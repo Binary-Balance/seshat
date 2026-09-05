@@ -1,0 +1,8 @@
+{
+  "name": "seshat-feasibility-benchmark",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": { "benchmark": "node run.mjs" },
+  "dependencies": { "typescript": "6.0.3", "oxc-parser": "0.148.0" }
+}

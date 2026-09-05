@@ -1,0 +1,2910 @@
+{
+  "date": "2026-09-05T10:31:09.195Z",
+  "environment": {
+    "node": "v24.20.0",
+    "typescript": "6.0.3",
+    "oxc": "0.148.0",
+    "nodeEntry": "precompiled JavaScript",
+    "rust": "1.98.1 release thin-LTO",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "cpuCount": 2
+  },
+  "corpus": {
+    "files": 51,
+    "bytes": 332495,
+    "functions": 493,
+    "comparisons": 767,
+    "sha256": "b5d5e93ea355a52b392d198eeac26a21976a01f2b0cb364b91ebdc1df275f5d5"
+  },
+  "parity": {
+    "fixture": true,
+    "sample": true
+  },
+  "samples": [
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 0,
+      "wallMs": 550.9371719999999,
+      "data": {
+        "times": [
+          211.113949
+        ],
+        "checksum": 0,
+        "maxRssKb": 138236
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 0,
+      "wallMs": 107.43607399999973,
+      "data": {
+        "times": [
+          51.593315
+        ],
+        "checksum": 0,
+        "maxRssKb": 73396
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 0,
+      "wallMs": 7.39713299999994,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3556,
+        "times": [
+          2.807497
+        ]
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 1,
+      "wallMs": 108.47620499999994,
+      "data": {
+        "times": [
+          51.197525
+        ],
+        "checksum": 0,
+        "maxRssKb": 73360
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 1,
+      "wallMs": 8.821284000000105,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3628,
+        "times": [
+          2.976553
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 1,
+      "wallMs": 617.6826379999998,
+      "data": {
+        "times": [
+          222.32617800000003
+        ],
+        "checksum": 0,
+        "maxRssKb": 134448
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 2,
+      "wallMs": 7.353833000000122,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3760,
+        "times": [
+          2.893658
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 2,
+      "wallMs": 516.8774920000001,
+      "data": {
+        "times": [
+          225.58196199999998
+        ],
+        "checksum": 0,
+        "maxRssKb": 128784
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 2,
+      "wallMs": 102.74275100000023,
+      "data": {
+        "times": [
+          46.885933
+        ],
+        "checksum": 0,
+        "maxRssKb": 73148
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 3,
+      "wallMs": 587.5439189999997,
+      "data": {
+        "times": [
+          221.65137
+        ],
+        "checksum": 0,
+        "maxRssKb": 152376
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 3,
+      "wallMs": 104.16007200000058,
+      "data": {
+        "times": [
+          46.991429000000004
+        ],
+        "checksum": 0,
+        "maxRssKb": 73260
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 3,
+      "wallMs": 7.275281999999606,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3756,
+        "times": [
+          2.725753
+        ]
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 4,
+      "wallMs": 100.0421809999998,
+      "data": {
+        "times": [
+          46.207317
+        ],
+        "checksum": 0,
+        "maxRssKb": 73332
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 4,
+      "wallMs": 7.752277000000504,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3752,
+        "times": [
+          2.749478
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 4,
+      "wallMs": 591.1844789999996,
+      "data": {
+        "times": [
+          249.71770399999997
+        ],
+        "checksum": 0,
+        "maxRssKb": 140476
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 5,
+      "wallMs": 8.071919999999409,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3720,
+        "times": [
+          3.107807
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 5,
+      "wallMs": 515.738488,
+      "data": {
+        "times": [
+          207.12748
+        ],
+        "checksum": 0,
+        "maxRssKb": 145208
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 5,
+      "wallMs": 102.89948499999991,
+      "data": {
+        "times": [
+          46.818224
+        ],
+        "checksum": 0,
+        "maxRssKb": 73180
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 6,
+      "wallMs": 759.913697,
+      "data": {
+        "times": [
+          287.990868
+        ],
+        "checksum": 0,
+        "maxRssKb": 145720
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 6,
+      "wallMs": 155.9389739999997,
+      "data": {
+        "times": [
+          70.821822
+        ],
+        "checksum": 0,
+        "maxRssKb": 73468
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 6,
+      "wallMs": 7.774575999999797,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3728,
+        "times": [
+          3.207986
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 0,
+      "wallMs": 957.1536839999999,
+      "data": {
+        "times": [
+          55.771151999999915,
+          54.98457200000007,
+          43.74759699999993,
+          32.344092000000046,
+          36.28844000000004
+        ],
+        "checksum": 0,
+        "maxRssKb": 153604
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 0,
+      "wallMs": 430.9938119999997,
+      "data": {
+        "times": [
+          40.485772999999995,
+          54.610791000000006,
+          63.656277000000046,
+          33.36190000000005,
+          35.61388299999999
+        ],
+        "checksum": 0,
+        "maxRssKb": 131688
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 0,
+      "wallMs": 27.07968500000061,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3700,
+        "times": [
+          2.624844,
+          2.504109,
+          2.4365419999999998,
+          2.5096,
+          2.542821
+        ]
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 1,
+      "wallMs": 446.2324609999996,
+      "data": {
+        "times": [
+          42.117631999999986,
+          53.44555700000001,
+          64.92441300000002,
+          36.72812200000004,
+          37.71342299999998
+        ],
+        "checksum": 0,
+        "maxRssKb": 131948
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 1,
+      "wallMs": 30.225963999999294,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3672,
+        "times": [
+          2.509088,
+          4.701043,
+          2.501934,
+          2.5254380000000003,
+          2.4770980000000002
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 1,
+      "wallMs": 919.9786370000002,
+      "data": {
+        "times": [
+          58.83995600000003,
+          50.538085000000024,
+          58.635673999999995,
+          29.78639200000009,
+          39.99481900000001
+        ],
+        "checksum": 0,
+        "maxRssKb": 159384
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 2,
+      "wallMs": 26.81895799999984,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3528,
+        "times": [
+          2.54242,
+          2.558069,
+          2.535186,
+          2.5118940000000003,
+          2.460226
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 2,
+      "wallMs": 911.4343000000008,
+      "data": {
+        "times": [
+          54.05578800000001,
+          48.926301999999964,
+          41.96522699999991,
+          39.070959000000016,
+          36.55527899999993
+        ],
+        "checksum": 0,
+        "maxRssKb": 148660
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 2,
+      "wallMs": 445.7297500000004,
+      "data": {
+        "times": [
+          37.288039,
+          51.63701800000001,
+          61.13676700000002,
+          35.56195299999996,
+          44.336568
+        ],
+        "checksum": 0,
+        "maxRssKb": 130468
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 0,
+      "wallMs": 651.300319,
+      "data": {
+        "times": [
+          249.13444200000004
+        ],
+        "checksum": 1260,
+        "maxRssKb": 133720
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 0,
+      "wallMs": 167.939257,
+      "data": {
+        "times": [
+          102.34297299999999
+        ],
+        "checksum": 1260,
+        "maxRssKb": 82516
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 0,
+      "wallMs": 8.604457000001275,
+      "data": {
+        "checksum": 1260,
+        "maxRssKb": 3772,
+        "times": [
+          3.85893
+        ]
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 1,
+      "wallMs": 148.46647200000007,
+      "data": {
+        "times": [
+          85.719577
+        ],
+        "checksum": 1260,
+        "maxRssKb": 84296
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 1,
+      "wallMs": 8.818565999999919,
+      "data": {
+        "checksum": 1260,
+        "maxRssKb": 3640,
+        "times": [
+          4.2487580000000005
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 1,
+      "wallMs": 949.1732660000016,
+      "data": {
+        "times": [
+          554.888555
+        ],
+        "checksum": 1260,
+        "maxRssKb": 129664
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 2,
+      "wallMs": 9.964790999998513,
+      "data": {
+        "checksum": 1260,
+        "maxRssKb": 3716,
+        "times": [
+          3.856265
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 2,
+      "wallMs": 588.7711099999997,
+      "data": {
+        "times": [
+          260.24526699999996
+        ],
+        "checksum": 1260,
+        "maxRssKb": 133084
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 2,
+      "wallMs": 144.9283349999987,
+      "data": {
+        "times": [
+          85.363112
+        ],
+        "checksum": 1260,
+        "maxRssKb": 86444
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 3,
+      "wallMs": 568.763003,
+      "data": {
+        "times": [
+          262.792485
+        ],
+        "checksum": 1260,
+        "maxRssKb": 135680
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 3,
+      "wallMs": 170.93603099999928,
+      "data": {
+        "times": [
+          92.713686
+        ],
+        "checksum": 1260,
+        "maxRssKb": 84656
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 3,
+      "wallMs": 11.65787199999977,
+      "data": {
+        "checksum": 1260,
+        "maxRssKb": 3768,
+        "times": [
+          4.307178
+        ]
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 4,
+      "wallMs": 174.49160399999892,
+      "data": {
+        "times": [
+          106.203463
+        ],
+        "checksum": 1260,
+        "maxRssKb": 82508
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 4,
+      "wallMs": 8.658276999998634,
+      "data": {
+        "checksum": 1260,
+        "maxRssKb": 3560,
+        "times": [
+          3.3518120000000002
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 4,
+      "wallMs": 608.7539959999995,
+      "data": {
+        "times": [
+          270.58399600000007
+        ],
+        "checksum": 1260,
+        "maxRssKb": 147060
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 5,
+      "wallMs": 9.325634000000719,
+      "data": {
+        "checksum": 1260,
+        "maxRssKb": 3776,
+        "times": [
+          3.687309
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 5,
+      "wallMs": 564.6662379999998,
+      "data": {
+        "times": [
+          255.43735599999997
+        ],
+        "checksum": 1260,
+        "maxRssKb": 142956
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 5,
+      "wallMs": 151.7553310000003,
+      "data": {
+        "times": [
+          88.45072300000001
+        ],
+        "checksum": 1260,
+        "maxRssKb": 84644
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 6,
+      "wallMs": 659.3135590000002,
+      "data": {
+        "times": [
+          339.08353600000004
+        ],
+        "checksum": 1260,
+        "maxRssKb": 130580
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 6,
+      "wallMs": 167.74405800000022,
+      "data": {
+        "times": [
+          97.05628300000001
+        ],
+        "checksum": 1260,
+        "maxRssKb": 84900
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "fresh-process",
+      "sample": 6,
+      "wallMs": 7.906876000000921,
+      "data": {
+        "checksum": 1260,
+        "maxRssKb": 3768,
+        "times": [
+          3.3613210000000002
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 0,
+      "wallMs": 1087.9651410000006,
+      "data": {
+        "times": [
+          70.220282,
+          56.73780099999999,
+          52.301512,
+          56.96100799999999,
+          56.46401500000002
+        ],
+        "checksum": 1260,
+        "maxRssKb": 169968
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 0,
+      "wallMs": 587.8022290000008,
+      "data": {
+        "times": [
+          62.336644999999976,
+          51.88991900000002,
+          60.701907000000006,
+          52.83561000000003,
+          68.30084499999998
+        ],
+        "checksum": 1260,
+        "maxRssKb": 142176
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 0,
+      "wallMs": 33.09533399999782,
+      "data": {
+        "checksum": 1260,
+        "maxRssKb": 3692,
+        "times": [
+          3.215608,
+          3.3319159999999997,
+          3.6308640000000003,
+          3.295618,
+          3.2524770000000003
+        ]
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 1,
+      "wallMs": 584.1663359999984,
+      "data": {
+        "times": [
+          64.79323499999998,
+          53.40240499999999,
+          63.31613199999998,
+          54.785483,
+          67.93654399999997
+        ],
+        "checksum": 1260,
+        "maxRssKb": 142888
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 1,
+      "wallMs": 31.921228999999585,
+      "data": {
+        "checksum": 1260,
+        "maxRssKb": 3660,
+        "times": [
+          3.065537,
+          3.122661,
+          3.105806,
+          3.459714,
+          3.351432
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 1,
+      "wallMs": 1053.153022999999,
+      "data": {
+        "times": [
+          57.1550400000001,
+          56.25957400000004,
+          46.83790299999998,
+          45.832494999999994,
+          46.405674999999974
+        ],
+        "checksum": 1260,
+        "maxRssKb": 150392
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 2,
+      "wallMs": 31.165718000000197,
+      "data": {
+        "checksum": 1260,
+        "maxRssKb": 3668,
+        "times": [
+          2.900569,
+          3.280883,
+          3.966852,
+          3.4099310000000003,
+          2.98123
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 2,
+      "wallMs": 1236.938828000002,
+      "data": {
+        "times": [
+          55.038994,
+          67.80166200000008,
+          53.605130000000145,
+          41.54756100000009,
+          58.55498499999999
+        ],
+        "checksum": 1260,
+        "maxRssKb": 166908
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 1,
+      "phase": "warm",
+      "sample": 2,
+      "wallMs": 666.9585570000017,
+      "data": {
+        "times": [
+          68.37179800000001,
+          58.00753500000002,
+          89.29932300000002,
+          72.02005700000001,
+          97.23949200000004
+        ],
+        "checksum": 1260,
+        "maxRssKb": 141368
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 0,
+      "wallMs": 1579.0611069999977,
+      "data": {
+        "times": [
+          1065.252622
+        ],
+        "checksum": 0,
+        "maxRssKb": 142596
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 0,
+      "wallMs": 963.4888549999996,
+      "data": {
+        "times": [
+          838.408272
+        ],
+        "checksum": 0,
+        "maxRssKb": 221708
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 0,
+      "wallMs": 59.9835579999999,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3560,
+        "times": [
+          55.205731
+        ]
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 1,
+      "wallMs": 969.2626549999986,
+      "data": {
+        "times": [
+          846.459942
+        ],
+        "checksum": 0,
+        "maxRssKb": 221240
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 1,
+      "wallMs": 59.47128000000157,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3764,
+        "times": [
+          54.420733
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 1,
+      "wallMs": 1304.4084679999978,
+      "data": {
+        "times": [
+          999.2429359999999
+        ],
+        "checksum": 0,
+        "maxRssKb": 158488
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 2,
+      "wallMs": 65.83407600000282,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3720,
+        "times": [
+          61.03264
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 2,
+      "wallMs": 1331.292429000001,
+      "data": {
+        "times": [
+          1035.6521790000002
+        ],
+        "checksum": 0,
+        "maxRssKb": 149208
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 2,
+      "wallMs": 1033.1617860000006,
+      "data": {
+        "times": [
+          907.9555399999999
+        ],
+        "checksum": 0,
+        "maxRssKb": 221716
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 3,
+      "wallMs": 1632.0289470000025,
+      "data": {
+        "times": [
+          1311.7229539999998
+        ],
+        "checksum": 0,
+        "maxRssKb": 144840
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 3,
+      "wallMs": 1068.9599660000022,
+      "data": {
+        "times": [
+          931.1631120000001
+        ],
+        "checksum": 0,
+        "maxRssKb": 221052
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 3,
+      "wallMs": 71.47171700000035,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3700,
+        "times": [
+          61.53149
+        ]
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 4,
+      "wallMs": 1040.3131169999979,
+      "data": {
+        "times": [
+          904.989313
+        ],
+        "checksum": 0,
+        "maxRssKb": 221588
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 4,
+      "wallMs": 72.24215099999856,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3652,
+        "times": [
+          66.233319
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 4,
+      "wallMs": 1492.4982889999956,
+      "data": {
+        "times": [
+          1180.563774
+        ],
+        "checksum": 0,
+        "maxRssKb": 154644
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 5,
+      "wallMs": 79.95886600000085,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3560,
+        "times": [
+          71.25413999999999
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 5,
+      "wallMs": 1438.6876029999985,
+      "data": {
+        "times": [
+          1089.3815909999998
+        ],
+        "checksum": 0,
+        "maxRssKb": 155424
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 5,
+      "wallMs": 1076.5726209999993,
+      "data": {
+        "times": [
+          947.479231
+        ],
+        "checksum": 0,
+        "maxRssKb": 222272
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 6,
+      "wallMs": 1418.283030999999,
+      "data": {
+        "times": [
+          1121.154463
+        ],
+        "checksum": 0,
+        "maxRssKb": 152260
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 6,
+      "wallMs": 1097.8565650000019,
+      "data": {
+        "times": [
+          959.5971930000001
+        ],
+        "checksum": 0,
+        "maxRssKb": 222192
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 6,
+      "wallMs": 63.934565000003204,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3692,
+        "times": [
+          58.826818
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 0,
+      "wallMs": 5151.903434,
+      "data": {
+        "times": [
+          518.4667420000001,
+          472.854836,
+          511.4058199999995,
+          465.8077860000003,
+          521.6565350000001
+        ],
+        "checksum": 0,
+        "maxRssKb": 156444
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 0,
+      "wallMs": 7499.382122000003,
+      "data": {
+        "times": [
+          871.429032,
+          872.467635,
+          1057.9129229999999,
+          867.5353230000001,
+          829.0112550000003
+        ],
+        "checksum": 0,
+        "maxRssKb": 381256
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 0,
+      "wallMs": 543.7881140000027,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3664,
+        "times": [
+          52.724144,
+          52.783264,
+          58.712081999999995,
+          108.562566,
+          102.61026199999999
+        ]
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 1,
+      "wallMs": 8567.262529,
+      "data": {
+        "times": [
+          830.8418889999998,
+          889.1222839999996,
+          1992.185085,
+          935.7301299999999,
+          973.1314980000006
+        ],
+        "checksum": 0,
+        "maxRssKb": 380548
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 1,
+      "wallMs": 636.7278270000024,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3656,
+        "times": [
+          87.185351,
+          86.391808,
+          68.884614,
+          64.94712299999999,
+          57.247583999999996
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 1,
+      "wallMs": 5135.563746999993,
+      "data": {
+        "times": [
+          495.039029,
+          715.6372619999997,
+          619.6490860000004,
+          475.5072479999999,
+          436.4815319999998
+        ],
+        "checksum": 0,
+        "maxRssKb": 165976
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 2,
+      "wallMs": 440.14120900000853,
+      "data": {
+        "checksum": 0,
+        "maxRssKb": 3632,
+        "times": [
+          54.335573,
+          55.446359,
+          52.897436,
+          51.543386,
+          53.437244
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 2,
+      "wallMs": 5378.990590000001,
+      "data": {
+        "times": [
+          541.9794960000004,
+          543.7560060000001,
+          568.4187329999995,
+          458.3936709999998,
+          540.797458
+        ],
+        "checksum": 0,
+        "maxRssKb": 171844
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "parse",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 2,
+      "wallMs": 7638.277320000008,
+      "data": {
+        "times": [
+          907.6706880000002,
+          1029.731111,
+          903.510663,
+          891.2912509999996,
+          845.5688369999998
+        ],
+        "checksum": 0,
+        "maxRssKb": 381296
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 0,
+      "wallMs": 1503.7389639999892,
+      "data": {
+        "times": [
+          1205.3388869999999
+        ],
+        "checksum": 25200,
+        "maxRssKb": 146308
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 0,
+      "wallMs": 1421.2301270000025,
+      "data": {
+        "times": [
+          1330.0415910000002
+        ],
+        "checksum": 25200,
+        "maxRssKb": 228904
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 0,
+      "wallMs": 72.58006800001021,
+      "data": {
+        "checksum": 25200,
+        "maxRssKb": 3720,
+        "times": [
+          67.984182
+        ]
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 1,
+      "wallMs": 1307.4028110000072,
+      "data": {
+        "times": [
+          1219.674888
+        ],
+        "checksum": 25200,
+        "maxRssKb": 231624
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 1,
+      "wallMs": 73.94075999999768,
+      "data": {
+        "checksum": 25200,
+        "maxRssKb": 3732,
+        "times": [
+          69.308125
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 1,
+      "wallMs": 1647.3232870000065,
+      "data": {
+        "times": [
+          1331.9569649999999
+        ],
+        "checksum": 25200,
+        "maxRssKb": 152728
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 2,
+      "wallMs": 114.01141800000914,
+      "data": {
+        "checksum": 25200,
+        "maxRssKb": 3696,
+        "times": [
+          103.68688900000001
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 2,
+      "wallMs": 2093.284786000004,
+      "data": {
+        "times": [
+          1496.132318
+        ],
+        "checksum": 25200,
+        "maxRssKb": 142004
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 2,
+      "wallMs": 1331.6667369999923,
+      "data": {
+        "times": [
+          1230.943668
+        ],
+        "checksum": 25200,
+        "maxRssKb": 232004
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 3,
+      "wallMs": 1761.4812699999893,
+      "data": {
+        "times": [
+          1448.5962869999998
+        ],
+        "checksum": 25200,
+        "maxRssKb": 149492
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 3,
+      "wallMs": 1296.7392069999914,
+      "data": {
+        "times": [
+          1202.894311
+        ],
+        "checksum": 25200,
+        "maxRssKb": 231496
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 3,
+      "wallMs": 72.56186299999536,
+      "data": {
+        "checksum": 25200,
+        "maxRssKb": 3736,
+        "times": [
+          67.022924
+        ]
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 4,
+      "wallMs": 1361.9454250000126,
+      "data": {
+        "times": [
+          1270.46857
+        ],
+        "checksum": 25200,
+        "maxRssKb": 230736
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 4,
+      "wallMs": 69.22072299999127,
+      "data": {
+        "checksum": 25200,
+        "maxRssKb": 3792,
+        "times": [
+          64.632054
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 4,
+      "wallMs": 1589.7329369999934,
+      "data": {
+        "times": [
+          1282.404577
+        ],
+        "checksum": 25200,
+        "maxRssKb": 145504
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 5,
+      "wallMs": 69.7015609999944,
+      "data": {
+        "checksum": 25200,
+        "maxRssKb": 3792,
+        "times": [
+          64.397037
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 5,
+      "wallMs": 1534.023755000002,
+      "data": {
+        "times": [
+          1225.043345
+        ],
+        "checksum": 25200,
+        "maxRssKb": 143440
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 5,
+      "wallMs": 1294.3879330000054,
+      "data": {
+        "times": [
+          1207.814605
+        ],
+        "checksum": 25200,
+        "maxRssKb": 229608
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 6,
+      "wallMs": 1641.9928939999954,
+      "data": {
+        "times": [
+          1327.302322
+        ],
+        "checksum": 25200,
+        "maxRssKb": 161864
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 6,
+      "wallMs": 1261.5945330000104,
+      "data": {
+        "times": [
+          1167.456346
+        ],
+        "checksum": 25200,
+        "maxRssKb": 228772
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "fresh-process",
+      "sample": 6,
+      "wallMs": 71.5393589999876,
+      "data": {
+        "checksum": 25200,
+        "maxRssKb": 3788,
+        "times": [
+          66.960934
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 0,
+      "wallMs": 6007.415332999997,
+      "data": {
+        "times": [
+          694.462524,
+          659.0188880000001,
+          596.4107309999999,
+          602.7704079999994,
+          584.0285250000006
+        ],
+        "checksum": 25200,
+        "maxRssKb": 163556
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 0,
+      "wallMs": 10005.095747999992,
+      "data": {
+        "times": [
+          1453.5148219999996,
+          1530.7867290000004,
+          1159.4187870000005,
+          1112.5406359999997,
+          1060.0417720000005
+        ],
+        "checksum": 25200,
+        "maxRssKb": 356964
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 0,
+      "wallMs": 546.4361079999944,
+      "data": {
+        "checksum": 25200,
+        "maxRssKb": 3720,
+        "times": [
+          69.46111300000001,
+          66.680372,
+          78.601858,
+          64.319985,
+          63.238063
+        ]
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 1,
+      "wallMs": 10593.890365999992,
+      "data": {
+        "times": [
+          1715.5561169999996,
+          1279.0598440000003,
+          1354.369826,
+          1562.251972000001,
+          1071.0865950000007
+        ],
+        "checksum": 25200,
+        "maxRssKb": 355408
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 1,
+      "wallMs": 514.3472150000016,
+      "data": {
+        "checksum": 25200,
+        "maxRssKb": 3768,
+        "times": [
+          62.465098,
+          63.635074,
+          66.705601,
+          63.365671,
+          62.148978
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 1,
+      "wallMs": 6083.23891,
+      "data": {
+        "times": [
+          700.1128320000003,
+          634.1689019999999,
+          582.6290280000003,
+          593.5607209999998,
+          608.6294749999997
+        ],
+        "checksum": 25200,
+        "maxRssKb": 164984
+      }
+    },
+    {
+      "engine": "rust",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 2,
+      "wallMs": 531.6825370000151,
+      "data": {
+        "checksum": 25200,
+        "maxRssKb": 3792,
+        "times": [
+          64.362089,
+          65.037141,
+          70.16592200000001,
+          65.944185,
+          64.808813
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 2,
+      "wallMs": 6202.699549000012,
+      "data": {
+        "times": [
+          764.7497509999998,
+          701.0353090000003,
+          628.901535,
+          611.303062,
+          600.9099239999996
+        ],
+        "checksum": 25200,
+        "maxRssKb": 174728
+      }
+    },
+    {
+      "engine": "hybrid",
+      "mode": "analyze",
+      "repeat": 20,
+      "phase": "warm",
+      "sample": 2,
+      "wallMs": 10986.85611600001,
+      "data": {
+        "times": [
+          2911.133672,
+          1106.8907170000002,
+          1068.6462060000003,
+          1084.603398000001,
+          1080.6572319999996
+        ],
+        "checksum": 25200,
+        "maxRssKb": 357064
+      }
+    }
+  ],
+  "mutation": [
+    {
+      "engine": "typescript",
+      "sample": 0,
+      "wallMs": 2324.9673649999895,
+      "data": {
+        "outcomes": [
+          [
+            48,
+            ">=",
+            "killed"
+          ],
+          [
+            105,
+            ">",
+            "killed"
+          ],
+          [
+            157,
+            "<",
+            "killed"
+          ],
+          [
+            210,
+            "<=",
+            "killed"
+          ],
+          [
+            263,
+            "===",
+            "killed"
+          ],
+          [
+            321,
+            "!==",
+            "killed"
+          ],
+          [
+            376,
+            "==",
+            "killed"
+          ],
+          [
+            433,
+            "!=",
+            "killed"
+          ],
+          [
+            495,
+            ">=",
+            "survived"
+          ],
+          [
+            554,
+            "<=",
+            "survived"
+          ]
+        ],
+        "executionMs": 1792.7258900000002,
+        "maxRssKb": 116808
+      }
+    },
+    {
+      "engine": "hybrid",
+      "sample": 0,
+      "wallMs": 2004.4638640000194,
+      "data": {
+        "outcomes": [
+          [
+            48,
+            ">=",
+            "killed"
+          ],
+          [
+            105,
+            ">",
+            "killed"
+          ],
+          [
+            157,
+            "<",
+            "killed"
+          ],
+          [
+            210,
+            "<=",
+            "killed"
+          ],
+          [
+            263,
+            "===",
+            "killed"
+          ],
+          [
+            321,
+            "!==",
+            "killed"
+          ],
+          [
+            376,
+            "==",
+            "killed"
+          ],
+          [
+            433,
+            "!=",
+            "killed"
+          ],
+          [
+            495,
+            ">=",
+            "survived"
+          ],
+          [
+            554,
+            "<=",
+            "survived"
+          ]
+        ],
+        "executionMs": 1776.3342109999999,
+        "maxRssKb": 60692
+      }
+    },
+    {
+      "engine": "rust",
+      "sample": 0,
+      "wallMs": 2020.3599620000168,
+      "data": {
+        "executionMs": 1856.3234710000002,
+        "maxRssKb": 3216,
+        "outcomes": [
+          [
+            48,
+            ">=",
+            "killed"
+          ],
+          [
+            105,
+            ">",
+            "killed"
+          ],
+          [
+            157,
+            "<",
+            "killed"
+          ],
+          [
+            210,
+            "<=",
+            "killed"
+          ],
+          [
+            263,
+            "===",
+            "killed"
+          ],
+          [
+            321,
+            "!==",
+            "killed"
+          ],
+          [
+            376,
+            "==",
+            "killed"
+          ],
+          [
+            433,
+            "!=",
+            "killed"
+          ],
+          [
+            495,
+            ">=",
+            "survived"
+          ],
+          [
+            554,
+            "<=",
+            "survived"
+          ]
+        ]
+      }
+    },
+    {
+      "engine": "hybrid",
+      "sample": 1,
+      "wallMs": 2136.7570140000025,
+      "data": {
+        "outcomes": [
+          [
+            48,
+            ">=",
+            "killed"
+          ],
+          [
+            105,
+            ">",
+            "killed"
+          ],
+          [
+            157,
+            "<",
+            "killed"
+          ],
+          [
+            210,
+            "<=",
+            "killed"
+          ],
+          [
+            263,
+            "===",
+            "killed"
+          ],
+          [
+            321,
+            "!==",
+            "killed"
+          ],
+          [
+            376,
+            "==",
+            "killed"
+          ],
+          [
+            433,
+            "!=",
+            "killed"
+          ],
+          [
+            495,
+            ">=",
+            "survived"
+          ],
+          [
+            554,
+            "<=",
+            "survived"
+          ]
+        ],
+        "executionMs": 1917.6004500000001,
+        "maxRssKb": 60708
+      }
+    },
+    {
+      "engine": "rust",
+      "sample": 1,
+      "wallMs": 1840.9325320000062,
+      "data": {
+        "executionMs": 1669.703905,
+        "maxRssKb": 3224,
+        "outcomes": [
+          [
+            48,
+            ">=",
+            "killed"
+          ],
+          [
+            105,
+            ">",
+            "killed"
+          ],
+          [
+            157,
+            "<",
+            "killed"
+          ],
+          [
+            210,
+            "<=",
+            "killed"
+          ],
+          [
+            263,
+            "===",
+            "killed"
+          ],
+          [
+            321,
+            "!==",
+            "killed"
+          ],
+          [
+            376,
+            "==",
+            "killed"
+          ],
+          [
+            433,
+            "!=",
+            "killed"
+          ],
+          [
+            495,
+            ">=",
+            "survived"
+          ],
+          [
+            554,
+            "<=",
+            "survived"
+          ]
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "sample": 1,
+      "wallMs": 2262.292604999995,
+      "data": {
+        "outcomes": [
+          [
+            48,
+            ">=",
+            "killed"
+          ],
+          [
+            105,
+            ">",
+            "killed"
+          ],
+          [
+            157,
+            "<",
+            "killed"
+          ],
+          [
+            210,
+            "<=",
+            "killed"
+          ],
+          [
+            263,
+            "===",
+            "killed"
+          ],
+          [
+            321,
+            "!==",
+            "killed"
+          ],
+          [
+            376,
+            "==",
+            "killed"
+          ],
+          [
+            433,
+            "!=",
+            "killed"
+          ],
+          [
+            495,
+            ">=",
+            "survived"
+          ],
+          [
+            554,
+            "<=",
+            "survived"
+          ]
+        ],
+        "executionMs": 1781.639523,
+        "maxRssKb": 117716
+      }
+    },
+    {
+      "engine": "rust",
+      "sample": 2,
+      "wallMs": 1865.978541999997,
+      "data": {
+        "executionMs": 1688.8931249999998,
+        "maxRssKb": 3136,
+        "outcomes": [
+          [
+            48,
+            ">=",
+            "killed"
+          ],
+          [
+            105,
+            ">",
+            "killed"
+          ],
+          [
+            157,
+            "<",
+            "killed"
+          ],
+          [
+            210,
+            "<=",
+            "killed"
+          ],
+          [
+            263,
+            "===",
+            "killed"
+          ],
+          [
+            321,
+            "!==",
+            "killed"
+          ],
+          [
+            376,
+            "==",
+            "killed"
+          ],
+          [
+            433,
+            "!=",
+            "killed"
+          ],
+          [
+            495,
+            ">=",
+            "survived"
+          ],
+          [
+            554,
+            "<=",
+            "survived"
+          ]
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "sample": 2,
+      "wallMs": 4045.950635999994,
+      "data": {
+        "outcomes": [
+          [
+            48,
+            ">=",
+            "killed"
+          ],
+          [
+            105,
+            ">",
+            "killed"
+          ],
+          [
+            157,
+            "<",
+            "killed"
+          ],
+          [
+            210,
+            "<=",
+            "killed"
+          ],
+          [
+            263,
+            "===",
+            "killed"
+          ],
+          [
+            321,
+            "!==",
+            "killed"
+          ],
+          [
+            376,
+            "==",
+            "killed"
+          ],
+          [
+            433,
+            "!=",
+            "killed"
+          ],
+          [
+            495,
+            ">=",
+            "survived"
+          ],
+          [
+            554,
+            "<=",
+            "survived"
+          ]
+        ],
+        "executionMs": 3545.667985,
+        "maxRssKb": 117904
+      }
+    },
+    {
+      "engine": "hybrid",
+      "sample": 2,
+      "wallMs": 2122.388439000002,
+      "data": {
+        "outcomes": [
+          [
+            48,
+            ">=",
+            "killed"
+          ],
+          [
+            105,
+            ">",
+            "killed"
+          ],
+          [
+            157,
+            "<",
+            "killed"
+          ],
+          [
+            210,
+            "<=",
+            "killed"
+          ],
+          [
+            263,
+            "===",
+            "killed"
+          ],
+          [
+            321,
+            "!==",
+            "killed"
+          ],
+          [
+            376,
+            "==",
+            "killed"
+          ],
+          [
+            433,
+            "!=",
+            "killed"
+          ],
+          [
+            495,
+            ">=",
+            "survived"
+          ],
+          [
+            554,
+            "<=",
+            "survived"
+          ]
+        ],
+        "executionMs": 1872.8037909999998,
+        "maxRssKb": 60212
+      }
+    },
+    {
+      "engine": "typescript",
+      "sample": 3,
+      "wallMs": 2345.3217120000045,
+      "data": {
+        "outcomes": [
+          [
+            48,
+            ">=",
+            "killed"
+          ],
+          [
+            105,
+            ">",
+            "killed"
+          ],
+          [
+            157,
+            "<",
+            "killed"
+          ],
+          [
+            210,
+            "<=",
+            "killed"
+          ],
+          [
+            263,
+            "===",
+            "killed"
+          ],
+          [
+            321,
+            "!==",
+            "killed"
+          ],
+          [
+            376,
+            "==",
+            "killed"
+          ],
+          [
+            433,
+            "!=",
+            "killed"
+          ],
+          [
+            495,
+            ">=",
+            "survived"
+          ],
+          [
+            554,
+            "<=",
+            "survived"
+          ]
+        ],
+        "executionMs": 1801.8758510000002,
+        "maxRssKb": 117584
+      }
+    },
+    {
+      "engine": "hybrid",
+      "sample": 3,
+      "wallMs": 1931.7215920000162,
+      "data": {
+        "outcomes": [
+          [
+            48,
+            ">=",
+            "killed"
+          ],
+          [
+            105,
+            ">",
+            "killed"
+          ],
+          [
+            157,
+            "<",
+            "killed"
+          ],
+          [
+            210,
+            "<=",
+            "killed"
+          ],
+          [
+            263,
+            "===",
+            "killed"
+          ],
+          [
+            321,
+            "!==",
+            "killed"
+          ],
+          [
+            376,
+            "==",
+            "killed"
+          ],
+          [
+            433,
+            "!=",
+            "killed"
+          ],
+          [
+            495,
+            ">=",
+            "survived"
+          ],
+          [
+            554,
+            "<=",
+            "survived"
+          ]
+        ],
+        "executionMs": 1718.955239,
+        "maxRssKb": 60728
+      }
+    },
+    {
+      "engine": "rust",
+      "sample": 3,
+      "wallMs": 1862.9330450000125,
+      "data": {
+        "executionMs": 1701.6120839999999,
+        "maxRssKb": 3216,
+        "outcomes": [
+          [
+            48,
+            ">=",
+            "killed"
+          ],
+          [
+            105,
+            ">",
+            "killed"
+          ],
+          [
+            157,
+            "<",
+            "killed"
+          ],
+          [
+            210,
+            "<=",
+            "killed"
+          ],
+          [
+            263,
+            "===",
+            "killed"
+          ],
+          [
+            321,
+            "!==",
+            "killed"
+          ],
+          [
+            376,
+            "==",
+            "killed"
+          ],
+          [
+            433,
+            "!=",
+            "killed"
+          ],
+          [
+            495,
+            ">=",
+            "survived"
+          ],
+          [
+            554,
+            "<=",
+            "survived"
+          ]
+        ]
+      }
+    },
+    {
+      "engine": "hybrid",
+      "sample": 4,
+      "wallMs": 1912.6777369999909,
+      "data": {
+        "outcomes": [
+          [
+            48,
+            ">=",
+            "killed"
+          ],
+          [
+            105,
+            ">",
+            "killed"
+          ],
+          [
+            157,
+            "<",
+            "killed"
+          ],
+          [
+            210,
+            "<=",
+            "killed"
+          ],
+          [
+            263,
+            "===",
+            "killed"
+          ],
+          [
+            321,
+            "!==",
+            "killed"
+          ],
+          [
+            376,
+            "==",
+            "killed"
+          ],
+          [
+            433,
+            "!=",
+            "killed"
+          ],
+          [
+            495,
+            ">=",
+            "survived"
+          ],
+          [
+            554,
+            "<=",
+            "survived"
+          ]
+        ],
+        "executionMs": 1695.674676,
+        "maxRssKb": 60716
+      }
+    },
+    {
+      "engine": "rust",
+      "sample": 4,
+      "wallMs": 1883.6548900000053,
+      "data": {
+        "executionMs": 1709.944315,
+        "maxRssKb": 3264,
+        "outcomes": [
+          [
+            48,
+            ">=",
+            "killed"
+          ],
+          [
+            105,
+            ">",
+            "killed"
+          ],
+          [
+            157,
+            "<",
+            "killed"
+          ],
+          [
+            210,
+            "<=",
+            "killed"
+          ],
+          [
+            263,
+            "===",
+            "killed"
+          ],
+          [
+            321,
+            "!==",
+            "killed"
+          ],
+          [
+            376,
+            "==",
+            "killed"
+          ],
+          [
+            433,
+            "!=",
+            "killed"
+          ],
+          [
+            495,
+            ">=",
+            "survived"
+          ],
+          [
+            554,
+            "<=",
+            "survived"
+          ]
+        ]
+      }
+    },
+    {
+      "engine": "typescript",
+      "sample": 4,
+      "wallMs": 2271.095845999982,
+      "data": {
+        "outcomes": [
+          [
+            48,
+            ">=",
+            "killed"
+          ],
+          [
+            105,
+            ">",
+            "killed"
+          ],
+          [
+            157,
+            "<",
+            "killed"
+          ],
+          [
+            210,
+            "<=",
+            "killed"
+          ],
+          [
+            263,
+            "===",
+            "killed"
+          ],
+          [
+            321,
+            "!==",
+            "killed"
+          ],
+          [
+            376,
+            "==",
+            "killed"
+          ],
+          [
+            433,
+            "!=",
+            "killed"
+          ],
+          [
+            495,
+            ">=",
+            "survived"
+          ],
+          [
+            554,
+            "<=",
+            "survived"
+          ]
+        ],
+        "executionMs": 1770.9600679999999,
+        "maxRssKb": 117692
+      }
+    }
+  ],
+  "domainTests": [
+    {
+      "wallMs": 998.9390070000081,
+      "summary": "ℹ tests 33\nℹ pass 33\nℹ fail 0"
+    },
+    {
+      "wallMs": 1063.9799160000111,
+      "summary": "ℹ tests 33\nℹ pass 33\nℹ fail 0"
+    },
+    {
+      "wallMs": 957.7004149999993,
+      "summary": "ℹ tests 33\nℹ pass 33\nℹ fail 0"
+    },
+    {
+      "wallMs": 956.5064089999942,
+      "summary": "ℹ tests 33\nℹ pass 33\nℹ fail 0"
+    },
+    {
+      "wallMs": 996.9941680000047,
+      "summary": "ℹ tests 33\nℹ pass 33\nℹ fail 0"
+    }
+  ]
+}
