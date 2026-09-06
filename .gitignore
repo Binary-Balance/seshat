@@ -2,3 +2,5 @@ work/
 benchmarks/rust/target/
 benchmarks/node_modules/
 benchmarks/generated/
+benchmarks/proofs/node_modules/
+benchmarks/proofs/target/

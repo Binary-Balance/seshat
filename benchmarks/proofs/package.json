@@ -1,0 +1,23 @@
+{
+  "name": "seshat-bounded-proofs",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": { "proof": "node run.mjs" },
+  "devDependencies": {
+    "@sinclair/typebox": "0.34.52",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@vitest/coverage-istanbul": "5.0.0",
+    "@vitest/coverage-v8": "5.0.0",
+    "c8": "12.0.0",
+    "fastify": "5.12.3",
+    "jest": "30.5.1",
+    "istanbul-lib-instrument": "6.0.3",
+    "istanbul-lib-coverage": "3.2.2",
+    "istanbul-lib-source-maps": "5.0.6",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "vitest": "5.0.0"
+  }
+}
