@@ -1,0 +1,1064 @@
+{
+  "environment": {
+    "node": "v24.20.0",
+    "typescript": "6.0.3",
+    "tools": {
+      "vitest": "5.0.0",
+      "@vitest/coverage-v8": "5.0.0",
+      "@vitest/coverage-istanbul": "5.0.0",
+      "jest": "30.5.1",
+      "istanbul-lib-instrument": "6.0.3",
+      "istanbul-lib-coverage": "3.2.2",
+      "istanbul-lib-source-maps": "5.0.6"
+    }
+  },
+  "project": "/workspace/seshat/work/assurance-proofs/coverage-hIqJEG",
+  "sourceHashes": {
+    "/workspace/seshat/work/assurance-proofs/coverage-hIqJEG/subject.tsx": "a621e07e3605673acb4af068339b923359bab488c7887f07dcf752f8af35303b",
+    "/workspace/seshat/work/assurance-proofs/coverage-hIqJEG/unloaded.tsx": "fea1d2d6b9a156d65fd298d400c8250966c57d301a5e2f505f4e389cecac389d"
+  },
+  "routes": {
+    "node": {
+      "executionMs": 118.47091999999998,
+      "report": "/workspace/seshat/work/assurance-proofs/coverage-hIqJEG/node-mapped.json",
+      "measured": {
+        "complete": true,
+        "functions": [
+          {
+            "complexity": 2,
+            "coverage": 1,
+            "covered": 3,
+            "crap": 2,
+            "name": "covered",
+            "start": 108,
+            "status": "measured",
+            "total": 3
+          },
+          {
+            "complexity": 2,
+            "coverage": 0.6666666666666666,
+            "covered": 2,
+            "crap": 2.1481481481481484,
+            "name": "partial",
+            "start": 196,
+            "status": "measured",
+            "total": 3
+          },
+          {
+            "complexity": 1,
+            "coverage": 0,
+            "covered": 0,
+            "crap": 2,
+            "name": "never",
+            "start": 292,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 1,
+            "coverage": null,
+            "covered": 0,
+            "crap": null,
+            "name": "empty",
+            "start": 333,
+            "status": "not-applicable",
+            "total": 0
+          },
+          {
+            "complexity": 4,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 4,
+            "name": "defaults",
+            "start": 360,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": 1,
+            "covered": 3,
+            "crap": 2,
+            "name": "outer",
+            "start": 439,
+            "status": "measured",
+            "total": 3
+          },
+          {
+            "complexity": 2,
+            "coverage": 0.6666666666666666,
+            "covered": 2,
+            "crap": 2.1481481481481484,
+            "name": "inner",
+            "start": 473,
+            "status": "measured",
+            "total": 3
+          },
+          {
+            "complexity": 1,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 1,
+            "name": "arrow@624",
+            "start": 624,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 1,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 1,
+            "name": "arrow@668",
+            "start": 668,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 1,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 1,
+            "name": "makeElement",
+            "start": 697,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 2,
+            "name": "arrow@844",
+            "start": 844,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 1,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 1,
+            "name": "containingClass",
+            "start": 910,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": null,
+            "covered": 1,
+            "crap": null,
+            "name": "field@974",
+            "start": 982,
+            "status": "complexity-only",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": null,
+            "covered": 1,
+            "crap": null,
+            "name": "static@1000",
+            "start": 1000,
+            "status": "complexity-only",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": 0.75,
+            "covered": 3,
+            "crap": 2.0625,
+            "name": "unicode",
+            "start": 1068,
+            "status": "measured",
+            "total": 4
+          }
+        ],
+        "problems": []
+      },
+      "unused": {
+        "complete": true,
+        "functions": [
+          {
+            "complexity": 1,
+            "coverage": 0,
+            "covered": 0,
+            "crap": 2,
+            "name": "untouched",
+            "start": 7,
+            "status": "measured",
+            "total": 1
+          }
+        ],
+        "problems": []
+      }
+    },
+    "jest": {
+      "executionMs": 1178.12828,
+      "report": "/workspace/seshat/work/assurance-proofs/coverage-hIqJEG/coverage-jest/coverage-final.json",
+      "measured": {
+        "complete": true,
+        "functions": [
+          {
+            "complexity": 2,
+            "coverage": 1,
+            "covered": 3,
+            "crap": 2,
+            "name": "covered",
+            "start": 108,
+            "status": "measured",
+            "total": 3
+          },
+          {
+            "complexity": 2,
+            "coverage": 0.6666666666666666,
+            "covered": 2,
+            "crap": 2.1481481481481484,
+            "name": "partial",
+            "start": 196,
+            "status": "measured",
+            "total": 3
+          },
+          {
+            "complexity": 1,
+            "coverage": 0,
+            "covered": 0,
+            "crap": 2,
+            "name": "never",
+            "start": 292,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 1,
+            "coverage": null,
+            "covered": 0,
+            "crap": null,
+            "name": "empty",
+            "start": 333,
+            "status": "not-applicable",
+            "total": 0
+          },
+          {
+            "complexity": 4,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 4,
+            "name": "defaults",
+            "start": 360,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": 1,
+            "covered": 3,
+            "crap": 2,
+            "name": "outer",
+            "start": 439,
+            "status": "measured",
+            "total": 3
+          },
+          {
+            "complexity": 2,
+            "coverage": 0.6666666666666666,
+            "covered": 2,
+            "crap": 2.1481481481481484,
+            "name": "inner",
+            "start": 473,
+            "status": "measured",
+            "total": 3
+          },
+          {
+            "complexity": 1,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 1,
+            "name": "arrow@624",
+            "start": 624,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 1,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 1,
+            "name": "arrow@668",
+            "start": 668,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 1,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 1,
+            "name": "makeElement",
+            "start": 697,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 2,
+            "name": "arrow@844",
+            "start": 844,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 1,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 1,
+            "name": "containingClass",
+            "start": 910,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": null,
+            "covered": 1,
+            "crap": null,
+            "name": "field@974",
+            "start": 982,
+            "status": "complexity-only",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": null,
+            "covered": 1,
+            "crap": null,
+            "name": "static@1000",
+            "start": 1000,
+            "status": "complexity-only",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": 0.75,
+            "covered": 3,
+            "crap": 2.0625,
+            "name": "unicode",
+            "start": 1068,
+            "status": "measured",
+            "total": 4
+          }
+        ],
+        "problems": []
+      },
+      "unused": {
+        "complete": true,
+        "functions": [
+          {
+            "complexity": 1,
+            "coverage": 0,
+            "covered": 0,
+            "crap": 2,
+            "name": "untouched",
+            "start": 7,
+            "status": "measured",
+            "total": 1
+          }
+        ],
+        "problems": []
+      }
+    },
+    "vitest-v8": {
+      "executionMs": 1008.0115059999998,
+      "report": "/workspace/seshat/work/assurance-proofs/coverage-hIqJEG/coverage-vitest-v8/coverage-final.json",
+      "measured": {
+        "complete": false,
+        "functions": [
+          {
+            "complexity": 2,
+            "coverage": null,
+            "covered": 3,
+            "crap": null,
+            "name": "covered",
+            "start": 108,
+            "status": "unknown",
+            "total": 3
+          },
+          {
+            "complexity": 2,
+            "coverage": null,
+            "covered": 2,
+            "crap": null,
+            "name": "partial",
+            "start": 196,
+            "status": "unknown",
+            "total": 3
+          },
+          {
+            "complexity": 1,
+            "coverage": null,
+            "covered": 0,
+            "crap": null,
+            "name": "never",
+            "start": 292,
+            "status": "unknown",
+            "total": 1
+          },
+          {
+            "complexity": 1,
+            "coverage": null,
+            "covered": 0,
+            "crap": null,
+            "name": "empty",
+            "start": 333,
+            "status": "not-applicable",
+            "total": 0
+          },
+          {
+            "complexity": 4,
+            "coverage": null,
+            "covered": 1,
+            "crap": null,
+            "name": "defaults",
+            "start": 360,
+            "status": "unknown",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": null,
+            "covered": 3,
+            "crap": null,
+            "name": "outer",
+            "start": 439,
+            "status": "unknown",
+            "total": 3
+          },
+          {
+            "complexity": 2,
+            "coverage": null,
+            "covered": 2,
+            "crap": null,
+            "name": "inner",
+            "start": 473,
+            "status": "unknown",
+            "total": 3
+          },
+          {
+            "complexity": 1,
+            "coverage": null,
+            "covered": 0,
+            "crap": null,
+            "name": "arrow@624",
+            "start": 624,
+            "status": "unknown",
+            "total": 0
+          },
+          {
+            "complexity": 1,
+            "coverage": null,
+            "covered": 1,
+            "crap": null,
+            "name": "arrow@668",
+            "start": 668,
+            "status": "unknown",
+            "total": 1
+          },
+          {
+            "complexity": 1,
+            "coverage": null,
+            "covered": 1,
+            "crap": null,
+            "name": "makeElement",
+            "start": 697,
+            "status": "unknown",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": null,
+            "covered": 1,
+            "crap": null,
+            "name": "arrow@844",
+            "start": 844,
+            "status": "unknown",
+            "total": 1
+          },
+          {
+            "complexity": 1,
+            "coverage": null,
+            "covered": 1,
+            "crap": null,
+            "name": "containingClass",
+            "start": 910,
+            "status": "unknown",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": null,
+            "covered": 1,
+            "crap": null,
+            "name": "field@974",
+            "start": 982,
+            "status": "complexity-only",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": null,
+            "covered": 1,
+            "crap": null,
+            "name": "static@1000",
+            "start": 1000,
+            "status": "complexity-only",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": null,
+            "covered": 3,
+            "crap": null,
+            "name": "unicode",
+            "start": 1068,
+            "status": "unknown",
+            "total": 4
+          }
+        ],
+        "problems": [
+          "statement escapes owning scope: 639..653"
+        ]
+      },
+      "unused": {
+        "complete": true,
+        "functions": [
+          {
+            "complexity": 1,
+            "coverage": 0,
+            "covered": 0,
+            "crap": 2,
+            "name": "untouched",
+            "start": 7,
+            "status": "measured",
+            "total": 1
+          }
+        ],
+        "problems": []
+      }
+    },
+    "vitest-istanbul": {
+      "executionMs": 1420.617549,
+      "report": "/workspace/seshat/work/assurance-proofs/coverage-hIqJEG/coverage-vitest-istanbul/coverage-final.json",
+      "measured": {
+        "complete": true,
+        "functions": [
+          {
+            "complexity": 2,
+            "coverage": 1,
+            "covered": 3,
+            "crap": 2,
+            "name": "covered",
+            "start": 108,
+            "status": "measured",
+            "total": 3
+          },
+          {
+            "complexity": 2,
+            "coverage": 0.6666666666666666,
+            "covered": 2,
+            "crap": 2.1481481481481484,
+            "name": "partial",
+            "start": 196,
+            "status": "measured",
+            "total": 3
+          },
+          {
+            "complexity": 1,
+            "coverage": 0,
+            "covered": 0,
+            "crap": 2,
+            "name": "never",
+            "start": 292,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 1,
+            "coverage": null,
+            "covered": 0,
+            "crap": null,
+            "name": "empty",
+            "start": 333,
+            "status": "not-applicable",
+            "total": 0
+          },
+          {
+            "complexity": 4,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 4,
+            "name": "defaults",
+            "start": 360,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": 1,
+            "covered": 3,
+            "crap": 2,
+            "name": "outer",
+            "start": 439,
+            "status": "measured",
+            "total": 3
+          },
+          {
+            "complexity": 2,
+            "coverage": 0.6666666666666666,
+            "covered": 2,
+            "crap": 2.1481481481481484,
+            "name": "inner",
+            "start": 473,
+            "status": "measured",
+            "total": 3
+          },
+          {
+            "complexity": 1,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 1,
+            "name": "arrow@624",
+            "start": 624,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 1,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 1,
+            "name": "arrow@668",
+            "start": 668,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 1,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 1,
+            "name": "makeElement",
+            "start": 697,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 2,
+            "name": "arrow@844",
+            "start": 844,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 1,
+            "coverage": 1,
+            "covered": 1,
+            "crap": 1,
+            "name": "containingClass",
+            "start": 910,
+            "status": "measured",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": null,
+            "covered": 1,
+            "crap": null,
+            "name": "field@974",
+            "start": 982,
+            "status": "complexity-only",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": null,
+            "covered": 1,
+            "crap": null,
+            "name": "static@1000",
+            "start": 1000,
+            "status": "complexity-only",
+            "total": 1
+          },
+          {
+            "complexity": 2,
+            "coverage": 0.75,
+            "covered": 3,
+            "crap": 2.0625,
+            "name": "unicode",
+            "start": 1068,
+            "status": "measured",
+            "total": 4
+          }
+        ],
+        "problems": []
+      },
+      "unused": {
+        "complete": true,
+        "functions": [
+          {
+            "complexity": 1,
+            "coverage": 0,
+            "covered": 0,
+            "crap": 2,
+            "name": "untouched",
+            "start": 7,
+            "status": "measured",
+            "total": 1
+          }
+        ],
+        "problems": []
+      }
+    }
+  },
+  "negativeChecks": {
+    "null-start": [
+      "missing column"
+    ],
+    "missing-end": [
+      "missing column"
+    ],
+    "invalid-line": [
+      "line outside source"
+    ],
+    "negative-counter": [
+      "invalid statement count"
+    ],
+    "missing-file": [
+      "missing source coverage: /workspace/seshat/work/assurance-proofs/coverage-hIqJEG/subject.tsx"
+    ],
+    "cross-function-end": [
+      "statement escapes owning scope: 639..689"
+    ]
+  },
+  "merging": {
+    "nodeAndJest": {
+      "complete": true,
+      "functions": [
+        {
+          "complexity": 2,
+          "coverage": 1,
+          "covered": 3,
+          "crap": 2,
+          "name": "covered",
+          "start": 108,
+          "status": "measured",
+          "total": 3
+        },
+        {
+          "complexity": 2,
+          "coverage": 0.6666666666666666,
+          "covered": 2,
+          "crap": 2.1481481481481484,
+          "name": "partial",
+          "start": 196,
+          "status": "measured",
+          "total": 3
+        },
+        {
+          "complexity": 1,
+          "coverage": 0,
+          "covered": 0,
+          "crap": 2,
+          "name": "never",
+          "start": 292,
+          "status": "measured",
+          "total": 1
+        },
+        {
+          "complexity": 1,
+          "coverage": null,
+          "covered": 0,
+          "crap": null,
+          "name": "empty",
+          "start": 333,
+          "status": "not-applicable",
+          "total": 0
+        },
+        {
+          "complexity": 4,
+          "coverage": 1,
+          "covered": 1,
+          "crap": 4,
+          "name": "defaults",
+          "start": 360,
+          "status": "measured",
+          "total": 1
+        },
+        {
+          "complexity": 2,
+          "coverage": 1,
+          "covered": 3,
+          "crap": 2,
+          "name": "outer",
+          "start": 439,
+          "status": "measured",
+          "total": 3
+        },
+        {
+          "complexity": 2,
+          "coverage": 0.6666666666666666,
+          "covered": 2,
+          "crap": 2.1481481481481484,
+          "name": "inner",
+          "start": 473,
+          "status": "measured",
+          "total": 3
+        },
+        {
+          "complexity": 1,
+          "coverage": 1,
+          "covered": 1,
+          "crap": 1,
+          "name": "arrow@624",
+          "start": 624,
+          "status": "measured",
+          "total": 1
+        },
+        {
+          "complexity": 1,
+          "coverage": 1,
+          "covered": 1,
+          "crap": 1,
+          "name": "arrow@668",
+          "start": 668,
+          "status": "measured",
+          "total": 1
+        },
+        {
+          "complexity": 1,
+          "coverage": 1,
+          "covered": 1,
+          "crap": 1,
+          "name": "makeElement",
+          "start": 697,
+          "status": "measured",
+          "total": 1
+        },
+        {
+          "complexity": 2,
+          "coverage": 1,
+          "covered": 1,
+          "crap": 2,
+          "name": "arrow@844",
+          "start": 844,
+          "status": "measured",
+          "total": 1
+        },
+        {
+          "complexity": 1,
+          "coverage": 1,
+          "covered": 1,
+          "crap": 1,
+          "name": "containingClass",
+          "start": 910,
+          "status": "measured",
+          "total": 1
+        },
+        {
+          "complexity": 2,
+          "coverage": null,
+          "covered": 1,
+          "crap": null,
+          "name": "field@974",
+          "start": 982,
+          "status": "complexity-only",
+          "total": 1
+        },
+        {
+          "complexity": 2,
+          "coverage": null,
+          "covered": 1,
+          "crap": null,
+          "name": "static@1000",
+          "start": 1000,
+          "status": "complexity-only",
+          "total": 1
+        },
+        {
+          "complexity": 2,
+          "coverage": 0.75,
+          "covered": 3,
+          "crap": 2.0625,
+          "name": "unicode",
+          "start": 1068,
+          "status": "measured",
+          "total": 4
+        }
+      ],
+      "problems": []
+    },
+    "nodeAndVitest": {
+      "complete": false,
+      "functions": [
+        {
+          "complexity": 2,
+          "coverage": null,
+          "covered": 3,
+          "crap": null,
+          "name": "covered",
+          "start": 108,
+          "status": "unknown",
+          "total": 3
+        },
+        {
+          "complexity": 2,
+          "coverage": null,
+          "covered": 2,
+          "crap": null,
+          "name": "partial",
+          "start": 196,
+          "status": "unknown",
+          "total": 3
+        },
+        {
+          "complexity": 1,
+          "coverage": null,
+          "covered": 0,
+          "crap": null,
+          "name": "never",
+          "start": 292,
+          "status": "unknown",
+          "total": 1
+        },
+        {
+          "complexity": 1,
+          "coverage": null,
+          "covered": 0,
+          "crap": null,
+          "name": "empty",
+          "start": 333,
+          "status": "not-applicable",
+          "total": 0
+        },
+        {
+          "complexity": 4,
+          "coverage": null,
+          "covered": 1,
+          "crap": null,
+          "name": "defaults",
+          "start": 360,
+          "status": "unknown",
+          "total": 1
+        },
+        {
+          "complexity": 2,
+          "coverage": null,
+          "covered": 3,
+          "crap": null,
+          "name": "outer",
+          "start": 439,
+          "status": "unknown",
+          "total": 3
+        },
+        {
+          "complexity": 2,
+          "coverage": null,
+          "covered": 2,
+          "crap": null,
+          "name": "inner",
+          "start": 473,
+          "status": "unknown",
+          "total": 3
+        },
+        {
+          "complexity": 1,
+          "coverage": null,
+          "covered": 1,
+          "crap": null,
+          "name": "arrow@624",
+          "start": 624,
+          "status": "unknown",
+          "total": 1
+        },
+        {
+          "complexity": 1,
+          "coverage": null,
+          "covered": 1,
+          "crap": null,
+          "name": "arrow@668",
+          "start": 668,
+          "status": "unknown",
+          "total": 1
+        },
+        {
+          "complexity": 1,
+          "coverage": null,
+          "covered": 1,
+          "crap": null,
+          "name": "makeElement",
+          "start": 697,
+          "status": "unknown",
+          "total": 1
+        },
+        {
+          "complexity": 2,
+          "coverage": null,
+          "covered": 1,
+          "crap": null,
+          "name": "arrow@844",
+          "start": 844,
+          "status": "unknown",
+          "total": 1
+        },
+        {
+          "complexity": 1,
+          "coverage": null,
+          "covered": 1,
+          "crap": null,
+          "name": "containingClass",
+          "start": 910,
+          "status": "unknown",
+          "total": 1
+        },
+        {
+          "complexity": 2,
+          "coverage": null,
+          "covered": 1,
+          "crap": null,
+          "name": "field@974",
+          "start": 982,
+          "status": "complexity-only",
+          "total": 1
+        },
+        {
+          "complexity": 2,
+          "coverage": null,
+          "covered": 1,
+          "crap": null,
+          "name": "static@1000",
+          "start": 1000,
+          "status": "complexity-only",
+          "total": 1
+        },
+        {
+          "complexity": 2,
+          "coverage": null,
+          "covered": 3,
+          "crap": null,
+          "name": "unicode",
+          "start": 1068,
+          "status": "unknown",
+          "total": 4
+        }
+      ],
+      "problems": [
+        "incompatible statement mappings"
+      ]
+    }
+  }
+}
