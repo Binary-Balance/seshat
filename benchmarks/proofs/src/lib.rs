@@ -1,7 +1,10 @@
+// Both command entry points share private modules; only entry functions are public.
 mod analysis;
 mod assessment;
+mod cli;
 mod coverage;
 mod execution;
+pub use cli::main as cli_main;
 use serde_json::{Value, json};
 use std::{env, fs};
 
