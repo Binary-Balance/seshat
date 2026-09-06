@@ -1,5 +1,8 @@
 # Seshat bounded proof results
 
+Local absolute paths in the recorded JSON are normalised to `/workspace/seshat`.
+Measurements and verdicts are preserved; those paths are illustrative.
+
 The later [coverage-route proof](coverage-routes.md) provides verified alternatives
 for the coverage gaps recorded below. These results describe the earlier run.
 
@@ -44,7 +47,7 @@ under both strategies. Avoided builds account for much of the elapsed saving.
 This comparison uses an explicit TypeScript-to-CommonJS build for both strategies.
 It does not compare against optimized replacement using native TypeScript
 loading or a runner's existing transform cache. Switching is worth pursuing,
-but these percentages must not be projected onto sample-application or sample-stack. They do not prove that Rust makes the JavaScript tests run faster.
+but these percentages must not be projected onto other applications. They do not prove that Rust makes the JavaScript tests run faster.
 
 ## Coverage attribution
 
@@ -133,4 +136,4 @@ direct TypeScript-loading replacement, with an
 explicit baseline type-check step and a verified mutation preparation route.
 That tests whether switching still earns its extra transformation code
 after avoiding unnecessary rebuilds. Real project and workspace integrations
-remain required; this proof did not execute sample-application, Expo or sample-stack.
+remain required; this proof uses synthetic inputs only.

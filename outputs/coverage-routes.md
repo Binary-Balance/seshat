@@ -1,5 +1,8 @@
 # Coverage routes verified on the bounded fixture
 
+Local absolute paths in the recorded JSON are normalised to `/workspace/seshat`.
+Measurements and verdicts are preserved; those paths are illustrative.
+
 Measured on 6 September 2026. Node statement instrumentation, Jest/Babel and
 Vitest/Istanbul now pass hand-checked per-function coverage and CRAP assertions.
 Vitest/V8 remains unsupported for one same-line arrow mapping. The fix adds no
@@ -7,7 +10,7 @@ Rust dependencies or custom source-map converter.
 
 [Reproduce the proof](../benchmarks/proofs/README.md#coverage-route-follow-up),
 inspect the [raw evidence](coverage-routes.json), or follow the root
-[README setup guidance](../README.md#coverage-setup-verified-by-the-proof).
+[README setup guidance](../docs/configuration.md#coverage).
 
 ## Results
 

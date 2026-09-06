@@ -1,5 +1,8 @@
 # Direct TypeScript loading: replacement or switching?
 
+Local absolute paths in the recorded JSON are normalised to `/workspace/seshat`.
+Measurements and verdicts are preserved; those paths are illustrative.
+
 The later [coverage-route proof](coverage-routes.md) addresses coverage setup;
 the measurements below concern mutation execution only.
 
@@ -99,8 +102,7 @@ Versions are Node 24.20.0, TypeScript 6.0.3, Jest 30.5.1 and Vitest 5.0.0 on
 Linux x64, using the existing Rust 1.98.1/Oxc 0.148.0 proof. The fixture contains
 no JSX or non-erasable TypeScript syntax. This does not verify Node TSX support,
 tsconfig aliases, Expo/Babel transforms, multi-package builds, parallel workers
-or cross-platform process supervision. sample-application and sample-stack were
-not executed by this experiment. The earlier coverage gaps remain open.
+or cross-platform process supervision. This experiment uses synthetic inputs only. The earlier coverage gaps remain open.
 
 ## Recommendation
 

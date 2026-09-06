@@ -20,7 +20,7 @@
   },
   "parity": {
     "fixture": true,
-    "sample": true
+    "corpus": true
   },
   "samples": [
     {
@@ -2883,28 +2883,6 @@
         "executionMs": 1770.9600679999999,
         "maxRssKb": 117692
       }
-    }
-  ],
-  "domainTests": [
-    {
-      "wallMs": 998.9390070000081,
-      "summary": "ℹ tests 33\nℹ pass 33\nℹ fail 0"
-    },
-    {
-      "wallMs": 1063.9799160000111,
-      "summary": "ℹ tests 33\nℹ pass 33\nℹ fail 0"
-    },
-    {
-      "wallMs": 957.7004149999993,
-      "summary": "ℹ tests 33\nℹ pass 33\nℹ fail 0"
-    },
-    {
-      "wallMs": 956.5064089999942,
-      "summary": "ℹ tests 33\nℹ pass 33\nℹ fail 0"
-    },
-    {
-      "wallMs": 996.9941680000047,
-      "summary": "ℹ tests 33\nℹ pass 33\nℹ fail 0"
     }
   ]
 }

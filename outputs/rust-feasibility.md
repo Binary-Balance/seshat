@@ -17,14 +17,14 @@ reads, but include parsing and analysis.
 
 | Workload | TypeScript compiler API | Rust parser + Node traversal | Native Rust + Oxc |
 |---|---:|---:|---:|
-| sample analysis, fresh process | 608.8 ms | 167.7 ms | **8.8 ms** |
-| sample analysis, warm | 56.3 ms | 63.3 ms | **3.3 ms** |
+| Corpus analysis, fresh process | 608.8 ms | 167.7 ms | **8.8 ms** |
+| Corpus analysis, warm | 56.3 ms | 63.3 ms | **3.3 ms** |
 | 20x analysis, fresh process | 1,642.0 ms | 1,307.4 ms | **72.6 ms** |
 | 20x analysis, warm | 611.3 ms | 1,159.4 ms | **64.8 ms** |
 | Peak analyser RSS, single-corpus fresh run | 130.6 MiB | 82.7 MiB | **3.7 MiB** |
 | Baseline + ten synthetic mutant executions, fresh process | 2,325.0 ms | 2,004.5 ms | **1,866.0 ms** |
 
-Native Rust was about **17.1x faster for warmed analysis** of sample and
+Native Rust was about **17.1x faster for warmed analysis** of the corpus and
 **9.4x faster on the repeated workload**. Fresh CLI invocations showed an even
 larger difference, about 69x, because importing the TypeScript compiler is part
 of startup. The absolute single-project saving was about 600 ms fresh or 53 ms
@@ -38,9 +38,10 @@ timings should not be assumed to scale linearly from the single-corpus test.
 
 ## What was checked
 
-The sample corpus contains **51 production TS/TSX files, 332,495 bytes,
-493 function bodies and 767 comparison sites**. Source was copied from a clean
-sample checkout at commit `e5edade6033a65af7764960122bd6c6ea411fe79`.
+The historical corpus contains 51 production TS/TSX files, 332,495 bytes,
+493 function bodies and 767 comparison sites. Its source is not distributed in
+this repository. These figures are not measurements of the benchmark's current
+self-contained default fixtures.
 
 Corpus content fingerprint, using the sorted file contents joined by a newline:
 
@@ -55,9 +56,7 @@ language conformance or production correctness.
 
 The CRAP arithmetic used **fixed synthetic 50% coverage**. Actual coverage
 ingestion, source-map remapping and attribution to functions were not implemented.
-These numbers must not be interpreted as sample's actual CRAP scores.
-
-sample-stack had no TypeScript source in its inspected checkout, so no sample-stack performance result is claimed.
+These numbers are synthetic CRAP calculations, not real coverage measurements.
 
 ## Why the hybrid did not win
 
@@ -97,11 +96,6 @@ The ranges overlap substantially. Rust still launches Node to execute tests, so
 there is no evidence here of a large improvement in test execution itself.
 The small fixture also makes startup a larger fraction than it would be for
 hundreds of mutants or slow integration tests.
-
-For real-project context, the unchanged sample domain suite passed all **33
-tests** in each of five runs, with a median process wall time of **997.0 ms**.
-No mutations were applied to sample itself. A mutation engine that repeatedly
-runs a suite of that duration will spend most of its time in test execution.
 
 Mutation switching, reliable test selection and worker reuse remain the more
 promising ways to reduce that cost. They were not implemented here; these results
