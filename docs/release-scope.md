@@ -268,6 +268,7 @@ commands as implemented functionality.
 - Documentation: verify README configuration, execution, result interpretation
   and threshold examples against working installations.
 
-Use sample-application as a real workload and a representative sample-stack-stack
-fixture until its implementation is available. Do not claim fastest performance
-merely because Seshat beats the original basic benchmark.
+Use self-contained Node, Jest/Expo and Vitest workloads, including TypeScript,
+TSX and workspace layouts. Keep any external-project measurements anonymous and
+report their scope. Do not claim fastest performance merely because Seshat beats
+the original basic benchmark.

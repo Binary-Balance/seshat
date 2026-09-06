@@ -27,8 +27,7 @@ tools are still required. npm's normal command linking also permits
 `npm exec --offline -- seshat --help`, or `seshat` inside a package script.
 Use the direct installed command for clean JSON and direct signal handling.
 
-Prepare `seshat.json` using the source checkout's root README and verified runner
-examples in `benchmarks/proofs/README.md`. This package does not configure tests
+Prepare `seshat.json` using `docs/configuration.md` in the source checkout. This package does not configure tests
 or bundle the proof's coverage collector. Commands run only explicitly captured,
 trusted project inputs; this is source isolation, not a security sandbox.
 

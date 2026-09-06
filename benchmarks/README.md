@@ -14,7 +14,6 @@ From the repository root:
 ```sh
 npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund
 cargo build --release --locked --manifest-path benchmarks/rust/Cargo.toml
-export SAMPLE_ROOT=/path/to/sample-application
 node benchmarks/run.mjs --check
 node benchmarks/run.mjs
 ```
@@ -28,12 +27,23 @@ export CARGO_HOME="$PWD/work/toolchain/cargo"
 export PATH="$CARGO_HOME/bin:$PATH"
 ```
 
-The harness compiles `node.ts` to JavaScript before timing either Node engine.
-It copies selected sample-application source into ignored `work/corpus/`, and
-executes synthetic mutants only in `work/mutants/`. It also runs the original
-sample domain tests without editing the project. Original source is not
-included in this benchmark's committed fixtures. sample-stack is not measured
-because its inspected checkout has no TypeScript source yet.
+The benchmark defaults to the checked-in TypeScript fixtures. To measure another
+trusted source tree, pass its source directory explicitly:
+
+```sh
+SESHAT_BENCH_ROOT=/path/to/typescript/source node benchmarks/run.mjs --check
+SESHAT_BENCH_ROOT=/path/to/typescript/source node benchmarks/run.mjs
+```
+
+The driver recursively selects production `.ts` and `.tsx` files, excluding common
+build/dependency directories and test/declaration files. It copies source into
+ignored `work/corpus/` and uses only the benchmark's own mutation tests. It does
+not run an external application's test suite. An empty source corpus is an error.
+The Node implementation is compiled to JavaScript before timing either Node engine.
+
+Historical measurements in `outputs/benchmark-results.json` use a separate
+51-file corpus that is not distributed here. They are not measurements of the
+checked-in default fixtures; run the driver to obtain timings for your own inputs.
 
 ## Measurement contract
 

@@ -64,7 +64,7 @@ invalid limits, command-specific checks and incomplete/cancellation precedence. 
 results under `work/assurance-proofs/cli-*`, not the recorded benchmark outputs.
 Rust tests additionally check human formatting of unknown and unscored functions.
 
-Use the [root README's capture configuration](../../README.md#project-capture-proof).
+Use the [configuration guide](../../docs/configuration.md).
 The configuration directory is the project root; all commands use its source and
 setup scope. Default config is `./seshat.json`; default scratch is the OS temporary
 directory. `--scratch PATH` must name an existing parent outside the project.
@@ -165,9 +165,9 @@ write failure. Handled cancellation exits 130 for SIGINT or 143 for SIGTERM,
 retains available evidence and withholds the mutation score. Zero planned mutants
 means a complete run with a null, not-applicable score, not 100%. That threshold
 is not evaluated and does not fail CI. `crap` and `mutate` do not evaluate limits
-for the other assessment. See the root README for [threshold configuration and
-JSON states](../../README.md#ci-thresholds) and
-[score interpretation](../../README.md#interpreting-the-planned-results).
+for the other assessment. See the configuration guide for [threshold configuration and
+JSON states](../../docs/configuration.md#quality-thresholds) and
+[score interpretation](../../README.md#understanding-the-results).
 
 The existing trusted-input, Linux and verified-runner restrictions still apply.
 This is not a security sandbox. No cross-platform packaging, baseline reuse, cross-run caching,
@@ -402,153 +402,7 @@ are untouched. Generated sources and reports remain under ignored
 `work/assurance-proofs/coverage-*` directories for inspection.
 
 See the [coverage findings](../../outputs/coverage-routes.md) and the root
-[README setup guidance](../../README.md#coverage-setup-verified-by-the-proof).
-
-## Consuming-project integration proof
-
-After the dependency installation and Rust build above, run:
-
-```sh
-node benchmarks/proofs/integration.mjs /absolute/path/to/sample-application
-```
-
-Use the public product checkout, not its containing public/private workspace.
-The default is this machine's public sample-application checkout. Use only a
-trusted, clean checkout with its dependencies already installed. The recorded
-revision and input hashes are in `outputs/integration-proofs.json`. This is a
-bounded check of that revision's four domain test files and 33 tests; changed
-tests or helper counts require reviewing the expectations.
-
-The driver copies domain source/tests, contract source, the generated Australian
-time-zone pack, package/config files, the sample licence and its two Noble
-dependencies into ignored `work/assurance-proofs/integration-*`. The workspace
-contract link points into that copy. No link points back to sample source.
-It invokes TypeScript directly to check the original domain project, then Node's
-real test runner. It does not invoke npm lifecycle scripts, native mobile builds,
-cloud services or databases. Source/dependency hashes and the original checkout's
-Git status are checked afterward. It does not copy private operations files.
-
-For statement coverage, the Node preload uses `registerHooks` to supply
-TypeScript-transpiled, Istanbul-instrumented versions of the four selected `.ts`
-files. All other files use Node's ordinary loader. Each test process supplies its
-own coverage record. The driver checks a passing run, merges the counters with
-the instrumenter's initial records, and uses `istanbul-lib-source-maps` before
-passing full JSON to Rust. CRAP covers explicit functions in those four TS files;
-the JS runtime module, contracts and mobile application are outside that scope.
-
-Mutation testing selects `civil-time-helpers.ts` and runs all four existing test
-files for each of its ten mutants. It also writes one extra test in the isolated
-copy to demonstrate why the surviving exact-start boundary mutation matters.
-That test is separate evidence; it does not change the recorded original-suite
-mutation results or the consuming repository.
-
-The same driver creates a synthetic single-package sample-stack-stack fixture:
-strict ESM TypeScript, a React TSX component, a TypeBox-validated Fastify injection
-route and three Vitest tests. The tempo thresholds are fixture values, not sample-stack product rules. React rendering is checked through `react-dom/server`, not
-a browser. Dependencies are pinned in this proof package; the fixture shares
-only those installed third-party packages. Vitest cache output stays in its copy.
-Its coverage config uses `provider: 'istanbul'`, explicit source includes and
-`reporter: ['json']`. It does not exercise React Router, Playwright, Expo or SQL.
-
-Both integrations compare replacement and switching with fresh test processes,
-one test worker, passing original baselines and an additional prepared-code
-baseline for switching. Original source is type-checked once before sampling;
-mutants are not re-type-checked. Three samples per strategy are the default.
-`SESHAT_PROOF_SAMPLES=1` shortens the run. Mutation timings include native edit
-commands, baselines and tests, but exclude copy/setup, coverage and the initial
-strict check. They are not complete `seshat check` timings or a Rust-versus-JS
-comparison. No verdict cache or test selection is used.
-
-Controlled failures exercise Node suite wrappers, setup errors, mixed failures
-and process crashes, plus Vitest suite setup and unhandled-error reporting. The
-Vitest reporter remains fixture-specific, without per-test hook/retry support.
-The driver owns Linux process groups and caps each process's output and runtime;
-it is not a sandbox for hostile tests or a production cancellation implementation.
-Ignored copies, logs and reports are deliberately retained for inspection.
-
-See the [integration findings](../../outputs/integration-proofs.md).
-
-## Real Jest/Expo follow-up
-
-Use the same trusted, clean public sample checkout with its dependencies
-already installed. Allow roughly 700 MB for an isolated dependency/source copy
-and caches, while preserving the workbench's free-space reserve. No Expo prebuild,
-native compilation, network service or private operations checkout is needed.
-After building the native proof binary, run:
-
-```sh
-node benchmarks/proofs/expo-integration.mjs /absolute/path/to/sample-application
-```
-
-The driver captures tracked mobile/package source and root package/config files,
-copies root and workspace-local installed dependencies with relative links intact, and
-rejects links escaping the execution copy. Unselected workspaces can leave
-dangling links inside that copy; they are not redirected to original source.
-The selected tests use only the captured mobile/package inputs. Source files and
-the original Git status are verified after execution. Generated controls and
-mutants never enter the consuming checkout.
-
-For a repeat run, reuse the printed `work/assurance-proofs/expo-*` directory with
-`SESHAT_EXPO_WORK=/absolute/path/to/that/directory`. Run only one proof against
-that directory at a time, and use it only with the same trusted dependency
-installation. This avoids copying the installed dependency tree repeatedly.
-Every invocation creates a new `run-*` evidence directory with fresh report
-paths and caches. The default is three samples per strategy; use
-`SESHAT_PROOF_SAMPLES=1` for a shorter correctness check.
-
-Before testing, the driver resolves the actual runner/tool packages from the
-mobile workspace and checks their versions and locations against the lockfile.
-It stops on a mismatch. If that happens, install only inside the printed isolated
-`sample` directory with `npm ci --ignore-scripts --no-audit --no-fund`, using
-`agent-heavy-job` on this workbench. Then rerun with `SESHAT_EXPO_WORK` set to its
-parent `expo-*` directory. This was necessary for the recorded run: the original
-installed Expo tree lagged behind the checked-in lockfile. The original install
-was not repaired or changed by this proof.
-
-Jest runs from `apps/mobile`, reading that package's existing `jest-expo` preset
-and transform exclusions. The driver checks the original mobile TypeScript
-project and first runs the selected tests with the original environment.
-It then subclasses that same React Native test environment only to record
-Jest Circus test/hook failure events. It keeps the preset's export conditions,
-setup files and Babel transform. A passing observed baseline checks that this
-evidence collection preserves the selected test results.
-
-The selected files are the existing report-header, data-freshness and motion
-tests: 13 tests in total. All 13 run for every data-freshness-component mutant.
-They do not constitute a full mobile test suite or native-device validation.
-
-For coverage, the driver adds these arguments to the normal Jest invocation:
-
-```sh
---coverage --coverageProvider=babel --coverageReporters=json \
---coverageDirectory /absolute/path/to/fresh-coverage \
---collectCoverageFrom src/features/status/civil-time-report-header.tsx \
---collectCoverageFrom src/features/status/data-freshness-section.tsx \
---collectCoverageFrom src/features/status/civil-time-report-motion.ts
-```
-
-It also uses `--runInBand`, `--runTestsByPath` with the three absolute test paths,
-an owned `--cacheDirectory`, and fresh JSON result files. The ordinary Babel/Expo
-transform supplies the original-source coverage map; there is no custom
-TypeScript transpiler. Rust checks the full `coverage-final.json` and the
-hand-counted function results.
-
-Each strategy/sample starts with an empty Jest transform cache. That cache is
-reused within the sample, but each mutant still gets a fresh test process.
-Switching includes an extra prepared-code baseline. Mutation timings include
-those baselines, native edit commands and test runs, but exclude capture,
-the initial original type-check and coverage collection. They are not full
-Seshat-command timings or measurements of diagnostics overhead.
-
-Controlled failures cover assertions, before-all/before-each/after-each hooks,
-mixed failures, module loading and test/hook timeouts. Timeout recognition uses
-the tested Jest 29 event diagnostic, including its string rejection format.
-This is not a version-independent runner adapter, and no retry, concurrent-test,
-watch-mode or cross-platform compatibility is claimed.
-
-Results go to `outputs/expo-integration.json`; source copies, reports and caches
-remain under the ignored proof directory. See the
-[Jest/Expo findings](../../outputs/expo-integration.md).
+[coverage setup guidance](../../docs/configuration.md#coverage).
 
 ## Project capture and configuration
 
@@ -608,8 +462,7 @@ does not check whether the executable, script or coverage provider is installed.
 It neither runs them nor synthesizes a coverage collector. The existing coverage
 proofs document the verified collection routes. The `collect` command
 below runs these settings. `check` adds original type-checking and replacement
-mutation testing. Thresholds and connecting the experimental switching option
-remain separate implementation work. Parallel mutation workers are opt-in below.
+mutation testing. The CLI supports optional thresholds; experimental switching remains a proof-only mode. Parallel mutation workers are opt-in below.
 
 - `source.include` and `source.exclude` choose assessment source, not the files
   needed by tests. Patterns are case-sensitive and relative to the project root.
@@ -655,8 +508,8 @@ filesystem snapshot or protection against hostile concurrent edits. It does not
 sandbox test access to external files, networks or databases. Copies retain
 existing reports and caches as ordinary captured files; `collect` removes its
 configured coverage output before collection. See the lifecycle proof below for
-cancellation support and forced-termination limits. No real sample or sample-stack checkout was captured
-by this test; their full capture lists still need integration verification.
+cancellation support and forced-termination limits. The fixture is self-contained;
+other workspace layouts require their own integration checks.
 
 Serde was already in the dependency tree and is now a direct dependency for typed
 configuration. `glob` adds one package for pattern matching, without a custom
@@ -797,7 +650,7 @@ enforce quality thresholds.
 
 `jobsAttempted` includes typechecks and mutant jobs. The mutation section adds its
 own job count and elapsed time. This is a verified synthetic Node workflow, not a
-released CLI or full sample/sample-stack integration. The checks preserve original
+released CLI or whole-application integration. The checks preserve original
 fixture files and write evidence under ignored `work/assurance-proofs/check-*`.
 
 ## Node load-failure evidence
@@ -842,157 +695,24 @@ accepted by this observation path. The verified route uses Node's default proces
 isolation; alternate runner isolation/loader configurations are not certified.
 Do not replace missing evidence with stack-text matching or a generic exit-1 kill.
 
-## sample combined workflow
-
-With the native executable built and the trusted public sample checkout clean:
-
-```sh
-node benchmarks/proofs/sample-check.mjs /path/to/sample-application
-```
-
-The driver reuses the Node collector and native `check` path. It stages explicit
-inputs only to place configuration outside the consuming checkout; Rust then
-creates and removes its own execution copy. The copied workspace link resolves
-to copied contracts. The installed TypeScript compiler, Noble dependencies,
-domain source/tests, generated data and required configuration are captured.
-The coverage collector uses Seshat's existing proof dependencies. No packages are
-installed, and no original source, tests, dependencies or configuration are changed.
-Input hashes, link targets, Git revision/status and native cleanup are checked.
-
-At sample revision `b7aa4b1c057c820020f1d6160d1551fa9d27008c`, the relevant
-domain inputs match the earlier integration revision. Node 24.20.0 and TypeScript
-6.0.3 pass original validation and all 33 tests in the four real test files.
-The full run selects four domain TypeScript files, excluding declarations. Both
-CRAP and mutation testing use that same scope. It is not a whole-application audit.
-
-Coverage agrees with the earlier proof: 31 functions and 122/131 measured function
-statements covered. The native plan contains 74 comparison mutants. The first
-changes `!==` to `===` in the module-level catalogue consistency check in
-`australian-zones.ts`, causing the existing guard to throw during import.
-
-Initially, Node reported four crashed test files without the original exception,
-so Seshat correctly withheld a score pending better evidence. The bounded
-[load-failure observer](#node-load-failure-evidence) now verifies these application
-import failures. All 74 mutants resolve: **58 killed, 16 survived, 78.38%**. Six
-mutants use that additional evidence; unsupported failures remain execution errors.
-Original tests and CRAP measurements are unchanged. Error text also reaches the
-supervisor's bounded diagnostics; forwarding has an overflow regression.
-
-A separately labelled historical helper control selects only
-`civil-time-helpers.ts`, still running all four test files. It reproduces 9 killed
-and 1 surviving mutant, 90% for that file, plus the seven hand-checked CRAP results.
-It is a narrower comparison, not sample's project mutation score.
-
-The driver asserts both results and retains configuration, hashes and raw evidence
-under ignored `work/assurance-proofs/sample-check-*`. Per-run wall time includes
-native capture, type-checking, baseline, coverage, executed mutants and cleanup;
-the preliminary staging copy is outside that measurement. The completed domain
-run took about 92 seconds and the helper control about 14 seconds in one sample.
-These are observations, not a repeated performance benchmark. Earlier incomplete
-runs are retained and must not be used as equivalent performance comparisons.
-
-## Expo combined workflow
-
-After building the native executable, reuse the locked installation retained by
-the earlier Expo proof. This avoids reinstalling dependencies or changing sample:
-
-```sh
-node benchmarks/proofs/expo-check.mjs
-# Or provide that installed snapshot explicitly:
-node benchmarks/proofs/expo-check.mjs /path/to/retained/sample
-```
-
-On hosts with short command limits, split the same checks into bounded batches:
-
-```sh
-SESHAT_EXPO_CHECK_CASES=mobile,assertion,before-all node benchmarks/proofs/expo-check.mjs
-SESHAT_EXPO_CHECK_CASES=after-each,mixed,timeout node benchmarks/proofs/expo-check.mjs
-SESHAT_EXPO_CHECK_CASES=hook-timeout,import-error,missing-observer node benchmarks/proofs/expo-check.mjs
-```
-
-The driver reads `outputs/expo-integration.json` for the snapshot location, source
-hashes and locked versions. It verifies those inputs, stages another copy, then
-Rust captures and removes its own execution copy. The input snapshot and its
-dependencies remain unchanged; file hashes and link targets are checked. No
-packages are installed. This uses the recorded public revision and installed
-stack, not a claim that the current full sample checkout was assessed.
-
-The source scope is `civil-time-report-header.tsx`, `data-freshness-section.tsx`
-and `civil-time-report-motion.ts` under `apps/mobile/src/features/status`.
-CRAP and mutation testing both assess these same three files and run all three
-associated test files. Original mobile type-checking passes, as do all 13 tests
-in baseline and coverage runs. The five function results reproduce the earlier
-hand-checked CRAP values and cover all eight measured function statements.
-All seven mutants resolve: **6 killed, 1 survived, 85.71%**. The three mutations
-in `data-freshness-section.tsx` still produce the earlier two kills and one survivor.
-Neither scope represents the entire mobile application.
-
-For this verified Expo route, use `runner: "jest"` and `cwd: "apps/mobile"`.
-The normal Jest command must include these arguments in both `test` and
-`coverage.command`:
-
-```json
-["node", "../../node_modules/jest/bin/jest.js", "--runInBand", "--runTestsByPath",
- "src/features/status/civil-time-report-header.test.tsx",
- "src/features/status/data-freshness-section.test.tsx",
- "src/features/status/civil-time-report-motion.test.ts",
- "--cacheDirectory=.seshat-cache", "--reporters=default",
- "--reporters={seshatReporter}", "--env={seshatEnvironment}"]
-```
-
-Use the actual captured Jest executable location if it differs. Add `--coverage`,
-`--coverageProvider=babel`, `--coverageReporters=json`,
-`--coverageDirectory=.seshat-coverage` and `--collectCoverageFrom` arguments for
-the selected source files to the coverage command. Set `coverage.report` to
-`.seshat-coverage/coverage-final.json`. Include the original TypeScript validation
-command, Babel/Expo configuration, source/tests, required workspace packages and
-installed dependencies in the capture. The runnable driver contains the complete
-configuration and verifies installed versions against the lockfile.
-
-`{seshatEnvironment}` extends the default environment from the installed Expo
-preset and forwards its test events. Use it only with that default environment,
-Jest Circus and one Jest project per setup. Arbitrary custom environments,
-per-file environment overrides and other Jest versions are not supported here.
-The observer must be present for baseline, coverage and mutations alike. Retries
-make the evidence incomplete; this adapter does not retry toward a chosen outcome.
-
-The reporter requires fresh per-file hook/test evidence tied to the current job.
-An assertion failure can kill a mutant; hook failures, missing observations and
-import failures remain execution errors. Jest's own test/hook timeouts remain
-timeouts, not kills. Synthetic controls exercise these cases after passing
-original validation and coverage, including a mixed assertion/setup failure.
-Native deadlines, output bounds, coverage freshness, source checks and cleanup
-are shared with the Node workflow. No generic non-zero-exit classification is used.
-
-Results and configurations remain under ignored `work/assurance-proofs/expo-check-*`.
-Single-run timings include native capture, validation, baseline, coverage, mutation
-execution and cleanup, but exclude the preliminary staging copy. They are not a
-repeated performance benchmark. General Jest support and
-cross-platform lifecycle checks remain development work.
-
 ## Vitest combined workflow
 
-Build the native executable and run the retained representative sample-stack-stack
-fixture through `check`:
+Build the native executable and run the checked-in fixture through `check`:
 
 ```sh
 node benchmarks/proofs/vitest-check.mjs
 ```
 
-The driver uses the fixture location and expected results in
-`outputs/integration-proofs.json`. It copies the installed proof dependencies
-instead of retaining the earlier fixture's external `node_modules` link. Rust
-then captures its own execution copy. The existing fixture and staged source
-remain unchanged, and native scratch directories are checked after each run.
-No packages are installed or added to Seshat's dependencies.
+The driver reads `fixtures/vitest`, copies its installed proof dependencies and
+compares results with hand-counted expectations. It needs no external application
+checkout or retained output from an earlier run. Rust captures its own execution
+copy; the driver checks unchanged fixture bytes and empty scratch directories.
 
-Both CRAP and mutation testing select `tempo.ts`, `view.tsx` and `server.ts` and
-run the same three tests. This exercises strict TypeScript, ESM, React server
-rendering of TSX, Fastify request injection and TypeBox validation, without opening
-a listener. It does not exercise sample-stack's actual application, a browser,
-database or cloud services. The four functions reproduce the earlier CRAP values
-and all ten measured function statements are covered. All four comparison mutants
-are killed. The synthetic tempo thresholds are not sample-stack product rules.
+CRAP and mutation testing select `tempo.ts`, `view.tsx` and `server.ts` and run the
+same three tests. This covers strict TypeScript, ESM, React server rendering,
+Fastify request injection and TypeBox validation. All ten measured function
+statements run, the four function scores match their expected values, and all
+four comparison mutants are killed. No browser, database or cloud service is used.
 
 Use `runner: "vitest"` in `seshat.json`. Merge this setting into the project's
 existing Vitest `test` configuration:
@@ -1126,81 +846,14 @@ The overlap fixture deliberately waits 400 ms in each mutant job; its timings
 are not a consuming-project performance claim. Rust tests also check independent
 worker files and rewritten workspace links.
 
-For a matched real-test comparison, pass a successful retained `sample-check`
-result, without modifying the sample checkout:
+For a parallel Vitest regression, run the checked-in fixture with two workers:
 
 ```sh
-node benchmarks/proofs/parallel-sample.mjs work/assurance-proofs/sample-check-REPLACE/result.json
+SESHAT_CHECK_WORKERS=2 SESHAT_VITEST_CHECK_CASES=stack,assertion,before-all node benchmarks/proofs/vitest-check.mjs
 ```
 
-This runs three samples each at one and two workers in alternating order. Each
-sample checks the same historical helper source, all 33 domain tests, ten mutants
-and original CRAP measurements. It compares verdict definitions and verifies
-retained/staged source and dependency hashes. This is deliberately narrower than
-the 74-mutant full-domain assessment. Evidence and medians remain under ignored
-`work/assurance-proofs/parallel-sample-*`; synthetic cases use `parallel-*`.
-The first matched comparison retained in `parallel-sample-agMtBH/result.json`
-had median total times of 15.04 seconds at one worker and 16.20 seconds at two,
-about 7.7% slower with two. Median mutation times were 9.86 and 9.78 seconds;
-the extra worker's preparation/baseline cost was 1.05 seconds. All six runs
-retained identical function scores, nine kills and one survivor. This small,
-local sample supports leaving this fixture at one worker; it is not a universal
-parallelism result or a benchmark of the installed release command.
-Two-worker Jest/Expo and Vitest checks are described below. Whole-project scaling
-and cross-platform supervision still need verification.
-
-### Two workers with Vitest and Jest/Expo
-
-The existing runner drivers accept `SESHAT_CHECK_WORKERS`, which writes the
-top-level `workers` setting into their disposable configuration. Omitting it
-retains one worker. It does not change the test runner's own concurrency: Jest
-still uses `--runInBand`, and Vitest still has one fork worker, sequential files
-and sequential tests.
-
-The two-worker sample-stack-stack fixture retains all four killed mutants and
-the same four function scores. The sample mobile fixture retains six killed
-mutants, one survivor and the same five function scores. Their ordered mutant
-definitions/verdicts and CRAP records match the retained one-worker results.
-Additional worker baselines pass the same three Vitest or thirteen Expo tests.
-Job receipts have distinct execution identities, and the native scratch copies
-and receipts are removed after each run. Original fixture sources stay unchanged;
-the Expo driver also checks full staged/retained file hashes and link inventories.
-
-With more than one requested worker, each synthetic control contains two
-comparison sites instead of one. Either mutation makes its exported condition
-false. Both mutant verdicts are checked, so these controls cannot silently clamp
-to a single worker. Assertions can kill mutants; setup/cleanup, import and mixed
-failures remain execution errors, while test/hook timeouts remain unresolved
-timeouts. Missing observer evidence still prevents mutation execution. The Vitest
-controls also verify survivors and unhandled-error classification.
-
-Reproduce the checks in bounded batches:
-
-```sh
-SESHAT_CHECK_WORKERS=2 SESHAT_VITEST_CHECK_CASES=stack,stack-repeat node benchmarks/proofs/vitest-check.mjs
-SESHAT_CHECK_WORKERS=2 SESHAT_VITEST_CHECK_CASES=assertion,survived,before-all,after-each,mixed node benchmarks/proofs/vitest-check.mjs
-SESHAT_CHECK_WORKERS=2 SESHAT_VITEST_CHECK_CASES=timeout,hook-timeout,import-error,unhandled,missing-runner node benchmarks/proofs/vitest-check.mjs
-
-SESHAT_CHECK_WORKERS=2 SESHAT_EXPO_CHECK_CASES=mobile node benchmarks/proofs/expo-check.mjs
-SESHAT_CHECK_WORKERS=2 SESHAT_EXPO_CHECK_CASES=mobile-repeat node benchmarks/proofs/expo-check.mjs
-SESHAT_CHECK_WORKERS=2 SESHAT_EXPO_CHECK_CASES=assertion,before-all node benchmarks/proofs/expo-check.mjs
-SESHAT_CHECK_WORKERS=2 SESHAT_EXPO_CHECK_CASES=after-each,mixed node benchmarks/proofs/expo-check.mjs
-SESHAT_CHECK_WORKERS=2 SESHAT_EXPO_CHECK_CASES=timeout,hook-timeout node benchmarks/proofs/expo-check.mjs
-SESHAT_CHECK_WORKERS=2 SESHAT_EXPO_CHECK_CASES=import-error,missing-observer node benchmarks/proofs/expo-check.mjs
-```
-
-`stack-repeat` and `mobile-repeat` are optional case names, not default extra
-runs. Selecting both the main case and its repeat in one invocation checks their
-ordered results for equality. The mobile pair may exceed a host's tool-command
-time limit; it can be run as separate invocations and its retained results compared.
-Evidence remains in the existing `vitest-check-*` and `expo-check-*` work directories.
-These runs verify correctness, not a parallel speedup. Some batches run alongside
-other correctness checks, so their wall times are not matched benchmarks. The
-worker default remains one. No runner implementation or dependency was added
-for this follow-up; it reuses native copy validation, scheduling and supervision.
-The verified batches total 22 scenarios, twelve Vitest and ten Expo, including
-repeats of both main fixtures. The separately run mobile repeat also matches the
-first two-worker run's ordered definitions, verdicts and CRAP records.
+Each run checks the same hand-counted function results and mutant verdicts.
+A standalone public Jest/Expo regression remains release work.
 
 ## Cancellation and process cleanup
 
@@ -1254,24 +907,16 @@ correctness evidence, not performance benchmarks.
 
 ## Deliberate limits
 
-The original mutation proof has one fixture file and one setup per execution.
-The integration follow-up adds a sample domain workspace and a synthetic
-React/Fastify/Vitest package. The Expo follow-up adds three real mobile test files,
-not complete consuming-project integration. These experiments do
-not establish Windows/macOS supervision, external-resource isolation or comprehensive
-JavaScript transformation equivalence. Bounded Linux worker parallelism,
-cancellation and forced-termination limits are exercised separately above.
+The original mutation proof uses one fixture file and one setup. The captured
+project checks cover multiple Node setups, and the checked-in Vitest fixture adds
+React TSX, Fastify and TypeBox. A standalone Jest/Expo integration fixture remains
+release work. These checks do not establish Windows/macOS supervision, isolation
+of external resources or general JavaScript transformation equivalence.
 
-The original mutation executor handles controlled single-test cases. Mixed setup,
-hook and assertion failures still need real adapters. Temporary logs are not
-size-bounded; cleanup failure is printed rather than included in assessment.
-Source ownership uses linear searches, runner details and coverage records still
-use JSON values, and Oxc span types are shared internally. Mutation assessment
-now consumes typed test states and owns verdicts, completeness and percentages.
-Its tests cover multiple setup results. The earlier `execute` fixture runs one
-setup; the combined `check` proof exercises multiple Node setups. These are not
-the finished private module contracts. Keep the evidence;
-do not promote this executor unchanged.
+The original `execute` proof and the captured-project CLI have different execution
+contracts. Only the latter supplies the configured multi-setup workflow, bounded
+parallel workers and cancellation checks described above. Keep results tied to
+the command, fixture and runner versions that produced them.
 
-See [the findings](../../outputs/bounded-proofs.md) and
-[raw samples](../../outputs/bounded-proofs.json).
+The [release scope](../../docs/release-scope.md) and
+[GitHub Issues](https://github.com/Binary-Balance/seshat/issues) track remaining work.
