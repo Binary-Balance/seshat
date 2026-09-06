@@ -1,0 +1,13 @@
+{
+  "name": "@binary-balance/seshat",
+  "version": "0.0.0",
+  "description": "Local Linux x64 candidate for native TypeScript code assurance",
+  "private": true,
+  "license": "MIT",
+  "os": ["linux"],
+  "cpu": ["x64"],
+  "libc": ["glibc"],
+  "engines": { "node": "24.20.0" },
+  "bin": { "seshat": "bin/seshat" },
+  "files": ["bin/seshat", "BUILD.json", "THIRD_PARTY_NOTICES.txt"]
+}
