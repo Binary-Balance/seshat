@@ -1,4 +1,4 @@
-// Native combined assessment of the retained representative sample-stack fixture.
+// Native combined assessment of the checked-in React, Fastify and Vitest fixture.
 import assert from 'node:assert/strict';
 import {cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
 import {dirname, join, resolve} from 'node:path';
@@ -9,8 +9,15 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
 const workers = Number(process.env.SESHAT_CHECK_WORKERS ?? 1);
 assert.ok(Number.isSafeInteger(workers) && workers > 0, 'SESHAT_CHECK_WORKERS must be a positive integer');
-const previous = JSON.parse(readFileSync(join(repo, 'outputs/integration-proofs.json'), 'utf8'));
-const original = join(previous.project, 'sample-fixture');
+const original = join(here, 'fixtures/vitest');
+const expectedScores = {
+  'tempo.ts': [[3,5,5,3]],
+  'view.tsx': [[1,1,1,1]],
+  'server.ts': [[1,3,3,1],[1,1,1,1]],
+};
+const environment = {node:process.version, tools:Object.fromEntries(
+  ['vitest','@vitest/coverage-istanbul','fastify','@sinclair/typebox','react','react-dom'].map(name =>
+    [name, JSON.parse(readFileSync(join(here,'node_modules',name,'package.json'),'utf8')).version]))};
 const work = mkdtempSync(join(repo, 'work/assurance-proofs/vitest-check-'));
 const project = join(work, 'input 🎸');
 const scratch = join(work, 'scratch');
@@ -18,10 +25,10 @@ mkdirSync(project); mkdirSync(scratch);
 const names = ['package.json','tsconfig.json','tempo.ts','view.tsx','server.ts','stack.test.tsx'];
 const inputs = Object.fromEntries(names.map(name => [name, readFileSync(join(original, name), 'utf8')]));
 for (const [name, source] of Object.entries(inputs)) writeFileSync(join(project, name), source);
-// The earlier fixture shared dependencies by link; this workflow must own its copy.
+// Native capture rejects dependency links that escape the project.
 cpSync(join(here, 'node_modules'), join(project, 'node_modules'), {recursive:true, verbatimSymlinks:true});
 if (!existsSync(join(project, 'node_modules/typescript'))) cpSync(join(repo, 'benchmarks/node_modules/typescript'), join(project, 'node_modules/typescript'), {recursive:true});
-for (const [name, version] of Object.entries(previous.environment.tools)) assert.equal(JSON.parse(readFileSync(join(project, 'node_modules', name, 'package.json'), 'utf8')).version, version);
+for (const [name, version] of Object.entries(environment.tools)) assert.equal(JSON.parse(readFileSync(join(project, 'node_modules', name, 'package.json'), 'utf8')).version, version);
 writeFileSync(join(project, 'vitest.config.mjs'), `export default {cacheDir:'.vite',test:{runner:process.env.SESHAT_VITEST_RUNNER,include:['stack.test.tsx'],coverage:{provider:'istanbul',include:['tempo.ts','view.tsx','server.ts'],reporter:['json'],reportsDirectory:'coverage'}}};\n`);
 const args = [process.execPath, 'node_modules/vitest/vitest.mjs', 'run', '--config', 'vitest.config.mjs',
   '--maxWorkers=1', '--no-file-parallelism', '--maxConcurrency=1', '--reporter=default', '--reporter={seshatReporter}'];
@@ -31,7 +38,7 @@ const config = {workers, source:{include:['tempo.ts','view.tsx','server.ts']},
     test:args, coverage:{command:[...args,'--coverage'],report:'coverage/coverage-final.json'}}]};
 const selected = process.env.SESHAT_VITEST_CHECK_CASES?.split(',');
 const wanted = name => !selected || selected.includes(name);
-const results = {representativeOnly:true, environment:previous.environment, runs:{}};
+const results = {representativeOnly:true, environment, runs:{}};
 const save = () => writeFileSync(join(work, 'result.json'), JSON.stringify(results,null,2)+'\n');
 async function check(name, input) {
   const path = join(project,'seshat.json'); writeFileSync(path,JSON.stringify(input));
@@ -61,11 +68,12 @@ for (const name of ['stack','stack-repeat']) {
   assert.equal(result.mutation.planned,4);
   assert.equal(result.mutation.killed,4);
   assert.equal(result.mutation.score,100);
-  for (const source of result.sources) assert.deepEqual(source.result.functions.map(f=>[f.complexity,f.covered,f.total,f.crap]), previous.sample.scores[source.path].functions.map(f=>[f.complexity,f.covered,f.total,f.crap]));
+  for (const source of result.sources) assert.deepEqual(source.result.functions.map(f=>[f.complexity,f.covered,f.total,f.crap]), expectedScores[source.path]);
   assert.ok(result.mutation.workerBaselines.every(b=>b.report.passed===3));
   if (name==='stack-repeat' && results.runs.stack) {
     assert.deepEqual(result.sources,results.runs.stack.result.sources);
-    const definitions=r=>r.mutation.outcomes.map(({setups,...row})=>row);
+    // Repeated runs must agree on definitions and verdicts; timings naturally vary.
+    const definitions=r=>r.mutation.outcomes.map(({setups,executionMs,...row})=>row);
     assert.deepEqual(definitions(result),definitions(results.runs.stack.result));
   }
 }

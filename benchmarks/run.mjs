@@ -22,7 +22,7 @@ const compiled = ts.transpileModule(readFileSync(join(here, 'node.ts'), 'utf8'),
 });
 assert.equal(compiled.diagnostics.length,0);
 writeFileSync(join(here, 'generated/node.mjs'),compiled.outputText);
-const sample = process.env.SAMPLE_ROOT ?? resolve(root, '../sample-application/sample-application');
+const corpusRoot = resolve(process.env.SESHAT_BENCH_ROOT ?? join(here, 'fixtures'));
 const engines = {
   typescript: [process.execPath, join(here, 'generated/node.mjs'), 'typescript'],
   hybrid: [process.execPath, join(here, 'generated/node.mjs'), 'oxc'],
@@ -41,15 +41,16 @@ function manifest(name, paths) {
   writeFileSync(path, JSON.stringify(paths));
   return path;
 }
-const originals = ['apps/mobile','packages','services'].flatMap(dir => files(join(sample, dir))).sort();
+const originals = files(corpusRoot);
+assert.ok(originals.length, 'The benchmark corpus must contain TypeScript source files.');
 const corpus = originals.map(path => {
-  const target = join(work, 'sample', relative(sample,path));
+  const target = join(work, 'input', relative(corpusRoot,path));
   mkdirSync(dirname(target), {recursive:true});
   copyFileSync(path,target);
   return target;
 });
 const fixture = manifest('fixture',[join(here,'fixtures/edge-cases.tsx')]);
-const project = manifest('sample',corpus);
+const project = manifest('corpus',corpus);
 const mutation = manifest('mutation',[join(here,'fixtures/mutation-source.ts'),join(here,'fixtures/mutation.test.mjs')]);
 function invoke(engine, input, mode, repeat=1, rounds=1, warmup=0) {
   const [cmd, ...prefix] = engines[engine];
@@ -78,7 +79,7 @@ if (process.argv.includes('--check')) process.exit(0);
 
 const results = {date:new Date().toISOString(), environment:{node:process.version,typescript:ts.version,oxc:'0.148.0',nodeEntry:'precompiled JavaScript',rust:'1.98.1 release thin-LTO',platform:process.platform,arch:process.arch,cpu:os.cpus()[0].model,cpuCount:os.availableParallelism()},
   corpus:{files:corpus.length,bytes:corpus.reduce((s,p)=>s+statSync(p).size,0),...counts,sha256:createHash('sha256').update(corpus.map(p=>readFileSync(p)).join('\n')).digest('hex')},
-  parity:{fixture:true,sample:true}, samples:[], mutation:[], domainTests:[]};
+  parity:{fixture:true,corpus:true}, samples:[], mutation:[]};
 const names = Object.keys(engines);
 for (const repeat of [1,20]) {
   for (const mode of ['parse','analyze']) {
@@ -110,14 +111,6 @@ for (let sample=0;sample<5;sample++) {
     results.mutation.push({engine,sample,...run});
   }
 }
-const tests=readdirSync(join(sample,'packages/domain/tests')).filter(p=>p.endsWith('.test.mjs')).map(p=>join(sample,'packages/domain/tests',p));
-for(let sample=0;sample<5;sample++) {
-  const start=performance.now();
-  const run=spawnSync(process.execPath,['--test',...tests],{cwd:sample,encoding:'utf8',timeout:30000});
-  assert.ifError(run.error);
-  assert.equal(run.status,0,run.stdout+'\n'+run.stderr);
-  results.domainTests.push({wallMs:performance.now()-start,summary:run.stdout.split('\n').filter(s=>/^ℹ (tests|pass|fail)/.test(s)).join('\n')});
-}
 writeFileSync(join(output,'benchmark-results.json'),JSON.stringify(results,null,2)+'\n');
 const median=values=>{const s=[...values].sort((a,b)=>a-b);return s[Math.floor(s.length/2)];};
 const summary=[];
@@ -127,4 +120,3 @@ for(const repeat of [1,20]) for(const engine of names) {
 }
 console.table(summary);
 console.table(names.map(engine=>({engine,mutationMs:median(results.mutation.filter(r=>r.engine===engine).map(r=>r.wallMs))})));
-console.log('sample domain baseline median ms:',median(results.domainTests.map(r=>r.wallMs)));
