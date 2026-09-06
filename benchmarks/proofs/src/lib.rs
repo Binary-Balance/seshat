@@ -8,7 +8,24 @@ use std::{env, fs};
 fn run(args: &[String]) -> Result<Value, String> {
     let mode = args
         .first()
-        .ok_or("expected inspect, score, prepare, replace or execute")?;
+        .ok_or("expected inspect, score, prepare, replace, execute, capture, collect or check")?;
+    if matches!(mode.as_str(), "capture" | "collect" | "check") {
+        if args.len() != 3 {
+            return Err(format!(
+                "expected {mode} <seshat.json> <existing scratch directory>"
+            ));
+        }
+        execution::install_cancellation()?;
+        let project = execution::CapturedProject::capture(
+            std::path::Path::new(&args[1]),
+            std::path::Path::new(&args[2]),
+        )?;
+        return if mode == "capture" {
+            project.inspect()
+        } else {
+            project.collect(mode == "check")
+        };
+    }
     if mode == "execute" {
         let config = serde_json::from_str(
             &fs::read_to_string(args.get(1).ok_or("manifest missing")?)

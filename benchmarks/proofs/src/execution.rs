@@ -1,7 +1,9 @@
 // Linux-only process supervision for controlled, disposable proof fixtures.
 mod job;
+mod project;
 use crate::{analysis::Analysis, assessment};
 use assessment::TestState;
+pub use project::{AssessmentMode, CapturedProject, Thresholds};
 use serde_json::{Value, json};
 use std::os::unix::process::CommandExt;
 use std::{
