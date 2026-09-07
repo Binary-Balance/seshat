@@ -179,9 +179,12 @@ automatic tuning or new runner compatibility claims are implied. The legacy
 From the repository root, with the local Rust environment configured:
 
 ```sh
-node packaging/pack.mjs
-node benchmarks/proofs/npm-package.mjs /absolute/path/to/the/reported/package.tgz
+node packaging/pack.mjs work/debian11-inputs
+SESHAT_PROOF_BINARY=/absolute/path/to/the/reported/proofBinary node benchmarks/proofs/npm-package.mjs /absolute/path/to/the/reported/package.tgz
 ```
+
+Prepare `work/debian11-inputs` with the three pinned library archives using the
+[package build instructions](../../packaging/README.md#build-and-verify-from-the-source-checkout).
 
 Packing stages only an explicit file list in a fresh ignored directory. It does
 not publish, modify either consuming application, install globally or add a
@@ -209,7 +212,7 @@ timing samples in that suite now include the installed command path. npm's own
 
 See [packaging instructions and remaining limits](../../packaging/README.md).
 
-Recorded verification passed 16 packaging checks, including all 42 installed CLI
+The initial host-linked verification passed 16 packaging checks, including all 42 installed CLI
 scenarios, on Node 24.20.0/npm 11.19.0/Linux x64/glibc 2.41. Two packs from the
 same checkout and toolchain produced identical tarball bytes. The archive is
 919,369 bytes; installed payload is 2,817,788 bytes, including a 2,319,936-byte
@@ -272,14 +275,89 @@ rebuilt executable's highest GLIBC requirement is 2.30, but execution on 2.30
 has not been tested. Its size is 2,321,040 bytes, 1,104 bytes larger than the
 host-linked candidate. Two fresh builds produced identical bytes on this host:
 SHA-256 `92e5173443e787726b6843c729754bc1e95f499ae736bb2e894e251b87dea6c0`.
-No Rust implementation, Cargo dependency or default package-build change was
-needed. These are compatibility results, not performance measurements.
+No Rust implementation or Cargo dependency change was needed. This experiment
+left the default package build unchanged; the complete userspace verification
+below subsequently established the package baseline. These are compatibility
+results, not performance measurements.
 
 Final evidence: `work/glibc-proof-7xQqmK/result.json`; the CLI reports are in
 `work/assurance-proofs/cli-qK7Ukt` and `work/assurance-proofs/cli-AWzrWD`.
 An earlier run under `work/glibc-proof-VFrJJZ/checks.json` passed the assessments
 but failed the wrapper's final assertion because it expected the wrong parallel
 completion message. That harness check was corrected before the final full run.
+
+## Debian 11 installed-package verification
+
+`linux-debian.mjs` verifies the npm package in a complete Debian 11 userspace.
+Unlike the extracted-library experiment, Node, npm, TypeScript, the coverage
+collector, test processes and Seshat all run with Debian's libraries. The
+consumer has no Rust toolchain and no network access.
+
+Prepare the three build archives and locked dependencies using the
+[package build instructions](../../packaging/README.md#build-and-verify-from-the-source-checkout).
+Also install Bubblewrap on the Linux x64 test host. Obtain these two runtime
+archives once; the proof verifies their pinned SHA-256 hashes before extraction:
+
+```sh
+curl --max-time 120 -fSL https://raw.githubusercontent.com/debuerreotype/docker-debian-artifacts/bae6d64d90b4068b09ff9d8b564c2773ef5d8d83/bullseye/oci/blobs/rootfs.tar.gz -o work/debian11-inputs/rootfs.tar.gz
+curl --max-time 120 -fSL https://nodejs.org/dist/v24.20.0/node-v24.20.0-linux-x64.tar.xz -o work/debian11-inputs/node.tar.xz
+node packaging/pack.mjs work/debian11-inputs > work/debian11-inputs/package-result.json
+node benchmarks/proofs/linux-debian.mjs work/debian11-inputs work/debian11-inputs/package-result.json
+```
+
+The filesystem is the pinned [official Debian image artifact](https://github.com/debuerreotype/docker-debian-artifacts/tree/bae6d64d90b4068b09ff9d8b564c2773ef5d8d83/bullseye).
+Node's archive hash comes from its [release checksums](https://nodejs.org/dist/v24.20.0/SHASUMS256.txt).
+Downloads are separate from the offline build and verification commands.
+
+The proof creates a fresh ignored directory, extracts Debian and Node, then
+starts Bubblewrap with separate user, process and network namespaces. Its root
+filesystem is Debian's, with read-only mounts for Node, the package and fixture
+tools. Writable mounts contain only disposable home, temporary and proof files.
+No host `/usr`, `/lib`, Node executable or Rust toolchain is mounted. The
+separate legacy proof executable is built against the same Debian libraries
+and mounted only for the existing CLI parity comparison.
+
+The checks verify Debian 11, glibc 2.31, Node 24.20.0, npm, linked libraries and
+the absence of `cargo` and `rustc`, then run:
+
+- All 16 package checks, including offline install and `npm ci`, workspace
+  installation, executable hashes, invocation and platform rejection.
+- All 42 installed CLI scenarios plus legacy parity, including real typechecks,
+  fresh coverage, mutation outcomes, thresholds, incomplete results, timeouts,
+  SIGINT/SIGTERM, source preservation and cleanup.
+- All 11 parallel-worker scenarios through that same installed executable,
+  including one, two and four workers, worker capping, repeated outcomes,
+  baseline/receipt/source failures, deadlines and cancellation. The controls
+  check worker isolation, score withholding and termination of descendants.
+
+The verified userspace baseline is **Linux x64 with glibc 2.31**, tested with
+Debian's `libc6 2.31-13+deb11u14`, `libgcc-s1 10.2.1-6` and
+`libstdc++6 10.2.1-6`. Build inputs use glibc `2.31-13+deb11u11` and GCC runtime
+`10.2.1-6`. Both the compiler and coverage collector use TypeScript 6.0.3; the
+test runner is Node 24.20.0's built-in runner. The proof records all these
+versions, artifact hashes, raw CLI reports and parallel-worker evidence.
+
+Only after this complete proof passed did the default packer adopt the pinned
+older-library build. It rejects GLIBC symbol requirements above 2.31. The
+executable's highest requirement is 2.30; that does not establish support for
+glibc 2.30. There are no new Rust or npm runtime dependencies.
+
+This is a userspace compatibility result on kernel
+`6.12.107+deb13-cloud-amd64`. It does not verify Debian 11's original kernel or
+establish a minimum kernel version. Other architectures, musl, Jest/Expo and
+Vitest compatibility remain separate release work. Timings are diagnostic
+evidence, not performance claims.
+
+Portable recorded evidence: [`outputs/linux-debian11.json`](../../outputs/linux-debian11.json).
+Each run also retains its raw reports under the printed `work/debian11-*`
+directory. Paths beginning `/seshat` belong to the isolated fixture environment.
+
+The recorded archive is 920,507 bytes; its installed payload is 2,820,795 bytes,
+including the 2,321,040-byte executable. Two packs of the same staged binary and
+documentation produced identical tarballs. Two fresh native builds during this
+work produced different executable hashes, although both passed the Debian
+controls. Native build reproducibility is not established. The final verified
+binary and tarball hashes, and the two build hashes, are retained in the evidence.
 
 ## Coverage experiment
 
