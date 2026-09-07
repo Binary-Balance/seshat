@@ -16,8 +16,9 @@ implementation; changes to these design choices require renewed discussion.
 - Support Node's built-in test runner, Jest/Expo and Vitest, developed and verified
   one at a time.
 - Ship native binaries for Linux and macOS on x64 and ARM64, and Windows on x64.
-  Windows ARM64 and Alpine Linux are deferred. Minimum supported OS and native
-  library versions remain to be established and documented.
+  Windows ARM64 and Alpine Linux are deferred. Linux x64's verified userspace
+  baseline is Debian 11/glibc 2.31 with Node 24.20.0. Minimum kernel versions and
+  the other targets' OS/native-library baselines remain to be established.
 - Accept full, source-mapped Istanbul JSON coverage, using existing runner
   reporters or conversion tools rather than a custom V8 coverage converter.
 - Provide terminal output and versioned machine-readable JSON reports.
