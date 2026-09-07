@@ -40,12 +40,37 @@ struct MutationProgress {
     started: usize,
     completed: usize,
     last_output: Option<Instant>,
+    timed_out: usize,
+    execution_errors: usize,
+    cancelled: usize,
+    not_run: usize,
 }
 
 impl MutationProgress {
-    fn update(&mut self, progress: &Progress, total: usize, finished: bool) {
+    fn update(
+        &mut self,
+        progress: &Progress,
+        total: usize,
+        finished: bool,
+        states: &[TestState],
+        setup_count: usize,
+    ) {
         if finished {
             self.completed += 1;
+            if states
+                .iter()
+                .any(|state| *state == TestState::ExecutionError)
+            {
+                self.execution_errors += 1;
+            } else if states.iter().any(|state| *state == TestState::Cancelled) {
+                self.cancelled += 1;
+            } else if states.iter().any(|state| *state == TestState::TimedOut) {
+                self.timed_out += 1;
+            } else if states.len() < setup_count
+                || states.iter().any(|state| *state == TestState::NotRun)
+            {
+                self.not_run += 1;
+            }
         } else {
             self.started += 1;
         }
@@ -56,10 +81,14 @@ impl MutationProgress {
             || self.completed == total
         {
             progress.phase(format_args!(
-                "mutation: completed {}/{total}, running {}, remaining {}",
+                "mutation: completed {}/{total}, running {}, remaining {}, unresolved timed-out {}, execution-error {}, cancelled {}, not-run {}",
                 self.completed,
                 self.started - self.completed,
-                total - self.started
+                total - self.started,
+                self.timed_out,
+                self.execution_errors,
+                self.cancelled,
+                self.not_run
             ));
             self.last_output = Some(Instant::now());
         }
@@ -131,7 +160,312 @@ fn read_report(root: &Path, path: &Path) -> Result<Value, String> {
     serde_json::from_slice(&bytes).map_err(|e| format!("invalid report JSON: {e}"))
 }
 
+fn per_second(count: usize, wall_ms: f64) -> Value {
+    if wall_ms.is_finite() && wall_ms > 0.0 {
+        json!(count as f64 / (wall_ms / 1000.0))
+    } else {
+        Value::Null
+    }
+}
+
+fn unresolved_breakdown(outcomes: &[Value]) -> Value {
+    let mut timed_out = 0;
+    let mut execution_errors = 0;
+    let mut cancelled = 0;
+    let mut not_run = 0;
+    let mut unassessed = 0;
+    for outcome in outcomes {
+        match outcome["verdict"].as_str() {
+            Some("timed-out") => timed_out += 1,
+            Some("execution-error") => execution_errors += 1,
+            Some("cancelled") => cancelled += 1,
+            Some("not-run") => not_run += 1,
+            Some("unassessed") => unassessed += 1,
+            _ => {}
+        }
+    }
+    json!({"timedOut":timed_out,"executionError":execution_errors,
+        "cancelled":cancelled,"notRun":not_run,"unassessed":unassessed})
+}
+
+fn slowest_executions(outcomes: &[Value]) -> Value {
+    let mut rows: Vec<_> = outcomes
+        .iter()
+        .filter_map(|outcome| {
+            Some((
+                outcome["executionMs"].as_f64()?,
+                json!({
+                    "id":outcome["id"],"path":outcome["path"],
+                    "executionMs":outcome["executionMs"],"verdict":outcome["verdict"]
+                }),
+            ))
+        })
+        .collect();
+    rows.sort_by(|(left, _), (right, _)| right.total_cmp(left));
+    json!(
+        rows.into_iter()
+            .take(5)
+            .map(|(_, row)| row)
+            .collect::<Vec<_>>()
+    )
+}
+
+fn mutation_diagnostics(outcomes: &[Value], completed: usize, jobs: usize, wall_ms: f64) -> Value {
+    let worker_time_ms: f64 = outcomes
+        .iter()
+        .filter_map(|outcome| outcome["executionMs"].as_f64())
+        .sum();
+    json!({
+        "throughput": {
+            "completedMutantsPerSecond": per_second(completed, wall_ms),
+            "jobsPerSecond": per_second(jobs, wall_ms),
+        },
+        "workerTimeMs": worker_time_ms,
+        "slowestExecutions": slowest_executions(outcomes),
+        "unresolvedBreakdown": unresolved_breakdown(outcomes),
+    })
+}
+
+fn exact_version(value: &str) -> bool {
+    let parts: Vec<_> = value.split('.').collect();
+    parts.len() == 3
+        && parts
+            .iter()
+            .all(|part| !part.is_empty() && part.chars().all(|c| c.is_ascii_digit()))
+}
+
+fn version_comparison(actual: Option<&str>, expected: Option<&str>) -> &'static str {
+    let (Some(actual), Some(expected)) = (actual, expected) else {
+        return "unavailable";
+    };
+    if actual == expected {
+        "match"
+    } else if exact_version(expected) {
+        "mismatch"
+    } else {
+        "not-comparable"
+    }
+}
+
+fn json_file(root: &Path, path: &Path) -> Option<Value> {
+    regular_path(root, path, false).ok()?;
+    serde_json::from_slice(&fs::read(path).ok()?).ok()
+}
+
+fn nearest_json(root: &Path, cwd: &str, name: &str) -> Option<(PathBuf, Value)> {
+    let mut directory = root.join(cwd);
+    loop {
+        let path = directory.join(name);
+        if let Some(value) = json_file(root, &path) {
+            return Some((directory, value));
+        }
+        if directory == root || !directory.pop() {
+            return None;
+        }
+    }
+}
+
+fn declared_version<'a>(package: &'a Value, name: &str) -> Option<&'a str> {
+    [
+        "dependencies",
+        "devDependencies",
+        "optionalDependencies",
+        "peerDependencies",
+    ]
+    .iter()
+    .find_map(|section| package[*section][name].as_str())
+}
+
+fn locked_version(
+    root: &Path,
+    setup_cwd: &str,
+    lock_directory: &Path,
+    lock: &Value,
+    name: &str,
+) -> Option<String> {
+    if let Some(version) = lock["dependencies"][name]["version"].as_str() {
+        return Some(version.to_string());
+    }
+    let packages = lock["packages"].as_object()?;
+    let setup = root.join(setup_cwd);
+    let prefix = setup.strip_prefix(lock_directory).ok()?.to_str()?;
+    let prefix = prefix.trim_matches('/');
+    let prefix = if prefix == "." { "" } else { prefix };
+    let mut keys = vec![format!("node_modules/{name}")];
+    if !prefix.is_empty() {
+        keys.insert(0, format!("{prefix}/node_modules/{name}"));
+    }
+    let versions: BTreeSet<_> = keys
+        .iter()
+        .filter_map(|key| packages.get(key)?.get("version")?.as_str())
+        .collect();
+    (versions.len() == 1).then(|| versions.into_iter().next().unwrap().to_string())
+}
+
+fn receipt_report<'a>(setup: &'a Value) -> Option<&'a Value> {
+    ["baseline", "coverage"].iter().find_map(|key| {
+        setup[*key]["report"]
+            .as_object()
+            .map(|_| &setup[*key]["report"])
+    })
+}
+
+fn actual_version<'a>(report: Option<&'a Value>, runner: Runner, package: &str) -> Option<&'a str> {
+    let report = report?;
+    match (runner, package) {
+        (Runner::Jest, "jest") => report["jest"].as_str(),
+        (Runner::Jest, "jest-expo") => report["expo"].as_str(),
+        (Runner::Vitest, "vitest") => report["vitest"].as_str(),
+        _ => None,
+    }
+}
+
+fn runner_packages(runner: Runner) -> &'static [&'static str] {
+    match runner {
+        Runner::Node => &[],
+        Runner::Jest => &["jest", "jest-expo"],
+        Runner::Vitest => &["vitest"],
+    }
+}
+
+fn numeric_flag(args: &[String], name: &str) -> Option<Option<usize>> {
+    let prefix = format!("{name}=");
+    let mut found = false;
+    let mut value = None;
+    let mut conflict = false;
+    for (index, arg) in args.iter().enumerate() {
+        let parsed = if arg == name {
+            Some(
+                args.get(index + 1)
+                    .and_then(|value| value.parse::<usize>().ok())
+                    .filter(|value| *value > 0),
+            )
+        } else if let Some(raw) = arg.strip_prefix(&prefix) {
+            Some(raw.parse::<usize>().ok().filter(|value| *value > 0))
+        } else {
+            None
+        };
+        if let Some(parsed) = parsed {
+            if found && value != parsed {
+                conflict = true;
+            }
+            found = true;
+            value = parsed;
+        }
+    }
+    if conflict {
+        Some(None)
+    } else {
+        found.then_some(value)
+    }
+}
+
+fn runner_invocation(runner: Runner, args: &[String]) -> bool {
+    match runner {
+        Runner::Node => args.iter().any(|arg| arg == "--test"),
+        Runner::Jest => args
+            .iter()
+            .any(|arg| arg == "jest" || arg.ends_with("/jest") || arg.ends_with("/jest.js")),
+        Runner::Vitest => args
+            .iter()
+            .any(|arg| arg == "vitest" || arg.ends_with("/vitest") || arg.ends_with("/vitest.mjs")),
+    }
+}
+
+fn runner_concurrency(setup: &Setup, args: &[String], command: &str) -> Value {
+    let (value, source) = if !runner_invocation(setup.runner.clone(), args) {
+        (None, None)
+    } else {
+        match setup.runner {
+            Runner::Node => (
+                numeric_flag(args, "--test-concurrency"),
+                Some("--test-concurrency"),
+            ),
+            Runner::Jest => {
+                let in_band = args.iter().any(|arg| arg == "--runInBand" || arg == "-i");
+                let max_workers = numeric_flag(args, "--maxWorkers");
+                let value = match (in_band, max_workers) {
+                    (true, None) => Some(Some(1)),
+                    (true, Some(_)) => Some(None),
+                    (false, value) => value,
+                };
+                (
+                    value,
+                    Some(if in_band {
+                        "--runInBand"
+                    } else {
+                        "--maxWorkers"
+                    }),
+                )
+            }
+            Runner::Vitest => (
+                numeric_flag(args, "--maxWorkers").or_else(|| numeric_flag(args, "--max-workers")),
+                Some("--maxWorkers"),
+            ),
+        }
+    };
+    let effective = value.flatten();
+    json!({"setup":setup.name,"runner":setup.runner.label(),"command":command,
+        "effectiveWorkers":effective,"state":if effective.is_some() {"known"} else {"unavailable"},
+        "source":if value.is_some() {source} else {None}})
+}
+
 impl CapturedProject {
+    fn diagnostics(&self, setups: &[Value], mutation: Option<&Value>) -> Value {
+        let mut runner_versions = Vec::new();
+        let mut concurrency = Vec::new();
+        for (config, result) in self.config.setups.iter().zip(setups) {
+            let report = receipt_report(result);
+            let package = nearest_json(&self.directory.0, &config.cwd, "package.json");
+            let lock = nearest_json(&self.directory.0, &config.cwd, "package-lock.json");
+            let node = report.and_then(|value| value["node"].as_str());
+            let node_declared = package
+                .as_ref()
+                .and_then(|(_, value)| value["engines"]["node"].as_str());
+            let packages = runner_packages(config.runner.clone())
+                .iter()
+                .map(|name| {
+                    let actual = actual_version(report, config.runner.clone(), name);
+                    let declared = package
+                        .as_ref()
+                        .and_then(|(_, value)| declared_version(value, name));
+                    let locked = lock.as_ref().and_then(|(directory, value)| {
+                        locked_version(&self.directory.0, &config.cwd, directory, value, name)
+                    });
+                    json!({"name":name,"actual":actual,"declared":declared,"locked":locked,
+                        "declaredComparison":version_comparison(actual, declared),
+                        "lockedComparison":version_comparison(actual, locked.as_deref())})
+                })
+                .collect::<Vec<_>>();
+            runner_versions.push(json!({
+                "setup":config.name,
+                "runner":config.runner.label(),
+                "runtime":{"node":node,"declared":node_declared,
+                    "declaredComparison":version_comparison(node,node_declared)},
+                "packages":packages,
+            }));
+            concurrency.push(runner_concurrency(config, &config.test, "test"));
+            concurrency.push(runner_concurrency(
+                config,
+                &config.coverage.command,
+                "coverage",
+            ));
+        }
+        let (effective, state) = mutation
+            .and_then(|value| value["workersUsed"].as_u64())
+            .map_or((Value::Null, "not-requested"), |workers| {
+                (json!(workers), "known")
+            });
+        json!({
+            "runnerVersions":runner_versions,
+            "concurrency":{
+                "seshat":{"configuredWorkers":self.config.workers,
+                    "effectiveWorkers":effective,"state":state},
+                "runners":concurrency,
+            }
+        })
+    }
+
     fn prepare_evidence(&self) -> Result<OwnedDirectory, String> {
         let evidence = OwnedDirectory::create(self.directory.0.parent().unwrap())?;
         for (name, content) in [
@@ -258,11 +592,11 @@ impl CapturedProject {
             )?;
         }
         let mut result = job::run(&mut command, Duration::from_millis(setup.timeout_ms))?;
-        let mut state = if result["cancelled"] == true {
-            TestState::Cancelled
-        } else if matches!(kind, JobKind::Typecheck) {
+        let mut state = if matches!(kind, JobKind::Typecheck) {
             // A compiler's exit code is validation evidence, never a mutant kill.
-            if result["timedOut"] == true {
+            if result["cancelled"] == true {
+                TestState::Cancelled
+            } else if result["timedOut"] == true {
                 TestState::TimedOut
             } else if result["exit"] == 0
                 && result["overflow"] == false
@@ -291,7 +625,9 @@ impl CapturedProject {
                         } =>
                 {
                     result["report"] = report;
-                    if result["overflow"] == true || !result["pipeError"].is_null() {
+                    if result["cancelled"] == true {
+                        TestState::Cancelled
+                    } else if result["overflow"] == true || !result["pipeError"].is_null() {
                         TestState::ExecutionError
                     } else {
                         classify(
@@ -308,7 +644,9 @@ impl CapturedProject {
                     Err(error) => error,
                     Ok(_) => "runner receipt has wrong execution identity, format or unsupported runner version".into(),
                 });
-                    if result["timedOut"] == true {
+                    if result["cancelled"] == true {
+                        TestState::Cancelled
+                    } else if result["timedOut"] == true {
                         TestState::TimedOut
                     } else {
                         TestState::ExecutionError
@@ -489,6 +827,7 @@ impl CapturedProject {
         let preparation_ms = preparation_started.elapsed().as_secs_f64() * 1000.0;
         let next = AtomicUsize::new(0);
         let stopped = AtomicBool::new(!worker_ready);
+        let setup_count = self.config.setups.len();
         let workers_used = if worker_ready && cancellation_signal() == 0 {
             worker_limit
         } else {
@@ -517,6 +856,8 @@ impl CapturedProject {
                             progress,
                             plan.len(),
                             false,
+                            &[],
+                            setup_count,
                         );
                     }
                     let result = project.run_mutant(
@@ -531,6 +872,8 @@ impl CapturedProject {
                             progress,
                             plan.len(),
                             true,
+                            &result.states,
+                            setup_count,
                         );
                     }
                     if result.restoration_error.is_some()
@@ -604,13 +947,19 @@ impl CapturedProject {
             .filter(|row| row.get("executionMs").is_some())
             .count();
         let resolved = assessed.killed + assessed.survived;
+        let diagnostics = mutation_diagnostics(&outcomes, completed, jobs_attempted, scheduling_ms);
         progress.phase(format_args!(
-            "mutation finished: completed {}/{}, running 0, not run {}, resolved {}, unresolved {}",
+            "mutation finished: completed {}/{}, running 0, not run {}, resolved {}, unresolved {} (timed-out {}, execution-error {}, cancelled {}, not-run {}, unassessed {})",
             completed,
             plan.len(),
             plan.len() - completed,
             resolved,
-            plan.len() - resolved
+            plan.len() - resolved,
+            diagnostics["unresolvedBreakdown"]["timedOut"],
+            diagnostics["unresolvedBreakdown"]["executionError"],
+            diagnostics["unresolvedBreakdown"]["cancelled"],
+            diagnostics["unresolvedBreakdown"]["notRun"],
+            diagnostics["unresolvedBreakdown"]["unassessed"]
         ));
         json!({"strategy":"replace","complete":complete,"planned":plan.len(),
             "killed":assessed.killed,"survived":assessed.survived,
@@ -620,6 +969,7 @@ impl CapturedProject {
             "workerBaselineJobs":baseline_jobs,"workerBaselines":worker_baselines,
             "workerPreparationMs":preparation_ms,"mutationWallMs":scheduling_ms,
             "workerCleanupMs":cleanup_ms,"completed":completed,"notRun":plan.len()-completed,"unresolved":plan.len()-resolved,
+            "diagnostics":diagnostics,
             "error":run_error,"restorationError":restoration_error})
     }
 
@@ -857,8 +1207,10 @@ impl CapturedProject {
         } else {
             None
         };
+        let diagnostics = self.diagnostics(&setups, mutation.as_ref());
         let mut result = json!({"phase":match mode { AssessmentMode::Check=>"check",AssessmentMode::Crap=>"crap",AssessmentMode::Mutate=>"mutate" },"complete":complete,"jobsAttempted":commands_run,
-            "sources":sources,"setups":setups,"phaseTimings":timings,"executionMs":started.elapsed().as_secs_f64()*1000.0});
+            "sources":sources,"setups":setups,"phaseTimings":timings,
+            "diagnostics":diagnostics,"executionMs":started.elapsed().as_secs_f64()*1000.0});
         if let Some(mutation) = mutation {
             result["mutation"] = mutation;
         }
@@ -913,5 +1265,73 @@ mod tests {
             "{}"
         );
         directory.close().unwrap();
+    }
+
+    #[test]
+    fn diagnostics_keep_ranges_unknown_and_incomplete_work_distinct() {
+        assert_eq!(version_comparison(Some("29.7.0"), Some("29.7.0")), "match");
+        assert_eq!(
+            version_comparison(Some("29.8.0"), Some("29.7.0")),
+            "mismatch"
+        );
+        assert_eq!(
+            version_comparison(Some("29.8.0"), Some("^29.7.0")),
+            "not-comparable"
+        );
+        assert_eq!(version_comparison(None, Some("29.7.0")), "unavailable");
+
+        let mut setup = Setup {
+            name: "unit".into(),
+            runner: Runner::Jest,
+            cwd: ".".into(),
+            test: vec!["node".into(), "jest".into(), "--runInBand".into()],
+            typecheck: None,
+            coverage: CoverageCommand {
+                command: vec!["node".into(), "coverage.mjs".into()],
+                report: "coverage.json".into(),
+            },
+            timeout_ms: 1000,
+        };
+        assert_eq!(
+            runner_concurrency(&setup, &setup.test, "test")["effectiveWorkers"],
+            1
+        );
+        setup.test.push("--maxWorkers=1".into());
+        assert_eq!(
+            runner_concurrency(&setup, &setup.test, "test")["state"],
+            "unavailable"
+        );
+        setup.test.pop();
+        assert_eq!(
+            runner_concurrency(&setup, &setup.coverage.command, "coverage")["state"],
+            "unavailable"
+        );
+        setup.test = vec![
+            "node".into(),
+            "node_modules/jest/bin/jest.js".into(),
+            "--maxWorkers=1".into(),
+            "--maxWorkers=2".into(),
+        ];
+        assert_eq!(
+            runner_concurrency(&setup, &setup.test, "test")["state"],
+            "unavailable"
+        );
+        setup.test = vec!["npm".into(), "test".into()];
+        assert_eq!(
+            runner_concurrency(&setup, &setup.test, "test")["state"],
+            "unavailable"
+        );
+
+        let outcomes = vec![
+            json!({"id":0,"path":"a.ts","executionMs":20.0,"verdict":"cancelled"}),
+            json!({"id":1,"path":"a.ts","executionMs":5.0,"verdict":"not-run"}),
+            json!({"id":2,"path":"a.ts","executionMs":10.0,"verdict":"killed"}),
+        ];
+        let diagnostics = mutation_diagnostics(&outcomes, 3, 4, 100.0);
+        assert_eq!(diagnostics["unresolvedBreakdown"]["cancelled"], 1);
+        assert_eq!(diagnostics["unresolvedBreakdown"]["notRun"], 1);
+        assert_eq!(diagnostics["slowestExecutions"][0]["id"], 0);
+        assert_eq!(diagnostics["throughput"]["completedMutantsPerSecond"], 30.0);
+        assert_eq!(diagnostics["workerTimeMs"], 35.0);
     }
 }

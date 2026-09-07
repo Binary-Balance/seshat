@@ -212,10 +212,10 @@ can see what Seshat is doing, identify expensive phases and tune the project's
 configuration using measurements. The CLI candidate now exposes phase-start
 notices, event-driven completed/running/remaining mutation counts, resolved source
 scope, phase/per-setup timings, job counts and mutation-worker measurements.
-Final reports retain completed/not-run/unresolved counts. A small-fixture proof
-compares progress-on/off runs. Remaining work includes resolved runner-version and
-runner-concurrency summaries, live unresolved breakdowns, throughput and slow-job
-summaries, and broader diagnostics-overhead measurements.
+Final reports retain completed/not-run/unresolved counts. Runner
+version/concurrency summaries, live unresolved breakdowns, throughput and bounded
+slow-execution summaries are included. A small-fixture proof compares
+progress-on/off runs. Remaining work is broader diagnostics-overhead measurement.
 
 - Show the current phase, elapsed time, completed/total work where known, and
   running, queued and unresolved mutation counts. Label estimates as estimates.
