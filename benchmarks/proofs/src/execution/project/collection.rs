@@ -312,11 +312,10 @@ fn receipt_report<'a>(setup: &'a Value) -> Option<&'a Value> {
 
 fn actual_version<'a>(report: Option<&'a Value>, runner: Runner, package: &str) -> Option<&'a str> {
     let report = report?;
-    match (runner, package) {
-        (Runner::Jest, "jest") => report["jest"].as_str(),
-        (Runner::Jest, "jest-expo") => report["expo"].as_str(),
-        (Runner::Vitest, "vitest") => report["vitest"].as_str(),
-        _ => None,
+    // The legacy top-level receipt fields are cwd lookups kept for assessment compatibility.
+    match runner {
+        Runner::Jest | Runner::Vitest => report["actual"][package].as_str(),
+        Runner::Node => None,
     }
 }
 
@@ -360,30 +359,56 @@ fn numeric_flag(args: &[String], name: &str) -> Option<Option<usize>> {
     }
 }
 
-fn runner_invocation(runner: Runner, args: &[String]) -> bool {
+fn direct_runner_args<'a>(runner: Runner, args: &'a [String]) -> Option<&'a [String]> {
+    let program = args.first()?;
+    let program_name = Path::new(program).file_name()?.to_str()?;
     match runner {
-        Runner::Node => args.iter().any(|arg| arg == "--test"),
-        Runner::Jest => args
-            .iter()
-            .any(|arg| arg == "jest" || arg.ends_with("/jest") || arg.ends_with("/jest.js")),
-        Runner::Vitest => args
-            .iter()
-            .any(|arg| arg == "vitest" || arg.ends_with("/vitest") || arg.ends_with("/vitest.mjs")),
+        Runner::Node => (matches!(program_name, "node" | "nodejs")
+            && args.get(1).is_some_and(|arg| arg == "--test"))
+        .then_some(&args[1..]),
+        Runner::Jest | Runner::Vitest => {
+            if program_name == runner.label() {
+                return Some(&args[1..]);
+            }
+            if !matches!(program_name, "node" | "nodejs") {
+                return None;
+            }
+            let script = Path::new(args.get(1)?);
+            let script_name = script.file_name()?.to_str()?;
+            let parent = script.parent()?.file_name()?.to_str()?;
+            let matches = match runner {
+                Runner::Jest => {
+                    let package = script.parent()?.parent()?.file_name()?.to_str()?;
+                    script_name == "jest.js" && parent == "bin" && package == "jest"
+                }
+                Runner::Vitest => {
+                    matches!(script_name, "vitest.mjs" | "vitest.js") && parent == "vitest"
+                }
+                Runner::Node => false,
+            };
+            matches.then_some(&args[2..])
+        }
     }
 }
 
-fn runner_concurrency(setup: &Setup, args: &[String], command: &str) -> Value {
-    let (value, source) = if !runner_invocation(setup.runner.clone(), args) {
-        (None, None)
-    } else {
+fn runner_concurrency(
+    setup: &Setup,
+    args: &[String],
+    command: &str,
+    report: Option<&Value>,
+) -> Value {
+    let (value, source) = if let Some(runner_args) = direct_runner_args(setup.runner.clone(), args)
+    {
         match setup.runner {
             Runner::Node => (
-                numeric_flag(args, "--test-concurrency"),
+                numeric_flag(runner_args, "--test-concurrency"),
                 Some("--test-concurrency"),
             ),
             Runner::Jest => {
-                let in_band = args.iter().any(|arg| arg == "--runInBand" || arg == "-i");
-                let max_workers = numeric_flag(args, "--maxWorkers");
+                let in_band = runner_args
+                    .iter()
+                    .any(|arg| arg == "--runInBand" || arg == "-i");
+                let max_workers = numeric_flag(runner_args, "--maxWorkers");
                 let value = match (in_band, max_workers) {
                     (true, None) => Some(Some(1)),
                     (true, Some(_)) => Some(None),
@@ -398,11 +423,27 @@ fn runner_concurrency(setup: &Setup, args: &[String], command: &str) -> Value {
                     }),
                 )
             }
-            Runner::Vitest => (
-                numeric_flag(args, "--maxWorkers").or_else(|| numeric_flag(args, "--max-workers")),
-                Some("--maxWorkers"),
-            ),
+            Runner::Vitest => {
+                let cli_value = numeric_flag(runner_args, "--maxWorkers")
+                    .or_else(|| numeric_flag(runner_args, "--max-workers"));
+                let observed = report
+                    .and_then(|report| report["maxWorkers"].as_u64())
+                    .and_then(|workers| usize::try_from(workers).ok())
+                    .filter(|workers| *workers > 0)
+                    .map(Some)
+                    .or_else(|| cli_value.map(|_| None));
+                (
+                    observed,
+                    if report.is_some_and(|report| report["maxWorkers"].is_u64()) {
+                        Some("resolved-config")
+                    } else {
+                        Some("--maxWorkers")
+                    },
+                )
+            }
         }
+    } else {
+        (None, None)
     };
     let effective = value.flatten();
     json!({"setup":setup.name,"runner":setup.runner.label(),"command":command,
@@ -416,6 +457,12 @@ impl CapturedProject {
         let mut concurrency = Vec::new();
         for (config, result) in self.config.setups.iter().zip(setups) {
             let report = receipt_report(result);
+            let test_report = result["baseline"]["report"]
+                .as_object()
+                .map(|_| &result["baseline"]["report"]);
+            let coverage_report = result["coverage"]["report"]
+                .as_object()
+                .map(|_| &result["coverage"]["report"]);
             let package = nearest_json(&self.directory.0, &config.cwd, "package.json");
             let lock = nearest_json(&self.directory.0, &config.cwd, "package-lock.json");
             let node = report.and_then(|value| value["node"].as_str());
@@ -444,11 +491,17 @@ impl CapturedProject {
                     "declaredComparison":version_comparison(node,node_declared)},
                 "packages":packages,
             }));
-            concurrency.push(runner_concurrency(config, &config.test, "test"));
+            concurrency.push(runner_concurrency(
+                config,
+                &config.test,
+                "test",
+                test_report,
+            ));
             concurrency.push(runner_concurrency(
                 config,
                 &config.coverage.command,
                 "coverage",
+                coverage_report,
             ));
         }
         let (effective, state) = mutation
@@ -1279,12 +1332,30 @@ mod tests {
             "not-comparable"
         );
         assert_eq!(version_comparison(None, Some("29.7.0")), "unavailable");
+        let report = json!({"jest":"29.7.0","expo":"57.0.5",
+            "actual":{"jest":"30.5.1","jest-expo":"60.0.0"}});
+        assert_eq!(
+            actual_version(Some(&report), Runner::Jest, "jest"),
+            Some("30.5.1")
+        );
+        assert_eq!(
+            actual_version(Some(&report), Runner::Jest, "jest-expo"),
+            Some("60.0.0")
+        );
+        assert_eq!(
+            actual_version(Some(&json!({"jest":"29.7.0"})), Runner::Jest, "jest"),
+            None
+        );
 
         let mut setup = Setup {
             name: "unit".into(),
             runner: Runner::Jest,
             cwd: ".".into(),
-            test: vec!["node".into(), "jest".into(), "--runInBand".into()],
+            test: vec![
+                "node".into(),
+                "node_modules/jest/bin/jest.js".into(),
+                "--runInBand".into(),
+            ],
             typecheck: None,
             coverage: CoverageCommand {
                 command: vec!["node".into(), "coverage.mjs".into()],
@@ -1293,17 +1364,17 @@ mod tests {
             timeout_ms: 1000,
         };
         assert_eq!(
-            runner_concurrency(&setup, &setup.test, "test")["effectiveWorkers"],
+            runner_concurrency(&setup, &setup.test, "test", None)["effectiveWorkers"],
             1
         );
         setup.test.push("--maxWorkers=1".into());
         assert_eq!(
-            runner_concurrency(&setup, &setup.test, "test")["state"],
+            runner_concurrency(&setup, &setup.test, "test", None)["state"],
             "unavailable"
         );
         setup.test.pop();
         assert_eq!(
-            runner_concurrency(&setup, &setup.coverage.command, "coverage")["state"],
+            runner_concurrency(&setup, &setup.coverage.command, "coverage", None)["state"],
             "unavailable"
         );
         setup.test = vec![
@@ -1313,12 +1384,67 @@ mod tests {
             "--maxWorkers=2".into(),
         ];
         assert_eq!(
-            runner_concurrency(&setup, &setup.test, "test")["state"],
+            runner_concurrency(&setup, &setup.test, "test", None)["state"],
             "unavailable"
         );
         setup.test = vec!["npm".into(), "test".into()];
         assert_eq!(
-            runner_concurrency(&setup, &setup.test, "test")["state"],
+            runner_concurrency(&setup, &setup.test, "test", None)["state"],
+            "unavailable"
+        );
+        setup.test = vec![
+            "node".into(),
+            "wrapper-jest.mjs".into(),
+            "jest".into(),
+            "--maxWorkers=7".into(),
+        ];
+        assert_eq!(
+            runner_concurrency(&setup, &setup.test, "test", None)["state"],
+            "unavailable"
+        );
+
+        setup.runner = Runner::Node;
+        setup.test = vec![
+            "node".into(),
+            "--test".into(),
+            "--test-concurrency=7".into(),
+        ];
+        assert_eq!(
+            runner_concurrency(&setup, &setup.test, "test", None)["effectiveWorkers"],
+            7
+        );
+        setup.test = vec![
+            "node".into(),
+            "wrapper.mjs".into(),
+            "--test".into(),
+            "--test-concurrency=7".into(),
+        ];
+        assert_eq!(
+            runner_concurrency(&setup, &setup.test, "test", None)["state"],
+            "unavailable"
+        );
+
+        setup.runner = Runner::Vitest;
+        setup.test = vec![
+            "node".into(),
+            "node_modules/vitest/vitest.mjs".into(),
+            "run".into(),
+            "--maxWorkers=7".into(),
+            "--no-file-parallelism".into(),
+        ];
+        let resolved = json!({"maxWorkers":1});
+        assert_eq!(
+            runner_concurrency(&setup, &setup.test, "test", Some(&resolved))["effectiveWorkers"],
+            1
+        );
+        setup.test = vec![
+            "node".into(),
+            "wrapper.mjs".into(),
+            "vitest".into(),
+            "--maxWorkers=7".into(),
+        ];
+        assert_eq!(
+            runner_concurrency(&setup, &setup.test, "test", Some(&resolved))["state"],
             "unavailable"
         );
 
