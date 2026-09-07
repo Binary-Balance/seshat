@@ -94,7 +94,7 @@ with stdout. Draft schema version 1 has these top-level fields:
 | `complete`, `cancelled`, `signal` | Assessment completeness, cancellation flag and signal number or null |
 | `scope` | Include/exclude patterns, resolved source paths and setup names/runners/directories; null when capture fails |
 | `timings` | `wallMs`, `captureMs`, `executionMs`; unavailable phases are null |
-| `result` | Existing assessment evidence: sources, setup results, job counts, optional mutation outcomes and errors |
+| `result` | Existing assessment evidence plus runtime diagnostics |
 | `quality` | Threshold state and configured checks, or null when config/capture did not succeed |
 
 Timings are milliseconds. Wall time covers argument handling, capture, assessment
@@ -124,10 +124,32 @@ mutants without a returned attempt. `unresolved` is planned minus killed minus
 survived, including unattempted mutants. These counters do not override the
 run's `complete` flag, which can also fail for cleanup or worker errors.
 
+`result.diagnostics.runnerVersions` records the Node version from a validated
+runner receipt and the runner package versions observed by the private
+reporters. It also reports captured `package.json` runner and Node-engine
+declarations and `package-lock.json` versions when present. Exact declarations
+are compared with
+the observed version; ranges are `not-comparable`, and missing receipts or
+manifests are `unavailable`. It never treats a declared range as a mismatch.
+`result.diagnostics.concurrency.seshat` reports the configured mutation worker
+limit and its effective use. Each runner entry is labelled `test` or
+`coverage` and reports an effective worker limit only when that command
+contains a supported numeric flag
+(`--test-concurrency`, `--runInBand`/`-i`, or `--maxWorkers`); wrappers, config
+files and runner defaults remain `unavailable`.
+
+`result.mutation.diagnostics` contains `unresolvedBreakdown` by verdict,
+`throughput` measured against mutation wall time, cumulative returned-mutant
+`workerTimeMs`, and at most five `slowestExecutions` rows. Mutation wall time is
+the scheduler interval and worker time is the sum of returned mutant attempt
+durations; parallel durations must not be added to wall time. Missing job
+durations are omitted from the slow list and do not become zero.
+
 Progress reports elapsed time since assessment began, after initial capture.
-Mutation snapshots show completed attempts, currently running attempts and
-remaining unstarted work. Their sum equals the plan size. Updates occur at
-attempt starts/finishes, at most four per second, plus phase/final notices.
+Mutation snapshots show completed attempts, currently running attempts,
+remaining unstarted work and the unresolved timeout/error/cancellation/not-run
+counts observed so far. Their work counts sum to the plan size. Updates occur
+at attempt starts/finishes, at most four per second, plus phase/final notices.
 There is no polling thread, ETA or periodic update while a test is still running.
 The final mutation notice adds resolved/unresolved and not-run counts. Final
 counts and phase timings remain available with progress disabled. Output errors
@@ -152,8 +174,19 @@ overhead bound. Evidence remains in `work/assurance-proofs/cli-ybny6Y`,
 `cli-yq1i0W` and `parallel-JttVJe` under that same parent directory.
 
 Snapshots are diagnostic text, not a stable parsing interface. Use the versioned
-JSON for automation. Runner-version/concurrency summaries, live unresolved
-breakdowns, slowest-execution lists and throughput summaries remain future work.
+JSON for automation. Version observations come only from the supported private
+receipts; an opaque command or unsupported runner cannot be made precise by
+guessing from its executable name.
+
+For tuning, first run the complete command with fixed source, configuration,
+coverage and runner inputs, retaining the JSON report and outcome rows. Change
+one setting, such as Seshat `workers` or an explicit runner worker limit, and
+repeat the same command at least three times after a warmup. Compare wall and
+phase timings, throughput, unresolved breakdowns and slowest rows, then verify
+identical source scope, scores, mutant definitions and verdicts. Keep runner
+workers bounded when Seshat workers overlap, and isolate ports, files and
+databases per worker. Do not reduce tests or source scope, hide failures or
+weaken coverage to improve timing.
 
 Exit 0 means complete execution with no failed applicable threshold. Without
 configured thresholds, surviving mutants and high CRAP do not fail the command.

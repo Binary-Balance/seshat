@@ -258,8 +258,12 @@ In CI, retain both the exit status and JSON report:
 
 `--json` emits one draft schema-version-1 report on stdout, including on failure.
 It records execution completeness, resolved scope, function results, mutation
-verdicts, optional threshold results, timings and worker counts. Progress uses
-stderr; `--no-progress` suppresses it while preserving final measurements.
+verdicts, optional threshold results, timings, worker counts and runtime
+diagnostics. Diagnostics include runner versions from validated receipts,
+exact-declaration/lock comparisons, per-test/coverage effective worker limits
+when explicit command flags make them knowable, unresolved breakdowns, mutation
+throughput and bounded slow-execution rows. Progress uses stderr; `--no-progress`
+suppresses it while preserving final measurements.
 
 Unknown measurements are not zero. Incomplete runs preserve available results
 but withhold the affected final score. JSON keeps execution `complete` separate
