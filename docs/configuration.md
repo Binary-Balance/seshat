@@ -5,6 +5,69 @@ project root. `seshat check` reads `./seshat.json` by default; `--config PATH`
 selects another file. Unknown fields, duplicate fields and invalid paths fail
 before execution. Configuration is JSON, with no inheritance or executable code.
 
+## Jest/Expo example
+
+This example follows the [included Jest/Expo fixture](../benchmarks/proofs/fixtures/jest-expo).
+The verified route uses Node 24.20.0, Jest 29.7.0, jest-expo 57.0.5, Expo
+57.0.20, React Native 0.86.3, `@react-native/jest-preset` 0.86.3,
+`babel-preset-expo` 57.0.10, React 19.2.3 and TypeScript 6.0.3. The fixture
+uses Jest Circus with Babel coverage and a fresh Istanbul JSON report.
+
+Use the fixture's `jest.config.cjs` (`preset: 'jest-expo'`) and
+`babel.config.cjs` (`babel-preset-expo`) with this `seshat.json` shape:
+
+```json
+{
+  "source": {"include": ["src/status.tsx"]},
+  "capture": [
+    "package.json", "package-lock.json", "tsconfig.json",
+    "babel.config.cjs", "jest.config.cjs", "src", "tests", "node_modules"
+  ],
+  "setups": [{
+    "name": "jest-expo",
+    "runner": "jest",
+    "cwd": ".",
+    "timeoutMs": 60000,
+    "typecheck": ["node", "node_modules/typescript/bin/tsc", "--project", "tsconfig.json"],
+    "test": [
+      "node", "node_modules/jest/bin/jest.js", "--config", "jest.config.cjs",
+      "--runInBand", "--runTestsByPath", "tests/status.test.tsx",
+      "--reporters=default", "--reporters={seshatReporter}", "--env={seshatEnvironment}"
+    ],
+    "coverage": {
+      "command": [
+        "node", "node_modules/jest/bin/jest.js", "--config", "jest.config.cjs",
+        "--runInBand", "--runTestsByPath", "tests/status.test.tsx",
+        "--reporters=default", "--reporters={seshatReporter}", "--env={seshatEnvironment}",
+        "--coverage", "--coverageProvider=babel", "--coverageReporters=json",
+        "--coverageDirectory=coverage", "--collectCoverageFrom", "src/status.tsx"
+      ],
+      "report": "coverage/coverage-final.json"
+    }
+  }]
+}
+```
+
+Build or obtain a local Seshat package, then run the installed-command proof from
+the repository root. Omitting `--deps` makes the driver install the fixture lockfile
+into its own ignored proof directory; `--cli` accepts an already installed binary.
+
+```sh
+node benchmarks/proofs/jest-expo-check.mjs \
+  --tarball /absolute/path/to/binary-balance-seshat-0.0.0.tgz
+# or:
+node benchmarks/proofs/jest-expo-check.mjs \
+  --cli /absolute/path/to/node_modules/.bin/seshat
+```
+
+The integration uses `{seshatReporter}` and `{seshatEnvironment}` with the
+default `jest-expo` environment. It supports one Jest project per setup and the
+tested Jest Circus behaviour. Custom Jest runners, environments, projects and
+Jest-internal parallel execution are outside this verification; use `--runInBand`
+and vary Seshat's top-level `workers` setting instead. See the [full proof
+workflow](../benchmarks/proofs/README.md#jestexpo-combined-workflow) for the
+hand-counted results and failure controls.
+
 ## Vitest example
 
 This example follows the [included fixture](../benchmarks/proofs/fixtures/vitest),
@@ -119,8 +182,10 @@ proof utility, not a general collector shipped in the npm package.
 The experimental Jest integration uses `{seshatReporter}` plus
 `--env={seshatEnvironment}`. Its environment extends the default `jest-expo` preset
 and is limited to Jest Circus, one Jest project per setup and the tested preset
-behaviour. Arbitrary Jest environments are not supported. A standalone public
-Expo fixture and broader runner-version verification remain release work.
+behaviour. Arbitrary Jest environments are not supported. The pinned public
+fixture and its installed-command controls are documented in the
+[Jest/Expo proof workflow](../benchmarks/proofs/README.md#jestexpo-combined-workflow);
+other runner versions and configurations remain unverified.
 
 ## Coverage
 
