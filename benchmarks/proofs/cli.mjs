@@ -245,5 +245,44 @@ for (const [signal, code, number] of [['SIGINT',130,2], ['SIGTERM',143,15]]) {
     await done;
   }
 }
+
+const receiptReady = join(work, 'receipt-cancellation');
+const receiptWaiting = structuredClone(config);
+receiptWaiting.setups[0].typecheck = [process.execPath, '-e', ''];
+receiptWaiting.setups[0].test = [process.execPath, '-e', `const fs=require('node:fs');
+fs.writeFileSync(process.env.SESHAT_RECEIPT,JSON.stringify({version:1,
+  executionId:process.env.SESHAT_EXECUTION_ID,node:process.versions.node,complete:true,
+  passed:1,failed:0,errors:0}),{flag:'wx'});
+fs.writeFileSync(${JSON.stringify(receiptReady)},'ready');
+setInterval(()=>{},1000);`];
+configure(receiptWaiting);
+const receiptChild = spawn(binary, ['mutate','--scratch',scratch,'--json'], {cwd:project, stdio:['ignore','pipe','pipe']});
+let receiptStdout = '', receiptStderr = '', receiptClosed = false;
+receiptChild.stdout.on('data', data => receiptStdout += data);
+receiptChild.stderr.on('data', data => receiptStderr += data);
+const receiptDone = new Promise((resolve, reject) => {
+  receiptChild.once('error', reject);
+  receiptChild.once('close', status => {receiptClosed = true; resolve(status);});
+});
+try {
+  const deadline = performance.now() + 10000;
+  while (!existsSync(receiptReady) && !receiptClosed && performance.now() < deadline) await delay(20);
+  assert.ok(existsSync(receiptReady), receiptStderr + receiptStdout);
+  receiptChild.kill('SIGTERM');
+  const timeout = setTimeout(() => receiptChild.kill('SIGKILL'), 10000);
+  let status;
+  try { status = await receiptDone; } finally { clearTimeout(timeout); }
+  assert.equal(status, 143, receiptStderr + receiptStdout);
+  const report = JSON.parse(receiptStdout);
+  assert.equal(report.cancelled, true);
+  assert.equal(report.result.setups[0].baseline.state, 'cancelled');
+  assert.equal(report.result.diagnostics.runnerVersions[0].runtime.node, process.versions.node);
+  unchanged();
+  results['SIGTERM-after-receipt'] = report;
+  console.log('SIGTERM after valid Node receipt: diagnostics retained');
+} finally {
+  if (!receiptClosed) receiptChild.kill('SIGTERM');
+  await receiptDone;
+}
 writeFileSync(join(work,'result.json'), JSON.stringify(results,null,2)+'\n');
 console.log(`CLI passed: ${Object.keys(results).length} scenarios plus legacy parity. Results: ${join(work,'result.json')}`);

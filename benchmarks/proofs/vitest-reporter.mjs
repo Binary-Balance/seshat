@@ -1,5 +1,12 @@
 import {writeFileSync} from 'node:fs';
 
+function resolvedMaxWorkers(modules) {
+  const projects = [...new Set(modules.map(module => module.project).filter(Boolean))];
+  const values = projects.map(project => project.config?.maxWorkers);
+  if (!values.length || values.some(value => !Number.isSafeInteger(value) || value < 1)) return undefined;
+  return values.every(value => value === values[0]) ? values[0] : undefined;
+}
+
 export default class EvidenceReporter {
   onInit(context) { this.context = context; }
   onTestRunEnd(modules, unhandled, reason) {
@@ -26,8 +33,10 @@ export default class EvidenceReporter {
         else errors++;
       }
     }
+    const maxWorkers = resolvedMaxWorkers(modules);
     writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({version:1,
       executionId:process.env.SESHAT_EXECUTION_ID, runner:'vitest', vitest:this.context.version,
+      actual:{vitest:this.context.version}, maxWorkers,
       node:process.versions.node, complete:modules.length > 0 && reason !== 'interrupted',
       passed, failed, errors, timeouts}), {flag:'wx'});
   }
