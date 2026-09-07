@@ -198,7 +198,7 @@ diagnostics commit. Build the candidate with the local toolchain and the pinned
 Debian inputs:
 
 The recorded candidate was built from runtime commit
-`ef722081bb4686e958cd1c923ca18ec99251db0d`.
+`62bcddd2a2008cdcca23b8baf93448b2d147f8d8`.
 
 ```sh
 REPO_ROOT="$PWD"
@@ -223,10 +223,9 @@ git archive fbe06e9280cedb8daea41edc07b90f39e369bbe6 | tar -x -C "$BASELINE_ROOT
 ```
 
 The Jest/Expo dependency directory is prepared as shown in the
-[Jest/Expo combined workflow](#jestexpo-combined-workflow). The recorded pack
-compiled and staged successfully but returned an empty `npm pack --json` capture;
-a direct offline `npm pack` of that reported staging directory completed the
-artifact without changing the packer. Set these paths to the resulting files:
+[Jest/Expo combined workflow](#jestexpo-combined-workflow). The current pack
+completes with the pinned Debian inputs and records the resulting artifact
+hashes in the retained JSON evidence. Set these paths to the resulting files:
 
 ```sh
 BASELINE_TARBALL=/absolute/path/to/baseline/binary-balance-seshat-0.0.0.tgz
@@ -243,7 +242,7 @@ node benchmarks/proofs/diagnostics-overhead.mjs \
   --candidate "$CANDIDATE_TARBALL" \
   --jest-deps "$JEST_DEPS" \
   --baseline-commit fbe06e9280cedb8daea41edc07b90f39e369bbe6 \
-  --candidate-commit ef722081bb4686e958cd1c923ca18ec99251db0d \
+  --candidate-commit 62bcddd2a2008cdcca23b8baf93448b2d147f8d8 \
   --samples 3 \
   --output outputs/diagnostics-overhead.json
 ```
@@ -260,16 +259,17 @@ job counts and semantic parity before retaining its timing. Fresh captured copie
 isolate each invocation, while host filesystem, npm, runner and OS caches remain
 warm.
 
-The recorded run retained 24 candidate diagnostics snapshots, including runner
+The refreshed run retained 24 candidate diagnostics snapshots, including runner
 versions, declared and lockfile comparisons, concurrency states, mutation
 throughput, worker time and unresolved breakdowns, under `runs[].diagnostics`.
 Jest reported actual `29.7.0` and `jest-expo` `57.0.5`, with matching declared
 and locked versions. Vitest reported actual `5.0.0`, but its fixture did not
-provide declared or lockfile versions; Node engine declarations were also
-unavailable in the three fixtures. The Node test, Vitest test/coverage and
-Jest/Expo test/coverage worker limits were reported as known from their explicit
-commands and resolved project configuration; the Node coverage collector has no
-supported numeric worker flag and is therefore explicitly `unavailable`. The report has no separate
+provide declared or lockfile versions. Node reported `24.20.0`; engine
+declarations were unavailable in all three fixtures. Node test concurrency was
+known from `--test-concurrency`, while its coverage collector remained
+explicitly `unavailable`. Vitest test and coverage both reported the resolved
+worker limit from project configuration, and Jest/Expo test and coverage both
+reported the explicit `--runInBand` limit. The report has no separate
 version-acquisition phase, so these values do not support a separate
 acquisition-cost claim.
 
@@ -277,15 +277,15 @@ Median candidate-versus-baseline wall-time deltas were:
 
 | Fixture | Workers | Progress on | Progress off |
 | --- | ---: | ---: | ---: |
-| Node workspace | 1 | +4.47% | −8.92% |
-| Node workspace | 2 | −5.79% | +0.17% |
-| Vitest | 1 | +2.07% | +1.95% |
-| Vitest | 2 | +12.23% | −4.09% |
-| Jest/Expo | 1 | −4.55% | +3.37% |
-| Jest/Expo | 2 | −0.86% | +2.09% |
+| Node workspace | 1 | +0.12% | −7.51% |
+| Node workspace | 2 | +3.41% | −0.67% |
+| Vitest | 1 | +4.98% | +10.26% |
+| Vitest | 2 | −2.25% | +2.39% |
+| Jest/Expo | 1 | +4.85% | +1.84% |
+| Jest/Expo | 2 | +8.97% | −0.44% |
 
-Progress-on versus progress-off medians ranged from −9.69% to +11.31% for the
-candidate and from −5.89% to +7.59% for the baseline. Raw samples, ranges,
+Progress-on versus progress-off medians ranged from −3.09% to +7.01% for the
+candidate and from −3.95% to +5.68% for the baseline. Raw samples, ranges,
 fixture/config hashes, artifact hashes and full retained semantic snapshots are
 in [`outputs/diagnostics-overhead.json`](../../outputs/diagnostics-overhead.json).
 These small fixed-fixture samples are noisy and fixture-specific; they do not

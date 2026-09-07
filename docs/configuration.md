@@ -261,8 +261,9 @@ It records execution completeness, resolved scope, function results, mutation
 verdicts, optional threshold results, timings, worker counts and runtime
 diagnostics. Diagnostics include runner versions from validated receipts,
 exact-declaration/lock comparisons, per-test/coverage effective worker limits
-when explicit command flags make them knowable, unresolved breakdowns, mutation
-throughput and bounded slow-execution rows. Progress uses stderr; `--no-progress`
+when direct command flags or resolved runner configuration make them knowable,
+unresolved breakdowns, mutation throughput and bounded slow-execution rows.
+Progress uses stderr; `--no-progress`
 suppresses it while preserving final measurements.
 
 Unknown measurements are not zero. Incomplete runs preserve available results

@@ -32,6 +32,7 @@
     "cacheBoundary": "each invocation captures a fresh Seshat copy; host filesystem, npm, runner and OS caches remain warm"
   },
   "baselineCommit": "fbe06e9280cedb8daea41edc07b90f39e369bbe6",
+  "candidateCommit": "62bcddd2a2008cdcca23b8baf93448b2d147f8d8",
   "artifacts": {
     "baseline": {
       "source": "baseline",
@@ -77,14 +78,14 @@
     "candidate": {
       "source": "candidate",
       "tarball": {
-        "path": "<repo>/work/npm-pack-pjMkvX/binary-balance-seshat-0.0.0.tgz",
-        "bytes": 955989,
-        "sha256": "9c09dea18c9773896ad8f0041804329e0bd2c9369a5008238f00b2589054ef03"
+        "path": "<repo>/work/npm-pack-BR2zxn/binary-balance-seshat-0.0.0.tgz",
+        "bytes": 957505,
+        "sha256": "ebfbe1d8af92572f2eb92dc034aba22eeffa769af725fe5b88391e64a8b7c135"
       },
       "installedBinary": {
         "path": "<work>/install/candidate/consumer/node_modules/@binary-balance/seshat/bin/seshat",
-        "bytes": 2403584,
-        "sha256": "37e2ce3ab25793c92fd8b1ecb2a66da31ecaae36421836f223832f0e989982ec"
+        "bytes": 2404520,
+        "sha256": "9e4adaad4531ae410eac83004b764d04cc4d3198b6d09b4dedcc84ae6d8fec88"
       },
       "version": "seshat 0.0.0 (candidate)",
       "package": {
@@ -866,8 +867,8 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 1906.459277,
-      "stdoutBytes": 3318,
+      "wallMs": 2193.310956,
+      "stdoutBytes": 3299,
       "stderrBytes": 714,
       "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -882,11 +883,11 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 2036.8679760000005,
-      "stdoutBytes": 4298,
+      "wallMs": 2050.369135,
+      "stdoutBytes": 4273,
       "stderrBytes": 919,
       "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
-      "diagnosticsHash": "7ff003fe0e9c7e91ab55501a3f3b14e1a7a3efe75f771e7373a2d23a740d2520",
+      "diagnosticsHash": "751cfe97a7fe12518719e614cf04c1b25ede461c0ec3f2eefc77e777ab8ad428",
       "diagnostics": {
         "report": {
           "concurrency": {
@@ -930,21 +931,21 @@
         "mutation": {
           "slowestExecutions": [
             {
-              "executionMs": 175.35694800000002,
-              "id": 1,
+              "executionMs": 180.691952,
+              "id": 0,
               "path": "src/compare.ts",
               "verdict": "killed"
             },
             {
-              "executionMs": 173.88906500000002,
-              "id": 0,
+              "executionMs": 178.094369,
+              "id": 1,
               "path": "src/compare.ts",
               "verdict": "killed"
             }
           ],
           "throughput": {
-            "completedMutantsPerSecond": 5.723807939295949,
-            "jobsPerSecond": 5.723807939295949
+            "completedMutantsPerSecond": 5.571556337960545,
+            "jobsPerSecond": 5.571556337960545
           },
           "unresolvedBreakdown": {
             "cancelled": 0,
@@ -953,13 +954,13 @@
             "timedOut": 0,
             "unassessed": 0
           },
-          "workerTimeMs": 349.24601300000006
+          "workerTimeMs": 358.786321
         }
       },
       "reportTimings": {
-        "captureMs": 1.918344,
-        "executionMs": 2030.0980059999997,
-        "wallMs": 2033.711448
+        "captureMs": 1.404477,
+        "executionMs": 2042.2756350000002,
+        "wallMs": 2045.1195950000001
       }
     },
     {
@@ -970,8 +971,8 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 2045.368912,
-      "stdoutBytes": 3326,
+      "wallMs": 2002.0986270000003,
+      "stdoutBytes": 3324,
       "stderrBytes": 0,
       "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -986,11 +987,11 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 2301.5408480000006,
-      "stdoutBytes": 4257,
+      "wallMs": 2133.585228,
+      "stdoutBytes": 4318,
       "stderrBytes": 0,
       "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
-      "diagnosticsHash": "5a879674609997b5e757e9379774f60f83ce10c13a39800c17cbd9a5501dfb7d",
+      "diagnosticsHash": "4974296705a37522f0d1e9adbf847a045e4358cf4e149e207da76fe71708baf9",
       "diagnostics": {
         "report": {
           "concurrency": {
@@ -1034,21 +1035,21 @@
         "mutation": {
           "slowestExecutions": [
             {
-              "executionMs": 256.191514,
+              "executionMs": 183.903425,
               "id": 1,
               "path": "src/compare.ts",
               "verdict": "killed"
             },
             {
-              "executionMs": 234.76631,
+              "executionMs": 177.48889,
               "id": 0,
               "path": "src/compare.ts",
               "verdict": "killed"
             }
           ],
           "throughput": {
-            "completedMutantsPerSecond": 4.073541510572375,
-            "jobsPerSecond": 4.073541510572375
+            "completedMutantsPerSecond": 5.533993686537769,
+            "jobsPerSecond": 5.533993686537769
           },
           "unresolvedBreakdown": {
             "cancelled": 0,
@@ -1057,13 +1058,13 @@
             "timedOut": 0,
             "unassessed": 0
           },
-          "workerTimeMs": 490.95782399999996
+          "workerTimeMs": 361.392315
         }
       },
       "reportTimings": {
-        "captureMs": 0.867732,
-        "executionMs": 2293.5639220000003,
-        "wallMs": 2295.568137
+        "captureMs": 1.006391,
+        "executionMs": 2127.5705669999998,
+        "wallMs": 2129.401198
       }
     },
     {
@@ -1074,8 +1075,8 @@
       "phase": "measured",
       "pair": 0,
       "sample": 1,
-      "wallMs": 2026.7016050000002,
-      "stdoutBytes": 3370,
+      "wallMs": 2027.7840509999987,
+      "stdoutBytes": 3340,
       "stderrBytes": 714,
       "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -1090,11 +1091,11 @@
       "phase": "measured",
       "pair": 0,
       "sample": 1,
-      "wallMs": 2097.874077999999,
-      "stdoutBytes": 4277,
+      "wallMs": 2063.3900859999994,
+      "stdoutBytes": 4238,
       "stderrBytes": 919,
       "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
-      "diagnosticsHash": "69b0d24c7d57301b62cd02275160140037947eef8a0c586b5064dac026f4657d",
+      "diagnosticsHash": "23040431a68f83be91130927525a600cb1ddf4d49e2c8548337fb15c899730b2",
       "diagnostics": {
         "report": {
           "concurrency": {
@@ -1138,21 +1139,21 @@
         "mutation": {
           "slowestExecutions": [
             {
-              "executionMs": 179.31563500000001,
-              "id": 1,
+              "executionMs": 198.686533,
+              "id": 0,
               "path": "src/compare.ts",
               "verdict": "killed"
             },
             {
-              "executionMs": 175.14817299999999,
-              "id": 0,
+              "executionMs": 182.197433,
+              "id": 1,
               "path": "src/compare.ts",
               "verdict": "killed"
             }
           ],
           "throughput": {
-            "completedMutantsPerSecond": 5.635048178422215,
-            "jobsPerSecond": 5.635048178422215
+            "completedMutantsPerSecond": 5.248354248628575,
+            "jobsPerSecond": 5.248354248628575
           },
           "unresolvedBreakdown": {
             "cancelled": 0,
@@ -1161,13 +1162,13 @@
             "timedOut": 0,
             "unassessed": 0
           },
-          "workerTimeMs": 354.463808
+          "workerTimeMs": 380.883966
         }
       },
       "reportTimings": {
-        "captureMs": 1.1222079999999999,
-        "executionMs": 2091.121549,
-        "wallMs": 2093.772874
+        "captureMs": 1.217957,
+        "executionMs": 2057.777782,
+        "wallMs": 2059.8837900000003
       }
     },
     {
@@ -1178,8 +1179,8 @@
       "phase": "measured",
       "pair": 0,
       "sample": 1,
-      "wallMs": 2070.648653999997,
-      "stdoutBytes": 3357,
+      "wallMs": 2126.918641,
+      "stdoutBytes": 3361,
       "stderrBytes": 0,
       "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -1194,11 +1195,11 @@
       "phase": "measured",
       "pair": 0,
       "sample": 1,
-      "wallMs": 1953.0576870000004,
-      "stdoutBytes": 4269,
+      "wallMs": 1984.6040460000004,
+      "stdoutBytes": 4282,
       "stderrBytes": 0,
       "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
-      "diagnosticsHash": "6b53495868da09288837da13f8780bb032a78a74d0c602b8dc8f21013828230b",
+      "diagnosticsHash": "7a78cc192359b3f8e83748623a314d40592ab39c7c5d70fdff53bb90ec714136",
       "diagnostics": {
         "report": {
           "concurrency": {
@@ -1242,21 +1243,21 @@
         "mutation": {
           "slowestExecutions": [
             {
-              "executionMs": 178.38994499999998,
+              "executionMs": 180.096084,
               "id": 1,
               "path": "src/compare.ts",
               "verdict": "killed"
             },
             {
-              "executionMs": 177.098218,
+              "executionMs": 179.77252,
               "id": 0,
               "path": "src/compare.ts",
               "verdict": "killed"
             }
           ],
           "throughput": {
-            "completedMutantsPerSecond": 5.625922563395357,
-            "jobsPerSecond": 5.625922563395357
+            "completedMutantsPerSecond": 5.557443990460858,
+            "jobsPerSecond": 5.557443990460858
           },
           "unresolvedBreakdown": {
             "cancelled": 0,
@@ -1265,13 +1266,13 @@
             "timedOut": 0,
             "unassessed": 0
           },
-          "workerTimeMs": 355.488163
+          "workerTimeMs": 359.868604
         }
       },
       "reportTimings": {
-        "captureMs": 0.82407,
-        "executionMs": 1944.227286,
-        "wallMs": 1947.096247
+        "captureMs": 0.813611,
+        "executionMs": 1979.725184,
+        "wallMs": 1981.3596900000002
       }
     },
     {
@@ -1282,11 +1283,11 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 1961.6942930000005,
-      "stdoutBytes": 4281,
+      "wallMs": 1984.5974929999975,
+      "stdoutBytes": 4263,
       "stderrBytes": 0,
       "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
-      "diagnosticsHash": "67bf157f69946cf38142d950e20aeb89e7f764aa809dcc2de9f216b419d04bf7",
+      "diagnosticsHash": "145e849da891ead7803f6b285bea032cd953aa238e7affc5d47f88cfe554dc75",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -1298,8 +1299,8 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 2503.0897589999986,
-      "stdoutBytes": 3332,
+      "wallMs": 2145.8024449999975,
+      "stdoutBytes": 3363,
       "stderrBytes": 0,
       "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -1314,11 +1315,11 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 2176.794906000003,
-      "stdoutBytes": 4285,
+      "wallMs": 2063.514779000001,
+      "stdoutBytes": 4276,
       "stderrBytes": 919,
       "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
-      "diagnosticsHash": "687eb7f2b73c0dd7a4da9d97309283849221a8ab9060b196168abc0b4fa1c45f",
+      "diagnosticsHash": "73309392acfca71c7d81ac06954b8ebdcf276df01924f4bc2d093a59059b066d",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -1330,8 +1331,8 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 2038.9597160000012,
-      "stdoutBytes": 3356,
+      "wallMs": 2061.093918999999,
+      "stdoutBytes": 3391,
       "stderrBytes": 714,
       "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -1346,8 +1347,8 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 2027.0767149999992,
-      "stdoutBytes": 3342,
+      "wallMs": 2874.2745219999997,
+      "stdoutBytes": 3373,
       "stderrBytes": 714,
       "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -1362,11 +1363,11 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 2117.609608999999,
-      "stdoutBytes": 4270,
-      "stderrBytes": 919,
+      "wallMs": 3435.4367010000024,
+      "stdoutBytes": 4314,
+      "stderrBytes": 1047,
       "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
-      "diagnosticsHash": "84e294e4eef0a105cdcb0db7056813bc160520701d67f875eece45f028ad927d",
+      "diagnosticsHash": "7d5396889dbe3bcc9e338e9e72b7425e46ce6bafa3c106094d83609a9c640b13",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -1378,8 +1379,8 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 2153.831533999997,
-      "stdoutBytes": 3322,
+      "wallMs": 3012.115619999997,
+      "stdoutBytes": 3350,
       "stderrBytes": 0,
       "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -1394,11 +1395,11 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 2018.6825499999977,
-      "stdoutBytes": 4266,
+      "wallMs": 3717.9638520000008,
+      "stdoutBytes": 4259,
       "stderrBytes": 0,
       "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
-      "diagnosticsHash": "15fe565b3def05175b1963206a6e9b33ea03cafb1973c147d0fae6545525db73",
+      "diagnosticsHash": "931097f6138d19fbff3fc53373a4cea1a8009cd1b6488da0bc4b8955fb89107a",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -1410,8 +1411,8 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 2192.826073999997,
-      "stdoutBytes": 3658,
+      "wallMs": 2204.4134940000004,
+      "stdoutBytes": 3684,
       "stderrBytes": 0,
       "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -1426,11 +1427,11 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 2099.570141000004,
-      "stdoutBytes": 4581,
+      "wallMs": 2363.199038999999,
+      "stdoutBytes": 4595,
       "stderrBytes": 0,
       "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
-      "diagnosticsHash": "291dcc45fd3f290f15a38aaf1775d124657c1c1b7a38bb01f9d0837671f5f5e0",
+      "diagnosticsHash": "69534690a2f457a609d64a8365e2a7bf00a1b9f2a995012f321092448b3ecdc8",
       "diagnostics": {
         "report": {
           "concurrency": {
@@ -1474,21 +1475,21 @@
         "mutation": {
           "slowestExecutions": [
             {
-              "executionMs": 276.08594400000004,
+              "executionMs": 297.983938,
               "id": 0,
               "path": "src/compare.ts",
               "verdict": "killed"
             },
             {
-              "executionMs": 271.74257,
+              "executionMs": 271.687376,
               "id": 1,
               "path": "src/compare.ts",
               "verdict": "killed"
             }
           ],
           "throughput": {
-            "completedMutantsPerSecond": 7.24304000080021,
-            "jobsPerSecond": 7.24304000080021
+            "completedMutantsPerSecond": 6.710841564194492,
+            "jobsPerSecond": 6.710841564194492
           },
           "unresolvedBreakdown": {
             "cancelled": 0,
@@ -1497,13 +1498,13 @@
             "timedOut": 0,
             "unassessed": 0
           },
-          "workerTimeMs": 547.828514
+          "workerTimeMs": 569.6713139999999
         }
       },
       "reportTimings": {
-        "captureMs": 1.367205,
-        "executionMs": 2092.5670450000002,
-        "wallMs": 2094.707695
+        "captureMs": 1.188091,
+        "executionMs": 2357.525302,
+        "wallMs": 2359.479586
       }
     },
     {
@@ -1514,8 +1515,8 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 2126.0473429999984,
-      "stdoutBytes": 3703,
+      "wallMs": 2086.106936999997,
+      "stdoutBytes": 3654,
       "stderrBytes": 855,
       "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -1530,219 +1531,11 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 2076.9673170000024,
-      "stdoutBytes": 4605,
-      "stderrBytes": 999,
-      "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
-      "diagnosticsHash": "1435537aece0123a0ef303fc318db1928b9f1ab59b818481eb8328849c9924f7",
-      "diagnostics": {
-        "report": {
-          "concurrency": {
-            "runners": [
-              {
-                "command": "test",
-                "effectiveWorkers": 1,
-                "runner": "node",
-                "setup": "node-workspace",
-                "source": "--test-concurrency",
-                "state": "known"
-              },
-              {
-                "command": "coverage",
-                "effectiveWorkers": null,
-                "runner": "node",
-                "setup": "node-workspace",
-                "source": null,
-                "state": "unavailable"
-              }
-            ],
-            "seshat": {
-              "configuredWorkers": 2,
-              "effectiveWorkers": 2,
-              "state": "known"
-            }
-          },
-          "runnerVersions": [
-            {
-              "packages": [],
-              "runner": "node",
-              "runtime": {
-                "declared": null,
-                "declaredComparison": "unavailable",
-                "node": "24.20.0"
-              },
-              "setup": "node-workspace"
-            }
-          ]
-        },
-        "mutation": {
-          "slowestExecutions": [
-            {
-              "executionMs": 273.226646,
-              "id": 1,
-              "path": "src/compare.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 247.097355,
-              "id": 0,
-              "path": "src/compare.ts",
-              "verdict": "killed"
-            }
-          ],
-          "throughput": {
-            "completedMutantsPerSecond": 7.312304549411699,
-            "jobsPerSecond": 7.312304549411699
-          },
-          "unresolvedBreakdown": {
-            "cancelled": 0,
-            "executionError": 0,
-            "notRun": 0,
-            "timedOut": 0,
-            "unassessed": 0
-          },
-          "workerTimeMs": 520.324001
-        }
-      },
-      "reportTimings": {
-        "captureMs": 0.867892,
-        "executionMs": 2069.9330840000002,
-        "wallMs": 2072.236057
-      }
-    },
-    {
-      "binary": "baseline",
-      "fixture": "nodeWorkspace",
-      "workers": 2,
-      "progress": false,
-      "phase": "measured",
-      "pair": 0,
-      "sample": 1,
-      "wallMs": 2743.559116999997,
-      "stdoutBytes": 3645,
-      "stderrBytes": 0,
-      "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
-      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
-      "diagnostics": null,
-      "reportTimings": null
-    },
-    {
-      "binary": "candidate",
-      "fixture": "nodeWorkspace",
-      "workers": 2,
-      "progress": false,
-      "phase": "measured",
-      "pair": 0,
-      "sample": 1,
-      "wallMs": 2083.751986000003,
-      "stdoutBytes": 4620,
-      "stderrBytes": 0,
-      "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
-      "diagnosticsHash": "008ff826747a795bea3180c94c219045af2b29f22d4c863e9a97218c335db564",
-      "diagnostics": {
-        "report": {
-          "concurrency": {
-            "runners": [
-              {
-                "command": "test",
-                "effectiveWorkers": 1,
-                "runner": "node",
-                "setup": "node-workspace",
-                "source": "--test-concurrency",
-                "state": "known"
-              },
-              {
-                "command": "coverage",
-                "effectiveWorkers": null,
-                "runner": "node",
-                "setup": "node-workspace",
-                "source": null,
-                "state": "unavailable"
-              }
-            ],
-            "seshat": {
-              "configuredWorkers": 2,
-              "effectiveWorkers": 2,
-              "state": "known"
-            }
-          },
-          "runnerVersions": [
-            {
-              "packages": [],
-              "runner": "node",
-              "runtime": {
-                "declared": null,
-                "declaredComparison": "unavailable",
-                "node": "24.20.0"
-              },
-              "setup": "node-workspace"
-            }
-          ]
-        },
-        "mutation": {
-          "slowestExecutions": [
-            {
-              "executionMs": 277.53293499999995,
-              "id": 0,
-              "path": "src/compare.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 253.94078,
-              "id": 1,
-              "path": "src/compare.ts",
-              "verdict": "killed"
-            }
-          ],
-          "throughput": {
-            "completedMutantsPerSecond": 7.205261812482744,
-            "jobsPerSecond": 7.205261812482744
-          },
-          "unresolvedBreakdown": {
-            "cancelled": 0,
-            "executionError": 0,
-            "notRun": 0,
-            "timedOut": 0,
-            "unassessed": 0
-          },
-          "workerTimeMs": 531.473715
-        }
-      },
-      "reportTimings": {
-        "captureMs": 0.81845,
-        "executionMs": 2078.219335,
-        "wallMs": 2079.8053689999997
-      }
-    },
-    {
-      "binary": "baseline",
-      "fixture": "nodeWorkspace",
-      "workers": 2,
-      "progress": true,
-      "phase": "measured",
-      "pair": 0,
-      "sample": 1,
-      "wallMs": 2214.016908000005,
-      "stdoutBytes": 3661,
-      "stderrBytes": 855,
-      "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
-      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
-      "diagnostics": null,
-      "reportTimings": null
-    },
-    {
-      "binary": "candidate",
-      "fixture": "nodeWorkspace",
-      "workers": 2,
-      "progress": true,
-      "phase": "measured",
-      "pair": 0,
-      "sample": 1,
-      "wallMs": 2116.3503169999967,
-      "stdoutBytes": 4620,
+      "wallMs": 2219.9066659999953,
+      "stdoutBytes": 4617,
       "stderrBytes": 1127,
       "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
-      "diagnosticsHash": "92bdbcae3b61098f4d4c335c0a27f7878c46847a243d6be5ea32110f01ca7545",
+      "diagnosticsHash": "26092e2046a644c818dfcde37d45ddf96719b6eb143ef3daef8d96ad9be4b49a",
       "diagnostics": {
         "report": {
           "concurrency": {
@@ -1786,21 +1579,21 @@
         "mutation": {
           "slowestExecutions": [
             {
-              "executionMs": 275.77844899999997,
+              "executionMs": 295.149108,
               "id": 0,
               "path": "src/compare.ts",
               "verdict": "killed"
             },
             {
-              "executionMs": 261.40725599999996,
+              "executionMs": 275.60278,
               "id": 1,
               "path": "src/compare.ts",
               "verdict": "killed"
             }
           ],
           "throughput": {
-            "completedMutantsPerSecond": 7.246283870127173,
-            "jobsPerSecond": 7.246283870127173
+            "completedMutantsPerSecond": 6.769931546717257,
+            "jobsPerSecond": 6.769931546717257
           },
           "unresolvedBreakdown": {
             "cancelled": 0,
@@ -1809,13 +1602,221 @@
             "timedOut": 0,
             "unassessed": 0
           },
-          "workerTimeMs": 537.1857049999999
+          "workerTimeMs": 570.751888
         }
       },
       "reportTimings": {
-        "captureMs": 2.701277,
-        "executionMs": 2109.22805,
-        "wallMs": 2112.819911
+        "captureMs": 0.835972,
+        "executionMs": 2214.822091,
+        "wallMs": 2216.4885170000002
+      }
+    },
+    {
+      "binary": "baseline",
+      "fixture": "nodeWorkspace",
+      "workers": 2,
+      "progress": false,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 2845.325742000001,
+      "stdoutBytes": 3702,
+      "stderrBytes": 0,
+      "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
+      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
+      "diagnostics": null,
+      "reportTimings": null
+    },
+    {
+      "binary": "candidate",
+      "fixture": "nodeWorkspace",
+      "workers": 2,
+      "progress": false,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 2131.6668720000016,
+      "stdoutBytes": 4587,
+      "stderrBytes": 0,
+      "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
+      "diagnosticsHash": "64ac6aeeab0df64773d4706dd4559d625ae86fe5f2e753b5a00fb302f4fcb61c",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": "--test-concurrency",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": null,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": null,
+                "state": "unavailable"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 2,
+              "effectiveWorkers": 2,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [],
+              "runner": "node",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "node-workspace"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 284.703373,
+              "id": 0,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 265.093878,
+              "id": 1,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 7.023849551390241,
+            "jobsPerSecond": 7.023849551390241
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 549.797251
+        }
+      },
+      "reportTimings": {
+        "captureMs": 0.830862,
+        "executionMs": 2126.04536,
+        "wallMs": 2127.627806
+      }
+    },
+    {
+      "binary": "baseline",
+      "fixture": "nodeWorkspace",
+      "workers": 2,
+      "progress": true,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 2110.4209770000016,
+      "stdoutBytes": 3650,
+      "stderrBytes": 855,
+      "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
+      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
+      "diagnostics": null,
+      "reportTimings": null
+    },
+    {
+      "binary": "candidate",
+      "fixture": "nodeWorkspace",
+      "workers": 2,
+      "progress": true,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 2182.389049999998,
+      "stdoutBytes": 4596,
+      "stderrBytes": 1127,
+      "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
+      "diagnosticsHash": "e41eab9371158dc08381344452a02809d46f5251cb213f51946a778cdaf2edc4",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": "--test-concurrency",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": null,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": null,
+                "state": "unavailable"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 2,
+              "effectiveWorkers": 2,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [],
+              "runner": "node",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "node-workspace"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 289.467368,
+              "id": 0,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 274.806316,
+              "id": 1,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 6.897989336474162,
+            "jobsPerSecond": 6.897989336474162
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 564.273684
+        }
+      },
+      "reportTimings": {
+        "captureMs": 1.148466,
+        "executionMs": 2176.761677,
+        "wallMs": 2178.8691550000003
       }
     },
     {
@@ -1826,11 +1827,11 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 2078.0691929999957,
-      "stdoutBytes": 4629,
+      "wallMs": 2095.4758470000015,
+      "stdoutBytes": 4644,
       "stderrBytes": 1127,
       "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
-      "diagnosticsHash": "f78df6fd7c3d2db65c307a42d0cc8d183dfa3bb273282428f48224de4d9ed12d",
+      "diagnosticsHash": "3518edc06bc2ead701488d2274751d96837da5552d504fb70afe672fe3b54348",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -1842,8 +1843,8 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 2711.3105789999972,
-      "stdoutBytes": 3635,
+      "wallMs": 2080.671300999995,
+      "stdoutBytes": 3653,
       "stderrBytes": 855,
       "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -1858,11 +1859,11 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 2158.2406499999997,
-      "stdoutBytes": 4589,
+      "wallMs": 2162.354131,
+      "stdoutBytes": 4613,
       "stderrBytes": 0,
       "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
-      "diagnosticsHash": "4af2923f0a099b4ed088cec835560046468d9ffff36d3532794c2ba0ad081b61",
+      "diagnosticsHash": "2177bc6e697aeb816d08749e5ec367380cdf47b02ce6a205a143854322330ae9",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -1874,8 +1875,8 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 2141.740699999995,
-      "stdoutBytes": 3677,
+      "wallMs": 2042.0126689999888,
+      "stdoutBytes": 3675,
       "stderrBytes": 0,
       "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -1890,8 +1891,8 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 2154.6018690000055,
-      "stdoutBytes": 3657,
+      "wallMs": 2176.999696999992,
+      "stdoutBytes": 3710,
       "stderrBytes": 0,
       "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -1906,11 +1907,11 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 2215.5715159999963,
-      "stdoutBytes": 4601,
+      "wallMs": 2216.2230150000105,
+      "stdoutBytes": 4585,
       "stderrBytes": 0,
       "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
-      "diagnosticsHash": "eb362ade5dff37ac10ce994964feb837ee3f76175a18edbcef31d3b6934d776e",
+      "diagnosticsHash": "40bcf70702ce10ddc2896383daeb396f405e64c085accf17b24824f722d3c25d",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -1922,8 +1923,8 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 2120.353952000005,
-      "stdoutBytes": 3661,
+      "wallMs": 2174.2891089999903,
+      "stdoutBytes": 3682,
       "stderrBytes": 855,
       "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -1938,11 +1939,11 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 2085.7297540000145,
-      "stdoutBytes": 4586,
+      "wallMs": 2281.849961999993,
+      "stdoutBytes": 4621,
       "stderrBytes": 1127,
       "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
-      "diagnosticsHash": "0110c395945d5ec7c5b25e6ef4ab1248ed4be22e997eaacd8bfbb5069771999e",
+      "diagnosticsHash": "8019a78a7038d87a1be185d1b7a1d7d94163f90fe6bc00db1a82293274e7b751",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -1954,7 +1955,555 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 9403.992333000002,
+      "wallMs": 9176.095077999998,
+      "stdoutBytes": 13401,
+      "stderrBytes": 870,
+      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
+      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
+      "diagnostics": null,
+      "reportTimings": null
+    },
+    {
+      "binary": "candidate",
+      "fixture": "vitest",
+      "workers": 1,
+      "progress": true,
+      "phase": "warmup",
+      "pair": null,
+      "sample": null,
+      "wallMs": 9355.076138999997,
+      "stdoutBytes": 14902,
+      "stderrBytes": 1276,
+      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
+      "diagnosticsHash": "2b5407d1747744e7f091ef9b91d627d6d2540bc0e91989e723b677698a83501a",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 1,
+              "effectiveWorkers": 1,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "5.0.0",
+                  "declared": null,
+                  "declaredComparison": "unavailable",
+                  "locked": null,
+                  "lockedComparison": "unavailable",
+                  "name": "vitest"
+                }
+              ],
+              "runner": "vitest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "stack"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 938.539775,
+              "id": 3,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 937.525919,
+              "id": 2,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 936.741569,
+              "id": 0,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 924.829341,
+              "id": 1,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 1.0700713566463722,
+            "jobsPerSecond": 1.0700713566463722
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 3737.6366040000003
+        }
+      },
+      "reportTimings": {
+        "captureMs": 692.9031060000001,
+        "executionMs": 8276.030533000001,
+        "wallMs": 9350.216162
+      }
+    },
+    {
+      "binary": "baseline",
+      "fixture": "vitest",
+      "workers": 1,
+      "progress": false,
+      "phase": "warmup",
+      "pair": null,
+      "sample": null,
+      "wallMs": 9219.999229999987,
+      "stdoutBytes": 13452,
+      "stderrBytes": 0,
+      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
+      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
+      "diagnostics": null,
+      "reportTimings": null
+    },
+    {
+      "binary": "candidate",
+      "fixture": "vitest",
+      "workers": 1,
+      "progress": false,
+      "phase": "warmup",
+      "pair": null,
+      "sample": null,
+      "wallMs": 9267.022645000005,
+      "stdoutBytes": 14876,
+      "stderrBytes": 0,
+      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
+      "diagnosticsHash": "6cdd193f4f8354b90b74742e2fb75c5575444d1bda7e0d642aa167b0f4814a99",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 1,
+              "effectiveWorkers": 1,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "5.0.0",
+                  "declared": null,
+                  "declaredComparison": "unavailable",
+                  "locked": null,
+                  "lockedComparison": "unavailable",
+                  "name": "vitest"
+                }
+              ],
+              "runner": "vitest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "stack"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 980.126633,
+              "id": 3,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 967.493963,
+              "id": 1,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 964.234224,
+              "id": 0,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 936.316283,
+              "id": 2,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 1.039449063806324,
+            "jobsPerSecond": 1.039449063806324
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 3848.171103
+        }
+      },
+      "reportTimings": {
+        "captureMs": 744.724822,
+        "executionMs": 8245.75219,
+        "wallMs": 9260.943053
+      }
+    },
+    {
+      "binary": "baseline",
+      "fixture": "vitest",
+      "workers": 1,
+      "progress": true,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 9750.190904000003,
+      "stdoutBytes": 13431,
+      "stderrBytes": 870,
+      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
+      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
+      "diagnostics": null,
+      "reportTimings": null
+    },
+    {
+      "binary": "candidate",
+      "fixture": "vitest",
+      "workers": 1,
+      "progress": true,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 12742.181220999992,
+      "stdoutBytes": 14897,
+      "stderrBytes": 1280,
+      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
+      "diagnosticsHash": "6985957d1343d663adae556af57c588b0fdedd6c0cc21c18d90d66f79fae6e94",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 1,
+              "effectiveWorkers": 1,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "5.0.0",
+                  "declared": null,
+                  "declaredComparison": "unavailable",
+                  "locked": null,
+                  "lockedComparison": "unavailable",
+                  "name": "vitest"
+                }
+              ],
+              "runner": "vitest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "stack"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 2087.779274,
+              "id": 0,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1854.209566,
+              "id": 3,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1256.509803,
+              "id": 1,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1198.583435,
+              "id": 2,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 0.6251636512379846,
+            "jobsPerSecond": 0.6251636512379846
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 6397.0820779999995
+        }
+      },
+      "reportTimings": {
+        "captureMs": 964.1957580000001,
+        "executionMs": 11505.65447,
+        "wallMs": 12735.118551
+      }
+    },
+    {
+      "binary": "baseline",
+      "fixture": "vitest",
+      "workers": 1,
+      "progress": false,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 10836.822736000002,
+      "stdoutBytes": 13442,
+      "stderrBytes": 0,
+      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
+      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
+      "diagnostics": null,
+      "reportTimings": null
+    },
+    {
+      "binary": "candidate",
+      "fixture": "vitest",
+      "workers": 1,
+      "progress": false,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 10615.112514000008,
+      "stdoutBytes": 14901,
+      "stderrBytes": 0,
+      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
+      "diagnosticsHash": "689a034a7fa63d01d8297993d6e1c06cb3196e6985f24479b1681a3c79b340f0",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 1,
+              "effectiveWorkers": 1,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "5.0.0",
+                  "declared": null,
+                  "declaredComparison": "unavailable",
+                  "locked": null,
+                  "lockedComparison": "unavailable",
+                  "name": "vitest"
+                }
+              ],
+              "runner": "vitest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "stack"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 1384.286633,
+              "id": 0,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1270.027971,
+              "id": 1,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1036.404947,
+              "id": 2,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 927.0118040000001,
+              "id": 3,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 0.8662224399504087,
+            "jobsPerSecond": 0.8662224399504087
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 4617.731355
+        }
+      },
+      "reportTimings": {
+        "captureMs": 756.388217,
+        "executionMs": 9592.00597,
+        "wallMs": 10593.602095
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "vitest",
+      "workers": 1,
+      "progress": false,
+      "phase": "measured",
+      "pair": 1,
+      "sample": 2,
+      "wallMs": 10506.873678000004,
+      "stdoutBytes": 14897,
+      "stderrBytes": 0,
+      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
+      "diagnosticsHash": "47f08b1f97774f77ef3f029864935057a57525a40c0910746f9ecb35dd83ba11",
+      "diagnostics": null,
+      "reportTimings": null
+    },
+    {
+      "binary": "baseline",
+      "fixture": "vitest",
+      "workers": 1,
+      "progress": false,
+      "phase": "measured",
+      "pair": 1,
+      "sample": 2,
+      "wallMs": 9528.969981000002,
+      "stdoutBytes": 13507,
+      "stderrBytes": 0,
+      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
+      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
+      "diagnostics": null,
+      "reportTimings": null
+    },
+    {
+      "binary": "candidate",
+      "fixture": "vitest",
+      "workers": 1,
+      "progress": true,
+      "phase": "measured",
+      "pair": 1,
+      "sample": 2,
+      "wallMs": 10162.193635999982,
+      "stdoutBytes": 14950,
+      "stderrBytes": 1276,
+      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
+      "diagnosticsHash": "d2b5de4fa1e1289becacb6e09f5afda154fceec028885c183f4efd465a16170a",
+      "diagnostics": null,
+      "reportTimings": null
+    },
+    {
+      "binary": "baseline",
+      "fixture": "vitest",
+      "workers": 1,
+      "progress": true,
+      "phase": "measured",
+      "pair": 1,
+      "sample": 2,
+      "wallMs": 10451.771925000008,
       "stdoutBytes": 13439,
       "stderrBytes": 870,
       "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
@@ -1963,249 +2512,15 @@
       "reportTimings": null
     },
     {
-      "binary": "candidate",
-      "fixture": "vitest",
-      "workers": 1,
-      "progress": true,
-      "phase": "warmup",
-      "pair": null,
-      "sample": null,
-      "wallMs": 11496.182615999991,
-      "stdoutBytes": 14584,
-      "stderrBytes": 1280,
-      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
-      "diagnosticsHash": "fb939ed8a38237b05d1c83789c713a74aad86418938519147482cc024df5f61d",
-      "diagnostics": {
-        "report": {
-          "concurrency": {
-            "runners": [
-              {
-                "command": "test",
-                "effectiveWorkers": 1,
-                "runner": "vitest",
-                "setup": "stack",
-                "source": "--maxWorkers",
-                "state": "known"
-              },
-              {
-                "command": "coverage",
-                "effectiveWorkers": 1,
-                "runner": "vitest",
-                "setup": "stack",
-                "source": "--maxWorkers",
-                "state": "known"
-              }
-            ],
-            "seshat": {
-              "configuredWorkers": 1,
-              "effectiveWorkers": 1,
-              "state": "known"
-            }
-          },
-          "runnerVersions": [
-            {
-              "packages": [
-                {
-                  "actual": "5.0.0",
-                  "declared": null,
-                  "declaredComparison": "unavailable",
-                  "locked": null,
-                  "lockedComparison": "unavailable",
-                  "name": "vitest"
-                }
-              ],
-              "runner": "vitest",
-              "runtime": {
-                "declared": null,
-                "declaredComparison": "unavailable",
-                "node": "24.20.0"
-              },
-              "setup": "stack"
-            }
-          ]
-        },
-        "mutation": {
-          "slowestExecutions": [
-            {
-              "executionMs": 1169.614811,
-              "id": 0,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 1061.72327,
-              "id": 1,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 1039.749412,
-              "id": 3,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 959.030505,
-              "id": 2,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            }
-          ],
-          "throughput": {
-            "completedMutantsPerSecond": 0.94551466272086,
-            "jobsPerSecond": 0.94551466272086
-          },
-          "unresolvedBreakdown": {
-            "cancelled": 0,
-            "executionError": 0,
-            "notRun": 0,
-            "timedOut": 0,
-            "unassessed": 0
-          },
-          "workerTimeMs": 4230.117998
-        }
-      },
-      "reportTimings": {
-        "captureMs": 637.709211,
-        "executionMs": 10617.530426,
-        "wallMs": 11491.342011
-      }
-    },
-    {
-      "binary": "baseline",
-      "fixture": "vitest",
-      "workers": 1,
-      "progress": false,
-      "phase": "warmup",
-      "pair": null,
-      "sample": null,
-      "wallMs": 9154.016168000002,
-      "stdoutBytes": 13407,
-      "stderrBytes": 0,
-      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
-      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
-      "diagnostics": null,
-      "reportTimings": null
-    },
-    {
-      "binary": "candidate",
-      "fixture": "vitest",
-      "workers": 1,
-      "progress": false,
-      "phase": "warmup",
-      "pair": null,
-      "sample": null,
-      "wallMs": 9951.684127999994,
-      "stdoutBytes": 14625,
-      "stderrBytes": 0,
-      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
-      "diagnosticsHash": "6733930eff586935befa25b58ecb72b88e2a53fb77a38d9f9cfef17e6542d174",
-      "diagnostics": {
-        "report": {
-          "concurrency": {
-            "runners": [
-              {
-                "command": "test",
-                "effectiveWorkers": 1,
-                "runner": "vitest",
-                "setup": "stack",
-                "source": "--maxWorkers",
-                "state": "known"
-              },
-              {
-                "command": "coverage",
-                "effectiveWorkers": 1,
-                "runner": "vitest",
-                "setup": "stack",
-                "source": "--maxWorkers",
-                "state": "known"
-              }
-            ],
-            "seshat": {
-              "configuredWorkers": 1,
-              "effectiveWorkers": 1,
-              "state": "known"
-            }
-          },
-          "runnerVersions": [
-            {
-              "packages": [
-                {
-                  "actual": "5.0.0",
-                  "declared": null,
-                  "declaredComparison": "unavailable",
-                  "locked": null,
-                  "lockedComparison": "unavailable",
-                  "name": "vitest"
-                }
-              ],
-              "runner": "vitest",
-              "runtime": {
-                "declared": null,
-                "declaredComparison": "unavailable",
-                "node": "24.20.0"
-              },
-              "setup": "stack"
-            }
-          ]
-        },
-        "mutation": {
-          "slowestExecutions": [
-            {
-              "executionMs": 1061.511432,
-              "id": 2,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 1056.910211,
-              "id": 0,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 1028.115448,
-              "id": 3,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 941.1383880000001,
-              "id": 1,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            }
-          ],
-          "throughput": {
-            "completedMutantsPerSecond": 0.9785457319657495,
-            "jobsPerSecond": 0.9785457319657495
-          },
-          "unresolvedBreakdown": {
-            "cancelled": 0,
-            "executionError": 0,
-            "notRun": 0,
-            "timedOut": 0,
-            "unassessed": 0
-          },
-          "workerTimeMs": 4087.675479
-        }
-      },
-      "reportTimings": {
-        "captureMs": 698.402667,
-        "executionMs": 8806.223442,
-        "wallMs": 9947.050289
-      }
-    },
-    {
       "binary": "baseline",
       "fixture": "vitest",
       "workers": 1,
       "progress": true,
       "phase": "measured",
-      "pair": 0,
-      "sample": 1,
-      "wallMs": 9607.812737999993,
-      "stdoutBytes": 13467,
+      "pair": 2,
+      "sample": 3,
+      "wallMs": 10070.224736000004,
+      "stdoutBytes": 13456,
       "stderrBytes": 870,
       "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -2218,327 +2533,13 @@
       "workers": 1,
       "progress": true,
       "phase": "measured",
-      "pair": 0,
-      "sample": 1,
-      "wallMs": 10819.433963000003,
-      "stdoutBytes": 14635,
-      "stderrBytes": 1277,
-      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
-      "diagnosticsHash": "81c2f92493f4fc8bfdf9d6b996634034cdd7b6f07a3964f29eabc88bfea4c4d6",
-      "diagnostics": {
-        "report": {
-          "concurrency": {
-            "runners": [
-              {
-                "command": "test",
-                "effectiveWorkers": 1,
-                "runner": "vitest",
-                "setup": "stack",
-                "source": "--maxWorkers",
-                "state": "known"
-              },
-              {
-                "command": "coverage",
-                "effectiveWorkers": 1,
-                "runner": "vitest",
-                "setup": "stack",
-                "source": "--maxWorkers",
-                "state": "known"
-              }
-            ],
-            "seshat": {
-              "configuredWorkers": 1,
-              "effectiveWorkers": 1,
-              "state": "known"
-            }
-          },
-          "runnerVersions": [
-            {
-              "packages": [
-                {
-                  "actual": "5.0.0",
-                  "declared": null,
-                  "declaredComparison": "unavailable",
-                  "locked": null,
-                  "lockedComparison": "unavailable",
-                  "name": "vitest"
-                }
-              ],
-              "runner": "vitest",
-              "runtime": {
-                "declared": null,
-                "declaredComparison": "unavailable",
-                "node": "24.20.0"
-              },
-              "setup": "stack"
-            }
-          ]
-        },
-        "mutation": {
-          "slowestExecutions": [
-            {
-              "executionMs": 1150.788695,
-              "id": 2,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 1016.482274,
-              "id": 3,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 966.546046,
-              "id": 0,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 950.0243459999999,
-              "id": 1,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            }
-          ],
-          "throughput": {
-            "completedMutantsPerSecond": 0.9793740687131981,
-            "jobsPerSecond": 0.9793740687131981
-          },
-          "unresolvedBreakdown": {
-            "cancelled": 0,
-            "executionError": 0,
-            "notRun": 0,
-            "timedOut": 0,
-            "unassessed": 0
-          },
-          "workerTimeMs": 4083.841361
-        }
-      },
-      "reportTimings": {
-        "captureMs": 675.001754,
-        "executionMs": 9863.26844,
-        "wallMs": 10814.280951
-      }
-    },
-    {
-      "binary": "baseline",
-      "fixture": "vitest",
-      "workers": 1,
-      "progress": false,
-      "phase": "measured",
-      "pair": 0,
-      "sample": 1,
-      "wallMs": 10087.372986000002,
-      "stdoutBytes": 13438,
-      "stderrBytes": 0,
-      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
-      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
-      "diagnostics": null,
-      "reportTimings": null
-    },
-    {
-      "binary": "candidate",
-      "fixture": "vitest",
-      "workers": 1,
-      "progress": false,
-      "phase": "measured",
-      "pair": 0,
-      "sample": 1,
-      "wallMs": 10086.547277999984,
-      "stdoutBytes": 14629,
-      "stderrBytes": 0,
-      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
-      "diagnosticsHash": "b0df4b431a755bfbe25a6638a9e095ff148ed17efc8cecbcf3d0fd4ab0eb6ec4",
-      "diagnostics": {
-        "report": {
-          "concurrency": {
-            "runners": [
-              {
-                "command": "test",
-                "effectiveWorkers": 1,
-                "runner": "vitest",
-                "setup": "stack",
-                "source": "--maxWorkers",
-                "state": "known"
-              },
-              {
-                "command": "coverage",
-                "effectiveWorkers": 1,
-                "runner": "vitest",
-                "setup": "stack",
-                "source": "--maxWorkers",
-                "state": "known"
-              }
-            ],
-            "seshat": {
-              "configuredWorkers": 1,
-              "effectiveWorkers": 1,
-              "state": "known"
-            }
-          },
-          "runnerVersions": [
-            {
-              "packages": [
-                {
-                  "actual": "5.0.0",
-                  "declared": null,
-                  "declaredComparison": "unavailable",
-                  "locked": null,
-                  "lockedComparison": "unavailable",
-                  "name": "vitest"
-                }
-              ],
-              "runner": "vitest",
-              "runtime": {
-                "declared": null,
-                "declaredComparison": "unavailable",
-                "node": "24.20.0"
-              },
-              "setup": "stack"
-            }
-          ]
-        },
-        "mutation": {
-          "slowestExecutions": [
-            {
-              "executionMs": 1134.915083,
-              "id": 0,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 1115.053226,
-              "id": 2,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 1038.678417,
-              "id": 1,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 968.8232390000001,
-              "id": 3,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            }
-          ],
-          "throughput": {
-            "completedMutantsPerSecond": 0.9395206832110227,
-            "jobsPerSecond": 0.9395206832110227
-          },
-          "unresolvedBreakdown": {
-            "cancelled": 0,
-            "executionError": 0,
-            "notRun": 0,
-            "timedOut": 0,
-            "unassessed": 0
-          },
-          "workerTimeMs": 4257.469965
-        }
-      },
-      "reportTimings": {
-        "captureMs": 677.1283139999999,
-        "executionMs": 9164.263192,
-        "wallMs": 10081.591936
-      }
-    },
-    {
-      "binary": "candidate",
-      "fixture": "vitest",
-      "workers": 1,
-      "progress": false,
-      "phase": "measured",
-      "pair": 1,
-      "sample": 2,
-      "wallMs": 11605.551246999996,
-      "stdoutBytes": 14639,
-      "stderrBytes": 0,
-      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
-      "diagnosticsHash": "fd49eef0d9785d66d38e4caf194726c98156aa1472b44009c7525274c7aac28d",
-      "diagnostics": null,
-      "reportTimings": null
-    },
-    {
-      "binary": "baseline",
-      "fixture": "vitest",
-      "workers": 1,
-      "progress": false,
-      "phase": "measured",
-      "pair": 1,
-      "sample": 2,
-      "wallMs": 9522.304099,
-      "stdoutBytes": 13457,
-      "stderrBytes": 0,
-      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
-      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
-      "diagnostics": null,
-      "reportTimings": null
-    },
-    {
-      "binary": "candidate",
-      "fixture": "vitest",
-      "workers": 1,
-      "progress": true,
-      "phase": "measured",
-      "pair": 1,
-      "sample": 2,
-      "wallMs": 9806.516674999992,
-      "stdoutBytes": 14600,
+      "pair": 2,
+      "sample": 3,
+      "wallMs": 10571.988902000012,
+      "stdoutBytes": 14883,
       "stderrBytes": 1276,
       "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
-      "diagnosticsHash": "22e604199cca455704c5e479e62141118479c048a2839aca7b4d3531df441679",
-      "diagnostics": null,
-      "reportTimings": null
-    },
-    {
-      "binary": "baseline",
-      "fixture": "vitest",
-      "workers": 1,
-      "progress": true,
-      "phase": "measured",
-      "pair": 1,
-      "sample": 2,
-      "wallMs": 9499.03667999999,
-      "stdoutBytes": 13442,
-      "stderrBytes": 870,
-      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
-      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
-      "diagnostics": null,
-      "reportTimings": null
-    },
-    {
-      "binary": "baseline",
-      "fixture": "vitest",
-      "workers": 1,
-      "progress": true,
-      "phase": "measured",
-      "pair": 2,
-      "sample": 3,
-      "wallMs": 9832.154905000003,
-      "stdoutBytes": 13458,
-      "stderrBytes": 870,
-      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
-      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
-      "diagnostics": null,
-      "reportTimings": null
-    },
-    {
-      "binary": "candidate",
-      "fixture": "vitest",
-      "workers": 1,
-      "progress": true,
-      "phase": "measured",
-      "pair": 2,
-      "sample": 3,
-      "wallMs": 8885.401662999997,
-      "stdoutBytes": 14595,
-      "stderrBytes": 1276,
-      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
-      "diagnosticsHash": "11e63013894b3da5d7190a784d20c2ed9f93d1304689fac93e27026e2bc8c57d",
+      "diagnosticsHash": "d33cdc2deabebd862a4f346cecac981a35721065dbf7b3efac470e37f587a413",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -2550,8 +2551,8 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 9893.841462000011,
-      "stdoutBytes": 13474,
+      "wallMs": 9409.447834999999,
+      "stdoutBytes": 13423,
       "stderrBytes": 0,
       "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -2566,11 +2567,11 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 9532.77825199999,
-      "stdoutBytes": 14637,
+      "wallMs": 8886.693980000011,
+      "stdoutBytes": 14882,
       "stderrBytes": 0,
       "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
-      "diagnosticsHash": "79fcba704c46c20742b03fd5de561f5beb0e3d5bfc1e66e1f1597cf157a88898",
+      "diagnosticsHash": "5e85a0744424727660152ed0ce1fc76e7b8df00ee6a09e62c8e49d71aaceade2",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -2582,8 +2583,8 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 10451.733555000013,
-      "stdoutBytes": 13754,
+      "wallMs": 10533.54804200001,
+      "stdoutBytes": 13815,
       "stderrBytes": 0,
       "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -2598,11 +2599,11 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 10651.786614000011,
-      "stdoutBytes": 14973,
+      "wallMs": 10577.786098000011,
+      "stdoutBytes": 15273,
       "stderrBytes": 0,
       "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
-      "diagnosticsHash": "ea9553ae53cbed39c1b04bc82e6eca7c7f16830e8bebc2a7610347a481015dac",
+      "diagnosticsHash": "1048bb55cabbd056485c995ac9143d1642cfd673cda9474ea045efe9c7bd02cf",
       "diagnostics": {
         "report": {
           "concurrency": {
@@ -2612,7 +2613,7 @@
                 "effectiveWorkers": 1,
                 "runner": "vitest",
                 "setup": "stack",
-                "source": "--maxWorkers",
+                "source": "resolved-config",
                 "state": "known"
               },
               {
@@ -2620,7 +2621,7 @@
                 "effectiveWorkers": 1,
                 "runner": "vitest",
                 "setup": "stack",
-                "source": "--maxWorkers",
+                "source": "resolved-config",
                 "state": "known"
               }
             ],
@@ -2655,33 +2656,33 @@
         "mutation": {
           "slowestExecutions": [
             {
-              "executionMs": 1639.411914,
-              "id": 3,
+              "executionMs": 1757.1906419999998,
+              "id": 0,
               "path": "tempo.ts",
               "verdict": "killed"
             },
             {
-              "executionMs": 1623.920517,
-              "id": 2,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 1587.864008,
+              "executionMs": 1718.842037,
               "id": 1,
               "path": "tempo.ts",
               "verdict": "killed"
             },
             {
-              "executionMs": 1536.530422,
-              "id": 0,
+              "executionMs": 1625.250474,
+              "id": 3,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1567.8155179999999,
+              "id": 2,
               "path": "tempo.ts",
               "verdict": "killed"
             }
           ],
           "throughput": {
-            "completedMutantsPerSecond": 1.2393746336702935,
-            "jobsPerSecond": 1.2393746336702935
+            "completedMutantsPerSecond": 1.1825610821439079,
+            "jobsPerSecond": 1.1825610821439079
           },
           "unresolvedBreakdown": {
             "cancelled": 0,
@@ -2690,13 +2691,13 @@
             "timedOut": 0,
             "unassessed": 0
           },
-          "workerTimeMs": 6387.726861000001
+          "workerTimeMs": 6669.098671
         }
       },
       "reportTimings": {
-        "captureMs": 691.579826,
-        "executionMs": 9725.448124999999,
-        "wallMs": 10647.383801
+        "captureMs": 661.297326,
+        "executionMs": 9687.406617,
+        "wallMs": 10572.953851
       }
     },
     {
@@ -2707,258 +2708,8 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 11424.132273000025,
-      "stdoutBytes": 13802,
-      "stderrBytes": 885,
-      "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
-      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
-      "diagnostics": null,
-      "reportTimings": null
-    },
-    {
-      "binary": "candidate",
-      "fixture": "vitest",
-      "workers": 2,
-      "progress": true,
-      "phase": "warmup",
-      "pair": null,
-      "sample": null,
-      "wallMs": 13777.718819000002,
-      "stdoutBytes": 14995,
-      "stderrBytes": 1224,
-      "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
-      "diagnosticsHash": "a120224da5a3dd5aa705cbe3c82bdab646698acbc731d0953126844b03d2f9e8",
-      "diagnostics": {
-        "report": {
-          "concurrency": {
-            "runners": [
-              {
-                "command": "test",
-                "effectiveWorkers": 1,
-                "runner": "vitest",
-                "setup": "stack",
-                "source": "--maxWorkers",
-                "state": "known"
-              },
-              {
-                "command": "coverage",
-                "effectiveWorkers": 1,
-                "runner": "vitest",
-                "setup": "stack",
-                "source": "--maxWorkers",
-                "state": "known"
-              }
-            ],
-            "seshat": {
-              "configuredWorkers": 2,
-              "effectiveWorkers": 2,
-              "state": "known"
-            }
-          },
-          "runnerVersions": [
-            {
-              "packages": [
-                {
-                  "actual": "5.0.0",
-                  "declared": null,
-                  "declaredComparison": "unavailable",
-                  "locked": null,
-                  "lockedComparison": "unavailable",
-                  "name": "vitest"
-                }
-              ],
-              "runner": "vitest",
-              "runtime": {
-                "declared": null,
-                "declaredComparison": "unavailable",
-                "node": "24.20.0"
-              },
-              "setup": "stack"
-            }
-          ]
-        },
-        "mutation": {
-          "slowestExecutions": [
-            {
-              "executionMs": 2342.319841,
-              "id": 2,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 2209.344221,
-              "id": 0,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 2173.1460270000002,
-              "id": 3,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 1962.947922,
-              "id": 1,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            }
-          ],
-          "throughput": {
-            "completedMutantsPerSecond": 0.9126050658028225,
-            "jobsPerSecond": 0.9126050658028225
-          },
-          "unresolvedBreakdown": {
-            "cancelled": 0,
-            "executionError": 0,
-            "notRun": 0,
-            "timedOut": 0,
-            "unassessed": 0
-          },
-          "workerTimeMs": 8687.758011
-        }
-      },
-      "reportTimings": {
-        "captureMs": 639.6333480000001,
-        "executionMs": 12864.647508999999,
-        "wallMs": 13773.382404
-      }
-    },
-    {
-      "binary": "baseline",
-      "fixture": "vitest",
-      "workers": 2,
-      "progress": false,
-      "phase": "measured",
-      "pair": 0,
-      "sample": 1,
-      "wallMs": 12508.838461000007,
-      "stdoutBytes": 13790,
-      "stderrBytes": 0,
-      "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
-      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
-      "diagnostics": null,
-      "reportTimings": null
-    },
-    {
-      "binary": "candidate",
-      "fixture": "vitest",
-      "workers": 2,
-      "progress": false,
-      "phase": "measured",
-      "pair": 0,
-      "sample": 1,
-      "wallMs": 10721.887178999954,
-      "stdoutBytes": 14985,
-      "stderrBytes": 0,
-      "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
-      "diagnosticsHash": "761726be6555508558f508e56fb7f89fb4370e71683834460d9ab2bc56cca2ff",
-      "diagnostics": {
-        "report": {
-          "concurrency": {
-            "runners": [
-              {
-                "command": "test",
-                "effectiveWorkers": 1,
-                "runner": "vitest",
-                "setup": "stack",
-                "source": "--maxWorkers",
-                "state": "known"
-              },
-              {
-                "command": "coverage",
-                "effectiveWorkers": 1,
-                "runner": "vitest",
-                "setup": "stack",
-                "source": "--maxWorkers",
-                "state": "known"
-              }
-            ],
-            "seshat": {
-              "configuredWorkers": 2,
-              "effectiveWorkers": 2,
-              "state": "known"
-            }
-          },
-          "runnerVersions": [
-            {
-              "packages": [
-                {
-                  "actual": "5.0.0",
-                  "declared": null,
-                  "declaredComparison": "unavailable",
-                  "locked": null,
-                  "lockedComparison": "unavailable",
-                  "name": "vitest"
-                }
-              ],
-              "runner": "vitest",
-              "runtime": {
-                "declared": null,
-                "declaredComparison": "unavailable",
-                "node": "24.20.0"
-              },
-              "setup": "stack"
-            }
-          ]
-        },
-        "mutation": {
-          "slowestExecutions": [
-            {
-              "executionMs": 1889.7300179999997,
-              "id": 2,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 1789.264836,
-              "id": 3,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 1741.256946,
-              "id": 1,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 1665.278794,
-              "id": 0,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            }
-          ],
-          "throughput": {
-            "completedMutantsPerSecond": 1.125126167077551,
-            "jobsPerSecond": 1.125126167077551
-          },
-          "unresolvedBreakdown": {
-            "cancelled": 0,
-            "executionError": 0,
-            "notRun": 0,
-            "timedOut": 0,
-            "unassessed": 0
-          },
-          "workerTimeMs": 7085.530594
-        }
-      },
-      "reportTimings": {
-        "captureMs": 675.563,
-        "executionMs": 9787.986643,
-        "wallMs": 10716.869827
-      }
-    },
-    {
-      "binary": "baseline",
-      "fixture": "vitest",
-      "workers": 2,
-      "progress": true,
-      "phase": "measured",
-      "pair": 0,
-      "sample": 1,
-      "wallMs": 10555.552533999959,
-      "stdoutBytes": 13753,
+      "wallMs": 10694.82582800003,
+      "stdoutBytes": 13769,
       "stderrBytes": 880,
       "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -2970,14 +2721,14 @@
       "fixture": "vitest",
       "workers": 2,
       "progress": true,
-      "phase": "measured",
-      "pair": 0,
-      "sample": 1,
-      "wallMs": 11934.879665000015,
-      "stdoutBytes": 14963,
-      "stderrBytes": 1224,
+      "phase": "warmup",
+      "pair": null,
+      "sample": null,
+      "wallMs": 11010.238886000006,
+      "stdoutBytes": 15329,
+      "stderrBytes": 1222,
       "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
-      "diagnosticsHash": "67073c640e40f5479fefb94da174c46223a34c7baf24608841f4214753711004",
+      "diagnosticsHash": "45ae4d5fcb5b042a024a597d27a4eea244b8171f19e846cd4660fb5ff2742c49",
       "diagnostics": {
         "report": {
           "concurrency": {
@@ -2987,7 +2738,7 @@
                 "effectiveWorkers": 1,
                 "runner": "vitest",
                 "setup": "stack",
-                "source": "--maxWorkers",
+                "source": "resolved-config",
                 "state": "known"
               },
               {
@@ -2995,7 +2746,7 @@
                 "effectiveWorkers": 1,
                 "runner": "vitest",
                 "setup": "stack",
-                "source": "--maxWorkers",
+                "source": "resolved-config",
                 "state": "known"
               }
             ],
@@ -3030,33 +2781,33 @@
         "mutation": {
           "slowestExecutions": [
             {
-              "executionMs": 2668.500899,
-              "id": 3,
+              "executionMs": 1754.7622199999998,
+              "id": 0,
               "path": "tempo.ts",
               "verdict": "killed"
             },
             {
-              "executionMs": 2284.6452409999997,
-              "id": 2,
-              "path": "tempo.ts",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 1821.710633,
+              "executionMs": 1754.4971739999999,
               "id": 1,
               "path": "tempo.ts",
               "verdict": "killed"
             },
             {
-              "executionMs": 1629.119853,
-              "id": 0,
+              "executionMs": 1616.1097519999998,
+              "id": 3,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1564.9203069999999,
+              "id": 2,
               "path": "tempo.ts",
               "verdict": "killed"
             }
           ],
           "throughput": {
-            "completedMutantsPerSecond": 0.8907602800351325,
-            "jobsPerSecond": 0.8907602800351325
+            "completedMutantsPerSecond": 1.1865475372306462,
+            "jobsPerSecond": 1.1865475372306462
           },
           "unresolvedBreakdown": {
             "cancelled": 0,
@@ -3065,13 +2816,263 @@
             "timedOut": 0,
             "unassessed": 0
           },
-          "workerTimeMs": 8403.976626
+          "workerTimeMs": 6690.289452999999
         }
       },
       "reportTimings": {
-        "captureMs": 706.181298,
-        "executionMs": 10977.305425,
-        "wallMs": 11930.343674
+        "captureMs": 706.544176,
+        "executionMs": 10063.368969000001,
+        "wallMs": 11004.606891
+      }
+    },
+    {
+      "binary": "baseline",
+      "fixture": "vitest",
+      "workers": 2,
+      "progress": false,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 10942.601720999985,
+      "stdoutBytes": 13807,
+      "stderrBytes": 0,
+      "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
+      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
+      "diagnostics": null,
+      "reportTimings": null
+    },
+    {
+      "binary": "candidate",
+      "fixture": "vitest",
+      "workers": 2,
+      "progress": false,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 11073.775026999996,
+      "stdoutBytes": 15303,
+      "stderrBytes": 0,
+      "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
+      "diagnosticsHash": "8b70a4dbe04c50724b71e14cfd32c372f4730db16247f4cb33ba6fffdc20f923",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 2,
+              "effectiveWorkers": 2,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "5.0.0",
+                  "declared": null,
+                  "declaredComparison": "unavailable",
+                  "locked": null,
+                  "lockedComparison": "unavailable",
+                  "name": "vitest"
+                }
+              ],
+              "runner": "vitest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "stack"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 1737.3583099999998,
+              "id": 1,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1714.754017,
+              "id": 3,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1604.28774,
+              "id": 2,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1551.049069,
+              "id": 0,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 1.1586681385857573,
+            "jobsPerSecond": 1.1586681385857573
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 6607.449136
+        }
+      },
+      "reportTimings": {
+        "captureMs": 697.912621,
+        "executionMs": 10030.443677,
+        "wallMs": 11068.416042
+      }
+    },
+    {
+      "binary": "baseline",
+      "fixture": "vitest",
+      "workers": 2,
+      "progress": true,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 11050.932423999999,
+      "stdoutBytes": 13800,
+      "stderrBytes": 881,
+      "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
+      "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
+      "diagnostics": null,
+      "reportTimings": null
+    },
+    {
+      "binary": "candidate",
+      "fixture": "vitest",
+      "workers": 2,
+      "progress": true,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 10604.926477,
+      "stdoutBytes": 15272,
+      "stderrBytes": 1219,
+      "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
+      "diagnosticsHash": "e435bff8d1dbebb2c825eacbf8f558196cdb7cf97807b6a87b1f94134f629d0c",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 2,
+              "effectiveWorkers": 2,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "5.0.0",
+                  "declared": null,
+                  "declaredComparison": "unavailable",
+                  "locked": null,
+                  "lockedComparison": "unavailable",
+                  "name": "vitest"
+                }
+              ],
+              "runner": "vitest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "stack"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 1715.8750440000001,
+              "id": 2,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1708.1715210000002,
+              "id": 3,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1614.4427249999999,
+              "id": 0,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1582.460206,
+              "id": 1,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 1.203179979539461,
+            "jobsPerSecond": 1.203179979539461
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 6620.949496
+        }
+      },
+      "reportTimings": {
+        "captureMs": 767.613784,
+        "executionMs": 9593.790166,
+        "wallMs": 10596.643542
       }
     },
     {
@@ -3082,11 +3083,11 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 11403.928288999945,
-      "stdoutBytes": 15001,
+      "wallMs": 12207.361804999993,
+      "stdoutBytes": 15297,
       "stderrBytes": 1224,
       "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
-      "diagnosticsHash": "5e22e550ac2ddc6c958d176c2dc1d9a3f61e7ea481900b4daff0512bd95394b0",
+      "diagnosticsHash": "80257f399b8c4f563eee4d3625dd10eab2491d21ab609c37c93f923ef009e24e",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -3098,9 +3099,9 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 10634.138078999997,
-      "stdoutBytes": 13818,
-      "stderrBytes": 880,
+      "wallMs": 11107.413547999982,
+      "stdoutBytes": 13806,
+      "stderrBytes": 883,
       "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
       "diagnostics": null,
@@ -3114,11 +3115,11 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 11613.548997999984,
-      "stdoutBytes": 15012,
+      "wallMs": 12739.055324000015,
+      "stdoutBytes": 15309,
       "stderrBytes": 0,
       "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
-      "diagnosticsHash": "e461e606ad94d802a5dfc8480e7e32cfad0a6210f5726ff65db9333172b42d3f",
+      "diagnosticsHash": "80bb077faab63111e042498c4bdc7263432699886304e9f290188aab6a4c3f98",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -3130,8 +3131,8 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 11178.74299900001,
-      "stdoutBytes": 13791,
+      "wallMs": 11382.76206800004,
+      "stdoutBytes": 13812,
       "stderrBytes": 0,
       "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -3146,8 +3147,8 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 10365.46057699999,
-      "stdoutBytes": 13792,
+      "wallMs": 10676.849109000002,
+      "stdoutBytes": 13782,
       "stderrBytes": 0,
       "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -3162,11 +3163,11 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 10484.88325199997,
-      "stdoutBytes": 14976,
+      "wallMs": 11204.122094999999,
+      "stdoutBytes": 15283,
       "stderrBytes": 0,
       "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
-      "diagnosticsHash": "d70ad579f31023bd19c7a648f77d7262454bb68833807a59aa6071de2aa4c3d3",
+      "diagnosticsHash": "0847ccaf4dcf5973fed1f702118fc0bf8f12d0b2a8f8863c5abeafaf542d4cd6",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -3178,8 +3179,8 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 11575.222126000037,
-      "stdoutBytes": 13774,
+      "wallMs": 12419.619018000027,
+      "stdoutBytes": 13784,
       "stderrBytes": 885,
       "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -3194,11 +3195,11 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 12525.819669999997,
-      "stdoutBytes": 14961,
-      "stderrBytes": 1224,
+      "wallMs": 10858.00112000003,
+      "stdoutBytes": 15285,
+      "stderrBytes": 1220,
       "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
-      "diagnosticsHash": "60247ccb3ea153724fbad7cb89dd9cc91c067d63229ce91923bf03a307b96e4c",
+      "diagnosticsHash": "bd940c652fd6f6c22f3a683cc36bf2c7b2dd755388ccd6581b96d326f00fb52a",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -3210,8 +3211,8 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 24386.504400999984,
-      "stdoutBytes": 7927,
+      "wallMs": 22677.754026999988,
+      "stdoutBytes": 7904,
       "stderrBytes": 893,
       "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -3226,11 +3227,11 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 22503.74893100001,
-      "stdoutBytes": 9181,
+      "wallMs": 23473.882990999962,
+      "stdoutBytes": 9551,
       "stderrBytes": 1299,
       "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
-      "diagnosticsHash": "0b4bf8953f45e5413e721282d0f847d3d4963a492091dc33fe3da9590ea99c57",
+      "diagnosticsHash": "6675ebf8633d273920a36a1d75bc4fc4c7100b8e03f85e09405cf7f475d5b518",
       "diagnostics": {
         "report": {
           "concurrency": {
@@ -3291,33 +3292,33 @@
         "mutation": {
           "slowestExecutions": [
             {
-              "executionMs": 2243.273857,
-              "id": 3,
-              "path": "src/status.tsx",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 1858.637287,
+              "executionMs": 2194.088054,
               "id": 1,
               "path": "src/status.tsx",
               "verdict": "killed"
             },
             {
-              "executionMs": 1749.256951,
-              "id": 2,
-              "path": "src/status.tsx",
-              "verdict": "survived"
-            },
-            {
-              "executionMs": 1748.527537,
+              "executionMs": 1979.591872,
               "id": 0,
               "path": "src/status.tsx",
               "verdict": "killed"
+            },
+            {
+              "executionMs": 1928.8607180000001,
+              "id": 3,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1908.786298,
+              "id": 2,
+              "path": "src/status.tsx",
+              "verdict": "survived"
             }
           ],
           "throughput": {
-            "completedMutantsPerSecond": 0.5263075671644651,
-            "jobsPerSecond": 0.5263075671644651
+            "completedMutantsPerSecond": 0.49926903424889774,
+            "jobsPerSecond": 0.49926903424889774
           },
           "unresolvedBreakdown": {
             "cancelled": 0,
@@ -3326,13 +3327,13 @@
             "timedOut": 0,
             "unassessed": 0
           },
-          "workerTimeMs": 7599.695632
+          "workerTimeMs": 8011.326942
         }
       },
       "reportTimings": {
-        "captureMs": 1772.300239,
-        "executionMs": 19487.261101,
-        "wallMs": 22499.217893
+        "captureMs": 1849.2006970000002,
+        "executionMs": 20970.164639,
+        "wallMs": 23469.229207
       }
     },
     {
@@ -3343,8 +3344,8 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 22108.476803000027,
-      "stdoutBytes": 7900,
+      "wallMs": 23374.374996999977,
+      "stdoutBytes": 7886,
       "stderrBytes": 0,
       "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -3359,11 +3360,11 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 21412.04453799996,
-      "stdoutBytes": 9217,
+      "wallMs": 21252.529118999955,
+      "stdoutBytes": 9521,
       "stderrBytes": 0,
       "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
-      "diagnosticsHash": "18795fb0301d91651e7ad6353818090bd8f68d7bfc12da6f3c539426d00d5959",
+      "diagnosticsHash": "4dbaa7dbc1fb7da1164c20c0bb1f09cf773c99e4e6c5db15f9a20854f59196e1",
       "diagnostics": {
         "report": {
           "concurrency": {
@@ -3424,33 +3425,33 @@
         "mutation": {
           "slowestExecutions": [
             {
-              "executionMs": 2027.5347410000002,
-              "id": 1,
-              "path": "src/status.tsx",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 1948.539511,
+              "executionMs": 1861.728848,
               "id": 0,
               "path": "src/status.tsx",
               "verdict": "killed"
             },
             {
-              "executionMs": 1834.709677,
-              "id": 2,
+              "executionMs": 1854.5721130000002,
+              "id": 1,
               "path": "src/status.tsx",
-              "verdict": "survived"
+              "verdict": "killed"
             },
             {
-              "executionMs": 1773.994253,
+              "executionMs": 1826.670405,
               "id": 3,
               "path": "src/status.tsx",
               "verdict": "killed"
+            },
+            {
+              "executionMs": 1783.3493190000002,
+              "id": 2,
+              "path": "src/status.tsx",
+              "verdict": "survived"
             }
           ],
           "throughput": {
-            "completedMutantsPerSecond": 0.5273706139706699,
-            "jobsPerSecond": 0.5273706139706699
+            "completedMutantsPerSecond": 0.5459749421158664,
+            "jobsPerSecond": 0.5459749421158664
           },
           "unresolvedBreakdown": {
             "cancelled": 0,
@@ -3459,13 +3460,13 @@
             "timedOut": 0,
             "unassessed": 0
           },
-          "workerTimeMs": 7584.778182
+          "workerTimeMs": 7326.320685
         }
       },
       "reportTimings": {
-        "captureMs": 1810.7356180000002,
-        "executionMs": 18907.826318000003,
-        "wallMs": 21405.320412
+        "captureMs": 1822.465717,
+        "executionMs": 18792.108946,
+        "wallMs": 21247.977845
       }
     },
     {
@@ -3476,8 +3477,8 @@
       "phase": "measured",
       "pair": 0,
       "sample": 1,
-      "wallMs": 20524.51039900002,
-      "stdoutBytes": 7946,
+      "wallMs": 21240.583148000005,
+      "stdoutBytes": 7904,
       "stderrBytes": 893,
       "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -3492,11 +3493,11 @@
       "phase": "measured",
       "pair": 0,
       "sample": 1,
-      "wallMs": 20322.20166599995,
-      "stdoutBytes": 9273,
+      "wallMs": 21446.665402999963,
+      "stdoutBytes": 9575,
       "stderrBytes": 1299,
       "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
-      "diagnosticsHash": "90c9e3d124dc9bba9798efdf38b3da51c26c9c8cb6854a3c1eb471a06c18aed9",
+      "diagnosticsHash": "59e34ede456e0211573474e23c1ab5c495e4974ffeb9de2f3b20c888454c9580",
       "diagnostics": {
         "report": {
           "concurrency": {
@@ -3557,33 +3558,33 @@
         "mutation": {
           "slowestExecutions": [
             {
-              "executionMs": 1732.8385979999998,
+              "executionMs": 1791.82364,
               "id": 3,
               "path": "src/status.tsx",
               "verdict": "killed"
             },
             {
-              "executionMs": 1726.503175,
+              "executionMs": 1791.6248449999998,
               "id": 0,
               "path": "src/status.tsx",
               "verdict": "killed"
             },
             {
-              "executionMs": 1713.164845,
+              "executionMs": 1756.93047,
               "id": 1,
               "path": "src/status.tsx",
               "verdict": "killed"
             },
             {
-              "executionMs": 1702.309901,
+              "executionMs": 1754.2570469999998,
               "id": 2,
               "path": "src/status.tsx",
               "verdict": "survived"
             }
           ],
           "throughput": {
-            "completedMutantsPerSecond": 0.5818036004236266,
-            "jobsPerSecond": 0.5818036004236266
+            "completedMutantsPerSecond": 0.5637773157505535,
+            "jobsPerSecond": 0.5637773157505535
           },
           "unresolvedBreakdown": {
             "cancelled": 0,
@@ -3592,13 +3593,13 @@
             "timedOut": 0,
             "unassessed": 0
           },
-          "workerTimeMs": 6874.816519
+          "workerTimeMs": 7094.636001999999
         }
       },
       "reportTimings": {
-        "captureMs": 1772.5018719999998,
-        "executionMs": 17927.493882,
-        "wallMs": 20313.465573999998
+        "captureMs": 1753.017844,
+        "executionMs": 19050.806097,
+        "wallMs": 21439.864174
       }
     },
     {
@@ -3609,8 +3610,8 @@
       "phase": "measured",
       "pair": 0,
       "sample": 1,
-      "wallMs": 22236.837871000054,
-      "stdoutBytes": 7885,
+      "wallMs": 21881.893958,
+      "stdoutBytes": 7933,
       "stderrBytes": 0,
       "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -3625,11 +3626,11 @@
       "phase": "measured",
       "pair": 0,
       "sample": 1,
-      "wallMs": 23534.44631000003,
-      "stdoutBytes": 9237,
+      "wallMs": 22283.457380999927,
+      "stdoutBytes": 9520,
       "stderrBytes": 0,
       "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
-      "diagnosticsHash": "65168b57a608ab9c670a49885c9bf782e7a23fe85009ee9068af5e416e7c2bf3",
+      "diagnosticsHash": "25756dd8efb1d42c93609767f1b804572ec78c3464d6939da6e54713a13f5f53",
       "diagnostics": {
         "report": {
           "concurrency": {
@@ -3690,33 +3691,33 @@
         "mutation": {
           "slowestExecutions": [
             {
-              "executionMs": 1938.0115469999998,
+              "executionMs": 1981.4245660000001,
               "id": 1,
               "path": "src/status.tsx",
               "verdict": "killed"
             },
             {
-              "executionMs": 1737.853571,
+              "executionMs": 1877.889446,
+              "id": 3,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1797.648406,
               "id": 0,
               "path": "src/status.tsx",
               "verdict": "killed"
             },
             {
-              "executionMs": 1724.548199,
+              "executionMs": 1792.495565,
               "id": 2,
               "path": "src/status.tsx",
               "verdict": "survived"
-            },
-            {
-              "executionMs": 1716.966368,
-              "id": 3,
-              "path": "src/status.tsx",
-              "verdict": "killed"
             }
           ],
           "throughput": {
-            "completedMutantsPerSecond": 0.5620030994274232,
-            "jobsPerSecond": 0.5620030994274232
+            "completedMutantsPerSecond": 0.5369503937743768,
+            "jobsPerSecond": 0.5369503937743768
           },
           "unresolvedBreakdown": {
             "cancelled": 0,
@@ -3725,13 +3726,13 @@
             "timedOut": 0,
             "unassessed": 0
           },
-          "workerTimeMs": 7117.379685
+          "workerTimeMs": 7449.457983
         }
       },
       "reportTimings": {
-        "captureMs": 1776.777174,
-        "executionMs": 21125.820002,
-        "wallMs": 23529.67397
+        "captureMs": 2534.127979,
+        "executionMs": 19075.92044,
+        "wallMs": 22278.276859
       }
     },
     {
@@ -3742,11 +3743,11 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 22986.518766999943,
-      "stdoutBytes": 9239,
+      "wallMs": 21960.56283499999,
+      "stdoutBytes": 9527,
       "stderrBytes": 0,
       "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
-      "diagnosticsHash": "97c1671eeb9400b5325662f67e381d98081fe5684102fe555bcd6dca6c7d110a",
+      "diagnosticsHash": "0b9035092dfb9348276196ca77c7ee7d89e835b8d95ea65cf6f825f27153e027",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -3758,8 +3759,8 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 22586.566281999927,
-      "stdoutBytes": 7891,
+      "wallMs": 20919.27397800004,
+      "stdoutBytes": 7871,
       "stderrBytes": 0,
       "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -3774,11 +3775,11 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 21980.084324000054,
-      "stdoutBytes": 9234,
+      "wallMs": 22911.225979000097,
+      "stdoutBytes": 9509,
       "stderrBytes": 1299,
       "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
-      "diagnosticsHash": "6424f074d0ebc62fd5e793a857155e545452617e9bfe126113c4d50ca56f3e8d",
+      "diagnosticsHash": "80755fcb6ad5d1cb3dff73e64011467be19b87b7fbed81b8c995b31265b86afa",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -3790,8 +3791,8 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 21748.138609000016,
-      "stdoutBytes": 7859,
+      "wallMs": 21777.906585999997,
+      "stdoutBytes": 7896,
       "stderrBytes": 893,
       "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -3806,8 +3807,8 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 22861.021248999983,
-      "stdoutBytes": 7921,
+      "wallMs": 22684.264124999987,
+      "stdoutBytes": 7901,
       "stderrBytes": 893,
       "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -3822,11 +3823,11 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 20759.058518999955,
-      "stdoutBytes": 9214,
+      "wallMs": 22835.209557000082,
+      "stdoutBytes": 9507,
       "stderrBytes": 1299,
       "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
-      "diagnosticsHash": "926e7f23e3d4425d5c9ddca9d06e0ff7c61dd61c3310734e7544b5e2d34a6099",
+      "diagnosticsHash": "b5c60462b661ae5b6b6838ed0759d990bf1de599854e3f75ba103b5de0a4894a",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -3838,8 +3839,8 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 20401.05322999996,
-      "stdoutBytes": 7920,
+      "wallMs": 23900.864951000083,
+      "stdoutBytes": 7931,
       "stderrBytes": 0,
       "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -3854,11 +3855,11 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 21362.76116200001,
-      "stdoutBytes": 9209,
+      "wallMs": 23906.49502599996,
+      "stdoutBytes": 9532,
       "stderrBytes": 0,
       "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
-      "diagnosticsHash": "b3269e9f9569951c421edafd19f581eafb1ef7a503f03ded6f22b384d2eebc18",
+      "diagnosticsHash": "12bae05358a7bbc08e561243aeab90d68267e864e9093f5e40d0b12f0d69e608",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -3870,8 +3871,8 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 35051.013118,
-      "stdoutBytes": 8257,
+      "wallMs": 29766.933502000058,
+      "stdoutBytes": 8287,
       "stderrBytes": 0,
       "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -3886,11 +3887,11 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 29200.852222000016,
-      "stdoutBytes": 9642,
+      "wallMs": 29150.638999000075,
+      "stdoutBytes": 9932,
       "stderrBytes": 0,
       "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
-      "diagnosticsHash": "311c91f8d5b148f058924f31a52e9083f2d156d87737c30681d462b00cf83ead",
+      "diagnosticsHash": "73e2538072acbc1c10da00117349e5aa5cefeaf22abe71fadf83452674ca3bc3",
       "diagnostics": {
         "report": {
           "concurrency": {
@@ -3951,33 +3952,33 @@
         "mutation": {
           "slowestExecutions": [
             {
-              "executionMs": 3752.4900749999997,
+              "executionMs": 3039.874241,
               "id": 0,
               "path": "src/status.tsx",
               "verdict": "killed"
             },
             {
-              "executionMs": 3476.715059,
-              "id": 1,
-              "path": "src/status.tsx",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 3475.080877,
+              "executionMs": 2916.949931,
               "id": 3,
               "path": "src/status.tsx",
               "verdict": "killed"
             },
             {
-              "executionMs": 3447.1165300000002,
+              "executionMs": 2910.571321,
+              "id": 1,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 2901.934953,
               "id": 2,
               "path": "src/status.tsx",
               "verdict": "survived"
             }
           ],
           "throughput": {
-            "completedMutantsPerSecond": 0.5534308749328692,
-            "jobsPerSecond": 0.5534308749328692
+            "completedMutantsPerSecond": 0.6714928480429898,
+            "jobsPerSecond": 0.6714928480429898
           },
           "unresolvedBreakdown": {
             "cancelled": 0,
@@ -3986,13 +3987,13 @@
             "timedOut": 0,
             "unassessed": 0
           },
-          "workerTimeMs": 14151.402541
+          "workerTimeMs": 11769.330446
         }
       },
       "reportTimings": {
-        "captureMs": 1968.116988,
-        "executionMs": 26131.353630999998,
-        "wallMs": 29195.992021
+        "captureMs": 1827.669116,
+        "executionMs": 26697.972899,
+        "wallMs": 29146.420555999997
       }
     },
     {
@@ -4003,9 +4004,9 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 31713.212586000096,
-      "stdoutBytes": 8285,
-      "stderrBytes": 908,
+      "wallMs": 29211.63123499998,
+      "stdoutBytes": 8269,
+      "stderrBytes": 970,
       "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
       "diagnostics": null,
@@ -4019,11 +4020,11 @@
       "phase": "warmup",
       "pair": null,
       "sample": null,
-      "wallMs": 29157.682090000017,
-      "stdoutBytes": 9667,
+      "wallMs": 33258.43096300005,
+      "stdoutBytes": 9944,
       "stderrBytes": 1376,
       "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
-      "diagnosticsHash": "8484a3935bbb6e9edb1ee3b99264f72e4c98c9779e5149385f8266621d57310b",
+      "diagnosticsHash": "384646a9ca313ba38b44b0afe2c027d112d8aaa23c8e3bb59e9a984db5f12d37",
       "diagnostics": {
         "report": {
           "concurrency": {
@@ -4084,33 +4085,33 @@
         "mutation": {
           "slowestExecutions": [
             {
-              "executionMs": 3599.552144,
-              "id": 2,
-              "path": "src/status.tsx",
-              "verdict": "survived"
-            },
-            {
-              "executionMs": 3542.0199939999998,
+              "executionMs": 5447.418137,
               "id": 3,
               "path": "src/status.tsx",
               "verdict": "killed"
             },
             {
-              "executionMs": 3155.436173,
-              "id": 1,
+              "executionMs": 5429.354789,
+              "id": 2,
+              "path": "src/status.tsx",
+              "verdict": "survived"
+            },
+            {
+              "executionMs": 3738.722354,
+              "id": 0,
               "path": "src/status.tsx",
               "verdict": "killed"
             },
             {
-              "executionMs": 2887.0685240000003,
-              "id": 0,
+              "executionMs": 3406.182787,
+              "id": 1,
               "path": "src/status.tsx",
               "verdict": "killed"
             }
           ],
           "throughput": {
-            "completedMutantsPerSecond": 0.5971808245236051,
-            "jobsPerSecond": 0.5971808245236051
+            "completedMutantsPerSecond": 0.435409812555157,
+            "jobsPerSecond": 0.435409812555157
           },
           "unresolvedBreakdown": {
             "cancelled": 0,
@@ -4119,13 +4120,13 @@
             "timedOut": 0,
             "unassessed": 0
           },
-          "workerTimeMs": 13184.076835000002
+          "workerTimeMs": 18021.678067
         }
       },
       "reportTimings": {
-        "captureMs": 2407.0450499999997,
-        "executionMs": 25829.15397,
-        "wallMs": 29152.360928000002
+        "captureMs": 1902.661851,
+        "executionMs": 30679.344201,
+        "wallMs": 33251.232551
       }
     },
     {
@@ -4136,8 +4137,8 @@
       "phase": "measured",
       "pair": 0,
       "sample": 1,
-      "wallMs": 29339.67119900009,
-      "stdoutBytes": 8262,
+      "wallMs": 30045.18954199995,
+      "stdoutBytes": 8297,
       "stderrBytes": 0,
       "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -4152,11 +4153,11 @@
       "phase": "measured",
       "pair": 0,
       "sample": 1,
-      "wallMs": 30976.181825999985,
-      "stdoutBytes": 9621,
+      "wallMs": 27108.51199099992,
+      "stdoutBytes": 9968,
       "stderrBytes": 0,
       "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
-      "diagnosticsHash": "2ea2ae7205ddfc2a33efd46296b415511478071947c30f5addb928b7ae03f861",
+      "diagnosticsHash": "ac5bb3009ddd999e1130a9fa8a59eba5415ef9c9d02e7a82756a4a5ae59e875f",
       "diagnostics": {
         "report": {
           "concurrency": {
@@ -4217,33 +4218,33 @@
         "mutation": {
           "slowestExecutions": [
             {
-              "executionMs": 4229.725081,
+              "executionMs": 3140.807611,
+              "id": 0,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 3097.97739,
               "id": 2,
               "path": "src/status.tsx",
               "verdict": "survived"
             },
             {
-              "executionMs": 3921.398281,
-              "id": 3,
-              "path": "src/status.tsx",
-              "verdict": "killed"
-            },
-            {
-              "executionMs": 3409.1272799999997,
+              "executionMs": 3094.9040729999997,
               "id": 1,
               "path": "src/status.tsx",
               "verdict": "killed"
             },
             {
-              "executionMs": 3351.030355,
-              "id": 0,
+              "executionMs": 3036.595411,
+              "id": 3,
               "path": "src/status.tsx",
               "verdict": "killed"
             }
           ],
           "throughput": {
-            "completedMutantsPerSecond": 0.5276472371551044,
-            "jobsPerSecond": 0.5276472371551044
+            "completedMutantsPerSecond": 0.6458888194888529,
+            "jobsPerSecond": 0.6458888194888529
           },
           "unresolvedBreakdown": {
             "cancelled": 0,
@@ -4252,13 +4253,13 @@
             "timedOut": 0,
             "unassessed": 0
           },
-          "workerTimeMs": 14911.280997
+          "workerTimeMs": 12370.284485
         }
       },
       "reportTimings": {
-        "captureMs": 3070.001967,
-        "executionMs": 27138.347035,
-        "wallMs": 30970.351799
+        "captureMs": 1990.331043,
+        "executionMs": 24483.035448,
+        "wallMs": 27101.712609
       }
     },
     {
@@ -4269,8 +4270,8 @@
       "phase": "measured",
       "pair": 0,
       "sample": 1,
-      "wallMs": 32458.927058,
-      "stdoutBytes": 8322,
+      "wallMs": 29375.28915800003,
+      "stdoutBytes": 8260,
       "stderrBytes": 908,
       "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -4285,11 +4286,11 @@
       "phase": "measured",
       "pair": 0,
       "sample": 1,
-      "wallMs": 31296.08082999999,
-      "stdoutBytes": 9632,
+      "wallMs": 32009.124290999956,
+      "stdoutBytes": 9955,
       "stderrBytes": 1247,
       "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
-      "diagnosticsHash": "212622c1135f19bf61d4e2b13fca18490b14f414d2806f0fca2ddde9872919f6",
+      "diagnosticsHash": "8bab4178e56020ca671aed0d6f3ced0ac0fc9755f5a6c61bf4da75e05f50e940",
       "diagnostics": {
         "report": {
           "concurrency": {
@@ -4350,33 +4351,33 @@
         "mutation": {
           "slowestExecutions": [
             {
-              "executionMs": 4216.605805,
-              "id": 2,
-              "path": "src/status.tsx",
-              "verdict": "survived"
-            },
-            {
-              "executionMs": 3967.712187,
+              "executionMs": 4170.435674,
               "id": 3,
               "path": "src/status.tsx",
               "verdict": "killed"
             },
             {
-              "executionMs": 3188.437611,
+              "executionMs": 3859.879472,
+              "id": 2,
+              "path": "src/status.tsx",
+              "verdict": "survived"
+            },
+            {
+              "executionMs": 3209.016626,
               "id": 1,
               "path": "src/status.tsx",
               "verdict": "killed"
             },
             {
-              "executionMs": 3168.6689189999997,
+              "executionMs": 2987.32004,
               "id": 0,
               "path": "src/status.tsx",
               "verdict": "killed"
             }
           ],
           "throughput": {
-            "completedMutantsPerSecond": 0.5415768301672256,
-            "jobsPerSecond": 0.5415768301672256
+            "completedMutantsPerSecond": 0.542025252890405,
+            "jobsPerSecond": 0.542025252890405
           },
           "unresolvedBreakdown": {
             "cancelled": 0,
@@ -4385,13 +4386,13 @@
             "timedOut": 0,
             "unassessed": 0
           },
-          "workerTimeMs": 14541.424522000001
+          "workerTimeMs": 14226.651812
         }
       },
       "reportTimings": {
-        "captureMs": 1839.139916,
-        "executionMs": 28691.74425,
-        "wallMs": 31290.096286
+        "captureMs": 1861.741656,
+        "executionMs": 28829.04083,
+        "wallMs": 32004.863573000002
       }
     },
     {
@@ -4402,11 +4403,11 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 29942.797049000044,
-      "stdoutBytes": 9623,
-      "stderrBytes": 1247,
+      "wallMs": 32091.703903999995,
+      "stdoutBytes": 9963,
+      "stderrBytes": 1376,
       "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
-      "diagnosticsHash": "9d47162eb5fd8f5ae3361b7bb4c3a708c9fdfcc190f2d87fd39d6fa13d5230a2",
+      "diagnosticsHash": "8aabc2bd7e79a6794edfb0f9c38591c84c5aec922cf531d165e57960886c9d05",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -4418,8 +4419,8 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 31567.784914000076,
-      "stdoutBytes": 8283,
+      "wallMs": 31124.59924999997,
+      "stdoutBytes": 8266,
       "stderrBytes": 908,
       "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -4434,11 +4435,11 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 29951.858722999925,
-      "stdoutBytes": 9660,
+      "wallMs": 29912.519984999904,
+      "stdoutBytes": 9937,
       "stderrBytes": 0,
       "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
-      "diagnosticsHash": "727c05fbe2b1016c690397348bafc69b75229cd0d85cc9742b891151541a6cb8",
+      "diagnosticsHash": "279de71bd46c54c1e4e2d5b62453e3baaa1a358ade9efb046a40dd2f00ebd77b",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -4450,8 +4451,8 @@
       "phase": "measured",
       "pair": 1,
       "sample": 2,
-      "wallMs": 29130.83433500002,
-      "stdoutBytes": 8263,
+      "wallMs": 29550.174370999914,
+      "stdoutBytes": 8269,
       "stderrBytes": 0,
       "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -4466,8 +4467,8 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 34989.264190000016,
-      "stdoutBytes": 8279,
+      "wallMs": 30353.839768999955,
+      "stdoutBytes": 8292,
       "stderrBytes": 0,
       "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
@@ -4482,11 +4483,11 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 29793.061987000052,
-      "stdoutBytes": 9638,
+      "wallMs": 31788.514084999915,
+      "stdoutBytes": 9962,
       "stderrBytes": 0,
       "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
-      "diagnosticsHash": "8b55bbf76e8fbc5fa7643ecf7bba3fee86ad6f402a850fbf61199d23dcb2245b",
+      "diagnosticsHash": "f40efd3855131fe54bf3ddff57bcb547c417719aafae91d121e0b6ce1f2c2ff6",
       "diagnostics": null,
       "reportTimings": null
     },
@@ -4498,9 +4499,9 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 30544.894555000123,
-      "stdoutBytes": 8281,
-      "stderrBytes": 908,
+      "wallMs": 28791.53491100017,
+      "stdoutBytes": 8284,
+      "stderrBytes": 970,
       "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
       "diagnosticsHash": "3f0c112e2d6e06d60c19c6c9cceea1fc330fb0266f7d3659d05326c9ade9b8ef",
       "diagnostics": null,
@@ -4514,11 +4515,11 @@
       "phase": "measured",
       "pair": 2,
       "sample": 3,
-      "wallMs": 32959.3103730001,
-      "stdoutBytes": 9632,
+      "wallMs": 29889.666542999912,
+      "stdoutBytes": 9965,
       "stderrBytes": 1247,
       "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
-      "diagnosticsHash": "f2c6749714320e10fedd2fa88dd2f7af14b9eed8856c9b7f382a1494c04ab431",
+      "diagnosticsHash": "5ce19be76d39820284c5e447c20ce8bf21bcb2530694c4624e42c9f7cc242193",
       "diagnostics": null,
       "reportTimings": null
     }
@@ -6816,14 +6817,14 @@
       "progress": true,
       "binary": "baseline",
       "samples": [
-        2026.702,
-        2038.96,
-        2027.077
+        2027.784,
+        2061.094,
+        2874.275
       ],
-      "medianMs": 2027.077,
-      "minMs": 2026.7016050000002,
-      "maxMs": 2038.9597160000012,
-      "rangeMs": 12.258111000001009
+      "medianMs": 2061.094,
+      "minMs": 2027.7840509999987,
+      "maxMs": 2874.2745219999997,
+      "rangeMs": 846.490471000001
     },
     {
       "fixture": "nodeWorkspace",
@@ -6831,14 +6832,14 @@
       "progress": true,
       "binary": "candidate",
       "samples": [
-        2097.874,
-        2176.795,
-        2117.61
+        2063.39,
+        2063.515,
+        3435.437
       ],
-      "medianMs": 2117.61,
-      "minMs": 2097.874077999999,
-      "maxMs": 2176.794906000003,
-      "rangeMs": 78.9208280000039
+      "medianMs": 2063.515,
+      "minMs": 2063.3900859999994,
+      "maxMs": 3435.4367010000024,
+      "rangeMs": 1372.046615000003
     },
     {
       "fixture": "nodeWorkspace",
@@ -6846,14 +6847,14 @@
       "progress": false,
       "binary": "baseline",
       "samples": [
-        2070.649,
-        2503.09,
-        2153.832
+        2126.919,
+        2145.802,
+        3012.116
       ],
-      "medianMs": 2153.832,
-      "minMs": 2070.648653999997,
-      "maxMs": 2503.0897589999986,
-      "rangeMs": 432.4411050000017
+      "medianMs": 2145.802,
+      "minMs": 2126.918641,
+      "maxMs": 3012.115619999997,
+      "rangeMs": 885.1969789999966
     },
     {
       "fixture": "nodeWorkspace",
@@ -6861,14 +6862,14 @@
       "progress": false,
       "binary": "candidate",
       "samples": [
-        1953.058,
-        1961.694,
-        2018.683
+        1984.604,
+        1984.597,
+        3717.964
       ],
-      "medianMs": 1961.694,
-      "minMs": 1953.0576870000004,
-      "maxMs": 2018.6825499999977,
-      "rangeMs": 65.62486299999728
+      "medianMs": 1984.604,
+      "minMs": 1984.5974929999975,
+      "maxMs": 3717.9638520000008,
+      "rangeMs": 1733.3663590000033
     },
     {
       "fixture": "nodeWorkspace",
@@ -6876,14 +6877,14 @@
       "progress": false,
       "binary": "baseline",
       "samples": [
-        2743.559,
-        2141.741,
-        2154.602
+        2845.326,
+        2042.013,
+        2177
       ],
-      "medianMs": 2154.602,
-      "minMs": 2141.740699999995,
-      "maxMs": 2743.559116999997,
-      "rangeMs": 601.8184170000022
+      "medianMs": 2177,
+      "minMs": 2042.0126689999888,
+      "maxMs": 2845.325742000001,
+      "rangeMs": 803.3130730000121
     },
     {
       "fixture": "nodeWorkspace",
@@ -6891,14 +6892,14 @@
       "progress": false,
       "binary": "candidate",
       "samples": [
-        2083.752,
-        2158.241,
-        2215.572
+        2131.667,
+        2162.354,
+        2216.223
       ],
-      "medianMs": 2158.241,
-      "minMs": 2083.751986000003,
-      "maxMs": 2215.5715159999963,
-      "rangeMs": 131.8195299999934
+      "medianMs": 2162.354,
+      "minMs": 2131.6668720000016,
+      "maxMs": 2216.2230150000105,
+      "rangeMs": 84.55614300000889
     },
     {
       "fixture": "nodeWorkspace",
@@ -6906,14 +6907,14 @@
       "progress": true,
       "binary": "baseline",
       "samples": [
-        2214.017,
-        2711.311,
-        2120.354
+        2110.421,
+        2080.671,
+        2174.289
       ],
-      "medianMs": 2214.017,
-      "minMs": 2120.353952000005,
-      "maxMs": 2711.3105789999972,
-      "rangeMs": 590.9566269999923
+      "medianMs": 2110.421,
+      "minMs": 2080.671300999995,
+      "maxMs": 2174.2891089999903,
+      "rangeMs": 93.61780799999542
     },
     {
       "fixture": "nodeWorkspace",
@@ -6921,14 +6922,14 @@
       "progress": true,
       "binary": "candidate",
       "samples": [
-        2116.35,
-        2078.069,
-        2085.73
+        2182.389,
+        2095.476,
+        2281.85
       ],
-      "medianMs": 2085.73,
-      "minMs": 2078.0691929999957,
-      "maxMs": 2116.3503169999967,
-      "rangeMs": 38.281124000001
+      "medianMs": 2182.389,
+      "minMs": 2095.4758470000015,
+      "maxMs": 2281.849961999993,
+      "rangeMs": 186.37411499999143
     },
     {
       "fixture": "vitest",
@@ -6936,14 +6937,14 @@
       "progress": true,
       "binary": "baseline",
       "samples": [
-        9607.813,
-        9499.037,
-        9832.155
+        9750.191,
+        10451.772,
+        10070.225
       ],
-      "medianMs": 9607.813,
-      "minMs": 9499.03667999999,
-      "maxMs": 9832.154905000003,
-      "rangeMs": 333.1182250000129
+      "medianMs": 10070.225,
+      "minMs": 9750.190904000003,
+      "maxMs": 10451.771925000008,
+      "rangeMs": 701.5810210000054
     },
     {
       "fixture": "vitest",
@@ -6951,14 +6952,14 @@
       "progress": true,
       "binary": "candidate",
       "samples": [
-        10819.434,
-        9806.517,
-        8885.402
+        12742.181,
+        10162.194,
+        10571.989
       ],
-      "medianMs": 9806.517,
-      "minMs": 8885.401662999997,
-      "maxMs": 10819.433963000003,
-      "rangeMs": 1934.0323000000062
+      "medianMs": 10571.989,
+      "minMs": 10162.193635999982,
+      "maxMs": 12742.181220999992,
+      "rangeMs": 2579.98758500001
     },
     {
       "fixture": "vitest",
@@ -6966,14 +6967,14 @@
       "progress": false,
       "binary": "baseline",
       "samples": [
-        10087.373,
-        9522.304,
-        9893.841
+        10836.823,
+        9528.97,
+        9409.448
       ],
-      "medianMs": 9893.841,
-      "minMs": 9522.304099,
-      "maxMs": 10087.372986000002,
-      "rangeMs": 565.0688870000013
+      "medianMs": 9528.97,
+      "minMs": 9409.447834999999,
+      "maxMs": 10836.822736000002,
+      "rangeMs": 1427.3749010000029
     },
     {
       "fixture": "vitest",
@@ -6981,14 +6982,14 @@
       "progress": false,
       "binary": "candidate",
       "samples": [
-        10086.547,
-        11605.551,
-        9532.778
+        10615.113,
+        10506.874,
+        8886.694
       ],
-      "medianMs": 10086.547,
-      "minMs": 9532.77825199999,
-      "maxMs": 11605.551246999996,
-      "rangeMs": 2072.7729950000066
+      "medianMs": 10506.874,
+      "minMs": 8886.693980000011,
+      "maxMs": 10615.112514000008,
+      "rangeMs": 1728.4185339999967
     },
     {
       "fixture": "vitest",
@@ -6996,14 +6997,14 @@
       "progress": false,
       "binary": "baseline",
       "samples": [
-        12508.838,
-        11178.743,
-        10365.461
+        10942.602,
+        11382.762,
+        10676.849
       ],
-      "medianMs": 11178.743,
-      "minMs": 10365.46057699999,
-      "maxMs": 12508.838461000007,
-      "rangeMs": 2143.377884000016
+      "medianMs": 10942.602,
+      "minMs": 10676.849109000002,
+      "maxMs": 11382.76206800004,
+      "rangeMs": 705.9129590000375
     },
     {
       "fixture": "vitest",
@@ -7011,14 +7012,14 @@
       "progress": false,
       "binary": "candidate",
       "samples": [
-        10721.887,
-        11613.549,
-        10484.883
+        11073.775,
+        12739.055,
+        11204.122
       ],
-      "medianMs": 10721.887,
-      "minMs": 10484.88325199997,
-      "maxMs": 11613.548997999984,
-      "rangeMs": 1128.6657460000133
+      "medianMs": 11204.122,
+      "minMs": 11073.775026999996,
+      "maxMs": 12739.055324000015,
+      "rangeMs": 1665.2802970000193
     },
     {
       "fixture": "vitest",
@@ -7026,14 +7027,14 @@
       "progress": true,
       "binary": "baseline",
       "samples": [
-        10555.553,
-        10634.138,
-        11575.222
+        11050.932,
+        11107.414,
+        12419.619
       ],
-      "medianMs": 10634.138,
-      "minMs": 10555.552533999959,
-      "maxMs": 11575.222126000037,
-      "rangeMs": 1019.6695920000784
+      "medianMs": 11107.414,
+      "minMs": 11050.932423999999,
+      "maxMs": 12419.619018000027,
+      "rangeMs": 1368.686594000028
     },
     {
       "fixture": "vitest",
@@ -7041,14 +7042,14 @@
       "progress": true,
       "binary": "candidate",
       "samples": [
-        11934.88,
-        11403.928,
-        12525.82
+        10604.926,
+        12207.362,
+        10858.001
       ],
-      "medianMs": 11934.88,
-      "minMs": 11403.928288999945,
-      "maxMs": 12525.819669999997,
-      "rangeMs": 1121.8913810000522
+      "medianMs": 10858.001,
+      "minMs": 10604.926477,
+      "maxMs": 12207.361804999993,
+      "rangeMs": 1602.4353279999923
     },
     {
       "fixture": "jestExpo",
@@ -7056,14 +7057,14 @@
       "progress": true,
       "binary": "baseline",
       "samples": [
-        20524.51,
-        21748.139,
-        22861.021
+        21240.583,
+        21777.907,
+        22684.264
       ],
-      "medianMs": 21748.139,
-      "minMs": 20524.51039900002,
-      "maxMs": 22861.021248999983,
-      "rangeMs": 2336.5108499999624
+      "medianMs": 21777.907,
+      "minMs": 21240.583148000005,
+      "maxMs": 22684.264124999987,
+      "rangeMs": 1443.6809769999818
     },
     {
       "fixture": "jestExpo",
@@ -7071,14 +7072,14 @@
       "progress": true,
       "binary": "candidate",
       "samples": [
-        20322.202,
-        21980.084,
-        20759.059
+        21446.665,
+        22911.226,
+        22835.21
       ],
-      "medianMs": 20759.059,
-      "minMs": 20322.20166599995,
-      "maxMs": 21980.084324000054,
-      "rangeMs": 1657.8826580001041
+      "medianMs": 22835.21,
+      "minMs": 21446.665402999963,
+      "maxMs": 22911.225979000097,
+      "rangeMs": 1464.5605760001345
     },
     {
       "fixture": "jestExpo",
@@ -7086,14 +7087,14 @@
       "progress": false,
       "binary": "baseline",
       "samples": [
-        22236.838,
-        22586.566,
-        20401.053
+        21881.894,
+        20919.274,
+        23900.865
       ],
-      "medianMs": 22236.838,
-      "minMs": 20401.05322999996,
-      "maxMs": 22586.566281999927,
-      "rangeMs": 2185.5130519999657
+      "medianMs": 21881.894,
+      "minMs": 20919.27397800004,
+      "maxMs": 23900.864951000083,
+      "rangeMs": 2981.590973000042
     },
     {
       "fixture": "jestExpo",
@@ -7101,14 +7102,14 @@
       "progress": false,
       "binary": "candidate",
       "samples": [
-        23534.446,
-        22986.519,
-        21362.761
+        22283.457,
+        21960.563,
+        23906.495
       ],
-      "medianMs": 22986.519,
-      "minMs": 21362.76116200001,
-      "maxMs": 23534.44631000003,
-      "rangeMs": 2171.6851480000187
+      "medianMs": 22283.457,
+      "minMs": 21960.56283499999,
+      "maxMs": 23906.49502599996,
+      "rangeMs": 1945.9321909999708
     },
     {
       "fixture": "jestExpo",
@@ -7116,14 +7117,14 @@
       "progress": false,
       "binary": "baseline",
       "samples": [
-        29339.671,
-        29130.834,
-        34989.264
+        30045.19,
+        29550.174,
+        30353.84
       ],
-      "medianMs": 29339.671,
-      "minMs": 29130.83433500002,
-      "maxMs": 34989.264190000016,
-      "rangeMs": 5858.429854999995
+      "medianMs": 30045.19,
+      "minMs": 29550.174370999914,
+      "maxMs": 30353.839768999955,
+      "rangeMs": 803.665398000041
     },
     {
       "fixture": "jestExpo",
@@ -7131,14 +7132,14 @@
       "progress": false,
       "binary": "candidate",
       "samples": [
-        30976.182,
-        29951.859,
-        29793.062
+        27108.512,
+        29912.52,
+        31788.514
       ],
-      "medianMs": 29951.859,
-      "minMs": 29793.061987000052,
-      "maxMs": 30976.181825999985,
-      "rangeMs": 1183.1198389999336
+      "medianMs": 29912.52,
+      "minMs": 27108.51199099992,
+      "maxMs": 31788.514084999915,
+      "rangeMs": 4680.002093999996
     },
     {
       "fixture": "jestExpo",
@@ -7146,14 +7147,14 @@
       "progress": true,
       "binary": "baseline",
       "samples": [
-        32458.927,
-        31567.785,
-        30544.895
+        29375.289,
+        31124.599,
+        28791.535
       ],
-      "medianMs": 31567.785,
-      "minMs": 30544.894555000123,
-      "maxMs": 32458.927058,
-      "rangeMs": 1914.0325029998785
+      "medianMs": 29375.289,
+      "minMs": 28791.53491100017,
+      "maxMs": 31124.59924999997,
+      "rangeMs": 2333.0643389998004
     },
     {
       "fixture": "jestExpo",
@@ -7161,14 +7162,14 @@
       "progress": true,
       "binary": "candidate",
       "samples": [
-        31296.081,
-        29942.797,
-        32959.31
+        32009.124,
+        32091.704,
+        29889.667
       ],
-      "medianMs": 31296.081,
-      "minMs": 29942.797049000044,
-      "maxMs": 32959.3103730001,
-      "rangeMs": 3016.5133240000578
+      "medianMs": 32009.124,
+      "minMs": 29889.666542999912,
+      "maxMs": 32091.703903999995,
+      "rangeMs": 2202.0373610000825
     }
   ],
   "pairs": [
@@ -7178,16 +7179,16 @@
       "progress": true,
       "pair": 0,
       "values": {
-        "baseline": 2026.7016050000002,
-        "candidate": 2097.874077999999
+        "baseline": 2027.7840509999987,
+        "candidate": 2063.3900859999994
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 2026.7016050000002,
-      "candidateMs": 2097.874077999999,
-      "deltaMs": 71.17247299999872
+      "baselineMs": 2027.7840509999987,
+      "candidateMs": 2063.3900859999994,
+      "deltaMs": 35.6060350000007
     },
     {
       "fixture": "nodeWorkspace",
@@ -7195,16 +7196,16 @@
       "progress": false,
       "pair": 0,
       "values": {
-        "baseline": 2070.648653999997,
-        "candidate": 1953.0576870000004
+        "baseline": 2126.918641,
+        "candidate": 1984.6040460000004
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 2070.648653999997,
-      "candidateMs": 1953.0576870000004,
-      "deltaMs": -117.59096699999645
+      "baselineMs": 2126.918641,
+      "candidateMs": 1984.6040460000004,
+      "deltaMs": -142.31459499999983
     },
     {
       "fixture": "nodeWorkspace",
@@ -7212,16 +7213,16 @@
       "progress": false,
       "pair": 1,
       "values": {
-        "candidate": 1961.6942930000005,
-        "baseline": 2503.0897589999986
+        "candidate": 1984.5974929999975,
+        "baseline": 2145.8024449999975
       },
       "order": [
         "candidate",
         "baseline"
       ],
-      "baselineMs": 2503.0897589999986,
-      "candidateMs": 1961.6942930000005,
-      "deltaMs": -541.3954659999981
+      "baselineMs": 2145.8024449999975,
+      "candidateMs": 1984.5974929999975,
+      "deltaMs": -161.20495200000005
     },
     {
       "fixture": "nodeWorkspace",
@@ -7229,16 +7230,16 @@
       "progress": true,
       "pair": 1,
       "values": {
-        "candidate": 2176.794906000003,
-        "baseline": 2038.9597160000012
+        "candidate": 2063.514779000001,
+        "baseline": 2061.093918999999
       },
       "order": [
         "candidate",
         "baseline"
       ],
-      "baselineMs": 2038.9597160000012,
-      "candidateMs": 2176.794906000003,
-      "deltaMs": 137.8351900000016
+      "baselineMs": 2061.093918999999,
+      "candidateMs": 2063.514779000001,
+      "deltaMs": 2.420860000001994
     },
     {
       "fixture": "nodeWorkspace",
@@ -7246,16 +7247,16 @@
       "progress": true,
       "pair": 2,
       "values": {
-        "baseline": 2027.0767149999992,
-        "candidate": 2117.609608999999
+        "baseline": 2874.2745219999997,
+        "candidate": 3435.4367010000024
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 2027.0767149999992,
-      "candidateMs": 2117.609608999999,
-      "deltaMs": 90.53289399999994
+      "baselineMs": 2874.2745219999997,
+      "candidateMs": 3435.4367010000024,
+      "deltaMs": 561.1621790000027
     },
     {
       "fixture": "nodeWorkspace",
@@ -7263,16 +7264,16 @@
       "progress": false,
       "pair": 2,
       "values": {
-        "baseline": 2153.831533999997,
-        "candidate": 2018.6825499999977
+        "baseline": 3012.115619999997,
+        "candidate": 3717.9638520000008
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 2153.831533999997,
-      "candidateMs": 2018.6825499999977,
-      "deltaMs": -135.14898399999947
+      "baselineMs": 3012.115619999997,
+      "candidateMs": 3717.9638520000008,
+      "deltaMs": 705.8482320000039
     },
     {
       "fixture": "nodeWorkspace",
@@ -7280,16 +7281,16 @@
       "progress": false,
       "pair": 0,
       "values": {
-        "baseline": 2743.559116999997,
-        "candidate": 2083.751986000003
+        "baseline": 2845.325742000001,
+        "candidate": 2131.6668720000016
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 2743.559116999997,
-      "candidateMs": 2083.751986000003,
-      "deltaMs": -659.8071309999941
+      "baselineMs": 2845.325742000001,
+      "candidateMs": 2131.6668720000016,
+      "deltaMs": -713.6588699999993
     },
     {
       "fixture": "nodeWorkspace",
@@ -7297,16 +7298,16 @@
       "progress": true,
       "pair": 0,
       "values": {
-        "baseline": 2214.016908000005,
-        "candidate": 2116.3503169999967
+        "baseline": 2110.4209770000016,
+        "candidate": 2182.389049999998
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 2214.016908000005,
-      "candidateMs": 2116.3503169999967,
-      "deltaMs": -97.66659100000834
+      "baselineMs": 2110.4209770000016,
+      "candidateMs": 2182.389049999998,
+      "deltaMs": 71.96807299999637
     },
     {
       "fixture": "nodeWorkspace",
@@ -7314,16 +7315,16 @@
       "progress": true,
       "pair": 1,
       "values": {
-        "candidate": 2078.0691929999957,
-        "baseline": 2711.3105789999972
+        "candidate": 2095.4758470000015,
+        "baseline": 2080.671300999995
       },
       "order": [
         "candidate",
         "baseline"
       ],
-      "baselineMs": 2711.3105789999972,
-      "candidateMs": 2078.0691929999957,
-      "deltaMs": -633.2413860000015
+      "baselineMs": 2080.671300999995,
+      "candidateMs": 2095.4758470000015,
+      "deltaMs": 14.804546000006667
     },
     {
       "fixture": "nodeWorkspace",
@@ -7331,16 +7332,16 @@
       "progress": false,
       "pair": 1,
       "values": {
-        "candidate": 2158.2406499999997,
-        "baseline": 2141.740699999995
+        "candidate": 2162.354131,
+        "baseline": 2042.0126689999888
       },
       "order": [
         "candidate",
         "baseline"
       ],
-      "baselineMs": 2141.740699999995,
-      "candidateMs": 2158.2406499999997,
-      "deltaMs": 16.4999500000049
+      "baselineMs": 2042.0126689999888,
+      "candidateMs": 2162.354131,
+      "deltaMs": 120.34146200001123
     },
     {
       "fixture": "nodeWorkspace",
@@ -7348,16 +7349,16 @@
       "progress": false,
       "pair": 2,
       "values": {
-        "baseline": 2154.6018690000055,
-        "candidate": 2215.5715159999963
+        "baseline": 2176.999696999992,
+        "candidate": 2216.2230150000105
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 2154.6018690000055,
-      "candidateMs": 2215.5715159999963,
-      "deltaMs": 60.9696469999908
+      "baselineMs": 2176.999696999992,
+      "candidateMs": 2216.2230150000105,
+      "deltaMs": 39.22331800001848
     },
     {
       "fixture": "nodeWorkspace",
@@ -7365,16 +7366,16 @@
       "progress": true,
       "pair": 2,
       "values": {
-        "baseline": 2120.353952000005,
-        "candidate": 2085.7297540000145
+        "baseline": 2174.2891089999903,
+        "candidate": 2281.849961999993
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 2120.353952000005,
-      "candidateMs": 2085.7297540000145,
-      "deltaMs": -34.62419799999043
+      "baselineMs": 2174.2891089999903,
+      "candidateMs": 2281.849961999993,
+      "deltaMs": 107.56085300000268
     },
     {
       "fixture": "vitest",
@@ -7382,16 +7383,16 @@
       "progress": true,
       "pair": 0,
       "values": {
-        "baseline": 9607.812737999993,
-        "candidate": 10819.433963000003
+        "baseline": 9750.190904000003,
+        "candidate": 12742.181220999992
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 9607.812737999993,
-      "candidateMs": 10819.433963000003,
-      "deltaMs": 1211.6212250000099
+      "baselineMs": 9750.190904000003,
+      "candidateMs": 12742.181220999992,
+      "deltaMs": 2991.990316999989
     },
     {
       "fixture": "vitest",
@@ -7399,16 +7400,16 @@
       "progress": false,
       "pair": 0,
       "values": {
-        "baseline": 10087.372986000002,
-        "candidate": 10086.547277999984
+        "baseline": 10836.822736000002,
+        "candidate": 10615.112514000008
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 10087.372986000002,
-      "candidateMs": 10086.547277999984,
-      "deltaMs": -0.8257080000184942
+      "baselineMs": 10836.822736000002,
+      "candidateMs": 10615.112514000008,
+      "deltaMs": -221.71022199999425
     },
     {
       "fixture": "vitest",
@@ -7416,16 +7417,16 @@
       "progress": false,
       "pair": 1,
       "values": {
-        "candidate": 11605.551246999996,
-        "baseline": 9522.304099
+        "candidate": 10506.873678000004,
+        "baseline": 9528.969981000002
       },
       "order": [
         "candidate",
         "baseline"
       ],
-      "baselineMs": 9522.304099,
-      "candidateMs": 11605.551246999996,
-      "deltaMs": 2083.247147999995
+      "baselineMs": 9528.969981000002,
+      "candidateMs": 10506.873678000004,
+      "deltaMs": 977.9036970000016
     },
     {
       "fixture": "vitest",
@@ -7433,16 +7434,16 @@
       "progress": true,
       "pair": 1,
       "values": {
-        "candidate": 9806.516674999992,
-        "baseline": 9499.03667999999
+        "candidate": 10162.193635999982,
+        "baseline": 10451.771925000008
       },
       "order": [
         "candidate",
         "baseline"
       ],
-      "baselineMs": 9499.03667999999,
-      "candidateMs": 9806.516674999992,
-      "deltaMs": 307.4799950000015
+      "baselineMs": 10451.771925000008,
+      "candidateMs": 10162.193635999982,
+      "deltaMs": -289.5782890000264
     },
     {
       "fixture": "vitest",
@@ -7450,16 +7451,16 @@
       "progress": true,
       "pair": 2,
       "values": {
-        "baseline": 9832.154905000003,
-        "candidate": 8885.401662999997
+        "baseline": 10070.224736000004,
+        "candidate": 10571.988902000012
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 9832.154905000003,
-      "candidateMs": 8885.401662999997,
-      "deltaMs": -946.7532420000061
+      "baselineMs": 10070.224736000004,
+      "candidateMs": 10571.988902000012,
+      "deltaMs": 501.7641660000081
     },
     {
       "fixture": "vitest",
@@ -7467,16 +7468,16 @@
       "progress": false,
       "pair": 2,
       "values": {
-        "baseline": 9893.841462000011,
-        "candidate": 9532.77825199999
+        "baseline": 9409.447834999999,
+        "candidate": 8886.693980000011
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 9893.841462000011,
-      "candidateMs": 9532.77825199999,
-      "deltaMs": -361.0632100000221
+      "baselineMs": 9409.447834999999,
+      "candidateMs": 8886.693980000011,
+      "deltaMs": -522.7538549999881
     },
     {
       "fixture": "vitest",
@@ -7484,16 +7485,16 @@
       "progress": false,
       "pair": 0,
       "values": {
-        "baseline": 12508.838461000007,
-        "candidate": 10721.887178999954
+        "baseline": 10942.601720999985,
+        "candidate": 11073.775026999996
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 12508.838461000007,
-      "candidateMs": 10721.887178999954,
-      "deltaMs": -1786.9512820000527
+      "baselineMs": 10942.601720999985,
+      "candidateMs": 11073.775026999996,
+      "deltaMs": 131.1733060000115
     },
     {
       "fixture": "vitest",
@@ -7501,16 +7502,16 @@
       "progress": true,
       "pair": 0,
       "values": {
-        "baseline": 10555.552533999959,
-        "candidate": 11934.879665000015
+        "baseline": 11050.932423999999,
+        "candidate": 10604.926477
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 10555.552533999959,
-      "candidateMs": 11934.879665000015,
-      "deltaMs": 1379.3271310000564
+      "baselineMs": 11050.932423999999,
+      "candidateMs": 10604.926477,
+      "deltaMs": -446.00594699999783
     },
     {
       "fixture": "vitest",
@@ -7518,16 +7519,16 @@
       "progress": true,
       "pair": 1,
       "values": {
-        "candidate": 11403.928288999945,
-        "baseline": 10634.138078999997
+        "candidate": 12207.361804999993,
+        "baseline": 11107.413547999982
       },
       "order": [
         "candidate",
         "baseline"
       ],
-      "baselineMs": 10634.138078999997,
-      "candidateMs": 11403.928288999945,
-      "deltaMs": 769.7902099999483
+      "baselineMs": 11107.413547999982,
+      "candidateMs": 12207.361804999993,
+      "deltaMs": 1099.948257000011
     },
     {
       "fixture": "vitest",
@@ -7535,16 +7536,16 @@
       "progress": false,
       "pair": 1,
       "values": {
-        "candidate": 11613.548997999984,
-        "baseline": 11178.74299900001
+        "candidate": 12739.055324000015,
+        "baseline": 11382.76206800004
       },
       "order": [
         "candidate",
         "baseline"
       ],
-      "baselineMs": 11178.74299900001,
-      "candidateMs": 11613.548997999984,
-      "deltaMs": 434.8059989999747
+      "baselineMs": 11382.76206800004,
+      "candidateMs": 12739.055324000015,
+      "deltaMs": 1356.2932559999754
     },
     {
       "fixture": "vitest",
@@ -7552,16 +7553,16 @@
       "progress": false,
       "pair": 2,
       "values": {
-        "baseline": 10365.46057699999,
-        "candidate": 10484.88325199997
+        "baseline": 10676.849109000002,
+        "candidate": 11204.122094999999
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 10365.46057699999,
-      "candidateMs": 10484.88325199997,
-      "deltaMs": 119.42267499997979
+      "baselineMs": 10676.849109000002,
+      "candidateMs": 11204.122094999999,
+      "deltaMs": 527.2729859999963
     },
     {
       "fixture": "vitest",
@@ -7569,16 +7570,16 @@
       "progress": true,
       "pair": 2,
       "values": {
-        "baseline": 11575.222126000037,
-        "candidate": 12525.819669999997
+        "baseline": 12419.619018000027,
+        "candidate": 10858.00112000003
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 11575.222126000037,
-      "candidateMs": 12525.819669999997,
-      "deltaMs": 950.5975439999602
+      "baselineMs": 12419.619018000027,
+      "candidateMs": 10858.00112000003,
+      "deltaMs": -1561.6178979999968
     },
     {
       "fixture": "jestExpo",
@@ -7586,16 +7587,16 @@
       "progress": true,
       "pair": 0,
       "values": {
-        "baseline": 20524.51039900002,
-        "candidate": 20322.20166599995
+        "baseline": 21240.583148000005,
+        "candidate": 21446.665402999963
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 20524.51039900002,
-      "candidateMs": 20322.20166599995,
-      "deltaMs": -202.3087330000708
+      "baselineMs": 21240.583148000005,
+      "candidateMs": 21446.665402999963,
+      "deltaMs": 206.0822549999575
     },
     {
       "fixture": "jestExpo",
@@ -7603,16 +7604,16 @@
       "progress": false,
       "pair": 0,
       "values": {
-        "baseline": 22236.837871000054,
-        "candidate": 23534.44631000003
+        "baseline": 21881.893958,
+        "candidate": 22283.457380999927
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 22236.837871000054,
-      "candidateMs": 23534.44631000003,
-      "deltaMs": 1297.6084389999742
+      "baselineMs": 21881.893958,
+      "candidateMs": 22283.457380999927,
+      "deltaMs": 401.56342299992684
     },
     {
       "fixture": "jestExpo",
@@ -7620,16 +7621,16 @@
       "progress": false,
       "pair": 1,
       "values": {
-        "candidate": 22986.518766999943,
-        "baseline": 22586.566281999927
+        "candidate": 21960.56283499999,
+        "baseline": 20919.27397800004
       },
       "order": [
         "candidate",
         "baseline"
       ],
-      "baselineMs": 22586.566281999927,
-      "candidateMs": 22986.518766999943,
-      "deltaMs": 399.95248500001617
+      "baselineMs": 20919.27397800004,
+      "candidateMs": 21960.56283499999,
+      "deltaMs": 1041.2888569999486
     },
     {
       "fixture": "jestExpo",
@@ -7637,16 +7638,16 @@
       "progress": true,
       "pair": 1,
       "values": {
-        "candidate": 21980.084324000054,
-        "baseline": 21748.138609000016
+        "candidate": 22911.225979000097,
+        "baseline": 21777.906585999997
       },
       "order": [
         "candidate",
         "baseline"
       ],
-      "baselineMs": 21748.138609000016,
-      "candidateMs": 21980.084324000054,
-      "deltaMs": 231.94571500003804
+      "baselineMs": 21777.906585999997,
+      "candidateMs": 22911.225979000097,
+      "deltaMs": 1133.3193930000998
     },
     {
       "fixture": "jestExpo",
@@ -7654,16 +7655,16 @@
       "progress": true,
       "pair": 2,
       "values": {
-        "baseline": 22861.021248999983,
-        "candidate": 20759.058518999955
+        "baseline": 22684.264124999987,
+        "candidate": 22835.209557000082
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 22861.021248999983,
-      "candidateMs": 20759.058518999955,
-      "deltaMs": -2101.9627300000284
+      "baselineMs": 22684.264124999987,
+      "candidateMs": 22835.209557000082,
+      "deltaMs": 150.94543200009502
     },
     {
       "fixture": "jestExpo",
@@ -7671,16 +7672,16 @@
       "progress": false,
       "pair": 2,
       "values": {
-        "baseline": 20401.05322999996,
-        "candidate": 21362.76116200001
+        "baseline": 23900.864951000083,
+        "candidate": 23906.49502599996
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 20401.05322999996,
-      "candidateMs": 21362.76116200001,
-      "deltaMs": 961.7079320000485
+      "baselineMs": 23900.864951000083,
+      "candidateMs": 23906.49502599996,
+      "deltaMs": 5.630074999877252
     },
     {
       "fixture": "jestExpo",
@@ -7688,16 +7689,16 @@
       "progress": false,
       "pair": 0,
       "values": {
-        "baseline": 29339.67119900009,
-        "candidate": 30976.181825999985
+        "baseline": 30045.18954199995,
+        "candidate": 27108.51199099992
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 29339.67119900009,
-      "candidateMs": 30976.181825999985,
-      "deltaMs": 1636.5106269998942
+      "baselineMs": 30045.18954199995,
+      "candidateMs": 27108.51199099992,
+      "deltaMs": -2936.67755100003
     },
     {
       "fixture": "jestExpo",
@@ -7705,16 +7706,16 @@
       "progress": true,
       "pair": 0,
       "values": {
-        "baseline": 32458.927058,
-        "candidate": 31296.08082999999
+        "baseline": 29375.28915800003,
+        "candidate": 32009.124290999956
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 32458.927058,
-      "candidateMs": 31296.08082999999,
-      "deltaMs": -1162.8462280000094
+      "baselineMs": 29375.28915800003,
+      "candidateMs": 32009.124290999956,
+      "deltaMs": 2633.8351329999277
     },
     {
       "fixture": "jestExpo",
@@ -7722,16 +7723,16 @@
       "progress": true,
       "pair": 1,
       "values": {
-        "candidate": 29942.797049000044,
-        "baseline": 31567.784914000076
+        "candidate": 32091.703903999995,
+        "baseline": 31124.59924999997
       },
       "order": [
         "candidate",
         "baseline"
       ],
-      "baselineMs": 31567.784914000076,
-      "candidateMs": 29942.797049000044,
-      "deltaMs": -1624.987865000032
+      "baselineMs": 31124.59924999997,
+      "candidateMs": 32091.703903999995,
+      "deltaMs": 967.1046540000243
     },
     {
       "fixture": "jestExpo",
@@ -7739,16 +7740,16 @@
       "progress": false,
       "pair": 1,
       "values": {
-        "candidate": 29951.858722999925,
-        "baseline": 29130.83433500002
+        "candidate": 29912.519984999904,
+        "baseline": 29550.174370999914
       },
       "order": [
         "candidate",
         "baseline"
       ],
-      "baselineMs": 29130.83433500002,
-      "candidateMs": 29951.858722999925,
-      "deltaMs": 821.0243879999034
+      "baselineMs": 29550.174370999914,
+      "candidateMs": 29912.519984999904,
+      "deltaMs": 362.34561399999075
     },
     {
       "fixture": "jestExpo",
@@ -7756,16 +7757,16 @@
       "progress": false,
       "pair": 2,
       "values": {
-        "baseline": 34989.264190000016,
-        "candidate": 29793.061987000052
+        "baseline": 30353.839768999955,
+        "candidate": 31788.514084999915
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 34989.264190000016,
-      "candidateMs": 29793.061987000052,
-      "deltaMs": -5196.202202999964
+      "baselineMs": 30353.839768999955,
+      "candidateMs": 31788.514084999915,
+      "deltaMs": 1434.6743159999605
     },
     {
       "fixture": "jestExpo",
@@ -7773,16 +7774,16 @@
       "progress": true,
       "pair": 2,
       "values": {
-        "baseline": 30544.894555000123,
-        "candidate": 32959.3103730001
+        "baseline": 28791.53491100017,
+        "candidate": 29889.666542999912
       },
       "order": [
         "baseline",
         "candidate"
       ],
-      "baselineMs": 30544.894555000123,
-      "candidateMs": 32959.3103730001,
-      "deltaMs": 2414.4158179999795
+      "baselineMs": 28791.53491100017,
+      "candidateMs": 29889.666542999912,
+      "deltaMs": 1098.1316319997422
     }
   ],
   "comparisons": {
@@ -7792,300 +7793,300 @@
         "workers": 1,
         "progress": true,
         "leftSamples": [
-          2026.702,
-          2038.96,
-          2027.077
+          2027.784,
+          2061.094,
+          2874.275
         ],
         "rightSamples": [
-          2097.874,
-          2176.795,
-          2117.61
+          2063.39,
+          2063.515,
+          3435.437
         ],
-        "leftMedianMs": 2027.077,
-        "rightMedianMs": 2117.61,
-        "leftMinMs": 2026.702,
-        "leftMaxMs": 2038.96,
-        "leftRangeMs": 12.258000000000038,
-        "rightMinMs": 2097.874,
-        "rightMaxMs": 2176.795,
-        "rightRangeMs": 78.92100000000028,
-        "deltaMedianMs": 90.53300000000013,
-        "deltaMedianPercent": 4.466184560329979
+        "leftMedianMs": 2061.094,
+        "rightMedianMs": 2063.515,
+        "leftMinMs": 2027.784,
+        "leftMaxMs": 2874.275,
+        "leftRangeMs": 846.491,
+        "rightMinMs": 2063.39,
+        "rightMaxMs": 3435.437,
+        "rightRangeMs": 1372.047,
+        "deltaMedianMs": 2.4209999999998217,
+        "deltaMedianPercent": 0.11746189159736634
       },
       {
         "fixture": "nodeWorkspace",
         "workers": 1,
         "progress": false,
         "leftSamples": [
-          2070.649,
-          2503.09,
-          2153.832
+          2126.919,
+          2145.802,
+          3012.116
         ],
         "rightSamples": [
-          1953.058,
-          1961.694,
-          2018.683
+          1984.604,
+          1984.597,
+          3717.964
         ],
-        "leftMedianMs": 2153.832,
-        "rightMedianMs": 1961.694,
-        "leftMinMs": 2070.649,
-        "leftMaxMs": 2503.09,
-        "leftRangeMs": 432.44100000000026,
-        "rightMinMs": 1953.058,
-        "rightMaxMs": 2018.683,
-        "rightRangeMs": 65.625,
-        "deltaMedianMs": -192.13799999999992,
-        "deltaMedianPercent": -8.920751479224002
+        "leftMedianMs": 2145.802,
+        "rightMedianMs": 1984.604,
+        "leftMinMs": 2126.919,
+        "leftMaxMs": 3012.116,
+        "leftRangeMs": 885.1970000000001,
+        "rightMinMs": 1984.597,
+        "rightMaxMs": 3717.964,
+        "rightRangeMs": 1733.367,
+        "deltaMedianMs": -161.1980000000001,
+        "deltaMedianPercent": -7.512249499254827
       },
       {
         "fixture": "nodeWorkspace",
         "workers": 2,
         "progress": false,
         "leftSamples": [
-          2743.559,
-          2141.741,
-          2154.602
+          2845.326,
+          2042.013,
+          2177
         ],
         "rightSamples": [
-          2083.752,
-          2158.241,
-          2215.572
+          2131.667,
+          2162.354,
+          2216.223
         ],
-        "leftMedianMs": 2154.602,
-        "rightMedianMs": 2158.241,
-        "leftMinMs": 2141.741,
-        "leftMaxMs": 2743.559,
-        "leftRangeMs": 601.8180000000002,
-        "rightMinMs": 2083.752,
-        "rightMaxMs": 2215.572,
-        "rightRangeMs": 131.82000000000016,
-        "deltaMedianMs": 3.6390000000001237,
-        "deltaMedianPercent": 0.16889430159259686
+        "leftMedianMs": 2177,
+        "rightMedianMs": 2162.354,
+        "leftMinMs": 2042.013,
+        "leftMaxMs": 2845.326,
+        "leftRangeMs": 803.3130000000001,
+        "rightMinMs": 2131.667,
+        "rightMaxMs": 2216.223,
+        "rightRangeMs": 84.55600000000004,
+        "deltaMedianMs": -14.646000000000186,
+        "deltaMedianPercent": -0.6727606798346434
       },
       {
         "fixture": "nodeWorkspace",
         "workers": 2,
         "progress": true,
         "leftSamples": [
-          2214.017,
-          2711.311,
-          2120.354
+          2110.421,
+          2080.671,
+          2174.289
         ],
         "rightSamples": [
-          2116.35,
-          2078.069,
-          2085.73
+          2182.389,
+          2095.476,
+          2281.85
         ],
-        "leftMedianMs": 2214.017,
-        "rightMedianMs": 2085.73,
-        "leftMinMs": 2120.354,
-        "leftMaxMs": 2711.311,
-        "leftRangeMs": 590.9570000000003,
-        "rightMinMs": 2078.069,
-        "rightMaxMs": 2116.35,
-        "rightRangeMs": 38.28099999999995,
-        "deltaMedianMs": -128.2869999999998,
-        "deltaMedianPercent": -5.794309619122157
+        "leftMedianMs": 2110.421,
+        "rightMedianMs": 2182.389,
+        "leftMinMs": 2080.671,
+        "leftMaxMs": 2174.289,
+        "leftRangeMs": 93.6180000000004,
+        "rightMinMs": 2095.476,
+        "rightMaxMs": 2281.85,
+        "rightRangeMs": 186.3739999999998,
+        "deltaMedianMs": 71.9680000000003,
+        "deltaMedianPercent": 3.4101252783212597
       },
       {
         "fixture": "vitest",
         "workers": 1,
         "progress": true,
         "leftSamples": [
-          9607.813,
-          9499.037,
-          9832.155
+          9750.191,
+          10451.772,
+          10070.225
         ],
         "rightSamples": [
-          10819.434,
-          9806.517,
-          8885.402
+          12742.181,
+          10162.194,
+          10571.989
         ],
-        "leftMedianMs": 9607.813,
-        "rightMedianMs": 9806.517,
-        "leftMinMs": 9499.037,
-        "leftMaxMs": 9832.155,
-        "leftRangeMs": 333.1180000000004,
-        "rightMinMs": 8885.402,
-        "rightMaxMs": 10819.434,
-        "rightRangeMs": 1934.0319999999992,
-        "deltaMedianMs": 198.70399999999972,
-        "deltaMedianPercent": 2.0681501607077464
+        "leftMedianMs": 10070.225,
+        "rightMedianMs": 10571.989,
+        "leftMinMs": 9750.191,
+        "leftMaxMs": 10451.772,
+        "leftRangeMs": 701.5810000000001,
+        "rightMinMs": 10162.194,
+        "rightMaxMs": 12742.181,
+        "rightRangeMs": 2579.987000000001,
+        "deltaMedianMs": 501.7639999999992,
+        "deltaMedianPercent": 4.982649344974906
       },
       {
         "fixture": "vitest",
         "workers": 1,
         "progress": false,
         "leftSamples": [
-          10087.373,
-          9522.304,
-          9893.841
+          10836.823,
+          9528.97,
+          9409.448
         ],
         "rightSamples": [
-          10086.547,
-          11605.551,
-          9532.778
+          10615.113,
+          10506.874,
+          8886.694
         ],
-        "leftMedianMs": 9893.841,
-        "rightMedianMs": 10086.547,
-        "leftMinMs": 9522.304,
-        "leftMaxMs": 10087.373,
-        "leftRangeMs": 565.0689999999995,
-        "rightMinMs": 9532.778,
-        "rightMaxMs": 11605.551,
-        "rightRangeMs": 2072.7729999999992,
-        "deltaMedianMs": 192.70600000000013,
-        "deltaMedianPercent": 1.947736981016777
+        "leftMedianMs": 9528.97,
+        "rightMedianMs": 10506.874,
+        "leftMinMs": 9409.448,
+        "leftMaxMs": 10836.823,
+        "leftRangeMs": 1427.375,
+        "rightMinMs": 8886.694,
+        "rightMaxMs": 10615.113,
+        "rightRangeMs": 1728.4189999999999,
+        "deltaMedianMs": 977.9040000000005,
+        "deltaMedianPercent": 10.262431301599234
       },
       {
         "fixture": "vitest",
         "workers": 2,
         "progress": false,
         "leftSamples": [
-          12508.838,
-          11178.743,
-          10365.461
+          10942.602,
+          11382.762,
+          10676.849
         ],
         "rightSamples": [
-          10721.887,
-          11613.549,
-          10484.883
+          11073.775,
+          12739.055,
+          11204.122
         ],
-        "leftMedianMs": 11178.743,
-        "rightMedianMs": 10721.887,
-        "leftMinMs": 10365.461,
-        "leftMaxMs": 12508.838,
-        "leftRangeMs": 2143.3770000000004,
-        "rightMinMs": 10484.883,
-        "rightMaxMs": 11613.549,
-        "rightRangeMs": 1128.666000000001,
-        "deltaMedianMs": -456.85599999999977,
-        "deltaMedianPercent": -4.086828009195665
+        "leftMedianMs": 10942.602,
+        "rightMedianMs": 11204.122,
+        "leftMinMs": 10676.849,
+        "leftMaxMs": 11382.762,
+        "leftRangeMs": 705.9130000000005,
+        "rightMinMs": 11073.775,
+        "rightMaxMs": 12739.055,
+        "rightRangeMs": 1665.2800000000007,
+        "deltaMedianMs": 261.5199999999986,
+        "deltaMedianPercent": 2.3899251750177752
       },
       {
         "fixture": "vitest",
         "workers": 2,
         "progress": true,
         "leftSamples": [
-          10555.553,
-          10634.138,
-          11575.222
+          11050.932,
+          11107.414,
+          12419.619
         ],
         "rightSamples": [
-          11934.88,
-          11403.928,
-          12525.82
+          10604.926,
+          12207.362,
+          10858.001
         ],
-        "leftMedianMs": 10634.138,
-        "rightMedianMs": 11934.88,
-        "leftMinMs": 10555.553,
-        "leftMaxMs": 11575.222,
-        "leftRangeMs": 1019.6689999999999,
-        "rightMinMs": 11403.928,
-        "rightMaxMs": 12525.82,
-        "rightRangeMs": 1121.8919999999998,
-        "deltaMedianMs": 1300.7419999999984,
-        "deltaMedianPercent": 12.231757759773272
+        "leftMedianMs": 11107.414,
+        "rightMedianMs": 10858.001,
+        "leftMinMs": 11050.932,
+        "leftMaxMs": 12419.619,
+        "leftRangeMs": 1368.687,
+        "rightMinMs": 10604.926,
+        "rightMaxMs": 12207.362,
+        "rightRangeMs": 1602.4359999999997,
+        "deltaMedianMs": -249.41300000000047,
+        "deltaMedianPercent": -2.245464155743186
       },
       {
         "fixture": "jestExpo",
         "workers": 1,
         "progress": true,
         "leftSamples": [
-          20524.51,
-          21748.139,
-          22861.021
+          21240.583,
+          21777.907,
+          22684.264
         ],
         "rightSamples": [
-          20322.202,
-          21980.084,
-          20759.059
+          21446.665,
+          22911.226,
+          22835.21
         ],
-        "leftMedianMs": 21748.139,
-        "rightMedianMs": 20759.059,
-        "leftMinMs": 20524.51,
-        "leftMaxMs": 22861.021,
-        "leftRangeMs": 2336.5110000000022,
-        "rightMinMs": 20322.202,
-        "rightMaxMs": 21980.084,
-        "rightRangeMs": 1657.8819999999978,
-        "deltaMedianMs": -989.0799999999981,
-        "deltaMedianPercent": -4.547883384412791
+        "leftMedianMs": 21777.907,
+        "rightMedianMs": 22835.21,
+        "leftMinMs": 21240.583,
+        "leftMaxMs": 22684.264,
+        "leftRangeMs": 1443.6810000000005,
+        "rightMinMs": 21446.665,
+        "rightMaxMs": 22911.226,
+        "rightRangeMs": 1464.5609999999979,
+        "deltaMedianMs": 1057.3029999999999,
+        "deltaMedianPercent": 4.85493394750928
       },
       {
         "fixture": "jestExpo",
         "workers": 1,
         "progress": false,
         "leftSamples": [
-          22236.838,
-          22586.566,
-          20401.053
+          21881.894,
+          20919.274,
+          23900.865
         ],
         "rightSamples": [
-          23534.446,
-          22986.519,
-          21362.761
+          22283.457,
+          21960.563,
+          23906.495
         ],
-        "leftMedianMs": 22236.838,
-        "rightMedianMs": 22986.519,
-        "leftMinMs": 20401.053,
-        "leftMaxMs": 22586.566,
-        "leftRangeMs": 2185.512999999999,
-        "rightMinMs": 21362.761,
-        "rightMaxMs": 23534.446,
-        "rightRangeMs": 2171.6850000000013,
-        "deltaMedianMs": 749.6810000000005,
-        "deltaMedianPercent": 3.371347131278289
+        "leftMedianMs": 21881.894,
+        "rightMedianMs": 22283.457,
+        "leftMinMs": 20919.274,
+        "leftMaxMs": 23900.865,
+        "leftRangeMs": 2981.5910000000003,
+        "rightMinMs": 21960.563,
+        "rightMaxMs": 23906.495,
+        "rightRangeMs": 1945.9320000000007,
+        "deltaMedianMs": 401.5629999999983,
+        "deltaMedianPercent": 1.8351382197537303
       },
       {
         "fixture": "jestExpo",
         "workers": 2,
         "progress": false,
         "leftSamples": [
-          29339.671,
-          29130.834,
-          34989.264
+          30045.19,
+          29550.174,
+          30353.84
         ],
         "rightSamples": [
-          30976.182,
-          29951.859,
-          29793.062
+          27108.512,
+          29912.52,
+          31788.514
         ],
-        "leftMedianMs": 29339.671,
-        "rightMedianMs": 29951.859,
-        "leftMinMs": 29130.834,
-        "leftMaxMs": 34989.264,
-        "leftRangeMs": 5858.430000000004,
-        "rightMinMs": 29793.062,
-        "rightMaxMs": 30976.182,
-        "rightRangeMs": 1183.119999999999,
-        "deltaMedianMs": 612.1880000000019,
-        "deltaMedianPercent": 2.086553731294403
+        "leftMedianMs": 30045.19,
+        "rightMedianMs": 29912.52,
+        "leftMinMs": 29550.174,
+        "leftMaxMs": 30353.84,
+        "leftRangeMs": 803.6660000000011,
+        "rightMinMs": 27108.512,
+        "rightMaxMs": 31788.514,
+        "rightRangeMs": 4680.002,
+        "deltaMedianMs": -132.66999999999825,
+        "deltaMedianPercent": -0.4415681844581388
       },
       {
         "fixture": "jestExpo",
         "workers": 2,
         "progress": true,
         "leftSamples": [
-          32458.927,
-          31567.785,
-          30544.895
+          29375.289,
+          31124.599,
+          28791.535
         ],
         "rightSamples": [
-          31296.081,
-          29942.797,
-          32959.31
+          32009.124,
+          32091.704,
+          29889.667
         ],
-        "leftMedianMs": 31567.785,
-        "rightMedianMs": 31296.081,
-        "leftMinMs": 30544.895,
-        "leftMaxMs": 32458.927,
-        "leftRangeMs": 1914.0319999999992,
-        "rightMinMs": 29942.797,
-        "rightMaxMs": 32959.31,
-        "rightRangeMs": 3016.512999999999,
-        "deltaMedianMs": -271.70400000000154,
-        "deltaMedianPercent": -0.8607002360159306
+        "leftMedianMs": 29375.289,
+        "rightMedianMs": 32009.124,
+        "leftMinMs": 28791.535,
+        "leftMaxMs": 31124.599,
+        "leftRangeMs": 2333.0639999999985,
+        "rightMinMs": 29889.667,
+        "rightMaxMs": 32091.704,
+        "rightRangeMs": 2202.0370000000003,
+        "deltaMedianMs": 2633.834999999999,
+        "deltaMedianPercent": 8.966158596771589
       }
     ],
     "progress": [
@@ -8094,303 +8095,302 @@
         "binary": "baseline",
         "workers": 1,
         "leftSamples": [
-          2070.649,
-          2503.09,
-          2153.832
+          2126.919,
+          2145.802,
+          3012.116
         ],
         "rightSamples": [
-          2026.702,
-          2038.96,
-          2027.077
+          2027.784,
+          2061.094,
+          2874.275
         ],
-        "leftMedianMs": 2153.832,
-        "rightMedianMs": 2027.077,
-        "leftMinMs": 2070.649,
-        "leftMaxMs": 2503.09,
-        "leftRangeMs": 432.44100000000026,
-        "rightMinMs": 2026.702,
-        "rightMaxMs": 2038.96,
-        "rightRangeMs": 12.258000000000038,
-        "deltaMedianMs": -126.75499999999988,
-        "deltaMedianPercent": -5.885092244891889
+        "leftMedianMs": 2145.802,
+        "rightMedianMs": 2061.094,
+        "leftMinMs": 2126.919,
+        "leftMaxMs": 3012.116,
+        "leftRangeMs": 885.1970000000001,
+        "rightMinMs": 2027.784,
+        "rightMaxMs": 2874.275,
+        "rightRangeMs": 846.491,
+        "deltaMedianMs": -84.70800000000008,
+        "deltaMedianPercent": -3.9476149243965697
       },
       {
         "fixture": "nodeWorkspace",
         "binary": "baseline",
         "workers": 2,
         "leftSamples": [
-          2743.559,
-          2141.741,
-          2154.602
+          2845.326,
+          2042.013,
+          2177
         ],
         "rightSamples": [
-          2214.017,
-          2711.311,
-          2120.354
+          2110.421,
+          2080.671,
+          2174.289
         ],
-        "leftMedianMs": 2154.602,
-        "rightMedianMs": 2214.017,
-        "leftMinMs": 2141.741,
-        "leftMaxMs": 2743.559,
-        "leftRangeMs": 601.8180000000002,
-        "rightMinMs": 2120.354,
-        "rightMaxMs": 2711.311,
-        "rightRangeMs": 590.9570000000003,
-        "deltaMedianMs": 59.414999999999964,
-        "deltaMedianPercent": 2.7575858557636153
+        "leftMedianMs": 2177,
+        "rightMedianMs": 2110.421,
+        "leftMinMs": 2042.013,
+        "leftMaxMs": 2845.326,
+        "leftRangeMs": 803.3130000000001,
+        "rightMinMs": 2080.671,
+        "rightMaxMs": 2174.289,
+        "rightRangeMs": 93.6180000000004,
+        "deltaMedianMs": -66.57900000000018,
+        "deltaMedianPercent": -3.0582912264584374
       },
       {
         "fixture": "nodeWorkspace",
         "binary": "candidate",
         "workers": 1,
         "leftSamples": [
-          1953.058,
-          1961.694,
-          2018.683
+          1984.604,
+          1984.597,
+          3717.964
         ],
         "rightSamples": [
-          2097.874,
-          2176.795,
-          2117.61
+          2063.39,
+          2063.515,
+          3435.437
         ],
-        "leftMedianMs": 1961.694,
-        "rightMedianMs": 2117.61,
-        "leftMinMs": 1953.058,
-        "leftMaxMs": 2018.683,
-        "leftRangeMs": 65.625,
-        "rightMinMs": 2097.874,
-        "rightMaxMs": 2176.795,
-        "rightRangeMs": 78.92100000000028,
-        "deltaMedianMs": 155.91600000000017,
-        "deltaMedianPercent": 7.948028591615215
+        "leftMedianMs": 1984.604,
+        "rightMedianMs": 2063.515,
+        "leftMinMs": 1984.597,
+        "leftMaxMs": 3717.964,
+        "leftRangeMs": 1733.367,
+        "rightMinMs": 2063.39,
+        "rightMaxMs": 3435.437,
+        "rightRangeMs": 1372.047,
+        "deltaMedianMs": 78.91099999999983,
+        "deltaMedianPercent": 3.976158467885776
       },
       {
         "fixture": "nodeWorkspace",
         "binary": "candidate",
         "workers": 2,
         "leftSamples": [
-          2083.752,
-          2158.241,
-          2215.572
+          2131.667,
+          2162.354,
+          2216.223
         ],
         "rightSamples": [
-          2116.35,
-          2078.069,
-          2085.73
+          2182.389,
+          2095.476,
+          2281.85
         ],
-        "leftMedianMs": 2158.241,
-        "rightMedianMs": 2085.73,
-        "leftMinMs": 2083.752,
-        "leftMaxMs": 2215.572,
-        "leftRangeMs": 131.82000000000016,
-        "rightMinMs": 2078.069,
-        "rightMaxMs": 2116.35,
-        "rightRangeMs": 38.28099999999995,
-        "deltaMedianMs": -72.51099999999997,
-        "deltaMedianPercent": -3.359726740433527
+        "leftMedianMs": 2162.354,
+        "rightMedianMs": 2182.389,
+        "leftMinMs": 2131.667,
+        "leftMaxMs": 2216.223,
+        "leftRangeMs": 84.55600000000004,
+        "rightMinMs": 2095.476,
+        "rightMaxMs": 2281.85,
+        "rightRangeMs": 186.3739999999998,
+        "deltaMedianMs": 20.03500000000031,
+        "deltaMedianPercent": 0.9265365430452328
       },
       {
         "fixture": "vitest",
         "binary": "baseline",
         "workers": 1,
         "leftSamples": [
-          10087.373,
-          9522.304,
-          9893.841
+          10836.823,
+          9528.97,
+          9409.448
         ],
         "rightSamples": [
-          9607.813,
-          9499.037,
-          9832.155
+          9750.191,
+          10451.772,
+          10070.225
         ],
-        "leftMedianMs": 9893.841,
-        "rightMedianMs": 9607.813,
-        "leftMinMs": 9522.304,
-        "leftMaxMs": 10087.373,
-        "leftRangeMs": 565.0689999999995,
-        "rightMinMs": 9499.037,
-        "rightMaxMs": 9832.155,
-        "rightRangeMs": 333.1180000000004,
-        "deltaMedianMs": -286.02800000000025,
-        "deltaMedianPercent": -2.8909702510885333
+        "leftMedianMs": 9528.97,
+        "rightMedianMs": 10070.225,
+        "leftMinMs": 9409.448,
+        "leftMaxMs": 10836.823,
+        "leftRangeMs": 1427.375,
+        "rightMinMs": 9750.191,
+        "rightMaxMs": 10451.772,
+        "rightRangeMs": 701.5810000000001,
+        "deltaMedianMs": 541.255000000001,
+        "deltaMedianPercent": 5.680099737956999
       },
       {
         "fixture": "vitest",
         "binary": "baseline",
         "workers": 2,
         "leftSamples": [
-          12508.838,
-          11178.743,
-          10365.461
+          10942.602,
+          11382.762,
+          10676.849
         ],
         "rightSamples": [
-          10555.553,
-          10634.138,
-          11575.222
+          11050.932,
+          11107.414,
+          12419.619
         ],
-        "leftMedianMs": 11178.743,
-        "rightMedianMs": 10634.138,
-        "leftMinMs": 10365.461,
-        "leftMaxMs": 12508.838,
-        "leftRangeMs": 2143.3770000000004,
-        "rightMinMs": 10555.553,
-        "rightMaxMs": 11575.222,
-        "rightRangeMs": 1019.6689999999999,
-        "deltaMedianMs": -544.6049999999996,
-        "deltaMedianPercent": -4.871791041264653
+        "leftMedianMs": 10942.602,
+        "rightMedianMs": 11107.414,
+        "leftMinMs": 10676.849,
+        "leftMaxMs": 11382.762,
+        "leftRangeMs": 705.9130000000005,
+        "rightMinMs": 11050.932,
+        "rightMaxMs": 12419.619,
+        "rightRangeMs": 1368.687,
+        "deltaMedianMs": 164.8119999999999,
+        "deltaMedianPercent": 1.5061499997898111
       },
       {
         "fixture": "vitest",
         "binary": "candidate",
         "workers": 1,
         "leftSamples": [
-          10086.547,
-          11605.551,
-          9532.778
+          10615.113,
+          10506.874,
+          8886.694
         ],
         "rightSamples": [
-          10819.434,
-          9806.517,
-          8885.402
+          12742.181,
+          10162.194,
+          10571.989
         ],
-        "leftMedianMs": 10086.547,
-        "rightMedianMs": 9806.517,
-        "leftMinMs": 9532.778,
-        "leftMaxMs": 11605.551,
-        "leftRangeMs": 2072.7729999999992,
-        "rightMinMs": 8885.402,
-        "rightMaxMs": 10819.434,
-        "rightRangeMs": 1934.0319999999992,
-        "deltaMedianMs": -280.03000000000065,
-        "deltaMedianPercent": -2.776272197016488
+        "leftMedianMs": 10506.874,
+        "rightMedianMs": 10571.989,
+        "leftMinMs": 8886.694,
+        "leftMaxMs": 10615.113,
+        "leftRangeMs": 1728.4189999999999,
+        "rightMinMs": 10162.194,
+        "rightMaxMs": 12742.181,
+        "rightRangeMs": 2579.987000000001,
+        "deltaMedianMs": 65.11499999999978,
+        "deltaMedianPercent": 0.6197371358978873
       },
       {
         "fixture": "vitest",
         "binary": "candidate",
         "workers": 2,
         "leftSamples": [
-          10721.887,
-          11613.549,
-          10484.883
+          11073.775,
+          12739.055,
+          11204.122
         ],
         "rightSamples": [
-          11934.88,
-          11403.928,
-          12525.82
+          10604.926,
+          12207.362,
+          10858.001
         ],
-        "leftMedianMs": 10721.887,
-        "rightMedianMs": 11934.88,
-        "leftMinMs": 10484.883,
-        "leftMaxMs": 11613.549,
-        "leftRangeMs": 1128.666000000001,
-        "rightMinMs": 11403.928,
-        "rightMaxMs": 12525.82,
-        "rightRangeMs": 1121.8919999999998,
-        "deltaMedianMs": 1212.9929999999986,
-        "deltaMedianPercent": 11.313241782906298
+        "leftMedianMs": 11204.122,
+        "rightMedianMs": 10858.001,
+        "leftMinMs": 11073.775,
+        "leftMaxMs": 12739.055,
+        "leftRangeMs": 1665.2800000000007,
+        "rightMinMs": 10604.926,
+        "rightMaxMs": 12207.362,
+        "rightRangeMs": 1602.4359999999997,
+        "deltaMedianMs": -346.1209999999992,
+        "deltaMedianPercent": -3.0892291247810335
       },
       {
         "fixture": "jestExpo",
         "binary": "baseline",
         "workers": 1,
         "leftSamples": [
-          22236.838,
-          22586.566,
-          20401.053
+          21881.894,
+          20919.274,
+          23900.865
         ],
         "rightSamples": [
-          20524.51,
-          21748.139,
-          22861.021
+          21240.583,
+          21777.907,
+          22684.264
         ],
-        "leftMedianMs": 22236.838,
-        "rightMedianMs": 21748.139,
-        "leftMinMs": 20401.053,
-        "leftMaxMs": 22586.566,
-        "leftRangeMs": 2185.512999999999,
-        "rightMinMs": 20524.51,
-        "rightMaxMs": 22861.021,
-        "rightRangeMs": 2336.5110000000022,
-        "deltaMedianMs": -488.6990000000005,
-        "deltaMedianPercent": -2.1977000506996567
+        "leftMedianMs": 21881.894,
+        "rightMedianMs": 21777.907,
+        "leftMinMs": 20919.274,
+        "leftMaxMs": 23900.865,
+        "leftRangeMs": 2981.5910000000003,
+        "rightMinMs": 21240.583,
+        "rightMaxMs": 22684.264,
+        "rightRangeMs": 1443.6810000000005,
+        "deltaMedianMs": -103.98700000000099,
+        "deltaMedianPercent": -0.47521937543432474
       },
       {
         "fixture": "jestExpo",
         "binary": "baseline",
         "workers": 2,
         "leftSamples": [
-          29339.671,
-          29130.834,
-          34989.264
+          30045.19,
+          29550.174,
+          30353.84
         ],
         "rightSamples": [
-          32458.927,
-          31567.785,
-          30544.895
+          29375.289,
+          31124.599,
+          28791.535
         ],
-        "leftMedianMs": 29339.671,
-        "rightMedianMs": 31567.785,
-        "leftMinMs": 29130.834,
-        "leftMaxMs": 34989.264,
-        "leftRangeMs": 5858.430000000004,
-        "rightMinMs": 30544.895,
-        "rightMaxMs": 32458.927,
-        "rightRangeMs": 1914.0319999999992,
-        "deltaMedianMs": 2228.1140000000014,
-        "deltaMedianPercent": 7.594202402610451
+        "leftMedianMs": 30045.19,
+        "rightMedianMs": 29375.289,
+        "leftMinMs": 29550.174,
+        "leftMaxMs": 30353.84,
+        "leftRangeMs": 803.6660000000011,
+        "rightMinMs": 28791.535,
+        "rightMaxMs": 31124.599,
+        "rightRangeMs": 2333.0639999999985,
+        "deltaMedianMs": -669.900999999998,
+        "deltaMedianPercent": -2.229644745132243
       },
       {
         "fixture": "jestExpo",
         "binary": "candidate",
         "workers": 1,
         "leftSamples": [
-          23534.446,
-          22986.519,
-          21362.761
+          22283.457,
+          21960.563,
+          23906.495
         ],
         "rightSamples": [
-          20322.202,
-          21980.084,
-          20759.059
+          21446.665,
+          22911.226,
+          22835.21
         ],
-        "leftMedianMs": 22986.519,
-        "rightMedianMs": 20759.059,
-        "leftMinMs": 21362.761,
-        "leftMaxMs": 23534.446,
-        "leftRangeMs": 2171.6850000000013,
-        "rightMinMs": 20322.202,
-        "rightMaxMs": 21980.084,
-        "rightRangeMs": 1657.8819999999978,
-        "deltaMedianMs": -2227.459999999999,
-        "deltaMedianPercent": -9.690288468645466
+        "leftMedianMs": 22283.457,
+        "rightMedianMs": 22835.21,
+        "leftMinMs": 21960.563,
+        "leftMaxMs": 23906.495,
+        "leftRangeMs": 1945.9320000000007,
+        "rightMinMs": 21446.665,
+        "rightMaxMs": 22911.226,
+        "rightRangeMs": 1464.5609999999979,
+        "deltaMedianMs": 551.7530000000006,
+        "deltaMedianPercent": 2.476065540459008
       },
       {
         "fixture": "jestExpo",
         "binary": "candidate",
         "workers": 2,
         "leftSamples": [
-          30976.182,
-          29951.859,
-          29793.062
+          27108.512,
+          29912.52,
+          31788.514
         ],
         "rightSamples": [
-          31296.081,
-          29942.797,
-          32959.31
+          32009.124,
+          32091.704,
+          29889.667
         ],
-        "leftMedianMs": 29951.859,
-        "rightMedianMs": 31296.081,
-        "leftMinMs": 29793.062,
-        "leftMaxMs": 30976.182,
-        "leftRangeMs": 1183.119999999999,
-        "rightMinMs": 29942.797,
-        "rightMaxMs": 32959.31,
-        "rightRangeMs": 3016.512999999999,
-        "deltaMedianMs": 1344.221999999998,
-        "deltaMedianPercent": 4.4879418002067855
+        "leftMedianMs": 29912.52,
+        "rightMedianMs": 32009.124,
+        "leftMinMs": 27108.512,
+        "leftMaxMs": 31788.514,
+        "leftRangeMs": 4680.002,
+        "rightMinMs": 29889.667,
+        "rightMaxMs": 32091.704,
+        "rightRangeMs": 2202.0370000000003,
+        "deltaMedianMs": 2096.6039999999994,
+        "deltaMedianPercent": 7.009118589807878
       }
     ]
   },
-  "conclusion": "Descriptive medians and raw ranges only: three paired samples on fixed fixtures do not establish a production overhead bound.",
-  "candidateCommit": "ef722081bb4686e958cd1c923ca18ec99251db0d"
+  "conclusion": "Descriptive medians and raw ranges only: three paired samples on fixed fixtures do not establish a production overhead bound."
 }
