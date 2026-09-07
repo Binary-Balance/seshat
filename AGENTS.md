@@ -14,9 +14,16 @@ Use a single-context layout. See `docs/agents/domain.md`.
 
 ## Delivery workflow
 
-When a piece of work is finished, commit it, push its branch and open a GitHub
-pull request. Follow `docs/agents/delivery.md` for the fresh-agent review and fix
-loop. Continue until the PR is ready to merge; do not merge unless asked.
+For routine documentation-only edits, check prose and technical accuracy,
+commands and links, and the diff. When repository rules allow, commit and push
+directly to `main` without a PR or fresh-agent review/fix loop; otherwise use the
+minimal required PR route without that loop. Changes touching executable code,
+runtime/build/CI configuration, or substantive security/release-support claims
+follow the normal workflow in `docs/agents/delivery.md`.
+
+For work covered by the normal workflow, commit it, push its branch and open a
+GitHub pull request. Follow `docs/agents/delivery.md` for the fresh-agent review
+and fix loop. Continue until the PR is ready to merge; do not merge unless asked.
 
 ## Disk housekeeping
 

@@ -39,6 +39,7 @@ Its body holds Notes, Decisions-so-far, and Fog.
 - Choose the first open, unassigned child in map order with no open blockers.
 - Claim it with `gh issue edit <number> --add-assignee @me`.
 - For repository changes, follow the delivery workflow and close the issue when
-  the PR merges. For work that does not change repository files, comment with the
-  result and close the issue once its acceptance criteria are met. Add a summary
-  and link to the map's Decisions-so-far.
+  the PR merges, or when a direct documentation-only commit lands on `main`. For
+  work that does not change repository files, comment with the result and close
+  the issue once its acceptance criteria are met. Add a summary and link to the
+  map's Decisions-so-far.

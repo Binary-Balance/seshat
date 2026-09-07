@@ -1,9 +1,15 @@
 # Commit, review and fix
 
-Apply this process whenever a piece of repository work is finished. Committing,
-pushing a task branch, opening its PR and posting review/fix notes are part of
-the task; do not ask for separate permission for each step. Stop before merging
-unless the user has authorised the merge.
+Apply this process whenever work is not a routine documentation-only edit.
+Routine documentation-only edits require checking prose and technical accuracy,
+commands and links, and the diff. When repository rules allow, commit and push
+them directly to `main` without a PR or fresh-agent review/fix loop; otherwise
+use the minimal required PR route without that loop. Changes touching executable
+code, runtime/build/CI configuration, or substantive security/release-support
+claims use this normal workflow. Committing, pushing a task branch, opening its
+PR and posting review/fix notes are part of the task; do not ask for separate
+permission for each step. Stop before merging unless the user has authorised the
+merge.
 
 The coordinator delegates implementation work and review fixes to agents using
 model `gpt-5.6-luna` with `reasoning_effort: max`. Review passes use fresh
