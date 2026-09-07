@@ -133,10 +133,12 @@ the observed version; ranges are `not-comparable`, and missing receipts or
 manifests are `unavailable`. It never treats a declared range as a mismatch.
 `result.diagnostics.concurrency.seshat` reports the configured mutation worker
 limit and its effective use. Each runner entry is labelled `test` or
-`coverage` and reports an effective worker limit only when that command
-contains a supported numeric flag
-(`--test-concurrency`, `--runInBand`/`-i`, or `--maxWorkers`); wrappers, config
-files and runner defaults remain `unavailable`.
+`coverage` and reports an effective worker limit only when the direct runner
+invocation or resolved receipt establishes one. Node and Jest use supported
+runner flags (`--test-concurrency`, `--runInBand`/`-i`, or `--maxWorkers`);
+Vitest uses the resolved limit for the selected project(s), including a
+`fileParallelism: false` override. Wrappers, unresolved config values and
+selected projects with conflicting limits remain `unavailable`.
 
 `result.mutation.diagnostics` contains `unresolvedBreakdown` by verdict,
 `throughput` measured against mutation wall time, cumulative returned-mutant
@@ -266,8 +268,8 @@ and locked versions. Vitest reported actual `5.0.0`, but its fixture did not
 provide declared or lockfile versions; Node engine declarations were also
 unavailable in the three fixtures. The Node test, Vitest test/coverage and
 Jest/Expo test/coverage worker limits were reported as known from their explicit
-commands; the Node coverage collector has no supported numeric worker flag and
-is therefore explicitly `unavailable`. The report has no separate
+commands and resolved project configuration; the Node coverage collector has no
+supported numeric worker flag and is therefore explicitly `unavailable`. The report has no separate
 version-acquisition phase, so these values do not support a separate
 acquisition-cost claim.
 

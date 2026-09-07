@@ -359,16 +359,20 @@ fn numeric_flag(args: &[String], name: &str) -> Option<Option<usize>> {
     }
 }
 
+fn runner_option_args(args: &[String]) -> &[String] {
+    args.split(|arg| arg == "--").next().unwrap_or(args)
+}
+
 fn direct_runner_args<'a>(runner: Runner, args: &'a [String]) -> Option<&'a [String]> {
     let program = args.first()?;
     let program_name = Path::new(program).file_name()?.to_str()?;
     match runner {
         Runner::Node => (matches!(program_name, "node" | "nodejs")
             && args.get(1).is_some_and(|arg| arg == "--test"))
-        .then_some(&args[1..]),
+        .then_some(runner_option_args(&args[1..])),
         Runner::Jest | Runner::Vitest => {
             if program_name == runner.label() {
-                return Some(&args[1..]);
+                return Some(runner_option_args(&args[1..]));
             }
             if !matches!(program_name, "node" | "nodejs") {
                 return None;
@@ -386,7 +390,7 @@ fn direct_runner_args<'a>(runner: Runner, args: &'a [String]) -> Option<&'a [Str
                 }
                 Runner::Node => false,
             };
-            matches.then_some(&args[2..])
+            matches.then_some(runner_option_args(&args[2..]))
         }
     }
 }
@@ -1415,9 +1419,41 @@ mod tests {
         );
         setup.test = vec![
             "node".into(),
+            "--test".into(),
+            "--".into(),
+            "--test-concurrency=7".into(),
+        ];
+        assert_eq!(
+            runner_concurrency(&setup, &setup.test, "test", None)["state"],
+            "unavailable"
+        );
+        setup.test = vec![
+            "node".into(),
             "wrapper.mjs".into(),
             "--test".into(),
             "--test-concurrency=7".into(),
+        ];
+        assert_eq!(
+            runner_concurrency(&setup, &setup.test, "test", None)["state"],
+            "unavailable"
+        );
+
+        setup.runner = Runner::Jest;
+        setup.test = vec![
+            "node".into(),
+            "node_modules/jest/bin/jest.js".into(),
+            "--".into(),
+            "--runInBand".into(),
+        ];
+        assert_eq!(
+            runner_concurrency(&setup, &setup.test, "test", None)["state"],
+            "unavailable"
+        );
+        setup.test = vec![
+            "node".into(),
+            "node_modules/jest/bin/jest.js".into(),
+            "--".into(),
+            "--maxWorkers=7".into(),
         ];
         assert_eq!(
             runner_concurrency(&setup, &setup.test, "test", None)["state"],
@@ -1445,6 +1481,17 @@ mod tests {
         ];
         assert_eq!(
             runner_concurrency(&setup, &setup.test, "test", Some(&resolved))["state"],
+            "unavailable"
+        );
+        setup.test = vec![
+            "node".into(),
+            "node_modules/vitest/vitest.mjs".into(),
+            "run".into(),
+            "--".into(),
+            "--maxWorkers=7".into(),
+        ];
+        assert_eq!(
+            runner_concurrency(&setup, &setup.test, "test", None)["state"],
             "unavailable"
         );
 
