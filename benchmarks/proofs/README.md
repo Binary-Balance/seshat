@@ -846,7 +846,7 @@ contains the exact runner reports and configuration scope used for that route.
 | --- | --- | --- | --- |
 | Node | Node 24.20.0 | Built-in test runner with the verified Istanbul statement collector | [`linux-debian11.json`](../../outputs/linux-debian11.json) (installed candidate); [`bounded-proofs.json`](../../outputs/bounded-proofs.json) (fixture) |
 | Jest/Expo | Node 24.20.0, Jest 29.7.0, jest-expo 57.0.5, Expo 57.0.20 | Jest Circus, `jest-expo` preset, Babel coverage, `--runInBand`, Seshat workers 1 and 2 | [`jest-expo-check.json`](../../outputs/jest-expo-check.json) |
-| Vitest | Node 24.20.0, Vitest 5.0.0, `@vitest/coverage-istanbul` 5.0.0 | Private `TestRunner` and reporter, Node environment, fork pool, Istanbul coverage and sequential runner tests | [`vitest-check.json`](../../outputs/vitest-check.json) (worker 1); [`vitest-installed-preflight.json`](../../outputs/vitest-installed-preflight.json) (installed CLI, worker 2) |
+| Vitest | Node 24.20.0, Vitest 5.0.0, `@vitest/coverage-istanbul` 5.0.0 | Private `TestRunner` and reporter, Node environment, fork pool, Istanbul coverage and sequential runner tests | [`vitest-check.json`](../../outputs/vitest-check.json) (worker 1); [`vitest-installed-workers-2.json`](../../outputs/vitest-installed-workers-2.json) (installed CLI, worker 2) |
 
 ## Vitest combined workflow
 
