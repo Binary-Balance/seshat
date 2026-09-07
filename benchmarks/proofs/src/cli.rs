@@ -279,6 +279,71 @@ fn readable(report: &Value) -> String {
             }
         }
     }
+    if let Some(diagnostics) = result.get("diagnostics") {
+        let seshat = &diagnostics["concurrency"]["seshat"];
+        let _ = writeln!(
+            output,
+            "Seshat workers: configured {}, effective {} ({})",
+            seshat["configuredWorkers"],
+            seshat
+                .get("effectiveWorkers")
+                .filter(|value| !value.is_null())
+                .map_or("unavailable".into(), Value::to_string),
+            text(&seshat["state"])
+        );
+        for version in array(&diagnostics["runnerVersions"]) {
+            let _ = write!(
+                output,
+                "Runner {:?}: Node {:?}",
+                text(&version["setup"]),
+                version["runtime"]
+                    .get("node")
+                    .filter(|value| !value.is_null())
+                    .map_or_else(
+                        || "unavailable".to_string(),
+                        |value| value.as_str().unwrap_or("unknown").to_string(),
+                    )
+            );
+            for package in array(&version["packages"]) {
+                let _ = write!(
+                    output,
+                    ", {:?} {:?} (declared {:?}, {}, locked {:?}, {})",
+                    text(&package["name"]),
+                    package
+                        .get("actual")
+                        .filter(|value| !value.is_null())
+                        .and_then(Value::as_str)
+                        .unwrap_or("unavailable"),
+                    package
+                        .get("declared")
+                        .filter(|value| !value.is_null())
+                        .and_then(Value::as_str)
+                        .unwrap_or("unavailable"),
+                    text(&package["declaredComparison"]),
+                    package
+                        .get("locked")
+                        .filter(|value| !value.is_null())
+                        .and_then(Value::as_str)
+                        .unwrap_or("unavailable"),
+                    text(&package["lockedComparison"])
+                );
+            }
+            output.push('\n');
+        }
+        for runner in array(&diagnostics["concurrency"]["runners"]) {
+            let _ = writeln!(
+                output,
+                "Runner {:?} {} workers: {} ({})",
+                text(&runner["setup"]),
+                text(&runner["command"]),
+                runner
+                    .get("effectiveWorkers")
+                    .filter(|value| !value.is_null())
+                    .map_or("unavailable".into(), Value::to_string),
+                text(&runner["state"])
+            );
+        }
+    }
     if let Some(mutation) = result.get("mutation") {
         let score = mutation["score"]
             .as_f64()
@@ -307,6 +372,48 @@ fn readable(report: &Value) -> String {
                 "Mutation work: {} completed, {} not run, {} unresolved",
                 mutation["completed"], mutation["notRun"], mutation["unresolved"]
             );
+        }
+        let breakdown = &mutation["diagnostics"]["unresolvedBreakdown"];
+        if breakdown.is_object() {
+            let _ = writeln!(
+                output,
+                "Unresolved breakdown: timed-out {}, execution-error {}, cancelled {}, not-run {}, unassessed {}",
+                breakdown["timedOut"],
+                breakdown["executionError"],
+                breakdown["cancelled"],
+                breakdown["notRun"],
+                breakdown["unassessed"]
+            );
+        }
+        if let Some(throughput) = mutation["diagnostics"]["throughput"].as_object() {
+            let _ = writeln!(
+                output,
+                "Mutation throughput: {} mutant/s, {} job/s; mutant worker time {} ms",
+                throughput
+                    .get("completedMutantsPerSecond")
+                    .filter(|value| !value.is_null())
+                    .map_or("unavailable".into(), Value::to_string),
+                throughput
+                    .get("jobsPerSecond")
+                    .filter(|value| !value.is_null())
+                    .map_or("unavailable".into(), Value::to_string),
+                mutation["diagnostics"]["workerTimeMs"]
+            );
+        }
+        if let Some(slowest) = mutation["diagnostics"]["slowestExecutions"].as_array() {
+            if !slowest.is_empty() {
+                let _ = writeln!(output, "Slowest mutant executions:");
+                for row in slowest {
+                    let _ = writeln!(
+                        output,
+                        "  #{} {:?}: {} ms ({})",
+                        row["id"],
+                        text(&row["path"]),
+                        row["executionMs"],
+                        text(&row["verdict"])
+                    );
+                }
+            }
         }
         for row in array(&mutation["outcomes"]) {
             let _ = writeln!(

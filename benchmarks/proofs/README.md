@@ -94,7 +94,7 @@ with stdout. Draft schema version 1 has these top-level fields:
 | `complete`, `cancelled`, `signal` | Assessment completeness, cancellation flag and signal number or null |
 | `scope` | Include/exclude patterns, resolved source paths and setup names/runners/directories; null when capture fails |
 | `timings` | `wallMs`, `captureMs`, `executionMs`; unavailable phases are null |
-| `result` | Existing assessment evidence: sources, setup results, job counts, optional mutation outcomes and errors |
+| `result` | Existing assessment evidence plus runtime diagnostics |
 | `quality` | Threshold state and configured checks, or null when config/capture did not succeed |
 
 Timings are milliseconds. Wall time covers argument handling, capture, assessment
@@ -124,10 +124,34 @@ mutants without a returned attempt. `unresolved` is planned minus killed minus
 survived, including unattempted mutants. These counters do not override the
 run's `complete` flag, which can also fail for cleanup or worker errors.
 
+`result.diagnostics.runnerVersions` records the Node version from a validated
+runner receipt and the runner package versions observed by the private
+reporters. It also reports captured `package.json` runner and Node-engine
+declarations and `package-lock.json` versions when present. Exact declarations
+are compared with
+the observed version; ranges are `not-comparable`, and missing receipts or
+manifests are `unavailable`. It never treats a declared range as a mismatch.
+`result.diagnostics.concurrency.seshat` reports the configured mutation worker
+limit and its effective use. Each runner entry is labelled `test` or
+`coverage` and reports an effective worker limit only when the direct runner
+invocation or resolved receipt establishes one. Node and Jest use supported
+runner flags (`--test-concurrency`, `--runInBand`/`-i`, or `--maxWorkers`);
+Vitest uses the resolved limit for the selected project(s), including a
+`fileParallelism: false` override. Wrappers, unresolved config values and
+selected projects with conflicting limits remain `unavailable`.
+
+`result.mutation.diagnostics` contains `unresolvedBreakdown` by verdict,
+`throughput` measured against mutation wall time, cumulative returned-mutant
+`workerTimeMs`, and at most five `slowestExecutions` rows. Mutation wall time is
+the scheduler interval and worker time is the sum of returned mutant attempt
+durations; parallel durations must not be added to wall time. Missing job
+durations are omitted from the slow list and do not become zero.
+
 Progress reports elapsed time since assessment began, after initial capture.
-Mutation snapshots show completed attempts, currently running attempts and
-remaining unstarted work. Their sum equals the plan size. Updates occur at
-attempt starts/finishes, at most four per second, plus phase/final notices.
+Mutation snapshots show completed attempts, currently running attempts,
+remaining unstarted work and the unresolved timeout/error/cancellation/not-run
+counts observed so far. Their work counts sum to the plan size. Updates occur
+at attempt starts/finishes, at most four per second, plus phase/final notices.
 There is no polling thread, ETA or periodic update while a test is still running.
 The final mutation notice adds resolved/unresolved and not-run counts. Final
 counts and phase timings remain available with progress disabled. Output errors
@@ -152,8 +176,120 @@ overhead bound. Evidence remains in `work/assurance-proofs/cli-ybny6Y`,
 `cli-yq1i0W` and `parallel-JttVJe` under that same parent directory.
 
 Snapshots are diagnostic text, not a stable parsing interface. Use the versioned
-JSON for automation. Runner-version/concurrency summaries, live unresolved
-breakdowns, slowest-execution lists and throughput summaries remain future work.
+JSON for automation. Version observations come only from the supported private
+receipts; an opaque command or unsupported runner cannot be made precise by
+guessing from its executable name.
+
+For tuning, first run the complete command with fixed source, configuration,
+coverage and runner inputs, retaining the JSON report and outcome rows. Change
+one setting, such as Seshat `workers` or an explicit runner worker limit, and
+repeat the same command at least three times after a warmup. Compare wall and
+phase timings, throughput, unresolved breakdowns and slowest rows, then verify
+identical source scope, scores, mutant definitions and verdicts. Keep runner
+workers bounded when Seshat workers overlap, and isolate ports, files and
+databases per worker. Do not reduce tests or source scope, hide failures or
+weaken coverage to improve timing.
+
+### Diagnostics overhead matrix
+
+The bounded overhead proof uses the baseline tarball from commit
+`fbe06e9280cedb8daea41edc07b90f39e369bbe6` and a candidate built from the
+diagnostics commit. Build the candidate with the local toolchain and the pinned
+Debian inputs:
+
+The recorded candidate was built from runtime commit
+`62bcddd2a2008cdcca23b8baf93448b2d147f8d8`.
+
+```sh
+REPO_ROOT="$PWD"
+export RUSTUP_HOME="$REPO_ROOT/work/toolchain/rustup"
+export CARGO_HOME="$REPO_ROOT/work/toolchain/cargo"
+export PATH="$REPO_ROOT/work/toolchain/cargo/bin:$PATH"
+node packaging/pack.mjs work/debian11-inputs
+```
+
+For a fresh baseline, archive the pinned commit into a separate source root and
+run the same pack command there; the recorded run reused its captured tarball:
+
+```sh
+BASELINE_ROOT="$REPO_ROOT/work/diagnostics-baseline/source"
+mkdir -p "$BASELINE_ROOT"
+git archive fbe06e9280cedb8daea41edc07b90f39e369bbe6 | tar -x -C "$BASELINE_ROOT"
+(cd "$BASELINE_ROOT" && \
+  RUSTUP_HOME="$REPO_ROOT/work/toolchain/rustup" \
+  CARGO_HOME="$REPO_ROOT/work/toolchain/cargo" \
+  PATH="$REPO_ROOT/work/toolchain/cargo/bin:$PATH" \
+  node packaging/pack.mjs "$REPO_ROOT/work/debian11-inputs")
+```
+
+The Jest/Expo dependency directory is prepared as shown in the
+[Jest/Expo combined workflow](#jestexpo-combined-workflow). The current pack
+completes with the pinned Debian inputs and records the resulting artifact
+hashes in the retained JSON evidence. Set these paths to the resulting files:
+
+```sh
+BASELINE_TARBALL=/absolute/path/to/baseline/binary-balance-seshat-0.0.0.tgz
+CANDIDATE_TARBALL=/absolute/path/to/candidate/binary-balance-seshat-0.0.0.tgz
+JEST_DEPS=/absolute/path/to/jest-expo-fixture
+```
+
+Then run the fixed matrix:
+
+```sh
+node benchmarks/proofs/diagnostics-overhead.mjs \
+  --repo "$PWD" \
+  --baseline "$BASELINE_TARBALL" \
+  --candidate "$CANDIDATE_TARBALL" \
+  --jest-deps "$JEST_DEPS" \
+  --baseline-commit fbe06e9280cedb8daea41edc07b90f39e369bbe6 \
+  --candidate-commit 62bcddd2a2008cdcca23b8baf93448b2d147f8d8 \
+  --samples 3 \
+  --output outputs/diagnostics-overhead.json
+```
+
+The driver installs both tarballs offline into separate consumers with isolated
+npm caches and configs. It runs the Node workspace, Vitest React/Fastify TSX and
+Jest/Expo fixtures at Seshat workers 1 and 2, with progress enabled and disabled.
+Each condition has one warmup and three paired measured samples. Binary order
+alternates between pairs and progress order alternates within each pair; all
+processes run sequentially. The wall boundary includes child exit and stdout /
+stderr report serialization. Each run checks complete `check --json` output,
+source and config hashes, expected CRAP values, mutant definitions and verdicts,
+job counts and semantic parity before retaining its timing. Fresh captured copies
+isolate each invocation, while host filesystem, npm, runner and OS caches remain
+warm.
+
+The refreshed run retained 24 candidate diagnostics snapshots, including runner
+versions, declared and lockfile comparisons, concurrency states, mutation
+throughput, worker time and unresolved breakdowns, under `runs[].diagnostics`.
+Jest reported actual `29.7.0` and `jest-expo` `57.0.5`, with matching declared
+and locked versions. Vitest reported actual `5.0.0`, but its fixture did not
+provide declared or lockfile versions. Node reported `24.20.0`; engine
+declarations were unavailable in all three fixtures. Node test concurrency was
+known from `--test-concurrency`, while its coverage collector remained
+explicitly `unavailable`. Vitest test and coverage both reported the resolved
+worker limit from project configuration, and Jest/Expo test and coverage both
+reported the explicit `--runInBand` limit. The report has no separate
+version-acquisition phase, so these values do not support a separate
+acquisition-cost claim.
+
+Median candidate-versus-baseline wall-time deltas were:
+
+| Fixture | Workers | Progress on | Progress off |
+| --- | ---: | ---: | ---: |
+| Node workspace | 1 | +0.12% | −7.51% |
+| Node workspace | 2 | +3.41% | −0.67% |
+| Vitest | 1 | +4.98% | +10.26% |
+| Vitest | 2 | −2.25% | +2.39% |
+| Jest/Expo | 1 | +4.85% | +1.84% |
+| Jest/Expo | 2 | +8.97% | −0.44% |
+
+Progress-on versus progress-off medians ranged from −3.09% to +7.01% for the
+candidate and from −3.95% to +5.68% for the baseline. Raw samples, ranges,
+fixture/config hashes, artifact hashes and full retained semantic snapshots are
+in [`outputs/diagnostics-overhead.json`](../../outputs/diagnostics-overhead.json).
+These small fixed-fixture samples are noisy and fixture-specific; they do not
+establish a production overhead bound or a general claim about diagnostics cost.
 
 Exit 0 means complete execution with no failed applicable threshold. Without
 configured thresholds, surviving mutants and high CRAP do not fail the command.
