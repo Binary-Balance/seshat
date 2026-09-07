@@ -208,7 +208,7 @@ outcome appears, or imply that Seshat can make arbitrary tests deterministic.
 <a id="runtime-diagnostics-to-develop"></a>
 ## Runtime diagnostics
 
-The CLI candidate provides low-overhead runtime information so a human or
+The CLI candidate provides runtime information so a human or
 consuming-project agent can see what Seshat is doing, identify expensive phases
 and tune the project's configuration using measurements. It exposes phase-start
 notices, event-driven completed/running/remaining mutation counts, resolved source
