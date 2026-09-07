@@ -188,6 +188,107 @@ workers bounded when Seshat workers overlap, and isolate ports, files and
 databases per worker. Do not reduce tests or source scope, hide failures or
 weaken coverage to improve timing.
 
+### Diagnostics overhead matrix
+
+The bounded overhead proof uses the baseline tarball from commit
+`fbe06e9280cedb8daea41edc07b90f39e369bbe6` and a candidate built from the
+diagnostics commit. Build the candidate with the local toolchain and the pinned
+Debian inputs:
+
+The recorded candidate was built from runtime commit
+`ef722081bb4686e958cd1c923ca18ec99251db0d`.
+
+```sh
+REPO_ROOT="$PWD"
+export RUSTUP_HOME="$REPO_ROOT/work/toolchain/rustup"
+export CARGO_HOME="$REPO_ROOT/work/toolchain/cargo"
+export PATH="$REPO_ROOT/work/toolchain/cargo/bin:$PATH"
+node packaging/pack.mjs work/debian11-inputs
+```
+
+For a fresh baseline, archive the pinned commit into a separate source root and
+run the same pack command there; the recorded run reused its captured tarball:
+
+```sh
+BASELINE_ROOT="$REPO_ROOT/work/diagnostics-baseline/source"
+mkdir -p "$BASELINE_ROOT"
+git archive fbe06e9280cedb8daea41edc07b90f39e369bbe6 | tar -x -C "$BASELINE_ROOT"
+(cd "$BASELINE_ROOT" && \
+  RUSTUP_HOME="$REPO_ROOT/work/toolchain/rustup" \
+  CARGO_HOME="$REPO_ROOT/work/toolchain/cargo" \
+  PATH="$REPO_ROOT/work/toolchain/cargo/bin:$PATH" \
+  node packaging/pack.mjs "$REPO_ROOT/work/debian11-inputs")
+```
+
+The Jest/Expo dependency directory is prepared as shown in the
+[Jest/Expo combined workflow](#jestexpo-combined-workflow). The recorded pack
+compiled and staged successfully but returned an empty `npm pack --json` capture;
+a direct offline `npm pack` of that reported staging directory completed the
+artifact without changing the packer. Set these paths to the resulting files:
+
+```sh
+BASELINE_TARBALL=/absolute/path/to/baseline/binary-balance-seshat-0.0.0.tgz
+CANDIDATE_TARBALL=/absolute/path/to/candidate/binary-balance-seshat-0.0.0.tgz
+JEST_DEPS=/absolute/path/to/jest-expo-fixture
+```
+
+Then run the fixed matrix:
+
+```sh
+node benchmarks/proofs/diagnostics-overhead.mjs \
+  --repo "$PWD" \
+  --baseline "$BASELINE_TARBALL" \
+  --candidate "$CANDIDATE_TARBALL" \
+  --jest-deps "$JEST_DEPS" \
+  --baseline-commit fbe06e9280cedb8daea41edc07b90f39e369bbe6 \
+  --candidate-commit ef722081bb4686e958cd1c923ca18ec99251db0d \
+  --samples 3 \
+  --output outputs/diagnostics-overhead.json
+```
+
+The driver installs both tarballs offline into separate consumers with isolated
+npm caches and configs. It runs the Node workspace, Vitest React/Fastify TSX and
+Jest/Expo fixtures at Seshat workers 1 and 2, with progress enabled and disabled.
+Each condition has one warmup and three paired measured samples. Binary order
+alternates between pairs and progress order alternates within each pair; all
+processes run sequentially. The wall boundary includes child exit and stdout /
+stderr report serialization. Each run checks complete `check --json` output,
+source and config hashes, expected CRAP values, mutant definitions and verdicts,
+job counts and semantic parity before retaining its timing. Fresh captured copies
+isolate each invocation, while host filesystem, npm, runner and OS caches remain
+warm.
+
+The recorded run retained 24 candidate diagnostics snapshots, including runner
+versions, declared and lockfile comparisons, concurrency states, mutation
+throughput, worker time and unresolved breakdowns, under `runs[].diagnostics`.
+Jest reported actual `29.7.0` and `jest-expo` `57.0.5`, with matching declared
+and locked versions. Vitest reported actual `5.0.0`, but its fixture did not
+provide declared or lockfile versions; Node engine declarations were also
+unavailable in the three fixtures. The Node test, Vitest test/coverage and
+Jest/Expo test/coverage worker limits were reported as known from their explicit
+commands; the Node coverage collector has no supported numeric worker flag and
+is therefore explicitly `unavailable`. The report has no separate
+version-acquisition phase, so these values do not support a separate
+acquisition-cost claim.
+
+Median candidate-versus-baseline wall-time deltas were:
+
+| Fixture | Workers | Progress on | Progress off |
+| --- | ---: | ---: | ---: |
+| Node workspace | 1 | +4.47% | −8.92% |
+| Node workspace | 2 | −5.79% | +0.17% |
+| Vitest | 1 | +2.07% | +1.95% |
+| Vitest | 2 | +12.23% | −4.09% |
+| Jest/Expo | 1 | −4.55% | +3.37% |
+| Jest/Expo | 2 | −0.86% | +2.09% |
+
+Progress-on versus progress-off medians ranged from −9.69% to +11.31% for the
+candidate and from −5.89% to +7.59% for the baseline. Raw samples, ranges,
+fixture/config hashes, artifact hashes and full retained semantic snapshots are
+in [`outputs/diagnostics-overhead.json`](../../outputs/diagnostics-overhead.json).
+These small fixed-fixture samples are noisy and fixture-specific; they do not
+establish a production overhead bound or a general claim about diagnostics cost.
+
 Exit 0 means complete execution with no failed applicable threshold. Without
 configured thresholds, surviving mutants and high CRAP do not fail the command.
 Exit 1 means a complete run exceeded `thresholds.maxCrap` for a measured function

@@ -215,7 +215,10 @@ scope, phase/per-setup timings, job counts and mutation-worker measurements.
 Final reports retain completed/not-run/unresolved counts. Runner
 version/concurrency summaries, live unresolved breakdowns, throughput and bounded
 slow-execution summaries are included. A small-fixture proof compares
-progress-on/off runs. Remaining work is broader diagnostics-overhead measurement.
+progress-on/off runs. A [bounded three-sample matrix](../benchmarks/proofs/README.md#diagnostics-overhead-matrix)
+across the three checked-in fixtures recorded fixture-specific
+candidate-versus-baseline medians from −8.92% to +12.23%; broader
+production-workload overhead measurement remains.
 
 - Show the current phase, elapsed time, completed/total work where known, and
   running, queued and unresolved mutation counts. Label estimates as estimates.
