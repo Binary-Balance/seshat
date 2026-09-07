@@ -205,11 +205,12 @@ and report ordering. Timings are outside this guarantee.
 Report detected test instability explicitly. Do not retry until a preferred
 outcome appears, or imply that Seshat can make arbitrary tests deterministic.
 
-## Runtime diagnostics to develop
+<a id="runtime-diagnostics-to-develop"></a>
+## Runtime diagnostics
 
-Provide low-overhead runtime information so a human or consuming-project agent
-can see what Seshat is doing, identify expensive phases and tune the project's
-configuration using measurements. The CLI candidate now exposes phase-start
+The CLI candidate provides low-overhead runtime information so a human or
+consuming-project agent can see what Seshat is doing, identify expensive phases
+and tune the project's configuration using measurements. It exposes phase-start
 notices, event-driven completed/running/remaining mutation counts, resolved source
 scope, phase/per-setup timings, job counts and mutation-worker measurements.
 Final reports retain completed/not-run/unresolved counts. Runner
@@ -239,10 +240,11 @@ production-workload overhead measurement remains.
   Do not recommend reducing tests/source scope, hiding failures or weakening
   coverage to improve timing. Do not change project configuration automatically.
 
-Start with timings and counters already available during execution. Measure the
-diagnostics' own overhead. Detailed CPU/memory profiling, dashboards and automatic
-tuning are not implied by this note. Decide exact fields and progress frequency
-when implementing reporting, using the consuming-project proofs as examples.
+The implementation starts with timings and counters already available during
+execution and measures the diagnostics' own overhead. Detailed CPU/memory
+profiling, dashboards and automatic tuning are outside this scope. The exact
+fields, progress frequency and tuning procedure are documented in the
+[CLI candidate proof](../benchmarks/proofs/README.md#cli-candidate).
 
 ## README requirements
 
