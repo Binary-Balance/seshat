@@ -1,0 +1,480 @@
+{
+  "version": 1,
+  "toolchain": {
+    "node": "24.20.0",
+    "vitest": "5.0.0",
+    "@vitest/coverage-istanbul": "5.0.0",
+    "typescript": "6.0.3"
+  },
+  "candidate": {
+    "version": "seshat 0.0.0 (candidate)",
+    "binarySha256": "92e5173443e787726b6843c729754bc1e95f499ae736bb2e894e251b87dea6c0"
+  },
+  "invocation": {
+    "command": "seshat check --config seshat.json --scratch <scratch> --json --no-progress",
+    "workers": 2,
+    "runnerPool": "forks",
+    "runnerConcurrency": [
+      "--maxWorkers=1",
+      "--no-file-parallelism",
+      "--maxConcurrency=1"
+    ]
+  },
+  "configuration": {
+    "seshat": {
+      "workers": 2,
+      "source": {
+        "include": [
+          "tempo.ts",
+          "view.tsx",
+          "server.ts"
+        ]
+      },
+      "capture": [
+        "package.json",
+        "tsconfig.json",
+        "tempo.ts",
+        "view.tsx",
+        "server.ts",
+        "stack.test.tsx",
+        "vitest.config.mjs",
+        "node_modules"
+      ],
+      "setups": [
+        {
+          "name": "stack",
+          "runner": "vitest",
+          "cwd": ".",
+          "timeoutMs": 30000,
+          "typecheck": [
+            "/usr/bin/node",
+            "node_modules/typescript/bin/tsc",
+            "--project",
+            "tsconfig.json"
+          ],
+          "test": [
+            "/usr/bin/node",
+            "node_modules/vitest/vitest.mjs",
+            "run",
+            "--config",
+            "vitest.config.mjs",
+            "--maxWorkers=1",
+            "--no-file-parallelism",
+            "--maxConcurrency=1",
+            "--reporter=default",
+            "--reporter={seshatReporter}"
+          ],
+          "coverage": {
+            "command": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}",
+              "--coverage"
+            ],
+            "report": "coverage/coverage-final.json"
+          }
+        }
+      ]
+    },
+    "vitest": "export default {cacheDir:'.vite',test:{runner:process.env.SESHAT_VITEST_RUNNER,include:['stack.test.tsx'],coverage:{provider:'istanbul',include:['tempo.ts','view.tsx','server.ts'],reporter:['json'],reportsDirectory:'coverage'}}};\n",
+    "typescript": {
+      "compilerOptions": {
+        "strict": true,
+        "noEmit": true,
+        "skipLibCheck": true,
+        "exactOptionalPropertyTypes": true,
+        "noUncheckedIndexedAccess": true,
+        "target": "ES2022",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "allowImportingTsExtensions": true,
+        "jsx": "react-jsx",
+        "types": [
+          "node",
+          "react"
+        ]
+      },
+      "include": [
+        "*.ts",
+        "*.tsx"
+      ]
+    }
+  },
+  "report": {
+    "cancelled": false,
+    "command": "check",
+    "complete": true,
+    "quality": {
+      "checks": [],
+      "state": "not-configured"
+    },
+    "result": {
+      "complete": true,
+      "executionMs": 11669.162195,
+      "jobsAttempted": 8,
+      "mutation": {
+        "complete": true,
+        "completed": 4,
+        "error": null,
+        "executionMs": 5526.212788000001,
+        "jobsAttempted": 4,
+        "killed": 4,
+        "mutationWallMs": 3372.518908,
+        "notRun": 0,
+        "outcomes": [
+          {
+            "executionMs": 1629.245122,
+            "id": 0,
+            "localId": 0,
+            "offset": 60,
+            "original": "<",
+            "path": "tempo.ts",
+            "replacement": "<=",
+            "setups": [
+              {
+                "cancelled": false,
+                "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-833700-1788747608306303029\n\n ❯ stack.test.tsx (3 tests | 3 failed) 245ms\n   × pure rule has inclusive boundaries 38ms\n   × React TSX displays the rule result 11ms\n   × Fastify validates transport and uses the rule without a listener 180ms\n\n Test Files  1 failed (1)\n      Tests  3 failed (3)\n   Start at  12:20:17\n   Duration  920ms (import 47%, tests 36%, transform 10%, worker 7%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ 'slow', 'slow', 'steady', 'fast' ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n    \"slow\",\n-   \"steady\",\n+   \"slow\",\n    \"steady\",\n    \"fast\",\n  ]\n\n ❯ stack.test.tsx:8:43\n      6| import {createApp} from './server.ts';\n      7| test('pure rule has inclusive boundaries',()=>{\n      8|   expect([59,60,120,121].map(tempoLabel)).toEqual(['slow','steady','st…\n       |                                           ^\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n ❯ EvidenceRunner.runTask ../capture-833700-1788747609124467607/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯\n\n FAIL  stack.test.tsx > React TSX displays the rule result\nAssertionError: expected '<output>slow</output>' to be '<output>steady</output>' // Object.is equality\n\nExpected: \"<output>steady</output>\"\nReceived: \"<output>slow</output>\"\n\n ❯ stack.test.tsx:11:51\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n     11|   expect(renderToStaticMarkup(<Tempo bpm={60}/>)).toBe('<output>steady…\n       |                                                   ^\n     12| });\n     13| test('Fastify validates transport and uses the rule without a listener…\n ❯ EvidenceRunner.runTask ../capture-833700-1788747609124467607/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯\n\n FAIL  stack.test.tsx > Fastify validates transport and uses the rule wit",
+                "exit": 1,
+                "ms": 1628.720803,
+                "name": "stack",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-833700-1788747609124467607-mutant-0-0",
+                  "failed": 3,
+                  "node": "24.20.0",
+                  "passed": 0,
+                  "runner": "vitest",
+                  "timeouts": 0,
+                  "version": 1,
+                  "vitest": "5.0.0"
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 1621.891083,
+            "id": 1,
+            "localId": 1,
+            "offset": 60,
+            "original": "<",
+            "path": "tempo.ts",
+            "replacement": ">=",
+            "setups": [
+              {
+                "cancelled": false,
+                "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-833700-1788747615346830127\n\n ❯ stack.test.tsx (3 tests | 3 failed) 274ms\n   × pure rule has inclusive boundaries 29ms\n   × React TSX displays the rule result 23ms\n   × Fastify validates transport and uses the rule without a listener 212ms\n\n Test Files  1 failed (1)\n      Tests  3 failed (3)\n   Start at  12:20:17\n   Duration  925ms (import 47%, tests 40%, transform 8%, worker 5%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ 'steady', 'slow', 'slow', 'slow' ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n-   \"slow\",\n    \"steady\",\n-   \"steady\",\n-   \"fast\",\n+   \"slow\",\n+   \"slow\",\n+   \"slow\",\n  ]\n\n ❯ stack.test.tsx:8:43\n      6| import {createApp} from './server.ts';\n      7| test('pure rule has inclusive boundaries',()=>{\n      8|   expect([59,60,120,121].map(tempoLabel)).toEqual(['slow','steady','st…\n       |                                           ^\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n ❯ EvidenceRunner.runTask ../capture-833700-1788747616186013789/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯\n\n FAIL  stack.test.tsx > React TSX displays the rule result\nAssertionError: expected '<output>slow</output>' to be '<output>steady</output>' // Object.is equality\n\nExpected: \"<output>steady</output>\"\nReceived: \"<output>slow</output>\"\n\n ❯ stack.test.tsx:11:51\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n     11|   expect(renderToStaticMarkup(<Tempo bpm={60}/>)).toBe('<output>steady…\n       |                                                   ^\n     12| });\n     13| test('Fastify validates transport and uses the rule without a listener…\n ❯ EvidenceRunner.runTask ../capture-833700-1788747616186013789/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯\n\n FAIL  stack.test.tsx > Fastify validates transpor",
+                "exit": 1,
+                "ms": 1621.336777,
+                "name": "stack",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-833700-1788747616186013789-mutant-1-0",
+                  "failed": 3,
+                  "node": "24.20.0",
+                  "passed": 0,
+                  "runner": "vitest",
+                  "timeouts": 0,
+                  "version": 1,
+                  "vitest": "5.0.0"
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 1669.446723,
+            "id": 2,
+            "localId": 2,
+            "offset": 91,
+            "original": ">",
+            "path": "tempo.ts",
+            "replacement": ">=",
+            "setups": [
+              {
+                "cancelled": false,
+                "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-833700-1788747615346830127\n\n ❯ stack.test.tsx (3 tests | 2 failed) 219ms\n   × pure rule has inclusive boundaries 28ms\n   ✓ React TSX displays the rule result 10ms\n   × Fastify validates transport and uses the rule without a listener 179ms\n\n Test Files  1 failed (1)\n      Tests  2 failed | 1 passed (3)\n   Start at  12:20:19\n   Duration  948ms (import 45%, tests 33%, worker 13%, transform 8%, environment 1%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ 'slow', 'steady', 'fast', 'fast' ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n    \"slow\",\n    \"steady\",\n-   \"steady\",\n+   \"fast\",\n    \"fast\",\n  ]\n\n ❯ stack.test.tsx:8:43\n      6| import {createApp} from './server.ts';\n      7| test('pure rule has inclusive boundaries',()=>{\n      8|   expect([59,60,120,121].map(tempoLabel)).toEqual(['slow','steady','st…\n       |                                           ^\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n ❯ EvidenceRunner.runTask ../capture-833700-1788747616186013789/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯\n\n FAIL  stack.test.tsx > Fastify validates transport and uses the rule without a listener\nAssertionError: expected { label: 'fast' } to deeply equal { label: 'steady' }\n\n- Expected\n+ Received\n\n  {\n-   \"label\": \"steady\",\n+   \"label\": \"fast\",\n  }\n\n ❯ stack.test.tsx:19:31\n     17|       const response=await app.inject({method:'GET',url:'/tempo?bpm='+…\n     18|       expect(response.statusCode).toBe(200);\n     19|       expect(response.json()).toEqual({label});\n       |                               ^\n     20|     }\n     21|     expect((await app.inject({method:'GET',url:'/tempo?bpm=no'})).stat…\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯\n\n",
+                "exit": 1,
+                "ms": 1665.20606,
+                "name": "stack",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-833700-1788747616186013789-mutant-2-0",
+                  "failed": 2,
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "vitest",
+                  "timeouts": 0,
+                  "version": 1,
+                  "vitest": "5.0.0"
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 1743.213483,
+            "id": 3,
+            "localId": 3,
+            "offset": 91,
+            "original": ">",
+            "path": "tempo.ts",
+            "replacement": "<=",
+            "setups": [
+              {
+                "cancelled": false,
+                "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-833700-1788747608306303029\n\n ❯ stack.test.tsx (3 tests | 3 failed) 239ms\n   × pure rule has inclusive boundaries 43ms\n   × React TSX displays the rule result 15ms\n   × Fastify validates transport and uses the rule without a listener 174ms\n\n Test Files  1 failed (1)\n      Tests  3 failed (3)\n   Start at  12:20:19\n   Duration  1.03s (import 52%, tests 30%, transform 13%, worker 5%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ 'slow', 'fast', 'fast', 'steady' ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n    \"slow\",\n-   \"steady\",\n-   \"steady\",\n+   \"fast\",\n    \"fast\",\n+   \"steady\",\n  ]\n\n ❯ stack.test.tsx:8:43\n      6| import {createApp} from './server.ts';\n      7| test('pure rule has inclusive boundaries',()=>{\n      8|   expect([59,60,120,121].map(tempoLabel)).toEqual(['slow','steady','st…\n       |                                           ^\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n ❯ EvidenceRunner.runTask ../capture-833700-1788747609124467607/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯\n\n FAIL  stack.test.tsx > React TSX displays the rule result\nAssertionError: expected '<output>fast</output>' to be '<output>steady</output>' // Object.is equality\n\nExpected: \"<output>steady</output>\"\nReceived: \"<output>fast</output>\"\n\n ❯ stack.test.tsx:11:51\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n     11|   expect(renderToStaticMarkup(<Tempo bpm={60}/>)).toBe('<output>steady…\n       |                                                   ^\n     12| });\n     13| test('Fastify validates transport and uses the rule without a listener…\n ❯ EvidenceRunner.runTask ../capture-833700-1788747609124467607/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯\n\n FAIL  stack.test.tsx > Fastify validates transport and use",
+                "exit": 1,
+                "ms": 1737.938298,
+                "name": "stack",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-833700-1788747609124467607-mutant-3-0",
+                  "failed": 3,
+                  "node": "24.20.0",
+                  "passed": 0,
+                  "runner": "vitest",
+                  "timeouts": 0,
+                  "version": 1,
+                  "vitest": "5.0.0"
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ],
+        "planned": 4,
+        "restorationError": null,
+        "score": 100,
+        "strategy": "replace",
+        "survived": 0,
+        "unresolved": 0,
+        "workerBaselineJobs": 1,
+        "workerBaselines": [
+          {
+            "cancelled": false,
+            "exit": 0,
+            "ms": 1002.756105,
+            "name": "stack",
+            "overflow": false,
+            "pipeError": null,
+            "report": {
+              "complete": true,
+              "errors": 0,
+              "executionId": "capture-833700-1788747616186013789-worker-1-baseline-0",
+              "failed": 0,
+              "node": "24.20.0",
+              "passed": 3,
+              "runner": "vitest",
+              "timeouts": 0,
+              "version": 1,
+              "vitest": "5.0.0"
+            },
+            "state": "passed",
+            "timedOut": false,
+            "worker": 1
+          }
+        ],
+        "workerCleanupMs": 228.193932,
+        "workerPreparationMs": 1925.443542,
+        "workersRequested": 2,
+        "workersUsed": 2
+      },
+      "phase": "check",
+      "phaseTimings": {
+        "analysisMs": 3.697237,
+        "attributionMs": 0.035456,
+        "baselineMs": 1253.328783,
+        "cleanupMs": 229.687623,
+        "coverageMs": 1336.244921,
+        "preparationMs": 0.27710799999999997,
+        "typecheckMs": 3549.311221
+      },
+      "setups": [
+        {
+          "baseline": {
+            "cancelled": false,
+            "exit": 0,
+            "ms": 1253.094355,
+            "overflow": false,
+            "pipeError": null,
+            "report": {
+              "complete": true,
+              "errors": 0,
+              "executionId": "capture-833700-1788747609124467607-0-baseline",
+              "failed": 0,
+              "node": "24.20.0",
+              "passed": 3,
+              "runner": "vitest",
+              "timeouts": 0,
+              "version": 1,
+              "vitest": "5.0.0"
+            },
+            "state": "passed",
+            "timedOut": false
+          },
+          "coverage": {
+            "cancelled": false,
+            "exit": 0,
+            "ms": 1335.9057970000001,
+            "overflow": false,
+            "pipeError": null,
+            "report": {
+              "complete": true,
+              "errors": 0,
+              "executionId": "capture-833700-1788747609124467607-0-coverage",
+              "failed": 0,
+              "node": "24.20.0",
+              "passed": 3,
+              "runner": "vitest",
+              "timeouts": 0,
+              "version": 1,
+              "vitest": "5.0.0"
+            },
+            "state": "passed",
+            "timedOut": false
+          },
+          "name": "stack",
+          "timings": {
+            "baselineMs": 1253.328783,
+            "coverageMs": 1336.244921,
+            "typecheckMs": 3549.311221
+          },
+          "typecheck": {
+            "cancelled": false,
+            "exit": 0,
+            "ms": 3549.125063,
+            "overflow": false,
+            "pipeError": null,
+            "state": "passed",
+            "timedOut": false
+          }
+        }
+      ],
+      "sources": [
+        {
+          "path": "server.ts",
+          "result": {
+            "complete": true,
+            "functions": [
+              {
+                "complexity": 1,
+                "coverage": 1,
+                "covered": 3,
+                "crap": 1,
+                "name": "createApp",
+                "start": 210,
+                "status": "measured",
+                "total": 3
+              },
+              {
+                "complexity": 1,
+                "coverage": 1,
+                "covered": 1,
+                "crap": 1,
+                "name": "arrow@347",
+                "start": 347,
+                "status": "measured",
+                "total": 1
+              }
+            ],
+            "problems": []
+          }
+        },
+        {
+          "path": "tempo.ts",
+          "result": {
+            "complete": true,
+            "functions": [
+              {
+                "complexity": 3,
+                "coverage": 1,
+                "covered": 5,
+                "crap": 3,
+                "name": "tempoLabel",
+                "start": 7,
+                "status": "measured",
+                "total": 5
+              }
+            ],
+            "problems": []
+          }
+        },
+        {
+          "path": "view.tsx",
+          "result": {
+            "complete": true,
+            "functions": [
+              {
+                "complexity": 1,
+                "coverage": 1,
+                "covered": 1,
+                "crap": 1,
+                "name": "Tempo",
+                "start": 73,
+                "status": "measured",
+                "total": 1
+              }
+            ],
+            "problems": []
+          }
+        }
+      ]
+    },
+    "schemaVersion": 1,
+    "scope": {
+      "exclude": [],
+      "files": [
+        "server.ts",
+        "tempo.ts",
+        "view.tsx"
+      ],
+      "include": [
+        "tempo.ts",
+        "view.tsx",
+        "server.ts"
+      ],
+      "setups": [
+        {
+          "cwd": ".",
+          "name": "stack",
+          "runner": "vitest"
+        }
+      ]
+    },
+    "signal": null,
+    "timings": {
+      "captureMs": 897.278278,
+      "executionMs": 11669.162195,
+      "wallMs": 12797.5692
+    },
+    "toolVersion": "0.0.0"
+  }
+}

@@ -1,0 +1,5123 @@
+{
+  "representativeOnly": true,
+  "environment": {
+    "node": "v24.20.0",
+    "tools": {
+      "vitest": "5.0.0",
+      "@vitest/coverage-istanbul": "5.0.0",
+      "fastify": "5.12.3",
+      "@sinclair/typebox": "0.34.52",
+      "react": "19.2.8",
+      "react-dom": "19.2.8"
+    }
+  },
+  "runs": {
+    "stack": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "tempo.ts",
+            "view.tsx",
+            "server.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": true,
+        "executionMs": 8185.808333000001,
+        "jobsAttempted": 7,
+        "mutation": {
+          "complete": true,
+          "completed": 4,
+          "error": null,
+          "executionMs": 3786.4242959999997,
+          "jobsAttempted": 4,
+          "killed": 4,
+          "mutationWallMs": 3786.3727310000004,
+          "notRun": 0,
+          "outcomes": [
+            {
+              "executionMs": 923.5812589999999,
+              "id": 0,
+              "localId": 0,
+              "offset": 60,
+              "original": "<",
+              "path": "tempo.ts",
+              "replacement": "<=",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-731287-1788737994244086027\n\n ❯ stack.test.tsx (3 tests | 3 failed) 147ms\n   × pure rule has inclusive boundaries 14ms\n   × React TSX displays the rule result 11ms\n   × Fastify validates transport and uses the rule without a listener 120ms\n\n Test Files  1 failed (1)\n      Tests  3 failed (3)\n   Start at  09:39:59\n   Duration  508ms (import 46%, tests 39%, transform 9%, worker 6%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ 'slow', 'slow', 'steady', 'fast' ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n    \"slow\",\n-   \"steady\",\n+   \"slow\",\n    \"steady\",\n    \"fast\",\n  ]\n\n ❯ stack.test.tsx:8:43\n      6| import {createApp} from './server.ts';\n      7| test('pure rule has inclusive boundaries',()=>{\n      8|   expect([59,60,120,121].map(tempoLabel)).toEqual(['slow','steady','st…\n       |                                           ^\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n ❯ EvidenceRunner.runTask ../capture-731287-1788737994877419288/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯\n\n FAIL  stack.test.tsx > React TSX displays the rule result\nAssertionError: expected '<output>slow</output>' to be '<output>steady</output>' // Object.is equality\n\nExpected: \"<output>steady</output>\"\nReceived: \"<output>slow</output>\"\n\n ❯ stack.test.tsx:11:51\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n     11|   expect(renderToStaticMarkup(<Tempo bpm={60}/>)).toBe('<output>steady…\n       |                                                   ^\n     12| });\n     13| test('Fastify validates transport and uses the rule without a listener…\n ❯ EvidenceRunner.runTask ../capture-731287-1788737994877419288/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯\n\n FAIL  stack.test.tsx > Fastify validates transport and uses the rule w",
+                  "exit": 1,
+                  "ms": 923.12672,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 0,
+                    "executionId": "capture-731287-1788737994877419288-mutant-0-0",
+                    "failed": 3,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "failed",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1025.722853,
+              "id": 1,
+              "localId": 1,
+              "offset": 60,
+              "original": "<",
+              "path": "tempo.ts",
+              "replacement": ">=",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-731287-1788737994244086027\n\n ❯ stack.test.tsx (3 tests | 3 failed) 142ms\n   × pure rule has inclusive boundaries 13ms\n   × React TSX displays the rule result 10ms\n   × Fastify validates transport and uses the rule without a listener 117ms\n\n Test Files  1 failed (1)\n      Tests  3 failed (3)\n   Start at  09:40:00\n   Duration  576ms (import 46%, tests 38%, transform 9%, worker 6%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ 'steady', 'slow', 'slow', 'slow' ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n-   \"slow\",\n    \"steady\",\n-   \"steady\",\n-   \"fast\",\n+   \"slow\",\n+   \"slow\",\n+   \"slow\",\n  ]\n\n ❯ stack.test.tsx:8:43\n      6| import {createApp} from './server.ts';\n      7| test('pure rule has inclusive boundaries',()=>{\n      8|   expect([59,60,120,121].map(tempoLabel)).toEqual(['slow','steady','st…\n       |                                           ^\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n ❯ EvidenceRunner.runTask ../capture-731287-1788737994877419288/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯\n\n FAIL  stack.test.tsx > React TSX displays the rule result\nAssertionError: expected '<output>slow</output>' to be '<output>steady</output>' // Object.is equality\n\nExpected: \"<output>steady</output>\"\nReceived: \"<output>slow</output>\"\n\n ❯ stack.test.tsx:11:51\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n     11|   expect(renderToStaticMarkup(<Tempo bpm={60}/>)).toBe('<output>steady…\n       |                                                   ^\n     12| });\n     13| test('Fastify validates transport and uses the rule without a listener…\n ❯ EvidenceRunner.runTask ../capture-731287-1788737994877419288/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯\n\n FAIL  stack.test.tsx > Fastify validates trans",
+                  "exit": 1,
+                  "ms": 1025.252925,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 0,
+                    "executionId": "capture-731287-1788737994877419288-mutant-1-0",
+                    "failed": 3,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "failed",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 907.0717430000001,
+              "id": 2,
+              "localId": 2,
+              "offset": 91,
+              "original": ">",
+              "path": "tempo.ts",
+              "replacement": ">=",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-731287-1788737994244086027\n\n ❯ stack.test.tsx (3 tests | 2 failed) 136ms\n   × pure rule has inclusive boundaries 12ms\n   ✓ React TSX displays the rule result 6ms\n   × Fastify validates transport and uses the rule without a listener 115ms\n\n Test Files  1 failed (1)\n      Tests  2 failed | 1 passed (3)\n   Start at  09:40:01\n   Duration  517ms (import 48%, tests 36%, transform 10%, worker 6%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ 'slow', 'steady', 'fast', 'fast' ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n    \"slow\",\n    \"steady\",\n-   \"steady\",\n+   \"fast\",\n    \"fast\",\n  ]\n\n ❯ stack.test.tsx:8:43\n      6| import {createApp} from './server.ts';\n      7| test('pure rule has inclusive boundaries',()=>{\n      8|   expect([59,60,120,121].map(tempoLabel)).toEqual(['slow','steady','st…\n       |                                           ^\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n ❯ EvidenceRunner.runTask ../capture-731287-1788737994877419288/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯\n\n FAIL  stack.test.tsx > Fastify validates transport and uses the rule without a listener\nAssertionError: expected { label: 'fast' } to deeply equal { label: 'steady' }\n\n- Expected\n+ Received\n\n  {\n-   \"label\": \"steady\",\n+   \"label\": \"fast\",\n  }\n\n ❯ stack.test.tsx:19:31\n     17|       const response=await app.inject({method:'GET',url:'/tempo?bpm='+…\n     18|       expect(response.statusCode).toBe(200);\n     19|       expect(response.json()).toEqual({label});\n       |                               ^\n     20|     }\n     21|     expect((await app.inject({method:'GET',url:'/tempo?bpm=no'})).stat…\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯\n\n",
+                  "exit": 1,
+                  "ms": 906.530031,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 0,
+                    "executionId": "capture-731287-1788737994877419288-mutant-2-0",
+                    "failed": 2,
+                    "node": "24.20.0",
+                    "passed": 1,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "failed",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 929.9357620000001,
+              "id": 3,
+              "localId": 3,
+              "offset": 91,
+              "original": ">",
+              "path": "tempo.ts",
+              "replacement": "<=",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-731287-1788737994244086027\n\n ❯ stack.test.tsx (3 tests | 3 failed) 147ms\n   × pure rule has inclusive boundaries 13ms\n   × React TSX displays the rule result 12ms\n   × Fastify validates transport and uses the rule without a listener 120ms\n\n Test Files  1 failed (1)\n      Tests  3 failed (3)\n   Start at  09:40:02\n   Duration  526ms (import 47%, tests 38%, transform 9%, worker 6%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ 'slow', 'fast', 'fast', 'steady' ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n    \"slow\",\n-   \"steady\",\n-   \"steady\",\n+   \"fast\",\n    \"fast\",\n+   \"steady\",\n  ]\n\n ❯ stack.test.tsx:8:43\n      6| import {createApp} from './server.ts';\n      7| test('pure rule has inclusive boundaries',()=>{\n      8|   expect([59,60,120,121].map(tempoLabel)).toEqual(['slow','steady','st…\n       |                                           ^\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n ❯ EvidenceRunner.runTask ../capture-731287-1788737994877419288/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯\n\n FAIL  stack.test.tsx > React TSX displays the rule result\nAssertionError: expected '<output>fast</output>' to be '<output>steady</output>' // Object.is equality\n\nExpected: \"<output>steady</output>\"\nReceived: \"<output>fast</output>\"\n\n ❯ stack.test.tsx:11:51\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n     11|   expect(renderToStaticMarkup(<Tempo bpm={60}/>)).toBe('<output>steady…\n       |                                                   ^\n     12| });\n     13| test('Fastify validates transport and uses the rule without a listener…\n ❯ EvidenceRunner.runTask ../capture-731287-1788737994877419288/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯\n\n FAIL  stack.test.tsx > Fastify validates transport and u",
+                  "exit": 1,
+                  "ms": 929.337444,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 0,
+                    "executionId": "capture-731287-1788737994877419288-mutant-3-0",
+                    "failed": 3,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "failed",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "killed"
+            }
+          ],
+          "planned": 4,
+          "restorationError": null,
+          "score": 100,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 0,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.00019,
+          "workerPreparationMs": 0.00004,
+          "workersRequested": 1,
+          "workersUsed": 1
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.5493359999999999,
+          "attributionMs": 0.025167000000000002,
+          "baselineMs": 872.749328,
+          "cleanupMs": 230.276947,
+          "coverageMs": 1243.8729580000002,
+          "preparationMs": 0.226453,
+          "typecheckMs": 2281.9166920000002
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 872.5539329999999,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-731287-1788737994877419288-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 3,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "coverage": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 1243.516141,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-731287-1788737994877419288-0-coverage",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 3,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 872.749328,
+              "coverageMs": 1243.8729580000002,
+              "typecheckMs": 2281.9166920000002
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2281.751854,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "server.ts",
+            "result": {
+              "complete": true,
+              "functions": [
+                {
+                  "complexity": 1,
+                  "coverage": 1,
+                  "covered": 3,
+                  "crap": 1,
+                  "name": "createApp",
+                  "start": 210,
+                  "status": "measured",
+                  "total": 3
+                },
+                {
+                  "complexity": 1,
+                  "coverage": 1,
+                  "covered": 1,
+                  "crap": 1,
+                  "name": "arrow@347",
+                  "start": 347,
+                  "status": "measured",
+                  "total": 1
+                }
+              ],
+              "problems": []
+            }
+          },
+          {
+            "path": "tempo.ts",
+            "result": {
+              "complete": true,
+              "functions": [
+                {
+                  "complexity": 3,
+                  "coverage": 1,
+                  "covered": 5,
+                  "crap": 3,
+                  "name": "tempoLabel",
+                  "start": 7,
+                  "status": "measured",
+                  "total": 5
+                }
+              ],
+              "problems": []
+            }
+          },
+          {
+            "path": "view.tsx",
+            "result": {
+              "complete": true,
+              "functions": [
+                {
+                  "complexity": 1,
+                  "coverage": 1,
+                  "covered": 1,
+                  "crap": 1,
+                  "name": "Tempo",
+                  "start": 73,
+                  "status": "measured",
+                  "total": 1
+                }
+              ],
+              "problems": []
+            }
+          }
+        ]
+      },
+      "wallMs": 9138.308821999999
+    },
+    "stack-repeat": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "tempo.ts",
+            "view.tsx",
+            "server.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": true,
+        "executionMs": 8691.620163,
+        "jobsAttempted": 7,
+        "mutation": {
+          "complete": true,
+          "completed": 4,
+          "error": null,
+          "executionMs": 3788.4985850000003,
+          "jobsAttempted": 4,
+          "killed": 4,
+          "mutationWallMs": 3788.4488530000003,
+          "notRun": 0,
+          "outcomes": [
+            {
+              "executionMs": 906.358585,
+              "id": 0,
+              "localId": 0,
+              "offset": 60,
+              "original": "<",
+              "path": "tempo.ts",
+              "replacement": "<=",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-731466-1788738003383486341\n\n ❯ stack.test.tsx (3 tests | 3 failed) 137ms\n   × pure rule has inclusive boundaries 13ms\n   × React TSX displays the rule result 10ms\n   × Fastify validates transport and uses the rule without a listener 112ms\n\n Test Files  1 failed (1)\n      Tests  3 failed (3)\n   Start at  09:40:09\n   Duration  511ms (import 47%, tests 38%, transform 9%, worker 6%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ 'slow', 'slow', 'steady', 'fast' ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n    \"slow\",\n-   \"steady\",\n+   \"slow\",\n    \"steady\",\n    \"fast\",\n  ]\n\n ❯ stack.test.tsx:8:43\n      6| import {createApp} from './server.ts';\n      7| test('pure rule has inclusive boundaries',()=>{\n      8|   expect([59,60,120,121].map(tempoLabel)).toEqual(['slow','steady','st…\n       |                                           ^\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n ❯ EvidenceRunner.runTask ../capture-731466-1788738004165139887/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯\n\n FAIL  stack.test.tsx > React TSX displays the rule result\nAssertionError: expected '<output>slow</output>' to be '<output>steady</output>' // Object.is equality\n\nExpected: \"<output>steady</output>\"\nReceived: \"<output>slow</output>\"\n\n ❯ stack.test.tsx:11:51\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n     11|   expect(renderToStaticMarkup(<Tempo bpm={60}/>)).toBe('<output>steady…\n       |                                                   ^\n     12| });\n     13| test('Fastify validates transport and uses the rule without a listener…\n ❯ EvidenceRunner.runTask ../capture-731466-1788738004165139887/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯\n\n FAIL  stack.test.tsx > Fastify validates transport and uses the rule w",
+                  "exit": 1,
+                  "ms": 905.898456,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 0,
+                    "executionId": "capture-731466-1788738004165139887-mutant-0-0",
+                    "failed": 3,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "failed",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 920.306875,
+              "id": 1,
+              "localId": 1,
+              "offset": 60,
+              "original": "<",
+              "path": "tempo.ts",
+              "replacement": ">=",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-731466-1788738003383486341\n\n ❯ stack.test.tsx (3 tests | 3 failed) 129ms\n   × pure rule has inclusive boundaries 11ms\n   × React TSX displays the rule result 7ms\n   × Fastify validates transport and uses the rule without a listener 108ms\n\n Test Files  1 failed (1)\n      Tests  3 failed (3)\n   Start at  09:40:10\n   Duration  509ms (import 49%, tests 36%, transform 9%, worker 6%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ 'steady', 'slow', 'slow', 'slow' ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n-   \"slow\",\n    \"steady\",\n-   \"steady\",\n-   \"fast\",\n+   \"slow\",\n+   \"slow\",\n+   \"slow\",\n  ]\n\n ❯ stack.test.tsx:8:43\n      6| import {createApp} from './server.ts';\n      7| test('pure rule has inclusive boundaries',()=>{\n      8|   expect([59,60,120,121].map(tempoLabel)).toEqual(['slow','steady','st…\n       |                                           ^\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n ❯ EvidenceRunner.runTask ../capture-731466-1788738004165139887/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯\n\n FAIL  stack.test.tsx > React TSX displays the rule result\nAssertionError: expected '<output>slow</output>' to be '<output>steady</output>' // Object.is equality\n\nExpected: \"<output>steady</output>\"\nReceived: \"<output>slow</output>\"\n\n ❯ stack.test.tsx:11:51\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n     11|   expect(renderToStaticMarkup(<Tempo bpm={60}/>)).toBe('<output>steady…\n       |                                                   ^\n     12| });\n     13| test('Fastify validates transport and uses the rule without a listener…\n ❯ EvidenceRunner.runTask ../capture-731466-1788738004165139887/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯\n\n FAIL  stack.test.tsx > Fastify validates transp",
+                  "exit": 1,
+                  "ms": 919.818622,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 0,
+                    "executionId": "capture-731466-1788738004165139887-mutant-1-0",
+                    "failed": 3,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "failed",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 903.430862,
+              "id": 2,
+              "localId": 2,
+              "offset": 91,
+              "original": ">",
+              "path": "tempo.ts",
+              "replacement": ">=",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-731466-1788738003383486341\n\n ❯ stack.test.tsx (3 tests | 2 failed) 134ms\n   × pure rule has inclusive boundaries 12ms\n   ✓ React TSX displays the rule result 6ms\n   × Fastify validates transport and uses the rule without a listener 114ms\n\n Test Files  1 failed (1)\n      Tests  2 failed | 1 passed (3)\n   Start at  09:40:11\n   Duration  502ms (import 48%, tests 37%, transform 10%, worker 6%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ 'slow', 'steady', 'fast', 'fast' ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n    \"slow\",\n    \"steady\",\n-   \"steady\",\n+   \"fast\",\n    \"fast\",\n  ]\n\n ❯ stack.test.tsx:8:43\n      6| import {createApp} from './server.ts';\n      7| test('pure rule has inclusive boundaries',()=>{\n      8|   expect([59,60,120,121].map(tempoLabel)).toEqual(['slow','steady','st…\n       |                                           ^\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n ❯ EvidenceRunner.runTask ../capture-731466-1788738004165139887/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯\n\n FAIL  stack.test.tsx > Fastify validates transport and uses the rule without a listener\nAssertionError: expected { label: 'fast' } to deeply equal { label: 'steady' }\n\n- Expected\n+ Received\n\n  {\n-   \"label\": \"steady\",\n+   \"label\": \"fast\",\n  }\n\n ❯ stack.test.tsx:19:31\n     17|       const response=await app.inject({method:'GET',url:'/tempo?bpm='+…\n     18|       expect(response.statusCode).toBe(200);\n     19|       expect(response.json()).toEqual({label});\n       |                               ^\n     20|     }\n     21|     expect((await app.inject({method:'GET',url:'/tempo?bpm=no'})).stat…\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯\n\n",
+                  "exit": 1,
+                  "ms": 902.90539,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 0,
+                    "executionId": "capture-731466-1788738004165139887-mutant-2-0",
+                    "failed": 2,
+                    "node": "24.20.0",
+                    "passed": 1,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "failed",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1058.333004,
+              "id": 3,
+              "localId": 3,
+              "offset": 91,
+              "original": ">",
+              "path": "tempo.ts",
+              "replacement": "<=",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-731466-1788738003383486341\n\n ❯ stack.test.tsx (3 tests | 3 failed) 207ms\n   × pure rule has inclusive boundaries 13ms\n   × React TSX displays the rule result 8ms\n   × Fastify validates transport and uses the rule without a listener 184ms\n\n Test Files  1 failed (1)\n      Tests  3 failed (3)\n   Start at  09:40:12\n   Duration  646ms (tests 46%, import 40%, transform 9%, worker 5%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ 'slow', 'fast', 'fast', 'steady' ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n    \"slow\",\n-   \"steady\",\n-   \"steady\",\n+   \"fast\",\n    \"fast\",\n+   \"steady\",\n  ]\n\n ❯ stack.test.tsx:8:43\n      6| import {createApp} from './server.ts';\n      7| test('pure rule has inclusive boundaries',()=>{\n      8|   expect([59,60,120,121].map(tempoLabel)).toEqual(['slow','steady','st…\n       |                                           ^\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n ❯ EvidenceRunner.runTask ../capture-731466-1788738004165139887/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯\n\n FAIL  stack.test.tsx > React TSX displays the rule result\nAssertionError: expected '<output>fast</output>' to be '<output>steady</output>' // Object.is equality\n\nExpected: \"<output>steady</output>\"\nReceived: \"<output>fast</output>\"\n\n ❯ stack.test.tsx:11:51\n      9| });\n     10| test('React TSX displays the rule result',()=>{\n     11|   expect(renderToStaticMarkup(<Tempo bpm={60}/>)).toBe('<output>steady…\n       |                                                   ^\n     12| });\n     13| test('Fastify validates transport and uses the rule without a listener…\n ❯ EvidenceRunner.runTask ../capture-731466-1788738004165139887/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯\n\n FAIL  stack.test.tsx > Fastify validates transport and us",
+                  "exit": 1,
+                  "ms": 1057.8221800000001,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 0,
+                    "executionId": "capture-731466-1788738004165139887-mutant-3-0",
+                    "failed": 3,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "failed",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "killed"
+            }
+          ],
+          "planned": 4,
+          "restorationError": null,
+          "score": 100,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 0,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.00015,
+          "workerPreparationMs": 0.000029999999999999997,
+          "workersRequested": 1,
+          "workersUsed": 1
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.775428,
+          "attributionMs": 0.024796000000000002,
+          "baselineMs": 1194.694321,
+          "cleanupMs": 240.275116,
+          "coverageMs": 1400.220635,
+          "preparationMs": 0.250037,
+          "typecheckMs": 2307.1138809999998
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 1194.467868,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-731466-1788738004165139887-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 3,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "coverage": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 1399.87588,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-731466-1788738004165139887-0-coverage",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 3,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 1194.694321,
+              "coverageMs": 1400.220635,
+              "typecheckMs": 2307.1138809999998
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2306.9262200000003,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "server.ts",
+            "result": {
+              "complete": true,
+              "functions": [
+                {
+                  "complexity": 1,
+                  "coverage": 1,
+                  "covered": 3,
+                  "crap": 1,
+                  "name": "createApp",
+                  "start": 210,
+                  "status": "measured",
+                  "total": 3
+                },
+                {
+                  "complexity": 1,
+                  "coverage": 1,
+                  "covered": 1,
+                  "crap": 1,
+                  "name": "arrow@347",
+                  "start": 347,
+                  "status": "measured",
+                  "total": 1
+                }
+              ],
+              "problems": []
+            }
+          },
+          {
+            "path": "tempo.ts",
+            "result": {
+              "complete": true,
+              "functions": [
+                {
+                  "complexity": 3,
+                  "coverage": 1,
+                  "covered": 5,
+                  "crap": 3,
+                  "name": "tempoLabel",
+                  "start": 7,
+                  "status": "measured",
+                  "total": 5
+                }
+              ],
+              "problems": []
+            }
+          },
+          {
+            "path": "view.tsx",
+            "result": {
+              "complete": true,
+              "functions": [
+                {
+                  "complexity": 1,
+                  "coverage": 1,
+                  "covered": 1,
+                  "crap": 1,
+                  "name": "Tempo",
+                  "start": 73,
+                  "status": "measured",
+                  "total": 1
+                }
+              ],
+              "problems": []
+            }
+          }
+        ]
+      },
+      "wallMs": 9798.134902000002
+    },
+    "assertion": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.ts",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": true,
+        "executionMs": 4216.848612,
+        "jobsAttempted": 4,
+        "mutation": {
+          "complete": true,
+          "completed": 1,
+          "error": null,
+          "executionMs": 586.247064,
+          "jobsAttempted": 1,
+          "killed": 1,
+          "mutationWallMs": 586.2290999999999,
+          "notRun": 0,
+          "outcomes": [
+            {
+              "executionMs": 586.2231690000001,
+              "id": 0,
+              "localId": 0,
+              "offset": 23,
+              "original": "===",
+              "path": "control.ts",
+              "replacement": "!==",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-731686-1788738013183712446\n\n ❯ control.test.ts (1 test | 1 failed) 11ms\n   × assertion 10ms\n\n Test Files  1 failed (1)\n      Tests  1 failed (1)\n   Start at  09:40:17\n   Duration  181ms (worker 44%, tests 24%, transform 22%, import 10%, environment 1%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  control.test.ts > assertion\nAssertionError: expected false to be true // Object.is equality\n\n- Expected\n+ Received\n\n- true\n+ false\n\n ❯ control.test.ts:2:36\n      1| import {test,expect,beforeAll,beforeEach,afterEach,aroundEach} from 'v…\n      2| test('assertion',()=>expect(ready).toBe(true));\n       |                                    ^\n      3|\n ❯ EvidenceRunner.runTask ../capture-731686-1788738013746716272/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+                  "exit": 1,
+                  "ms": 585.7897800000001,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 0,
+                    "executionId": "capture-731686-1788738013746716272-mutant-0-0",
+                    "failed": 1,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "failed",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "killed"
+            }
+          ],
+          "planned": 1,
+          "restorationError": null,
+          "score": 100,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 0,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.000171,
+          "workerPreparationMs": 0.000141,
+          "workersRequested": 1,
+          "workersUsed": 1
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.061584,
+          "attributionMs": 0.006771999999999999,
+          "baselineMs": 582.418572,
+          "cleanupMs": 228.32132199999998,
+          "coverageMs": 849.3713670000001,
+          "preparationMs": 0.176811,
+          "typecheckMs": 2198.534493
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 582.286675,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-731686-1788738013746716272-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "coverage": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 849.1156880000001,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-731686-1788738013746716272-0-coverage",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 582.418572,
+              "coverageMs": 849.3713670000001,
+              "typecheckMs": 2198.534493
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2198.443464,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "control.ts",
+            "result": {
+              "complete": true,
+              "functions": [],
+              "problems": []
+            }
+          }
+        ]
+      },
+      "wallMs": 5093.398289000001
+    },
+    "survived": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.ts",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": true,
+        "executionMs": 4235.213951000001,
+        "jobsAttempted": 4,
+        "mutation": {
+          "complete": true,
+          "completed": 1,
+          "error": null,
+          "executionMs": 580.8511010000001,
+          "jobsAttempted": 1,
+          "killed": 0,
+          "mutationWallMs": 580.837827,
+          "notRun": 0,
+          "outcomes": [
+            {
+              "executionMs": 580.832517,
+              "id": 0,
+              "localId": 0,
+              "offset": 23,
+              "original": "===",
+              "path": "control.ts",
+              "replacement": "!==",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "exit": 0,
+                  "ms": 580.422019,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 0,
+                    "executionId": "capture-731797-1788738018830234151-mutant-0-0",
+                    "failed": 0,
+                    "node": "24.20.0",
+                    "passed": 1,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "passed",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "survived"
+            }
+          ],
+          "planned": 1,
+          "restorationError": null,
+          "score": 0,
+          "strategy": "replace",
+          "survived": 1,
+          "unresolved": 0,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.00008999999999999999,
+          "workerPreparationMs": 0.000029999999999999997,
+          "workersRequested": 1,
+          "workersUsed": 1
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.062046,
+          "attributionMs": 0.006402,
+          "baselineMs": 589.404822,
+          "cleanupMs": 232.725101,
+          "coverageMs": 855.07637,
+          "preparationMs": 0.175899,
+          "typecheckMs": 2209.609108
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 589.270111,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-731797-1788738018830234151-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "coverage": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 854.849667,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-731797-1788738018830234151-0-coverage",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 589.404822,
+              "coverageMs": 855.07637,
+              "typecheckMs": 2209.609108
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2209.509341,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "control.ts",
+            "result": {
+              "complete": true,
+              "functions": [],
+              "problems": []
+            }
+          }
+        ]
+      },
+      "wallMs": 5103.921276000001
+    },
+    "clean-hooks": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.ts",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": true,
+        "executionMs": 4935.360885,
+        "jobsAttempted": 4,
+        "mutation": {
+          "complete": true,
+          "completed": 1,
+          "error": null,
+          "executionMs": 662.6416419999999,
+          "jobsAttempted": 1,
+          "killed": 1,
+          "mutationWallMs": 662.626714,
+          "notRun": 0,
+          "outcomes": [
+            {
+              "executionMs": 662.6207939999999,
+              "id": 0,
+              "localId": 0,
+              "offset": 23,
+              "original": "===",
+              "path": "control.ts",
+              "replacement": "!==",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-731906-1788738023387848033\n\n ❯ control.test.ts (1 test | 1 failed) 15ms\n   × assertion 13ms\n\n Test Files  1 failed (1)\n      Tests  1 failed (1)\n   Start at  09:40:28\n   Duration  187ms (worker 40%, tests 30%, transform 23%, import 7%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  control.test.ts > assertion\nAssertionError: expected false to be true // Object.is equality\n\n- Expected\n+ Received\n\n- true\n+ false\n\n ❯ control.test.ts:2:73\n      1| import {test,expect,beforeAll,beforeEach,afterEach,aroundEach} from 'v…\n      2| beforeEach(()=>{});afterEach(()=>{});test('assertion',()=>expect(ready…\n       |                                                                         ^\n      3|\n ❯ EvidenceRunner.runTask ../capture-731906-1788738023952527514/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+                  "exit": 1,
+                  "ms": 662.2244539999999,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 0,
+                    "executionId": "capture-731906-1788738023952527514-mutant-0-0",
+                    "failed": 1,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "failed",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "killed"
+            }
+          ],
+          "planned": 1,
+          "restorationError": null,
+          "score": 100,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 0,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.000171,
+          "workerPreparationMs": 0.000031,
+          "workersRequested": 1,
+          "workersUsed": 1
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.067065,
+          "attributionMs": 0.00523,
+          "baselineMs": 633.334564,
+          "cleanupMs": 265.938602,
+          "coverageMs": 1043.9641100000001,
+          "preparationMs": 0.179636,
+          "typecheckMs": 2595.1377390000002
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 633.174485,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-731906-1788738023952527514-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "coverage": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 1043.7397509999998,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-731906-1788738023952527514-0-coverage",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 633.334564,
+              "coverageMs": 1043.9641100000001,
+              "typecheckMs": 2595.1377390000002
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2595.04214,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "control.ts",
+            "result": {
+              "complete": true,
+              "functions": [],
+              "problems": []
+            }
+          }
+        ]
+      },
+      "wallMs": 5854.279295
+    },
+    "assertion-count": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.ts",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": true,
+        "executionMs": 4324.419264,
+        "jobsAttempted": 4,
+        "mutation": {
+          "complete": true,
+          "completed": 1,
+          "error": null,
+          "executionMs": 673.669207,
+          "jobsAttempted": 1,
+          "killed": 1,
+          "mutationWallMs": 673.654139,
+          "notRun": 0,
+          "outcomes": [
+            {
+              "executionMs": 673.647928,
+              "id": 0,
+              "localId": 0,
+              "offset": 23,
+              "original": "===",
+              "path": "control.ts",
+              "replacement": "!==",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-732103-1788738029239140933\n\n ❯ control.test.ts (1 test | 1 failed) 8ms\n   × count 6ms\n\n Test Files  1 failed (1)\n      Tests  1 failed (1)\n   Start at  09:40:33\n   Duration  194ms (worker 44%, transform 29%, tests 17%, import 9%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  control.test.ts > count\nError: expected number of assertions to be 1, but got 0\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+                  "exit": 1,
+                  "ms": 673.197947,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 0,
+                    "executionId": "capture-732103-1788738029791730445-mutant-0-0",
+                    "failed": 1,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "failed",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "killed"
+            }
+          ],
+          "planned": 1,
+          "restorationError": null,
+          "score": 100,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 0,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.00004,
+          "workerPreparationMs": 0.00011999999999999999,
+          "workersRequested": 1,
+          "workersUsed": 1
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.063659,
+          "attributionMs": 0.007744000000000001,
+          "baselineMs": 654.794163,
+          "cleanupMs": 234.523218,
+          "coverageMs": 864.3367870000001,
+          "preparationMs": 0.172823,
+          "typecheckMs": 2131.345606
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 654.662217,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732103-1788738029791730445-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "coverage": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 864.101717,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732103-1788738029791730445-0-coverage",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 654.794163,
+              "coverageMs": 864.3367870000001,
+              "typecheckMs": 2131.345606
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2131.2547670000004,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "control.ts",
+            "result": {
+              "complete": true,
+              "functions": [],
+              "problems": []
+            }
+          }
+        ]
+      },
+      "wallMs": 5194.681367999998
+    },
+    "before-all": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.ts",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": false,
+        "executionMs": 4331.443456,
+        "jobsAttempted": 4,
+        "mutation": {
+          "complete": false,
+          "completed": 1,
+          "error": null,
+          "executionMs": 583.048495,
+          "jobsAttempted": 1,
+          "killed": 0,
+          "mutationWallMs": 583.032977,
+          "notRun": 0,
+          "outcomes": [
+            {
+              "executionMs": 583.0260539999999,
+              "id": 0,
+              "localId": 0,
+              "offset": 23,
+              "original": "===",
+              "path": "control.ts",
+              "replacement": "!==",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-732212-1788738034436440739\n\n ❯ control.test.ts (1 test | 1 skipped) 6ms\n   ↓ blocked\n\n Test Files  1 failed (1)\n      Tests  1 skipped (1)\n   Start at  09:40:39\n   Duration  169ms (worker 46%, transform 23%, import 16%, tests 15%)\n\n\n⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  control.test.ts [ control.test.ts ]\nError: setup\n ❯ control.test.ts:2:32\n      1| import {test,expect,beforeAll,beforeEach,afterEach,aroundEach} from 'v…\n      2| beforeAll(()=>{if(!ready)throw Error('setup');});test('blocked',()=>{}…\n       |                                ^\n      3|\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+                  "exit": 1,
+                  "ms": 582.609406,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 2,
+                    "executionId": "capture-732212-1788738034990767677-mutant-0-0",
+                    "failed": 0,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "execution-error",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "execution-error"
+            }
+          ],
+          "planned": 1,
+          "restorationError": null,
+          "score": null,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 1,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.00014000000000000001,
+          "workerPreparationMs": 0.000031,
+          "workersRequested": 1,
+          "workersUsed": 1
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.066054,
+          "attributionMs": 0.00535,
+          "baselineMs": 606.7048229999999,
+          "cleanupMs": 233.380744,
+          "coverageMs": 848.450423,
+          "preparationMs": 0.17668,
+          "typecheckMs": 2292.958629
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 606.559171,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732212-1788738034990767677-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "coverage": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 848.237515,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732212-1788738034990767677-0-coverage",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 606.7048229999999,
+              "coverageMs": 848.450423,
+              "typecheckMs": 2292.958629
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2292.85239,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "control.ts",
+            "result": {
+              "complete": true,
+              "functions": [],
+              "problems": []
+            }
+          }
+        ]
+      },
+      "wallMs": 5203.005663000004
+    },
+    "before-each": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.ts",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": false,
+        "executionMs": 4059.9119530000003,
+        "jobsAttempted": 4,
+        "mutation": {
+          "complete": false,
+          "completed": 1,
+          "error": null,
+          "executionMs": 589.926529,
+          "jobsAttempted": 1,
+          "killed": 0,
+          "mutationWallMs": 589.913775,
+          "notRun": 0,
+          "outcomes": [
+            {
+              "executionMs": 589.908495,
+              "id": 0,
+              "localId": 0,
+              "offset": 23,
+              "original": "===",
+              "path": "control.ts",
+              "replacement": "!==",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-732316-1788738039641333822\n\n ❯ control.test.ts (1 test | 1 failed) 5ms\n   × blocked 4ms\n\n Test Files  1 failed (1)\n      Tests  1 failed (1)\n   Start at  09:40:44\n   Duration  173ms (worker 51%, transform 27%, tests 13%, import 9%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  control.test.ts > blocked\nError: setup\n ❯ control.test.ts:2:33\n      1| import {test,expect,beforeAll,beforeEach,afterEach,aroundEach} from 'v…\n      2| beforeEach(()=>{if(!ready)throw Error('setup');});test('blocked',()=>{…\n       |                                 ^\n      3|\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+                  "exit": 1,
+                  "ms": 589.551829,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 1,
+                    "executionId": "capture-732316-1788738040187519905-mutant-0-0",
+                    "failed": 0,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "execution-error",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "execution-error"
+            }
+          ],
+          "planned": 1,
+          "restorationError": null,
+          "score": null,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 1,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.00009999999999999999,
+          "workerPreparationMs": 0.000029999999999999997,
+          "workersRequested": 1,
+          "workersUsed": 1
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.062747,
+          "attributionMs": 0.005851,
+          "baselineMs": 581.645659,
+          "cleanupMs": 271.49192,
+          "coverageMs": 842.7640819999999,
+          "preparationMs": 0.176259,
+          "typecheckMs": 2045.3027129999998
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 581.516097,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732316-1788738040187519905-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "coverage": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 842.562685,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732316-1788738040187519905-0-coverage",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 581.645659,
+              "coverageMs": 842.7640819999999,
+              "typecheckMs": 2045.3027129999998
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2045.211492,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "control.ts",
+            "result": {
+              "complete": true,
+              "functions": [],
+              "problems": []
+            }
+          }
+        ]
+      },
+      "wallMs": 4961.6277249999985
+    },
+    "after-each": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.ts",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": false,
+        "executionMs": 4180.65538,
+        "jobsAttempted": 4,
+        "mutation": {
+          "complete": false,
+          "completed": 1,
+          "error": null,
+          "executionMs": 586.894324,
+          "jobsAttempted": 1,
+          "killed": 0,
+          "mutationWallMs": 586.88144,
+          "notRun": 0,
+          "outcomes": [
+            {
+              "executionMs": 586.87601,
+              "id": 0,
+              "localId": 0,
+              "offset": 23,
+              "original": "===",
+              "path": "control.ts",
+              "replacement": "!==",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-732408-1788738044607460408\n\n ❯ control.test.ts (1 test | 1 failed) 7ms\n   × passed 5ms\n\n Test Files  1 failed (1)\n      Tests  1 failed (1)\n   Start at  09:40:49\n   Duration  175ms (worker 48%, transform 28%, tests 15%, import 9%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  control.test.ts > passed\nError: cleanup\n ❯ control.test.ts:2:32\n      1| import {test,expect,beforeAll,beforeEach,afterEach,aroundEach} from 'v…\n      2| afterEach(()=>{if(!ready)throw Error('cleanup');});test('passed',()=>{…\n       |                                ^\n      3|\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+                  "exit": 1,
+                  "ms": 586.527688,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 1,
+                    "executionId": "capture-732408-1788738045157314138-mutant-0-0",
+                    "failed": 0,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "execution-error",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "execution-error"
+            }
+          ],
+          "planned": 1,
+          "restorationError": null,
+          "score": null,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 1,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.00004,
+          "workerPreparationMs": 0.000029999999999999997,
+          "workersRequested": 1,
+          "workersUsed": 1
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.071694,
+          "attributionMs": 0.006132,
+          "baselineMs": 594.9223179999999,
+          "cleanupMs": 225.19669100000002,
+          "coverageMs": 933.0405059999999,
+          "preparationMs": 0.217256,
+          "typecheckMs": 2065.4755609999997
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 594.78988,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732408-1788738045157314138-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "coverage": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 932.824101,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732408-1788738045157314138-0-coverage",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 594.9223179999999,
+              "coverageMs": 933.0405059999999,
+              "typecheckMs": 2065.4755609999997
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2065.381896,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "control.ts",
+            "result": {
+              "complete": true,
+              "functions": [],
+              "problems": []
+            }
+          }
+        ]
+      },
+      "wallMs": 5041.8796719999955
+    },
+    "cleanup": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.ts",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": false,
+        "executionMs": 4107.621309,
+        "jobsAttempted": 4,
+        "mutation": {
+          "complete": false,
+          "completed": 1,
+          "error": null,
+          "executionMs": 578.086948,
+          "jobsAttempted": 1,
+          "killed": 0,
+          "mutationWallMs": 578.0747160000001,
+          "notRun": 0,
+          "outcomes": [
+            {
+              "executionMs": 578.069165,
+              "id": 0,
+              "localId": 0,
+              "offset": 23,
+              "original": "===",
+              "path": "control.ts",
+              "replacement": "!==",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-732516-1788738049649304748\n\n ❯ control.test.ts (1 test | 1 failed) 6ms\n   × passed 4ms\n\n Test Files  1 failed (1)\n      Tests  1 failed (1)\n   Start at  09:40:54\n   Duration  164ms (worker 51%, transform 25%, tests 15%, import 9%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  control.test.ts > passed\nError: cleanup\n ❯ control.test.ts:2:37\n      1| import {test,expect,beforeAll,beforeEach,afterEach,aroundEach} from 'v…\n      2| beforeEach(()=>()=>{if(!ready)throw Error('cleanup');});test('passed',…\n       |                                     ^\n      3|\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+                  "exit": 1,
+                  "ms": 577.720323,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 1,
+                    "executionId": "capture-732516-1788738050204090637-mutant-0-0",
+                    "failed": 0,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "execution-error",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "execution-error"
+            }
+          ],
+          "planned": 1,
+          "restorationError": null,
+          "score": null,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 1,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.00004,
+          "workerPreparationMs": 0.00004,
+          "workersRequested": 1,
+          "workersUsed": 1
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.062517,
+          "attributionMs": 0.00543,
+          "baselineMs": 597.5882449999999,
+          "cleanupMs": 234.332991,
+          "coverageMs": 858.7132240000001,
+          "preparationMs": 0.275545,
+          "typecheckMs": 2072.862049
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 597.458512,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732516-1788738050204090637-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "coverage": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 858.5207740000001,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732516-1788738050204090637-0-coverage",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 597.5882449999999,
+              "coverageMs": 858.7132240000001,
+              "typecheckMs": 2072.862049
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2072.762954,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "control.ts",
+            "result": {
+              "complete": true,
+              "functions": [],
+              "problems": []
+            }
+          }
+        ]
+      },
+      "wallMs": 4980.148581000001
+    },
+    "mixed": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.ts",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": false,
+        "executionMs": 4032.159927,
+        "jobsAttempted": 4,
+        "mutation": {
+          "complete": false,
+          "completed": 1,
+          "error": null,
+          "executionMs": 574.723278,
+          "jobsAttempted": 1,
+          "killed": 0,
+          "mutationWallMs": 574.7075689999999,
+          "notRun": 0,
+          "outcomes": [
+            {
+              "executionMs": 574.70282,
+              "id": 0,
+              "localId": 0,
+              "offset": 23,
+              "original": "===",
+              "path": "control.ts",
+              "replacement": "!==",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-732623-1788738054630166158\n\n ❯ control.test.ts (1 test | 1 failed) 14ms\n   × assertion 13ms\n\n Test Files  1 failed (1)\n      Tests  1 failed (1)\n   Start at  09:40:58\n   Duration  181ms (worker 42%, tests 29%, transform 21%, import 8%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  control.test.ts > assertion\nAssertionError: expected false to be true // Object.is equality\n\n- Expected\n+ Received\n\n- true\n+ false\n\n ❯ control.test.ts:2:87\n      1| import {test,expect,beforeAll,beforeEach,afterEach,aroundEach} from 'v…\n      2| afterEach(()=>{if(!ready)throw Error('cleanup');});test('assertion',()…\n       |                                                                                       ^\n      3|\n ❯ EvidenceRunner.runTask ../capture-732623-1788738055178786662/vitest-runner.mjs:18:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯\n\n FAIL  control.test.ts > assertion\nError: cleanup\n ❯ control.test.ts:2:32\n      1| import {test,expect,beforeAll,beforeEach,afterEach,aroundEach} from 'v…\n      2| afterEach(()=>{if(!ready)throw Error('cleanup');});test('assertion',()…\n       |                                ^\n      3|\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯\n\n",
+                  "exit": 1,
+                  "ms": 574.3528060000001,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 1,
+                    "executionId": "capture-732623-1788738055178786662-mutant-0-0",
+                    "failed": 0,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "execution-error",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "execution-error"
+            }
+          ],
+          "planned": 1,
+          "restorationError": null,
+          "score": null,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 1,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.00009099999999999999,
+          "workerPreparationMs": 0.00004,
+          "workersRequested": 1,
+          "workersUsed": 1
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.062457,
+          "attributionMs": 0.006833,
+          "baselineMs": 584.1041329999999,
+          "cleanupMs": 230.978772,
+          "coverageMs": 847.1444710000001,
+          "preparationMs": 0.172993,
+          "typecheckMs": 2025.9178000000002
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 583.972297,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732623-1788738055178786662-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "coverage": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 846.920943,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732623-1788738055178786662-0-coverage",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 584.1041329999999,
+              "coverageMs": 847.1444710000001,
+              "typecheckMs": 2025.9178000000002
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2025.8140770000002,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "control.ts",
+            "result": {
+              "complete": true,
+              "functions": [],
+              "problems": []
+            }
+          }
+        ]
+      },
+      "wallMs": 4895.111938999995
+    },
+    "timeout": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.ts",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": false,
+        "executionMs": 4308.170537,
+        "jobsAttempted": 4,
+        "mutation": {
+          "complete": false,
+          "completed": 1,
+          "error": null,
+          "executionMs": 692.2694889999999,
+          "jobsAttempted": 1,
+          "killed": 0,
+          "mutationWallMs": 692.2546609999999,
+          "notRun": 0,
+          "outcomes": [
+            {
+              "executionMs": 692.2494019999999,
+              "id": 0,
+              "localId": 0,
+              "offset": 23,
+              "original": "===",
+              "path": "control.ts",
+              "replacement": "!==",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-732712-1788738059532077792\n\n ❯ control.test.ts (1 test | 1 failed) 59ms\n   × timeout 58ms\n\n Test Files  1 failed (1)\n      Tests  1 failed (1)\n   Start at  09:41:04\n   Duration  264ms (tests 55%, worker 26%, transform 12%, import 7%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  control.test.ts > timeout\nError: Test timed out in 50ms.\nIf this is a long-running test, pass a timeout value as the last argument or configure it globally with \"testTimeout\".\n ❯ control.test.ts:2:1\n      1| import {test,expect,beforeAll,beforeEach,afterEach,aroundEach} from 'v…\n      2| test('timeout',()=>ready?Promise.resolve():new Promise(()=>{}),50);\n       | ^\n      3|\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+                  "exit": 1,
+                  "ms": 691.861457,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 0,
+                    "executionId": "capture-732712-1788738060100361833-mutant-0-0",
+                    "failed": 1,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 1,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "timed-out",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "timed-out"
+            }
+          ],
+          "planned": 1,
+          "restorationError": null,
+          "score": null,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 1,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.000049999999999999996,
+          "workerPreparationMs": 0.00014000000000000001,
+          "workersRequested": 1,
+          "workersUsed": 1
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.05322,
+          "attributionMs": 0.0064919999999999995,
+          "baselineMs": 572.364436,
+          "cleanupMs": 223.09882,
+          "coverageMs": 858.487127,
+          "preparationMs": 0.236573,
+          "typecheckMs": 2184.722523
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 572.213284,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732712-1788738060100361833-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "coverage": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 858.2356960000001,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732712-1788738060100361833-0-coverage",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 572.364436,
+              "coverageMs": 858.487127,
+              "typecheckMs": 2184.722523
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2184.618939,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "control.ts",
+            "result": {
+              "complete": true,
+              "functions": [],
+              "problems": []
+            }
+          }
+        ]
+      },
+      "wallMs": 5186.094882000005
+    },
+    "hook-timeout": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.ts",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": false,
+        "executionMs": 4196.961984,
+        "jobsAttempted": 4,
+        "mutation": {
+          "complete": false,
+          "completed": 1,
+          "error": null,
+          "executionMs": 615.1483979999999,
+          "jobsAttempted": 1,
+          "killed": 0,
+          "mutationWallMs": 615.131717,
+          "notRun": 0,
+          "outcomes": [
+            {
+              "executionMs": 615.124793,
+              "id": 0,
+              "localId": 0,
+              "offset": 23,
+              "original": "===",
+              "path": "control.ts",
+              "replacement": "!==",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-732814-1788738064726157246\n\n ❯ control.test.ts (1 test | 1 failed) 58ms\n   × blocked 56ms\n\n Test Files  1 failed (1)\n      Tests  1 failed (1)\n   Start at  09:41:09\n   Duration  224ms (tests 62%, worker 22%, transform 12%, import 4%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  control.test.ts > blocked\nError: Hook timed out in 50ms.\nIf this is a long-running hook, pass a timeout value as the last argument or configure it globally with \"hookTimeout\".\n ❯ control.test.ts:2:1\n      1| import {test,expect,beforeAll,beforeEach,afterEach,aroundEach} from 'v…\n      2| beforeEach(()=>ready?Promise.resolve():new Promise(()=>{}),50);test('b…\n       | ^\n      3|\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+                  "exit": 1,
+                  "ms": 614.682037,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 1,
+                    "executionId": "capture-732814-1788738065269860967-mutant-0-0",
+                    "failed": 0,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 1,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "timed-out",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "timed-out"
+            }
+          ],
+          "planned": 1,
+          "restorationError": null,
+          "score": null,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 1,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.00023,
+          "workerPreparationMs": 0.000029999999999999997,
+          "workersRequested": 1,
+          "workersUsed": 1
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.077075,
+          "attributionMs": 0.006412,
+          "baselineMs": 595.9704999999999,
+          "cleanupMs": 231.550733,
+          "coverageMs": 839.369804,
+          "preparationMs": 0.22441,
+          "typecheckMs": 2146.130162
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 595.792416,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732814-1788738065269860967-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "coverage": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 839.156705,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732814-1788738065269860967-0-coverage",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 595.9704999999999,
+              "coverageMs": 839.369804,
+              "typecheckMs": 2146.130162
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2146.018323,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "control.ts",
+            "result": {
+              "complete": true,
+              "functions": [],
+              "problems": []
+            }
+          }
+        ]
+      },
+      "wallMs": 5064.0723480000015
+    },
+    "import-error": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.ts",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": false,
+        "executionMs": 4320.692346999999,
+        "jobsAttempted": 4,
+        "mutation": {
+          "complete": false,
+          "completed": 1,
+          "error": null,
+          "executionMs": 788.893625,
+          "jobsAttempted": 1,
+          "killed": 0,
+          "mutationWallMs": 788.879649,
+          "notRun": 0,
+          "outcomes": [
+            {
+              "executionMs": 788.874199,
+              "id": 0,
+              "localId": 0,
+              "offset": 23,
+              "original": "===",
+              "path": "control.ts",
+              "replacement": "!==",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-732910-1788738069785260895\n\n ❯ control.test.ts (0 test)\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  09:41:14\n   Duration  163ms (worker 99%, environment 1%)\n\n\n⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  control.test.ts [ control.test.ts ]\nError: load\n ❯ control.test.ts:2:17\n      1| import {test,expect,beforeAll,beforeEach,afterEach,aroundEach} from 'v…\n      2| if(!ready)throw Error('load');test('blocked',()=>{});\n       |                 ^\n      3|\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+                  "exit": 1,
+                  "ms": 575.1049780000001,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 1,
+                    "executionId": "capture-732910-1788738070336024676-mutant-0-0",
+                    "failed": 0,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "execution-error",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "execution-error"
+            }
+          ],
+          "planned": 1,
+          "restorationError": null,
+          "score": null,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 1,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.000101,
+          "workerPreparationMs": 0.00004,
+          "workersRequested": 1,
+          "workersUsed": 1
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.06456,
+          "attributionMs": 0.006172,
+          "baselineMs": 586.349819,
+          "cleanupMs": 229.416071,
+          "coverageMs": 935.358592,
+          "preparationMs": 0.216485,
+          "typecheckMs": 2009.7744
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 586.210108,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732910-1788738070336024676-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "coverage": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 935.1398039999999,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732910-1788738070336024676-0-coverage",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 586.349819,
+              "coverageMs": 935.358592,
+              "typecheckMs": 2009.7744
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2009.679393,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "control.ts",
+            "result": {
+              "complete": true,
+              "functions": [],
+              "problems": []
+            }
+          }
+        ]
+      },
+      "wallMs": 5185.500551999998
+    },
+    "unhandled": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.ts",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": false,
+        "executionMs": 4260.037242,
+        "jobsAttempted": 4,
+        "mutation": {
+          "complete": false,
+          "completed": 1,
+          "error": null,
+          "executionMs": 592.37272,
+          "jobsAttempted": 1,
+          "killed": 0,
+          "mutationWallMs": 592.359085,
+          "notRun": 0,
+          "outcomes": [
+            {
+              "executionMs": 592.353655,
+              "id": 0,
+              "localId": 0,
+              "offset": 23,
+              "original": "===",
+              "path": "control.ts",
+              "replacement": "!==",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-732999-1788738074975592720\n\n ✓ control.test.ts (1 test) 13ms\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n     Errors  1 error\n   Start at  09:41:19\n   Duration  181ms (worker 40%, transform 24%, tests 23%, import 13%)\n\n⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯\n\nVitest caught 1 unhandled error during the test run.\nThis might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.\n\n⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯\nError: background\n ❯ control.test.ts:2:59\n      1| import {test,expect,beforeAll,beforeEach,afterEach,aroundEach} from 'v…\n      2| test('background',async()=>{if(!ready)void Promise.reject(Error('backg…\n       |                                                           ^\n      3|\n ❯ node_modules/vitest/dist/chunks/run.CQOUYP-x.js:1628:35\n ❯ node_modules/vitest/dist/chunks/run.CQOUYP-x.js:2783:26\n ❯ node_modules/vitest/dist/chunks/run.CQOUYP-x.js:3319:20\n ❯ runWithCancel node_modules/vitest/dist/chunks/run.CQOUYP-x.js:3314:10\n ❯ node_modules/vitest/dist/chunks/run.CQOUYP-x.js:3299:20\n ❯ runWithTimeout node_modules/vitest/dist/chunks/run.CQOUYP-x.js:3257:10\n ❯ EvidenceRunner.runTask ../capture-732999-1788738075519823015/vitest-runner.mjs:18:37\n\nThis error originated in \"control.test.ts\" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.\nThe last test to run before this error was \"background\". This means either:\n- the error was thrown while Vitest was running this test, or\n- the error was thrown after the test completed, and this was the most recent test at that point.\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n\n",
+                  "exit": 1,
+                  "ms": 591.9868190000001,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 1,
+                    "executionId": "capture-732999-1788738075519823015-mutant-0-0",
+                    "failed": 0,
+                    "node": "24.20.0",
+                    "passed": 1,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "execution-error",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "execution-error"
+            }
+          ],
+          "planned": 1,
+          "restorationError": null,
+          "score": null,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 1,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.000101,
+          "workerPreparationMs": 0.000029999999999999997,
+          "workersRequested": 1,
+          "workersUsed": 1
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.06651399999999999,
+          "attributionMs": 0.00535,
+          "baselineMs": 579.888991,
+          "cleanupMs": 227.37499,
+          "coverageMs": 847.491808,
+          "preparationMs": 0.17422600000000002,
+          "typecheckMs": 2240.009712
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 579.755061,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732999-1788738075519823015-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "coverage": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 847.277517,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-732999-1788738075519823015-0-coverage",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 579.888991,
+              "coverageMs": 847.491808,
+              "typecheckMs": 2240.009712
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2239.918741,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "control.ts",
+            "result": {
+              "complete": true,
+              "functions": [],
+              "problems": []
+            }
+          }
+        ]
+      },
+      "wallMs": 5118.440885999997
+    },
+    "around-each": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.ts",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": false,
+        "executionMs": 4137.479765,
+        "jobsAttempted": 4,
+        "mutation": {
+          "complete": false,
+          "completed": 1,
+          "error": null,
+          "executionMs": 577.8316599999999,
+          "jobsAttempted": 1,
+          "killed": 0,
+          "mutationWallMs": 577.816332,
+          "notRun": 0,
+          "outcomes": [
+            {
+              "executionMs": 577.8113529999999,
+              "id": 0,
+              "localId": 0,
+              "offset": 23,
+              "original": "===",
+              "path": "control.ts",
+              "replacement": "!==",
+              "setups": [
+                {
+                  "cancelled": false,
+                  "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-733093-1788738080096513748\n\n ❯ control.test.ts (1 test | 1 failed) 6ms\n   × passed 5ms\n\n Test Files  1 failed (1)\n      Tests  1 failed (1)\n   Start at  09:41:24\n   Duration  171ms (worker 49%, transform 28%, tests 14%, import 9%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  control.test.ts > passed\nError: around cleanup\n ❯ control.test.ts:2:53\n      1| import {test,expect,beforeAll,beforeEach,afterEach,aroundEach} from 'v…\n      2| aroundEach(async(run)=>{await run();if(!ready)throw Error('around clea…\n       |                                                     ^\n      3|\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+                  "exit": 1,
+                  "ms": 577.41891,
+                  "name": "stack",
+                  "overflow": false,
+                  "pipeError": null,
+                  "report": {
+                    "complete": true,
+                    "errors": 1,
+                    "executionId": "capture-733093-1788738080693577047-mutant-0-0",
+                    "failed": 0,
+                    "node": "24.20.0",
+                    "passed": 0,
+                    "runner": "vitest",
+                    "timeouts": 0,
+                    "version": 1,
+                    "vitest": "5.0.0"
+                  },
+                  "state": "execution-error",
+                  "timedOut": false
+                }
+              ],
+              "verdict": "execution-error"
+            }
+          ],
+          "planned": 1,
+          "restorationError": null,
+          "score": null,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 1,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.00011,
+          "workerPreparationMs": 0.00013,
+          "workersRequested": 1,
+          "workersUsed": 1
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.058819,
+          "attributionMs": 0.0070940000000000005,
+          "baselineMs": 572.391375,
+          "cleanupMs": 231.531248,
+          "coverageMs": 853.812724,
+          "preparationMs": 0.174516,
+          "typecheckMs": 2133.1756450000003
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 572.260259,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-733093-1788738080693577047-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "coverage": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 853.5872519999999,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-733093-1788738080693577047-0-coverage",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 1,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "passed",
+              "timedOut": false
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 572.391375,
+              "coverageMs": 853.812724,
+              "typecheckMs": 2133.1756450000003
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2133.0827120000004,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "control.ts",
+            "result": {
+              "complete": true,
+              "functions": [],
+              "problems": []
+            }
+          }
+        ]
+      },
+      "wallMs": 5053.396320999993
+    },
+    "missing-runner": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "tempo.ts",
+            "view.tsx",
+            "server.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": false,
+        "executionMs": 3020.277732,
+        "jobsAttempted": 2,
+        "mutation": {
+          "complete": false,
+          "completed": 0,
+          "error": null,
+          "executionMs": 0.047839,
+          "jobsAttempted": 0,
+          "killed": 0,
+          "mutationWallMs": 0.00028000000000000003,
+          "notRun": 4,
+          "outcomes": [
+            {
+              "id": 0,
+              "localId": 0,
+              "offset": 60,
+              "original": "<",
+              "path": "tempo.ts",
+              "replacement": "<=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            },
+            {
+              "id": 1,
+              "localId": 1,
+              "offset": 60,
+              "original": "<",
+              "path": "tempo.ts",
+              "replacement": ">=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            },
+            {
+              "id": 2,
+              "localId": 2,
+              "offset": 91,
+              "original": ">",
+              "path": "tempo.ts",
+              "replacement": ">=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            },
+            {
+              "id": 3,
+              "localId": 3,
+              "offset": 91,
+              "original": ">",
+              "path": "tempo.ts",
+              "replacement": "<=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            }
+          ],
+          "planned": 4,
+          "restorationError": null,
+          "score": null,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 4,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.000161,
+          "workerPreparationMs": 0.00013099999999999999,
+          "workersRequested": 1,
+          "workersUsed": 0
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.33940400000000004,
+          "attributionMs": 0.020809,
+          "baselineMs": 969.36874,
+          "cleanupMs": 234.819866,
+          "coverageMs": null,
+          "preparationMs": 0.179085,
+          "typecheckMs": 2050.288814
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-733207-1788738085154189830\n\n ✓ stack.test.tsx (3 tests) 147ms\n\n Test Files  1 passed (1)\n      Tests  3 passed (3)\n   Start at  09:41:28\n   Duration  548ms (import 49%, tests 40%, transform 10%, worker 1%)\n\n",
+              "exit": 0,
+              "ms": 969.165671,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 3,
+                "executionId": "capture-733207-1788738085700708085-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 0,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "execution-error",
+              "timedOut": false
+            },
+            "coverage": {
+              "state": "not-run"
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 969.36874,
+              "coverageMs": null,
+              "typecheckMs": 2050.288814
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2050.138523,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "server.ts",
+            "result": {
+              "complete": false,
+              "functions": [
+                {
+                  "complexity": 1,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "createApp",
+                  "start": 210,
+                  "status": "unknown",
+                  "total": 0
+                },
+                {
+                  "complexity": 1,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "arrow@347",
+                  "start": 347,
+                  "status": "unknown",
+                  "total": 0
+                }
+              ],
+              "problems": [
+                "no coverage reports"
+              ]
+            }
+          },
+          {
+            "path": "tempo.ts",
+            "result": {
+              "complete": false,
+              "functions": [
+                {
+                  "complexity": 3,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "tempoLabel",
+                  "start": 7,
+                  "status": "unknown",
+                  "total": 0
+                }
+              ],
+              "problems": [
+                "no coverage reports"
+              ]
+            }
+          },
+          {
+            "path": "view.tsx",
+            "result": {
+              "complete": false,
+              "functions": [
+                {
+                  "complexity": 1,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "Tempo",
+                  "start": 73,
+                  "status": "unknown",
+                  "total": 0
+                }
+              ],
+              "problems": [
+                "no coverage reports"
+              ]
+            }
+          }
+        ]
+      },
+      "wallMs": 3885.7714070000075
+    },
+    "retry": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "tempo.ts",
+            "view.tsx",
+            "server.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": false,
+        "executionMs": 2621.121741,
+        "jobsAttempted": 2,
+        "mutation": {
+          "complete": false,
+          "completed": 0,
+          "error": null,
+          "executionMs": 0.02634,
+          "jobsAttempted": 0,
+          "killed": 0,
+          "mutationWallMs": 0.00016,
+          "notRun": 4,
+          "outcomes": [
+            {
+              "id": 0,
+              "localId": 0,
+              "offset": 60,
+              "original": "<",
+              "path": "tempo.ts",
+              "replacement": "<=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            },
+            {
+              "id": 1,
+              "localId": 1,
+              "offset": 60,
+              "original": "<",
+              "path": "tempo.ts",
+              "replacement": ">=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            },
+            {
+              "id": 2,
+              "localId": 2,
+              "offset": 91,
+              "original": ">",
+              "path": "tempo.ts",
+              "replacement": ">=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            },
+            {
+              "id": 3,
+              "localId": 3,
+              "offset": 91,
+              "original": ">",
+              "path": "tempo.ts",
+              "replacement": "<=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            }
+          ],
+          "planned": 4,
+          "restorationError": null,
+          "score": null,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 4,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.000059999999999999995,
+          "workerPreparationMs": 0.000029999999999999997,
+          "workersRequested": 1,
+          "workersUsed": 0
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.39076999999999995,
+          "attributionMs": 0.019817,
+          "baselineMs": 587.711475,
+          "cleanupMs": 230.526421,
+          "coverageMs": null,
+          "preparationMs": 0.189063,
+          "typecheckMs": 2032.757396
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-733251-1788738089042641622\n\n ✓ control.test.ts (1 test) 3ms\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  09:41:32\n   Duration  161ms (worker 60%, transform 23%, import 8%, tests 8%, environment 1%)\n\n",
+              "exit": 0,
+              "ms": 587.533593,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 1,
+                "executionId": "capture-733251-1788738089626261269-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 0,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "execution-error",
+              "timedOut": false
+            },
+            "coverage": {
+              "state": "not-run"
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 587.711475,
+              "coverageMs": null,
+              "typecheckMs": 2032.757396
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2032.612035,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "server.ts",
+            "result": {
+              "complete": false,
+              "functions": [
+                {
+                  "complexity": 1,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "createApp",
+                  "start": 210,
+                  "status": "unknown",
+                  "total": 0
+                },
+                {
+                  "complexity": 1,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "arrow@347",
+                  "start": 347,
+                  "status": "unknown",
+                  "total": 0
+                }
+              ],
+              "problems": [
+                "no coverage reports"
+              ]
+            }
+          },
+          {
+            "path": "tempo.ts",
+            "result": {
+              "complete": false,
+              "functions": [
+                {
+                  "complexity": 3,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "tempoLabel",
+                  "start": 7,
+                  "status": "unknown",
+                  "total": 0
+                }
+              ],
+              "problems": [
+                "no coverage reports"
+              ]
+            }
+          },
+          {
+            "path": "view.tsx",
+            "result": {
+              "complete": false,
+              "functions": [
+                {
+                  "complexity": 1,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "Tempo",
+                  "start": 73,
+                  "status": "unknown",
+                  "total": 0
+                }
+              ],
+              "problems": [
+                "no coverage reports"
+              ]
+            }
+          }
+        ]
+      },
+      "wallMs": 3519.046644999995
+    },
+    "repeat": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "tempo.ts",
+            "view.tsx",
+            "server.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": false,
+        "executionMs": 2660.7961219999997,
+        "jobsAttempted": 2,
+        "mutation": {
+          "complete": false,
+          "completed": 0,
+          "error": null,
+          "executionMs": 0.036177,
+          "jobsAttempted": 0,
+          "killed": 0,
+          "mutationWallMs": 0.000281,
+          "notRun": 4,
+          "outcomes": [
+            {
+              "id": 0,
+              "localId": 0,
+              "offset": 60,
+              "original": "<",
+              "path": "tempo.ts",
+              "replacement": "<=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            },
+            {
+              "id": 1,
+              "localId": 1,
+              "offset": 60,
+              "original": "<",
+              "path": "tempo.ts",
+              "replacement": ">=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            },
+            {
+              "id": 2,
+              "localId": 2,
+              "offset": 91,
+              "original": ">",
+              "path": "tempo.ts",
+              "replacement": ">=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            },
+            {
+              "id": 3,
+              "localId": 3,
+              "offset": 91,
+              "original": ">",
+              "path": "tempo.ts",
+              "replacement": "<=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            }
+          ],
+          "planned": 4,
+          "restorationError": null,
+          "score": null,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 4,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.00015,
+          "workerPreparationMs": 0.00013,
+          "workersRequested": 1,
+          "workersUsed": 0
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.634756,
+          "attributionMs": 0.02692,
+          "baselineMs": 578.261999,
+          "cleanupMs": 238.805794,
+          "coverageMs": null,
+          "preparationMs": 0.254055,
+          "typecheckMs": 2081.5484109999998
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-733286-1788738092565992593\n\n ✓ control.test.ts (1 test) 3ms\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  09:41:35\n   Duration  157ms (worker 63%, transform 19%, tests 10%, import 7%, environment 1%)\n\n",
+              "exit": 0,
+              "ms": 578.052468,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 1,
+                "executionId": "capture-733286-1788738093121842579-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 0,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "execution-error",
+              "timedOut": false
+            },
+            "coverage": {
+              "state": "not-run"
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 578.261999,
+              "coverageMs": null,
+              "typecheckMs": 2081.5484109999998
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2081.3716910000003,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "server.ts",
+            "result": {
+              "complete": false,
+              "functions": [
+                {
+                  "complexity": 1,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "createApp",
+                  "start": 210,
+                  "status": "unknown",
+                  "total": 0
+                },
+                {
+                  "complexity": 1,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "arrow@347",
+                  "start": 347,
+                  "status": "unknown",
+                  "total": 0
+                }
+              ],
+              "problems": [
+                "no coverage reports"
+              ]
+            }
+          },
+          {
+            "path": "tempo.ts",
+            "result": {
+              "complete": false,
+              "functions": [
+                {
+                  "complexity": 3,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "tempoLabel",
+                  "start": 7,
+                  "status": "unknown",
+                  "total": 0
+                }
+              ],
+              "problems": [
+                "no coverage reports"
+              ]
+            }
+          },
+          {
+            "path": "view.tsx",
+            "result": {
+              "complete": false,
+              "functions": [
+                {
+                  "complexity": 1,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "Tempo",
+                  "start": 73,
+                  "status": "unknown",
+                  "total": 0
+                }
+              ],
+              "problems": [
+                "no coverage reports"
+              ]
+            }
+          }
+        ]
+      },
+      "wallMs": 3540.809024000002
+    },
+    "expected-failure": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "tempo.ts",
+            "view.tsx",
+            "server.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": false,
+        "executionMs": 2630.5792979999997,
+        "jobsAttempted": 2,
+        "mutation": {
+          "complete": false,
+          "completed": 0,
+          "error": null,
+          "executionMs": 0.026158,
+          "jobsAttempted": 0,
+          "killed": 0,
+          "mutationWallMs": 0.00016999999999999999,
+          "notRun": 4,
+          "outcomes": [
+            {
+              "id": 0,
+              "localId": 0,
+              "offset": 60,
+              "original": "<",
+              "path": "tempo.ts",
+              "replacement": "<=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            },
+            {
+              "id": 1,
+              "localId": 1,
+              "offset": 60,
+              "original": "<",
+              "path": "tempo.ts",
+              "replacement": ">=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            },
+            {
+              "id": 2,
+              "localId": 2,
+              "offset": 91,
+              "original": ">",
+              "path": "tempo.ts",
+              "replacement": ">=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            },
+            {
+              "id": 3,
+              "localId": 3,
+              "offset": 91,
+              "original": ">",
+              "path": "tempo.ts",
+              "replacement": "<=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            }
+          ],
+          "planned": 4,
+          "restorationError": null,
+          "score": null,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 4,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.00008999999999999999,
+          "workerPreparationMs": 0.000031,
+          "workersRequested": 1,
+          "workersUsed": 0
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 0.510834,
+          "attributionMs": 0.021049000000000002,
+          "baselineMs": 570.602391,
+          "cleanupMs": 234.136642,
+          "coverageMs": null,
+          "preparationMs": 0.183733,
+          "typecheckMs": 2059.208311
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-733321-1788738096150552017\n\n ✓ control.test.ts (1 test) 8ms\n\n Test Files  1 passed (1)\n      Tests  1 expected fail (1)\n   Start at  09:41:39\n   Duration  157ms (worker 53%, tests 22%, transform 17%, import 7%, environment 1%)\n\n",
+              "exit": 0,
+              "ms": 570.421743,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 1,
+                "executionId": "capture-733321-1788738096707787778-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 0,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "execution-error",
+              "timedOut": false
+            },
+            "coverage": {
+              "state": "not-run"
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 570.602391,
+              "coverageMs": null,
+              "typecheckMs": 2059.208311
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2059.049133,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "server.ts",
+            "result": {
+              "complete": false,
+              "functions": [
+                {
+                  "complexity": 1,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "createApp",
+                  "start": 210,
+                  "status": "unknown",
+                  "total": 0
+                },
+                {
+                  "complexity": 1,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "arrow@347",
+                  "start": 347,
+                  "status": "unknown",
+                  "total": 0
+                }
+              ],
+              "problems": [
+                "no coverage reports"
+              ]
+            }
+          },
+          {
+            "path": "tempo.ts",
+            "result": {
+              "complete": false,
+              "functions": [
+                {
+                  "complexity": 3,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "tempoLabel",
+                  "start": 7,
+                  "status": "unknown",
+                  "total": 0
+                }
+              ],
+              "problems": [
+                "no coverage reports"
+              ]
+            }
+          },
+          {
+            "path": "view.tsx",
+            "result": {
+              "complete": false,
+              "functions": [
+                {
+                  "complexity": 1,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "Tempo",
+                  "start": 73,
+                  "status": "unknown",
+                  "total": 0
+                }
+              ],
+              "problems": [
+                "no coverage reports"
+              ]
+            }
+          }
+        ]
+      },
+      "wallMs": 3546.9373650000052
+    },
+    "concurrent": {
+      "config": {
+        "workers": 1,
+        "source": {
+          "include": [
+            "tempo.ts",
+            "view.tsx",
+            "server.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "tsconfig.json",
+          "tempo.ts",
+          "view.tsx",
+          "server.ts",
+          "stack.test.tsx",
+          "vitest.config.mjs",
+          "node_modules",
+          "control.test.ts"
+        ],
+        "setups": [
+          {
+            "name": "stack",
+            "runner": "vitest",
+            "cwd": ".",
+            "timeoutMs": 30000,
+            "typecheck": [
+              "/usr/bin/node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "/usr/bin/node",
+              "node_modules/vitest/vitest.mjs",
+              "run",
+              "--config",
+              "vitest.config.mjs",
+              "--maxWorkers=1",
+              "--no-file-parallelism",
+              "--maxConcurrency=1",
+              "--reporter=default",
+              "--reporter={seshatReporter}"
+            ],
+            "coverage": {
+              "command": [
+                "/usr/bin/node",
+                "node_modules/vitest/vitest.mjs",
+                "run",
+                "--config",
+                "vitest.config.mjs",
+                "--maxWorkers=1",
+                "--no-file-parallelism",
+                "--maxConcurrency=1",
+                "--reporter=default",
+                "--reporter={seshatReporter}",
+                "--coverage"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "result": {
+        "complete": false,
+        "executionMs": 2712.982278,
+        "jobsAttempted": 2,
+        "mutation": {
+          "complete": false,
+          "completed": 0,
+          "error": null,
+          "executionMs": 0.02697,
+          "jobsAttempted": 0,
+          "killed": 0,
+          "mutationWallMs": 0.00017999999999999998,
+          "notRun": 4,
+          "outcomes": [
+            {
+              "id": 0,
+              "localId": 0,
+              "offset": 60,
+              "original": "<",
+              "path": "tempo.ts",
+              "replacement": "<=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            },
+            {
+              "id": 1,
+              "localId": 1,
+              "offset": 60,
+              "original": "<",
+              "path": "tempo.ts",
+              "replacement": ">=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            },
+            {
+              "id": 2,
+              "localId": 2,
+              "offset": 91,
+              "original": ">",
+              "path": "tempo.ts",
+              "replacement": ">=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            },
+            {
+              "id": 3,
+              "localId": 3,
+              "offset": 91,
+              "original": ">",
+              "path": "tempo.ts",
+              "replacement": "<=",
+              "setups": [
+                {
+                  "name": "stack",
+                  "state": "not-run"
+                }
+              ],
+              "verdict": "unassessed"
+            }
+          ],
+          "planned": 4,
+          "restorationError": null,
+          "score": null,
+          "strategy": "replace",
+          "survived": 0,
+          "unresolved": 4,
+          "workerBaselineJobs": 0,
+          "workerBaselines": [],
+          "workerCleanupMs": 0.00008999999999999999,
+          "workerPreparationMs": 0.00016,
+          "workersRequested": 1,
+          "workersUsed": 0
+        },
+        "phase": "check",
+        "phaseTimings": {
+          "analysisMs": 3.438624,
+          "attributionMs": 0.020308,
+          "baselineMs": 565.003119,
+          "cleanupMs": 230.005128,
+          "coverageMs": null,
+          "preparationMs": 0.444871,
+          "typecheckMs": 2144.020193
+        },
+        "setups": [
+          {
+            "baseline": {
+              "cancelled": false,
+              "diagnostic": "\n RUN  v5.0.0 <work>/scratch/capture-733358-1788738099659786400\n\n ✓ control.test.ts (1 test) 4ms\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  09:41:42\n   Duration  161ms (worker 62%, transform 18%, tests 11%, import 8%)\n\n",
+              "exit": 0,
+              "ms": 564.8301650000001,
+              "overflow": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 1,
+                "executionId": "capture-733358-1788738100247190999-0-baseline",
+                "failed": 0,
+                "node": "24.20.0",
+                "passed": 0,
+                "runner": "vitest",
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "state": "execution-error",
+              "timedOut": false
+            },
+            "coverage": {
+              "state": "not-run"
+            },
+            "name": "stack",
+            "timings": {
+              "baselineMs": 565.003119,
+              "coverageMs": null,
+              "typecheckMs": 2144.020193
+            },
+            "typecheck": {
+              "cancelled": false,
+              "exit": 0,
+              "ms": 2143.840527,
+              "overflow": false,
+              "pipeError": null,
+              "state": "passed",
+              "timedOut": false
+            }
+          }
+        ],
+        "sources": [
+          {
+            "path": "server.ts",
+            "result": {
+              "complete": false,
+              "functions": [
+                {
+                  "complexity": 1,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "createApp",
+                  "start": 210,
+                  "status": "unknown",
+                  "total": 0
+                },
+                {
+                  "complexity": 1,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "arrow@347",
+                  "start": 347,
+                  "status": "unknown",
+                  "total": 0
+                }
+              ],
+              "problems": [
+                "no coverage reports"
+              ]
+            }
+          },
+          {
+            "path": "tempo.ts",
+            "result": {
+              "complete": false,
+              "functions": [
+                {
+                  "complexity": 3,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "tempoLabel",
+                  "start": 7,
+                  "status": "unknown",
+                  "total": 0
+                }
+              ],
+              "problems": [
+                "no coverage reports"
+              ]
+            }
+          },
+          {
+            "path": "view.tsx",
+            "result": {
+              "complete": false,
+              "functions": [
+                {
+                  "complexity": 1,
+                  "coverage": null,
+                  "covered": 0,
+                  "crap": null,
+                  "name": "Tempo",
+                  "start": 73,
+                  "status": "unknown",
+                  "total": 0
+                }
+              ],
+              "problems": [
+                "no coverage reports"
+              ]
+            }
+          }
+        ]
+      },
+      "wallMs": 3611.3421700000035
+    }
+  },
+  "originalsPreserved": true
+}

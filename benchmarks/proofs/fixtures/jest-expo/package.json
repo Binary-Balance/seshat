@@ -1,0 +1,21 @@
+{
+  "name": "seshat-jest-expo-fixture",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "jest --config jest.config.cjs",
+    "typecheck": "tsc --project tsconfig.json"
+  },
+  "devDependencies": {
+    "@react-native/jest-preset": "0.86.3",
+    "@types/jest": "29.5.14",
+    "@types/react": "19.2.2",
+    "babel-preset-expo": "57.0.10",
+    "expo": "57.0.20",
+    "jest": "29.7.0",
+    "jest-expo": "57.0.5",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "typescript": "6.0.3"
+  }
+}

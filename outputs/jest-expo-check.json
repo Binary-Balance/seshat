@@ -1,0 +1,4476 @@
+{
+  "version": 1,
+  "environment": {
+    "node": "v24.20.0",
+    "tools": {
+      "jest": "29.7.0",
+      "jest-expo": "57.0.5",
+      "expo": "57.0.20",
+      "react-native": "0.86.3",
+      "@react-native/jest-preset": "0.86.3",
+      "babel-preset-expo": "57.0.10",
+      "react": "19.2.3",
+      "typescript": "6.0.3"
+    }
+  },
+  "cli": {
+    "source": "tarball",
+    "tarballSha256": "54abf4ecb1dcbd50f7340e039018cb1fab2b7126ea058ce5ea041a1db4e53eb2",
+    "version": "seshat 0.0.0 (candidate)",
+    "binarySha256": "92e5173443e787726b6843c729754bc1e95f499ae736bb2e894e251b87dea6c0"
+  },
+  "dependencies": {
+    "versions": {
+      "jest": "29.7.0",
+      "jest-expo": "57.0.5",
+      "expo": "57.0.20",
+      "react-native": "0.86.3",
+      "@react-native/jest-preset": "0.86.3",
+      "babel-preset-expo": "57.0.10",
+      "react": "19.2.3",
+      "typescript": "6.0.3"
+    }
+  },
+  "work": "<work>",
+  "runs": {
+    "normal-1": {
+      "config": {
+        "source": {
+          "include": [
+            "src/status.tsx"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "babel.config.cjs",
+          "jest.config.cjs",
+          "src",
+          "tests",
+          "node_modules"
+        ],
+        "workers": 1,
+        "setups": [
+          {
+            "name": "jest-expo",
+            "runner": "jest",
+            "cwd": ".",
+            "timeoutMs": 60000,
+            "typecheck": [
+              "node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "node",
+              "node_modules/jest/bin/jest.js",
+              "--config",
+              "jest.config.cjs",
+              "--runInBand",
+              "--runTestsByPath",
+              "tests/status.test.tsx",
+              "--reporters=default",
+              "--reporters={seshatReporter}",
+              "--env={seshatEnvironment}"
+            ],
+            "coverage": {
+              "command": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--config",
+                "jest.config.cjs",
+                "--runInBand",
+                "--runTestsByPath",
+                "tests/status.test.tsx",
+                "--reporters=default",
+                "--reporters={seshatReporter}",
+                "--env={seshatEnvironment}",
+                "--coverage",
+                "--coverageProvider=babel",
+                "--coverageReporters=json",
+                "--coverageDirectory=coverage",
+                "--collectCoverageFrom",
+                "src/status.tsx"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "execution": {
+        "status": 0,
+        "signal": null,
+        "stderr": ""
+      },
+      "report": {
+        "cancelled": false,
+        "command": "check",
+        "complete": true,
+        "quality": {
+          "checks": [],
+          "state": "not-configured"
+        },
+        "result": {
+          "complete": true,
+          "executionMs": 20818.302921000002,
+          "jobsAttempted": 7,
+          "mutation": {
+            "complete": true,
+            "completed": 4,
+            "error": null,
+            "executionMs": 8697.79392,
+            "jobsAttempted": 4,
+            "killed": 3,
+            "mutationWallMs": 8697.751119999999,
+            "notRun": 0,
+            "outcomes": [
+              {
+                "executionMs": 2104.2539659999998,
+                "id": 0,
+                "localId": 0,
+                "offset": 113,
+                "original": ">=",
+                "path": "src/status.tsx",
+                "replacement": ">",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/status.test.tsx\n  ✕ covers both classification boundaries (5 ms)\n  ✓ covers the intentionally surviving positive boundary\n  ✕ renders the Expo text element (111 ms)\n\n  ● covers both classification boundaries\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: \"minor\"\n\n      3 |\n      4 | test('covers both classification boundaries', () => {\n    > 5 |   expect(classify(18)).toBe('adult');\n        |                        ^\n      6 |   expect(classify(17)).toBe('minor');\n      7 | });\n      8 |\n\n      at Object.toBe (tests/status.test.tsx:5:24)\n\n  ● renders the Expo text element\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: \"minor\"\n\n      14 |   const element = statusCard(18);\n      15 |   expect(element.type).toBe(Text);\n    > 16 |   expect(element.props.children).toBe('adult');\n         |                                  ^\n      17 | });\n      18 |\n\n      at Object.toBe (tests/status.test.tsx:16:34)\n\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 1 passed, 3 total\nSnapshots:   0 total\nTime:        1.438 s, estimated 3 s\nRan all test suites within paths \"tests/status.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 2103.715731,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 0,
+                      "executionId": "capture-22-1788748409913047399-mutant-0-0",
+                      "expo": "57.0.5",
+                      "failed": 2,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 1,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "failed",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "killed"
+              },
+              {
+                "executionMs": 2407.717397,
+                "id": 1,
+                "localId": 1,
+                "offset": 113,
+                "original": ">=",
+                "path": "src/status.tsx",
+                "replacement": "<",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/status.test.tsx\n  ✕ covers both classification boundaries (5 ms)\n  ✓ covers the intentionally surviving positive boundary\n  ✕ renders the Expo text element (96 ms)\n\n  ● covers both classification boundaries\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: \"minor\"\n\n      3 |\n      4 | test('covers both classification boundaries', () => {\n    > 5 |   expect(classify(18)).toBe('adult');\n        |                        ^\n      6 |   expect(classify(17)).toBe('minor');\n      7 | });\n      8 |\n\n      at Object.toBe (tests/status.test.tsx:5:24)\n\n  ● renders the Expo text element\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: \"minor\"\n\n      14 |   const element = statusCard(18);\n      15 |   expect(element.type).toBe(Text);\n    > 16 |   expect(element.props.children).toBe('adult');\n         |                                  ^\n      17 | });\n      18 |\n\n      at Object.toBe (tests/status.test.tsx:16:34)\n\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 1 passed, 3 total\nSnapshots:   0 total\nTime:        1.532 s, estimated 2 s\nRan all test suites within paths \"tests/status.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 2290.1634799999997,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 0,
+                      "executionId": "capture-22-1788748409913047399-mutant-1-0",
+                      "expo": "57.0.5",
+                      "failed": 2,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 1,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "failed",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "killed"
+              },
+              {
+                "executionMs": 1973.617503,
+                "id": 2,
+                "localId": 2,
+                "offset": 216,
+                "original": ">",
+                "path": "src/status.tsx",
+                "replacement": ">=",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "exit": 0,
+                    "ms": 1969.322867,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 0,
+                      "executionId": "capture-22-1788748409913047399-mutant-2-0",
+                      "expo": "57.0.5",
+                      "failed": 0,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 3,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "passed",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "survived"
+              },
+              {
+                "executionMs": 2212.141323,
+                "id": 3,
+                "localId": 3,
+                "offset": 216,
+                "original": ">",
+                "path": "src/status.tsx",
+                "replacement": "<=",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/status.test.tsx\n  ✓ covers both classification boundaries (3 ms)\n  ✕ covers the intentionally surviving positive boundary (2 ms)\n  ✓ renders the Expo text element (94 ms)\n\n  ● covers the intentionally surviving positive boundary\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: true\n    Received: false\n\n       8 |\n       9 | test('covers the intentionally surviving positive boundary', () => {\n    > 10 |   expect(isPositive(1)).toBe(true);\n         |                         ^\n      11 | });\n      12 |\n      13 | test('renders the Expo text element', () => {\n\n      at Object.toBe (tests/status.test.tsx:10:25)\n\nTest Suites: 1 failed, 1 total\nTests:       1 failed, 2 passed, 3 total\nSnapshots:   0 total\nTime:        1.35 s, estimated 2 s\nRan all test suites within paths \"tests/status.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 2210.708607,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 0,
+                      "executionId": "capture-22-1788748409913047399-mutant-3-0",
+                      "expo": "57.0.5",
+                      "failed": 1,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 2,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "failed",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "killed"
+              }
+            ],
+            "planned": 4,
+            "restorationError": null,
+            "score": 75,
+            "strategy": "replace",
+            "survived": 1,
+            "unresolved": 0,
+            "workerBaselineJobs": 0,
+            "workerBaselines": [],
+            "workerCleanupMs": 0.00008999999999999999,
+            "workerPreparationMs": 0.000029999999999999997,
+            "workersRequested": 1,
+            "workersUsed": 1
+          },
+          "phase": "check",
+          "phaseTimings": {
+            "analysisMs": 1.559944,
+            "attributionMs": 0.020207000000000003,
+            "baselineMs": 5327.2821969999995,
+            "cleanupMs": 623.222986,
+            "coverageMs": 5250.3521820000005,
+            "preparationMs": 5.153919,
+            "typecheckMs": 1536.105364
+          },
+          "setups": [
+            {
+              "baseline": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 5327.11252,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-22-1788748409913047399-0-baseline",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 3,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "coverage": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 5250.068592,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-22-1788748409913047399-0-coverage",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 3,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "name": "jest-expo",
+              "timings": {
+                "baselineMs": 5327.2821969999995,
+                "coverageMs": 5250.3521820000005,
+                "typecheckMs": 1536.105364
+              },
+              "typecheck": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 1535.973759,
+                "overflow": false,
+                "pipeError": null,
+                "state": "passed",
+                "timedOut": false
+              }
+            }
+          ],
+          "sources": [
+            {
+              "path": "src/status.tsx",
+              "result": {
+                "complete": true,
+                "functions": [
+                  {
+                    "complexity": 2,
+                    "coverage": 1,
+                    "covered": 3,
+                    "crap": 2,
+                    "name": "classify",
+                    "start": 70,
+                    "status": "measured",
+                    "total": 3
+                  },
+                  {
+                    "complexity": 1,
+                    "coverage": 1,
+                    "covered": 1,
+                    "crap": 1,
+                    "name": "isPositive",
+                    "start": 164,
+                    "status": "measured",
+                    "total": 1
+                  },
+                  {
+                    "complexity": 1,
+                    "coverage": 1,
+                    "covered": 1,
+                    "crap": 1,
+                    "name": "statusCard",
+                    "start": 231,
+                    "status": "measured",
+                    "total": 1
+                  }
+                ],
+                "problems": []
+              }
+            }
+          ]
+        },
+        "schemaVersion": 1,
+        "scope": {
+          "exclude": [],
+          "files": [
+            "src/status.tsx"
+          ],
+          "include": [
+            "src/status.tsx"
+          ],
+          "setups": [
+            {
+              "cwd": ".",
+              "name": "jest-expo",
+              "runner": "jest"
+            }
+          ]
+        },
+        "signal": null,
+        "timings": {
+          "captureMs": 1924.0214369999999,
+          "executionMs": 20818.302921000002,
+          "wallMs": 23365.63147
+        },
+        "toolVersion": "0.0.0"
+      }
+    },
+    "normal-repeat": {
+      "config": {
+        "source": {
+          "include": [
+            "src/status.tsx"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "babel.config.cjs",
+          "jest.config.cjs",
+          "src",
+          "tests",
+          "node_modules"
+        ],
+        "workers": 1,
+        "setups": [
+          {
+            "name": "jest-expo",
+            "runner": "jest",
+            "cwd": ".",
+            "timeoutMs": 60000,
+            "typecheck": [
+              "node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "node",
+              "node_modules/jest/bin/jest.js",
+              "--config",
+              "jest.config.cjs",
+              "--runInBand",
+              "--runTestsByPath",
+              "tests/status.test.tsx",
+              "--reporters=default",
+              "--reporters={seshatReporter}",
+              "--env={seshatEnvironment}"
+            ],
+            "coverage": {
+              "command": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--config",
+                "jest.config.cjs",
+                "--runInBand",
+                "--runTestsByPath",
+                "tests/status.test.tsx",
+                "--reporters=default",
+                "--reporters={seshatReporter}",
+                "--env={seshatEnvironment}",
+                "--coverage",
+                "--coverageProvider=babel",
+                "--coverageReporters=json",
+                "--coverageDirectory=coverage",
+                "--collectCoverageFrom",
+                "src/status.tsx"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "execution": {
+        "status": 0,
+        "signal": null,
+        "stderr": ""
+      },
+      "report": {
+        "cancelled": false,
+        "command": "check",
+        "complete": true,
+        "quality": {
+          "checks": [],
+          "state": "not-configured"
+        },
+        "result": {
+          "complete": true,
+          "executionMs": 20239.786455,
+          "jobsAttempted": 7,
+          "mutation": {
+            "complete": true,
+            "completed": 4,
+            "error": null,
+            "executionMs": 7828.482464000001,
+            "jobsAttempted": 4,
+            "killed": 3,
+            "mutationWallMs": 7828.429756,
+            "notRun": 0,
+            "outcomes": [
+              {
+                "executionMs": 1865.211598,
+                "id": 0,
+                "localId": 0,
+                "offset": 113,
+                "original": ">=",
+                "path": "src/status.tsx",
+                "replacement": ">",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/status.test.tsx\n  ✕ covers both classification boundaries (5 ms)\n  ✓ covers the intentionally surviving positive boundary (1 ms)\n  ✕ renders the Expo text element (98 ms)\n\n  ● covers both classification boundaries\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: \"minor\"\n\n      3 |\n      4 | test('covers both classification boundaries', () => {\n    > 5 |   expect(classify(18)).toBe('adult');\n        |                        ^\n      6 |   expect(classify(17)).toBe('minor');\n      7 | });\n      8 |\n\n      at Object.toBe (tests/status.test.tsx:5:24)\n\n  ● renders the Expo text element\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: \"minor\"\n\n      14 |   const element = statusCard(18);\n      15 |   expect(element.type).toBe(Text);\n    > 16 |   expect(element.props.children).toBe('adult');\n         |                                  ^\n      17 | });\n      18 |\n\n      at Object.toBe (tests/status.test.tsx:16:34)\n\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 1 passed, 3 total\nSnapshots:   0 total\nTime:        1.138 s, estimated 4 s\nRan all test suites within paths \"tests/status.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 1864.82731,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 0,
+                      "executionId": "capture-134-1788748433830411889-mutant-0-0",
+                      "expo": "57.0.5",
+                      "failed": 2,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 1,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "failed",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "killed"
+              },
+              {
+                "executionMs": 1789.3979749999999,
+                "id": 1,
+                "localId": 1,
+                "offset": 113,
+                "original": ">=",
+                "path": "src/status.tsx",
+                "replacement": "<",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/status.test.tsx\n  ✕ covers both classification boundaries (5 ms)\n  ✓ covers the intentionally surviving positive boundary\n  ✕ renders the Expo text element (94 ms)\n\n  ● covers both classification boundaries\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: \"minor\"\n\n      3 |\n      4 | test('covers both classification boundaries', () => {\n    > 5 |   expect(classify(18)).toBe('adult');\n        |                        ^\n      6 |   expect(classify(17)).toBe('minor');\n      7 | });\n      8 |\n\n      at Object.toBe (tests/status.test.tsx:5:24)\n\n  ● renders the Expo text element\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: \"minor\"\n\n      14 |   const element = statusCard(18);\n      15 |   expect(element.type).toBe(Text);\n    > 16 |   expect(element.props.children).toBe('adult');\n         |                                  ^\n      17 | });\n      18 |\n\n      at Object.toBe (tests/status.test.tsx:16:34)\n\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 1 passed, 3 total\nSnapshots:   0 total\nTime:        1.106 s\nRan all test suites within paths \"tests/status.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 1787.708027,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 0,
+                      "executionId": "capture-134-1788748433830411889-mutant-1-0",
+                      "expo": "57.0.5",
+                      "failed": 2,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 1,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "failed",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "killed"
+              },
+              {
+                "executionMs": 2183.920064,
+                "id": 2,
+                "localId": 2,
+                "offset": 216,
+                "original": ">",
+                "path": "src/status.tsx",
+                "replacement": ">=",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "exit": 0,
+                    "ms": 2182.530738,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 0,
+                      "executionId": "capture-134-1788748433830411889-mutant-2-0",
+                      "expo": "57.0.5",
+                      "failed": 0,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 3,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "passed",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "survived"
+              },
+              {
+                "executionMs": 1989.875864,
+                "id": 3,
+                "localId": 3,
+                "offset": 216,
+                "original": ">",
+                "path": "src/status.tsx",
+                "replacement": "<=",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/status.test.tsx\n  ✓ covers both classification boundaries (2 ms)\n  ✕ covers the intentionally surviving positive boundary (2 ms)\n  ✓ renders the Expo text element (91 ms)\n\n  ● covers the intentionally surviving positive boundary\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: true\n    Received: false\n\n       8 |\n       9 | test('covers the intentionally surviving positive boundary', () => {\n    > 10 |   expect(isPositive(1)).toBe(true);\n         |                         ^\n      11 | });\n      12 |\n      13 | test('renders the Expo text element', () => {\n\n      at Object.toBe (tests/status.test.tsx:10:25)\n\nTest Suites: 1 failed, 1 total\nTests:       1 failed, 2 passed, 3 total\nSnapshots:   0 total\nTime:        1.119 s, estimated 2 s\nRan all test suites within paths \"tests/status.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 1988.474075,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 0,
+                      "executionId": "capture-134-1788748433830411889-mutant-3-0",
+                      "expo": "57.0.5",
+                      "failed": 1,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 2,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "failed",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "killed"
+              }
+            ],
+            "planned": 4,
+            "restorationError": null,
+            "score": 75,
+            "strategy": "replace",
+            "survived": 1,
+            "unresolved": 0,
+            "workerBaselineJobs": 0,
+            "workerBaselines": [],
+            "workerCleanupMs": 0.00014000000000000001,
+            "workerPreparationMs": 0.000029999999999999997,
+            "workersRequested": 1,
+            "workersUsed": 1
+          },
+          "phase": "check",
+          "phaseTimings": {
+            "analysisMs": 1.480455,
+            "attributionMs": 0.019666,
+            "baselineMs": 5665.782574,
+            "cleanupMs": 702.7694690000001,
+            "coverageMs": 4946.403477000001,
+            "preparationMs": 0.275395,
+            "typecheckMs": 1797.3018670000001
+          },
+          "setups": [
+            {
+              "baseline": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 5665.634087,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-134-1788748433830411889-0-baseline",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 3,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "coverage": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 4946.119666,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-134-1788748433830411889-0-coverage",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 3,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "name": "jest-expo",
+              "timings": {
+                "baselineMs": 5665.782574,
+                "coverageMs": 4946.403477000001,
+                "typecheckMs": 1797.3018670000001
+              },
+              "typecheck": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 1797.1794889999999,
+                "overflow": false,
+                "pipeError": null,
+                "state": "passed",
+                "timedOut": false
+              }
+            }
+          ],
+          "sources": [
+            {
+              "path": "src/status.tsx",
+              "result": {
+                "complete": true,
+                "functions": [
+                  {
+                    "complexity": 2,
+                    "coverage": 1,
+                    "covered": 3,
+                    "crap": 2,
+                    "name": "classify",
+                    "start": 70,
+                    "status": "measured",
+                    "total": 3
+                  },
+                  {
+                    "complexity": 1,
+                    "coverage": 1,
+                    "covered": 1,
+                    "crap": 1,
+                    "name": "isPositive",
+                    "start": 164,
+                    "status": "measured",
+                    "total": 1
+                  },
+                  {
+                    "complexity": 1,
+                    "coverage": 1,
+                    "covered": 1,
+                    "crap": 1,
+                    "name": "statusCard",
+                    "start": 231,
+                    "status": "measured",
+                    "total": 1
+                  }
+                ],
+                "problems": []
+              }
+            }
+          ]
+        },
+        "schemaVersion": 1,
+        "scope": {
+          "exclude": [],
+          "files": [
+            "src/status.tsx"
+          ],
+          "include": [
+            "src/status.tsx"
+          ],
+          "setups": [
+            {
+              "cwd": ".",
+              "name": "jest-expo",
+              "runner": "jest"
+            }
+          ]
+        },
+        "signal": null,
+        "timings": {
+          "captureMs": 2460.394659,
+          "executionMs": 20239.786455,
+          "wallMs": 23403.457661
+        },
+        "toolVersion": "0.0.0"
+      }
+    },
+    "normal-2": {
+      "config": {
+        "source": {
+          "include": [
+            "src/status.tsx"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "babel.config.cjs",
+          "jest.config.cjs",
+          "src",
+          "tests",
+          "node_modules"
+        ],
+        "workers": 2,
+        "setups": [
+          {
+            "name": "jest-expo",
+            "runner": "jest",
+            "cwd": ".",
+            "timeoutMs": 60000,
+            "typecheck": [
+              "node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "node",
+              "node_modules/jest/bin/jest.js",
+              "--config",
+              "jest.config.cjs",
+              "--runInBand",
+              "--runTestsByPath",
+              "tests/status.test.tsx",
+              "--reporters=default",
+              "--reporters={seshatReporter}",
+              "--env={seshatEnvironment}"
+            ],
+            "coverage": {
+              "command": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--config",
+                "jest.config.cjs",
+                "--runInBand",
+                "--runTestsByPath",
+                "tests/status.test.tsx",
+                "--reporters=default",
+                "--reporters={seshatReporter}",
+                "--env={seshatEnvironment}",
+                "--coverage",
+                "--coverageProvider=babel",
+                "--coverageReporters=json",
+                "--coverageDirectory=coverage",
+                "--collectCoverageFrom",
+                "src/status.tsx"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "execution": {
+        "status": 0,
+        "signal": null,
+        "stderr": ""
+      },
+      "report": {
+        "cancelled": false,
+        "command": "check",
+        "complete": true,
+        "quality": {
+          "checks": [],
+          "state": "not-configured"
+        },
+        "result": {
+          "complete": true,
+          "executionMs": 25640.846729,
+          "jobsAttempted": 8,
+          "mutation": {
+            "complete": true,
+            "completed": 4,
+            "error": null,
+            "executionMs": 14369.407393,
+            "jobsAttempted": 4,
+            "killed": 3,
+            "mutationWallMs": 6789.1670380000005,
+            "notRun": 0,
+            "outcomes": [
+              {
+                "executionMs": 3631.54871,
+                "id": 0,
+                "localId": 0,
+                "offset": 113,
+                "original": ">=",
+                "path": "src/status.tsx",
+                "replacement": ">",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/status.test.tsx\n  ✕ covers both classification boundaries (22 ms)\n  ✓ covers the intentionally surviving positive boundary\n  ✕ renders the Expo text element (283 ms)\n\n  ● covers both classification boundaries\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: \"minor\"\n\n      3 |\n      4 | test('covers both classification boundaries', () => {\n    > 5 |   expect(classify(18)).toBe('adult');\n        |                        ^\n      6 |   expect(classify(17)).toBe('minor');\n      7 | });\n      8 |\n\n      at Object.toBe (tests/status.test.tsx:5:24)\n\n  ● renders the Expo text element\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: \"minor\"\n\n      14 |   const element = statusCard(18);\n      15 |   expect(element.type).toBe(Text);\n    > 16 |   expect(element.props.children).toBe('adult');\n         |                                  ^\n      17 | });\n      18 |\n\n      at Object.toBe (tests/status.test.tsx:16:34)\n\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 1 passed, 3 total\nSnapshots:   0 total\nTime:        2.328 s, estimated 4 s\nRan all test suites within paths \"tests/status.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 3631.045039,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 0,
+                      "executionId": "capture-246-1788748457233074881-mutant-0-0",
+                      "expo": "57.0.5",
+                      "failed": 2,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 1,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "failed",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "killed"
+              },
+              {
+                "executionMs": 3863.678149,
+                "id": 1,
+                "localId": 1,
+                "offset": 113,
+                "original": ">=",
+                "path": "src/status.tsx",
+                "replacement": "<",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/status.test.tsx\n  ✕ covers both classification boundaries (8 ms)\n  ✓ covers the intentionally surviving positive boundary\n  ✕ renders the Expo text element (187 ms)\n\n  ● covers both classification boundaries\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: \"minor\"\n\n      3 |\n      4 | test('covers both classification boundaries', () => {\n    > 5 |   expect(classify(18)).toBe('adult');\n        |                        ^\n      6 |   expect(classify(17)).toBe('minor');\n      7 | });\n      8 |\n\n      at Object.toBe (tests/status.test.tsx:5:24)\n\n  ● renders the Expo text element\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: \"minor\"\n\n      14 |   const element = statusCard(18);\n      15 |   expect(element.type).toBe(Text);\n    > 16 |   expect(element.props.children).toBe('adult');\n         |                                  ^\n      17 | });\n      18 |\n\n      at Object.toBe (tests/status.test.tsx:16:34)\n\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 1 passed, 3 total\nSnapshots:   0 total\nTime:        2.452 s, estimated 4 s\nRan all test suites within paths \"tests/status.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 3863.136249,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 0,
+                      "executionId": "capture-246-1788748470512440454-mutant-1-0",
+                      "expo": "57.0.5",
+                      "failed": 2,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 1,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "failed",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "killed"
+              },
+              {
+                "executionMs": 2933.000556,
+                "id": 2,
+                "localId": 2,
+                "offset": 216,
+                "original": ">",
+                "path": "src/status.tsx",
+                "replacement": ">=",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "exit": 0,
+                    "ms": 2931.437284,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 0,
+                      "executionId": "capture-246-1788748457233074881-mutant-2-0",
+                      "expo": "57.0.5",
+                      "failed": 0,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 3,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "passed",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "survived"
+              },
+              {
+                "executionMs": 2925.002188,
+                "id": 3,
+                "localId": 3,
+                "offset": 216,
+                "original": ">",
+                "path": "src/status.tsx",
+                "replacement": "<=",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/status.test.tsx\n  ✓ covers both classification boundaries (4 ms)\n  ✕ covers the intentionally surviving positive boundary (3 ms)\n  ✓ renders the Expo text element (182 ms)\n\n  ● covers the intentionally surviving positive boundary\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: true\n    Received: false\n\n       8 |\n       9 | test('covers the intentionally surviving positive boundary', () => {\n    > 10 |   expect(isPositive(1)).toBe(true);\n         |                         ^\n      11 | });\n      12 |\n      13 | test('renders the Expo text element', () => {\n\n      at Object.toBe (tests/status.test.tsx:10:25)\n\nTest Suites: 1 failed, 1 total\nTests:       1 failed, 2 passed, 3 total\nSnapshots:   0 total\nTime:        1.789 s, estimated 2 s\nRan all test suites within paths \"tests/status.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 2922.146091,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 0,
+                      "executionId": "capture-246-1788748470512440454-mutant-3-0",
+                      "expo": "57.0.5",
+                      "failed": 1,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 2,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "failed",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "killed"
+              }
+            ],
+            "planned": 4,
+            "restorationError": null,
+            "score": 75,
+            "strategy": "replace",
+            "survived": 1,
+            "unresolved": 0,
+            "workerBaselineJobs": 1,
+            "workerBaselines": [
+              {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 4951.579653,
+                "name": "jest-expo",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-246-1788748470512440454-worker-1-baseline-0",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 3,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false,
+                "worker": 1
+              }
+            ],
+            "workerCleanupMs": 619.460154,
+            "workerPreparationMs": 6960.72082,
+            "workersRequested": 2,
+            "workersUsed": 2
+          },
+          "phase": "check",
+          "phaseTimings": {
+            "analysisMs": 0.7446109999999999,
+            "attributionMs": 0.019577,
+            "baselineMs": 4796.070125,
+            "cleanupMs": 618.910061,
+            "coverageMs": 5009.955951,
+            "preparationMs": 0.197018,
+            "typecheckMs": 1464.4087539999998
+          },
+          "setups": [
+            {
+              "baseline": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 4795.907311,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-246-1788748457233074881-0-baseline",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 3,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "coverage": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 5009.707045,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-246-1788748457233074881-0-coverage",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 3,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "name": "jest-expo",
+              "timings": {
+                "baselineMs": 4796.070125,
+                "coverageMs": 5009.955951,
+                "typecheckMs": 1464.4087539999998
+              },
+              "typecheck": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 1464.311543,
+                "overflow": false,
+                "pipeError": null,
+                "state": "passed",
+                "timedOut": false
+              }
+            }
+          ],
+          "sources": [
+            {
+              "path": "src/status.tsx",
+              "result": {
+                "complete": true,
+                "functions": [
+                  {
+                    "complexity": 2,
+                    "coverage": 1,
+                    "covered": 3,
+                    "crap": 2,
+                    "name": "classify",
+                    "start": 70,
+                    "status": "measured",
+                    "total": 3
+                  },
+                  {
+                    "complexity": 1,
+                    "coverage": 1,
+                    "covered": 1,
+                    "crap": 1,
+                    "name": "isPositive",
+                    "start": 164,
+                    "status": "measured",
+                    "total": 1
+                  },
+                  {
+                    "complexity": 1,
+                    "coverage": 1,
+                    "covered": 1,
+                    "crap": 1,
+                    "name": "statusCard",
+                    "start": 231,
+                    "status": "measured",
+                    "total": 1
+                  }
+                ],
+                "problems": []
+              }
+            }
+          ]
+        },
+        "schemaVersion": 1,
+        "scope": {
+          "exclude": [],
+          "files": [
+            "src/status.tsx"
+          ],
+          "include": [
+            "src/status.tsx"
+          ],
+          "setups": [
+            {
+              "cwd": ".",
+              "name": "jest-expo",
+              "runner": "jest"
+            }
+          ]
+        },
+        "signal": null,
+        "timings": {
+          "captureMs": 2450.7192560000003,
+          "executionMs": 25640.846729,
+          "wallMs": 28710.598174000002
+        },
+        "toolVersion": "0.0.0"
+      }
+    },
+    "assertion-kill": {
+      "config": {
+        "source": {
+          "include": [
+            "src/control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "babel.config.cjs",
+          "jest.config.cjs",
+          "src",
+          "tests",
+          "node_modules"
+        ],
+        "workers": 1,
+        "setups": [
+          {
+            "name": "jest-expo",
+            "runner": "jest",
+            "cwd": ".",
+            "timeoutMs": 60000,
+            "typecheck": [
+              "node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "node",
+              "node_modules/jest/bin/jest.js",
+              "--config",
+              "jest.config.cjs",
+              "--runInBand",
+              "--runTestsByPath",
+              "tests/control.test.tsx",
+              "--reporters=default",
+              "--reporters={seshatReporter}",
+              "--env={seshatEnvironment}"
+            ],
+            "coverage": {
+              "command": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--config",
+                "jest.config.cjs",
+                "--runInBand",
+                "--runTestsByPath",
+                "tests/control.test.tsx",
+                "--reporters=default",
+                "--reporters={seshatReporter}",
+                "--env={seshatEnvironment}",
+                "--coverage",
+                "--coverageProvider=babel",
+                "--coverageReporters=json",
+                "--coverageDirectory=coverage",
+                "--collectCoverageFrom",
+                "src/control.ts"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "execution": {
+        "status": 0,
+        "signal": null,
+        "stderr": ""
+      },
+      "report": {
+        "cancelled": false,
+        "command": "check",
+        "complete": true,
+        "quality": {
+          "checks": [],
+          "state": "not-configured"
+        },
+        "result": {
+          "complete": true,
+          "executionMs": 10346.042158,
+          "jobsAttempted": 4,
+          "mutation": {
+            "complete": true,
+            "completed": 1,
+            "error": null,
+            "executionMs": 1647.15059,
+            "jobsAttempted": 1,
+            "killed": 1,
+            "mutationWallMs": 1647.133449,
+            "notRun": 0,
+            "outcomes": [
+              {
+                "executionMs": 1647.127668,
+                "id": 0,
+                "localId": 0,
+                "offset": 23,
+                "original": "===",
+                "path": "src/control.ts",
+                "replacement": "!==",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/control.test.tsx\n  ✕ assertion (4 ms)\n\n  ● assertion\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: true\n    Received: false\n\n      1 | import {ready} from '../src/control';\n    > 2 | test('assertion',()=>expect(ready).toBe(true));\n        |                                    ^\n      3 |\n\n      at Object.toBe (tests/control.test.tsx:2:36)\n\nTest Suites: 1 failed, 1 total\nTests:       1 failed, 1 total\nSnapshots:   0 total\nTime:        0.975 s, estimated 2 s\nRan all test suites within paths \"tests/control.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 1646.747217,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 0,
+                      "executionId": "capture-376-1788748485333108013-mutant-0-0",
+                      "expo": "57.0.5",
+                      "failed": 1,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 0,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "failed",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "killed"
+              }
+            ],
+            "planned": 1,
+            "restorationError": null,
+            "score": 100,
+            "strategy": "replace",
+            "survived": 0,
+            "unresolved": 0,
+            "workerBaselineJobs": 0,
+            "workerBaselines": [],
+            "workerCleanupMs": 0.00015,
+            "workerPreparationMs": 0.00004,
+            "workersRequested": 1,
+            "workersUsed": 1
+          },
+          "phase": "check",
+          "phaseTimings": {
+            "analysisMs": 0.762254,
+            "attributionMs": 0.005691,
+            "baselineMs": 3752.5360490000003,
+            "cleanupMs": 668.214478,
+            "coverageMs": 3514.61503,
+            "preparationMs": 0.243265,
+            "typecheckMs": 1430.6975710000002
+          },
+          "setups": [
+            {
+              "baseline": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3752.296611,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-376-1788748485333108013-0-baseline",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "coverage": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3514.3738300000005,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-376-1788748485333108013-0-coverage",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "name": "jest-expo",
+              "timings": {
+                "baselineMs": 3752.5360490000003,
+                "coverageMs": 3514.61503,
+                "typecheckMs": 1430.6975710000002
+              },
+              "typecheck": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 1430.578758,
+                "overflow": false,
+                "pipeError": null,
+                "state": "passed",
+                "timedOut": false
+              }
+            }
+          ],
+          "sources": [
+            {
+              "path": "src/control.ts",
+              "result": {
+                "complete": true,
+                "functions": [],
+                "problems": []
+              }
+            }
+          ]
+        },
+        "schemaVersion": 1,
+        "scope": {
+          "exclude": [],
+          "files": [
+            "src/control.ts"
+          ],
+          "include": [
+            "src/control.ts"
+          ],
+          "setups": [
+            {
+              "cwd": ".",
+              "name": "jest-expo",
+              "runner": "jest"
+            }
+          ]
+        },
+        "signal": null,
+        "timings": {
+          "captureMs": 1828.698336,
+          "executionMs": 10346.042158,
+          "wallMs": 12843.029181
+        },
+        "toolVersion": "0.0.0"
+      }
+    },
+    "survivor": {
+      "config": {
+        "source": {
+          "include": [
+            "src/control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "babel.config.cjs",
+          "jest.config.cjs",
+          "src",
+          "tests",
+          "node_modules"
+        ],
+        "workers": 1,
+        "setups": [
+          {
+            "name": "jest-expo",
+            "runner": "jest",
+            "cwd": ".",
+            "timeoutMs": 60000,
+            "typecheck": [
+              "node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "node",
+              "node_modules/jest/bin/jest.js",
+              "--config",
+              "jest.config.cjs",
+              "--runInBand",
+              "--runTestsByPath",
+              "tests/control.test.tsx",
+              "--reporters=default",
+              "--reporters={seshatReporter}",
+              "--env={seshatEnvironment}"
+            ],
+            "coverage": {
+              "command": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--config",
+                "jest.config.cjs",
+                "--runInBand",
+                "--runTestsByPath",
+                "tests/control.test.tsx",
+                "--reporters=default",
+                "--reporters={seshatReporter}",
+                "--env={seshatEnvironment}",
+                "--coverage",
+                "--coverageProvider=babel",
+                "--coverageReporters=json",
+                "--coverageDirectory=coverage",
+                "--collectCoverageFrom",
+                "src/control.ts"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "execution": {
+        "status": 0,
+        "signal": null,
+        "stderr": ""
+      },
+      "report": {
+        "cancelled": false,
+        "command": "check",
+        "complete": true,
+        "quality": {
+          "checks": [],
+          "state": "not-configured"
+        },
+        "result": {
+          "complete": true,
+          "executionMs": 11036.157066,
+          "jobsAttempted": 4,
+          "mutation": {
+            "complete": true,
+            "completed": 1,
+            "error": null,
+            "executionMs": 1637.481782,
+            "jobsAttempted": 1,
+            "killed": 0,
+            "mutationWallMs": 1637.46484,
+            "notRun": 0,
+            "outcomes": [
+              {
+                "executionMs": 1637.459629,
+                "id": 0,
+                "localId": 0,
+                "offset": 23,
+                "original": "===",
+                "path": "src/control.ts",
+                "replacement": "!==",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "exit": 0,
+                    "ms": 1637.074761,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 0,
+                      "executionId": "capture-437-1788748498471855481-mutant-0-0",
+                      "expo": "57.0.5",
+                      "failed": 0,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 1,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "passed",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "survived"
+              }
+            ],
+            "planned": 1,
+            "restorationError": null,
+            "score": 0,
+            "strategy": "replace",
+            "survived": 1,
+            "unresolved": 0,
+            "workerBaselineJobs": 0,
+            "workerBaselines": [],
+            "workerCleanupMs": 0.00004,
+            "workerPreparationMs": 0.000029999999999999997,
+            "workersRequested": 1,
+            "workersUsed": 1
+          },
+          "phase": "check",
+          "phaseTimings": {
+            "analysisMs": 0.829039,
+            "attributionMs": 0.00541,
+            "baselineMs": 4185.628054999999,
+            "cleanupMs": 776.8477969999999,
+            "coverageMs": 3750.4833519999997,
+            "preparationMs": 0.223408,
+            "typecheckMs": 1461.473991
+          },
+          "setups": [
+            {
+              "baseline": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 4185.477312999999,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-437-1788748498471855481-0-baseline",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "coverage": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3750.266127,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-437-1788748498471855481-0-coverage",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "name": "jest-expo",
+              "timings": {
+                "baselineMs": 4185.628054999999,
+                "coverageMs": 3750.4833519999997,
+                "typecheckMs": 1461.473991
+              },
+              "typecheck": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 1461.3312839999999,
+                "overflow": false,
+                "pipeError": null,
+                "state": "passed",
+                "timedOut": false
+              }
+            }
+          ],
+          "sources": [
+            {
+              "path": "src/control.ts",
+              "result": {
+                "complete": true,
+                "functions": [],
+                "problems": []
+              }
+            }
+          ]
+        },
+        "schemaVersion": 1,
+        "scope": {
+          "exclude": [],
+          "files": [
+            "src/control.ts"
+          ],
+          "include": [
+            "src/control.ts"
+          ],
+          "setups": [
+            {
+              "cwd": ".",
+              "name": "jest-expo",
+              "runner": "jest"
+            }
+          ]
+        },
+        "signal": null,
+        "timings": {
+          "captureMs": 2116.8915949999996,
+          "executionMs": 11036.157066,
+          "wallMs": 13929.960808
+        },
+        "toolVersion": "0.0.0"
+      }
+    },
+    "before-all": {
+      "config": {
+        "source": {
+          "include": [
+            "src/control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "babel.config.cjs",
+          "jest.config.cjs",
+          "src",
+          "tests",
+          "node_modules"
+        ],
+        "workers": 1,
+        "setups": [
+          {
+            "name": "jest-expo",
+            "runner": "jest",
+            "cwd": ".",
+            "timeoutMs": 60000,
+            "typecheck": [
+              "node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "node",
+              "node_modules/jest/bin/jest.js",
+              "--config",
+              "jest.config.cjs",
+              "--runInBand",
+              "--runTestsByPath",
+              "tests/control.test.tsx",
+              "--reporters=default",
+              "--reporters={seshatReporter}",
+              "--env={seshatEnvironment}"
+            ],
+            "coverage": {
+              "command": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--config",
+                "jest.config.cjs",
+                "--runInBand",
+                "--runTestsByPath",
+                "tests/control.test.tsx",
+                "--reporters=default",
+                "--reporters={seshatReporter}",
+                "--env={seshatEnvironment}",
+                "--coverage",
+                "--coverageProvider=babel",
+                "--coverageReporters=json",
+                "--coverageDirectory=coverage",
+                "--collectCoverageFrom",
+                "src/control.ts"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "execution": {
+        "status": 2,
+        "signal": null,
+        "stderr": ""
+      },
+      "report": {
+        "cancelled": false,
+        "command": "check",
+        "complete": false,
+        "quality": {
+          "checks": [],
+          "state": "incomplete"
+        },
+        "result": {
+          "complete": false,
+          "executionMs": 10898.018087,
+          "jobsAttempted": 4,
+          "mutation": {
+            "complete": false,
+            "completed": 1,
+            "error": null,
+            "executionMs": 1663.85572,
+            "jobsAttempted": 1,
+            "killed": 0,
+            "mutationWallMs": 1663.8375760000001,
+            "notRun": 0,
+            "outcomes": [
+              {
+                "executionMs": 1663.831875,
+                "id": 0,
+                "localId": 0,
+                "offset": 23,
+                "original": "===",
+                "path": "src/control.ts",
+                "replacement": "!==",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/control.test.tsx\n  ✕ blocked (1 ms)\n\n  ● blocked\n\n    setup\n\n      1 | import {ready} from '../src/control';\n    > 2 | beforeAll(()=>{if(!ready)throw Error('setup');});test('blocked',()=>{});\n        |                                ^\n      3 |\n\n      at Object.Error (tests/control.test.tsx:2:32)\n\nTest Suites: 1 failed, 1 total\nTests:       1 failed, 1 total\nSnapshots:   0 total\nTime:        0.996 s, estimated 2 s\nRan all test suites within paths \"tests/control.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 1663.406851,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 2,
+                      "executionId": "capture-498-1788748512059555060-mutant-0-0",
+                      "expo": "57.0.5",
+                      "failed": 0,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 0,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "execution-error",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "execution-error"
+              }
+            ],
+            "planned": 1,
+            "restorationError": null,
+            "score": null,
+            "strategy": "replace",
+            "survived": 0,
+            "unresolved": 1,
+            "workerBaselineJobs": 0,
+            "workerBaselines": [],
+            "workerCleanupMs": 0.00009999999999999999,
+            "workerPreparationMs": 0.000031,
+            "workersRequested": 1,
+            "workersUsed": 1
+          },
+          "phase": "check",
+          "phaseTimings": {
+            "analysisMs": 1.258081,
+            "attributionMs": 0.00545,
+            "baselineMs": 3969.055847,
+            "cleanupMs": 661.244568,
+            "coverageMs": 3712.967521,
+            "preparationMs": 0.18233,
+            "typecheckMs": 1550.6623280000001
+          },
+          "setups": [
+            {
+              "baseline": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3968.893485,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-498-1788748512059555060-0-baseline",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "coverage": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3712.700532,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-498-1788748512059555060-0-coverage",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "name": "jest-expo",
+              "timings": {
+                "baselineMs": 3969.055847,
+                "coverageMs": 3712.967521,
+                "typecheckMs": 1550.6623280000001
+              },
+              "typecheck": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 1550.560407,
+                "overflow": false,
+                "pipeError": null,
+                "state": "passed",
+                "timedOut": false
+              }
+            }
+          ],
+          "sources": [
+            {
+              "path": "src/control.ts",
+              "result": {
+                "complete": true,
+                "functions": [],
+                "problems": []
+              }
+            }
+          ]
+        },
+        "schemaVersion": 1,
+        "scope": {
+          "exclude": [],
+          "files": [
+            "src/control.ts"
+          ],
+          "include": [
+            "src/control.ts"
+          ],
+          "setups": [
+            {
+              "cwd": ".",
+              "name": "jest-expo",
+              "runner": "jest"
+            }
+          ]
+        },
+        "signal": null,
+        "timings": {
+          "captureMs": 1764.7634810000002,
+          "executionMs": 10898.018087,
+          "wallMs": 13324.095725
+        },
+        "toolVersion": "0.0.0"
+      }
+    },
+    "before-each": {
+      "config": {
+        "source": {
+          "include": [
+            "src/control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "babel.config.cjs",
+          "jest.config.cjs",
+          "src",
+          "tests",
+          "node_modules"
+        ],
+        "workers": 1,
+        "setups": [
+          {
+            "name": "jest-expo",
+            "runner": "jest",
+            "cwd": ".",
+            "timeoutMs": 60000,
+            "typecheck": [
+              "node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "node",
+              "node_modules/jest/bin/jest.js",
+              "--config",
+              "jest.config.cjs",
+              "--runInBand",
+              "--runTestsByPath",
+              "tests/control.test.tsx",
+              "--reporters=default",
+              "--reporters={seshatReporter}",
+              "--env={seshatEnvironment}"
+            ],
+            "coverage": {
+              "command": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--config",
+                "jest.config.cjs",
+                "--runInBand",
+                "--runTestsByPath",
+                "tests/control.test.tsx",
+                "--reporters=default",
+                "--reporters={seshatReporter}",
+                "--env={seshatEnvironment}",
+                "--coverage",
+                "--coverageProvider=babel",
+                "--coverageReporters=json",
+                "--coverageDirectory=coverage",
+                "--collectCoverageFrom",
+                "src/control.ts"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "execution": {
+        "status": 2,
+        "signal": null,
+        "stderr": ""
+      },
+      "report": {
+        "cancelled": false,
+        "command": "check",
+        "complete": false,
+        "quality": {
+          "checks": [],
+          "state": "incomplete"
+        },
+        "result": {
+          "complete": false,
+          "executionMs": 10617.503545,
+          "jobsAttempted": 4,
+          "mutation": {
+            "complete": false,
+            "completed": 1,
+            "error": null,
+            "executionMs": 1741.4177849999999,
+            "jobsAttempted": 1,
+            "killed": 0,
+            "mutationWallMs": 1741.3979479999998,
+            "notRun": 0,
+            "outcomes": [
+              {
+                "executionMs": 1741.3919359999998,
+                "id": 0,
+                "localId": 0,
+                "offset": 23,
+                "original": "===",
+                "path": "src/control.ts",
+                "replacement": "!==",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/control.test.tsx\n  ✕ blocked (2 ms)\n\n  ● blocked\n\n    setup\n\n      1 | import {ready} from '../src/control';\n    > 2 | beforeEach(()=>{if(!ready)throw Error('setup');});test('blocked',()=>{});\n        |                                 ^\n      3 |\n\n      at Object.Error (tests/control.test.tsx:2:33)\n\nTest Suites: 1 failed, 1 total\nTests:       1 failed, 1 total\nSnapshots:   0 total\nTime:        1.012 s, estimated 2 s\nRan all test suites within paths \"tests/control.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 1740.964078,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 2,
+                      "executionId": "capture-559-1788748525735764534-mutant-0-0",
+                      "expo": "57.0.5",
+                      "failed": 0,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 0,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "execution-error",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "execution-error"
+              }
+            ],
+            "planned": 1,
+            "restorationError": null,
+            "score": null,
+            "strategy": "replace",
+            "survived": 0,
+            "unresolved": 1,
+            "workerBaselineJobs": 0,
+            "workerBaselines": [],
+            "workerCleanupMs": 0.00016,
+            "workerPreparationMs": 0.000029999999999999997,
+            "workersRequested": 1,
+            "workersUsed": 1
+          },
+          "phase": "check",
+          "phaseTimings": {
+            "analysisMs": 0.7631950000000001,
+            "attributionMs": 0.005631,
+            "baselineMs": 3793.893386,
+            "cleanupMs": 818.114846,
+            "coverageMs": 3697.09296,
+            "preparationMs": 0.184315,
+            "typecheckMs": 1384.110888
+          },
+          "setups": [
+            {
+              "baseline": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3793.714752,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559-1788748525735764534-0-baseline",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "coverage": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3696.870724,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559-1788748525735764534-0-coverage",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "name": "jest-expo",
+              "timings": {
+                "baselineMs": 3793.893386,
+                "coverageMs": 3697.09296,
+                "typecheckMs": 1384.110888
+              },
+              "typecheck": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 1384.0054619999999,
+                "overflow": false,
+                "pipeError": null,
+                "state": "passed",
+                "timedOut": false
+              }
+            }
+          ],
+          "sources": [
+            {
+              "path": "src/control.ts",
+              "result": {
+                "complete": true,
+                "functions": [],
+                "problems": []
+              }
+            }
+          ]
+        },
+        "schemaVersion": 1,
+        "scope": {
+          "exclude": [],
+          "files": [
+            "src/control.ts"
+          ],
+          "include": [
+            "src/control.ts"
+          ],
+          "setups": [
+            {
+              "cwd": ".",
+              "name": "jest-expo",
+              "runner": "jest"
+            }
+          ]
+        },
+        "signal": null,
+        "timings": {
+          "captureMs": 2104.411498,
+          "executionMs": 10617.503545,
+          "wallMs": 13540.105231
+        },
+        "toolVersion": "0.0.0"
+      }
+    },
+    "after-each": {
+      "config": {
+        "source": {
+          "include": [
+            "src/control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "babel.config.cjs",
+          "jest.config.cjs",
+          "src",
+          "tests",
+          "node_modules"
+        ],
+        "workers": 1,
+        "setups": [
+          {
+            "name": "jest-expo",
+            "runner": "jest",
+            "cwd": ".",
+            "timeoutMs": 60000,
+            "typecheck": [
+              "node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "node",
+              "node_modules/jest/bin/jest.js",
+              "--config",
+              "jest.config.cjs",
+              "--runInBand",
+              "--runTestsByPath",
+              "tests/control.test.tsx",
+              "--reporters=default",
+              "--reporters={seshatReporter}",
+              "--env={seshatEnvironment}"
+            ],
+            "coverage": {
+              "command": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--config",
+                "jest.config.cjs",
+                "--runInBand",
+                "--runTestsByPath",
+                "tests/control.test.tsx",
+                "--reporters=default",
+                "--reporters={seshatReporter}",
+                "--env={seshatEnvironment}",
+                "--coverage",
+                "--coverageProvider=babel",
+                "--coverageReporters=json",
+                "--coverageDirectory=coverage",
+                "--collectCoverageFrom",
+                "src/control.ts"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "execution": {
+        "status": 2,
+        "signal": null,
+        "stderr": ""
+      },
+      "report": {
+        "cancelled": false,
+        "command": "check",
+        "complete": false,
+        "quality": {
+          "checks": [],
+          "state": "incomplete"
+        },
+        "result": {
+          "complete": false,
+          "executionMs": 10079.863203,
+          "jobsAttempted": 4,
+          "mutation": {
+            "complete": false,
+            "completed": 1,
+            "error": null,
+            "executionMs": 1636.220855,
+            "jobsAttempted": 1,
+            "killed": 0,
+            "mutationWallMs": 1636.202741,
+            "notRun": 0,
+            "outcomes": [
+              {
+                "executionMs": 1636.197191,
+                "id": 0,
+                "localId": 0,
+                "offset": 23,
+                "original": "===",
+                "path": "src/control.ts",
+                "replacement": "!==",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/control.test.tsx\n  ✕ passes (1 ms)\n\n  ● passes\n\n    cleanup\n\n      1 | import {ready} from '../src/control';\n    > 2 | afterEach(()=>{if(!ready)throw Error('cleanup');});test('passes',()=>{});\n        |                                ^\n      3 |\n\n      at Object.Error (tests/control.test.tsx:2:32)\n\nTest Suites: 1 failed, 1 total\nTests:       1 failed, 1 total\nSnapshots:   0 total\nTime:        0.945 s, estimated 2 s\nRan all test suites within paths \"tests/control.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 1635.799869,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 2,
+                      "executionId": "capture-620-1788748539248085024-mutant-0-0",
+                      "expo": "57.0.5",
+                      "failed": 0,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 0,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "execution-error",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "execution-error"
+              }
+            ],
+            "planned": 1,
+            "restorationError": null,
+            "score": null,
+            "strategy": "replace",
+            "survived": 0,
+            "unresolved": 1,
+            "workerBaselineJobs": 0,
+            "workerBaselines": [],
+            "workerCleanupMs": 0.000049999999999999996,
+            "workerPreparationMs": 0.000031,
+            "workersRequested": 1,
+            "workersUsed": 1
+          },
+          "phase": "check",
+          "phaseTimings": {
+            "analysisMs": 0.657138,
+            "attributionMs": 0.006000999999999999,
+            "baselineMs": 3518.072279,
+            "cleanupMs": 644.785262,
+            "coverageMs": 3577.041001,
+            "preparationMs": 0.209121,
+            "typecheckMs": 1347.6250890000001
+          },
+          "setups": [
+            {
+              "baseline": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3517.902172,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-620-1788748539248085024-0-baseline",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "coverage": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3576.8185240000003,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-620-1788748539248085024-0-coverage",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "name": "jest-expo",
+              "timings": {
+                "baselineMs": 3518.072279,
+                "coverageMs": 3577.041001,
+                "typecheckMs": 1347.6250890000001
+              },
+              "typecheck": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 1347.511356,
+                "overflow": false,
+                "pipeError": null,
+                "state": "passed",
+                "timedOut": false
+              }
+            }
+          ],
+          "sources": [
+            {
+              "path": "src/control.ts",
+              "result": {
+                "complete": true,
+                "functions": [],
+                "problems": []
+              }
+            }
+          ]
+        },
+        "schemaVersion": 1,
+        "scope": {
+          "exclude": [],
+          "files": [
+            "src/control.ts"
+          ],
+          "include": [
+            "src/control.ts"
+          ],
+          "setups": [
+            {
+              "cwd": ".",
+              "name": "jest-expo",
+              "runner": "jest"
+            }
+          ]
+        },
+        "signal": null,
+        "timings": {
+          "captureMs": 2066.061452,
+          "executionMs": 10079.863203,
+          "wallMs": 12790.80796
+        },
+        "toolVersion": "0.0.0"
+      }
+    },
+    "mixed-assertion-hook": {
+      "config": {
+        "source": {
+          "include": [
+            "src/control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "babel.config.cjs",
+          "jest.config.cjs",
+          "src",
+          "tests",
+          "node_modules"
+        ],
+        "workers": 1,
+        "setups": [
+          {
+            "name": "jest-expo",
+            "runner": "jest",
+            "cwd": ".",
+            "timeoutMs": 60000,
+            "typecheck": [
+              "node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "node",
+              "node_modules/jest/bin/jest.js",
+              "--config",
+              "jest.config.cjs",
+              "--runInBand",
+              "--runTestsByPath",
+              "tests/control.test.tsx",
+              "--reporters=default",
+              "--reporters={seshatReporter}",
+              "--env={seshatEnvironment}"
+            ],
+            "coverage": {
+              "command": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--config",
+                "jest.config.cjs",
+                "--runInBand",
+                "--runTestsByPath",
+                "tests/control.test.tsx",
+                "--reporters=default",
+                "--reporters={seshatReporter}",
+                "--env={seshatEnvironment}",
+                "--coverage",
+                "--coverageProvider=babel",
+                "--coverageReporters=json",
+                "--coverageDirectory=coverage",
+                "--collectCoverageFrom",
+                "src/control.ts"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "execution": {
+        "status": 2,
+        "signal": null,
+        "stderr": ""
+      },
+      "report": {
+        "cancelled": false,
+        "command": "check",
+        "complete": false,
+        "quality": {
+          "checks": [],
+          "state": "incomplete"
+        },
+        "result": {
+          "complete": false,
+          "executionMs": 10237.933629000001,
+          "jobsAttempted": 4,
+          "mutation": {
+            "complete": false,
+            "completed": 1,
+            "error": null,
+            "executionMs": 1837.6032389999998,
+            "jobsAttempted": 1,
+            "killed": 0,
+            "mutationWallMs": 1837.585767,
+            "notRun": 0,
+            "outcomes": [
+              {
+                "executionMs": 1837.578563,
+                "id": 0,
+                "localId": 0,
+                "offset": 23,
+                "original": "===",
+                "path": "src/control.ts",
+                "replacement": "!==",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/control.test.tsx\n  ✕ assertion (4 ms)\n\n  ● assertion\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: true\n    Received: false\n\n      1 | import {ready} from '../src/control';\n    > 2 | afterEach(()=>{if(!ready)throw Error('cleanup');});test('assertion',()=>expect(ready).toBe(true));\n        |                                                                                       ^\n      3 |\n\n      at Object.toBe (tests/control.test.tsx:2:87)\n\n  ● assertion\n\n    cleanup\n\n      1 | import {ready} from '../src/control';\n    > 2 | afterEach(()=>{if(!ready)throw Error('cleanup');});test('assertion',()=>expect(ready).toBe(true));\n        |                                ^\n      3 |\n\n      at Object.Error (tests/control.test.tsx:2:32)\n\nTest Suites: 1 failed, 1 total\nTests:       1 failed, 1 total\nSnapshots:   0 total\nTime:        1.002 s, estimated 2 s\nRan all test suites within paths \"tests/control.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 1837.1276810000002,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 1,
+                      "executionId": "capture-681-1788748551756628204-mutant-0-0",
+                      "expo": "57.0.5",
+                      "failed": 1,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 0,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "execution-error",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "execution-error"
+              }
+            ],
+            "planned": 1,
+            "restorationError": null,
+            "score": null,
+            "strategy": "replace",
+            "survived": 0,
+            "unresolved": 1,
+            "workerBaselineJobs": 0,
+            "workerBaselines": [],
+            "workerCleanupMs": 0.00019,
+            "workerPreparationMs": 0.000029999999999999997,
+            "workersRequested": 1,
+            "workersUsed": 1
+          },
+          "phase": "check",
+          "phaseTimings": {
+            "analysisMs": 0.6949690000000001,
+            "attributionMs": 0.005981,
+            "baselineMs": 3555.430305,
+            "cleanupMs": 627.535791,
+            "coverageMs": 3507.112841,
+            "preparationMs": 0.183703,
+            "typecheckMs": 1336.8655010000002
+          },
+          "setups": [
+            {
+              "baseline": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3555.2823289999997,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-681-1788748551756628204-0-baseline",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "coverage": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3506.8250430000003,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-681-1788748551756628204-0-coverage",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "name": "jest-expo",
+              "timings": {
+                "baselineMs": 3555.430305,
+                "coverageMs": 3507.112841,
+                "typecheckMs": 1336.8655010000002
+              },
+              "typecheck": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 1336.7612060000001,
+                "overflow": false,
+                "pipeError": null,
+                "state": "passed",
+                "timedOut": false
+              }
+            }
+          ],
+          "sources": [
+            {
+              "path": "src/control.ts",
+              "result": {
+                "complete": true,
+                "functions": [],
+                "problems": []
+              }
+            }
+          ]
+        },
+        "schemaVersion": 1,
+        "scope": {
+          "exclude": [],
+          "files": [
+            "src/control.ts"
+          ],
+          "include": [
+            "src/control.ts"
+          ],
+          "setups": [
+            {
+              "cwd": ".",
+              "name": "jest-expo",
+              "runner": "jest"
+            }
+          ]
+        },
+        "signal": null,
+        "timings": {
+          "captureMs": 1772.734333,
+          "executionMs": 10237.933629000001,
+          "wallMs": 12638.2878
+        },
+        "toolVersion": "0.0.0"
+      }
+    },
+    "import-failure": {
+      "config": {
+        "source": {
+          "include": [
+            "src/control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "babel.config.cjs",
+          "jest.config.cjs",
+          "src",
+          "tests",
+          "node_modules"
+        ],
+        "workers": 1,
+        "setups": [
+          {
+            "name": "jest-expo",
+            "runner": "jest",
+            "cwd": ".",
+            "timeoutMs": 60000,
+            "typecheck": [
+              "node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "node",
+              "node_modules/jest/bin/jest.js",
+              "--config",
+              "jest.config.cjs",
+              "--runInBand",
+              "--runTestsByPath",
+              "tests/control.test.tsx",
+              "--reporters=default",
+              "--reporters={seshatReporter}",
+              "--env={seshatEnvironment}"
+            ],
+            "coverage": {
+              "command": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--config",
+                "jest.config.cjs",
+                "--runInBand",
+                "--runTestsByPath",
+                "tests/control.test.tsx",
+                "--reporters=default",
+                "--reporters={seshatReporter}",
+                "--env={seshatEnvironment}",
+                "--coverage",
+                "--coverageProvider=babel",
+                "--coverageReporters=json",
+                "--coverageDirectory=coverage",
+                "--collectCoverageFrom",
+                "src/control.ts"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "execution": {
+        "status": 2,
+        "signal": null,
+        "stderr": ""
+      },
+      "report": {
+        "cancelled": false,
+        "command": "check",
+        "complete": false,
+        "quality": {
+          "checks": [],
+          "state": "incomplete"
+        },
+        "result": {
+          "complete": false,
+          "executionMs": 10823.660195,
+          "jobsAttempted": 4,
+          "mutation": {
+            "complete": false,
+            "completed": 1,
+            "error": null,
+            "executionMs": 1699.652128,
+            "jobsAttempted": 1,
+            "killed": 0,
+            "mutationWallMs": 1699.63685,
+            "notRun": 0,
+            "outcomes": [
+              {
+                "executionMs": 1699.630177,
+                "id": 0,
+                "localId": 0,
+                "offset": 23,
+                "original": "===",
+                "path": "src/control.ts",
+                "replacement": "!==",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/control.test.tsx\n  ● Test suite failed to run\n\n    load\n\n      1 | import {ready} from '../src/control';\n    > 2 | if(!ready)throw Error('load');test('blocked',()=>{});\n        |                 ^\n      3 |\n\n      at Object.Error (tests/control.test.tsx:2:17)\n\nTest Suites: 1 failed, 1 total\nTests:       0 total\nSnapshots:   0 total\nTime:        1.02 s, estimated 2 s\nRan all test suites within paths \"tests/control.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 1699.188722,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 2,
+                      "executionId": "capture-742-1788748564473310715-mutant-0-0",
+                      "expo": "57.0.5",
+                      "failed": 0,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 0,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "execution-error",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "execution-error"
+              }
+            ],
+            "planned": 1,
+            "restorationError": null,
+            "score": null,
+            "strategy": "replace",
+            "survived": 0,
+            "unresolved": 1,
+            "workerBaselineJobs": 0,
+            "workerBaselines": [],
+            "workerCleanupMs": 0.000049999999999999996,
+            "workerPreparationMs": 0.00004,
+            "workersRequested": 1,
+            "workersUsed": 1
+          },
+          "phase": "check",
+          "phaseTimings": {
+            "analysisMs": 0.637661,
+            "attributionMs": 0.006473,
+            "baselineMs": 3742.9805730000003,
+            "cleanupMs": 647.5666920000001,
+            "coverageMs": 4051.344441,
+            "preparationMs": 0.18126899999999999,
+            "typecheckMs": 1328.827325
+          },
+          "setups": [
+            {
+              "baseline": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3742.815585,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-742-1788748564473310715-0-baseline",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "coverage": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 4051.101857,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-742-1788748564473310715-0-coverage",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "name": "jest-expo",
+              "timings": {
+                "baselineMs": 3742.9805730000003,
+                "coverageMs": 4051.344441,
+                "typecheckMs": 1328.827325
+              },
+              "typecheck": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 1328.706919,
+                "overflow": false,
+                "pipeError": null,
+                "state": "passed",
+                "timedOut": false
+              }
+            }
+          ],
+          "sources": [
+            {
+              "path": "src/control.ts",
+              "result": {
+                "complete": true,
+                "functions": [],
+                "problems": []
+              }
+            }
+          ]
+        },
+        "schemaVersion": 1,
+        "scope": {
+          "exclude": [],
+          "files": [
+            "src/control.ts"
+          ],
+          "include": [
+            "src/control.ts"
+          ],
+          "setups": [
+            {
+              "cwd": ".",
+              "name": "jest-expo",
+              "runner": "jest"
+            }
+          ]
+        },
+        "signal": null,
+        "timings": {
+          "captureMs": 1841.509844,
+          "executionMs": 10823.660195,
+          "wallMs": 13312.809387
+        },
+        "toolVersion": "0.0.0"
+      }
+    },
+    "test-timeout": {
+      "config": {
+        "source": {
+          "include": [
+            "src/control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "babel.config.cjs",
+          "jest.config.cjs",
+          "src",
+          "tests",
+          "node_modules"
+        ],
+        "workers": 1,
+        "setups": [
+          {
+            "name": "jest-expo",
+            "runner": "jest",
+            "cwd": ".",
+            "timeoutMs": 60000,
+            "typecheck": [
+              "node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "node",
+              "node_modules/jest/bin/jest.js",
+              "--config",
+              "jest.config.cjs",
+              "--runInBand",
+              "--runTestsByPath",
+              "tests/control.test.tsx",
+              "--reporters=default",
+              "--reporters={seshatReporter}",
+              "--env={seshatEnvironment}"
+            ],
+            "coverage": {
+              "command": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--config",
+                "jest.config.cjs",
+                "--runInBand",
+                "--runTestsByPath",
+                "tests/control.test.tsx",
+                "--reporters=default",
+                "--reporters={seshatReporter}",
+                "--env={seshatEnvironment}",
+                "--coverage",
+                "--coverageProvider=babel",
+                "--coverageReporters=json",
+                "--coverageDirectory=coverage",
+                "--collectCoverageFrom",
+                "src/control.ts"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "execution": {
+        "status": 2,
+        "signal": null,
+        "stderr": ""
+      },
+      "report": {
+        "cancelled": false,
+        "command": "check",
+        "complete": false,
+        "quality": {
+          "checks": [],
+          "state": "incomplete"
+        },
+        "result": {
+          "complete": false,
+          "executionMs": 11732.936819,
+          "jobsAttempted": 4,
+          "mutation": {
+            "complete": false,
+            "completed": 1,
+            "error": null,
+            "executionMs": 2028.902955,
+            "jobsAttempted": 1,
+            "killed": 0,
+            "mutationWallMs": 2028.8838299999998,
+            "notRun": 0,
+            "outcomes": [
+              {
+                "executionMs": 2028.878159,
+                "id": 0,
+                "localId": 0,
+                "offset": 23,
+                "original": "===",
+                "path": "src/control.ts",
+                "replacement": "!==",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/control.test.tsx\n  ✕ timeout (26 ms)\n\n  ● timeout\n\n    thrown: \"Exceeded timeout of 25 ms for a test.\n    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout.\"\n\n      1 | import {ready} from '../src/control';\n    > 2 | test('timeout',()=>ready?Promise.resolve():new Promise(()=>{}),25);\n        | ^\n      3 |\n\n      at Object.test (tests/control.test.tsx:2:1)\n\nTest Suites: 1 failed, 1 total\nTests:       1 failed, 1 total\nSnapshots:   0 total\nTime:        1.046 s, estimated 2 s\nRan all test suites within paths \"tests/control.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 2028.4216869999998,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 0,
+                      "executionId": "capture-803-1788748578019646363-mutant-0-0",
+                      "expo": "57.0.5",
+                      "failed": 0,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 0,
+                      "runner": "jest",
+                      "timeouts": 1,
+                      "version": 1
+                    },
+                    "state": "timed-out",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "timed-out"
+              }
+            ],
+            "planned": 1,
+            "restorationError": null,
+            "score": null,
+            "strategy": "replace",
+            "survived": 0,
+            "unresolved": 1,
+            "workerBaselineJobs": 0,
+            "workerBaselines": [],
+            "workerCleanupMs": 0.000049999999999999996,
+            "workerPreparationMs": 0.00014000000000000001,
+            "workersRequested": 1,
+            "workersUsed": 1
+          },
+          "phase": "check",
+          "phaseTimings": {
+            "analysisMs": 0.659332,
+            "attributionMs": 0.008005,
+            "baselineMs": 4165.272367,
+            "cleanupMs": 657.100133,
+            "coverageMs": 3685.325435,
+            "preparationMs": 0.17836300000000002,
+            "typecheckMs": 1852.559904
+          },
+          "setups": [
+            {
+              "baseline": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 4165.105595,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-803-1788748578019646363-0-baseline",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "coverage": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3685.056231,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-803-1788748578019646363-0-coverage",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "name": "jest-expo",
+              "timings": {
+                "baselineMs": 4165.272367,
+                "coverageMs": 3685.325435,
+                "typecheckMs": 1852.559904
+              },
+              "typecheck": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 1852.443057,
+                "overflow": false,
+                "pipeError": null,
+                "state": "passed",
+                "timedOut": false
+              }
+            }
+          ],
+          "sources": [
+            {
+              "path": "src/control.ts",
+              "result": {
+                "complete": true,
+                "functions": [],
+                "problems": []
+              }
+            }
+          ]
+        },
+        "schemaVersion": 1,
+        "scope": {
+          "exclude": [],
+          "files": [
+            "src/control.ts"
+          ],
+          "include": [
+            "src/control.ts"
+          ],
+          "setups": [
+            {
+              "cwd": ".",
+              "name": "jest-expo",
+              "runner": "jest"
+            }
+          ]
+        },
+        "signal": null,
+        "timings": {
+          "captureMs": 2065.000714,
+          "executionMs": 11732.936819,
+          "wallMs": 14455.118927000001
+        },
+        "toolVersion": "0.0.0"
+      }
+    },
+    "hook-timeout": {
+      "config": {
+        "source": {
+          "include": [
+            "src/control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "babel.config.cjs",
+          "jest.config.cjs",
+          "src",
+          "tests",
+          "node_modules"
+        ],
+        "workers": 1,
+        "setups": [
+          {
+            "name": "jest-expo",
+            "runner": "jest",
+            "cwd": ".",
+            "timeoutMs": 60000,
+            "typecheck": [
+              "node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "node",
+              "node_modules/jest/bin/jest.js",
+              "--config",
+              "jest.config.cjs",
+              "--runInBand",
+              "--runTestsByPath",
+              "tests/control.test.tsx",
+              "--reporters=default",
+              "--reporters={seshatReporter}",
+              "--env={seshatEnvironment}"
+            ],
+            "coverage": {
+              "command": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--config",
+                "jest.config.cjs",
+                "--runInBand",
+                "--runTestsByPath",
+                "tests/control.test.tsx",
+                "--reporters=default",
+                "--reporters={seshatReporter}",
+                "--env={seshatEnvironment}",
+                "--coverage",
+                "--coverageProvider=babel",
+                "--coverageReporters=json",
+                "--coverageDirectory=coverage",
+                "--collectCoverageFrom",
+                "src/control.ts"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "execution": {
+        "status": 2,
+        "signal": null,
+        "stderr": ""
+      },
+      "report": {
+        "cancelled": false,
+        "command": "check",
+        "complete": false,
+        "quality": {
+          "checks": [],
+          "state": "incomplete"
+        },
+        "result": {
+          "complete": false,
+          "executionMs": 11060.997404,
+          "jobsAttempted": 4,
+          "mutation": {
+            "complete": false,
+            "completed": 1,
+            "error": null,
+            "executionMs": 1737.617013,
+            "jobsAttempted": 1,
+            "killed": 0,
+            "mutationWallMs": 1737.6020560000002,
+            "notRun": 0,
+            "outcomes": [
+              {
+                "executionMs": 1737.596114,
+                "id": 0,
+                "localId": 0,
+                "offset": 23,
+                "original": "===",
+                "path": "src/control.ts",
+                "replacement": "!==",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/control.test.tsx\n  ✕ blocked (26 ms)\n\n  ● blocked\n\n    thrown: \"Exceeded timeout of 25 ms for a hook.\n    Add a timeout value to this test to increase the timeout, if this is a long-running test. See https://jestjs.io/docs/api#testname-fn-timeout.\"\n\n      1 | import {ready} from '../src/control';\n    > 2 | beforeEach(()=>ready?Promise.resolve():new Promise(()=>{}),25);test('blocked',()=>{});\n        | ^\n      3 |\n\n      at Object.beforeEach (tests/control.test.tsx:2:1)\n\nTest Suites: 1 failed, 1 total\nTests:       1 failed, 1 total\nSnapshots:   0 total\nTime:        1.021 s, estimated 2 s\nRan all test suites within paths \"tests/control.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 1737.1409529999999,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 0,
+                      "executionId": "capture-864-1788748592248218865-mutant-0-0",
+                      "expo": "57.0.5",
+                      "failed": 0,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 0,
+                      "runner": "jest",
+                      "timeouts": 1,
+                      "version": 1
+                    },
+                    "state": "timed-out",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "timed-out"
+              }
+            ],
+            "planned": 1,
+            "restorationError": null,
+            "score": null,
+            "strategy": "replace",
+            "survived": 0,
+            "unresolved": 1,
+            "workerBaselineJobs": 0,
+            "workerBaselines": [],
+            "workerCleanupMs": 0.000059999999999999995,
+            "workerPreparationMs": 0.000029999999999999997,
+            "workersRequested": 1,
+            "workersUsed": 1
+          },
+          "phase": "check",
+          "phaseTimings": {
+            "analysisMs": 0.669441,
+            "attributionMs": 0.005961,
+            "baselineMs": 3577.4380629999996,
+            "cleanupMs": 684.099416,
+            "coverageMs": 3887.0055780000002,
+            "preparationMs": 0.188973,
+            "typecheckMs": 1858.03743
+          },
+          "setups": [
+            {
+              "baseline": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3577.28663,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-864-1788748592248218865-0-baseline",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "coverage": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3886.78209,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-864-1788748592248218865-0-coverage",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "name": "jest-expo",
+              "timings": {
+                "baselineMs": 3577.4380629999996,
+                "coverageMs": 3887.0055780000002,
+                "typecheckMs": 1858.03743
+              },
+              "typecheck": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 1857.9318620000001,
+                "overflow": false,
+                "pipeError": null,
+                "state": "passed",
+                "timedOut": false
+              }
+            }
+          ],
+          "sources": [
+            {
+              "path": "src/control.ts",
+              "result": {
+                "complete": true,
+                "functions": [],
+                "problems": []
+              }
+            }
+          ]
+        },
+        "schemaVersion": 1,
+        "scope": {
+          "exclude": [],
+          "files": [
+            "src/control.ts"
+          ],
+          "include": [
+            "src/control.ts"
+          ],
+          "setups": [
+            {
+              "cwd": ".",
+              "name": "jest-expo",
+              "runner": "jest"
+            }
+          ]
+        },
+        "signal": null,
+        "timings": {
+          "captureMs": 1829.782217,
+          "executionMs": 11060.997404,
+          "wallMs": 13574.950420000001
+        },
+        "toolVersion": "0.0.0"
+      }
+    },
+    "missing-events": {
+      "config": {
+        "source": {
+          "include": [
+            "src/control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "babel.config.cjs",
+          "jest.config.cjs",
+          "src",
+          "tests",
+          "node_modules",
+          "conditional-environment.cjs"
+        ],
+        "workers": 1,
+        "setups": [
+          {
+            "name": "jest-expo",
+            "runner": "jest",
+            "cwd": ".",
+            "timeoutMs": 60000,
+            "typecheck": [
+              "node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "node",
+              "node_modules/jest/bin/jest.js",
+              "--config",
+              "jest.config.cjs",
+              "--runInBand",
+              "--runTestsByPath",
+              "tests/control.test.tsx",
+              "--reporters=default",
+              "--reporters={seshatReporter}",
+              "--env=./conditional-environment.cjs"
+            ],
+            "coverage": {
+              "command": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--config",
+                "jest.config.cjs",
+                "--runInBand",
+                "--runTestsByPath",
+                "tests/control.test.tsx",
+                "--reporters=default",
+                "--reporters={seshatReporter}",
+                "--env=./conditional-environment.cjs",
+                "--coverage",
+                "--coverageProvider=babel",
+                "--coverageReporters=json",
+                "--coverageDirectory=coverage",
+                "--collectCoverageFrom",
+                "src/control.ts"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "execution": {
+        "status": 2,
+        "signal": null,
+        "stderr": ""
+      },
+      "report": {
+        "cancelled": false,
+        "command": "check",
+        "complete": false,
+        "quality": {
+          "checks": [],
+          "state": "incomplete"
+        },
+        "result": {
+          "complete": false,
+          "executionMs": 11275.173836,
+          "jobsAttempted": 4,
+          "mutation": {
+            "complete": false,
+            "completed": 1,
+            "error": null,
+            "executionMs": 1637.3608370000002,
+            "jobsAttempted": 1,
+            "killed": 0,
+            "mutationWallMs": 1637.3443869999999,
+            "notRun": 0,
+            "outcomes": [
+              {
+                "executionMs": 1637.3380339999999,
+                "id": 0,
+                "localId": 0,
+                "offset": 23,
+                "original": "===",
+                "path": "src/control.ts",
+                "replacement": "!==",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "FAIL tests/control.test.tsx\n  ✕ passes (4 ms)\n\n  ● passes\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: true\n    Received: false\n\n      1 | import {ready} from '../src/control';\n    > 2 | test('passes',()=>expect(ready).toBe(true));\n        |                                 ^\n      3 |\n\n      at Object.toBe (tests/control.test.tsx:2:33)\n\nTest Suites: 1 failed, 1 total\nTests:       1 failed, 1 total\nSnapshots:   0 total\nTime:        0.955 s, estimated 2 s\nRan all test suites within paths \"tests/control.test.tsx\".\n",
+                    "exit": 1,
+                    "ms": 1636.8773239999998,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 2,
+                      "executionId": "capture-925-1788748606013555013-mutant-0-0",
+                      "expo": "57.0.5",
+                      "failed": 0,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 0,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "execution-error",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "execution-error"
+              }
+            ],
+            "planned": 1,
+            "restorationError": null,
+            "score": null,
+            "strategy": "replace",
+            "survived": 0,
+            "unresolved": 1,
+            "workerBaselineJobs": 0,
+            "workerBaselines": [],
+            "workerCleanupMs": 0.00016,
+            "workerPreparationMs": 0.000029999999999999997,
+            "workersRequested": 1,
+            "workersUsed": 1
+          },
+          "phase": "check",
+          "phaseTimings": {
+            "analysisMs": 1.251558,
+            "attributionMs": 0.005921,
+            "baselineMs": 4428.818572,
+            "cleanupMs": 637.5952110000001,
+            "coverageMs": 3618.1649829999997,
+            "preparationMs": 0.181489,
+            "typecheckMs": 1589.356241
+          },
+          "setups": [
+            {
+              "baseline": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 4428.646841,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-925-1788748606013555013-0-baseline",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "coverage": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3617.920537,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-925-1788748606013555013-0-coverage",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "name": "jest-expo",
+              "timings": {
+                "baselineMs": 4428.818572,
+                "coverageMs": 3618.1649829999997,
+                "typecheckMs": 1589.356241
+              },
+              "typecheck": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 1589.2499719999998,
+                "overflow": false,
+                "pipeError": null,
+                "state": "passed",
+                "timedOut": false
+              }
+            }
+          ],
+          "sources": [
+            {
+              "path": "src/control.ts",
+              "result": {
+                "complete": true,
+                "functions": [],
+                "problems": []
+              }
+            }
+          ]
+        },
+        "schemaVersion": 1,
+        "scope": {
+          "exclude": [],
+          "files": [
+            "src/control.ts"
+          ],
+          "include": [
+            "src/control.ts"
+          ],
+          "setups": [
+            {
+              "cwd": ".",
+              "name": "jest-expo",
+              "runner": "jest"
+            }
+          ]
+        },
+        "signal": null,
+        "timings": {
+          "captureMs": 1797.180747,
+          "executionMs": 11275.173836,
+          "wallMs": 13710.02786
+        },
+        "toolVersion": "0.0.0"
+      }
+    },
+    "missing-receipt": {
+      "config": {
+        "source": {
+          "include": [
+            "src/control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "babel.config.cjs",
+          "jest.config.cjs",
+          "src",
+          "tests",
+          "node_modules"
+        ],
+        "workers": 1,
+        "setups": [
+          {
+            "name": "jest-expo",
+            "runner": "jest",
+            "cwd": ".",
+            "timeoutMs": 60000,
+            "typecheck": [
+              "node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "node",
+              "node_modules/jest/bin/jest.js",
+              "--config",
+              "jest.config.cjs",
+              "--runInBand",
+              "--runTestsByPath",
+              "tests/control.test.tsx",
+              "--reporters=default",
+              "--reporters={seshatReporter}",
+              "--env={seshatEnvironment}"
+            ],
+            "coverage": {
+              "command": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--config",
+                "jest.config.cjs",
+                "--runInBand",
+                "--runTestsByPath",
+                "tests/control.test.tsx",
+                "--reporters=default",
+                "--reporters={seshatReporter}",
+                "--env={seshatEnvironment}",
+                "--coverage",
+                "--coverageProvider=babel",
+                "--coverageReporters=json",
+                "--coverageDirectory=coverage",
+                "--collectCoverageFrom",
+                "src/control.ts"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "execution": {
+        "status": 2,
+        "signal": null,
+        "stderr": ""
+      },
+      "report": {
+        "cancelled": false,
+        "command": "check",
+        "complete": false,
+        "quality": {
+          "checks": [],
+          "state": "incomplete"
+        },
+        "result": {
+          "complete": false,
+          "executionMs": 10149.152828,
+          "jobsAttempted": 4,
+          "mutation": {
+            "complete": false,
+            "completed": 1,
+            "error": null,
+            "executionMs": 1453.5664239999999,
+            "jobsAttempted": 1,
+            "killed": 0,
+            "mutationWallMs": 1453.554021,
+            "notRun": 0,
+            "outcomes": [
+              {
+                "executionMs": 1453.5478799999999,
+                "id": 0,
+                "localId": 0,
+                "offset": 23,
+                "original": "===",
+                "path": "src/control.ts",
+                "replacement": "!==",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "  ●  process.exit called with \"0\"\n\n      1 | import {ready} from '../src/control';\n    > 2 | const proc=(globalThis as {process?:{env?:Record<string,string|undefined>,exit?:(code:number)=>void}}).process;if(proc?.env?.SESHAT_EXECUTION_ID?.includes('-mutant-'))proc.exit?.(0);test('passes',()=>expect(ready).toBe(true));\n        |                                                                                                                                                                                 ^\n      3 |\n\n      at Object.<anonymous> (tests/control.test.tsx:2:177)\n",
+                    "evidenceError": "capture-986-1788748619859483372-mutant-0-0.json: No such file or directory (os error 2)",
+                    "exit": 0,
+                    "ms": 1453.162409,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "state": "execution-error",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "execution-error"
+              }
+            ],
+            "planned": 1,
+            "restorationError": null,
+            "score": null,
+            "strategy": "replace",
+            "survived": 0,
+            "unresolved": 1,
+            "workerBaselineJobs": 0,
+            "workerBaselines": [],
+            "workerCleanupMs": 0.000049999999999999996,
+            "workerPreparationMs": 0.000029999999999999997,
+            "workersRequested": 1,
+            "workersUsed": 1
+          },
+          "phase": "check",
+          "phaseTimings": {
+            "analysisMs": 1.7770299999999999,
+            "attributionMs": 0.00569,
+            "baselineMs": 3553.2263749999997,
+            "cleanupMs": 630.5898410000001,
+            "coverageMs": 3645.442508,
+            "preparationMs": 0.24405600000000002,
+            "typecheckMs": 1494.856842
+          },
+          "setups": [
+            {
+              "baseline": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3553.080433,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-986-1788748619859483372-0-baseline",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "coverage": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3645.219631,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-986-1788748619859483372-0-coverage",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "name": "jest-expo",
+              "timings": {
+                "baselineMs": 3553.2263749999997,
+                "coverageMs": 3645.442508,
+                "typecheckMs": 1494.856842
+              },
+              "typecheck": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 1494.7364570000002,
+                "overflow": false,
+                "pipeError": null,
+                "state": "passed",
+                "timedOut": false
+              }
+            }
+          ],
+          "sources": [
+            {
+              "path": "src/control.ts",
+              "result": {
+                "complete": true,
+                "functions": [],
+                "problems": []
+              }
+            }
+          ]
+        },
+        "schemaVersion": 1,
+        "scope": {
+          "exclude": [],
+          "files": [
+            "src/control.ts"
+          ],
+          "include": [
+            "src/control.ts"
+          ],
+          "setups": [
+            {
+              "cwd": ".",
+              "name": "jest-expo",
+              "runner": "jest"
+            }
+          ]
+        },
+        "signal": null,
+        "timings": {
+          "captureMs": 1918.829506,
+          "executionMs": 10149.152828,
+          "wallMs": 12698.65501
+        },
+        "toolVersion": "0.0.0"
+      }
+    },
+    "retry-eventually-passes": {
+      "config": {
+        "source": {
+          "include": [
+            "src/control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "babel.config.cjs",
+          "jest.config.cjs",
+          "src",
+          "tests",
+          "node_modules"
+        ],
+        "workers": 1,
+        "setups": [
+          {
+            "name": "jest-expo",
+            "runner": "jest",
+            "cwd": ".",
+            "timeoutMs": 60000,
+            "typecheck": [
+              "node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "node",
+              "node_modules/jest/bin/jest.js",
+              "--config",
+              "jest.config.cjs",
+              "--runInBand",
+              "--runTestsByPath",
+              "tests/control.test.tsx",
+              "--reporters=default",
+              "--reporters={seshatReporter}",
+              "--env={seshatEnvironment}"
+            ],
+            "coverage": {
+              "command": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--config",
+                "jest.config.cjs",
+                "--runInBand",
+                "--runTestsByPath",
+                "tests/control.test.tsx",
+                "--reporters=default",
+                "--reporters={seshatReporter}",
+                "--env={seshatEnvironment}",
+                "--coverage",
+                "--coverageProvider=babel",
+                "--coverageReporters=json",
+                "--coverageDirectory=coverage",
+                "--collectCoverageFrom",
+                "src/control.ts"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "execution": {
+        "status": 2,
+        "signal": null,
+        "stderr": ""
+      },
+      "report": {
+        "cancelled": false,
+        "command": "check",
+        "complete": false,
+        "quality": {
+          "checks": [],
+          "state": "incomplete"
+        },
+        "result": {
+          "complete": false,
+          "executionMs": 10724.385947,
+          "jobsAttempted": 4,
+          "mutation": {
+            "complete": false,
+            "completed": 1,
+            "error": null,
+            "executionMs": 1663.27488,
+            "jobsAttempted": 1,
+            "killed": 0,
+            "mutationWallMs": 1663.255704,
+            "notRun": 0,
+            "outcomes": [
+              {
+                "executionMs": 1663.248971,
+                "id": 0,
+                "localId": 0,
+                "offset": 23,
+                "original": "===",
+                "path": "src/control.ts",
+                "replacement": "!==",
+                "setups": [
+                  {
+                    "cancelled": false,
+                    "diagnostic": "PASS tests/control.test.tsx\n  ✓ retry (1 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        0.97 s, estimated 2 s\nRan all test suites within paths \"tests/control.test.tsx\".\n",
+                    "exit": 0,
+                    "ms": 1662.8211419999998,
+                    "name": "jest-expo",
+                    "overflow": false,
+                    "pipeError": null,
+                    "report": {
+                      "complete": true,
+                      "errors": 2,
+                      "executionId": "capture-1047-1788748632422692581-mutant-0-0",
+                      "expo": "57.0.5",
+                      "failed": 1,
+                      "jest": "29.7.0",
+                      "node": "24.20.0",
+                      "passed": 1,
+                      "runner": "jest",
+                      "timeouts": 0,
+                      "version": 1
+                    },
+                    "state": "execution-error",
+                    "timedOut": false
+                  }
+                ],
+                "verdict": "execution-error"
+              }
+            ],
+            "planned": 1,
+            "restorationError": null,
+            "score": null,
+            "strategy": "replace",
+            "survived": 0,
+            "unresolved": 1,
+            "workerBaselineJobs": 0,
+            "workerBaselines": [],
+            "workerCleanupMs": 0.00013099999999999999,
+            "workerPreparationMs": 0.000029999999999999997,
+            "workersRequested": 1,
+            "workersUsed": 1
+          },
+          "phase": "check",
+          "phaseTimings": {
+            "analysisMs": 0.902386,
+            "attributionMs": 0.006011,
+            "baselineMs": 3790.77319,
+            "cleanupMs": 694.6523970000001,
+            "coverageMs": 3890.239578,
+            "preparationMs": 0.243144,
+            "typecheckMs": 1378.91078
+          },
+          "setups": [
+            {
+              "baseline": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3790.597472,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-1047-1788748632422692581-0-baseline",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "coverage": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 3890.029165,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-1047-1788748632422692581-0-coverage",
+                  "expo": "57.0.5",
+                  "failed": 0,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "passed",
+                "timedOut": false
+              },
+              "name": "jest-expo",
+              "timings": {
+                "baselineMs": 3790.77319,
+                "coverageMs": 3890.239578,
+                "typecheckMs": 1378.91078
+              },
+              "typecheck": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 1378.7743150000001,
+                "overflow": false,
+                "pipeError": null,
+                "state": "passed",
+                "timedOut": false
+              }
+            }
+          ],
+          "sources": [
+            {
+              "path": "src/control.ts",
+              "result": {
+                "complete": true,
+                "functions": [],
+                "problems": []
+              }
+            }
+          ]
+        },
+        "schemaVersion": 1,
+        "scope": {
+          "exclude": [],
+          "files": [
+            "src/control.ts"
+          ],
+          "include": [
+            "src/control.ts"
+          ],
+          "setups": [
+            {
+              "cwd": ".",
+              "name": "jest-expo",
+              "runner": "jest"
+            }
+          ]
+        },
+        "signal": null,
+        "timings": {
+          "captureMs": 1774.4180470000001,
+          "executionMs": 10724.385947,
+          "wallMs": 13193.524047
+        },
+        "toolVersion": "0.0.0"
+      }
+    },
+    "retry-baseline": {
+      "config": {
+        "source": {
+          "include": [
+            "src/control.ts"
+          ]
+        },
+        "capture": [
+          "package.json",
+          "package-lock.json",
+          "tsconfig.json",
+          "babel.config.cjs",
+          "jest.config.cjs",
+          "src",
+          "tests",
+          "node_modules"
+        ],
+        "workers": 1,
+        "setups": [
+          {
+            "name": "jest-expo",
+            "runner": "jest",
+            "cwd": ".",
+            "timeoutMs": 60000,
+            "typecheck": [
+              "node",
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json"
+            ],
+            "test": [
+              "node",
+              "node_modules/jest/bin/jest.js",
+              "--config",
+              "jest.config.cjs",
+              "--runInBand",
+              "--runTestsByPath",
+              "tests/control.test.tsx",
+              "--reporters=default",
+              "--reporters={seshatReporter}",
+              "--env={seshatEnvironment}"
+            ],
+            "coverage": {
+              "command": [
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--config",
+                "jest.config.cjs",
+                "--runInBand",
+                "--runTestsByPath",
+                "tests/control.test.tsx",
+                "--reporters=default",
+                "--reporters={seshatReporter}",
+                "--env={seshatEnvironment}",
+                "--coverage",
+                "--coverageProvider=babel",
+                "--coverageReporters=json",
+                "--coverageDirectory=coverage",
+                "--collectCoverageFrom",
+                "src/control.ts"
+              ],
+              "report": "coverage/coverage-final.json"
+            }
+          }
+        ]
+      },
+      "execution": {
+        "status": 2,
+        "signal": null,
+        "stderr": ""
+      },
+      "report": {
+        "cancelled": false,
+        "command": "check",
+        "complete": false,
+        "quality": {
+          "checks": [],
+          "state": "incomplete"
+        },
+        "result": {
+          "complete": false,
+          "executionMs": 5120.158165000001,
+          "jobsAttempted": 2,
+          "mutation": {
+            "complete": false,
+            "completed": 0,
+            "error": null,
+            "executionMs": 0.010258999999999999,
+            "jobsAttempted": 0,
+            "killed": 0,
+            "mutationWallMs": 0.00016,
+            "notRun": 1,
+            "outcomes": [
+              {
+                "id": 0,
+                "localId": 0,
+                "offset": 23,
+                "original": "===",
+                "path": "src/control.ts",
+                "replacement": "!==",
+                "setups": [
+                  {
+                    "name": "jest-expo",
+                    "state": "not-run"
+                  }
+                ],
+                "verdict": "unassessed"
+              }
+            ],
+            "planned": 1,
+            "restorationError": null,
+            "score": null,
+            "strategy": "replace",
+            "survived": 0,
+            "unresolved": 1,
+            "workerBaselineJobs": 0,
+            "workerBaselines": [],
+            "workerCleanupMs": 0.00011,
+            "workerPreparationMs": 0.00004,
+            "workersRequested": 1,
+            "workersUsed": 0
+          },
+          "phase": "check",
+          "phaseTimings": {
+            "analysisMs": 0.660815,
+            "attributionMs": 0.005911,
+            "baselineMs": 3713.9804449999997,
+            "cleanupMs": 641.164623,
+            "coverageMs": null,
+            "preparationMs": 0.188702,
+            "typecheckMs": 1405.290172
+          },
+          "setups": [
+            {
+              "baseline": {
+                "cancelled": false,
+                "diagnostic": "PASS tests/control.test.tsx\n  ✓ retry (2 ms)\n\nTest Suites: 1 passed, 1 total\nTests:       1 passed, 1 total\nSnapshots:   0 total\nTime:        3.063 s\nRan all test suites within paths \"tests/control.test.tsx\".\n",
+                "exit": 0,
+                "ms": 3713.8007589999997,
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 2,
+                  "executionId": "capture-1108-1788748645806457946-0-baseline",
+                  "expo": "57.0.5",
+                  "failed": 1,
+                  "jest": "29.7.0",
+                  "node": "24.20.0",
+                  "passed": 1,
+                  "runner": "jest",
+                  "timeouts": 0,
+                  "version": 1
+                },
+                "state": "execution-error",
+                "timedOut": false
+              },
+              "coverage": {
+                "state": "not-run"
+              },
+              "name": "jest-expo",
+              "timings": {
+                "baselineMs": 3713.9804449999997,
+                "coverageMs": null,
+                "typecheckMs": 1405.290172
+              },
+              "typecheck": {
+                "cancelled": false,
+                "exit": 0,
+                "ms": 1405.179545,
+                "overflow": false,
+                "pipeError": null,
+                "state": "passed",
+                "timedOut": false
+              }
+            }
+          ],
+          "sources": [
+            {
+              "path": "src/control.ts",
+              "result": {
+                "complete": false,
+                "functions": [],
+                "problems": [
+                  "no coverage reports"
+                ]
+              }
+            }
+          ]
+        },
+        "schemaVersion": 1,
+        "scope": {
+          "exclude": [],
+          "files": [
+            "src/control.ts"
+          ],
+          "include": [
+            "src/control.ts"
+          ],
+          "setups": [
+            {
+              "cwd": ".",
+              "name": "jest-expo",
+              "runner": "jest"
+            }
+          ]
+        },
+        "signal": null,
+        "timings": {
+          "captureMs": 1953.9892590000002,
+          "executionMs": 5120.158165000001,
+          "wallMs": 7715.576703
+        },
+        "toolVersion": "0.0.0"
+      }
+    }
+  },
+  "originalsPreserved": true
+}

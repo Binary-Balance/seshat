@@ -344,8 +344,9 @@ glibc 2.30. There are no new Rust or npm runtime dependencies.
 
 This is a userspace compatibility result on kernel
 `6.12.107+deb13-cloud-amd64`. It does not verify Debian 11's original kernel or
-establish a minimum kernel version. Other architectures, musl, Jest/Expo and
-Vitest compatibility remain separate release work. Timings are diagnostic
+establish a minimum kernel version. Other architectures and musl remain separate
+release work. The bounded Jest/Expo and Vitest integrations are verified only
+through the version-pinned fixtures described below. Timings are diagnostic
 evidence, not performance claims.
 
 Portable recorded evidence: [`outputs/linux-debian11.json`](../../outputs/linux-debian11.json).
@@ -773,6 +774,80 @@ accepted by this observation path. The verified route uses Node's default proces
 isolation; alternate runner isolation/loader configurations are not certified.
 Do not replace missing evidence with stack-text matching or a generic exit-1 kill.
 
+## Jest/Expo combined workflow
+
+The checked-in fixture at `fixtures/jest-expo` is a small Expo TSX project with
+no application checkout or private input. It was tested with Node 24.20.0; its
+lockfile pins Jest 29.7.0, jest-expo 57.0.5, Expo 57.0.20, React Native 0.86.3,
+`@react-native/jest-preset` 0.86.3, `babel-preset-expo` 57.0.10, React 19.2.3
+and TypeScript 6.0.3. Jest runs with its `jest-expo` preset and `--runInBand`;
+coverage uses Babel instrumentation and writes full Istanbul JSON.
+
+Run the reusable installed-command driver from the repository root after building
+or obtaining a local Seshat package:
+
+```sh
+node benchmarks/proofs/jest-expo-check.mjs \
+  --tarball /absolute/path/to/binary-balance-seshat-0.0.0.tgz
+```
+
+The driver installs the fixture's pinned lockfile into a fresh ignored proof
+directory when `--deps` is omitted. To reuse a prepared dependency directory,
+install the fixture once and pass it explicitly:
+
+```sh
+mkdir -p work/jest-expo-fixture
+cp benchmarks/proofs/fixtures/jest-expo/package.json \
+  benchmarks/proofs/fixtures/jest-expo/package-lock.json work/jest-expo-fixture/
+npm ci --prefix work/jest-expo-fixture --ignore-scripts --no-audit --no-fund
+node benchmarks/proofs/jest-expo-check.mjs \
+  --tarball /absolute/path/to/binary-balance-seshat-0.0.0.tgz \
+  --deps work/jest-expo-fixture
+```
+
+`--cli /absolute/path/to/node_modules/.bin/seshat` runs the same checks against
+an installed executable. The driver records the candidate version and SHA-256
+hashes, checks each expected exit status and verdict, compares a repeated run,
+and checks both one and two Seshat workers. A focused invocation accepts a comma
+separated `--cases` list; `normal-repeat` and `normal-2` automatically include
+their `normal-1` prerequisite.
+
+The normal fixture has three tests and three fully covered functions. Its hand
+count is `classify` CRAP 2, `isPositive` CRAP 1 and `statusCard` CRAP 1. Four
+comparison mutants produce three kills and one intentional boundary survivor,
+for a 75% score, with the same result for one and two workers and on repeat.
+The assertion-kill and survivor controls produce 100% and 0% respectively.
+Setup and cleanup failures (`beforeAll`, `beforeEach`, `afterEach` and mixed
+assertion plus cleanup), import failure, test and hook timeouts, missing event
+observations, missing receipts and retry controls all produce the expected
+unresolved verdict or baseline failure. Those runs exit 2 and withhold the
+mutation score. The eventually-passing retry is retained as an execution error
+because its receipt does not prove the complete retry sequence.
+
+Every case snapshots the checked-in fixture and generated control inputs before
+execution, verifies their bytes afterward and requires an empty Seshat scratch
+directory. Full JSON evidence remains under ignored
+`work/assurance-proofs/jest-expo-check-*`; paths in the recorded result are
+portable relative paths. Dependency copies may be removed after preserving the
+result and generated config/source evidence.
+
+This verifies one Jest project using Jest Circus, the default `jest-expo`
+environment, `{seshatReporter}`, `{seshatEnvironment}` and `--runInBand`.
+Custom Jest runners, environments, projects and Jest-internal concurrency are
+outside this claim. Seshat worker isolation is covered at limits one and two;
+other worker counts, browser mode and other Jest/Expo versions require separate
+evidence. The [configuration guide](../../docs/configuration.md#jestexpo-example)
+contains the matching setup.
+
+The compatibility evidence is summarized here; each linked JSON is portable and
+contains the exact runner reports and configuration scope used for that route.
+
+| Route | Tested versions | Configuration exercised | Evidence |
+| --- | --- | --- | --- |
+| Node | Node 24.20.0 | Built-in test runner with the verified Istanbul statement collector | [`linux-debian11.json`](../../outputs/linux-debian11.json) (installed candidate); [`bounded-proofs.json`](../../outputs/bounded-proofs.json) (fixture) |
+| Jest/Expo | Node 24.20.0, Jest 29.7.0, jest-expo 57.0.5, Expo 57.0.20 | Jest Circus, `jest-expo` preset, Babel coverage, `--runInBand`, Seshat workers 1 and 2 | [`jest-expo-check.json`](../../outputs/jest-expo-check.json) |
+| Vitest | Node 24.20.0, Vitest 5.0.0, `@vitest/coverage-istanbul` 5.0.0 | Private `TestRunner` and reporter, Node environment, fork pool, Istanbul coverage and sequential runner tests | [`vitest-check.json`](../../outputs/vitest-check.json) (worker 1); [`vitest-installed-preflight.json`](../../outputs/vitest-installed-preflight.json) (installed CLI, worker 2) |
+
 ## Vitest combined workflow
 
 Build the native executable and run the checked-in fixture through `check`:
@@ -931,7 +1006,8 @@ SESHAT_CHECK_WORKERS=2 SESHAT_VITEST_CHECK_CASES=stack,assertion,before-all node
 ```
 
 Each run checks the same hand-counted function results and mutant verdicts.
-A standalone public Jest/Expo regression remains release work.
+The Jest/Expo fixture above uses the same installed-command and source-preservation
+proof pattern with its runner-specific environment and coverage configuration.
 
 ## Cancellation and process cleanup
 
@@ -987,9 +1063,10 @@ correctness evidence, not performance benchmarks.
 
 The original mutation proof uses one fixture file and one setup. The captured
 project checks cover multiple Node setups, and the checked-in Vitest fixture adds
-React TSX, Fastify and TypeBox. A standalone Jest/Expo integration fixture remains
-release work. These checks do not establish Windows/macOS supervision, isolation
-of external resources or general JavaScript transformation equivalence.
+React TSX, Fastify and TypeBox. The Jest/Expo fixture covers an Expo TSX route
+with the pinned versions above. These checks do not establish Windows/macOS
+supervision, isolation of external resources or general JavaScript transformation
+equivalence.
 
 The original `execute` proof and the captured-project CLI have different execution
 contracts. Only the latter supplies the configured multi-setup workflow, bounded
