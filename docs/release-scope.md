@@ -217,7 +217,7 @@ version/concurrency summaries, live unresolved breakdowns, throughput and bounde
 slow-execution summaries are included. A small-fixture proof compares
 progress-on/off runs. A [bounded three-sample matrix](../benchmarks/proofs/README.md#diagnostics-overhead-matrix)
 across the three checked-in fixtures recorded fixture-specific
-candidate-versus-baseline medians from −8.92% to +12.23%; broader
+candidate-versus-baseline medians from −7.51% to +10.26%; broader
 production-workload overhead measurement remains.
 
 - Show the current phase, elapsed time, completed/total work where known, and
