@@ -20,8 +20,8 @@ project's purpose: measuring code and recording evidence about its tests.
 
 Seshat is experimental. The current candidate runs on Linux x64 with glibc and
 can be installed from a locally built npm package. It has not been published to
-npm. The package has been verified on glibc 2.41 with Node 24.20.0; other platforms
-and older Linux distributions still need verification.
+npm. The package has been verified in Debian 11/glibc 2.31 with Node 24.20.0.
+Other platforms and a minimum supported kernel still need verification.
 
 Node's test runner and Vitest have self-contained regression fixtures. Jest/Expo
 support is experimental and still needs a standalone public integration fixture.
@@ -30,12 +30,13 @@ See the [release scope](docs/release-scope.md) and
 
 ## Build and install
 
-Building requires Rust 1.98.1, Node 24 and npm. From this checkout:
+Building requires Rust 1.98.1, Node 24, npm, GCC, binutils and `dpkg-deb`.
+Prepare the locked dependencies and Debian library archives using the
+[package build instructions](packaging/README.md#build-and-verify-from-the-source-checkout),
+then run from this checkout:
 
 ```sh
-export CARGO_TARGET_DIR="$PWD/benchmarks/rust/target"
-cargo build --release --locked --manifest-path benchmarks/proofs/Cargo.toml --bins
-node packaging/pack.mjs
+node packaging/pack.mjs work/debian11-inputs
 ```
 
 The packaging command prints a tarball path. Install that file in the project

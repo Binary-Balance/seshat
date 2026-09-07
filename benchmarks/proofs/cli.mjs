@@ -89,7 +89,10 @@ assert.equal(mutated.result.mutation.completed, 2);
 assert.equal(mutated.result.mutation.notRun, 0);
 assert.equal(mutated.result.mutation.unresolved, 0);
 assert.deepEqual(stableMutation(mutated.result.mutation), stableMutation(checked.result.mutation));
-const legacy = spawnSync(join(repo, 'benchmarks/rust/target/release/seshat-proofs'), ['check', configPath, scratch], {encoding:'utf8', timeout:60000});
+const proofBinary = process.env.SESHAT_PROOF_BINARY
+  ? resolve(process.env.SESHAT_PROOF_BINARY)
+  : join(repo, 'benchmarks/rust/target/release/seshat-proofs');
+const legacy = spawnSync(proofBinary, ['check', configPath, scratch], {encoding:'utf8', timeout:60000});
 assert.ifError(legacy.error); assert.equal(legacy.status, 0, legacy.stderr);
 const proof = JSON.parse(legacy.stdout);
 assert.deepEqual(proof.sources, checked.result.sources);
