@@ -16,6 +16,35 @@ model `gpt-5.6-luna` with `reasoning_effort: max`. Review passes use fresh
 agents with model `gpt-6-astra`; leave the reviewer's reasoning effort at its
 default unless the user specifies one.
 
+## Bounded delegation and implementation ownership
+
+Before delegating, define one independently reviewable slice: the concrete
+output, relevant files or interfaces, constraints, acceptance checks, and the
+point at which the agent should stop and report. Include the decisions and
+context needed for that slice; link supporting material instead of copying
+unrelated history. Split broad work at useful completion boundaries, not into
+instructions for every edit.
+
+Assign one clear implementer to each slice and one writer per branch at a time.
+The coordinator owns scope, contracts, decisions and delivery coordination. It
+must not mirror the implementer's investigation, coding or routine validation.
+While implementation runs, resolve a distinct open question or wait for an
+agreed milestone. Request updates at those milestones or when evidence indicates
+a blocker; silence alone is not proof that work has stalled.
+
+If progress stalls, inspect the cause and narrow or reassign the slice while
+preserving useful context, files and evidence. Before another agent takes over
+edits, stop the previous writer and explicitly transfer ownership. A handoff
+does not bypass the normal review requirements. Parallel implementation is
+appropriate only for independently scoped work without conflicting writers.
+
+Reuse applicable passing checks. Repeat them when the change, an unresolved
+failure or a specific review concern warrants it. Keep independent review and
+its targeted verification; avoiding duplicate routine work is not permission
+to skip review or required validation.
+
+## Review and fix loop
+
 1. Check the diff and run the checks appropriate to the change. Retain required
    evidence with portable paths. Commit only the task's files on a `codex/`
    branch, preserving unrelated local work. Keep separate pieces of work in
