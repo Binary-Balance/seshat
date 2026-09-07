@@ -11,7 +11,34 @@ function packageVersion(root, name) {
   } catch { return undefined; }
 }
 
-function executingVersions(executable, preset) {
+function packageVersionAtPath(path, name) {
+  let directory;
+  try { directory = dirname(realpathSync(path)); } catch { return undefined; }
+  for (;;) {
+    const version = packageVersion(directory, name);
+    if (version) return version;
+    const parent = dirname(directory);
+    if (parent === directory) return undefined;
+    directory = parent;
+  }
+}
+
+function selectedPackageVersion(contexts, name) {
+  const versions = new Set();
+  for (const context of contexts ?? []) {
+    const config = context?.config;
+    const paths = [config?.preset, config?.testEnvironment,
+      ...(config?.setupFiles ?? []), ...(config?.setupFilesAfterEnv ?? [])];
+    for (const path of paths) {
+      if (typeof path !== 'string') continue;
+      const version = packageVersionAtPath(path, name);
+      if (version) versions.add(version);
+    }
+  }
+  return versions.size === 1 ? versions.values().next().value : undefined;
+}
+
+function executingVersions(executable, contexts) {
   if (typeof executable !== 'string') return {};
   let script;
   try { script = realpathSync(executable); } catch { return {}; }
@@ -19,17 +46,8 @@ function executingVersions(executable, preset) {
   if (basename(script) !== 'jest.js' || basename(dirname(script)) !== 'bin'
     || basename(root) !== 'jest') return {};
   const actual = {jest: packageVersion(root, 'jest')};
-  if (preset === 'jest-expo') actual['jest-expo'] = packageVersion(join(dirname(root), 'jest-expo'), 'jest-expo');
+  actual['jest-expo'] = selectedPackageVersion(contexts, 'jest-expo');
   return Object.fromEntries(Object.entries(actual).filter(([, version]) => version));
-}
-
-function usesJestExpo(contexts) {
-  return [...contexts].some(({config}) => [
-    config?.preset,
-    ...(config?.setupFiles ?? []),
-    ...(config?.setupFilesAfterEnv ?? []),
-  ].some(value => typeof value === 'string' && (value === 'jest-expo'
-    || value.includes('/jest-expo/') || value.includes('\\jest-expo\\'))));
 }
 
 module.exports = class EvidenceReporter {
@@ -38,7 +56,7 @@ module.exports = class EvidenceReporter {
     const jest = projectRequire('jest/package.json').version;
     const expo = projectRequire('jest-expo/package.json').version;
     // Keep cwd-resolved fields for the existing assessment contract; diagnostics use actual.
-    const actual = executingVersions(process.argv[1], usesJestExpo(contexts) ? 'jest-expo' : undefined);
+    const actual = executingVersions(process.argv[1], contexts);
     let errors = results.numRuntimeErrorTestSuites + Number(results.wasInterrupted);
     let failed = 0, timeouts = 0;
     const files = new Set();
