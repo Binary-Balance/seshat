@@ -22,7 +22,8 @@ When it says "fetch the relevant ticket", read the issue and its comments.
 
 ## Pull requests as a triage surface
 
-PRs as a request surface: no.
+Use issues for task intake and specifications. Use PR comments and reviews for
+implementation findings and fixes, following [the delivery workflow](delivery.md).
 
 ## Wayfinding operations
 
@@ -37,5 +38,7 @@ Its body holds Notes, Decisions-so-far, and Fog.
   use a `Blocked by: #<number>` line in the child.
 - Choose the first open, unassigned child in map order with no open blockers.
 - Claim it with `gh issue edit <number> --add-assignee @me`.
-- Resolve it by commenting with the result, closing the issue, and adding
-  a summary and link to the map's Decisions-so-far.
+- For code changes, follow the delivery workflow and close the issue when the
+  PR merges. For work without code changes, comment with the result and close
+  the issue once its acceptance criteria are met. Add a summary and link to the
+  map's Decisions-so-far.
