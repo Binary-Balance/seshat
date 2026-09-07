@@ -23,8 +23,10 @@ can be installed from a locally built npm package. It has not been published to
 npm. The package has been verified in Debian 11/glibc 2.31 with Node 24.20.0.
 Other platforms and a minimum supported kernel still need verification.
 
-Node's test runner and Vitest have self-contained regression fixtures. Jest/Expo
-support is experimental and still needs a standalone public integration fixture.
+Node's test runner, Jest/Expo and Vitest have self-contained regression fixtures.
+The verified Jest/Expo route is pinned to Jest 29.7.0, jest-expo 57.0.5 and
+Expo 57.0.20; see the [Jest/Expo configuration example](docs/configuration.md#jestexpo-example)
+and [installed-command proof](benchmarks/proofs/README.md#jestexpo-combined-workflow).
 See the [release scope](docs/release-scope.md) and
 [open issues](https://github.com/Binary-Balance/seshat/issues) for remaining work.
 
