@@ -5,6 +5,11 @@ pushing a task branch, opening its PR and posting review/fix notes are part of
 the task; do not ask for separate permission for each step. Stop before merging
 unless the user has authorised the merge.
 
+The coordinator delegates implementation work and review fixes to agents using
+model `gpt-5.6-luna` with `reasoning_effort: max`. Review passes use fresh
+agents with model `gpt-6-astra`; leave the reviewer's reasoning effort at its
+default unless the user specifies one.
+
 1. Check the diff and run the checks appropriate to the change. Retain required
    evidence with portable paths. Commit only the task's files on a `codex/`
    branch, preserving unrelated local work. Keep separate pieces of work in
@@ -13,9 +18,10 @@ unless the user has authorised the merge.
    update the existing PR for that work. Describe the problem, resulting
    behaviour, validation and material limits. Link the originating issue with
    `Closes #N` when merging will fully resolve it. Keep the issue open until then.
-3. Start a fresh review agent with no inherited conversation history. Give it
-   the PR URL, current head commit and originating issue/specification. It must
-   read repository instructions and inspect the full PR diff and relevant code,
+3. Start a fresh review agent with no inherited conversation history, using
+   model `gpt-6-astra` and its default reasoning effort. Give it the PR URL,
+   current head commit and originating issue/specification. It must read
+   repository instructions and inspect the full PR diff and relevant code,
    checking correctness, requirements, simplicity and validation. It must not
    edit the implementation.
 4. Have the reviewer post its findings on the PR. Each actionable finding needs
@@ -25,11 +31,12 @@ unless the user has authorised the merge.
    GitHub account cannot formally review its own PR; do not claim an independent
    GitHub approval.
 5. If findings need changes, start a different fresh fix agent with no inherited
-   conversation history. Give it the PR, current head and review findings. It
-   must read the relevant code, make the necessary fixes, run appropriate checks,
-   commit and push to the same branch, and post what changed and how it was
-   verified. Explain with evidence when a finding does not warrant a change;
-   do not silently dismiss it. Keep one writer per branch at a time.
+   conversation history, using model `gpt-5.6-luna` with `reasoning_effort: max`.
+   Give it the PR, current head and review findings. It must read the relevant
+   code, make the necessary fixes, run appropriate checks, commit and push to
+   the same branch, and post what changed and how it was verified. Explain with
+   evidence when a finding does not warrant a change; do not silently dismiss
+   it. Keep one writer per branch at a time.
 6. After fixes or a disputed finding, start another fresh reviewer for the
    updated PR. Check prior findings and the full current diff for regressions.
    Repeat the review/fix cycle until no actionable findings or unresolved
