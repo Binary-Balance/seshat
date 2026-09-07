@@ -1,13 +1,44 @@
 const {createRequire} = require('node:module');
-const {join} = require('node:path');
-const {lstatSync, readFileSync, writeFileSync} = require('node:fs');
+const {basename, dirname, join} = require('node:path');
+const {lstatSync, readFileSync, realpathSync, writeFileSync} = require('node:fs');
 const {createHash} = require('node:crypto');
+
+function packageVersion(root, name) {
+  try {
+    const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+    return packageJson.name === name && typeof packageJson.version === 'string'
+      ? packageJson.version : undefined;
+  } catch { return undefined; }
+}
+
+function executingVersions(executable, preset) {
+  if (typeof executable !== 'string') return {};
+  let script;
+  try { script = realpathSync(executable); } catch { return {}; }
+  const root = dirname(dirname(script));
+  if (basename(script) !== 'jest.js' || basename(dirname(script)) !== 'bin'
+    || basename(root) !== 'jest') return {};
+  const actual = {jest: packageVersion(root, 'jest')};
+  if (preset === 'jest-expo') actual['jest-expo'] = packageVersion(join(dirname(root), 'jest-expo'), 'jest-expo');
+  return Object.fromEntries(Object.entries(actual).filter(([, version]) => version));
+}
+
+function usesJestExpo(contexts) {
+  return [...contexts].some(({config}) => [
+    config?.preset,
+    ...(config?.setupFiles ?? []),
+    ...(config?.setupFilesAfterEnv ?? []),
+  ].some(value => typeof value === 'string' && (value === 'jest-expo'
+    || value.includes('/jest-expo/') || value.includes('\\jest-expo\\'))));
+}
 
 module.exports = class EvidenceReporter {
   onRunComplete(contexts, results) {
     const projectRequire = createRequire(join(process.cwd(), 'package.json'));
     const jest = projectRequire('jest/package.json').version;
     const expo = projectRequire('jest-expo/package.json').version;
+    // Keep cwd-resolved fields for the existing assessment contract; diagnostics use actual.
+    const actual = executingVersions(process.argv[1], usesJestExpo(contexts) ? 'jest-expo' : undefined);
     let errors = results.numRuntimeErrorTestSuites + Number(results.wasInterrupted);
     let failed = 0, timeouts = 0;
     const files = new Set();
@@ -33,6 +64,8 @@ module.exports = class EvidenceReporter {
     const complete = contexts.size === 1 && files.size === results.numTotalTestSuites && files.size > 0;
     writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({version:1,
       executionId:process.env.SESHAT_EXECUTION_ID, runner:'jest', node:process.versions.node,
-      jest, expo, complete, passed:results.numPassedTests, failed, errors, timeouts}), {flag:'wx'});
+      jest, expo, actual, complete, passed:results.numPassedTests, failed, errors, timeouts}), {flag:'wx'});
   }
 };
+
+module.exports.executingVersions = executingVersions;

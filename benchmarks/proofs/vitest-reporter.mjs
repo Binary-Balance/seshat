@@ -26,8 +26,11 @@ export default class EvidenceReporter {
         else errors++;
       }
     }
+    const maxWorkers = Number.isSafeInteger(this.context.config?.maxWorkers)
+      && this.context.config.maxWorkers > 0 ? this.context.config.maxWorkers : undefined;
     writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({version:1,
       executionId:process.env.SESHAT_EXECUTION_ID, runner:'vitest', vitest:this.context.version,
+      actual:{vitest:this.context.version}, maxWorkers,
       node:process.versions.node, complete:modules.length > 0 && reason !== 'interrupted',
       passed, failed, errors, timeouts}), {flag:'wx'});
   }

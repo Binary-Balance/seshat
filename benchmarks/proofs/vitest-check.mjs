@@ -77,6 +77,21 @@ for (const name of ['stack','stack-repeat']) {
     assert.deepEqual(definitions(result),definitions(results.runs.stack.result));
   }
 }
+if (wanted('worker-config-override')) {
+  const overrideArgs = args.filter(value => value !== '--no-file-parallelism')
+    .map(value => value === '--maxWorkers=1' ? '--maxWorkers=7' : value);
+  writeFileSync(join(project,'vitest.config.mjs'), `export default {cacheDir:'.vite',test:{runner:process.env.SESHAT_VITEST_RUNNER,include:['stack.test.tsx'],maxWorkers:7,fileParallelism:false,coverage:{provider:'istanbul',include:['tempo.ts','view.tsx','server.ts'],reporter:['json'],reportsDirectory:'coverage'}}};\n`);
+  const override = structuredClone(config);
+  override.setups[0].test = overrideArgs;
+  override.setups[0].coverage.command = [...overrideArgs, '--coverage'];
+  const result = await check('worker-config-override', override);
+  const rows = result.diagnostics.concurrency.runners;
+  assert.deepEqual(rows.map(({command,effectiveWorkers,state,source}) =>
+    ({command,effectiveWorkers,state,source})), [
+    {command:'test',effectiveWorkers:1,state:'known',source:'resolved-config'},
+    {command:'coverage',effectiveWorkers:1,state:'known',source:'resolved-config'},
+  ]);
+}
 // Two independent changes make the existing failure controls exercise two workers.
 writeFileSync(join(project,'control.ts'),`export const ready = 1 === 1${workers>1?' && 2 === 2':''};\n`);
 for (const [name,body,expected] of [
