@@ -291,6 +291,19 @@ in [`outputs/diagnostics-overhead.json`](../../outputs/diagnostics-overhead.json
 These small fixed-fixture samples are noisy and fixture-specific; they do not
 establish a production overhead bound or a general claim about diagnostics cost.
 
+### Installed Linux x64 release benchmark
+
+The candidate-only [release benchmark protocol](release-benchmark.md) ran the
+installed `seshat check --json` command 24 times across the same three fixtures
+at workers 1 and 2, with replacement, normal progress and serial runner
+commands. On the two-logical-CPU host, median harness wall time was 1,874.602
+ms / 1,960.178 ms for Node, 9,215.511 ms / 9,646.675 ms for Vitest, and
+19,426.972 ms / 25,464.283 ms for Jest/Expo at workers 1 / 2. The result is
+fixture-specific evidence, not a production overhead bound. Raw runs, phase
+timings, semantic hashes, artifact sizes and provenance are in the
+[release benchmark report](../../outputs/release-benchmark.md) and
+[JSON evidence](../../outputs/release-benchmark.json).
+
 Exit 0 means complete execution with no failed applicable threshold. Without
 configured thresholds, surviving mutants and high CRAP do not fail the command.
 Exit 1 means a complete run exceeded `thresholds.maxCrap` for a measured function
