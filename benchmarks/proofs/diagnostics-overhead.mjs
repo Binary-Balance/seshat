@@ -12,7 +12,6 @@ import {
   readlinkSync,
   realpathSync,
   statSync,
-  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import {spawnSync} from 'node:child_process';
@@ -20,6 +19,12 @@ import {dirname, join, resolve} from 'node:path';
 import {performance} from 'node:perf_hooks';
 import os from 'node:os';
 import {parseArgs} from 'node:util';
+import {
+  NODE_WORKSPACE_EXPECTED,
+  NODE_WORKSPACE_INPUT_PATHS,
+  nodeWorkspaceSeshatConfig,
+  writeNodeWorkspace,
+} from './node-workspace-fixture.mjs';
 
 const cli = parseArgs({
   args: process.argv.slice(2),
@@ -77,23 +82,9 @@ const collector = join(proofHere, 'collect-node.mjs');
 const nodeCommand = process.execPath;
 const baselineCommit = cli['baseline-commit'] ?? null;
 const candidateCommit = cli['candidate-commit'] ?? null;
-const NODE_COMPARE_SOURCE = 'export const adult = (age: number) => age >= 18;\n';
-const NODE_COMPARE_OFFSET = Buffer.byteLength(NODE_COMPARE_SOURCE.slice(0, NODE_COMPARE_SOURCE.indexOf('>=')));
 
 const EXPECTED = {
-  nodeWorkspace: {
-    name: 'node-workspace',
-    sourceMetrics: {
-      'packages/rules/index.ts': [[1, 1, 1, 1]],
-      'src/compare.ts': [[1, 1, 1, 1]],
-    },
-    mutants: [
-      {id: 0, localId: 0, offset: NODE_COMPARE_OFFSET, path: 'src/compare.ts', original: '>=', replacement: '>', verdict: 'killed'},
-      {id: 1, localId: 1, offset: NODE_COMPARE_OFFSET, path: 'src/compare.ts', original: '>=', replacement: '<', verdict: 'killed'},
-    ],
-    score: 100,
-    tests: 1,
-  },
+  nodeWorkspace: NODE_WORKSPACE_EXPECTED,
   vitest: {
     name: 'vitest',
     sourceMetrics: {
@@ -283,52 +274,6 @@ function copyDirectory(source, destination) {
   cpSync(source, destination, {recursive: true, verbatimSymlinks: true, force: true});
 }
 
-function writeNodeWorkspace(project) {
-  mkdirSync(join(project, 'src'), {recursive: true});
-  mkdirSync(join(project, 'packages/rules'), {recursive: true});
-  mkdirSync(join(project, 'tests'), {recursive: true});
-  mkdirSync(join(project, 'node_modules/@seshat'), {recursive: true});
-  json(join(project, 'package.json'), {name: 'seshat-diagnostics-workspace', private: true, type: 'module', workspaces: ['packages/*']});
-  json(join(project, 'packages/rules/package.json'), {name: '@seshat/rules', version: '0.0.0', private: true, type: 'module', exports: './index.ts'});
-  json(join(project, 'tsconfig.json'), {
-    compilerOptions: {
-      strict: true, noEmit: true, skipLibCheck: true, target: 'ES2022', module: 'NodeNext',
-      moduleResolution: 'NodeNext', allowImportingTsExtensions: true,
-    },
-    include: ['src/**/*.ts', 'packages/**/*.ts'],
-  });
-  writeFileSync(join(project, 'packages/rules/index.ts'), 'export const answer = () => 42;\n');
-  writeFileSync(join(project, 'src/compare.ts'), NODE_COMPARE_SOURCE);
-  assert.equal(readFileSync(join(project, 'src/compare.ts'), 'utf8'), NODE_COMPARE_SOURCE);
-  writeFileSync(join(project, 'tests/check.mjs'), [
-    "import {test} from 'node:test';",
-    "import assert from 'node:assert/strict';",
-    "import {adult} from '../src/compare.ts';",
-    "import {answer} from '@seshat/rules';",
-    "test('workspace rules', () => {",
-    "  assert.deepEqual([adult(17), adult(18), adult(19)], [false, true, true]);",
-    '  assert.equal(answer(), 42);',
-    '});',
-  ].join('\n') + '\n');
-  symlinkSync('../../packages/rules', join(project, 'node_modules/@seshat/rules'));
-  assert.equal(readlinkSync(join(project, 'node_modules/@seshat/rules')), '../../packages/rules');
-}
-
-function nodeWorkspaceConfig(project, workers) {
-  const test = [nodeCommand, '--test', '--test-concurrency=1', '--test-reporter={seshatReporter}', 'tests/check.mjs'];
-  return {
-    workers,
-    source: {include: ['src/**/*.ts', 'packages/**/*.ts']},
-    capture: ['package.json', 'tsconfig.json', 'src', 'packages', 'node_modules', 'tests'],
-    setups: [{
-      name: 'node-workspace', runner: 'node', cwd: '.', timeoutMs: 60000,
-      typecheck: [nodeCommand, compiler, '--project', 'tsconfig.json'],
-      test,
-      coverage: {command: [nodeCommand, collector, 'tests/check.mjs'], report: 'coverage/coverage-final.json'},
-    }],
-  };
-}
-
 function makeNodeFixture() {
   const project = join(work, 'fixtures/node-workspace');
   const scratch = join(work, 'scratch/node-workspace');
@@ -339,9 +284,9 @@ function makeNodeFixture() {
     project,
     scratch,
     configPath: join(project, 'seshat.json'),
-    inputPaths: ['package.json', 'tsconfig.json', 'src', 'packages', 'node_modules/@seshat/rules', 'tests'],
+    inputPaths: NODE_WORKSPACE_INPUT_PATHS,
     expected: EXPECTED.nodeWorkspace,
-    config: workers => nodeWorkspaceConfig(project, workers),
+    config: workers => nodeWorkspaceSeshatConfig({collector, compiler, nodeCommand, workers}),
   };
 }
 
