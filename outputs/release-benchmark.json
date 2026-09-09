@@ -1,0 +1,3918 @@
+{
+  "version": 1,
+  "kind": "release-benchmark",
+  "environment": {
+    "node": "v24.20.0",
+    "npm": "11.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "kernel": "6.12.107+deb13-cloud-amd64",
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "logicalCPUs": 2,
+    "memoryBytes": 16720142336,
+    "typescript": "6.0.3",
+    "proofTools": {
+      "vitest": "5.0.0",
+      "@vitest/coverage-istanbul": "5.0.0",
+      "jest": "29.7.0",
+      "jest-expo": "57.0.5"
+    }
+  },
+  "limits": {
+    "samplesPerCondition": 3,
+    "warmupsPerCondition": 1,
+    "workers": [
+      1,
+      2
+    ],
+    "progress": [
+      true
+    ],
+    "strategy": "replace",
+    "conditions": 6,
+    "expectedExecutions": 24,
+    "order": "worker order alternates by measured pair within each fixture; all processes are sequential",
+    "wallBoundary": "spawn through close after stdout/stderr drains; child report serialization is included",
+    "cacheBoundary": "each invocation captures a fresh Seshat copy; host filesystem, npm, runner and OS caches remain warm"
+  },
+  "baselineCommit": null,
+  "candidateCommit": "62bcddd2a2008cdcca23b8baf93448b2d147f8d8",
+  "provenance": {
+    "candidateSourceRevision": "62bcddd2a2008cdcca23b8baf93448b2d147f8d8",
+    "harnessRevision": "6410b8099e2252423bf3ce7723c2c2e39261f02b",
+    "harness": {
+      "path": "benchmarks/proofs/diagnostics-overhead.mjs",
+      "sha256": "13aad6a4c24dfcfbe8f0cc043af772e0dc307a8424a9d2e511a6fc03586b6826"
+    },
+    "protocol": {
+      "path": "benchmarks/proofs/release-benchmark.md",
+      "sha256": "6b7ffb0129ccb1b3bf1901080d86b526be9625ffc1f88022a0e85efcb65a9f06"
+    }
+  },
+  "maintainedCounts": {
+    "code": {
+      "scope": [
+        "benchmarks/proofs/src",
+        "benchmarks/proofs/diagnostics-overhead.mjs"
+      ],
+      "files": 12,
+      "lines": 5837
+    },
+    "cargoDependencies": {
+      "scope": "benchmarks/proofs/Cargo.lock [[package]] entries",
+      "packages": 66,
+      "type": "locked Cargo package entries"
+    }
+  },
+  "buildCost": {
+    "wallMs": null,
+    "status": "unmeasured",
+    "reason": "reused package metadata has no build timing"
+  },
+  "artifacts": {
+    "candidate": {
+      "source": "candidate",
+      "tarball": {
+        "path": "<repo>/work/npm-pack-BR2zxn/binary-balance-seshat-0.0.0.tgz",
+        "bytes": 957505,
+        "sha256": "ebfbe1d8af92572f2eb92dc034aba22eeffa769af725fe5b88391e64a8b7c135"
+      },
+      "installedBinary": {
+        "path": "<work>/install/candidate/consumer/node_modules/@binary-balance/seshat/bin/seshat",
+        "bytes": 2404520,
+        "sha256": "9e4adaad4531ae410eac83004b764d04cc4d3198b6d09b4dedcc84ae6d8fec88"
+      },
+      "installedPackage": {
+        "bytes": 2904275,
+        "files": 6,
+        "sha256": "56107f0db58a266ba19cc3eddf57e4b5f3a67c364dfa1cffcc872aff37581da7"
+      },
+      "buildMetadata": {
+        "path": "<work>/install/candidate/consumer/node_modules/@binary-balance/seshat/BUILD.json",
+        "bytes": 7692,
+        "sha256": "cbdf34b605b6d0a0fefabd4d6b8b8afe4c0e67692d86b57a342e134812f0bc65",
+        "cargoDependencies": {
+          "count": 65,
+          "type": "locked package entries listed by package BUILD.json"
+        },
+        "metadata": {
+          "target": "x86_64-unknown-linux-gnu",
+          "rust": "rustc 1.98.1 (48a229cea 2026-09-01)",
+          "binarySha256": "9e4adaad4531ae410eac83004b764d04cc4d3198b6d09b4dedcc84ae6d8fec88",
+          "binaryBytes": 2404520,
+          "cargoLockSha256": "bb820a335e5eb7b35e9185cedaabf68b1608f4712c48f73bafcd2bac180e757d",
+          "glibcSymbols": [
+            "GLIBC_2.12",
+            "GLIBC_2.14",
+            "GLIBC_2.15",
+            "GLIBC_2.16",
+            "GLIBC_2.17",
+            "GLIBC_2.18",
+            "GLIBC_2.2.5",
+            "GLIBC_2.27",
+            "GLIBC_2.28",
+            "GLIBC_2.29",
+            "GLIBC_2.3",
+            "GLIBC_2.3.4",
+            "GLIBC_2.30",
+            "GLIBC_2.4",
+            "GLIBC_2.5",
+            "GLIBC_2.9"
+          ],
+          "nativeLibraries": [
+            "libgcc_s.so.1",
+            "libpthread.so.0",
+            "libm.so.6",
+            "libdl.so.2",
+            "libc.so.6"
+          ],
+          "dependencies": [
+            {
+              "name": "allocator-api2",
+              "version": "0.2.21",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "autocfg",
+              "version": "1.5.1",
+              "license": "Apache-2.0 OR MIT"
+            },
+            {
+              "name": "bitflags",
+              "version": "2.13.1",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "bytecount",
+              "version": "0.6.9",
+              "license": "Apache-2.0/MIT"
+            },
+            {
+              "name": "castaway",
+              "version": "0.2.4",
+              "license": "MIT"
+            },
+            {
+              "name": "cfg-if",
+              "version": "1.0.4",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "compact_str",
+              "version": "0.10.0",
+              "license": "MIT"
+            },
+            {
+              "name": "cow-utils",
+              "version": "0.1.3",
+              "license": "MIT"
+            },
+            {
+              "name": "dragonbox_ecma",
+              "version": "0.1.12",
+              "license": "Apache-2.0 WITH LLVM-exception OR BSL-1.0"
+            },
+            {
+              "name": "errno",
+              "version": "0.3.14",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "fastrand",
+              "version": "2.5.0",
+              "license": "Apache-2.0 OR MIT"
+            },
+            {
+              "name": "glob",
+              "version": "0.3.3",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "hashbrown",
+              "version": "0.17.1",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "itoa",
+              "version": "1.0.18",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "libc",
+              "version": "0.2.189",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "memchr",
+              "version": "2.8.3",
+              "license": "Unlicense OR MIT"
+            },
+            {
+              "name": "nonmax",
+              "version": "0.5.5",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "num-bigint",
+              "version": "0.5.1",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "num-integer",
+              "version": "0.1.47",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "num-traits",
+              "version": "0.2.19",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "oxc_allocator",
+              "version": "0.148.0",
+              "license": "MIT"
+            },
+            {
+              "name": "oxc_ast",
+              "version": "0.148.0",
+              "license": "MIT"
+            },
+            {
+              "name": "oxc_ast_macros",
+              "version": "0.148.0",
+              "license": "MIT"
+            },
+            {
+              "name": "oxc_ast_visit",
+              "version": "0.148.0",
+              "license": "MIT"
+            },
+            {
+              "name": "oxc_data_structures",
+              "version": "0.148.0",
+              "license": "MIT"
+            },
+            {
+              "name": "oxc_diagnostics",
+              "version": "0.148.0",
+              "license": "MIT"
+            },
+            {
+              "name": "oxc_ecmascript",
+              "version": "0.148.0",
+              "license": "MIT"
+            },
+            {
+              "name": "oxc_estree",
+              "version": "0.148.0",
+              "license": "MIT"
+            },
+            {
+              "name": "oxc_index",
+              "version": "5.0.0",
+              "license": "MIT"
+            },
+            {
+              "name": "oxc_parser",
+              "version": "0.148.0",
+              "license": "MIT"
+            },
+            {
+              "name": "oxc_regular_expression",
+              "version": "0.148.0",
+              "license": "MIT"
+            },
+            {
+              "name": "oxc_span",
+              "version": "0.148.0",
+              "license": "MIT"
+            },
+            {
+              "name": "oxc_str",
+              "version": "0.148.0",
+              "license": "MIT"
+            },
+            {
+              "name": "oxc_syntax",
+              "version": "0.148.0",
+              "license": "MIT"
+            },
+            {
+              "name": "percent-encoding",
+              "version": "2.3.2",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "phf",
+              "version": "0.14.0",
+              "license": "MIT"
+            },
+            {
+              "name": "phf_generator",
+              "version": "0.14.0",
+              "license": "MIT"
+            },
+            {
+              "name": "phf_macros",
+              "version": "0.14.0",
+              "license": "MIT"
+            },
+            {
+              "name": "phf_shared",
+              "version": "0.14.0",
+              "license": "MIT"
+            },
+            {
+              "name": "proc-macro2",
+              "version": "1.0.107",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "quote",
+              "version": "1.0.47",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "rustc-hash",
+              "version": "2.1.3",
+              "license": "Apache-2.0 OR MIT"
+            },
+            {
+              "name": "rustversion",
+              "version": "1.0.23",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "seq-macro",
+              "version": "0.3.6",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "serde",
+              "version": "1.0.229",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "serde_core",
+              "version": "1.0.229",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "serde_derive",
+              "version": "1.0.229",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "serde_json",
+              "version": "1.0.151",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "signal-hook",
+              "version": "0.4.4",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "signal-hook-registry",
+              "version": "1.4.8",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "siphasher",
+              "version": "1.0.3",
+              "license": "MIT/Apache-2.0"
+            },
+            {
+              "name": "smallvec",
+              "version": "1.16.0",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "smawk",
+              "version": "0.3.3",
+              "license": "MIT"
+            },
+            {
+              "name": "static_assertions",
+              "version": "1.1.0",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "syn",
+              "version": "2.0.119",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "syn",
+              "version": "3.0.5",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "textwrap",
+              "version": "0.16.2",
+              "license": "MIT"
+            },
+            {
+              "name": "unicode-id-start",
+              "version": "1.4.0",
+              "license": "(MIT OR Apache-2.0) AND Unicode-3.0"
+            },
+            {
+              "name": "unicode-ident",
+              "version": "1.0.24",
+              "license": "(MIT OR Apache-2.0) AND Unicode-3.0"
+            },
+            {
+              "name": "unicode-linebreak",
+              "version": "0.1.5",
+              "license": "Apache-2.0"
+            },
+            {
+              "name": "unicode-segmentation",
+              "version": "1.13.3",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "unicode-width",
+              "version": "0.2.2",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "windows-link",
+              "version": "0.2.1",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "windows-sys",
+              "version": "0.61.2",
+              "license": "MIT OR Apache-2.0"
+            },
+            {
+              "name": "zmij",
+              "version": "1.0.23",
+              "license": "MIT"
+            }
+          ],
+          "glibcPackages": [
+            {
+              "file": "libc6.deb",
+              "sha256": "05f7264da867b37f4c5ce49266b558ea1e81e05a9464f623152fca70f3550282"
+            },
+            {
+              "file": "libc6-dev.deb",
+              "sha256": "e7f7b45d9c5cfcf37609f0b6efd3c645272c812144703af89dfd32218fcb0fd3"
+            },
+            {
+              "file": "libgcc-s1.deb",
+              "sha256": "e478f2709d8474165bb664de42e16950c391f30eaa55bc9b3573281d83a29daf"
+            }
+          ]
+        }
+      },
+      "installWallMs": 505.176747,
+      "version": "seshat 0.0.0 (candidate)",
+      "package": {
+        "name": "@binary-balance/seshat",
+        "version": "0.0.0",
+        "description": "Local Linux x64 candidate for native TypeScript code assurance",
+        "private": true,
+        "license": "MIT",
+        "os": [
+          "linux"
+        ],
+        "cpu": [
+          "x64"
+        ],
+        "libc": [
+          "glibc"
+        ],
+        "engines": {
+          "node": "24.20.0"
+        },
+        "bin": {
+          "seshat": "bin/seshat"
+        },
+        "files": [
+          "bin/seshat",
+          "BUILD.json",
+          "THIRD_PARTY_NOTICES.txt"
+        ]
+      }
+    }
+  },
+  "fixtures": {
+    "nodeWorkspace": {
+      "expected": {
+        "name": "node-workspace",
+        "sourceMetrics": {
+          "packages/rules/index.ts": [
+            [
+              1,
+              1,
+              1,
+              1
+            ]
+          ],
+          "src/compare.ts": [
+            [
+              1,
+              1,
+              1,
+              1
+            ]
+          ]
+        },
+        "mutants": [
+          {
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "path": "src/compare.ts",
+            "original": ">=",
+            "replacement": ">",
+            "verdict": "killed"
+          },
+          {
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "path": "src/compare.ts",
+            "original": ">=",
+            "replacement": "<",
+            "verdict": "killed"
+          }
+        ],
+        "score": 100,
+        "tests": 1
+      },
+      "inputs": {
+        "files": [
+          {
+            "path": "node_modules/@seshat/rules",
+            "kind": "symlink",
+            "target": "../../packages/rules"
+          },
+          {
+            "path": "package.json",
+            "kind": "file",
+            "bytes": 124,
+            "sha256": "d849a0174ed647bbbd16ac0c1f3bb3ae668cded830ac65737c51f5414bdf32f8"
+          },
+          {
+            "path": "packages/rules/index.ts",
+            "kind": "file",
+            "bytes": 32,
+            "sha256": "7b1a4d5327f8a1ac5702b115bf2686dba73338f154deb63e681c7ab0f2ff8f3a"
+          },
+          {
+            "path": "packages/rules/package.json",
+            "kind": "file",
+            "bytes": 118,
+            "sha256": "6d0fa7aeeaaf71b0298588e3cff22d8291bba18238f10d2f4382752aabb18185"
+          },
+          {
+            "path": "src/compare.ts",
+            "kind": "file",
+            "bytes": 49,
+            "sha256": "5c331da60088760820a1c58fd20852a65a64c0963b618b810a53ecaa8b6242fd"
+          },
+          {
+            "path": "tests/check.mjs",
+            "kind": "file",
+            "bytes": 294,
+            "sha256": "f4e2f367089bf61a0902ddeec8c7c7ef95943ba66ab8a481f88abb74edbe91da"
+          },
+          {
+            "path": "tsconfig.json",
+            "kind": "file",
+            "bytes": 284,
+            "sha256": "654d7df38a4604f755567217027a997f2672904f5de52b2abeba417859cfe3df"
+          }
+        ],
+        "sha256": "653ef36d6390f8fdee150758411ad04f74aa4d68579ac369467ea5d6a66a8110"
+      },
+      "configs": {
+        "1": {
+          "config": {
+            "workers": 1,
+            "source": {
+              "include": [
+                "src/**/*.ts",
+                "packages/**/*.ts"
+              ]
+            },
+            "capture": [
+              "package.json",
+              "tsconfig.json",
+              "src",
+              "packages",
+              "node_modules",
+              "tests"
+            ],
+            "setups": [
+              {
+                "name": "node-workspace",
+                "runner": "node",
+                "cwd": ".",
+                "timeoutMs": 60000,
+                "typecheck": [
+                  "/usr/bin/node",
+                  "<repo>/benchmarks/node_modules/typescript/bin/tsc",
+                  "--project",
+                  "tsconfig.json"
+                ],
+                "test": [
+                  "/usr/bin/node",
+                  "--test",
+                  "--test-concurrency=1",
+                  "--test-reporter={seshatReporter}",
+                  "tests/check.mjs"
+                ],
+                "coverage": {
+                  "command": [
+                    "/usr/bin/node",
+                    "<repo>/benchmarks/proofs/collect-node.mjs",
+                    "tests/check.mjs"
+                  ],
+                  "report": "coverage/coverage-final.json"
+                }
+              }
+            ]
+          },
+          "sha256": "3507dbf3e3eb37e60cb80615087f5b3fc897afbb272fc229a8c11c9f41649ecd"
+        },
+        "2": {
+          "config": {
+            "workers": 2,
+            "source": {
+              "include": [
+                "src/**/*.ts",
+                "packages/**/*.ts"
+              ]
+            },
+            "capture": [
+              "package.json",
+              "tsconfig.json",
+              "src",
+              "packages",
+              "node_modules",
+              "tests"
+            ],
+            "setups": [
+              {
+                "name": "node-workspace",
+                "runner": "node",
+                "cwd": ".",
+                "timeoutMs": 60000,
+                "typecheck": [
+                  "/usr/bin/node",
+                  "<repo>/benchmarks/node_modules/typescript/bin/tsc",
+                  "--project",
+                  "tsconfig.json"
+                ],
+                "test": [
+                  "/usr/bin/node",
+                  "--test",
+                  "--test-concurrency=1",
+                  "--test-reporter={seshatReporter}",
+                  "tests/check.mjs"
+                ],
+                "coverage": {
+                  "command": [
+                    "/usr/bin/node",
+                    "<repo>/benchmarks/proofs/collect-node.mjs",
+                    "tests/check.mjs"
+                  ],
+                  "report": "coverage/coverage-final.json"
+                }
+              }
+            ]
+          },
+          "sha256": "b4af2581ddc2a7205f37f1ac822584496bb34895ed6cb6303300e605020f48fa"
+        }
+      },
+      "dependencies": [],
+      "dependencyVersions": {}
+    },
+    "vitest": {
+      "expected": {
+        "name": "vitest",
+        "sourceMetrics": {
+          "tempo.ts": [
+            [
+              3,
+              5,
+              5,
+              3
+            ]
+          ],
+          "view.tsx": [
+            [
+              1,
+              1,
+              1,
+              1
+            ]
+          ],
+          "server.ts": [
+            [
+              1,
+              3,
+              3,
+              1
+            ],
+            [
+              1,
+              1,
+              1,
+              1
+            ]
+          ]
+        },
+        "mutants": [
+          {
+            "id": 0,
+            "localId": 0,
+            "offset": 60,
+            "path": "tempo.ts",
+            "original": "<",
+            "replacement": "<=",
+            "verdict": "killed"
+          },
+          {
+            "id": 1,
+            "localId": 1,
+            "offset": 60,
+            "path": "tempo.ts",
+            "original": "<",
+            "replacement": ">=",
+            "verdict": "killed"
+          },
+          {
+            "id": 2,
+            "localId": 2,
+            "offset": 91,
+            "path": "tempo.ts",
+            "original": ">",
+            "replacement": ">=",
+            "verdict": "killed"
+          },
+          {
+            "id": 3,
+            "localId": 3,
+            "offset": 91,
+            "path": "tempo.ts",
+            "original": ">",
+            "replacement": "<=",
+            "verdict": "killed"
+          }
+        ],
+        "score": 100,
+        "tests": 3
+      },
+      "inputs": {
+        "files": [
+          {
+            "path": "package.json",
+            "kind": "file",
+            "bytes": 77,
+            "sha256": "25938bb51db8ee3ba7a6aa6d9065964745c5e42862aad954257509c3c5882e03"
+          },
+          {
+            "path": "server.ts",
+            "kind": "file",
+            "bytes": 423,
+            "sha256": "2a84786b7d56253db6f7b68e994c02763816d5a64615c961dc5ef6c2561a1ad7"
+          },
+          {
+            "path": "stack.test.tsx",
+            "kind": "file",
+            "bytes": 1100,
+            "sha256": "57ad7a19c2f0ea5531308636f58d1e049a83bab94863a7b3eec8351e79efa6ef"
+          },
+          {
+            "path": "tempo.ts",
+            "kind": "file",
+            "bytes": 134,
+            "sha256": "59436d39b26d49c5a2ec0a274b8be971dca72e463ca71dbd10c3786872fbe7c0"
+          },
+          {
+            "path": "tsconfig.json",
+            "kind": "file",
+            "bytes": 418,
+            "sha256": "c6a34d75753d78ec830b665849dfa31b25b37bb53114fab02f8dbfaee0c3d36f"
+          },
+          {
+            "path": "view.tsx",
+            "kind": "file",
+            "bytes": 159,
+            "sha256": "98e060bbbef95a9922085b43d4a20dcd221b462fbe94013c879e1491acc08e23"
+          },
+          {
+            "path": "vitest.config.mjs",
+            "kind": "file",
+            "bytes": 230,
+            "sha256": "954d7a92f86e97d741baf88d87a2369d48e666fd0b0656f61032c06f22066a0d"
+          }
+        ],
+        "sha256": "a031b45a18aebad086e832f8c73972fdcbc129e9837c8d63f20c0fb8a4c6f455"
+      },
+      "configs": {
+        "1": {
+          "config": {
+            "workers": 1,
+            "source": {
+              "include": [
+                "tempo.ts",
+                "view.tsx",
+                "server.ts"
+              ]
+            },
+            "capture": [
+              "package.json",
+              "tsconfig.json",
+              "tempo.ts",
+              "view.tsx",
+              "server.ts",
+              "stack.test.tsx",
+              "vitest.config.mjs",
+              "node_modules"
+            ],
+            "setups": [
+              {
+                "name": "stack",
+                "runner": "vitest",
+                "cwd": ".",
+                "timeoutMs": 120000,
+                "typecheck": [
+                  "/usr/bin/node",
+                  "node_modules/typescript/bin/tsc",
+                  "--project",
+                  "tsconfig.json"
+                ],
+                "test": [
+                  "/usr/bin/node",
+                  "node_modules/vitest/vitest.mjs",
+                  "run",
+                  "--config",
+                  "vitest.config.mjs",
+                  "--maxWorkers=1",
+                  "--no-file-parallelism",
+                  "--maxConcurrency=1",
+                  "--reporter=default",
+                  "--reporter={seshatReporter}"
+                ],
+                "coverage": {
+                  "command": [
+                    "/usr/bin/node",
+                    "node_modules/vitest/vitest.mjs",
+                    "run",
+                    "--config",
+                    "vitest.config.mjs",
+                    "--maxWorkers=1",
+                    "--no-file-parallelism",
+                    "--maxConcurrency=1",
+                    "--reporter=default",
+                    "--reporter={seshatReporter}",
+                    "--coverage"
+                  ],
+                  "report": "coverage/coverage-final.json"
+                }
+              }
+            ]
+          },
+          "sha256": "e54e9be63161d315586c9271b27258c572560451557b037f182a2eab5870a886"
+        },
+        "2": {
+          "config": {
+            "workers": 2,
+            "source": {
+              "include": [
+                "tempo.ts",
+                "view.tsx",
+                "server.ts"
+              ]
+            },
+            "capture": [
+              "package.json",
+              "tsconfig.json",
+              "tempo.ts",
+              "view.tsx",
+              "server.ts",
+              "stack.test.tsx",
+              "vitest.config.mjs",
+              "node_modules"
+            ],
+            "setups": [
+              {
+                "name": "stack",
+                "runner": "vitest",
+                "cwd": ".",
+                "timeoutMs": 120000,
+                "typecheck": [
+                  "/usr/bin/node",
+                  "node_modules/typescript/bin/tsc",
+                  "--project",
+                  "tsconfig.json"
+                ],
+                "test": [
+                  "/usr/bin/node",
+                  "node_modules/vitest/vitest.mjs",
+                  "run",
+                  "--config",
+                  "vitest.config.mjs",
+                  "--maxWorkers=1",
+                  "--no-file-parallelism",
+                  "--maxConcurrency=1",
+                  "--reporter=default",
+                  "--reporter={seshatReporter}"
+                ],
+                "coverage": {
+                  "command": [
+                    "/usr/bin/node",
+                    "node_modules/vitest/vitest.mjs",
+                    "run",
+                    "--config",
+                    "vitest.config.mjs",
+                    "--maxWorkers=1",
+                    "--no-file-parallelism",
+                    "--maxConcurrency=1",
+                    "--reporter=default",
+                    "--reporter={seshatReporter}",
+                    "--coverage"
+                  ],
+                  "report": "coverage/coverage-final.json"
+                }
+              }
+            ]
+          },
+          "sha256": "3831485e15d2ae504f98fcc61aa1eeefc233b10ecff33c27337ec56820448841"
+        }
+      },
+      "dependencies": [
+        "vitest",
+        "@vitest/coverage-istanbul",
+        "fastify",
+        "@sinclair/typebox",
+        "react",
+        "react-dom",
+        "typescript"
+      ],
+      "dependencyVersions": {
+        "vitest": "5.0.0",
+        "@vitest/coverage-istanbul": "5.0.0",
+        "fastify": "5.12.3",
+        "@sinclair/typebox": "0.34.52",
+        "react": "19.2.8",
+        "react-dom": "19.2.8",
+        "typescript": "6.0.3"
+      }
+    },
+    "jestExpo": {
+      "expected": {
+        "name": "jest-expo",
+        "sourceMetrics": {
+          "src/status.tsx": [
+            [
+              2,
+              3,
+              3,
+              2
+            ],
+            [
+              1,
+              1,
+              1,
+              1
+            ],
+            [
+              1,
+              1,
+              1,
+              1
+            ]
+          ]
+        },
+        "mutants": [
+          {
+            "id": 0,
+            "localId": 0,
+            "offset": 113,
+            "path": "src/status.tsx",
+            "original": ">=",
+            "replacement": ">",
+            "verdict": "killed"
+          },
+          {
+            "id": 1,
+            "localId": 1,
+            "offset": 113,
+            "path": "src/status.tsx",
+            "original": ">=",
+            "replacement": "<",
+            "verdict": "killed"
+          },
+          {
+            "id": 2,
+            "localId": 2,
+            "offset": 216,
+            "path": "src/status.tsx",
+            "original": ">",
+            "replacement": ">=",
+            "verdict": "survived"
+          },
+          {
+            "id": 3,
+            "localId": 3,
+            "offset": 216,
+            "original": ">",
+            "replacement": "<=",
+            "path": "src/status.tsx",
+            "verdict": "killed"
+          }
+        ],
+        "score": 75,
+        "tests": 3
+      },
+      "inputs": {
+        "files": [
+          {
+            "path": "babel.config.cjs",
+            "kind": "file",
+            "bytes": 110,
+            "sha256": "21c5e1e97dd79808ca655ca9bb3ef06d01d06a95a8228e43fb8aae6c88e0ea81"
+          },
+          {
+            "path": "jest.config.cjs",
+            "kind": "file",
+            "bytes": 132,
+            "sha256": "b277dabc312ca64e5f9dc09b35c4c624c28c0936480e8988f555cec9da3918dc"
+          },
+          {
+            "path": "package-lock.json",
+            "kind": "file",
+            "bytes": 363778,
+            "sha256": "2a2ee1b28ea92c6f83bd48dd967b5bfb2cfa4d37bd722cdf02f30fb5c4af1d8f"
+          },
+          {
+            "path": "package.json",
+            "kind": "file",
+            "bytes": 510,
+            "sha256": "d9464e30470ffd70bca95eed5ccb7262c3df3271454c770f2371b505a50e0491"
+          },
+          {
+            "path": "src/status.tsx",
+            "kind": "file",
+            "bytes": 307,
+            "sha256": "9ed0fc4bbefb6c4a1ebe65b1f8b49223159e440bd0be07c65542bf078570e822"
+          },
+          {
+            "path": "tests/status.test.tsx",
+            "kind": "file",
+            "bytes": 512,
+            "sha256": "f89b8cd9c1c6f44b635127a05fdc0a973f342c49d038ad8e67ce13dc9b3800bf"
+          },
+          {
+            "path": "tsconfig.json",
+            "kind": "file",
+            "bytes": 335,
+            "sha256": "70bbf7c7be4829ed75fcd1d02ecb712762d915cc274a3a42450f890530d5212b"
+          }
+        ],
+        "sha256": "2620191d8d5b8aad5ed118f0df814da17e5e9646b696722d84afbcc58265ec1c"
+      },
+      "configs": {
+        "1": {
+          "config": {
+            "workers": 1,
+            "source": {
+              "include": [
+                "src/status.tsx"
+              ]
+            },
+            "capture": [
+              "package.json",
+              "package-lock.json",
+              "tsconfig.json",
+              "babel.config.cjs",
+              "jest.config.cjs",
+              "src",
+              "tests",
+              "node_modules"
+            ],
+            "setups": [
+              {
+                "name": "jest-expo",
+                "runner": "jest",
+                "cwd": ".",
+                "timeoutMs": 180000,
+                "typecheck": [
+                  "/usr/bin/node",
+                  "node_modules/typescript/bin/tsc",
+                  "--project",
+                  "tsconfig.json"
+                ],
+                "test": [
+                  "/usr/bin/node",
+                  "node_modules/jest/bin/jest.js",
+                  "--config",
+                  "jest.config.cjs",
+                  "--runInBand",
+                  "--runTestsByPath",
+                  "tests/status.test.tsx",
+                  "--reporters=default",
+                  "--reporters={seshatReporter}",
+                  "--env={seshatEnvironment}"
+                ],
+                "coverage": {
+                  "command": [
+                    "/usr/bin/node",
+                    "node_modules/jest/bin/jest.js",
+                    "--config",
+                    "jest.config.cjs",
+                    "--runInBand",
+                    "--runTestsByPath",
+                    "tests/status.test.tsx",
+                    "--reporters=default",
+                    "--reporters={seshatReporter}",
+                    "--env={seshatEnvironment}",
+                    "--coverage",
+                    "--coverageProvider=babel",
+                    "--coverageReporters=json",
+                    "--coverageDirectory=coverage",
+                    "--collectCoverageFrom",
+                    "src/status.tsx"
+                  ],
+                  "report": "coverage/coverage-final.json"
+                }
+              }
+            ]
+          },
+          "sha256": "546d484e4f91ec62c8656827c0f0a4c6bfdfe0409939074dd6282538cd0a2a7f"
+        },
+        "2": {
+          "config": {
+            "workers": 2,
+            "source": {
+              "include": [
+                "src/status.tsx"
+              ]
+            },
+            "capture": [
+              "package.json",
+              "package-lock.json",
+              "tsconfig.json",
+              "babel.config.cjs",
+              "jest.config.cjs",
+              "src",
+              "tests",
+              "node_modules"
+            ],
+            "setups": [
+              {
+                "name": "jest-expo",
+                "runner": "jest",
+                "cwd": ".",
+                "timeoutMs": 180000,
+                "typecheck": [
+                  "/usr/bin/node",
+                  "node_modules/typescript/bin/tsc",
+                  "--project",
+                  "tsconfig.json"
+                ],
+                "test": [
+                  "/usr/bin/node",
+                  "node_modules/jest/bin/jest.js",
+                  "--config",
+                  "jest.config.cjs",
+                  "--runInBand",
+                  "--runTestsByPath",
+                  "tests/status.test.tsx",
+                  "--reporters=default",
+                  "--reporters={seshatReporter}",
+                  "--env={seshatEnvironment}"
+                ],
+                "coverage": {
+                  "command": [
+                    "/usr/bin/node",
+                    "node_modules/jest/bin/jest.js",
+                    "--config",
+                    "jest.config.cjs",
+                    "--runInBand",
+                    "--runTestsByPath",
+                    "tests/status.test.tsx",
+                    "--reporters=default",
+                    "--reporters={seshatReporter}",
+                    "--env={seshatEnvironment}",
+                    "--coverage",
+                    "--coverageProvider=babel",
+                    "--coverageReporters=json",
+                    "--coverageDirectory=coverage",
+                    "--collectCoverageFrom",
+                    "src/status.tsx"
+                  ],
+                  "report": "coverage/coverage-final.json"
+                }
+              }
+            ]
+          },
+          "sha256": "038b5b9872ce19f33c89d141a3eb89a02b117981ea7d2be69e67d42511ed3331"
+        }
+      },
+      "dependencies": [
+        "jest",
+        "jest-expo",
+        "expo",
+        "react-native",
+        "@react-native/jest-preset",
+        "babel-preset-expo",
+        "react",
+        "typescript"
+      ],
+      "dependencyVersions": {
+        "jest": "29.7.0",
+        "jest-expo": "57.0.5",
+        "expo": "57.0.20",
+        "react-native": "0.86.3",
+        "@react-native/jest-preset": "0.86.3",
+        "babel-preset-expo": "57.0.10",
+        "react": "19.2.3",
+        "typescript": "6.0.3"
+      }
+    }
+  },
+  "runs": [
+    {
+      "binary": "candidate",
+      "fixture": "nodeWorkspace",
+      "workers": 1,
+      "progress": true,
+      "phase": "warmup",
+      "pair": null,
+      "sample": null,
+      "wallMs": 1877.2691079999995,
+      "stdoutBytes": 4256,
+      "stderrBytes": 919,
+      "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
+      "workerParityHash": "ffed486d93935a9ed099e10dab3cd1e45635ff076de7108d55921ca7ca7e987d",
+      "diagnosticsHash": "94ec4972c528cbc8c11a8a2a85ea6246d3178913dbf180de9a48457d05e67fbe",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": "--test-concurrency",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": null,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": null,
+                "state": "unavailable"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 1,
+              "effectiveWorkers": 1,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [],
+              "runner": "node",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "node-workspace"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 167.833213,
+              "id": 1,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 164.840687,
+              "id": 0,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 6.009121582160369,
+            "jobsPerSecond": 6.009121582160369
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 332.6739
+        }
+      },
+      "reportTimings": {
+        "captureMs": 1.1141720000000002,
+        "executionMs": 1869.334967,
+        "wallMs": 1872.106185
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "nodeWorkspace",
+      "workers": 2,
+      "progress": true,
+      "phase": "warmup",
+      "pair": null,
+      "sample": null,
+      "wallMs": 2093.3054090000005,
+      "stdoutBytes": 4574,
+      "stderrBytes": 1127,
+      "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
+      "workerParityHash": "ffed486d93935a9ed099e10dab3cd1e45635ff076de7108d55921ca7ca7e987d",
+      "diagnosticsHash": "12061d4fb2b39e97ba2664c0e61b7af5fb8dc9e6bff2613a5521efb36e68319f",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": "--test-concurrency",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": null,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": null,
+                "state": "unavailable"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 2,
+              "effectiveWorkers": 2,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [],
+              "runner": "node",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "node-workspace"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 363.54982,
+              "id": 0,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 363.263134,
+              "id": 1,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 5.496848435543753,
+            "jobsPerSecond": 5.496848435543753
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 726.812954
+        }
+      },
+      "reportTimings": {
+        "captureMs": 0.8353609999999999,
+        "executionMs": 2087.888204,
+        "wallMs": 2089.95165
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "nodeWorkspace",
+      "workers": 1,
+      "progress": true,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 1954.6994350000004,
+      "stdoutBytes": 4272,
+      "stderrBytes": 919,
+      "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
+      "workerParityHash": "ffed486d93935a9ed099e10dab3cd1e45635ff076de7108d55921ca7ca7e987d",
+      "diagnosticsHash": "e7e49b2855bf7bc03d95e9eaa029ec1e155b127cc635d9e7ffffe60a09f6af43",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": "--test-concurrency",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": null,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": null,
+                "state": "unavailable"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 1,
+              "effectiveWorkers": 1,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [],
+              "runner": "node",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "node-workspace"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 169.399878,
+              "id": 1,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 165.579795,
+              "id": 0,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 5.967327562814201,
+            "jobsPerSecond": 5.967327562814201
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 334.979673
+        }
+      },
+      "reportTimings": {
+        "captureMs": 1.146422,
+        "executionMs": 1948.17409,
+        "wallMs": 1950.5599280000001
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "nodeWorkspace",
+      "workers": 2,
+      "progress": true,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 2010.5266169999995,
+      "stdoutBytes": 4611,
+      "stderrBytes": 1127,
+      "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
+      "workerParityHash": "ffed486d93935a9ed099e10dab3cd1e45635ff076de7108d55921ca7ca7e987d",
+      "diagnosticsHash": "f81f0e3b811d3ba67ab0528d37d54f23df6180b71ff225b01d6fb9ee86661714",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": "--test-concurrency",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": null,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": null,
+                "state": "unavailable"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 2,
+              "effectiveWorkers": 2,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [],
+              "runner": "node",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "node-workspace"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 356.01013,
+              "id": 0,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 318.035031,
+              "id": 1,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 5.608808229490221,
+            "jobsPerSecond": 5.608808229490221
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 674.045161
+        }
+      },
+      "reportTimings": {
+        "captureMs": 0.9844599999999999,
+        "executionMs": 2005.437492,
+        "wallMs": 2007.361898
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "nodeWorkspace",
+      "workers": 2,
+      "progress": true,
+      "phase": "measured",
+      "pair": 1,
+      "sample": 2,
+      "wallMs": 1960.1781100000007,
+      "stdoutBytes": 4610,
+      "stderrBytes": 1127,
+      "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
+      "workerParityHash": "ffed486d93935a9ed099e10dab3cd1e45635ff076de7108d55921ca7ca7e987d",
+      "diagnosticsHash": "717ab22524e4caa328890bd55a4b302257862fe0102f8f80031f17ffa4671ca0",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": "--test-concurrency",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": null,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": null,
+                "state": "unavailable"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 2,
+              "effectiveWorkers": 2,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [],
+              "runner": "node",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "node-workspace"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 250.51826300000002,
+              "id": 0,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 250.513885,
+              "id": 1,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 7.958544926338275,
+            "jobsPerSecond": 7.958544926338275
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 501.032148
+        }
+      },
+      "reportTimings": {
+        "captureMs": 0.86175,
+        "executionMs": 1954.8318490000001,
+        "wallMs": 1956.555649
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "nodeWorkspace",
+      "workers": 1,
+      "progress": true,
+      "phase": "measured",
+      "pair": 1,
+      "sample": 2,
+      "wallMs": 1817.335224999999,
+      "stdoutBytes": 4273,
+      "stderrBytes": 919,
+      "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
+      "workerParityHash": "ffed486d93935a9ed099e10dab3cd1e45635ff076de7108d55921ca7ca7e987d",
+      "diagnosticsHash": "2515e7440dbef8619133f1f710a40559456e5abf691c22e84908d369473de98c",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": "--test-concurrency",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": null,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": null,
+                "state": "unavailable"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 1,
+              "effectiveWorkers": 1,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [],
+              "runner": "node",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "node-workspace"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 167.56950600000002,
+              "id": 1,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 167.041438,
+              "id": 0,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 5.974331232092334,
+            "jobsPerSecond": 5.974331232092334
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 334.610944
+        }
+      },
+      "reportTimings": {
+        "captureMs": 0.9433630000000001,
+        "executionMs": 1812.500588,
+        "wallMs": 1814.333123
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "nodeWorkspace",
+      "workers": 1,
+      "progress": true,
+      "phase": "measured",
+      "pair": 2,
+      "sample": 3,
+      "wallMs": 1874.6023249999998,
+      "stdoutBytes": 4253,
+      "stderrBytes": 919,
+      "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
+      "workerParityHash": "ffed486d93935a9ed099e10dab3cd1e45635ff076de7108d55921ca7ca7e987d",
+      "diagnosticsHash": "e56cc2320a3a540b6ecbf7bd0f414176ea73c8afafbcba2af20d826ab386e0e7",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": "--test-concurrency",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": null,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": null,
+                "state": "unavailable"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 1,
+              "effectiveWorkers": 1,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [],
+              "runner": "node",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "node-workspace"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 167.772836,
+              "id": 0,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 164.098276,
+              "id": 1,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 6.0231731709749265,
+            "jobsPerSecond": 6.0231731709749265
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 331.87111200000004
+        }
+      },
+      "reportTimings": {
+        "captureMs": 0.8411719999999999,
+        "executionMs": 1869.919815,
+        "wallMs": 1871.804376
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "nodeWorkspace",
+      "workers": 2,
+      "progress": true,
+      "phase": "measured",
+      "pair": 2,
+      "sample": 3,
+      "wallMs": 1912.6159560000015,
+      "stdoutBytes": 4627,
+      "stderrBytes": 1127,
+      "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
+      "workerParityHash": "ffed486d93935a9ed099e10dab3cd1e45635ff076de7108d55921ca7ca7e987d",
+      "diagnosticsHash": "0656fcb500823e5423a30e0400351931b4e1968fe663524ef809c646c830ef50",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": "--test-concurrency",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": null,
+                "runner": "node",
+                "setup": "node-workspace",
+                "source": null,
+                "state": "unavailable"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 2,
+              "effectiveWorkers": 2,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [],
+              "runner": "node",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "node-workspace"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 254.55592399999998,
+              "id": 1,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 254.253752,
+              "id": 0,
+              "path": "src/compare.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 7.848104273931612,
+            "jobsPerSecond": 7.848104273931612
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 508.80967599999997
+        }
+      },
+      "reportTimings": {
+        "captureMs": 1.043399,
+        "executionMs": 1907.25613,
+        "wallMs": 1909.213598
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "vitest",
+      "workers": 1,
+      "progress": true,
+      "phase": "warmup",
+      "pair": null,
+      "sample": null,
+      "wallMs": 9022.702743000002,
+      "stdoutBytes": 14886,
+      "stderrBytes": 1276,
+      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
+      "workerParityHash": "32cffee0844d54727a9d7316e98dde4cf76c76e1533bab00ecaa9665221f6a53",
+      "diagnosticsHash": "404871ee4a88248a352a84bb6dc72087efe4173e48098a1763a5726053161be0",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 1,
+              "effectiveWorkers": 1,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "5.0.0",
+                  "declared": null,
+                  "declaredComparison": "unavailable",
+                  "locked": null,
+                  "lockedComparison": "unavailable",
+                  "name": "vitest"
+                }
+              ],
+              "runner": "vitest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "stack"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 882.747136,
+              "id": 0,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 876.694756,
+              "id": 3,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 865.56781,
+              "id": 1,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 861.967284,
+              "id": 2,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 1.14684579914845,
+            "jobsPerSecond": 1.14684579914845
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 3486.9769859999997
+        }
+      },
+      "reportTimings": {
+        "captureMs": 735.876444,
+        "executionMs": 8026.850481,
+        "wallMs": 9019.332256
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "vitest",
+      "workers": 2,
+      "progress": true,
+      "phase": "warmup",
+      "pair": null,
+      "sample": null,
+      "wallMs": 10521.873985999999,
+      "stdoutBytes": 15260,
+      "stderrBytes": 1219,
+      "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
+      "workerParityHash": "32cffee0844d54727a9d7316e98dde4cf76c76e1533bab00ecaa9665221f6a53",
+      "diagnosticsHash": "cdc62191e44c0d4a3f543f8545b48997a2d6383569f47571139803202400e6e0",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 2,
+              "effectiveWorkers": 2,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "5.0.0",
+                  "declared": null,
+                  "declaredComparison": "unavailable",
+                  "locked": null,
+                  "lockedComparison": "unavailable",
+                  "name": "vitest"
+                }
+              ],
+              "runner": "vitest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "stack"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 1664.470281,
+              "id": 0,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1615.090731,
+              "id": 1,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1448.925648,
+              "id": 2,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1419.766443,
+              "id": 3,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 1.296803216673694,
+            "jobsPerSecond": 1.296803216673694
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 6148.253103000001
+        }
+      },
+      "reportTimings": {
+        "captureMs": 984.542242,
+        "executionMs": 9297.870270000001,
+        "wallMs": 10517.614726
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "vitest",
+      "workers": 1,
+      "progress": true,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 9215.511466999997,
+      "stdoutBytes": 14910,
+      "stderrBytes": 1276,
+      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
+      "workerParityHash": "32cffee0844d54727a9d7316e98dde4cf76c76e1533bab00ecaa9665221f6a53",
+      "diagnosticsHash": "d0480c86b6c1d09a9de0e1c27ef9c8acbd782029079da44db314c32ebc82abd5",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 1,
+              "effectiveWorkers": 1,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "5.0.0",
+                  "declared": null,
+                  "declaredComparison": "unavailable",
+                  "locked": null,
+                  "lockedComparison": "unavailable",
+                  "name": "vitest"
+                }
+              ],
+              "runner": "vitest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "stack"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 870.335948,
+              "id": 0,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 864.971852,
+              "id": 3,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 861.3952350000001,
+              "id": 2,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 851.175836,
+              "id": 1,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 1.1599972698072258,
+            "jobsPerSecond": 1.1599972698072258
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 3447.8788710000003
+        }
+      },
+      "reportTimings": {
+        "captureMs": 1389.2465889999999,
+        "executionMs": 7598.0974049999995,
+        "wallMs": 9210.886602
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "vitest",
+      "workers": 2,
+      "progress": true,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 10081.473288000001,
+      "stdoutBytes": 15300,
+      "stderrBytes": 1219,
+      "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
+      "workerParityHash": "32cffee0844d54727a9d7316e98dde4cf76c76e1533bab00ecaa9665221f6a53",
+      "diagnosticsHash": "c7fcfe11ee4f2767ef6239d1b55962a37656edda4ca6295d0ddf14b3e6e38d98",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 2,
+              "effectiveWorkers": 2,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "5.0.0",
+                  "declared": null,
+                  "declaredComparison": "unavailable",
+                  "locked": null,
+                  "lockedComparison": "unavailable",
+                  "name": "vitest"
+                }
+              ],
+              "runner": "vitest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "stack"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 1981.512087,
+              "id": 1,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1943.385279,
+              "id": 0,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1645.0070230000001,
+              "id": 2,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1581.503348,
+              "id": 3,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 1.1145050613642475,
+            "jobsPerSecond": 1.1145050613642475
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 7151.407737
+        }
+      },
+      "reportTimings": {
+        "captureMs": 636.817162,
+        "executionMs": 9221.958752999999,
+        "wallMs": 10077.653422
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "vitest",
+      "workers": 2,
+      "progress": true,
+      "phase": "measured",
+      "pair": 1,
+      "sample": 2,
+      "wallMs": 9483.885469000008,
+      "stdoutBytes": 15304,
+      "stderrBytes": 1219,
+      "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
+      "workerParityHash": "32cffee0844d54727a9d7316e98dde4cf76c76e1533bab00ecaa9665221f6a53",
+      "diagnosticsHash": "482c3348c3870dbe13ade6de6164c92ffd42adba3662a5a18b145205a19dea1a",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 2,
+              "effectiveWorkers": 2,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "5.0.0",
+                  "declared": null,
+                  "declaredComparison": "unavailable",
+                  "locked": null,
+                  "lockedComparison": "unavailable",
+                  "name": "vitest"
+                }
+              ],
+              "runner": "vitest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "stack"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 1461.3924419999998,
+              "id": 1,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1443.047502,
+              "id": 2,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1438.1896709999999,
+              "id": 0,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1437.046687,
+              "id": 3,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 1.3799244578432563,
+            "jobsPerSecond": 1.3799244578432563
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 5779.676302
+        }
+      },
+      "reportTimings": {
+        "captureMs": 594.187806,
+        "executionMs": 8664.874009,
+        "wallMs": 9480.316838
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "vitest",
+      "workers": 1,
+      "progress": true,
+      "phase": "measured",
+      "pair": 1,
+      "sample": 2,
+      "wallMs": 9220.239916000006,
+      "stdoutBytes": 14886,
+      "stderrBytes": 1276,
+      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
+      "workerParityHash": "32cffee0844d54727a9d7316e98dde4cf76c76e1533bab00ecaa9665221f6a53",
+      "diagnosticsHash": "c4917274b6f2c713dfd3732d2e21cf4c8f30aa2f4672377d7c25301a7fd00f57",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 1,
+              "effectiveWorkers": 1,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "5.0.0",
+                  "declared": null,
+                  "declaredComparison": "unavailable",
+                  "locked": null,
+                  "lockedComparison": "unavailable",
+                  "name": "vitest"
+                }
+              ],
+              "runner": "vitest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "stack"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 868.780192,
+              "id": 0,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 865.365097,
+              "id": 3,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 863.705105,
+              "id": 1,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 853.954119,
+              "id": 2,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 1.158679143259954,
+            "jobsPerSecond": 1.158679143259954
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 3451.804513
+        }
+      },
+      "reportTimings": {
+        "captureMs": 1460.8068649999998,
+        "executionMs": 7531.204565999999,
+        "wallMs": 9216.014199
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "vitest",
+      "workers": 1,
+      "progress": true,
+      "phase": "measured",
+      "pair": 2,
+      "sample": 3,
+      "wallMs": 8990.154314,
+      "stdoutBytes": 14852,
+      "stderrBytes": 1276,
+      "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
+      "workerParityHash": "32cffee0844d54727a9d7316e98dde4cf76c76e1533bab00ecaa9665221f6a53",
+      "diagnosticsHash": "57c27e7aab4301cd7caa0aaa2f907cbac627c8a720c40c0f8d22398db33d4ef9",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 1,
+              "effectiveWorkers": 1,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "5.0.0",
+                  "declared": null,
+                  "declaredComparison": "unavailable",
+                  "locked": null,
+                  "lockedComparison": "unavailable",
+                  "name": "vitest"
+                }
+              ],
+              "runner": "vitest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "stack"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 940.391666,
+              "id": 1,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 917.223883,
+              "id": 2,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 879.2863090000001,
+              "id": 3,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 863.841125,
+              "id": 0,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 1.1107467827724133,
+            "jobsPerSecond": 1.1107467827724133
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 3600.742983
+        }
+      },
+      "reportTimings": {
+        "captureMs": 780.958217,
+        "executionMs": 7941.6515739999995,
+        "wallMs": 8986.909394
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "vitest",
+      "workers": 2,
+      "progress": true,
+      "phase": "measured",
+      "pair": 2,
+      "sample": 3,
+      "wallMs": 9646.675288999992,
+      "stdoutBytes": 15267,
+      "stderrBytes": 1219,
+      "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
+      "workerParityHash": "32cffee0844d54727a9d7316e98dde4cf76c76e1533bab00ecaa9665221f6a53",
+      "diagnosticsHash": "75e023a70c085e18460c198dac156fbde90cc4234994a5c28689a6daed20bed2",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "vitest",
+                "setup": "stack",
+                "source": "resolved-config",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 2,
+              "effectiveWorkers": 2,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "5.0.0",
+                  "declared": null,
+                  "declaredComparison": "unavailable",
+                  "locked": null,
+                  "lockedComparison": "unavailable",
+                  "name": "vitest"
+                }
+              ],
+              "runner": "vitest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "stack"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 1707.9888819999999,
+              "id": 0,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1513.864233,
+              "id": 1,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1424.832228,
+              "id": 2,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1377.767453,
+              "id": 3,
+              "path": "tempo.ts",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 1.2961831935111359,
+            "jobsPerSecond": 1.2961831935111359
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 6024.452796
+        }
+      },
+      "reportTimings": {
+        "captureMs": 613.058251,
+        "executionMs": 8812.795371,
+        "wallMs": 9643.169358
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "jestExpo",
+      "workers": 1,
+      "progress": true,
+      "phase": "warmup",
+      "pair": null,
+      "sample": null,
+      "wallMs": 20088.50630400001,
+      "stdoutBytes": 9503,
+      "stderrBytes": 1295,
+      "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
+      "workerParityHash": "679321ff0cd8fcd4d1b5427215b5fb186b8f9319855b358676e468e7cc674925",
+      "diagnosticsHash": "826b99c640775e52c928f0fcf994b870e97ea28ae4e38d16692f8771f62555d2",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "jest",
+                "setup": "jest-expo",
+                "source": "--runInBand",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "jest",
+                "setup": "jest-expo",
+                "source": "--runInBand",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 1,
+              "effectiveWorkers": 1,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "29.7.0",
+                  "declared": "29.7.0",
+                  "declaredComparison": "match",
+                  "locked": "29.7.0",
+                  "lockedComparison": "match",
+                  "name": "jest"
+                },
+                {
+                  "actual": "57.0.5",
+                  "declared": "57.0.5",
+                  "declaredComparison": "match",
+                  "locked": "57.0.5",
+                  "lockedComparison": "match",
+                  "name": "jest-expo"
+                }
+              ],
+              "runner": "jest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "jest-expo"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 1853.767814,
+              "id": 1,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1759.7561580000001,
+              "id": 3,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1663.978135,
+              "id": 2,
+              "path": "src/status.tsx",
+              "verdict": "survived"
+            },
+            {
+              "executionMs": 1652.053671,
+              "id": 0,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 0.5772008078310299,
+            "jobsPerSecond": 0.5772008078310299
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 6929.555778
+        }
+      },
+      "reportTimings": {
+        "captureMs": 2658.189716,
+        "executionMs": 16691.821765,
+        "wallMs": 20084.445506
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "jestExpo",
+      "workers": 2,
+      "progress": true,
+      "phase": "warmup",
+      "pair": null,
+      "sample": null,
+      "wallMs": 25776.478113000005,
+      "stdoutBytes": 9939,
+      "stderrBytes": 1244,
+      "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
+      "workerParityHash": "679321ff0cd8fcd4d1b5427215b5fb186b8f9319855b358676e468e7cc674925",
+      "diagnosticsHash": "c052dda0039e3090d0458b55d41b4776dd902ca63833342c63e41a7698bc3034",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "jest",
+                "setup": "jest-expo",
+                "source": "--runInBand",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "jest",
+                "setup": "jest-expo",
+                "source": "--runInBand",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 2,
+              "effectiveWorkers": 2,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "29.7.0",
+                  "declared": "29.7.0",
+                  "declaredComparison": "match",
+                  "locked": "29.7.0",
+                  "lockedComparison": "match",
+                  "name": "jest"
+                },
+                {
+                  "actual": "57.0.5",
+                  "declared": "57.0.5",
+                  "declaredComparison": "match",
+                  "locked": "57.0.5",
+                  "lockedComparison": "match",
+                  "name": "jest-expo"
+                }
+              ],
+              "runner": "jest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "jest-expo"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 2830.701309,
+              "id": 3,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 2764.294468,
+              "id": 0,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 2656.164139,
+              "id": 1,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 2639.735861,
+              "id": 2,
+              "path": "src/status.tsx",
+              "verdict": "survived"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 0.7148506110670535,
+            "jobsPerSecond": 0.7148506110670535
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 10890.895777000002
+        }
+      },
+      "reportTimings": {
+        "captureMs": 1647.514518,
+        "executionMs": 23043.452492,
+        "wallMs": 25771.195972
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "jestExpo",
+      "workers": 1,
+      "progress": true,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 20159.126407999982,
+      "stdoutBytes": 9493,
+      "stderrBytes": 1299,
+      "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
+      "workerParityHash": "679321ff0cd8fcd4d1b5427215b5fb186b8f9319855b358676e468e7cc674925",
+      "diagnosticsHash": "770fa17176f3fd4097fbe6eece9ed4a15b7c73f6669b1eac6105024fde6a6fc6",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "jest",
+                "setup": "jest-expo",
+                "source": "--runInBand",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "jest",
+                "setup": "jest-expo",
+                "source": "--runInBand",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 1,
+              "effectiveWorkers": 1,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "29.7.0",
+                  "declared": "29.7.0",
+                  "declaredComparison": "match",
+                  "locked": "29.7.0",
+                  "lockedComparison": "match",
+                  "name": "jest"
+                },
+                {
+                  "actual": "57.0.5",
+                  "declared": "57.0.5",
+                  "declaredComparison": "match",
+                  "locked": "57.0.5",
+                  "lockedComparison": "match",
+                  "name": "jest-expo"
+                }
+              ],
+              "runner": "jest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "jest-expo"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 1636.312969,
+              "id": 0,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1621.296037,
+              "id": 1,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1617.6405599999998,
+              "id": 3,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1614.833343,
+              "id": 2,
+              "path": "src/status.tsx",
+              "verdict": "survived"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 0.6162868660883175,
+            "jobsPerSecond": 0.6162868660883175
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 6490.082909
+        }
+      },
+      "reportTimings": {
+        "captureMs": 2463.3629790000005,
+        "executionMs": 17098.466588,
+        "wallMs": 20155.391044
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "jestExpo",
+      "workers": 2,
+      "progress": true,
+      "phase": "measured",
+      "pair": 0,
+      "sample": 1,
+      "wallMs": 25464.282794,
+      "stdoutBytes": 9996,
+      "stderrBytes": 1247,
+      "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
+      "workerParityHash": "679321ff0cd8fcd4d1b5427215b5fb186b8f9319855b358676e468e7cc674925",
+      "diagnosticsHash": "7b9ff24e0fc9fa3f24d566678497219dacf8528b2f372f9813e7358dc0388f6a",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "jest",
+                "setup": "jest-expo",
+                "source": "--runInBand",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "jest",
+                "setup": "jest-expo",
+                "source": "--runInBand",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 2,
+              "effectiveWorkers": 2,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "29.7.0",
+                  "declared": "29.7.0",
+                  "declaredComparison": "match",
+                  "locked": "29.7.0",
+                  "lockedComparison": "match",
+                  "name": "jest"
+                },
+                {
+                  "actual": "57.0.5",
+                  "declared": "57.0.5",
+                  "declaredComparison": "match",
+                  "locked": "57.0.5",
+                  "lockedComparison": "match",
+                  "name": "jest-expo"
+                }
+              ],
+              "runner": "jest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "jest-expo"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 3076.2790880000002,
+              "id": 2,
+              "path": "src/status.tsx",
+              "verdict": "survived"
+            },
+            {
+              "executionMs": 2987.2941960000003,
+              "id": 3,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 2858.3730109999997,
+              "id": 0,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 2765.342617,
+              "id": 1,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 0.6842395153923034,
+            "jobsPerSecond": 0.6842395153923034
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 11687.288912000002
+        }
+      },
+      "reportTimings": {
+        "captureMs": 1765.864711,
+        "executionMs": 22969.114327,
+        "wallMs": 25460.279067
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "jestExpo",
+      "workers": 2,
+      "progress": true,
+      "phase": "measured",
+      "pair": 1,
+      "sample": 2,
+      "wallMs": 27183.524615000002,
+      "stdoutBytes": 9911,
+      "stderrBytes": 1247,
+      "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
+      "workerParityHash": "679321ff0cd8fcd4d1b5427215b5fb186b8f9319855b358676e468e7cc674925",
+      "diagnosticsHash": "8f7681e5becd87d5165e5737734144692c17d0018634fe9ce18fb11ee4790c94",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "jest",
+                "setup": "jest-expo",
+                "source": "--runInBand",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "jest",
+                "setup": "jest-expo",
+                "source": "--runInBand",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 2,
+              "effectiveWorkers": 2,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "29.7.0",
+                  "declared": "29.7.0",
+                  "declaredComparison": "match",
+                  "locked": "29.7.0",
+                  "lockedComparison": "match",
+                  "name": "jest"
+                },
+                {
+                  "actual": "57.0.5",
+                  "declared": "57.0.5",
+                  "declaredComparison": "match",
+                  "locked": "57.0.5",
+                  "lockedComparison": "match",
+                  "name": "jest-expo"
+                }
+              ],
+              "runner": "jest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "jest-expo"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 3561.55943,
+              "id": 2,
+              "path": "src/status.tsx",
+              "verdict": "survived"
+            },
+            {
+              "executionMs": 3497.796512,
+              "id": 3,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 2994.15755,
+              "id": 0,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 2929.876659,
+              "id": 1,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 0.6160868917899581,
+            "jobsPerSecond": 0.6160868917899581
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 12983.390151
+        }
+      },
+      "reportTimings": {
+        "captureMs": 2132.039191,
+        "executionMs": 24325.329258,
+        "wallMs": 27179.76181
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "jestExpo",
+      "workers": 1,
+      "progress": true,
+      "phase": "measured",
+      "pair": 1,
+      "sample": 2,
+      "wallMs": 18857.269425000006,
+      "stdoutBytes": 9569,
+      "stderrBytes": 1299,
+      "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
+      "workerParityHash": "679321ff0cd8fcd4d1b5427215b5fb186b8f9319855b358676e468e7cc674925",
+      "diagnosticsHash": "a149417aaef613ce526c198b2b036556771f617d576b671e08e1c2c20751223b",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "jest",
+                "setup": "jest-expo",
+                "source": "--runInBand",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "jest",
+                "setup": "jest-expo",
+                "source": "--runInBand",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 1,
+              "effectiveWorkers": 1,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "29.7.0",
+                  "declared": "29.7.0",
+                  "declaredComparison": "match",
+                  "locked": "29.7.0",
+                  "lockedComparison": "match",
+                  "name": "jest"
+                },
+                {
+                  "actual": "57.0.5",
+                  "declared": "57.0.5",
+                  "declaredComparison": "match",
+                  "locked": "57.0.5",
+                  "lockedComparison": "match",
+                  "name": "jest-expo"
+                }
+              ],
+              "runner": "jest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "jest-expo"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 1686.436075,
+              "id": 3,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1629.2372209999999,
+              "id": 0,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1622.6552000000001,
+              "id": 1,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1600.0466709999998,
+              "id": 2,
+              "path": "src/status.tsx",
+              "verdict": "survived"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 0.611732120250921,
+            "jobsPerSecond": 0.611732120250921
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 6538.375167
+        }
+      },
+      "reportTimings": {
+        "captureMs": 1627.509651,
+        "executionMs": 16637.295105,
+        "wallMs": 18853.445838
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "jestExpo",
+      "workers": 1,
+      "progress": true,
+      "phase": "measured",
+      "pair": 2,
+      "sample": 3,
+      "wallMs": 19426.971890999994,
+      "stdoutBytes": 9568,
+      "stderrBytes": 1299,
+      "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
+      "workerParityHash": "679321ff0cd8fcd4d1b5427215b5fb186b8f9319855b358676e468e7cc674925",
+      "diagnosticsHash": "cc391e1307d989568505c0ea4980a05a728e984bf0e3d4c785b08617ffd8eb72",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "jest",
+                "setup": "jest-expo",
+                "source": "--runInBand",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "jest",
+                "setup": "jest-expo",
+                "source": "--runInBand",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 1,
+              "effectiveWorkers": 1,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "29.7.0",
+                  "declared": "29.7.0",
+                  "declaredComparison": "match",
+                  "locked": "29.7.0",
+                  "lockedComparison": "match",
+                  "name": "jest"
+                },
+                {
+                  "actual": "57.0.5",
+                  "declared": "57.0.5",
+                  "declaredComparison": "match",
+                  "locked": "57.0.5",
+                  "lockedComparison": "match",
+                  "name": "jest-expo"
+                }
+              ],
+              "runner": "jest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "jest-expo"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 1650.5434930000001,
+              "id": 0,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1631.5988340000001,
+              "id": 1,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1625.4594359999999,
+              "id": 3,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 1613.804083,
+              "id": 2,
+              "path": "src/status.tsx",
+              "verdict": "survived"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 0.613325776149828,
+            "jobsPerSecond": 0.613325776149828
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 6521.405846000001
+        }
+      },
+      "reportTimings": {
+        "captureMs": 1632.0780670000001,
+        "executionMs": 17186.869381,
+        "wallMs": 19423.187684999997
+      }
+    },
+    {
+      "binary": "candidate",
+      "fixture": "jestExpo",
+      "workers": 2,
+      "progress": true,
+      "phase": "measured",
+      "pair": 2,
+      "sample": 3,
+      "wallMs": 25322.44679799999,
+      "stdoutBytes": 9966,
+      "stderrBytes": 1244,
+      "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
+      "workerParityHash": "679321ff0cd8fcd4d1b5427215b5fb186b8f9319855b358676e468e7cc674925",
+      "diagnosticsHash": "27ea1bd92c8a60e57719c91c6b5dca8aa97f189b9863acab531fcf082fb43f3e",
+      "diagnostics": {
+        "report": {
+          "concurrency": {
+            "runners": [
+              {
+                "command": "test",
+                "effectiveWorkers": 1,
+                "runner": "jest",
+                "setup": "jest-expo",
+                "source": "--runInBand",
+                "state": "known"
+              },
+              {
+                "command": "coverage",
+                "effectiveWorkers": 1,
+                "runner": "jest",
+                "setup": "jest-expo",
+                "source": "--runInBand",
+                "state": "known"
+              }
+            ],
+            "seshat": {
+              "configuredWorkers": 2,
+              "effectiveWorkers": 2,
+              "state": "known"
+            }
+          },
+          "runnerVersions": [
+            {
+              "packages": [
+                {
+                  "actual": "29.7.0",
+                  "declared": "29.7.0",
+                  "declaredComparison": "match",
+                  "locked": "29.7.0",
+                  "lockedComparison": "match",
+                  "name": "jest"
+                },
+                {
+                  "actual": "57.0.5",
+                  "declared": "57.0.5",
+                  "declaredComparison": "match",
+                  "locked": "57.0.5",
+                  "lockedComparison": "match",
+                  "name": "jest-expo"
+                }
+              ],
+              "runner": "jest",
+              "runtime": {
+                "declared": null,
+                "declaredComparison": "unavailable",
+                "node": "24.20.0"
+              },
+              "setup": "jest-expo"
+            }
+          ]
+        },
+        "mutation": {
+          "slowestExecutions": [
+            {
+              "executionMs": 2917.604899,
+              "id": 0,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 2890.0459339999998,
+              "id": 1,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            },
+            {
+              "executionMs": 2846.720817,
+              "id": 2,
+              "path": "src/status.tsx",
+              "verdict": "survived"
+            },
+            {
+              "executionMs": 2712.7688829999997,
+              "id": 3,
+              "path": "src/status.tsx",
+              "verdict": "killed"
+            }
+          ],
+          "throughput": {
+            "completedMutantsPerSecond": 0.6966718441483555,
+            "jobsPerSecond": 0.6966718441483555
+          },
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          },
+          "workerTimeMs": 11367.140532999998
+        }
+      },
+      "reportTimings": {
+        "captureMs": 1696.5996949999999,
+        "executionMs": 22674.707698,
+        "wallMs": 25317.697632000003
+      }
+    }
+  ],
+  "mode": "release-matrix",
+  "work": "<work>",
+  "aggregate": [
+    {
+      "fixture": "nodeWorkspace",
+      "workers": 1,
+      "progress": true,
+      "binary": "candidate",
+      "samples": [
+        1954.699,
+        1817.335,
+        1874.602
+      ],
+      "medianMs": 1874.602,
+      "minMs": 1817.335224999999,
+      "maxMs": 1954.6994350000004,
+      "rangeMs": 137.36421000000155
+    },
+    {
+      "fixture": "nodeWorkspace",
+      "workers": 2,
+      "progress": true,
+      "binary": "candidate",
+      "samples": [
+        2010.527,
+        1960.178,
+        1912.616
+      ],
+      "medianMs": 1960.178,
+      "minMs": 1912.6159560000015,
+      "maxMs": 2010.5266169999995,
+      "rangeMs": 97.91066099999807
+    },
+    {
+      "fixture": "vitest",
+      "workers": 1,
+      "progress": true,
+      "binary": "candidate",
+      "samples": [
+        9215.511,
+        9220.24,
+        8990.154
+      ],
+      "medianMs": 9215.511,
+      "minMs": 8990.154314,
+      "maxMs": 9220.239916000006,
+      "rangeMs": 230.08560200000647
+    },
+    {
+      "fixture": "vitest",
+      "workers": 2,
+      "progress": true,
+      "binary": "candidate",
+      "samples": [
+        10081.473,
+        9483.885,
+        9646.675
+      ],
+      "medianMs": 9646.675,
+      "minMs": 9483.885469000008,
+      "maxMs": 10081.473288000001,
+      "rangeMs": 597.587818999993
+    },
+    {
+      "fixture": "jestExpo",
+      "workers": 1,
+      "progress": true,
+      "binary": "candidate",
+      "samples": [
+        20159.126,
+        18857.269,
+        19426.972
+      ],
+      "medianMs": 19426.972,
+      "minMs": 18857.269425000006,
+      "maxMs": 20159.126407999982,
+      "rangeMs": 1301.856982999976
+    },
+    {
+      "fixture": "jestExpo",
+      "workers": 2,
+      "progress": true,
+      "binary": "candidate",
+      "samples": [
+        25464.283,
+        27183.525,
+        25322.447
+      ],
+      "medianMs": 25464.283,
+      "minMs": 25322.44679799999,
+      "maxMs": 27183.524615000002,
+      "rangeMs": 1861.0778170000121
+    }
+  ],
+  "parity": {
+    "nodeWorkspace": {
+      "workerIndependentHash": "ffed486d93935a9ed099e10dab3cd1e45635ff076de7108d55921ca7ca7e987d",
+      "workers": {
+        "1": {
+          "semanticHash": "b7e8829ba8704fea3a6d17122def1600047486df08085794a0fd9ce60e005766",
+          "workerIndependentHash": "ffed486d93935a9ed099e10dab3cd1e45635ff076de7108d55921ca7ca7e987d"
+        },
+        "2": {
+          "semanticHash": "0f802fb2b4f201ab97ff065d3a3b97d61e620e1162bbea02cbb4d57be0482bfc",
+          "workerIndependentHash": "ffed486d93935a9ed099e10dab3cd1e45635ff076de7108d55921ca7ca7e987d"
+        }
+      }
+    },
+    "vitest": {
+      "workerIndependentHash": "32cffee0844d54727a9d7316e98dde4cf76c76e1533bab00ecaa9665221f6a53",
+      "workers": {
+        "1": {
+          "semanticHash": "0d76a8fb29d7d4ab0e3b83a8b7e6458739ade5687a6effb4b8a45189a7903666",
+          "workerIndependentHash": "32cffee0844d54727a9d7316e98dde4cf76c76e1533bab00ecaa9665221f6a53"
+        },
+        "2": {
+          "semanticHash": "788a27e0b7c7d29e481b8ce24d58def70e67184dbbd8e953f09961804bb6f3da",
+          "workerIndependentHash": "32cffee0844d54727a9d7316e98dde4cf76c76e1533bab00ecaa9665221f6a53"
+        }
+      }
+    },
+    "jestExpo": {
+      "workerIndependentHash": "679321ff0cd8fcd4d1b5427215b5fb186b8f9319855b358676e468e7cc674925",
+      "workers": {
+        "1": {
+          "semanticHash": "c2faeb209a9e615026e825081430709fde8e8fad14a8ae9543e3b6a28e4c131b",
+          "workerIndependentHash": "679321ff0cd8fcd4d1b5427215b5fb186b8f9319855b358676e468e7cc674925"
+        },
+        "2": {
+          "semanticHash": "ea7f947d3ed66408d86b19822325895d7233f00d4737b27d78e4a6d76563e43e",
+          "workerIndependentHash": "679321ff0cd8fcd4d1b5427215b5fb186b8f9319855b358676e468e7cc674925"
+        }
+      }
+    }
+  },
+  "conclusion": "Descriptive medians and raw ranges for six fixed fixture/worker conditions only; no production overhead bound."
+}
