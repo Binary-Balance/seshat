@@ -70,7 +70,7 @@ Every run produced this normalized tuple set and semantic hash:
 The common semantic hash is
 `a11c1366dc9fb91121bb17a75b533df4c46fc0373c8522c7a5e3bc46df3406f9`.
 The JSON validation records four warmups, twenty measured runs, four tool and
-tool and worker conditions, and that one common hash.
+worker conditions, and that one common hash.
 
 The Stryker reports contained exactly `packages/rules/index.ts` and
 `src/compare.ts`, with source bytes matching the shared files. They retained
@@ -89,7 +89,7 @@ unique operator within that span before calculating byte offset 42.
 | Installed Seshat package | 2,904,275 bytes across 6 files, inventory hash `56107f0db58a266ba19cc3eddf57e4b5f3a67c364dfa1cffcc872aff37581da7` |
 | Stryker package lock | 81,077 bytes, SHA-256 `a14213c92496b3869e9bd42d9c63f34f59091a1313ec127b4904816b7c5fd37f` |
 | Stryker installed dependencies | 165 lock entries, 8,412 files, 39,183,854 bytes |
-| Driver | SHA-256 `06ed03eec9e1a3ac2326598eb119ac4f157c1650a119ee731fa2e26fb065f579` |
+| Driver | SHA-256 `b488975697fd3ed2c761858499dcc52b889e4f05f698930ef796ecb0925bc55f` |
 | Shared fixture helper | SHA-256 `c0cd8cc593bb2ba167001a2aff4e1e55f875445b1ff81a70d03791c97a6d3cad` |
 | Protocol | SHA-256 `aaa17a760d4d869cc230df86248288027b4178523f6fc7dc03dd9a32519f84be` |
 
