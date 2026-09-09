@@ -2,7 +2,7 @@
 
 This report records the matched mutation-only comparison in
 [`stryker-node-comparison.json`](stryker-node-comparison.json). The matrix used
-the committed driver at `a293bc77c2475f68de856a962c0df6b1e882e31c` and accepted
+the committed driver at `1f3bb6b6e36fb6d56a50a9a43e8363f32bd44a47` and accepted
 all 24 runs: one warmup and five measured runs for each tool at workers 1 and
 2.
 
@@ -25,10 +25,10 @@ includes the external original TypeScript check followed by the Stryker command.
 
 | Tool | Workers | Whole invocation median [min, max] | Original TypeScript check median [min, max] | Mutation command median [min, max] |
 | --- | ---: | ---: | ---: | ---: |
-| Seshat | 1 | 1319.611 [1254.468, 1332.468] | inside `mutate` | inside `mutate` |
-| Seshat | 2 | 1373.950 [1364.111, 1450.746] | inside `mutate` | inside `mutate` |
-| StrykerJS | 1 | 2982.869 [2835.358, 3156.388] | 707.709 [691.017, 824.717] | 2291.819 [2138.815, 2368.084] |
-| StrykerJS | 2 | 2877.447 [2813.520, 2954.467] | 721.200 [676.300, 813.544] | 2156.214 [2101.758, 2228.998] |
+| Seshat | 1 | 1220.838 [1191.124, 1302.782] | inside `mutate` | inside `mutate` |
+| Seshat | 2 | 1284.436 [1272.726, 1312.998] | inside `mutate` | inside `mutate` |
+| StrykerJS | 1 | 2814.209 [2666.760, 2935.573] | 759.597 [654.407, 789.571] | 2038.357 [2012.316, 2236.968] |
+| StrykerJS | 2 | 2658.115 [2627.256, 2785.778] | 673.060 [668.207, 818.819] | 1970.660 [1958.988, 1988.001] |
 
 The timed boundary runs from child-process spawn through stdout and stderr
 drain. Stryker's two phase measurements are reported separately; their medians
@@ -102,7 +102,7 @@ From a clean checkout at the driver revision, install the locked benchmark
 dependencies and the existing shared TypeScript tools:
 
 ```sh
-git checkout a293bc77c2475f68de856a962c0df6b1e882e31c
+git checkout 1f3bb6b6e36fb6d56a50a9a43e8363f32bd44a47
 npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund
 npm ci --prefix benchmarks/stryker --ignore-scripts --no-audit --no-fund
 ```
