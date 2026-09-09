@@ -564,10 +564,7 @@ impl CapturedProject {
 
     fn unchanged(&self) -> Result<(), String> {
         for (index, (relative, original)) in self.sources.iter().enumerate() {
-            let expected = match &self.active_edit {
-                Some((active, source)) if *active == index => source,
-                _ => original,
-            };
+            let expected = self.expected_source(index, original);
             let path = self.directory.0.join(relative);
             regular_path(&self.directory.0, &path, false)?;
             if fs::read(&path).map_err(|e| e.to_string())? != expected.as_bytes() {
@@ -578,6 +575,18 @@ impl CapturedProject {
             }
         }
         Ok(())
+    }
+
+    fn expected_source<'a>(&'a self, index: usize, original: &'a str) -> &'a str {
+        if let Some((active, source)) = &self.active_edit
+            && *active == index
+        {
+            return source;
+        }
+        self.prepared_sources
+            .as_ref()
+            .and_then(|sources| sources.get(index))
+            .map_or(original, String::as_str)
     }
 
     fn run_job(
@@ -630,23 +639,34 @@ impl CapturedProject {
             .env("SESHAT_NODE_REPORTER", &reporter)
             .env("SESHAT_VITEST_RUNNER", evidence.join("vitest-runner.mjs"))
             .env("SESHAT_SOURCES", evidence.join("sources.json"));
+        if let Some(id) = self.active_mutant {
+            command.env("SESHAT_MUTANT_ID", id.to_string());
+        }
         if let JobKind::Coverage(path) = kind {
             command.env("SESHAT_COVERAGE_REPORT", path);
         }
         if matches!(setup.runner, Runner::Node) && !matches!(kind, JobKind::Typecheck) {
             // Keep the observer present in baseline, coverage and mutant processes.
-            let (index, source) = self
-                .active_edit
-                .as_ref()
-                .map(|(index, source)| (*index, source))
-                .unwrap_or((0, &self.sources[0].1));
-            observe_node_loads(
-                &mut command,
-                &self.directory.0.join(&self.sources[index].0),
-                source,
-                &receipt,
-                id,
-            )?;
+            let indices: Vec<_> = if self.prepared_sources.is_some() {
+                (0..self.sources.len()).collect()
+            } else {
+                vec![self.active_edit.as_ref().map_or(0, |(index, _)| *index)]
+            };
+            let paths: Vec<_> = indices
+                .iter()
+                .map(|index| self.directory.0.join(&self.sources[*index].0))
+                .collect();
+            let sources: Vec<_> = paths
+                .iter()
+                .zip(indices)
+                .map(|(path, index)| {
+                    (
+                        path.as_path(),
+                        self.expected_source(index, &self.sources[index].1),
+                    )
+                })
+                .collect();
+            observe_node_loads(&mut command, &sources, &receipt, id)?;
         }
         let mut result = job::run(&mut command, Duration::from_millis(setup.timeout_ms))?;
         let mut state = if matches!(kind, JobKind::Typecheck) {
@@ -735,6 +755,61 @@ impl CapturedProject {
         Ok(())
     }
 
+    fn install_prepared_sources(&mut self, prepared: &[String]) -> Result<(), String> {
+        if prepared.len() != self.sources.len() {
+            return Err("prepared source count differs from captured source scope".into());
+        }
+        self.unchanged()?;
+        for (relative, _) in &self.sources {
+            regular_path(&self.directory.0, &self.directory.0.join(relative), false)?;
+        }
+        for ((relative, _), source) in self.sources.iter().zip(prepared) {
+            fs::write(self.directory.0.join(relative), source).map_err(|e| e.to_string())?;
+        }
+        self.active_edit = None;
+        self.active_mutant = None;
+        self.prepared_sources = Some(prepared.to_vec());
+        self.unchanged()
+    }
+
+    fn run_prepared_baselines(
+        &self,
+        evidence: &Path,
+        label: &str,
+        worker: Option<usize>,
+        progress: &Progress,
+    ) -> (Vec<Value>, bool, usize) {
+        let mut rows = Vec::new();
+        let mut ready = true;
+        for (index, setup) in self.config.setups.iter().enumerate() {
+            if cancellation_signal() != 0 {
+                ready = false;
+                break;
+            }
+            let id = format!(
+                "{}-{label}-baseline-{index}",
+                evidence.file_name().unwrap().to_str().unwrap()
+            );
+            progress.phase(format_args!("{label} baseline {:?}", setup.name));
+            let checked = self
+                .run_job(setup, &setup.test, evidence, &id, JobKind::Test)
+                .unwrap_or_else(CommandEvidence::error);
+            ready &= checked.state == TestState::Passed;
+            let mut row = checked.into_json();
+            row["name"] = json!(setup.name);
+            row["phase"] = json!("prepared-baseline");
+            if let Some(worker) = worker {
+                row["worker"] = json!(worker);
+            }
+            rows.push(row);
+            if !ready {
+                break;
+            }
+        }
+        let jobs = rows.len();
+        (rows, ready, jobs)
+    }
+
     fn run_mutant(
         &mut self,
         analysis: &Analysis,
@@ -742,12 +817,26 @@ impl CapturedProject {
         local_id: usize,
         evidence: &Path,
         mut row: Value,
+        switching: bool,
     ) -> MutantExecution {
         let started = Instant::now();
-        let prepared = self
-            .unchanged()
-            .and_then(|()| analysis.replace(&self.sources[source_index].1, local_id))
-            .and_then(|source| self.replace_source(source_index, Some(source)));
+        let prepared = if switching {
+            self.unchanged().and_then(|()| {
+                let id = row["id"]
+                    .as_u64()
+                    .and_then(|id| usize::try_from(id).ok())
+                    .ok_or("mutant ID is not a valid usize")?;
+                if self.prepared_sources.is_none() {
+                    return Err("switching source was not prepared".into());
+                }
+                self.active_mutant = Some(id);
+                Ok(())
+            })
+        } else {
+            self.unchanged()
+                .and_then(|()| analysis.replace(&self.sources[source_index].1, local_id))
+                .and_then(|source| self.replace_source(source_index, Some(source)))
+        };
         if let Err(error) = prepared {
             row["preparationError"] = json!(error);
             row["executionMs"] = json!(started.elapsed().as_secs_f64() * 1000.0);
@@ -777,10 +866,14 @@ impl CapturedProject {
             row["setups"][index] = setup_row;
         }
         // Restore after every outcome, but never follow a rewritten source link.
-        let restoration_error = self
-            .replace_source(source_index, None)
-            .and_then(|()| self.unchanged())
-            .err();
+        let restoration_error = if switching {
+            self.active_mutant = None;
+            self.unchanged().err()
+        } else {
+            self.replace_source(source_index, None)
+                .and_then(|()| self.unchanged())
+                .err()
+        };
         row["executionMs"] = json!(started.elapsed().as_secs_f64() * 1000.0);
         MutantExecution {
             row,
@@ -797,6 +890,7 @@ impl CapturedProject {
         evidence: &Path,
         ready: bool,
         progress: &Progress,
+        switching: bool,
     ) -> Value {
         let started = Instant::now();
         let mut plan = Vec::new();
@@ -824,6 +918,31 @@ impl CapturedProject {
         let mut executions = vec![Vec::new(); plan.len()];
         let mut jobs_attempted = 0;
         let mut run_error = None;
+        let switch_preparation_started =
+            (switching && ready && !plan.is_empty()).then(Instant::now);
+        let prepared_sources = if switching && ready && !plan.is_empty() {
+            let mut offset = 0;
+            let prepared = facts
+                .iter()
+                .enumerate()
+                .map(|(source_index, fact)| {
+                    let analysis = fact.as_ref().map_err(Clone::clone)?;
+                    let source = &self.sources[source_index].1;
+                    let transformed = analysis.switched_with_offset(source, offset)?;
+                    offset += analysis.count();
+                    Ok::<_, String>(transformed)
+                })
+                .collect::<Result<Vec<_>, _>>();
+            match prepared {
+                Ok(sources) => Some(sources),
+                Err(error) => {
+                    run_error = Some(error);
+                    None
+                }
+            }
+        } else {
+            None
+        };
         let worker_limit = self.config.workers.min(plan.len());
         progress.phase(format_args!(
             "worker preparation: {} mutant(s), {} worker(s) requested",
@@ -834,14 +953,21 @@ impl CapturedProject {
         let mut workers = Vec::new();
         let mut worker_baselines = Vec::new();
         let mut baseline_jobs = 0;
-        let mut worker_ready = ready;
-        if ready {
+        let mut prepared_baselines = Vec::new();
+        let mut prepared_baseline_jobs = 0;
+        let mut prepared_baseline_ms = None;
+        let mut worker_ready =
+            ready && (!switching || plan.is_empty() || prepared_sources.is_some());
+        if worker_ready {
             for worker_id in 1..worker_limit {
                 progress.phase(format_args!("preparing worker {worker_id}"));
                 let prepared = (|| {
                     self.unchanged()?;
-                    let worker = self.copy_worker()?;
+                    let mut worker = self.copy_worker()?;
                     let receipts = worker.prepare_evidence()?;
+                    if let Some(sources) = &prepared_sources {
+                        worker.install_prepared_sources(sources)?;
+                    }
                     Ok::<_, String>((worker, receipts))
                 })();
                 let (worker, receipts) = match prepared {
@@ -852,27 +978,40 @@ impl CapturedProject {
                         break;
                     }
                 };
-                for (index, setup) in worker.config.setups.iter().enumerate() {
-                    if cancellation_signal() != 0 {
-                        worker_ready = false;
-                        break;
-                    }
-                    let id = format!(
-                        "{}-worker-{worker_id}-baseline-{index}",
-                        receipts.0.file_name().unwrap().to_str().unwrap()
+                if switching {
+                    let (rows, ready, jobs) = worker.run_prepared_baselines(
+                        &receipts.0,
+                        &format!("worker-{worker_id}"),
+                        Some(worker_id),
+                        progress,
                     );
-                    baseline_jobs += 1;
-                    progress.phase(format_args!("worker {worker_id} baseline {:?}", setup.name));
-                    let checked = worker
-                        .run_job(setup, &setup.test, &receipts.0, &id, JobKind::Test)
-                        .unwrap_or_else(CommandEvidence::error);
-                    worker_ready &= checked.state == TestState::Passed;
-                    let mut row = checked.into_json();
-                    row["worker"] = json!(worker_id);
-                    row["name"] = json!(setup.name);
-                    worker_baselines.push(row);
-                    if !worker_ready {
-                        break;
+                    worker_ready &= ready;
+                    baseline_jobs += jobs;
+                    worker_baselines.extend(rows);
+                } else {
+                    for (index, setup) in worker.config.setups.iter().enumerate() {
+                        if cancellation_signal() != 0 {
+                            worker_ready = false;
+                            break;
+                        }
+                        let id = format!(
+                            "{}-worker-{worker_id}-baseline-{index}",
+                            receipts.0.file_name().unwrap().to_str().unwrap()
+                        );
+                        baseline_jobs += 1;
+                        progress
+                            .phase(format_args!("worker {worker_id} baseline {:?}", setup.name));
+                        let checked = worker
+                            .run_job(setup, &setup.test, &receipts.0, &id, JobKind::Test)
+                            .unwrap_or_else(CommandEvidence::error);
+                        worker_ready &= checked.state == TestState::Passed;
+                        let mut row = checked.into_json();
+                        row["worker"] = json!(worker_id);
+                        row["name"] = json!(setup.name);
+                        worker_baselines.push(row);
+                        if !worker_ready {
+                            break;
+                        }
                     }
                 }
                 workers.push((worker, receipts));
@@ -881,6 +1020,25 @@ impl CapturedProject {
                 }
             }
         }
+        if switching && ready && !plan.is_empty() {
+            if let Some(sources) = &prepared_sources {
+                if let Err(error) = self.install_prepared_sources(sources) {
+                    run_error = Some(error);
+                    worker_ready = false;
+                } else {
+                    let prepared_baseline_started = Instant::now();
+                    let (rows, ready, jobs) =
+                        self.run_prepared_baselines(evidence, "primary", None, progress);
+                    worker_ready &= ready;
+                    prepared_baseline_jobs = jobs;
+                    prepared_baselines = rows;
+                    prepared_baseline_ms =
+                        Some(prepared_baseline_started.elapsed().as_secs_f64() * 1000.0);
+                }
+            }
+        }
+        let switch_preparation_ms =
+            switch_preparation_started.map(|started| started.elapsed().as_secs_f64() * 1000.0);
         let preparation_ms = preparation_started.elapsed().as_secs_f64() * 1000.0;
         let next = AtomicUsize::new(0);
         let stopped = AtomicBool::new(!worker_ready);
@@ -923,6 +1081,7 @@ impl CapturedProject {
                         local_id,
                         receipts,
                         outcomes[id].clone(),
+                        switching,
                     );
                     if progress.enabled {
                         live.lock().unwrap_or_else(|e| e.into_inner()).update(
@@ -1018,7 +1177,7 @@ impl CapturedProject {
             diagnostics["unresolvedBreakdown"]["notRun"],
             diagnostics["unresolvedBreakdown"]["unassessed"]
         ));
-        json!({"strategy":"replace","complete":complete,"planned":plan.len(),
+        let mut result = json!({"strategy":if switching {"switch"} else {"replace"},"complete":complete,"planned":plan.len(),
             "killed":assessed.killed,"survived":assessed.survived,
             "score":if complete {assessed.score} else {None},"outcomes":outcomes,
             "jobsAttempted":jobs_attempted,"executionMs":started.elapsed().as_secs_f64()*1000.0,
@@ -1027,7 +1186,14 @@ impl CapturedProject {
             "workerPreparationMs":preparation_ms,"mutationWallMs":scheduling_ms,
             "workerCleanupMs":cleanup_ms,"completed":completed,"notRun":plan.len()-completed,"unresolved":plan.len()-resolved,
             "diagnostics":diagnostics,
-            "error":run_error,"restorationError":restoration_error})
+            "error":run_error,"restorationError":restoration_error});
+        if switching {
+            result["preparedBaselines"] = json!(prepared_baselines);
+            result["preparedBaselineJobs"] = json!(prepared_baseline_jobs);
+            result["switchPreparationMs"] = json!(switch_preparation_ms);
+            result["preparedBaselineMs"] = json!(prepared_baseline_ms);
+        }
+        result
     }
 
     pub fn collect(self, mutate: bool) -> Result<Value, String> {
@@ -1045,7 +1211,16 @@ impl CapturedProject {
         Ok(result)
     }
 
-    pub fn assess(mut self, mode: AssessmentMode, show_progress: bool) -> Result<Value, String> {
+    pub fn assess(self, mode: AssessmentMode, show_progress: bool) -> Result<Value, String> {
+        self.assess_with_strategy(mode, show_progress, false)
+    }
+
+    pub fn assess_with_strategy(
+        mut self,
+        mode: AssessmentMode,
+        show_progress: bool,
+        switching: bool,
+    ) -> Result<Value, String> {
         let mutate = mode != AssessmentMode::Crap;
         let with_coverage = mode != AssessmentMode::Mutate;
         if mutate
@@ -1256,10 +1431,18 @@ impl CapturedProject {
             timings["attributionMs"] = json!(attribution_started.elapsed().as_secs_f64() * 1000.0);
         }
         let mutation = if mutate {
-            let measured = self.mutate(&facts, &baselines, &evidence.0, complete, &progress);
+            let measured = self.mutate(
+                &facts,
+                &baselines,
+                &evidence.0,
+                complete,
+                &progress,
+                switching,
+            );
             complete &= measured["complete"] == true;
             commands_run += measured["jobsAttempted"].as_u64().unwrap();
             commands_run += measured["workerBaselineJobs"].as_u64().unwrap();
+            commands_run += measured["preparedBaselineJobs"].as_u64().unwrap_or(0);
             Some(measured)
         } else {
             None

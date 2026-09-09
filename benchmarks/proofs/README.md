@@ -82,6 +82,15 @@ executes the coverage command. It reports coverage as `not-requested` and omits
 function CRAP results. This does not permit skipping any mutation test setup.
 `workers` remains a config setting; no command-line worker override is provided.
 
+Installed `check` and `mutate` accept `--experimental-switching`; `crap` rejects
+the option. Replacement remains the default. Switching prepares all selected
+sources after the original checks, runs an inactive prepared baseline on the
+primary copy and every worker, and then executes each mutant in a fresh test
+process. The mutation report includes `preparedBaselines`,
+`preparedBaselineJobs`, `switchPreparationMs` and `preparedBaselineMs` so the
+extra work stays visible. The experiment does not typecheck transformed helpers;
+helper wrapping can affect TypeScript narrowing and runtime reflection.
+
 Default stdout is readable text. `--json` instead emits one JSON object, even for
 argument/config errors. Phase notices and mutation snapshots go to stderr;
 `--no-progress` suppresses them. Captured test output stays in JSON evidence, never interleaved
@@ -663,8 +672,8 @@ contains project-relative source paths, analysis facts, setup identities and
 capture counts. `complete` here means capture/inspection completed, not that tests
 passed or that assurance was established. Failed inspection exits with status 2.
 
-This is the experimental capture/collection configuration, not a released `seshat
-check` interface. A single-package fixture uses:
+This is the experimental capture/collection configuration for the installed CLI.
+A single-package fixture uses:
 
 ```json
 {
@@ -694,7 +703,9 @@ does not check whether the executable, script or coverage provider is installed.
 It neither runs them nor synthesizes a coverage collector. The existing coverage
 proofs document the verified collection routes. The `collect` command
 below runs these settings. `check` adds original type-checking and replacement
-mutation testing. The CLI supports optional thresholds; experimental switching remains a proof-only mode. Parallel mutation workers are opt-in below.
+mutation testing by default. Pass `--experimental-switching` to `check` or
+`mutate` for the helper-based experiment; original checks still run first.
+Parallel mutation workers are opt-in below.
 
 - `source.include` and `source.exclude` choose assessment source, not the files
   needed by tests. Patterns are case-sensitive and relative to the project root.
@@ -828,6 +839,7 @@ The combined proof uses the same configuration and isolation rules as `collect`:
 
 ```sh
 node benchmarks/proofs/check.mjs
+node benchmarks/proofs/switching.mjs
 benchmarks/rust/target/release/seshat-proofs check /path/to/project/seshat.json /path/to/existing/scratch
 ```
 
@@ -847,23 +859,34 @@ Seshat validates command shape and completion, not the contents of a compiler's 
 
 All configured original checks, baselines and coverage collection must pass, and
 CRAP attribution must be complete, before any mutant starts. The proof uses source
-replacement only, one worker by default, and fresh test processes. Every setup runs for each
-mutant even when another setup has already detected it. A setup timeout or execution
+replacement by default, one worker by default, and fresh test processes. Every
+setup runs for each mutant even when another setup has already detected it. A
+setup timeout or execution
 error leaves that mutant unresolved and stops scheduling new mutants. Already
 running mutants finish their required setups unless cancelled. A test failure is a
 kill only when all required setup executions resolve without infrastructure errors.
+
+Pass `--experimental-switching` to prepare every selected source after those
+original checks. The primary copy and each additional worker run an inactive
+prepared baseline before mutant scheduling. Each mutant then selects its global
+ID through `SESHAT_MUTANT_ID` while all prepared sources remain in place. The
+report records prepared baseline rows and job counts separately from mutant jobs.
+The helper transformation is a bounded experiment: it can lose TypeScript
+narrowing and change reflection or source-text observations, and transformed
+helpers are not typechecked.
 
 Tests must load the copied source directly or transpile/rebuild it in their test
 command without type-checking mutants. Running tests against stale build outputs
 cannot assess source replacements. There is no separate build command or automatic
 build-cache invalidation here. The fixture verifies module-initialisation comparisons
 and a mutation that breaks TypeScript narrowing after the original passes validation.
-Switching remains experimental in the earlier proof commands, not this workflow.
 
-Original source stays immutable in memory. Execution allows exactly one intended
-file edit, checks all selected source before/after jobs, and restores it before the
-next mutant. A rewritten source link is rejected during restoration, never followed.
-This is still trusted-command isolation, not a sandbox for tests or external services.
+Original source stays immutable in memory. Replacement execution allows exactly
+one intended file edit, checks all selected source before/after jobs, and restores
+it before the next mutant. Switching keeps all selected sources in a prepared
+state, checks them before/after jobs, and clears the active mutant before the next
+one. A rewritten source link is rejected during restoration, never followed. This
+is still trusted-command isolation, not a sandbox for tests or external services.
 
 The `mutation` JSON section includes each mutant's project-relative `path`, operator
 offset, original/replacement operators, `localId` within its file and a run-wide `id`.
@@ -880,10 +903,13 @@ including restoration or cleanup failures, and exits 2. Earlier valid CRAP resul
 and resolved mutant counts remain visible. This legacy proof command does not
 enforce quality thresholds.
 
-`jobsAttempted` includes typechecks and mutant jobs. The mutation section adds its
-own job count and elapsed time. This is a verified synthetic Node workflow, not a
-released CLI or whole-application integration. The checks preserve original
+`jobsAttempted` includes original setup jobs, mutant jobs and any worker or
+prepared-baseline jobs. The mutation section reports its mutant job count and
+extra baseline counts separately. This is a verified synthetic Node workflow, not
+a whole-application integration. The checks preserve original
 fixture files and write evidence under ignored `work/assurance-proofs/check-*`.
+The focused switching fixture writes evidence under the corresponding
+`switching-*` directory.
 
 ## Node load-failure evidence
 
@@ -1114,6 +1140,12 @@ score. SIGINT/SIGTERM stop active owned job groups across workers and retain
 partial results. A worker error stops new scheduling while other active mutants
 finish; an assertion failure alone does not stop scheduling.
 
+With `--experimental-switching`, each additional copy receives every prepared
+source before its baseline. The primary copy runs the same inactive prepared
+baseline, and all of these rows remain separate from the original baselines and
+mutant jobs. A failed or incomplete prepared baseline prevents mutant execution
+and withholds the score.
+
 Parallelism is safe only when the tests isolate their external resources. Use
 temporary paths within each copy, dynamically allocated ports, and separate test
 databases where needed. Copies do not isolate fixed ports, absolute filenames,
@@ -1123,9 +1155,11 @@ above uses one worker and disables file parallelism. Seshat does not rewrite
 runner commands or silently choose concurrency settings for a project.
 
 The mutation JSON adds `workersRequested`, `workersUsed`, `workerBaselines`,
-`workerBaselineJobs`, `workerPreparationMs` and `mutationWallMs`. Preparation
-covers additional copies, receipts and baseline jobs; mutation wall time covers
-the scheduler through joining workers, not that preparation or final cleanup.
+`workerBaselineJobs`, `workerPreparationMs` and `mutationWallMs`. Switching adds
+`preparedBaselines`, `preparedBaselineJobs`, `switchPreparationMs` and
+`preparedBaselineMs`. Preparation covers additional copies, receipts and
+baseline jobs; mutation wall time covers the scheduler through joining workers,
+not that preparation or final cleanup.
 `mutation.executionMs` includes both and additional-worker cleanup. Per-job `ms`
 values overlap under parallelism and must not be added to estimate wall time.
 Top-level `jobsAttempted` includes additional baselines; mutation `jobsAttempted`

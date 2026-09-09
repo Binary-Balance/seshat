@@ -5,16 +5,18 @@ function loadFailures() {
   if (!process.env.SESHAT_LOAD_CONTEXT) return [];
   try {
     const context = JSON.parse(readFileSync(process.env.SESHAT_LOAD_CONTEXT, 'utf8'));
+    const sources = Array.isArray(context.sources) ? context.sources : [context];
     const receipt = process.env.SESHAT_RECEIPT;
     return readdirSync(dirname(receipt)).filter(name => name.startsWith(`${basename(receipt)}.load-`)).flatMap(name => {
       const path = join(dirname(receipt), name), info = lstatSync(path);
       if (!info.isFile() || info.nlink !== 1 || info.size > 16384) return [];
       const proof = JSON.parse(readFileSync(path, 'utf8'));
       return proof.version === 1 && proof.executionId === process.env.SESHAT_EXECUTION_ID
-        && proof.executionId === context.executionId && proof.source === context.source
+        && proof.executionId === context.executionId
         && typeof proof.entry === 'string' && Number.isInteger(proof.line) && Number.isInteger(proof.column)
-        && context.sites.some(([sl,sc,el,ec]) => (proof.line > sl || proof.line === sl && proof.column >= sc)
-          && (proof.line < el || proof.line === el && proof.column < ec)) ? [proof] : [];
+        && sources.some(source => proof.source === source.source && source.sites?.some(([sl,sc,el,ec]) =>
+          (proof.line > sl || proof.line === sl && proof.column >= sc)
+          && (proof.line < el || proof.line === el && proof.column < ec))) ? [proof] : [];
     });
   } catch { return []; }
 }

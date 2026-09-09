@@ -411,6 +411,9 @@ pub struct CapturedProject {
     sources: Vec<(PathBuf, String)>,
     // Original sources stay immutable; only this one intended edit may differ on disk.
     active_edit: Option<(usize, String)>,
+    // Switching keeps every selected source prepared and selects only the active mutant in env.
+    prepared_sources: Option<Vec<String>>,
+    active_mutant: Option<usize>,
     files: usize,
     bytes: u64,
     links: usize,
@@ -555,6 +558,8 @@ impl CapturedProject {
             config,
             sources,
             active_edit: None,
+            prepared_sources: None,
+            active_mutant: None,
             files,
             bytes,
             links: links.len(),
