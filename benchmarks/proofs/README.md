@@ -291,6 +291,10 @@ in [`outputs/diagnostics-overhead.json`](../../outputs/diagnostics-overhead.json
 These small fixed-fixture samples are noisy and fixture-specific; they do not
 establish a production overhead bound or a general claim about diagnostics cost.
 
+The matched Stryker Node workspace comparison is recorded in the [measured
+report](../../outputs/stryker-node-comparison.md), with its [protocol](stryker-node-comparison.md)
+and [JSON evidence](../../outputs/stryker-node-comparison.json).
+
 ### Installed Linux x64 release benchmark
 
 The candidate-only [release benchmark protocol](release-benchmark.md) ran the
