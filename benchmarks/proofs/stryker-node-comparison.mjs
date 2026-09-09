@@ -77,6 +77,7 @@ const cli = parseArgs({
 }).values;
 
 const root = resolve(cli.repo);
+mkdirSync(join(root, 'work'), {recursive: true});
 const mode = cli.mode;
 const workersArgument = Number(cli.workers);
 const samples = Number(cli.samples);
