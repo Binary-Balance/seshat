@@ -317,6 +317,15 @@ timings, semantic hashes, artifact sizes and provenance are in the
 [release benchmark report](../../outputs/release-benchmark.md) and
 [JSON evidence](../../outputs/release-benchmark.json).
 
+The separate [installed switching comparison protocol](installed-switching-comparison.md)
+now records the matched candidate-only Node workspace matrix for replacement
+and `--experimental-switching`, with its [measured report](../../outputs/installed-switching-comparison.md)
+and [JSON evidence](../../outputs/installed-switching-comparison.json). The
+measured switching median was 6.42% higher at workers 1 and 8.07% higher at
+workers 2 on this fixed host and fixture; these results remain descriptive and
+do not establish a production performance bound. The release report above
+predates this separate comparison, so its earlier pending wording is historical.
+
 Exit 0 means complete execution with no failed applicable threshold. Without
 configured thresholds, surviving mutants and high CRAP do not fail the command.
 Exit 1 means a complete run exceeded `thresholds.maxCrap` for a measured function
