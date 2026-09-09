@@ -1,7 +1,7 @@
 # Seshat
 
 A native code-assurance tool for TypeScript and TSX, written in Rust.
-Seshat combines function-level CRAP analysis with comparison-operator mutation
+Seshat combines function-level [CRAP](https://testing.googleblog.com/2011/02/this-code-is-crap.html) analysis with comparison-operator mutation
 testing to help you find complex, insufficiently tested code.
 
 The name comes from [Seshat](https://www.metmuseum.org/art/collection/search/548465),
