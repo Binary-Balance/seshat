@@ -59,11 +59,13 @@ struct CommandEvidence {
 
 fn observe_node_loads(
     command: &mut Command,
-    source_path: &Path,
-    source: &str,
+    sources: &[(&Path, &str)],
     receipt: &Path,
     id: &str,
 ) -> Result<(), String> {
+    if sources.is_empty() {
+        return Err("load evidence requires at least one source".into());
+    }
     let directory = receipt.parent().unwrap();
     if !fs::symlink_metadata(directory)
         .map_err(|e| e.to_string())?
@@ -72,11 +74,25 @@ fn observe_node_loads(
         return Err("load evidence directory is no longer a real directory".into());
     }
     let observer = directory.join(format!("node-load-{id}.mjs"));
-    let context = directory.join(format!("node-load-{id}.json"));
-    let analysis = Analysis::inspect(
-        source_path.to_str().ok_or("source path must be UTF-8")?,
-        source,
-    )?;
+    let context_path = directory.join(format!("node-load-{id}.json"));
+    let source_contexts = sources
+        .iter()
+        .map(|(source_path, source)| {
+            let analysis = Analysis::inspect(
+                source_path.to_str().ok_or("source path must be UTF-8")?,
+                source,
+            )?;
+            Ok::<_, String>(json!({
+                "source":source_path,
+                "sites":analysis.load_failure_sites(source),
+            }))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let context = if let [source_context] = source_contexts.as_slice() {
+        json!({"version":1,"executionId":id,"source":sources[0].0,"sites":source_context["sites"]})
+    } else {
+        json!({"version":1,"executionId":id,"sources":source_contexts})
+    };
     for (path, bytes) in [
         (
             &observer,
@@ -84,12 +100,7 @@ fn observe_node_loads(
                 .as_bytes()
                 .to_vec(),
         ),
-        (
-            &context,
-            serde_json::to_vec(&json!({"version":1,"source":source_path,
-            "executionId":id,"sites":analysis.load_failure_sites(source)}))
-            .unwrap(),
-        ),
+        (&context_path, serde_json::to_vec(&context).unwrap()),
     ] {
         fs::OpenOptions::new()
             .write(true)
@@ -103,7 +114,7 @@ fn observe_node_loads(
             "NODE_OPTIONS",
             format!("--import={}", serde_json::to_string(&observer).unwrap()),
         )
-        .env("SESHAT_LOAD_CONTEXT", context)
+        .env("SESHAT_LOAD_CONTEXT", context_path)
         .env("SESHAT_EXECUTION_ID", id);
     Ok(())
 }
@@ -209,7 +220,8 @@ impl Session {
                     .unwrap()
                     .as_nanos()
             );
-            observe_node_loads(&mut command, &self.source_path, &source, &receipt, &id)?;
+            let sources = [(self.source_path.as_path(), source.as_str())];
+            observe_node_loads(&mut command, &sources, &receipt, &id)?;
         }
         let mut child = command.spawn().map_err(|e| format!("spawn: {e}"))?;
         let timeout = Duration::from_millis(self.config["timeoutMs"].as_u64().unwrap_or(10000));
