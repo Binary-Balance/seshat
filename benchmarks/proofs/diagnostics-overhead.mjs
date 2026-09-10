@@ -59,10 +59,11 @@ const timeoutMs = Number(cli['timeout-ms']);
 const releaseMode = Boolean(cli.release);
 const switchingMode = Boolean(cli.switching);
 const switchingFixtureName = cli['switching-fixture'] ?? 'node';
+const switchingJestMode = switchingMode && switchingFixtureName === 'jest-expo';
 const selfCheck = Boolean(cli['self-check']);
 const preflightOnly = Boolean(cli['preflight-only']);
-assert.ok(['node', 'vitest'].includes(switchingFixtureName),
-  '--switching-fixture must be node or vitest');
+assert.ok(['node', 'vitest', 'jest-expo'].includes(switchingFixtureName),
+  '--switching-fixture must be node, vitest or jest-expo');
 assert.ok(switchingMode || cli['switching-fixture'] === undefined,
   '--switching-fixture requires --switching');
 if (!selfCheck) {
@@ -80,6 +81,8 @@ if (!selfCheck) {
     '--release cannot be combined with --prepare-only or --preflight-only');
   assert.ok(!switchingMode || (!cli['prepare-only'] && !preflightOnly),
     '--switching cannot be combined with --prepare-only or --preflight-only');
+  assert.ok(!switchingMode || !switchingJestMode || cli['jest-deps'],
+    '--jest-deps must point at the prepared Jest/Expo dependency fixture');
   assert.ok(switchingMode || cli['jest-deps'], '--jest-deps must point at the prepared Jest/Expo dependency fixture');
   if (switchingMode) assert.equal(samples, 5, '--samples is fixed at 5 by the switching protocol');
 }
@@ -87,8 +90,8 @@ assert.ok(Number.isSafeInteger(samples) && samples >= 3 && samples <= 9 && sampl
   '--samples must be an odd integer from 3 to 9');
 assert.ok(Number.isSafeInteger(timeoutMs) && timeoutMs > 0, '--timeoutMs must be positive');
 assert.ok(existsSync(repo), `repository does not exist: ${repo}`);
-const jestDeps = selfCheck || switchingMode ? null : realpathSync(resolve(cli['jest-deps']));
-if (!selfCheck && !switchingMode) {
+const jestDeps = selfCheck || !cli['jest-deps'] ? null : realpathSync(resolve(cli['jest-deps']));
+if (!selfCheck && (!switchingMode || switchingJestMode)) {
   assert.ok(statSync(jestDeps).isDirectory(), `Jest/Expo dependencies do not exist: ${jestDeps}`);
 }
 
@@ -96,15 +99,17 @@ const baselineTarball = selfCheck || !cli.baseline ? null : realpathSync(resolve
 const candidateTarball = selfCheck || !cli.candidate ? null : realpathSync(resolve(cli.candidate));
 for (const path of [baselineTarball, candidateTarball].filter(Boolean)) assert.ok(statSync(path).isFile(), path);
 
-const switchingWorkPrefix = switchingFixtureName === 'vitest' ? 'installed-vitest-switching' : 'installed-switching';
+const switchingWorkPrefix = switchingFixtureName === 'vitest'
+  ? 'installed-vitest-switching'
+  : switchingFixtureName === 'jest-expo' ? 'installed-jest-expo-switching' : 'installed-switching';
 const switchingOutputStem = switchingFixtureName === 'vitest'
   ? 'installed-vitest-switching-comparison'
-  : 'installed-switching-comparison';
+  : switchingFixtureName === 'jest-expo' ? 'installed-jest-expo-switching-comparison' : 'installed-switching-comparison';
 const work = selfCheck ? null : mkdtempSync(join(repo, `work/${switchingMode ? switchingWorkPrefix : releaseMode ? 'release-benchmark' : 'diagnostics-overhead'}-`));
-const output = selfCheck ? null : resolve(cli.output ?? join(work, switchingMode && switchingFixtureName === 'vitest' ? `${switchingOutputStem}.json` : 'result.json'));
+const output = selfCheck ? null : resolve(cli.output ?? join(work, switchingMode && switchingFixtureName !== 'node' ? `${switchingOutputStem}.json` : 'result.json'));
 const reportOutput = selfCheck ? null : resolve(cli.report ?? (cli.output
   ? cli.output.replace(/\.json$/i, '.md')
-  : join(work, switchingMode && switchingFixtureName === 'vitest' ? `${switchingOutputStem}.md` : 'report.md')));
+  : join(work, switchingMode && switchingFixtureName !== 'node' ? `${switchingOutputStem}.md` : 'report.md')));
 const proofHere = join(repo, 'benchmarks/proofs');
 const proofModules = join(proofHere, 'node_modules');
 const compiler = join(repo, 'benchmarks/node_modules/typescript/bin/tsc');
@@ -148,6 +153,7 @@ const EXPECTED = {
 };
 
 const VITEST_INPUT_SHA256 = 'a031b45a18aebad086e832f8c73972fdcbc129e9837c8d63f20c0fb8a4c6f455';
+const JEST_EXPO_INPUT_SHA256 = '2620191d8d5b8aad5ed118f0df814da17e5e9646b696722d84afbcc58265ec1c';
 
 function json(path, value) {
   mkdirSync(dirname(path), {recursive: true});
@@ -763,6 +769,14 @@ function switchingFixture() {
       protocol: 'installed-vitest-switching-comparison.md',
     };
   }
+  if (switchingFixtureName === 'jest-expo') {
+    return {
+      id: 'jestExpo',
+      expected: EXPECTED.jestExpo,
+      inputSha256: JEST_EXPO_INPUT_SHA256,
+      protocol: 'installed-jest-expo-switching-comparison.md',
+    };
+  }
   return {
     id: 'nodeWorkspace',
     expected: EXPECTED.nodeWorkspace,
@@ -772,7 +786,9 @@ function switchingFixture() {
 }
 
 function makeSwitchingFixture() {
-  return switchingFixtureName === 'vitest' ? makeVitestFixture() : makeNodeFixture();
+  if (switchingFixtureName === 'vitest') return makeVitestFixture();
+  if (switchingFixtureName === 'jest-expo') return makeJestFixture();
+  return makeNodeFixture();
 }
 
 function switchingConditions() {
@@ -916,8 +932,10 @@ function selfCheckReport(workers, score = 100, verdict = 'killed') {
 
 function selfCheckSwitchingReport(workers, strategy = 'replace') {
   const fixture = switchingFixture();
-  const setupName = fixture.id === 'vitest' ? 'stack' : 'node-workspace';
-  const runner = fixture.id === 'vitest' ? 'vitest' : 'node';
+  const setupName = fixture.id === 'vitest' ? 'stack' : fixture.id === 'jestExpo' ? 'jest-expo' : 'node-workspace';
+  const runner = fixture.id === 'vitest' ? 'vitest' : fixture.id === 'jestExpo' ? 'jest' : 'node';
+  const killed = fixture.expected.mutants.filter(item => item.verdict === 'killed').length;
+  const survived = fixture.expected.mutants.filter(item => item.verdict === 'survived').length;
   const receiptReport = executionId => ({
     version: 1,
     executionId,
@@ -957,8 +975,8 @@ function selfCheckSwitchingReport(workers, strategy = 'replace') {
     strategy,
     complete: true,
     planned: fixture.expected.mutants.length,
-    killed: fixture.expected.mutants.length,
-    survived: 0,
+    killed,
+    survived,
     score: fixture.expected.score,
     jobsAttempted: fixture.expected.mutants.length,
     workersRequested: workers,
@@ -977,7 +995,7 @@ function selfCheckSwitchingReport(workers, strategy = 'replace') {
     outcomes: fixture.expected.mutants.map(item => ({
       ...item,
       executionMs: 1,
-      setups: [{state: 'failed', report: receiptReport(`mutant-${item.id}`)}],
+      setups: [{state: item.verdict === 'survived' ? 'passed' : 'failed', report: receiptReport(`mutant-${item.id}`)}],
     })),
   };
   if (strategy === 'switch') {
@@ -995,11 +1013,13 @@ function selfCheckSwitchingReport(workers, strategy = 'replace') {
     command: 'check',
     complete: true,
     scope: {
-      include: fixture.id === 'vitest' ? ['tempo.ts', 'view.tsx', 'server.ts'] : ['src/**/*.ts', 'packages/**/*.ts'],
+      include: fixture.id === 'vitest'
+        ? ['tempo.ts', 'view.tsx', 'server.ts']
+        : fixture.id === 'jestExpo' ? ['src/status.tsx'] : ['src/**/*.ts', 'packages/**/*.ts'],
       exclude: [],
       files: fixture.id === 'vitest'
         ? Object.keys(fixture.expected.sourceMetrics)
-        : ['packages/rules/index.ts', 'src/compare.ts'],
+        : fixture.id === 'jestExpo' ? ['src/status.tsx'] : ['packages/rules/index.ts', 'src/compare.ts'],
       setups: [{name: setupName, runner, cwd: '.'}],
     },
     result: {
@@ -1051,7 +1071,7 @@ function runSwitchingSelfCheck() {
     'worker-specific report fields were not retained in semantic hash');
 
   const wrongMetrics = structuredClone(positive);
-  wrongMetrics.result.sources[0].result.functions[0].crap = 2;
+  wrongMetrics.result.sources[0].result.functions[0].crap = Object.values(fixture.expected.sourceMetrics)[0][0][3] + 1;
   assert.throws(() => assertExpected(fixture, wrongMetrics.result, 1, 'switch', true));
   const wrongOperator = structuredClone(positive);
   wrongOperator.result.mutation.outcomes[0].replacement = '<';
@@ -1062,6 +1082,15 @@ function runSwitchingSelfCheck() {
   falseKill.result.mutation.survived = 1;
   falseKill.result.mutation.score = 50;
   assert.throws(() => assertExpected(fixture, falseKill.result, 1, 'switch', true));
+  if (fixture.id === 'jestExpo') {
+    const falseSurvivor = structuredClone(positive);
+    falseSurvivor.result.mutation.outcomes[2].verdict = 'killed';
+    falseSurvivor.result.mutation.outcomes[2].setups[0].state = 'failed';
+    falseSurvivor.result.mutation.killed = 4;
+    falseSurvivor.result.mutation.survived = 0;
+    falseSurvivor.result.mutation.score = 100;
+    assert.throws(() => assertExpected(fixture, falseSurvivor.result, 1, 'switch', true));
+  }
   const wrongPreparedCount = structuredClone(positive);
   wrongPreparedCount.result.mutation.preparedBaselineJobs = 0;
   assert.throws(() => assertExpected(fixture, wrongPreparedCount.result, 1, 'switch', true));
@@ -1069,7 +1098,7 @@ function runSwitchingSelfCheck() {
   wrongWorkerPhase.result.mutation.workerBaselines[0].phase = 'original-baseline';
   assert.throws(() => assertExpected(fixture, wrongWorkerPhase.result, 2, 'switch', true));
   const wrongParity = structuredClone(records);
-  wrongParity[0].report.result.sources[0].result.functions[0].crap = 2;
+  wrongParity[0].report.result.sources[0].result.functions[0].crap = Object.values(fixture.expected.sourceMetrics)[0][0][3] + 1;
   wrongParity[0].workerParityHash = hashJson(portable(workerIndependentProjection(wrongParity[0].report)));
   assert.throws(() => assertSwitchingSummary(wrongParity, aggregateRows, fixture, sampleCount));
   console.log('Installed switching benchmark self-check passed.');
@@ -1127,6 +1156,10 @@ function toolVersions() {
     environment.proofTools = Object.fromEntries([
       'vitest', '@vitest/coverage-istanbul', 'fastify', '@sinclair/typebox', 'react', 'react-dom',
     ].map(name => [name, readVersion(join(proofModules, name))]));
+  } else if (switchingJestMode) {
+    environment.proofTools = Object.fromEntries([
+      'jest', 'jest-expo', 'expo', 'react-native', '@react-native/jest-preset', 'babel-preset-expo', 'react',
+    ].map(name => [name, readVersion(join(jestDeps, 'node_modules', name))]));
   } else if (!switchingMode) {
     environment.proofTools = {
       vitest: readVersion(join(proofModules, 'vitest')),
@@ -1197,19 +1230,24 @@ function formatPercent(value) {
 function renderSwitchingReport(evidence) {
   const fixture = evidence.fixture ?? {};
   const isVitest = fixture.id === 'vitest';
-  const fixtureLabel = isVitest ? 'Vitest/TSX fixture' : 'Node workspace';
-  const protocolFile = isVitest ? 'installed-vitest-switching-comparison.md' : 'installed-switching-comparison.md';
-  const outputFile = isVitest ? 'installed-vitest-switching-comparison.json' : 'installed-switching-comparison.json';
+  const isJestExpo = fixture.id === 'jestExpo';
+  const fixtureLabel = isVitest ? 'Vitest/TSX fixture' : isJestExpo ? 'Jest/Expo fixture' : 'Node workspace';
+  const protocolFile = isVitest
+    ? 'installed-vitest-switching-comparison.md'
+    : isJestExpo ? 'installed-jest-expo-switching-comparison.md' : 'installed-switching-comparison.md';
+  const outputFile = isVitest
+    ? 'installed-vitest-switching-comparison.json'
+    : isJestExpo ? 'installed-jest-expo-switching-comparison.json' : 'installed-switching-comparison.json';
   const metricSummary = Object.entries(fixture.expected?.sourceMetrics ?? {})
     .map(([path, metrics]) => `\`${path}\` reports \`${JSON.stringify(metrics)}\``)
     .join('; ');
   const mutantSummary = (fixture.expected?.mutants ?? [])
     .map(mutant => `\`${mutant.path}\` byte-${mutant.offset} \`${mutant.original}\` -> \`${mutant.replacement}\``)
     .join(', ');
-  const validation = isVitest
-    ? `The ${metricSummary}. All ${fixture.expected?.mutants?.length ?? 'expected'} exact mutants (${mutantSummary}) were killed with no unresolved or not-run outcomes.`
+  const validation = isVitest || isJestExpo
+    ? `The ${metricSummary}. The exact mutants (${mutantSummary}) produced ${fixture.expected?.mutants?.filter(mutant => mutant.verdict === 'killed').length ?? 'expected'} killed and ${fixture.expected?.mutants?.filter(mutant => mutant.verdict === 'survived').length ?? 'expected'} survived outcomes (score ${fixture.expected?.score ?? 'unavailable'}%), with no unresolved or not-run outcomes.`
     : 'Both source files report the expected \`[[1,1,1,1]]\` metrics. Both exact byte-42 \`>=\` mutants were killed with no unresolved or not-run outcomes.';
-  const buildTiming = isVitest && evidence.buildCost?.status === 0
+  const buildTiming = (isVitest || isJestExpo) && evidence.buildCost?.status === 0
     ? `\nThe recorded candidate build took ${formatMs(evidence.buildCost.wallMs)}. ${evidence.buildCost.boundary ?? 'The build boundary was not recorded.'}\n`
     : '';
   const comparisons = evidence.comparisons ?? [];
@@ -1240,7 +1278,10 @@ function renderSwitchingReport(evidence) {
   const artifact = evidence.artifacts?.candidate;
   const candidateHash = artifact?.tarball?.sha256 ?? 'unavailable';
   const semanticHash = evidence.parity?.workerIndependentHash ?? 'unavailable';
-  return `${isVitest ? '# Installed Seshat Vitest switching comparison' : '# Installed Seshat switching comparison'}
+  const title = isVitest
+    ? '# Installed Seshat Vitest switching comparison'
+    : isJestExpo ? '# Installed Seshat Jest/Expo switching comparison' : '# Installed Seshat switching comparison';
+  return `${title}
 
 This report records the fixed candidate-only ${fixtureLabel} matrix described by
 [\`${protocolFile}\`](../benchmarks/proofs/${protocolFile}).
@@ -1248,7 +1289,7 @@ It is fixture-specific evidence and does not establish a production performance
 bound.
 
 The installed candidate source revision is ${evidence.candidateCommit ?? 'unrecorded'}.
-The candidate tarball SHA-256 is \`${candidateHash}\`. The shared workspace input
+The candidate tarball SHA-256 is \`${candidateHash}\`. The fixture input
 hash is \`${evidence.fixture.inputSha256}\`; the common worker-independent semantic
 hash is \`${semanticHash}\`.
 ${buildTiming}
@@ -1367,16 +1408,20 @@ function runSwitchingBenchmark() {
   if (fixture.id === 'nodeWorkspace') {
     fixtureEvidence.source = NODE_COMPARE_SOURCE;
     fixtureEvidence.rulesSource = NODE_RULES_SOURCE;
-  } else {
+  } else if (fixture.id === 'vitest') {
     fixtureEvidence.sourcePaths = ['tempo.ts', 'view.tsx', 'server.ts'];
     fixtureEvidence.testPaths = ['stack.test.tsx'];
     fixtureEvidence.configPaths = ['vitest.config.mjs'];
+  } else {
+    fixtureEvidence.sourcePaths = ['src/status.tsx'];
+    fixtureEvidence.testPaths = ['tests/status.test.tsx'];
+    fixtureEvidence.configPaths = ['package.json', 'package-lock.json', 'tsconfig.json', 'babel.config.cjs', 'jest.config.cjs'];
   }
   const evidence = {
     version: 1,
     kind: switchingFixtureName === 'vitest'
       ? 'installed-vitest-switching-comparison'
-      : 'installed-switching-comparison',
+      : switchingFixtureName === 'jest-expo' ? 'installed-jest-expo-switching-comparison' : 'installed-switching-comparison',
     mode: 'switching-matrix',
     environment: toolVersions(),
     candidateCommit,
@@ -1452,7 +1497,8 @@ function runSwitchingBenchmark() {
     conditions: switchingConditions(),
     semanticHash: evidence.parity.workerIndependentHash,
   };
-  evidence.conclusion = `Descriptive medians and raw ranges for one fixed installed ${fixture.id === 'vitest' ? 'Vitest/TSX fixture' : 'Node workspace'} only; no production overhead or general strategy recommendation.`;
+  const fixtureLabel = fixture.id === 'vitest' ? 'Vitest/TSX fixture' : fixture.id === 'jestExpo' ? 'Jest/Expo fixture' : 'Node workspace';
+  evidence.conclusion = `Descriptive medians and raw ranges for one fixed installed ${fixtureLabel} only; no production overhead or general strategy recommendation.`;
   saveEvidence();
   mkdirSync(dirname(reportOutput), {recursive: true});
   writeFileSync(reportOutput, renderSwitchingReport(evidence));
