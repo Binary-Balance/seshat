@@ -21,6 +21,8 @@ Usage: seshat <check|crap|mutate> [options]
 Options:
   --config PATH   Configuration file (default: ./seshat.json)
   --scratch PATH  Existing scratch parent outside the project (default: OS temp)
+  --experimental-switching
+                  Use helper-based switching for check/mutate (experimental)
   --json          One versioned JSON report on stdout, including failures
   --no-progress   Suppress phase messages on stderr
   --help, -h      Show this help without reading configuration
@@ -36,6 +38,7 @@ struct Options {
     mode: AssessmentMode,
     config: PathBuf,
     scratch: PathBuf,
+    experimental_switching: bool,
     json: bool,
     progress: bool,
 }
@@ -71,6 +74,7 @@ fn parse(args: &[String]) -> Result<Action, String> {
         mode,
         config: "seshat.json".into(),
         scratch: env::temp_dir(),
+        experimental_switching: false,
         json: false,
         progress: true,
     };
@@ -81,6 +85,14 @@ fn parse(args: &[String]) -> Result<Action, String> {
             return Err(format!("duplicate option {flag:?}"));
         }
         match flag.as_str() {
+            "--experimental-switching" => {
+                if mode == AssessmentMode::Crap {
+                    return Err(
+                        "--experimental-switching is only available for check or mutate".into(),
+                    );
+                }
+                options.experimental_switching = true;
+            }
             "--json" => options.json = true,
             "--no-progress" => options.progress = false,
             "--config" | "--scratch" => {
@@ -345,6 +357,7 @@ fn readable(report: &Value) -> String {
         }
     }
     if let Some(mutation) = result.get("mutation") {
+        let _ = writeln!(output, "Mutation strategy: {}", text(&mutation["strategy"]));
         let score = mutation["score"]
             .as_f64()
             .map(|v| format!("{v:.2}%"))
@@ -366,6 +379,13 @@ fn readable(report: &Value) -> String {
             "Workers: {} requested, {} used; {} additional baseline job(s)",
             mutation["workersRequested"], mutation["workersUsed"], mutation["workerBaselineJobs"]
         );
+        if mutation["strategy"] == "switch" {
+            let _ = writeln!(
+                output,
+                "Prepared baseline: {} job(s)",
+                mutation["preparedBaselineJobs"]
+            );
+        }
         if mutation.get("completed").is_some() {
             let _ = writeln!(
                 output,
@@ -467,6 +487,14 @@ fn readable(report: &Value) -> String {
             "Worker preparation",
             &result["mutation"]["workerPreparationMs"],
         ),
+        (
+            "Switch preparation",
+            &result["mutation"]["switchPreparationMs"],
+        ),
+        (
+            "Prepared baseline",
+            &result["mutation"]["preparedBaselineMs"],
+        ),
         ("Mutation scheduling", &result["mutation"]["mutationWallMs"]),
         ("Worker cleanup", &result["mutation"]["workerCleanupMs"]),
     ] {
@@ -543,7 +571,11 @@ pub fn main() -> ExitCode {
                         array(&scope["files"]).len()
                     ),
                 );
-                project.assess(options.mode, options.progress)
+                project.assess_with_strategy(
+                    options.mode,
+                    options.progress,
+                    options.experimental_switching,
+                )
             })()
             .unwrap_or_else(|error: String| json!({"complete":false,"error":error}));
             let (value, status) = report(
@@ -694,6 +726,13 @@ mod tests {
             assert!(options.json);
             assert!(!options.progress);
         }
+        let Action::Run(options) =
+            parse(&["check".into(), "--experimental-switching".into()]).unwrap()
+        else {
+            panic!()
+        };
+        assert!(options.experimental_switching);
+        assert!(parse(&["crap".into(), "--experimental-switching".into()]).is_err());
     }
     #[test]
     fn unknown_is_not_zero_and_terminal_controls_are_escaped() {

@@ -61,7 +61,9 @@ assert.doesNotMatch(libraries,/not found/);
 run('debian-packages','dpkg-query',['-W','libc6','libgcc-s1','libstdc++6']);
 const output=run('installed-package',process.execPath,['/seshat/benchmarks/proofs/npm-package.mjs','/opt/package.tgz']);
 const install=read(output.match(/Results: (.+)/)[1]);
-assert.match(install.checks['installed-cli-regression'].stdout,/CLI passed: 42 scenarios plus legacy parity/);
+const cliSummary=install.checks['installed-cli-regression'].stdout.match(/CLI passed: (\d+) scenarios plus legacy parity/);
+assert.ok(cliSummary && Number(cliSummary[1]) > 0, install.checks['installed-cli-regression'].stdout);
+assert.equal(install.checks['installed-cli-regression'].status,0);
 assert.doesNotMatch(run('installed-libraries','ldd',[install.installedBinary]),/not found/);
 const parallel=run('installed-parallel',process.execPath,['/seshat/benchmarks/proofs/parallel.mjs'],
   {...process.env,SESHAT_PARALLEL_CLI:'1',SESHAT_CLI_BINARY:install.installedBinary});

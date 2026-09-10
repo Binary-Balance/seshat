@@ -174,6 +174,17 @@ even for `mutate`, which does not execute the coverage command.
 Every mutant runs all configured setups. No automatic test selection, persistent
 test-process reuse or cross-run verdict caching is performed.
 
+`check` and `mutate` use source replacement by default. Pass
+`--experimental-switching` to use the bounded helper-based switching experiment.
+The option is rejected by `crap`. Seshat completes the original typechecks and
+baselines first, plus fresh coverage for `check`, then prepares every selected
+source in the captured copy. It runs an inactive prepared baseline on the primary
+copy and each mutation worker before scheduling mutants. Prepared baseline rows,
+their job count and preparation timings are retained in the JSON mutation report.
+Switching does not typecheck transformed helpers. Helper wrapping can lose
+TypeScript narrowing and can change reflection or source-text observations; verify
+the result against replacement for the project before relying on it.
+
 `{seshatReporter}` is replaced with the private reporter for that runner. Node
 commands use `--test-reporter={seshatReporter}`. The bounded Node coverage collector
 is available in [collect-node.mjs](../benchmarks/proofs/collect-node.mjs); it is a

@@ -5,6 +5,7 @@ import {pathToFileURL} from 'node:url';
 
 if (process.env.NODE_TEST_CONTEXT === 'child-v8' && process.versions.node === '24.20.0' && process.env.SESHAT_LOAD_CONTEXT) {
   const context = JSON.parse(readFileSync(process.env.SESHAT_LOAD_CONTEXT, 'utf8'));
+  const sources = Array.isArray(context.sources) ? context.sources : [context];
   const entry = process.argv[1];
   const entryURL = pathToFileURL(entry).href;
   const formatter = Error.prepareStackTrace;
@@ -28,12 +29,17 @@ if (process.env.NODE_TEST_CONTEXT === 'child-v8' && process.versions.node === '2
     } finally { Error.prepareStackTrace = formatter; }
     if (!frames?.length) return;
     const first = frames[0];
-    if (first.getFileName() !== pathToFileURL(context.source).href) return;
     const line = first.getLineNumber(), column = first.getColumnNumber();
-    if (!context.sites.some(([sl,sc,el,ec]) => (line > sl || line === sl && column >= sc) && (line < el || line === el && column < ec))) return;
-    try {
-      writeFileSync(`${process.env.SESHAT_RECEIPT}.load-${process.pid}.json`, JSON.stringify({version:1,
-        executionId:context.executionId, entry, source:context.source, line, column}), {flag:'wx'});
-    } catch { /* Missing evidence leaves the crash unresolved. */ }
+    for (const source of sources) {
+      if (typeof source?.source !== 'string' || !Array.isArray(source.sites)
+        || first.getFileName() !== pathToFileURL(source.source).href
+        || !source.sites.some(([sl,sc,el,ec]) => (line > sl || line === sl && column >= sc)
+          && (line < el || line === el && column < ec))) continue;
+      try {
+        writeFileSync(`${process.env.SESHAT_RECEIPT}.load-${process.pid}.json`, JSON.stringify({version:1,
+          executionId:context.executionId, entry, source:source.source, line, column}), {flag:'wx'});
+      } catch { /* Missing evidence leaves the crash unresolved. */ }
+      break;
+    }
   });
 }
