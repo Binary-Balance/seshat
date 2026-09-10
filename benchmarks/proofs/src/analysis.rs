@@ -339,10 +339,14 @@ impl Analysis {
     }
 
     pub fn switched(&self, source: &str) -> Result<String, String> {
+        self.switched_with_offset(source, 0)
+    }
+
+    pub fn switched_with_offset(&self, source: &str, id_offset: usize) -> Result<String, String> {
         if source.contains("__seshat_") {
             return Err("proof helper name collision".into());
         }
-        fn render(a: &Analysis, source: &str, start: u32, end: u32) -> String {
+        fn render(a: &Analysis, source: &str, start: u32, end: u32, id_offset: usize) -> String {
             let mut out = String::new();
             let mut cursor = start;
             for c in &a.comparisons {
@@ -350,27 +354,25 @@ impl Analysis {
                     continue;
                 }
                 out.push_str(&source[cursor as usize..c.span.start as usize]);
-                let left = render(a, source, c.left.start, c.left.end);
-                let right = render(a, source, c.right.start, c.right.end);
+                let left = render(a, source, c.left.start, c.left.end, id_offset);
+                let right = render(a, source, c.right.start, c.right.end, id_offset);
                 out.push_str(&format!(
                     "__seshat_compare({}, ({left}), ({right}), {:?})",
-                    c.first_id, c.original
+                    c.first_id + id_offset,
+                    c.original
                 ));
                 cursor = c.span.end;
             }
             out.push_str(&source[cursor as usize..end as usize]);
             out
         }
-        let alternatives: Vec<_> = self
-            .comparisons
-            .iter()
-            .flat_map(|c| {
-                c.replacements
-                    .iter()
-                    .enumerate()
-                    .map(move |(i, op)| json!([c.first_id + i, c.first_id, op]))
-            })
-            .collect();
+        let mut alternatives = vec![Value::Null; id_offset];
+        alternatives.extend(self.comparisons.iter().flat_map(|c| {
+            c.replacements
+                .iter()
+                .enumerate()
+                .map(move |(i, op)| json!([c.first_id + id_offset + i, c.first_id + id_offset, op]))
+        }));
         // This helper proof intentionally measures transpile-only execution. Strict type checking
         // and syntax that observes transformed function text are separate compatibility checks.
         let prefix = format!(
@@ -378,11 +380,28 @@ impl Analysis {
             json!(alternatives)
         );
         let helper = "function __seshat_compare(site: number, a: any, b: any, op: string) {\n  const alternative = __seshat_alternatives[__seshat_active];\n  if (alternative && alternative[1] === site) op = alternative[2] as string;\n  switch(op) { case '<': return a < b; case '<=': return a <= b; case '>': return a > b; case '>=': return a >= b; case '==': return a == b; case '!=': return a != b; case '===': return a === b; case '!==': return a !== b; default: throw Error('unknown comparison'); }\n}\n";
-        Ok(prefix + helper + &render(self, source, 0, source.len() as u32))
+        Ok(prefix + helper + &render(self, source, 0, source.len() as u32, id_offset))
     }
 
     pub fn json(&self) -> Value {
         json!({"scopes": self.scopes.iter().map(|s| json!({"name":s.name,"start":s.span.start,"end":s.span.end,"complexity":s.complexity,"implicit":s.implicit,"empty":s.empty})).collect::<Vec<_>>(),
             "mutants": self.comparisons.iter().flat_map(|c| c.replacements.iter().enumerate().map(move |(i, op)| json!({"id":c.first_id+i,"offset":c.offset,"original":c.original,"replacement":op}))).collect::<Vec<_>>()})
     }
+}
+
+#[test]
+fn switched_sources_can_use_run_wide_ids_and_reject_helper_collisions() {
+    let source = "export const first = value >= 1;\nexport const second = value < 3;\n";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let switched = analysis.switched_with_offset(source, 7).unwrap();
+    assert!(switched.contains("__seshat_compare(7"));
+    assert!(switched.contains("[7,7,\">\"]"));
+    assert!(switched.contains("[9,9,\"<=\"]"));
+
+    let collision = "const __seshat_compare = () => true;\nexport const value = 1 < 2;\n";
+    let analysis = Analysis::inspect("source.ts", collision).unwrap();
+    assert!(matches!(
+        analysis.switched(collision),
+        Err(error) if error == "proof helper name collision"
+    ));
 }

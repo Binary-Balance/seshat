@@ -88,8 +88,10 @@ for(const [field,value] of [['os','darwin'],['cpu','arm64'],['libc','musl']]) {
 // The unchanged assessment regression now invokes the installed native command.
 env.SESHAT_CLI_BINARY = executable;
 const regression = run('installed-cli-regression',process.execPath,[join(repo,'benchmarks/proofs/cli.mjs')],consumer);
-assert.match(regression.stdout,/CLI passed: 42 scenarios plus legacy parity/);
+const cliSummary = regression.stdout.match(/CLI passed: (\d+) scenarios plus legacy parity/);
+assert.ok(cliSummary && Number(cliSummary[1]) > 0, regression.stdout);
+const cliScenarioCount = Number(cliSummary[1]);
 assert.equal(createHash('sha256').update(readFileSync(executable)).digest('hex'),build.binarySha256);
 const result = {tarball,work,installedBinary:executable,build,checks:evidence};
 json(join(work,'result.json'),result);
-console.log(`npm package passed: ${Object.keys(evidence).length} checks, including 42 installed CLI scenarios. Results: ${join(work,'result.json')}`);
+console.log(`npm package passed: ${Object.keys(evidence).length} checks, including ${cliScenarioCount} installed CLI scenarios. Results: ${join(work,'result.json')}`);

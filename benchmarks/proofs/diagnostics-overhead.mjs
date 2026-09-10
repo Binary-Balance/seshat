@@ -20,8 +20,11 @@ import {performance} from 'node:perf_hooks';
 import os from 'node:os';
 import {parseArgs} from 'node:util';
 import {
+  NODE_COMPARE_SOURCE,
+  NODE_RULES_SOURCE,
   NODE_WORKSPACE_EXPECTED,
   NODE_WORKSPACE_INPUT_PATHS,
+  NODE_WORKSPACE_INPUT_SHA256,
   nodeWorkspaceSeshatConfig,
   writeNodeWorkspace,
 } from './node-workspace-fixture.mjs';
@@ -41,7 +44,10 @@ const cli = parseArgs({
     'candidate-commit': {type: 'string'},
     'harness-commit': {type: 'string'},
     release: {type: 'boolean', default: false},
+    switching: {type: 'boolean', default: false},
     'self-check': {type: 'boolean', default: false},
+    'build-evidence': {type: 'string'},
+    report: {type: 'string'},
     'prepare-only': {type: 'boolean', default: false},
     'preflight-only': {type: 'boolean', default: false},
   },
@@ -50,31 +56,43 @@ const repo = resolve(cli.repo);
 const samples = Number(cli.samples);
 const timeoutMs = Number(cli['timeout-ms']);
 const releaseMode = Boolean(cli.release);
+const switchingMode = Boolean(cli.switching);
 const selfCheck = Boolean(cli['self-check']);
 const preflightOnly = Boolean(cli['preflight-only']);
 if (!selfCheck) {
-  assert.ok(releaseMode ? !cli.baseline && cli.candidate :
-    cli.baseline && (cli.candidate || cli['prepare-only'] || preflightOnly),
-    releaseMode
+  assert.ok(!releaseMode || !switchingMode, '--release and --switching are mutually exclusive');
+  assert.ok(switchingMode
+    ? !cli.baseline && cli.candidate
+    : releaseMode ? !cli.baseline && cli.candidate :
+      cli.baseline && (cli.candidate || cli['prepare-only'] || preflightOnly),
+  switchingMode
+    ? 'usage: node diagnostics-overhead.mjs --switching --candidate CANDIDATE.tgz [--repo ROOT]'
+    : releaseMode
       ? 'usage: node diagnostics-overhead.mjs --release --candidate CANDIDATE.tgz --jest-deps PATH [--repo ROOT]'
       : 'usage: node diagnostics-overhead.mjs --baseline BASE.tgz --candidate CANDIDATE.tgz --jest-deps PATH [--repo ROOT]');
   assert.ok(!releaseMode || (!cli['prepare-only'] && !preflightOnly),
     '--release cannot be combined with --prepare-only or --preflight-only');
-  assert.ok(cli['jest-deps'], '--jest-deps must point at the prepared Jest/Expo dependency fixture');
+  assert.ok(!switchingMode || (!cli['prepare-only'] && !preflightOnly),
+    '--switching cannot be combined with --prepare-only or --preflight-only');
+  assert.ok(switchingMode || cli['jest-deps'], '--jest-deps must point at the prepared Jest/Expo dependency fixture');
+  if (switchingMode) assert.equal(samples, 5, '--samples is fixed at 5 by the switching protocol');
 }
 assert.ok(Number.isSafeInteger(samples) && samples >= 3 && samples <= 9 && samples % 2 === 1,
   '--samples must be an odd integer from 3 to 9');
 assert.ok(Number.isSafeInteger(timeoutMs) && timeoutMs > 0, '--timeoutMs must be positive');
 assert.ok(existsSync(repo), `repository does not exist: ${repo}`);
-const jestDeps = selfCheck ? null : realpathSync(resolve(cli['jest-deps']));
-if (!selfCheck) assert.ok(statSync(jestDeps).isDirectory(), `Jest/Expo dependencies do not exist: ${jestDeps}`);
+const jestDeps = selfCheck || switchingMode ? null : realpathSync(resolve(cli['jest-deps']));
+if (!selfCheck && !switchingMode) {
+  assert.ok(statSync(jestDeps).isDirectory(), `Jest/Expo dependencies do not exist: ${jestDeps}`);
+}
 
 const baselineTarball = selfCheck || !cli.baseline ? null : realpathSync(resolve(cli.baseline));
 const candidateTarball = selfCheck || !cli.candidate ? null : realpathSync(resolve(cli.candidate));
 for (const path of [baselineTarball, candidateTarball].filter(Boolean)) assert.ok(statSync(path).isFile(), path);
 
-const work = selfCheck ? null : mkdtempSync(join(repo, `work/${releaseMode ? 'release-benchmark' : 'diagnostics-overhead'}-`));
+const work = selfCheck ? null : mkdtempSync(join(repo, `work/${switchingMode ? 'installed-switching' : releaseMode ? 'release-benchmark' : 'diagnostics-overhead'}-`));
 const output = selfCheck ? null : resolve(cli.output ?? join(work, 'result.json'));
+const reportOutput = selfCheck ? null : resolve(cli.report ?? (cli.output ? cli.output.replace(/\.json$/i, '.md') : join(work, 'report.md')));
 const proofHere = join(repo, 'benchmarks/proofs');
 const proofModules = join(proofHere, 'node_modules');
 const compiler = join(repo, 'benchmarks/node_modules/typescript/bin/tsc');
@@ -362,8 +380,8 @@ function makeJestFixture() {
   };
 }
 
-function expectedJobs(fixture, workers) {
-  return 3 + fixture.expected.mutants.length + (workers - 1);
+function expectedJobs(fixture, workers, strategy = 'replace') {
+  return 3 + fixture.expected.mutants.length + (workers - 1) + (strategy === 'switch' ? 1 : 0);
 }
 
 function reportResult(report) {
@@ -472,10 +490,10 @@ function metricsFor(result) {
   return metrics;
 }
 
-function assertExpected(fixture, result, workers) {
+function assertExpected(fixture, result, workers, strategy = 'replace', includeStrategy = switchingMode) {
   const {expected} = fixture;
   assert.equal(result.complete, true, `${fixture.id} report incomplete`);
-  assert.equal(result.jobsAttempted, expectedJobs(fixture, workers));
+  assert.equal(result.jobsAttempted, expectedJobs(fixture, workers, strategy));
   assert.equal(result.setups.length, 1);
   const setup = result.setups[0];
   assert.equal(setup.typecheck.state, 'passed');
@@ -498,6 +516,10 @@ function assertExpected(fixture, result, workers) {
   }));
   assert.deepEqual(definitions, expectedDefinitions, `${fixture.id} mutants changed`);
   assert.equal(result.mutation.planned, expected.mutants.length);
+  if (includeStrategy) {
+    assert.equal(result.mutation.strategy, strategy);
+    assert.equal(result.mutation.jobsAttempted, expected.mutants.length);
+  }
   assert.equal(result.mutation.killed, expected.mutants.filter(item => item.verdict === 'killed').length);
   assert.equal(result.mutation.survived, expected.mutants.filter(item => item.verdict === 'survived').length);
   assert.equal(result.mutation.score, expected.score);
@@ -509,8 +531,47 @@ function assertExpected(fixture, result, workers) {
   assert.equal(result.mutation.completed, expected.mutants.length);
   assert.equal(result.mutation.notRun, 0);
   assert.equal(result.mutation.unresolved, 0);
+  const receiptRows = [
+    setup.baseline,
+    setup.coverage,
+    ...result.mutation.workerBaselines,
+    ...(result.mutation.preparedBaselines ?? []),
+    ...result.mutation.outcomes.flatMap(outcome => outcome.setups ?? []),
+  ];
+  const receiptIds = receiptRows.map(row => row.report?.executionId);
+  assert.ok(receiptIds.every(id => typeof id === 'string' && id.length > 0),
+    `${fixture.id} receipt identity missing`);
+  assert.equal(new Set(receiptIds).size, receiptIds.length,
+    `${fixture.id} receipt identity reused`);
+  assert.ok(receiptRows.every(row => row.report.version === 1 && row.report.complete === true),
+    `${fixture.id} receipt is incomplete`);
+  if (includeStrategy) {
+    assert.equal(result.mutation.error, null);
+    assert.equal(result.mutation.restorationError, null);
+    assert.ok(result.mutation.outcomes.every(outcome => Number.isFinite(outcome.executionMs)),
+      `${fixture.id} mutation timing missing`);
+  }
   assert.equal(result.setups[0].baseline.report.passed, expected.tests);
   assert.equal(result.setups[0].coverage.report.passed, expected.tests);
+  assert.ok(result.mutation.workerBaselines.every(row => row.report.passed === expected.tests));
+  if (includeStrategy) {
+    if (strategy === 'switch') {
+      assert.equal(result.mutation.preparedBaselineJobs, 1);
+      assert.equal(result.mutation.preparedBaselines.length, 1);
+      assert.equal(result.mutation.preparedBaselines[0].phase, 'prepared-baseline');
+      assert.equal(result.mutation.preparedBaselines[0].state, 'passed');
+      assert.equal(result.mutation.preparedBaselines[0].report.passed, expected.tests);
+      assert.ok(Number.isFinite(result.mutation.switchPreparationMs));
+      assert.ok(Number.isFinite(result.mutation.preparedBaselineMs));
+      assert.ok(result.mutation.workerBaselines.every(row => row.phase === 'prepared-baseline'));
+    } else {
+      assert.equal(result.mutation.preparedBaselineJobs ?? 0, 0);
+      assert.equal(result.mutation.preparedBaselines?.length ?? 0, 0);
+      assert.equal(result.mutation.switchPreparationMs ?? null, null);
+      assert.equal(result.mutation.preparedBaselineMs ?? null, null);
+      assert.ok(result.mutation.workerBaselines.every(row => row.phase === undefined));
+    }
+  }
 }
 
 function diagnosticsSnapshot(report) {
@@ -525,9 +586,13 @@ function progressEnabled(result) {
   return /analysis:|baseline|coverage|mutation/.test(result.stderr);
 }
 
-function runCheck(binary, fixture, workers, progress, label, phase, pair, sample, expectedSnapshot, {retainDetails = false} = {}) {
+function runCheck(binary, fixture, workers, progress, label, phase, pair, sample, expectedSnapshot, {
+  retainDetails = false,
+  strategy = 'replace',
+} = {}) {
   const args = ['check', '--config', fixture.configPath, '--scratch', fixture.scratch, '--json'];
   if (!progress) args.push('--no-progress');
+  if (strategy === 'switch') args.push('--experimental-switching');
   const execution = run(binary.executable, args, fixture.project);
   assert.equal(execution.status, 0, `${label} ${fixture.id} check failed\n${execution.stdout}\n${execution.stderr}`);
   let report;
@@ -538,7 +603,7 @@ function runCheck(binary, fixture, workers, progress, label, phase, pair, sample
   assert.equal(hashJson(portable(JSON.parse(readFileSync(fixture.configPath, 'utf8')))), fixture.configs[workers].sha256,
     `${fixture.id} configuration changed`);
   assert.equal(readdirSync(fixture.scratch).length, 0, `${fixture.id} scratch was not cleaned`);
-  assertExpected(fixture, report.result, workers);
+  assertExpected(fixture, report.result, workers, strategy);
   const semantic = portable(semanticProjection(report));
   const semanticHash = hashJson(semantic);
   if (expectedSnapshot.semanticHash) {
@@ -558,7 +623,9 @@ function runCheck(binary, fixture, workers, progress, label, phase, pair, sample
     stdoutBytes: Buffer.byteLength(execution.stdout),
     stderrBytes: Buffer.byteLength(execution.stderr),
     semanticHash,
-    workerParityHash: hashJson(workerIndependentProjection(report)),
+    workerParityHash: switchingMode
+      ? hashJson(portable(workerIndependentProjection(report)))
+      : hashJson(workerIndependentProjection(report)),
     diagnosticsHash: hashJson(diagnosticsSnapshot(report)),
     diagnostics: retainDetails || label === 'candidate' && (phase === 'warmup' || sample === 1)
       ? diagnosticsSnapshot(report)
@@ -567,6 +634,12 @@ function runCheck(binary, fixture, workers, progress, label, phase, pair, sample
       ? portable(report.timings ?? null)
       : null,
   };
+  if (switchingMode) {
+    record.strategy = strategy;
+    record.report = portable(report);
+    record.stdout = portable(execution.stdout);
+    record.stderr = portable(execution.stderr);
+  }
   return {record, report, semantic};
 }
 
@@ -667,6 +740,95 @@ function assertReleaseSummary(records, aggregateRows, fixtures) {
   return parity;
 }
 
+function switchingFixture() {
+  return {id: 'nodeWorkspace', expected: EXPECTED.nodeWorkspace};
+}
+
+function switchingConditions() {
+  return [
+    {strategy: 'replace', workers: 1},
+    {strategy: 'switch', workers: 1},
+    {strategy: 'switch', workers: 2},
+    {strategy: 'replace', workers: 2},
+  ];
+}
+
+function assertSwitchingSummary(records, aggregateRows, fixture, sampleCount = samples) {
+  assert.equal(records.length, 4 * (sampleCount + 1),
+    `switching matrix must contain ${4 * (sampleCount + 1)} runs`);
+  assert.equal(records.filter(record => record.phase === 'warmup').length, 4,
+    'switching matrix must contain four warmups');
+  assert.equal(records.filter(record => record.phase === 'measured').length, 4 * sampleCount,
+    `switching matrix must contain ${4 * sampleCount} measured runs`);
+  const conditions = switchingConditions();
+  assert.equal(aggregateRows.length, conditions.length, 'switching condition count changed');
+  for (const condition of conditions) {
+    const matches = records.filter(record => record.strategy === condition.strategy && record.workers === condition.workers);
+    assert.equal(matches.length, sampleCount + 1,
+      `${condition.strategy} workers=${condition.workers} run count changed`);
+    assert.equal(matches.filter(record => record.phase === 'warmup').length, 1,
+      `${condition.strategy} workers=${condition.workers} warmup count changed`);
+    assert.equal(matches.filter(record => record.phase === 'measured').length, sampleCount,
+      `${condition.strategy} workers=${condition.workers} sample count changed`);
+    const semanticHashes = new Set(matches.map(record => record.semanticHash));
+    assert.equal(semanticHashes.size, 1,
+      `${condition.strategy} workers=${condition.workers} semantic result changed`);
+    const row = aggregateRows.find(item => item.strategy === condition.strategy && item.workers === condition.workers);
+    assert.ok(row, `${condition.strategy} workers=${condition.workers} aggregate missing`);
+    assert.equal(row.samples.length, sampleCount);
+  }
+  const parityHashes = new Set(records.map(record => record.workerParityHash));
+  assert.equal(parityHashes.size, 1, 'strategy or worker semantic parity changed');
+  const semanticHash = records.find(record => record.strategy === 'replace' && record.workers === 1).workerParityHash;
+  assert.equal(semanticHash, hashJson(portable(workerIndependentProjection(records.find(record => record.strategy === 'replace' && record.workers === 1).report))),
+    'worker parity hash does not match the retained report');
+  assert.equal(records.every(record => record.fixture === fixture.id), true, 'switching fixture changed');
+  return {workerIndependentHash: semanticHash, conditions};
+}
+
+function switchingComparisons(aggregateRows) {
+  return [1, 2].map(workers => {
+    const replace = aggregateRows.find(row => row.strategy === 'replace' && row.workers === workers);
+    const switching = aggregateRows.find(row => row.strategy === 'switch' && row.workers === workers);
+    return {workers, ...comparison(replace.samples, switching.samples)};
+  });
+}
+
+function switchingPhaseSummary(records) {
+  const fields = [
+    ['wallMs', record => record.wallMs],
+    ['captureMs', record => record.reportTimings?.captureMs],
+    ['executionMs', record => record.reportTimings?.executionMs],
+    ['analysisMs', record => record.report?.result?.phaseTimings?.analysisMs],
+    ['preparationMs', record => record.report?.result?.phaseTimings?.preparationMs],
+    ['typecheckMs', record => record.report?.result?.phaseTimings?.typecheckMs],
+    ['baselineMs', record => record.report?.result?.phaseTimings?.baselineMs],
+    ['coverageMs', record => record.report?.result?.phaseTimings?.coverageMs],
+    ['attributionMs', record => record.report?.result?.phaseTimings?.attributionMs],
+    ['preparedBaselineMs', record => record.report?.result?.mutation?.preparedBaselineMs],
+    ['switchPreparationMs', record => record.report?.result?.mutation?.switchPreparationMs],
+    ['workerPreparationMs', record => record.report?.result?.mutation?.workerPreparationMs],
+    ['mutationMs', record => record.report?.result?.mutation?.mutationWallMs],
+    ['workerCleanupMs', record => record.report?.result?.mutation?.workerCleanupMs],
+    ['cleanupMs', record => record.report?.result?.phaseTimings?.cleanupMs],
+  ];
+  return switchingConditions().map(({strategy, workers}) => {
+    const rows = records.filter(record => record.phase === 'measured'
+      && record.strategy === strategy && record.workers === workers);
+    return {
+      strategy,
+      workers,
+      timings: Object.fromEntries(fields.map(([name, read]) => {
+        const values = rows.map(read).filter(value => Number.isFinite(value));
+        return [name, values.length === rows.length ? {
+          medianMs: Number(median(values).toFixed(3)),
+          ...range(values),
+        } : null];
+      })),
+    };
+  });
+}
+
 function selfCheckReport(workers, score = 100, verdict = 'killed') {
   const setupReport = {passed: 1, failed: 0, errors: 0, timeouts: 0};
   const setup = {
@@ -721,6 +883,163 @@ function selfCheckReport(workers, score = 100, verdict = 'killed') {
   };
 }
 
+function selfCheckSwitchingReport(workers, strategy = 'replace') {
+  const fixture = switchingFixture();
+  const receiptReport = executionId => ({
+    version: 1,
+    executionId,
+    node: '24.20.0',
+    complete: true,
+    passed: 1,
+    failed: 0,
+    errors: 0,
+    timeouts: 0,
+  });
+  const setup = {
+    name: 'node-workspace',
+    runner: 'node',
+    cwd: '.',
+    typecheck: {state: 'passed'},
+    baseline: {state: 'passed', report: receiptReport('setup-baseline')},
+    coverage: {state: 'passed', report: receiptReport('setup-coverage')},
+  };
+  const sources = Object.entries(fixture.expected.sourceMetrics).map(([path, metrics]) => ({
+    path,
+    result: {
+      complete: true,
+      problems: [],
+      functions: metrics.map(([complexity, covered, total, crap], index) => ({
+        name: path.includes('rules') ? 'answer' : 'adult',
+        start: {line: index + 1, column: 1},
+        complexity,
+        coverage: covered / total,
+        covered,
+        total,
+        crap,
+        status: 'ok',
+      })),
+    },
+  }));
+  const mutation = {
+    strategy,
+    complete: true,
+    planned: fixture.expected.mutants.length,
+    killed: fixture.expected.mutants.length,
+    survived: 0,
+    score: fixture.expected.score,
+    jobsAttempted: fixture.expected.mutants.length,
+    workersRequested: workers,
+    workersUsed: workers,
+    workerBaselineJobs: workers - 1,
+    completed: fixture.expected.mutants.length,
+    notRun: 0,
+    unresolved: 0,
+    error: null,
+    restorationError: null,
+    workerBaselines: Array.from({length: workers - 1}, (_, index) => ({
+      state: 'passed',
+      report: receiptReport(`worker-baseline-${index + 1}`),
+      ...(strategy === 'switch' ? {phase: 'prepared-baseline', worker: index + 1} : {}),
+    })),
+    outcomes: fixture.expected.mutants.map(item => ({
+      ...item,
+      executionMs: 1,
+      setups: [{state: 'failed', report: receiptReport(`mutant-${item.id}`)}],
+    })),
+  };
+  if (strategy === 'switch') {
+    mutation.preparedBaselineJobs = 1;
+    mutation.preparedBaselines = [{
+      name: 'node-workspace',
+      phase: 'prepared-baseline',
+      state: 'passed',
+      report: receiptReport('prepared-baseline'),
+    }];
+    mutation.switchPreparationMs = 1;
+    mutation.preparedBaselineMs = 1;
+  }
+  return {
+    command: 'check',
+    complete: true,
+    scope: {
+      include: ['src/**/*.ts', 'packages/**/*.ts'],
+      exclude: [],
+      files: ['packages/rules/index.ts', 'src/compare.ts'],
+      setups: [{name: 'node-workspace', runner: 'node', cwd: '.'}],
+    },
+    result: {
+      phase: 'check',
+      complete: true,
+      jobsAttempted: expectedJobs(fixture, workers, strategy),
+      sources,
+      setups: [setup],
+      mutation,
+    },
+  };
+}
+
+function runSwitchingSelfCheck() {
+  const fixture = switchingFixture();
+  const sampleCount = 5;
+  const reports = [];
+  for (const condition of switchingConditions()) {
+    const report = selfCheckSwitchingReport(condition.workers, condition.strategy);
+    assertExpected(fixture, report.result, condition.workers, condition.strategy, true);
+    reports.push(report);
+  }
+  const positive = structuredClone(reports[1]);
+  const records = [];
+  for (const [index, condition] of switchingConditions().entries()) {
+    const report = reports[index];
+    for (const phase of ['warmup', ...Array.from({length: sampleCount}, (_, sample) => `sample-${sample + 1}`)]) {
+      records.push({
+        fixture: fixture.id,
+        strategy: condition.strategy,
+        workers: condition.workers,
+        phase: phase === 'warmup' ? 'warmup' : 'measured',
+        sample: phase === 'warmup' ? null : Number(phase.slice(7)),
+        wallMs: 1,
+        semanticHash: hashJson(portable(semanticProjection(report))),
+        workerParityHash: hashJson(portable(workerIndependentProjection(report))),
+        report: portable(report),
+        reportTimings: {captureMs: 1, executionMs: 1},
+      });
+    }
+  }
+  const aggregateRows = switchingConditions().map(condition => ({
+    ...condition,
+    samples: Array.from({length: sampleCount}, () => 1),
+  }));
+  const summary = assertSwitchingSummary(records, aggregateRows, fixture, sampleCount);
+  assert.equal(summary.conditions.length, 4);
+  assert.equal(new Set(records.map(record => record.semanticHash)).size, 4,
+    'worker-specific report fields were not retained in semantic hash');
+
+  const wrongMetrics = structuredClone(positive);
+  wrongMetrics.result.sources[0].result.functions[0].crap = 2;
+  assert.throws(() => assertExpected(fixture, wrongMetrics.result, 1, 'switch', true));
+  const wrongOperator = structuredClone(positive);
+  wrongOperator.result.mutation.outcomes[0].replacement = '<';
+  assert.throws(() => assertExpected(fixture, wrongOperator.result, 1, 'switch', true));
+  const falseKill = structuredClone(positive);
+  falseKill.result.mutation.outcomes[0].verdict = 'survived';
+  falseKill.result.mutation.killed = 1;
+  falseKill.result.mutation.survived = 1;
+  falseKill.result.mutation.score = 50;
+  assert.throws(() => assertExpected(fixture, falseKill.result, 1, 'switch', true));
+  const wrongPreparedCount = structuredClone(positive);
+  wrongPreparedCount.result.mutation.preparedBaselineJobs = 0;
+  assert.throws(() => assertExpected(fixture, wrongPreparedCount.result, 1, 'switch', true));
+  const wrongWorkerPhase = structuredClone(reports[2]);
+  wrongWorkerPhase.result.mutation.workerBaselines[0].phase = 'original-baseline';
+  assert.throws(() => assertExpected(fixture, wrongWorkerPhase.result, 2, 'switch', true));
+  const wrongParity = structuredClone(records);
+  wrongParity[0].report.result.sources[0].result.functions[0].crap = 2;
+  wrongParity[0].workerParityHash = hashJson(portable(workerIndependentProjection(wrongParity[0].report)));
+  assert.throws(() => assertSwitchingSummary(wrongParity, aggregateRows, fixture, sampleCount));
+  console.log('Installed switching benchmark self-check passed.');
+}
+
 function runReleaseSelfCheck() {
   const fixtures = [{id: 'nodeWorkspace'}, {id: 'vitest'}, {id: 'jestExpo'}];
   const records = [];
@@ -758,7 +1077,7 @@ function runReleaseSelfCheck() {
 function toolVersions() {
   const npm = assertCommand(run('npm', ['--version'], repo), 'npm --version').stdout.trim();
   const readVersion = path => JSON.parse(readFileSync(join(path, 'package.json'), 'utf8')).version;
-  return {
+  const environment = {
     node: process.version,
     npm,
     platform: process.platform,
@@ -768,13 +1087,16 @@ function toolVersions() {
     logicalCPUs: os.availableParallelism?.() ?? os.cpus().length,
     memoryBytes: os.totalmem(),
     typescript: readVersion(join(repo, 'benchmarks/node_modules/typescript')),
-    proofTools: {
+  };
+  if (!switchingMode) {
+    environment.proofTools = {
       vitest: readVersion(join(proofModules, 'vitest')),
       '@vitest/coverage-istanbul': readVersion(join(proofModules, '@vitest/coverage-istanbul')),
       jest: readVersion(join(jestDeps, 'node_modules/jest')),
       'jest-expo': readVersion(join(jestDeps, 'node_modules/jest-expo')),
-    },
-  };
+    };
+  }
+  return environment;
 }
 
 function maintainedCounts() {
@@ -801,7 +1123,7 @@ function maintainedCounts() {
 }
 
 function provenance() {
-  return {
+  const value = {
     candidateSourceRevision: candidateCommit,
     harnessRevision: cli['harness-commit'] ?? null,
     harness: {
@@ -809,10 +1131,113 @@ function provenance() {
       sha256: hashFile(join(proofHere, 'diagnostics-overhead.mjs')),
     },
     protocol: {
-      path: 'benchmarks/proofs/release-benchmark.md',
-      sha256: hashFile(join(proofHere, 'release-benchmark.md')),
+      path: switchingMode
+        ? 'benchmarks/proofs/installed-switching-comparison.md'
+        : 'benchmarks/proofs/release-benchmark.md',
+      sha256: hashFile(join(proofHere, switchingMode
+        ? 'installed-switching-comparison.md'
+        : 'release-benchmark.md')),
     },
   };
+  if (switchingMode) {
+    value.fixtureHelper = {
+      path: 'benchmarks/proofs/node-workspace-fixture.mjs',
+      sha256: hashFile(join(proofHere, 'node-workspace-fixture.mjs')),
+    };
+  }
+  return value;
+}
+
+function formatMs(value) {
+  return Number.isFinite(value) ? `${value.toFixed(3)} ms` : 'unavailable';
+}
+
+function formatPercent(value) {
+  return Number.isFinite(value) ? `${value.toFixed(2)}%` : 'unavailable';
+}
+
+function renderSwitchingReport(evidence) {
+  const comparisons = evidence.comparisons ?? [];
+  const phaseColumns = [
+    ['Wall', 'wallMs'],
+    ['Capture', 'captureMs'],
+    ['Execution', 'executionMs'],
+    ['Analysis', 'analysisMs'],
+    ['Runner prep', 'preparationMs'],
+    ['Typecheck', 'typecheckMs'],
+    ['Baseline', 'baselineMs'],
+    ['Coverage', 'coverageMs'],
+    ['Attribution', 'attributionMs'],
+    ['Worker prep', 'workerPreparationMs'],
+    ['Switch prep', 'switchPreparationMs'],
+    ['Prepared baseline', 'preparedBaselineMs'],
+    ['Mutation', 'mutationMs'],
+    ['Worker cleanup', 'workerCleanupMs'],
+    ['Cleanup', 'cleanupMs'],
+  ];
+  const rows = comparisons.map(comparison => [
+    `| ${comparison.workers} | ${formatMs(comparison.leftMedianMs)} [${formatMs(comparison.leftMinMs)}, ${formatMs(comparison.leftMaxMs)}] | ${formatMs(comparison.rightMedianMs)} [${formatMs(comparison.rightMinMs)}, ${formatMs(comparison.rightMaxMs)}] | ${formatMs(comparison.deltaMedianMs)} (${formatPercent(comparison.deltaMedianPercent)}) |`,
+  ].join('\n')).join('\n');
+  const phaseRows = (evidence.phaseSummary ?? []).map(({strategy, workers, timings}) =>
+    `| ${strategy} | ${workers} | ${phaseColumns.map(([, key]) => formatMs(timings[key]?.medianMs)).join(' | ')} |`).join('\n');
+  const phaseHeader = `| Strategy | Workers | ${phaseColumns.map(([label]) => label).join(' | ')} |`;
+  const phaseDivider = `| --- | ---: | ${phaseColumns.map(() => '---:').join(' | ')} |`;
+  const artifact = evidence.artifacts?.candidate;
+  const candidateHash = artifact?.tarball?.sha256 ?? 'unavailable';
+  const semanticHash = evidence.parity?.workerIndependentHash ?? 'unavailable';
+  return `# Installed Seshat switching comparison
+
+This report records the fixed candidate-only Node workspace matrix described by
+[\`installed-switching-comparison.md\`](../benchmarks/proofs/installed-switching-comparison.md).
+It is fixture-specific evidence and does not establish a production performance
+bound.
+
+The installed candidate source revision is ${evidence.candidateCommit ?? 'unrecorded'}.
+The candidate tarball SHA-256 is \`${candidateHash}\`. The shared workspace input
+hash is \`${evidence.fixture.inputSha256}\`; the common worker-independent semantic
+hash is \`${semanticHash}\`.
+
+## Timings
+
+Times are milliseconds. Each cell uses five measured samples; brackets contain
+the minimum and maximum. Delta is switching minus replacement, so a negative
+value favours switching.
+
+| Workers | Replacement median [min, max] | Switching median [min, max] | Delta (percent) |
+| ---: | ---: | ---: | ---: |
+${rows}
+
+The wall boundary runs from installed CLI process spawn through stdout and
+stderr drain. It includes capture, runner preparation, original typecheck and
+baseline, fresh coverage and CRAP, switching preparation and prepared baselines,
+mutation execution, cleanup and report serialization. Report parsing and
+semantic validation follow that boundary. Top-level invocations are serial;
+workers inside the workers-2 condition may run concurrently.
+
+${phaseHeader}
+${phaseDivider}
+${phaseRows}
+
+## Validation
+
+The matrix contains ${evidence.validation?.runCount ?? 'unavailable'} runs: one
+warmup and five measured runs for each replacement/switching and worker 1/2
+condition. Every run passed the original typecheck, test baseline, fresh coverage
+and CRAP attribution. Both source files report the expected \`[[1,1,1,1]]\`
+metrics. Both exact byte-42 \`>=\` mutants were killed with no unresolved or
+not-run outcomes. Strategy-specific prepared and worker baseline rows were
+validated separately before semantic parity was compared.
+
+## Provenance
+
+The raw portable reports and per-run timings are in
+[\`installed-switching-comparison.json\`](../outputs/installed-switching-comparison.json).
+The report retains the installed package and BUILD metadata, environment,
+configuration hashes, source inventory, helper hash and protocol provenance.
+
+The result is descriptive evidence for this small Node workspace. It does not
+claim that switching is faster for other projects, runners or hosts.
+`;
 }
 
 function createFixtures() {
@@ -834,7 +1259,140 @@ function prepareFixtureConfig(fixture, workers) {
   return fixture.inputs;
 }
 
+function switchingBuildCost() {
+  if (!cli['build-evidence']) {
+    return {wallMs: null, status: 'unmeasured', reason: 'candidate build runs outside the benchmark'};
+  }
+  const path = realpathSync(resolve(cli['build-evidence']));
+  let value;
+  assert.doesNotThrow(() => { value = JSON.parse(readFileSync(path, 'utf8')); },
+    'build evidence is not JSON');
+  assert.equal(value.status, 0, 'candidate build evidence reports failure');
+  assert.ok(Number.isFinite(value.wallMs) && value.wallMs >= 0, 'build evidence wall time is invalid');
+  if (candidateCommit && value.sourceRevision) {
+    assert.equal(value.sourceRevision, candidateCommit, 'build evidence source revision changed');
+  }
+  return {
+    ...portable(value),
+    evidencePath: '<build-evidence>',
+    boundary: value.boundary ?? 'build evidence boundary was not recorded',
+  };
+}
+
+function runSwitchingBenchmark() {
+  assert.ok(existsSync(compiler), `TypeScript compiler missing: ${compiler}`);
+  assert.ok(existsSync(collector), `coverage collector missing: ${collector}`);
+  const protocolPath = join(proofHere, 'installed-switching-comparison.md');
+  assert.ok(existsSync(protocolPath), `switching protocol missing: ${protocolPath}`);
+  assert.ok(cli['candidate-commit'], '--candidate-commit is required for the switching benchmark');
+  assert.ok(cli['harness-commit'], '--harness-commit is required for the switching benchmark');
+
+  const binary = installTarball('candidate', candidateTarball);
+  const fixture = makeNodeFixture();
+  fixture.configs = {};
+  fixture.inputs = snapshotInputs(fixture.project, fixture.inputPaths);
+  assert.equal(fixture.inputs.sha256, NODE_WORKSPACE_INPUT_SHA256,
+    'shared Node workspace input hash changed');
+  const evidence = {
+    version: 1,
+    kind: 'installed-switching-comparison',
+    mode: 'switching-matrix',
+    environment: toolVersions(),
+    candidateCommit,
+    provenance: provenance(),
+    maintainedCounts: maintainedCounts(),
+    buildCost: switchingBuildCost(),
+    artifacts: {candidate: binary.artifact},
+    fixture: {
+      id: fixture.id,
+      source: NODE_COMPARE_SOURCE,
+      rulesSource: NODE_RULES_SOURCE,
+      expected: fixture.expected,
+      inputPaths: fixture.inputPaths,
+      inputSha256: NODE_WORKSPACE_INPUT_SHA256,
+      inputs: fixture.inputs,
+      configs: {},
+    },
+    limits: {
+      samplesPerCondition: samples,
+      warmupsPerCondition: 1,
+      workers: [1, 2],
+      strategies: ['replace', 'switch'],
+      conditions: switchingConditions(),
+      expectedExecutions: 4 * (samples + 1),
+      progress: true,
+      order: 'warmup uses the fixed condition order; measured pairs alternate that order and its reverse; all top-level processes are serial',
+      wallBoundary: 'installed CLI process spawn through stdout/stderr drain; child report serialization is included; validation follows',
+      cacheBoundary: 'each invocation captures a fresh Seshat copy; host filesystem, npm, runner and OS caches remain warm',
+      hostPermissions: 'required for mutation child execution; EPERM is an environment failure, never a mutation verdict',
+    },
+    runs: [],
+  };
+  const expectedSnapshots = new Map();
+  const saveEvidence = () => {
+    evidence.work = portable(work);
+    evidence.fixture.configs = fixture.configs;
+    json(output, portable(evidence));
+  };
+  const recordRun = record => {
+    evidence.runs.push(record);
+    saveEvidence();
+    const sample = record.phase === 'warmup' ? 'warmup' : `sample=${record.sample}`;
+    console.log(`${record.phase} ${record.strategy} workers=${record.workers} ${sample} wall=${record.wallMs.toFixed(1)}ms`);
+  };
+  const runCondition = (condition, phase, sample) => {
+    prepareFixtureConfig(fixture, condition.workers);
+    const key = `${condition.strategy}|${condition.workers}`;
+    const expectedSnapshot = expectedSnapshots.get(key) ?? {inputs: fixture.inputs, semanticHash: null};
+    const result = runCheck(
+      binary,
+      fixture,
+      condition.workers,
+      true,
+      'candidate',
+      phase,
+      phase === 'warmup' ? null : sample,
+      phase === 'warmup' ? null : sample,
+      expectedSnapshot,
+      {retainDetails: true, strategy: condition.strategy},
+    );
+    if (!expectedSnapshot.semanticHash) {
+      expectedSnapshot.semanticHash = result.record.semanticHash;
+      expectedSnapshots.set(key, expectedSnapshot);
+    }
+    recordRun(result.record);
+  };
+
+  saveEvidence();
+  for (const condition of switchingConditions()) runCondition(condition, 'warmup', null);
+  for (let sample = 1; sample <= samples; sample += 1) {
+    const order = sample % 2 === 1 ? switchingConditions() : [...switchingConditions()].reverse();
+    for (const condition of order) runCondition(condition, 'measured', sample);
+  }
+  evidence.aggregate = aggregate(evidence.runs, ['strategy', 'workers']);
+  evidence.comparisons = switchingComparisons(evidence.aggregate);
+  evidence.phaseSummary = switchingPhaseSummary(evidence.runs);
+  evidence.parity = assertSwitchingSummary(evidence.runs, evidence.aggregate, fixture);
+  evidence.validation = {
+    runCount: evidence.runs.length,
+    warmups: 4,
+    measured: 4 * samples,
+    conditions: switchingConditions(),
+    semanticHash: evidence.parity.workerIndependentHash,
+  };
+  evidence.conclusion = 'Descriptive medians and raw ranges for one fixed installed Node workspace only; no production overhead or general strategy recommendation.';
+  saveEvidence();
+  mkdirSync(dirname(reportOutput), {recursive: true});
+  writeFileSync(reportOutput, renderSwitchingReport(evidence));
+  console.log(`Installed switching benchmark evidence: ${output}`);
+  console.log(`Installed switching benchmark report: ${reportOutput}`);
+}
+
 function main() {
+  if (switchingMode) {
+    runSwitchingBenchmark();
+    return;
+  }
   const binaries = {};
   if (releaseMode) {
     binaries.candidate = installTarball('candidate', candidateTarball);
@@ -1020,7 +1578,10 @@ function main() {
 }
 
 try {
-  if (selfCheck) runReleaseSelfCheck();
+  if (selfCheck) {
+    runReleaseSelfCheck();
+    if (switchingMode) runSwitchingSelfCheck();
+  }
   else main();
 } catch (error) {
   if (work) console.error(`Diagnostics overhead work retained at ${work}`);

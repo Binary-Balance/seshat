@@ -67,6 +67,12 @@ then run:
 `check` runs both assessments. `crap` runs coverage and CRAP analysis.
 `mutate` runs mutation testing after original typechecks and passing test baselines.
 
+`check` and `mutate` accept `--experimental-switching` to compare mutants through
+prepared helper code. Replacement remains the default strategy. Switching runs
+only after the original typecheck, baseline and (for `check`) fresh coverage have
+passed, and `crap` rejects the option. Helper wrapping can affect TypeScript
+narrowing and runtime reflection, so treat this strategy as experimental.
+
 For automation, use `--json` to write a report to stdout. Progress goes to stderr;
 `--no-progress` suppresses it.
 
