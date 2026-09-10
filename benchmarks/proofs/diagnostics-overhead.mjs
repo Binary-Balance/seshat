@@ -45,6 +45,7 @@ const cli = parseArgs({
     'harness-commit': {type: 'string'},
     release: {type: 'boolean', default: false},
     switching: {type: 'boolean', default: false},
+    'switching-fixture': {type: 'string'},
     'self-check': {type: 'boolean', default: false},
     'build-evidence': {type: 'string'},
     report: {type: 'string'},
@@ -57,8 +58,13 @@ const samples = Number(cli.samples);
 const timeoutMs = Number(cli['timeout-ms']);
 const releaseMode = Boolean(cli.release);
 const switchingMode = Boolean(cli.switching);
+const switchingFixtureName = cli['switching-fixture'] ?? 'node';
 const selfCheck = Boolean(cli['self-check']);
 const preflightOnly = Boolean(cli['preflight-only']);
+assert.ok(['node', 'vitest'].includes(switchingFixtureName),
+  '--switching-fixture must be node or vitest');
+assert.ok(switchingMode || cli['switching-fixture'] === undefined,
+  '--switching-fixture requires --switching');
 if (!selfCheck) {
   assert.ok(!releaseMode || !switchingMode, '--release and --switching are mutually exclusive');
   assert.ok(switchingMode
@@ -90,9 +96,15 @@ const baselineTarball = selfCheck || !cli.baseline ? null : realpathSync(resolve
 const candidateTarball = selfCheck || !cli.candidate ? null : realpathSync(resolve(cli.candidate));
 for (const path of [baselineTarball, candidateTarball].filter(Boolean)) assert.ok(statSync(path).isFile(), path);
 
-const work = selfCheck ? null : mkdtempSync(join(repo, `work/${switchingMode ? 'installed-switching' : releaseMode ? 'release-benchmark' : 'diagnostics-overhead'}-`));
-const output = selfCheck ? null : resolve(cli.output ?? join(work, 'result.json'));
-const reportOutput = selfCheck ? null : resolve(cli.report ?? (cli.output ? cli.output.replace(/\.json$/i, '.md') : join(work, 'report.md')));
+const switchingWorkPrefix = switchingFixtureName === 'vitest' ? 'installed-vitest-switching' : 'installed-switching';
+const switchingOutputStem = switchingFixtureName === 'vitest'
+  ? 'installed-vitest-switching-comparison'
+  : 'installed-switching-comparison';
+const work = selfCheck ? null : mkdtempSync(join(repo, `work/${switchingMode ? switchingWorkPrefix : releaseMode ? 'release-benchmark' : 'diagnostics-overhead'}-`));
+const output = selfCheck ? null : resolve(cli.output ?? join(work, switchingMode && switchingFixtureName === 'vitest' ? `${switchingOutputStem}.json` : 'result.json'));
+const reportOutput = selfCheck ? null : resolve(cli.report ?? (cli.output
+  ? cli.output.replace(/\.json$/i, '.md')
+  : join(work, switchingMode && switchingFixtureName === 'vitest' ? `${switchingOutputStem}.md` : 'report.md')));
 const proofHere = join(repo, 'benchmarks/proofs');
 const proofModules = join(proofHere, 'node_modules');
 const compiler = join(repo, 'benchmarks/node_modules/typescript/bin/tsc');
@@ -134,6 +146,8 @@ const EXPECTED = {
     tests: 3,
   },
 };
+
+const VITEST_INPUT_SHA256 = 'a031b45a18aebad086e832f8c73972fdcbc129e9837c8d63f20c0fb8a4c6f455';
 
 function json(path, value) {
   mkdirSync(dirname(path), {recursive: true});
@@ -741,7 +755,24 @@ function assertReleaseSummary(records, aggregateRows, fixtures) {
 }
 
 function switchingFixture() {
-  return {id: 'nodeWorkspace', expected: EXPECTED.nodeWorkspace};
+  if (switchingFixtureName === 'vitest') {
+    return {
+      id: 'vitest',
+      expected: EXPECTED.vitest,
+      inputSha256: VITEST_INPUT_SHA256,
+      protocol: 'installed-vitest-switching-comparison.md',
+    };
+  }
+  return {
+    id: 'nodeWorkspace',
+    expected: EXPECTED.nodeWorkspace,
+    inputSha256: NODE_WORKSPACE_INPUT_SHA256,
+    protocol: 'installed-switching-comparison.md',
+  };
+}
+
+function makeSwitchingFixture() {
+  return switchingFixtureName === 'vitest' ? makeVitestFixture() : makeNodeFixture();
 }
 
 function switchingConditions() {
@@ -885,19 +916,21 @@ function selfCheckReport(workers, score = 100, verdict = 'killed') {
 
 function selfCheckSwitchingReport(workers, strategy = 'replace') {
   const fixture = switchingFixture();
+  const setupName = fixture.id === 'vitest' ? 'stack' : 'node-workspace';
+  const runner = fixture.id === 'vitest' ? 'vitest' : 'node';
   const receiptReport = executionId => ({
     version: 1,
     executionId,
     node: '24.20.0',
     complete: true,
-    passed: 1,
+    passed: fixture.expected.tests,
     failed: 0,
     errors: 0,
     timeouts: 0,
   });
   const setup = {
-    name: 'node-workspace',
-    runner: 'node',
+    name: setupName,
+    runner,
     cwd: '.',
     typecheck: {state: 'passed'},
     baseline: {state: 'passed', report: receiptReport('setup-baseline')},
@@ -950,7 +983,7 @@ function selfCheckSwitchingReport(workers, strategy = 'replace') {
   if (strategy === 'switch') {
     mutation.preparedBaselineJobs = 1;
     mutation.preparedBaselines = [{
-      name: 'node-workspace',
+      name: setupName,
       phase: 'prepared-baseline',
       state: 'passed',
       report: receiptReport('prepared-baseline'),
@@ -962,10 +995,12 @@ function selfCheckSwitchingReport(workers, strategy = 'replace') {
     command: 'check',
     complete: true,
     scope: {
-      include: ['src/**/*.ts', 'packages/**/*.ts'],
+      include: fixture.id === 'vitest' ? ['tempo.ts', 'view.tsx', 'server.ts'] : ['src/**/*.ts', 'packages/**/*.ts'],
       exclude: [],
-      files: ['packages/rules/index.ts', 'src/compare.ts'],
-      setups: [{name: 'node-workspace', runner: 'node', cwd: '.'}],
+      files: fixture.id === 'vitest'
+        ? Object.keys(fixture.expected.sourceMetrics)
+        : ['packages/rules/index.ts', 'src/compare.ts'],
+      setups: [{name: setupName, runner, cwd: '.'}],
     },
     result: {
       phase: 'check',
@@ -1088,7 +1123,11 @@ function toolVersions() {
     memoryBytes: os.totalmem(),
     typescript: readVersion(join(repo, 'benchmarks/node_modules/typescript')),
   };
-  if (!switchingMode) {
+  if (switchingMode && switchingFixtureName === 'vitest') {
+    environment.proofTools = Object.fromEntries([
+      'vitest', '@vitest/coverage-istanbul', 'fastify', '@sinclair/typebox', 'react', 'react-dom',
+    ].map(name => [name, readVersion(join(proofModules, name))]));
+  } else if (!switchingMode) {
     environment.proofTools = {
       vitest: readVersion(join(proofModules, 'vitest')),
       '@vitest/coverage-istanbul': readVersion(join(proofModules, '@vitest/coverage-istanbul')),
@@ -1123,6 +1162,9 @@ function maintainedCounts() {
 }
 
 function provenance() {
+  const protocol = switchingMode
+    ? switchingFixture().protocol
+    : 'release-benchmark.md';
   const value = {
     candidateSourceRevision: candidateCommit,
     harnessRevision: cli['harness-commit'] ?? null,
@@ -1131,12 +1173,8 @@ function provenance() {
       sha256: hashFile(join(proofHere, 'diagnostics-overhead.mjs')),
     },
     protocol: {
-      path: switchingMode
-        ? 'benchmarks/proofs/installed-switching-comparison.md'
-        : 'benchmarks/proofs/release-benchmark.md',
-      sha256: hashFile(join(proofHere, switchingMode
-        ? 'installed-switching-comparison.md'
-        : 'release-benchmark.md')),
+      path: `benchmarks/proofs/${protocol}`,
+      sha256: hashFile(join(proofHere, protocol)),
     },
   };
   if (switchingMode) {
@@ -1157,6 +1195,23 @@ function formatPercent(value) {
 }
 
 function renderSwitchingReport(evidence) {
+  const fixture = evidence.fixture ?? {};
+  const isVitest = fixture.id === 'vitest';
+  const fixtureLabel = isVitest ? 'Vitest/TSX fixture' : 'Node workspace';
+  const protocolFile = isVitest ? 'installed-vitest-switching-comparison.md' : 'installed-switching-comparison.md';
+  const outputFile = isVitest ? 'installed-vitest-switching-comparison.json' : 'installed-switching-comparison.json';
+  const metricSummary = Object.entries(fixture.expected?.sourceMetrics ?? {})
+    .map(([path, metrics]) => `\`${path}\` reports \`${JSON.stringify(metrics)}\``)
+    .join('; ');
+  const mutantSummary = (fixture.expected?.mutants ?? [])
+    .map(mutant => `\`${mutant.path}\` byte-${mutant.offset} \`${mutant.original}\` -> \`${mutant.replacement}\``)
+    .join(', ');
+  const validation = isVitest
+    ? `The ${metricSummary}. All ${fixture.expected?.mutants?.length ?? 'expected'} exact mutants (${mutantSummary}) were killed with no unresolved or not-run outcomes.`
+    : 'Both source files report the expected \`[[1,1,1,1]]\` metrics. Both exact byte-42 \`>=\` mutants were killed with no unresolved or not-run outcomes.';
+  const buildTiming = isVitest && evidence.buildCost?.status === 0
+    ? `\nThe recorded candidate build took ${formatMs(evidence.buildCost.wallMs)}. ${evidence.buildCost.boundary ?? 'The build boundary was not recorded.'}\n`
+    : '';
   const comparisons = evidence.comparisons ?? [];
   const phaseColumns = [
     ['Wall', 'wallMs'],
@@ -1185,10 +1240,10 @@ function renderSwitchingReport(evidence) {
   const artifact = evidence.artifacts?.candidate;
   const candidateHash = artifact?.tarball?.sha256 ?? 'unavailable';
   const semanticHash = evidence.parity?.workerIndependentHash ?? 'unavailable';
-  return `# Installed Seshat switching comparison
+  return `${isVitest ? '# Installed Seshat Vitest switching comparison' : '# Installed Seshat switching comparison'}
 
-This report records the fixed candidate-only Node workspace matrix described by
-[\`installed-switching-comparison.md\`](../benchmarks/proofs/installed-switching-comparison.md).
+This report records the fixed candidate-only ${fixtureLabel} matrix described by
+[\`${protocolFile}\`](../benchmarks/proofs/${protocolFile}).
 It is fixture-specific evidence and does not establish a production performance
 bound.
 
@@ -1196,6 +1251,7 @@ The installed candidate source revision is ${evidence.candidateCommit ?? 'unreco
 The candidate tarball SHA-256 is \`${candidateHash}\`. The shared workspace input
 hash is \`${evidence.fixture.inputSha256}\`; the common worker-independent semantic
 hash is \`${semanticHash}\`.
+${buildTiming}
 
 ## Timings
 
@@ -1223,19 +1279,17 @@ ${phaseRows}
 The matrix contains ${evidence.validation?.runCount ?? 'unavailable'} runs: one
 warmup and five measured runs for each replacement/switching and worker 1/2
 condition. Every run passed the original typecheck, test baseline, fresh coverage
-and CRAP attribution. Both source files report the expected \`[[1,1,1,1]]\`
-metrics. Both exact byte-42 \`>=\` mutants were killed with no unresolved or
-not-run outcomes. Strategy-specific prepared and worker baseline rows were
+and CRAP attribution. ${validation} Strategy-specific prepared and worker baseline rows were
 validated separately before semantic parity was compared.
 
 ## Provenance
 
 The raw portable reports and per-run timings are in
-[\`installed-switching-comparison.json\`](../outputs/installed-switching-comparison.json).
+[\`${outputFile}\`](../outputs/${outputFile}).
 The report retains the installed package and BUILD metadata, environment,
 configuration hashes, source inventory, helper hash and protocol provenance.
 
-The result is descriptive evidence for this small Node workspace. It does not
+The result is descriptive evidence for this small ${fixtureLabel}. It does not
 claim that switching is faster for other projects, runners or hosts.
 `;
 }
@@ -1264,9 +1318,11 @@ function switchingBuildCost() {
     return {wallMs: null, status: 'unmeasured', reason: 'candidate build runs outside the benchmark'};
   }
   const path = realpathSync(resolve(cli['build-evidence']));
-  let value;
-  assert.doesNotThrow(() => { value = JSON.parse(readFileSync(path, 'utf8')); },
+  let supplied;
+  assert.doesNotThrow(() => { supplied = JSON.parse(readFileSync(path, 'utf8')); },
     'build evidence is not JSON');
+  const reused = supplied.buildCost && supplied.status === undefined;
+  const value = reused ? supplied.buildCost : supplied;
   assert.equal(value.status, 0, 'candidate build evidence reports failure');
   assert.ok(Number.isFinite(value.wallMs) && value.wallMs >= 0, 'build evidence wall time is invalid');
   if (candidateCommit && value.sourceRevision) {
@@ -1275,27 +1331,52 @@ function switchingBuildCost() {
   return {
     ...portable(value),
     evidencePath: '<build-evidence>',
-    boundary: value.boundary ?? 'build evidence boundary was not recorded',
+    source: reused ? 'historical-reused' : 'direct',
+    boundary: reused
+      ? `Historical reused build timing from a prior installed switching comparison; ${value.boundary ?? 'build evidence boundary was not recorded'}`
+      : value.boundary ?? 'build evidence boundary was not recorded',
   };
 }
 
 function runSwitchingBenchmark() {
   assert.ok(existsSync(compiler), `TypeScript compiler missing: ${compiler}`);
   assert.ok(existsSync(collector), `coverage collector missing: ${collector}`);
-  const protocolPath = join(proofHere, 'installed-switching-comparison.md');
+  const protocolPath = join(proofHere, switchingFixture().protocol);
   assert.ok(existsSync(protocolPath), `switching protocol missing: ${protocolPath}`);
   assert.ok(cli['candidate-commit'], '--candidate-commit is required for the switching benchmark');
   assert.ok(cli['harness-commit'], '--harness-commit is required for the switching benchmark');
 
   const binary = installTarball('candidate', candidateTarball);
-  const fixture = makeNodeFixture();
+  const fixture = makeSwitchingFixture();
   fixture.configs = {};
   fixture.inputs = snapshotInputs(fixture.project, fixture.inputPaths);
-  assert.equal(fixture.inputs.sha256, NODE_WORKSPACE_INPUT_SHA256,
-    'shared Node workspace input hash changed');
+  assert.equal(fixture.inputs.sha256, switchingFixture().inputSha256,
+    `${fixture.id} workspace input hash changed`);
+  fixture.dependencyVersions = Object.fromEntries((fixture.dependencies ?? [])
+    .map(name => [name, packageVersion(fixture.project, name)]));
+  const fixtureEvidence = {
+    id: fixture.id,
+    expected: fixture.expected,
+    inputPaths: fixture.inputPaths,
+    inputSha256: switchingFixture().inputSha256,
+    inputs: fixture.inputs,
+    configs: {},
+    dependencies: fixture.dependencies ?? [],
+    dependencyVersions: fixture.dependencyVersions,
+  };
+  if (fixture.id === 'nodeWorkspace') {
+    fixtureEvidence.source = NODE_COMPARE_SOURCE;
+    fixtureEvidence.rulesSource = NODE_RULES_SOURCE;
+  } else {
+    fixtureEvidence.sourcePaths = ['tempo.ts', 'view.tsx', 'server.ts'];
+    fixtureEvidence.testPaths = ['stack.test.tsx'];
+    fixtureEvidence.configPaths = ['vitest.config.mjs'];
+  }
   const evidence = {
     version: 1,
-    kind: 'installed-switching-comparison',
+    kind: switchingFixtureName === 'vitest'
+      ? 'installed-vitest-switching-comparison'
+      : 'installed-switching-comparison',
     mode: 'switching-matrix',
     environment: toolVersions(),
     candidateCommit,
@@ -1303,16 +1384,7 @@ function runSwitchingBenchmark() {
     maintainedCounts: maintainedCounts(),
     buildCost: switchingBuildCost(),
     artifacts: {candidate: binary.artifact},
-    fixture: {
-      id: fixture.id,
-      source: NODE_COMPARE_SOURCE,
-      rulesSource: NODE_RULES_SOURCE,
-      expected: fixture.expected,
-      inputPaths: fixture.inputPaths,
-      inputSha256: NODE_WORKSPACE_INPUT_SHA256,
-      inputs: fixture.inputs,
-      configs: {},
-    },
+    fixture: fixtureEvidence,
     limits: {
       samplesPerCondition: samples,
       warmupsPerCondition: 1,
@@ -1380,7 +1452,7 @@ function runSwitchingBenchmark() {
     conditions: switchingConditions(),
     semanticHash: evidence.parity.workerIndependentHash,
   };
-  evidence.conclusion = 'Descriptive medians and raw ranges for one fixed installed Node workspace only; no production overhead or general strategy recommendation.';
+  evidence.conclusion = `Descriptive medians and raw ranges for one fixed installed ${fixture.id === 'vitest' ? 'Vitest/TSX fixture' : 'Node workspace'} only; no production overhead or general strategy recommendation.`;
   saveEvidence();
   mkdirSync(dirname(reportOutput), {recursive: true});
   writeFileSync(reportOutput, renderSwitchingReport(evidence));
