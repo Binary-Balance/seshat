@@ -326,6 +326,17 @@ workers 2 on this fixed host and fixture; these results remain descriptive and
 do not establish a production performance bound. The release report above
 predates this separate comparison, so its earlier pending wording is historical.
 
+The separate [installed Vitest switching comparison protocol](installed-vitest-switching-comparison.md)
+records the same installed candidate through the existing Vitest React/Fastify
+TSX fixture. Its [measured report](../../outputs/installed-vitest-switching-comparison.md)
+and [JSON evidence](../../outputs/installed-vitest-switching-comparison.json)
+retain the 24-run replacement/switching matrix. Switching medians were 10.17%
+higher at workers 1 and 24.75% higher at workers 2 on this fixed fixture and
+host. The build timing is reused from an earlier candidate measurement, and
+phase timings overlap or nest under worker parallelism, so they are not additive.
+These results are descriptive and do not establish a production performance
+bound or a general claim about Vitest projects.
+
 Exit 0 means complete execution with no failed applicable threshold. Without
 configured thresholds, surviving mutants and high CRAP do not fail the command.
 Exit 1 means a complete run exceeded `thresholds.maxCrap` for a measured function
