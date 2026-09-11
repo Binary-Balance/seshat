@@ -99,8 +99,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npm ci --prefix benchmarks/proofs --ignore-scripts --no-audit --no-fund
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Fetch locked Rust dependencies
         shell: pwsh
         run: |
@@ -124,6 +122,11 @@ jobs:
           SESHAT_PACK_RESULT: work/windows/package-result.json
         run: |
           node packaging/pack.mjs --native-windows 2>&1 | Tee-Object -FilePath work/windows/pack.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Install locked Jest/Expo fixture dependencies
+        shell: pwsh
+        run: |
+          npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Retain npm payload for both installation routes
         shell: pwsh

@@ -81,7 +81,9 @@ function validate({preflight, packed, repeat, install, runtime, jestExpo, vitest
   if (!packed) fail('package result missing');
   else {
     if (!packed.binary || !packed.binaryBytes || !packed.tarballSha256 || !packed.standalone?.sha256) fail('package hashes missing');
-    if (packed.tarballSha256 !== packed.standalone.sha256) fail('package npm and standalone hashes differ');
+    if (packed.tarballSha256 && packed.standalone?.sha256 && packed.tarballSha256 !== packed.standalone.sha256) {
+      fail('package npm and standalone hashes differ');
+    }
     if (packed.binaryName !== 'seshat.exe') fail('package executable name is not seshat.exe');
     if (artifactDirectory) {
       for (const name of ['seshat-windows-x64.tgz', 'seshat-windows-x64-standalone.tar.gz', 'BUILD.json']) {
@@ -90,7 +92,7 @@ function validate({preflight, packed, repeat, install, runtime, jestExpo, vitest
       if (!artifacts.tarball?.sha256) fail('npm tarball hash missing');
       else if (artifacts.tarball.sha256 !== packed.tarballSha256) fail('npm tarball hash differs from package evidence');
       if (!artifacts.standalone?.sha256) fail('standalone archive hash missing');
-      else if (artifacts.standalone.sha256 !== packed.standalone.sha256) fail('standalone archive hash differs from package evidence');
+      else if (artifacts.standalone.sha256 !== packed.standalone?.sha256) fail('standalone archive hash differs from package evidence');
       const buildPath = join(artifactDirectory, 'BUILD.json');
       if (existsSync(buildPath)) {
         buildHash = hashFile(buildPath);
@@ -225,6 +227,9 @@ function selfCheck() {
       runnerImage:{label:'windows-2022', os:'Windows'}, toolchain:{rust:{rustc:{available:true, version:'rustc 1.98.1'}, cargo:{available:true, version:'cargo 1.98.1'}, host:'x86_64-pc-windows-msvc'}, msvc:{available:true, version:'cl'}, linker:{available:true, version:'link'}, sdk:{version:'sdk'}}, shell:{systemRoot:'C:', comspec:'C:'}},
     }, packed:{...packed, files:packageFiles.map(path => ({path}))}, repeat, install, runtime};
   assert.deepEqual(validate(base).failures, []);
+  const incompletePackage = structuredClone(base);
+  incompletePackage.packed = {};
+  assert.match(validate(incompletePackage).failures.join('\n'), /package hashes missing/);
   assert.equal(validate({...base, repeat:{...repeat, runs:repeat.runs.slice(0, 1)}}).failures[0], 'repeat pack did not bind two complete runs to the retained package');
   const wrongSource = structuredClone(base);
   wrongSource.repeat.sourceCommit = 'b'.repeat(40);
