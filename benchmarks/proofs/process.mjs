@@ -1,14 +1,26 @@
-// Shared Linux-only supervision for trusted local proof commands, not a sandbox.
-import {spawn} from 'node:child_process';
+// Shared supervision for trusted local proof commands, not a sandbox.
+import {spawn, spawnSync} from 'node:child_process';
 import {performance} from 'node:perf_hooks';
+
+export const nodeCommand = process.execPath;
+export const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
 export async function runProcess(command,args,cwd,extraEnv={},timeoutMs=30000) {
   const start=performance.now();
   const env={...process.env}; delete env.SESHAT_MUTANT_ID; delete env.NODE_OPTIONS;
   return await new Promise((resolveRun,reject)=>{
-    const child=spawn(command,args,{cwd,env:{...env,...extraEnv},detached:true,stdio:['ignore','pipe','pipe']});
+    const child=spawn(command,args,{cwd,env:{...env,...extraEnv},detached:true,
+      shell:process.platform === 'win32' && /\.(?:cmd|bat)$/i.test(command),stdio:['ignore','pipe','pipe']});
     let stdout='',stderr='',timedOut=false,overflow=false;
-    const kill=()=>{try{process.kill(-child.pid,'SIGKILL');}catch(error){if(error.code!=='ESRCH')reject(error);}};
+    const kill=()=>{
+      if (process.platform === 'win32') {
+        // A proof subprocess is trusted; taskkill is only an emergency tree cleanup.
+        const result=spawnSync('taskkill.exe',['/PID',String(child.pid),'/T','/F'],{stdio:'ignore'});
+        if (result.error && result.error.code !== 'ESRCH') reject(result.error);
+        return;
+      }
+      try{process.kill(-child.pid,'SIGKILL');}catch(error){if(error.code!=='ESRCH')reject(error);}
+    };
     const timer=setTimeout(()=>{timedOut=true;kill();},timeoutMs);
     const collect=(stream,text)=>{
       if(Buffer.byteLength(stdout)+Buffer.byteLength(stderr)+text.length>4*1024*1024){overflow=true;kill();}
