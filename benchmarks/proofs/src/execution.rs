@@ -1,4 +1,4 @@
-// Linux-only process supervision for controlled, disposable proof fixtures.
+// Unix process supervision for controlled, disposable proof fixtures.
 mod job;
 mod project;
 use crate::{analysis::Analysis, assessment};
@@ -237,11 +237,7 @@ impl Session {
             thread::sleep(Duration::from_millis(2));
         };
         // The leader can finish while descendants are still alive. Only this owned group is targeted.
-        let _ = Command::new("kill")
-            .args(["-KILL", "--", &format!("-{}", child.id())])
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status();
+        let _ = stop_owned_group(child.id());
         let report = if receipt.exists() {
             let raw = fs::read_to_string(&receipt).map_err(|e| e.to_string())?;
             serde_json::from_str::<Value>(&raw).ok()

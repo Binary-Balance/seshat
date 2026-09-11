@@ -42,11 +42,20 @@ const manifest = JSON.parse(readFileSync(join(consumer, 'package.json'), 'utf8')
 const build = JSON.parse(readFileSync(join(consumer, 'BUILD.json'), 'utf8'));
 const binary = readFileSync(installed);
 assert.ok(statSync(installed).mode & 0o111);
-assert.equal(manifest.os?.[0], 'linux');
+assert.ok(process.platform === 'linux' || process.platform === 'darwin');
+assert.equal(manifest.os?.[0], process.platform);
 assert.deepEqual(manifest.cpu, [process.arch]);
-assert.deepEqual(manifest.libc, ['glibc']);
+if (process.platform === 'linux') assert.deepEqual(manifest.libc, ['glibc']);
+else assert.equal(manifest.libc, undefined);
 if (process.arch === 'arm64') assert.equal(build.cpu, process.arch);
-assert.equal(build.target, process.arch === 'arm64' ? 'aarch64-unknown-linux-gnu' : 'x86_64-unknown-linux-gnu');
+const expectedTarget = process.platform === 'darwin'
+  ? `${process.arch === 'arm64' ? 'aarch64' : 'x86_64'}-apple-darwin`
+  : `${process.arch === 'arm64' ? 'aarch64' : 'x86_64'}-unknown-linux-gnu`;
+assert.equal(build.target, expectedTarget);
+if (process.platform === 'darwin') {
+  assert.equal(build.minimumMacos, '15.0');
+  assert.equal(build.deploymentTarget, '15.0');
+}
 const binarySha256 = hash(binary);
 assert.equal(binarySha256, build.binarySha256);
 if (process.env.SESHAT_BINARY_SHA256) assert.equal(binarySha256, process.env.SESHAT_BINARY_SHA256);

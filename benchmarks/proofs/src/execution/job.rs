@@ -1,4 +1,4 @@
-// Bounded Linux jobs for the captured-project path. No shell interpretation.
+// Bounded Unix jobs for the captured-project path. No shell interpretation.
 use serde_json::{Value, json};
 use std::{
     io::Read,
