@@ -97,6 +97,9 @@ fn module_path(path: &Path) -> Result<String, String> {
     let value = path.to_str().ok_or("module path is not valid UTF-8")?;
     #[cfg(windows)]
     {
+        if let Some(rest) = value.strip_prefix("\\\\?\\UNC\\") {
+            return Ok(format!("\\\\{rest}"));
+        }
         return Ok(value.strip_prefix("\\\\?\\").unwrap_or(value).to_owned());
     }
     #[cfg(not(windows))]

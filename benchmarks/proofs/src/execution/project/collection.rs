@@ -1561,7 +1561,11 @@ mod tests {
         let source = root.join("src").join("subject 🎸.ts");
         fs::create_dir(source.parent().unwrap()).unwrap();
         fs::write(&source, "export const value = 1;\n").unwrap();
-        let raw = source.to_string_lossy().replace('/', "\\");
+        let raw = if cfg!(windows) {
+            source.to_string_lossy().replace('/', "\\")
+        } else {
+            source.to_string_lossy().into_owned()
+        };
         let report_path = root.join("coverage.json");
         fs::write(
             &report_path,

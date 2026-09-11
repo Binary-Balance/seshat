@@ -52,6 +52,7 @@ After the installation above, build both binaries and run the regression:
 ```sh
 cargo build --release --locked --manifest-path benchmarks/proofs/Cargo.toml --bins
 node benchmarks/proofs/cli.mjs
+node benchmarks/proofs/process-environment-check.mjs
 benchmarks/rust/target/release/seshat --help
 benchmarks/rust/target/release/seshat check --config /absolute/path/to/seshat.json --json
 ```
@@ -1082,6 +1083,22 @@ The driver reads `fixtures/vitest`, copies its installed proof dependencies and
 compares results with hand-counted expectations. It needs no external application
 checkout or retained output from an earlier run. Rust captures its own execution
 copy; the driver checks unchanged fixture bytes and empty scratch directories.
+
+To exercise an installed native candidate, supply its package or executable and
+reuse a prepared dependency directory. The package path is installed offline;
+the dependency directory is never resolved or downloaded during the proof:
+
+```sh
+node benchmarks/proofs/vitest-check.mjs \
+  --tarball /absolute/path/to/binary-balance-seshat-0.0.0.tgz \
+  --deps /absolute/path/to/vitest-dependencies
+```
+
+Use `--cli /absolute/path/to/node_modules/.bin/seshat` for an already installed
+candidate. Both installed and legacy modes accept `--cases` (or
+`SESHAT_VITEST_CHECK_CASES`) for a focused run. The installed result records the
+candidate version and hashes, each report/check count, source preservation and
+the empty scratch-directory check.
 
 CRAP and mutation testing select `tempo.ts`, `view.tsx` and `server.ts` and run the
 same three tests. This covers strict TypeScript, ESM, React server rendering,
