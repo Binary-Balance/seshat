@@ -18,6 +18,7 @@ use std::os::unix::fs::{DirBuilderExt, symlink};
 use std::os::windows::fs::{symlink_dir, symlink_file};
 
 fn stable_path(path: &Path) -> String {
+    let path = comparable_path(path);
     let value = path.to_string_lossy();
     #[cfg(windows)]
     {
@@ -27,6 +28,22 @@ fn stable_path(path: &Path) -> String {
     {
         value.into_owned()
     }
+}
+
+fn comparable_path(path: &Path) -> PathBuf {
+    // Windows canonicalize returns an extended-length path, while Node coverage reporters
+    // normally emit the same file with its ordinary drive prefix.
+    #[cfg(windows)]
+    {
+        let value = path.to_string_lossy();
+        if let Some(rest) = value.strip_prefix(r"\\?\UNC\") {
+            return PathBuf::from(format!(r"\\{rest}"));
+        }
+        if let Some(rest) = value.strip_prefix(r"\\?\") {
+            return PathBuf::from(rest);
+        }
+    }
+    path.to_path_buf()
 }
 
 fn path_key(path: &Path) -> String {
@@ -69,7 +86,9 @@ fn has_path_prefix(path: &Path, prefix: &Path) -> bool {
 }
 
 fn relative_path(root: &Path, path: &Path) -> Option<PathBuf> {
-    if !has_path_prefix(path, root) {
+    let root = comparable_path(root);
+    let path = comparable_path(path);
+    if !has_path_prefix(&path, &root) {
         return None;
     }
     let prefix_length = root.components().count();
@@ -85,6 +104,10 @@ fn relative_path(root: &Path, path: &Path) -> Option<PathBuf> {
 
 fn within(root: &Path, path: &Path) -> bool {
     relative_path(root, path).is_some()
+}
+
+fn same_path_identity(left: &str, right: &str) -> bool {
+    path_key(Path::new(left)) == path_key(Path::new(right))
 }
 
 fn is_link(metadata: &fs::Metadata) -> bool {
