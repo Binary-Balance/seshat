@@ -387,10 +387,12 @@ Prepare `work/debian11-inputs` with the three pinned library archives using the
 
 Packing stages only an explicit file list in a fresh ignored directory. It does
 not publish, modify either consuming application, install globally or add a
-package-install hook. The native binary is copied without stripping or rewriting;
-the installed hash must match its recorded build hash. The private package has
-no npm dependency tree beyond itself. Cargo dependencies remain compiled into
-the native executable; see `BUILD.json` and the bundled notices.
+package-install hook. Cargo applies the release symbol-stripping and Linux
+build-ID settings during linking; the resulting native binary is copied without
+post-build rewriting, and the installed hash must match its recorded build
+hash. The private package has no npm dependency tree beyond itself. Cargo
+dependencies remain compiled into the native executable; see `BUILD.json` and
+the bundled notices.
 
 The regression installs the tarball offline into disposable single-package and
 npm-workspace consumers, using a fresh npm cache. Its PATH contains only Node,
@@ -415,7 +417,9 @@ The initial host-linked verification passed 16 packaging checks, including all 4
 scenarios, on Node 24.20.0/npm 11.19.0/Linux x64/glibc 2.41. Two packs from the
 same checkout and toolchain produced identical tarball bytes. The archive is
 919,369 bytes; installed payload is 2,817,788 bytes, including a 2,319,936-byte
-unmodified native executable and notices for 65 locked Cargo dependencies.
+native executable and notices for 65 locked Cargo dependencies. That historical
+candidate predates the current link-time stripping settings; the packer copied
+its executable without post-build rewriting.
 There are zero npm runtime dependencies. This does not establish reproducible
 builds across hosts or compatible execution on older glibc.
 
@@ -562,9 +566,9 @@ directory. Paths beginning `/seshat` belong to the isolated fixture environment.
 The recorded archive is 920,507 bytes; its installed payload is 2,820,795 bytes,
 including the 2,321,040-byte executable. Two packs of the same staged binary and
 documentation produced identical tarballs. Two fresh native builds during this
-work produced different executable hashes, although both passed the Debian
-controls. Native build reproducibility is not established. The final verified
-binary and tarball hashes, and the two build hashes, are retained in the evidence.
+historical work produced different executable hashes, although both passed the
+Debian controls. That observation prompted the current link-time controls and
+the bounded x64 reproducibility evidence in [the Linux x64 package protocol](../../docs/linux-x64-package.md).
 
 ## Coverage experiment
 
