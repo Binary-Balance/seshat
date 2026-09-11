@@ -1,11 +1,11 @@
-// Linux-only process supervision for controlled, disposable proof fixtures.
+// Platform process supervision for controlled, disposable proof fixtures.
 mod job;
+mod platform;
 mod project;
 use crate::{analysis::Analysis, assessment};
 use assessment::TestState;
 pub use project::{AssessmentMode, CapturedProject, Thresholds};
 use serde_json::{Value, json};
-use std::os::unix::process::CommandExt;
 use std::{
     fs,
     io::Write,
@@ -22,13 +22,21 @@ use std::{
 // ponytail: one CLI run per process; pass cancellation explicitly if this becomes a library.
 static CANCEL_SIGNAL: OnceLock<Arc<AtomicUsize>> = OnceLock::new();
 
+fn stable_path(path: &Path) -> String {
+    let value = path.to_string_lossy();
+    #[cfg(windows)]
+    {
+        return value.replace('\\', "/");
+    }
+    #[cfg(not(windows))]
+    {
+        value.into_owned()
+    }
+}
+
 pub fn install_cancellation() -> Result<(), String> {
     let flag = CANCEL_SIGNAL.get_or_init(|| Arc::new(AtomicUsize::new(0)));
-    for signal in [signal_hook::consts::SIGINT, signal_hook::consts::SIGTERM] {
-        signal_hook::flag::register_usize(signal, flag.clone(), signal as usize)
-            .map_err(|e| format!("install cancellation handler: {e}"))?;
-    }
-    Ok(())
+    platform::install_cancellation(flag.clone())
 }
 
 pub fn cancellation_signal() -> usize {
@@ -78,18 +86,15 @@ fn observe_node_loads(
     let source_contexts = sources
         .iter()
         .map(|(source_path, source)| {
-            let analysis = Analysis::inspect(
-                source_path.to_str().ok_or("source path must be UTF-8")?,
-                source,
-            )?;
+            let analysis = Analysis::inspect(&stable_path(source_path), source)?;
             Ok::<_, String>(json!({
-                "source":source_path,
+                "source":stable_path(source_path),
                 "sites":analysis.load_failure_sites(source),
             }))
         })
         .collect::<Result<Vec<_>, _>>()?;
     let context = if let [source_context] = source_contexts.as_slice() {
-        json!({"version":1,"executionId":id,"source":sources[0].0,"sites":source_context["sites"]})
+        json!({"version":1,"executionId":id,"source":stable_path(sources[0].0),"sites":source_context["sites"]})
     } else {
         json!({"version":1,"executionId":id,"sources":source_contexts})
     };
@@ -197,7 +202,6 @@ impl Session {
         command
             .args(args)
             .current_dir(&self.root)
-            .process_group(0)
             .env(
                 "SESHAT_MUTANT_ID",
                 id.map(|n| n.to_string()).unwrap_or_else(|| "-1".into()),
@@ -223,7 +227,7 @@ impl Session {
             let sources = [(self.source_path.as_path(), source.as_str())];
             observe_node_loads(&mut command, &sources, &receipt, &id)?;
         }
-        let mut child = command.spawn().map_err(|e| format!("spawn: {e}"))?;
+        let mut child = platform::ManagedChild::spawn(&mut command)?;
         let timeout = Duration::from_millis(self.config["timeoutMs"].as_u64().unwrap_or(10000));
         let mut timed_out = false;
         let status = loop {
@@ -232,16 +236,13 @@ impl Session {
             }
             if start.elapsed() >= timeout {
                 timed_out = true;
-                break kill_owned_group(&mut child)?;
+                break child.kill_tree()?;
             }
             thread::sleep(Duration::from_millis(2));
         };
-        // The leader can finish while descendants are still alive. Only this owned group is targeted.
-        let _ = Command::new("kill")
-            .args(["-KILL", "--", &format!("-{}", child.id())])
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status();
+        // The leader can finish while descendants are still alive. The supervisor targets only
+        // this invocation's owned process tree.
+        child.stop_tree()?;
         let report = if receipt.exists() {
             let raw = fs::read_to_string(&receipt).map_err(|e| e.to_string())?;
             serde_json::from_str::<Value>(&raw).ok()
@@ -362,29 +363,6 @@ impl Session {
         result["strategy"] = json!(strategy);
         result["runner"] = self.config["runner"].clone();
         Ok(result)
-    }
-}
-
-fn kill_owned_group(child: &mut std::process::Child) -> Result<std::process::ExitStatus, String> {
-    stop_owned_group(child.id())?;
-    child.wait().map_err(|e| e.to_string())
-}
-
-fn stop_owned_group(pid: u32) -> Result<(), String> {
-    let pid = i32::try_from(pid)
-        .ok()
-        .filter(|pid| *pid > 1)
-        .ok_or("invalid owned process group")?;
-    // SAFETY: a positive child PID identifies the dedicated group created by process_group(0).
-    // Negative PID targets only that group, never the caller's group or all processes.
-    if unsafe { libc::kill(-pid, libc::SIGKILL) } == 0 {
-        return Ok(());
-    }
-    let error = std::io::Error::last_os_error();
-    if error.raw_os_error() == Some(libc::ESRCH) {
-        Ok(())
-    } else {
-        Err(format!("stop owned process group: {error}"))
     }
 }
 

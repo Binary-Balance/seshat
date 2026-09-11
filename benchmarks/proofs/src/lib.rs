@@ -90,7 +90,15 @@ fn finish(mut value: Value) -> (Value, u8) {
         }
     }
     let status = if signal != 0 {
-        128 + signal as u8
+        #[cfg(unix)]
+        {
+            128 + signal as u8
+        }
+        #[cfg(windows)]
+        {
+            // Windows console control events do not have POSIX signal exit codes.
+            2
+        }
     } else if value["complete"] == false {
         2
     } else {
