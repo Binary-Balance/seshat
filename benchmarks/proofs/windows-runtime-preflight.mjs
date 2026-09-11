@@ -10,7 +10,7 @@ import {
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
-import {basename, join} from 'node:path';
+import {basename, dirname, join} from 'node:path';
 import {arch, release, tmpdir, version} from 'node:os';
 
 const expected = {
@@ -69,6 +69,11 @@ function commandPrerequisites() {
   const comspec = process.env.ComSpec ?? process.env.COMSPEC ?? null;
   const commandShell = comspec && basename(comspec).toLowerCase() === 'cmd.exe' && existsSync(comspec);
   const cmd = probe(comspec ?? 'cmd.exe', ['/d', '/c', 'ver']);
+  // npm is installed as a .cmd shim on the hosted Windows image. Spawn its
+  // JavaScript entry point through node so this probe does not depend on shell
+  // dispatch rules.
+  const npmCli = join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js');
+  const npm = probe(process.execPath, [npmCli, '--version']);
   return {
     commandShell: {
       available: Boolean(commandShell) && cmd.available,
@@ -76,7 +81,7 @@ function commandPrerequisites() {
       version: cmd.version,
     },
     node: publicProbe(probe('node')),
-    npm: publicProbe(probe('npm', ['--version'])),
+    npm: publicProbe(npm),
     rustc: publicProbe(probe('rustc')),
     cargo: publicProbe(probe('cargo')),
   };
