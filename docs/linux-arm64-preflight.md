@@ -101,9 +101,9 @@ build or installation support, and it does not claim a minimum kernel.
 
 ## Remaining issue 2 acceptance
 
-This preflight does not satisfy the rest of issue 2. The later platform proof
-still needs a native build, npm and standalone installed checks without a
-consuming Rust toolchain, source capture and workspace-link checks, runner
-deadlines, cancellation and process cleanup, CLI JSON, thresholds and failure
-exit checks, and retained evidence with hashes. Those results belong in a
-separate evidence milestone after the host has passed this preflight.
+This preflight does not satisfy the rest of issue 2. The separate
+[ARM64 package protocol](linux-arm64-package.md) covers the later native build,
+npm and standalone installed checks without a consuming Rust toolchain, source
+capture and workspace-link checks, runner deadlines, cancellation and process
+cleanup, CLI JSON, thresholds and failure exit checks, and retained evidence
+with hashes. This report remains host evidence only.

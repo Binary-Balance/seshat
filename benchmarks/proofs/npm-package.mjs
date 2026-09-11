@@ -10,6 +10,9 @@ const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 assert.equal(process.argv.length, 3, 'usage: node benchmarks/proofs/npm-package.mjs <local tarball>');
 const tarball = realpathSync(process.argv[2]);
 assert.ok(statSync(tarball).isFile());
+if (process.env.SESHAT_TARBALL_SHA256) {
+  assert.equal(createHash('sha256').update(readFileSync(tarball)).digest('hex'), process.env.SESHAT_TARBALL_SHA256);
+}
 const work = mkdtempSync(join(repo,'work/assurance-proofs/npm-package-'));
 const tools = join(work,'tools'); mkdirSync(tools);
 const npm = process.env.PATH.split(delimiter).map(path => join(path,'npm')).find(existsSync);
@@ -27,6 +30,9 @@ const npmOptions = ['--offline','--ignore-scripts','--no-audit','--no-fund','--c
 const read = path => JSON.parse(readFileSync(path,'utf8'));
 const json = (path,value) => writeFileSync(path,JSON.stringify(value,null,2)+'\n');
 const evidence = {};
+const candidateCpu = process.arch;
+assert.ok(candidateCpu === 'x64' || candidateCpu === 'arm64', `unsupported proof CPU: ${candidateCpu}`);
+const unsupportedCpu = candidateCpu === 'arm64' ? 'x64' : 'arm64';
 function run(name, command, args, cwd, status = 0) {
   const started = performance.now();
   const child = spawnSync(command,args,{cwd,env,encoding:'utf8',timeout:120000,maxBuffer:8*1024*1024});
@@ -48,12 +54,16 @@ assert.equal(manifest.license,'MIT');
 assert.equal(manifest.scripts,undefined);
 assert.equal(manifest.dependencies,undefined);
 assert.equal(manifest.optionalDependencies,undefined);
-assert.deepEqual(manifest.os,['linux']); assert.deepEqual(manifest.cpu,['x64']); assert.deepEqual(manifest.libc,['glibc']);
+assert.deepEqual(manifest.os,['linux']); assert.deepEqual(manifest.cpu,[candidateCpu]); assert.deepEqual(manifest.libc,['glibc']);
 assert.deepEqual(readdirSync(installed).sort(),['BUILD.json','LICENSE','README.md','THIRD_PARTY_NOTICES.txt','bin','package.json'].sort());
 assert.deepEqual(Object.keys(read(join(consumer,'package-lock.json')).packages).sort(),['','node_modules/@binary-balance/seshat']);
 const build = read(join(installed,'BUILD.json'));
+if (candidateCpu === 'arm64') assert.equal(build.cpu,candidateCpu);
+assert.equal(build.target,candidateCpu === 'arm64' ? 'aarch64-unknown-linux-gnu' : 'x86_64-unknown-linux-gnu');
 const binary = readFileSync(executable);
-assert.equal(createHash('sha256').update(binary).digest('hex'),build.binarySha256);
+const binarySha256 = createHash('sha256').update(binary).digest('hex');
+assert.equal(binarySha256,build.binarySha256);
+if (process.env.SESHAT_BINARY_SHA256) assert.equal(binarySha256,process.env.SESHAT_BINARY_SHA256);
 assert.equal(binary.length,build.binaryBytes);
 assert.ok(build.dependencies.length>0);
 assert.match(readFileSync(join(installed,'THIRD_PARTY_NOTICES.txt'),'utf8'),/VoidZero/);
@@ -73,7 +83,7 @@ run('workspace-script','npm',['run','--silent','--workspace','workspace-app','as
 
 // npm 11's overrides apply to optional dependencies, not this required dependency.
 // Invert one requirement in disposable control packages to test actual rejection here.
-for(const [field,value] of [['os','darwin'],['cpu','arm64'],['libc','musl']]) {
+for(const [field,value] of [['os','darwin'],['cpu',unsupportedCpu],['libc','musl']]) {
   const control = join(work,`${field}-control`); mkdirSync(control);
   json(join(control,'package.json'),{...manifest,name:`seshat-${field}-control`,[field]:[value],bin:undefined,files:[]});
   const packed = run(`pack-${field}-control`,'npm',['pack',control,'--json','--pack-destination',control,...npmOptions],work);
@@ -89,9 +99,12 @@ for(const [field,value] of [['os','darwin'],['cpu','arm64'],['libc','musl']]) {
 env.SESHAT_CLI_BINARY = executable;
 const regression = run('installed-cli-regression',process.execPath,[join(repo,'benchmarks/proofs/cli.mjs')],consumer);
 const cliSummary = regression.stdout.match(/CLI passed: (\d+) scenarios plus legacy parity/);
-assert.ok(cliSummary && Number(cliSummary[1]) > 0, regression.stdout);
+assert.ok(cliSummary && Number(cliSummary[1]) === 43, regression.stdout);
 const cliScenarioCount = Number(cliSummary[1]);
-assert.equal(createHash('sha256').update(readFileSync(executable)).digest('hex'),build.binarySha256);
+assert.equal(createHash('sha256').update(readFileSync(executable)).digest('hex'),binarySha256);
+assert.equal(Object.keys(evidence).length,16);
 const result = {tarball,work,installedBinary:executable,build,checks:evidence};
+const resultPath = process.env.SESHAT_PROOF_OUTPUT ?? join(work,'result.json');
 json(join(work,'result.json'),result);
-console.log(`npm package passed: ${Object.keys(evidence).length} checks, including ${cliScenarioCount} installed CLI scenarios. Results: ${join(work,'result.json')}`);
+if (process.env.SESHAT_PROOF_OUTPUT) json(resultPath,result);
+console.log(`npm package passed: ${Object.keys(evidence).length} checks, including ${cliScenarioCount} installed CLI scenarios. Results: ${resultPath}`);
