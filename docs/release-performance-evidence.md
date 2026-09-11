@@ -48,7 +48,7 @@ The three later switching reports expose the phase boundary directly. Their work
 | Vitest TSX | 9608.468 | 663.940 | 0.134 | 2217.692 | 938.500 | 1310.079 | 4111.334 |
 | Jest/Expo TSX | 23345.054 | 1825.239 | 0.708 | 1454.545 | 5039.318 | 5136.998 | 8073.068 |
 
-These phase values are diagnostics and can overlap under worker parallelism; they are not additive. The analysis column is the separate analysis/CRAP phase, not a claim that the entire command is analysis-only.
+These phase values are diagnostics and can overlap under worker parallelism; they are not additive. The analysis column is the source-analysis phase; CRAP scoring occurs during coverage attribution, reported separately in the attribution column.
 
 ### 3. Replacement versus switching with fixed work and worker repeats
 
