@@ -128,10 +128,14 @@ jobs:
         run: |
           npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Retain npm payload for both installation routes
+      - name: Retain package payload and legacy proof binary
         shell: pwsh
         run: |
           $result = Get-Content work/windows/package-result.json -Raw | ConvertFrom-Json
+          if (-not $result.proofBinary -or -not (Test-Path -LiteralPath $result.proofBinary)) {
+            throw 'legacy proof executable is missing from the native pack result'
+          }
+          Copy-Item -LiteralPath $result.proofBinary -Destination work/windows/seshat-proofs.exe
           Copy-Item -LiteralPath $result.tarball -Destination work/windows/seshat-windows-x64.tgz
           Copy-Item -LiteralPath $result.tarball -Destination work/windows/seshat-windows-x64-standalone.tar.gz
           $extract = Join-Path $env:RUNNER_TEMP 'seshat-windows-package-build'
@@ -182,7 +186,9 @@ jobs:
             Remove-Item "Env:$name" -ErrorAction SilentlyContinue
           }
           $env:SESHAT_CLI_BINARY = $install.installedBinary
-          $env:SESHAT_PROOF_BINARY = $package.proofBinary
+          $proofBinary = Join-Path $env:GITHUB_WORKSPACE 'work\windows\seshat-proofs.exe'
+          if (-not (Test-Path -LiteralPath $proofBinary)) { throw 'retained legacy proof executable is missing' }
+          $env:SESHAT_PROOF_BINARY = $proofBinary
           $env:SESHAT_CONSOLE_HELPER_BINARY = $package.consoleHelper
           node benchmarks/proofs/cli.mjs 2>&1 | Tee-Object -FilePath work/windows/shared-cli.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
