@@ -5,12 +5,18 @@ import {existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFile
 import {dirname, join, resolve} from 'node:path';
 import {setTimeout as delay} from 'node:timers/promises';
 import {fileURLToPath} from 'node:url';
+import {killTree} from './process.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
+const executableSuffix = process.platform === 'win32' ? '.exe' : '';
 const binary = process.env.SESHAT_CLI_BINARY
   ? resolve(process.env.SESHAT_CLI_BINARY)
-  : join(repo, 'benchmarks/rust/target/release/seshat');
+  : join(repo, `benchmarks/rust/target/release/seshat${executableSuffix}`);
+const consoleHelper = resolve(
+  process.env.SESHAT_CONSOLE_HELPER_BINARY ??
+    join(repo, `benchmarks/rust/target/release/windows-console-helper${executableSuffix}`),
+);
 mkdirSync(join(repo, 'work/assurance-proofs'), {recursive: true});
 const work = mkdtempSync(join(repo, 'work/assurance-proofs/cli-'));
 const project = join(work, 'input 🎸');
@@ -57,6 +63,26 @@ function json(name, command, status = 0) {
   assert.ok(report.timings.wallMs >= report.timings.captureMs);
   return report;
 }
+function cancellationRun(signal, args, ready, label) {
+  const expectedStatus = process.platform === 'win32' ? 2 : signal === 'SIGINT' ? 130 : 143;
+  if (process.platform !== 'win32') {
+    return {
+      child: spawn(binary, args, {cwd: project, stdio: ['ignore', 'pipe', 'pipe']}),
+      mechanism: signal,
+      expectedStatus,
+    };
+  }
+  const stdoutPath = join(work, `${label}.stdout`);
+  const stderrPath = join(work, `${label}.stderr`);
+  return {
+    child: spawn(consoleHelper, [ready, stdoutPath, stderrPath, binary, ...args], {
+      cwd: project,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }),
+    mechanism: 'CTRL_BREAK_EVENT',
+    expectedStatus,
+  };
+}
 const stableMutation = mutation => mutation.outcomes.map(({id,path,localId,offset,original,replacement,verdict}) =>
   ({id,path,localId,offset,original,replacement,verdict}));
 const checked = json('check', 'check');
@@ -92,7 +118,7 @@ assert.equal(mutated.result.mutation.unresolved, 0);
 assert.deepEqual(stableMutation(mutated.result.mutation), stableMutation(checked.result.mutation));
 const proofBinary = process.env.SESHAT_PROOF_BINARY
   ? resolve(process.env.SESHAT_PROOF_BINARY)
-  : join(repo, 'benchmarks/rust/target/release/seshat-proofs');
+  : join(repo, `benchmarks/rust/target/release/seshat-proofs${executableSuffix}`);
 const legacy = spawnSync(proofBinary, ['check', configPath, scratch], {encoding:'utf8', timeout:60000});
 assert.ifError(legacy.error); assert.equal(legacy.status, 0, legacy.stderr);
 const proof = JSON.parse(legacy.stdout);
@@ -212,27 +238,31 @@ const emptyThreshold = json('no-mutants-with-threshold', 'mutate');
 assert.equal(emptyThreshold.quality.state, 'not-evaluated');
 assert.equal(emptyThreshold.quality.checks[0].state, 'not-applicable');
 
-for (const [signal, code, number] of [['SIGINT',130,2], ['SIGTERM',143,15]]) {
+for (const [signal, , number] of [['SIGINT',130,2], ['SIGTERM',143,15]]) {
   const ready = join(work, signal);
   const waiting = structuredClone(config);
   waiting.thresholds = {maxCrap:0, minMutationScore:100};
-  waiting.setups[0].typecheck = [process.execPath, '-e', `require('fs').writeFileSync(${JSON.stringify(ready)},String(process.pid));setInterval(()=>{},1000)`];
+  waiting.setups[0].typecheck = [process.execPath, '-e', `const fs=require('node:fs');fs.writeFileSync(${JSON.stringify(ready)},String(process.pid));setInterval(()=>{},1000)`];
   configure(waiting);
-  const child = spawn(binary, ['mutate','--scratch',scratch,'--json'], {cwd:project, stdio:['ignore','pipe','pipe']});
+  const launched = cancellationRun(signal, ['mutate','--scratch',scratch,'--json'], ready, signal);
+  const child = launched.child;
   let stdout = '', stderr = '', closed = false;
   child.stdout.on('data', data => stdout += data); child.stderr.on('data', data => stderr += data);
   const done = new Promise((resolve,reject) => {child.once('error',reject); child.once('close',(status) => {closed = true; resolve(status);});});
+  const forceKill = () => process.platform === 'win32' ? killTree(child.pid) : child.kill('SIGKILL');
   try {
     const deadline = performance.now() + 10000;
     while (!existsSync(ready) && !closed && performance.now() < deadline) await delay(20);
     assert.ok(existsSync(ready), stderr + stdout);
-    child.kill(signal);
-    const timeout = setTimeout(() => child.kill('SIGKILL'), 10000);
+    if (process.platform !== 'win32') child.kill(signal);
+    const timeout = setTimeout(forceKill, 10000);
     let status;
     try {status = await done;} finally {clearTimeout(timeout);}
-    assert.equal(status, code, stderr + stdout);
+    assert.equal(status, launched.expectedStatus, stderr + stdout);
     const report = JSON.parse(stdout);
-    assert.equal(report.cancelled, true); assert.equal(report.signal, number);
+    assert.equal(report.cancelled, true);
+    assert.equal(report.signal, process.platform === 'win32' ? 2 : number);
+    report.cancellation = {mechanism: launched.mechanism, expectedHostStatus: launched.expectedStatus};
     assert.equal(report.complete, false); assert.equal(report.result.mutation.score, null);
     assert.equal(report.quality.state, 'incomplete');
     assert.equal(report.quality.checks[1].state, 'incomplete');
@@ -242,7 +272,7 @@ for (const [signal, code, number] of [['SIGINT',130,2], ['SIGTERM',143,15]]) {
     unchanged(); results[signal] = report;
     console.log(`${signal}: exit ${status}, score withheld, child stopped`);
   } finally {
-    if (!closed) child.kill('SIGTERM');
+    if (!closed) forceKill();
     await done;
   }
 }
@@ -257,7 +287,8 @@ fs.writeFileSync(process.env.SESHAT_RECEIPT,JSON.stringify({version:1,
 fs.writeFileSync(${JSON.stringify(receiptReady)},'ready');
 setInterval(()=>{},1000);`];
 configure(receiptWaiting);
-const receiptChild = spawn(binary, ['mutate','--scratch',scratch,'--json'], {cwd:project, stdio:['ignore','pipe','pipe']});
+const receiptLaunch = cancellationRun('SIGTERM', ['mutate','--scratch',scratch,'--json'], receiptReady, 'receipt-cancellation');
+const receiptChild = receiptLaunch.child;
 let receiptStdout = '', receiptStderr = '', receiptClosed = false;
 receiptChild.stdout.on('data', data => receiptStdout += data);
 receiptChild.stderr.on('data', data => receiptStderr += data);
@@ -265,25 +296,29 @@ const receiptDone = new Promise((resolve, reject) => {
   receiptChild.once('error', reject);
   receiptChild.once('close', status => {receiptClosed = true; resolve(status);});
 });
+const forceKill = () => process.platform === 'win32' ? killTree(receiptChild.pid) : receiptChild.kill('SIGKILL');
 try {
   const deadline = performance.now() + 10000;
   while (!existsSync(receiptReady) && !receiptClosed && performance.now() < deadline) await delay(20);
   assert.ok(existsSync(receiptReady), receiptStderr + receiptStdout);
-  receiptChild.kill('SIGTERM');
-  const timeout = setTimeout(() => receiptChild.kill('SIGKILL'), 10000);
+  if (process.platform !== 'win32') receiptChild.kill('SIGTERM');
+  const timeout = setTimeout(forceKill, 10000);
   let status;
   try { status = await receiptDone; } finally { clearTimeout(timeout); }
-  assert.equal(status, 143, receiptStderr + receiptStdout);
+  assert.equal(status, receiptLaunch.expectedStatus, receiptStderr + receiptStdout);
   const report = JSON.parse(receiptStdout);
   assert.equal(report.cancelled, true);
+  report.cancellation = {mechanism: receiptLaunch.mechanism, expectedHostStatus: receiptLaunch.expectedStatus};
   assert.equal(report.result.setups[0].baseline.state, 'cancelled');
   assert.equal(report.result.diagnostics.runnerVersions[0].runtime.node, process.versions.node);
   unchanged();
   results['SIGTERM-after-receipt'] = report;
   console.log('SIGTERM after valid Node receipt: diagnostics retained');
 } finally {
-  if (!receiptClosed) receiptChild.kill('SIGTERM');
+  if (!receiptClosed) forceKill();
   await receiptDone;
 }
-writeFileSync(join(work,'result.json'), JSON.stringify(results,null,2)+'\n');
-console.log(`CLI passed: ${Object.keys(results).length} scenarios plus legacy parity. Results: ${join(work,'result.json')}`);
+const resultPath = process.env.SESHAT_PROOF_OUTPUT ? resolve(process.env.SESHAT_PROOF_OUTPUT) : join(work, 'result.json');
+mkdirSync(dirname(resultPath), {recursive: true});
+writeFileSync(resultPath, JSON.stringify(results, null, 2) + '\n');
+console.log(`CLI passed: ${Object.keys(results).length} scenarios plus legacy parity. Results: ${resultPath}`);
