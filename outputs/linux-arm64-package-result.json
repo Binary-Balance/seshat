@@ -1,0 +1,47 @@
+{
+  "tarball": "seshat-linux-arm64.tgz",
+  "proofBinary": null,
+  "binary": "c258be2dff7219c7d691d2753045e68869bb2b3368092f8c11eb92e6eab981b8",
+  "binaryBytes": 2367976,
+  "packedBytes": 951117,
+  "unpackedBytes": 2863258,
+  "integrity": "sha512-oCbdcxo7YI9+v12P704dKIG+yPonBycGGUz4rDZs8fmie9T/TKIch4QbFlTsPppepRfGtgPdgsk38Gb+fvu6lw==",
+  "files": [
+    {
+      "path": "BUILD.json",
+      "size": 7193,
+      "mode": 420
+    },
+    {
+      "path": "LICENSE",
+      "size": 1074,
+      "mode": 420
+    },
+    {
+      "path": "README.md",
+      "size": 1097,
+      "mode": 420
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.txt",
+      "size": 485480,
+      "mode": 420
+    },
+    {
+      "path": "bin/seshat",
+      "size": 2367976,
+      "mode": 493
+    },
+    {
+      "path": "package.json",
+      "size": 438,
+      "mode": 420
+    }
+  ],
+  "tarballSha256": "50bb9e2cb60ff5e0d394e53a8119dfaf7b9b9f5e2e25da1cac0c596b23d2a12d",
+  "standalone": {
+    "path": "seshat-linux-arm64-standalone.tar.gz",
+    "sha256": "e88bd754dba5d9521a8215c15e4895b63c5326b423fc192cab46bd07b1cda661",
+    "bytes": 929461
+  }
+}

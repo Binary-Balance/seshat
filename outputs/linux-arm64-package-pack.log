@@ -1,0 +1,112 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.47
+   Compiling siphasher v1.0.3
+   Compiling zmij v1.0.23
+   Compiling phf_shared v0.14.0
+   Compiling serde_core v1.0.229
+   Compiling rustversion v1.0.23
+   Compiling itoa v1.0.18
+   Compiling syn v3.0.5
+   Compiling allocator-api2 v0.2.21
+   Compiling serde v1.0.229
+   Compiling castaway v0.2.4
+   Compiling rustc-hash v2.1.3
+   Compiling static_assertions v1.1.0
+   Compiling cfg-if v1.0.4
+   Compiling oxc_data_structures v0.148.0
+   Compiling hashbrown v0.17.1
+   Compiling compact_str v0.10.0
+   Compiling oxc_allocator v0.148.0
+   Compiling phf v0.14.0
+   Compiling oxc_estree v0.148.0
+   Compiling fastrand v2.5.0
+   Compiling phf_generator v0.14.0
+   Compiling oxc_str v0.148.0
+   Compiling syn v2.0.119
+   Compiling cow-utils v0.1.3
+   Compiling dragonbox_ecma v0.1.12
+   Compiling unicode-linebreak v0.1.5
+   Compiling smawk v0.3.3
+   Compiling unicode-width v0.2.2
+   Compiling memchr v2.8.3
+   Compiling autocfg v1.5.1
+   Compiling num-traits v0.2.19
+   Compiling textwrap v0.16.2
+   Compiling bitflags v2.13.1
+   Compiling bytecount v0.6.9
+   Compiling unicode-segmentation v1.13.3
+   Compiling serde_derive v1.0.229
+   Compiling oxc_ast_macros v0.148.0
+   Compiling unicode-id-start v1.4.0
+   Compiling nonmax v0.5.5
+   Compiling percent-encoding v2.3.2
+   Compiling oxc_span v0.148.0
+   Compiling libc v0.2.189
+   Compiling phf_macros v0.14.0
+   Compiling num-integer v0.1.47
+   Compiling num-bigint v0.5.1
+   Compiling errno v0.3.14
+   Compiling serde_json v1.0.151
+   Compiling signal-hook v0.4.4
+   Compiling signal-hook-registry v1.4.8
+   Compiling seq-macro v0.3.6
+   Compiling glob v0.3.3
+   Compiling smallvec v1.16.0
+   Compiling oxc_index v5.0.0
+   Compiling oxc_diagnostics v0.148.0
+   Compiling oxc_syntax v0.148.0
+   Compiling oxc_regular_expression v0.148.0
+   Compiling oxc_ast v0.148.0
+   Compiling oxc_ecmascript v0.148.0
+   Compiling oxc_ast_visit v0.148.0
+   Compiling oxc_parser v0.148.0
+   Compiling seshat-proofs v0.0.0 (<runner-work>/seshat/benchmarks/proofs)
+    Finished `release` profile [optimized] target(s) in 27.34s
+{
+  "tarball": "<runner-work>/seshat/work/npm-pack-BPYyNn/binary-balance-seshat-0.0.0.tgz",
+  "proofBinary": "<runner-work>/seshat/work/npm-pack-BPYyNn/target/aarch64-unknown-linux-gnu/release/seshat-proofs",
+  "binary": "c258be2dff7219c7d691d2753045e68869bb2b3368092f8c11eb92e6eab981b8",
+  "binaryBytes": 2367976,
+  "packedBytes": 951117,
+  "unpackedBytes": 2863258,
+  "integrity": "sha512-oCbdcxo7YI9+v12P704dKIG+yPonBycGGUz4rDZs8fmie9T/TKIch4QbFlTsPppepRfGtgPdgsk38Gb+fvu6lw==",
+  "files": [
+    {
+      "path": "BUILD.json",
+      "size": 7193,
+      "mode": 420
+    },
+    {
+      "path": "LICENSE",
+      "size": 1074,
+      "mode": 420
+    },
+    {
+      "path": "README.md",
+      "size": 1097,
+      "mode": 420
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.txt",
+      "size": 485480,
+      "mode": 420
+    },
+    {
+      "path": "bin/seshat",
+      "size": 2367976,
+      "mode": 493
+    },
+    {
+      "path": "package.json",
+      "size": 438,
+      "mode": 420
+    }
+  ],
+  "tarballSha256": "50bb9e2cb60ff5e0d394e53a8119dfaf7b9b9f5e2e25da1cac0c596b23d2a12d",
+  "standalone": {
+    "path": "<runner-work>/seshat/work/npm-pack-BPYyNn/binary-balance-seshat-0.0.0-standalone.tar.gz",
+    "sha256": "e88bd754dba5d9521a8215c15e4895b63c5326b423fc192cab46bd07b1cda661",
+    "bytes": 929461
+  }
+}
