@@ -1,6 +1,7 @@
 // Focused native Windows CLI proof. Package installation and publication are separate slices.
 import assert from 'node:assert/strict';
 import {spawn, spawnSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
 import {
   existsSync,
   mkdirSync,
@@ -8,6 +9,7 @@ import {
   readFileSync,
   readdirSync,
   rmSync,
+  statSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
@@ -87,6 +89,7 @@ const evidence = {
   schemaVersion: 1,
   kind: 'seshat-windows-runtime-cli',
   capturedAt: new Date().toISOString(),
+  binary: {path: binary, sha256: createHash('sha256').update(readFileSync(binary)).digest('hex'), bytes: statSync(binary).size},
   scenarios: {},
 };
 
