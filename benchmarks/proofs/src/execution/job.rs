@@ -63,7 +63,7 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
         thread::sleep(Duration::from_millis(2));
     };
     // Also stop descendants when their leader has already exited.
-    let cleanup = super::stop_owned_group(child.id());
+    let cleanup = super::stop_owned_group(child.id(), "job-post-status");
     if status.is_err() {
         let _ = child.kill();
         let _ = child.wait();
