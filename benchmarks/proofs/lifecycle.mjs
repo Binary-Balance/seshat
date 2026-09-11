@@ -79,6 +79,9 @@ for(const {name,phase,signal} of cases) {
     await delay(100);
     const result={exit,ms:performance.now()-started,stdout,stderr,leaderAlive:alive(leader.pid),descendantAlive:alive(descendant.pid),remainingScratch:readdirSync(scratch)};
     results[name]=result;json(join(work,'result.json'),results);
+    if (process.env.SESHAT_DEBUG_CLEANUP === '1') {
+      console.error(`[DEBUG-macos-cleanup] ${name}: ${JSON.stringify(result)}`);
+    }
     assert.equal(readFileSync(join(input,'subject.ts'),'utf8'),source);
     assert.equal(alive(sentinel.pid),true,'cleanup affected an unrelated process');
     if(signal!=='SIGKILL') {
