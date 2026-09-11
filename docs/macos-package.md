@@ -25,6 +25,15 @@ controls remain active and invert the actual macOS platform. The shared
 lifecycle helper uses the same portable liveness path for separate process
 cleanup regressions.
 
+Each matrix job then installs the same current npm archive into the pinned
+Jest/Expo and Vitest fixtures. Jest/Expo runs
+`normal-1,assertion-kill,survivor,before-all`; Vitest runs
+`stack,assertion,survived,before-all`. The runner reports retain the complete
+and partial per-case JSON, raw logs, archive and executable hashes, no-Rust and
+cleared-environment evidence, source-preservation checks and empty scratch
+directories. The summary rejects a missing or partial runner report, a changed
+archive identity or incomplete runner evidence.
+
 The matrix summary is fail-closed. A missing or invalid preflight, package,
 npm or standalone report fails the job. The uploaded artifact contains raw
 logs, reports, `BUILD.json`, package archives and the portable summary. It does
@@ -35,4 +44,24 @@ candidate. It does not publish an npm package, claim public release support,
 publisher code signing or notarization. A local ad-hoc `codesign --sign -`
 signature, if used for a structural check, is not publisher signing or
 notarization. Native hosted evidence is pending until both matrix jobs pass
-and the retained summaries are reviewed.
+and the retained summaries are reviewed. This protocol records no historical
+macOS runner result or support claim before that review.
+
+## Current protocol invocation
+
+The workflow runs these installed controls after packaging on both matrix CPUs:
+
+```sh
+node benchmarks/proofs/jest-expo-check.mjs \
+  --tarball work/macos/$CPU/seshat-macos-$CPU.tgz \
+  --cases normal-1,assertion-kill,survivor,before-all
+node benchmarks/proofs/vitest-check.mjs \
+  --tarball work/macos/$CPU/seshat-macos-$CPU.tgz \
+  --deps "$GITHUB_WORKSPACE/benchmarks/proofs" \
+  --cases stack,assertion,survived,before-all
+node benchmarks/proofs/macos-package-summary.mjs work/macos/$CPU
+```
+
+`$CPU` is the matrix value `x64` or `arm64`. The workflow still runs the
+existing native preflight, packaging, npm, standalone and eleven-case lifecycle
+checks around these controls.
