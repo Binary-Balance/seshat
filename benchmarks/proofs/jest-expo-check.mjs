@@ -16,7 +16,7 @@ import {
 import {dirname, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {parseArgs} from 'node:util';
-import {runProcess} from './process.mjs';
+import {nodeCommand, noRustProof, npmArgs, npmCommand, runProcess} from './process.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
@@ -85,6 +85,7 @@ const npmEnv = {
   npm_config_globalconfig: join(work, 'global.npmrc'),
   npm_config_update_notifier: 'false',
 };
+const rustProof = await noRustProof(repo);
 const portable = path => relative(repo, path) || '.';
 const sha256 = path => createHash('sha256').update(readFileSync(path)).digest('hex');
 const writeJson = (path, value) => writeFileSync(path, JSON.stringify(value, null, 2) + '\n');
@@ -145,7 +146,7 @@ function fixtureVersions(root) {
 
 function jestArgs(testPath, {reporter = true, environment = true} = {}) {
   const args = [
-    'node',
+    nodeCommand,
     'node_modules/jest/bin/jest.js',
     '--config',
     'jest.config.cjs',
@@ -188,7 +189,7 @@ function configFor({source, test, workers = 1, testArgs = jestArgs(test), timeou
       runner: 'jest',
       cwd: '.',
       timeoutMs,
-      typecheck: ['node', 'node_modules/typescript/bin/tsc', '--project', 'tsconfig.json'],
+      typecheck: [nodeCommand, 'node_modules/typescript/bin/tsc', '--project', 'tsconfig.json'],
       test: testArgs,
       coverage: {command: coverageArgs, report: 'coverage/coverage-final.json'},
     }],
@@ -290,7 +291,8 @@ const dependencyRoot = values.deps ? resolve(values.deps) : join(work, 'fixture-
 if (!values.deps) {
   mkdirSync(dependencyRoot);
   for (const path of ['package.json', 'package-lock.json']) writeFileSync(join(dependencyRoot, path), fixtureBytes[path]);
-  await runCommand('npm', ['ci', '--ignore-scripts', '--no-audit', '--no-fund'], dependencyRoot, 0, npmEnv);
+  await runCommand(npmCommand, [...npmArgs, 'ci', '--ignore-scripts', '--no-audit', '--no-fund'], dependencyRoot, 0,
+    {...rustProof.env, ...npmEnv});
 }
 assert.ok(statSync(join(dependencyRoot, 'node_modules')).isDirectory(), 'fixture dependencies are missing');
 const environment = {node: process.version, tools: fixtureVersions(dependencyRoot)};
@@ -313,20 +315,22 @@ if (tarballArg) {
   const consumer = join(work, 'cli-consumer');
   mkdirSync(consumer);
   writeJson(join(consumer, 'package.json'), {name: 'seshat-jest-expo-consumer', private: true});
-  await runCommand('npm', [
+  await runCommand(npmCommand, [...npmArgs,
     'install', '--offline', '--ignore-scripts', '--no-audit', '--no-fund',
     '--save-dev', '--save-exact', '--cache', npmEnv.npm_config_cache,
     '--userconfig', npmEnv.npm_config_userconfig,
     '--globalconfig', npmEnv.npm_config_globalconfig, tarball,
-  ], consumer, 0, npmEnv);
-  cli = realpathSync(join(consumer, 'node_modules/.bin/seshat'));
+  ], consumer, 0, {...rustProof.env, ...npmEnv});
+  const executable = process.platform === 'win32' ? 'seshat.cmd' : 'seshat';
+  const native = join(consumer, 'node_modules/@binary-balance/seshat/bin/seshat');
+  cli = realpathSync(existsSync(native) ? native : join(consumer, 'node_modules/.bin', executable));
   cliEvidence = {source: 'tarball', tarballSha256: sha256(tarball)};
 } else {
   cli = realpathSync(resolve(cliArg));
   assert.ok(statSync(cli).isFile(), 'CLI executable is missing');
   cliEvidence = {source: 'executable'};
 }
-const version = (await runCommand(cli, ['--version'], repo)).stdout.trim();
+const version = (await runCommand(cli, ['--version'], repo, 0, rustProof.env)).stdout.trim();
 assert.match(version, /^seshat 0\.0\.0 \(candidate\)$/);
 cliEvidence = {...cliEvidence, version, binarySha256: sha256(cli)};
 
@@ -337,6 +341,7 @@ const results = {
   environment,
   cli: cliEvidence,
   dependencies: {versions: environment.tools},
+  noConsumingRust: rustProof.evidence,
   work: portable(work),
   runs: {},
 };
@@ -349,7 +354,7 @@ async function check(name, config, expected, control = null) {
   writeJson(configPath, config);
   const execution = await runProcess(cli, [
     'check', '--config', configPath, '--scratch', scratch, '--json', '--no-progress',
-  ], project, {}, 600000);
+  ], project, rustProof.env, 600000);
   assert.equal(execution.timedOut, false, `${name} timed out running Seshat`);
   assert.equal(execution.overflow, false, `${name} overflowed Seshat output`);
   const report = JSON.parse(execution.stdout);
@@ -464,6 +469,7 @@ if (shouldRun('retry-baseline')) {
 }
 
 delete results.normalDefinition;
+results.checks = {requested: requestedCases.length, completed: Object.keys(results.runs).length};
 results.originalsPreserved = true;
 save();
-console.log(`Jest/Expo installed-command evidence: ${join(work, 'result.json')}`);
+console.log(`Jest/Expo installed-command evidence: ${results.checks.completed} checks; ${join(work, 'result.json')}`);
