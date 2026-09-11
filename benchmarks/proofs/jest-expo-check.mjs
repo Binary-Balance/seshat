@@ -16,7 +16,7 @@ import {
 import {dirname, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {parseArgs} from 'node:util';
-import {runProcess} from './process.mjs';
+import {nodeCommand, npmCommand, runProcess} from './process.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
@@ -145,7 +145,7 @@ function fixtureVersions(root) {
 
 function jestArgs(testPath, {reporter = true, environment = true} = {}) {
   const args = [
-    'node',
+    nodeCommand,
     'node_modules/jest/bin/jest.js',
     '--config',
     'jest.config.cjs',
@@ -188,7 +188,7 @@ function configFor({source, test, workers = 1, testArgs = jestArgs(test), timeou
       runner: 'jest',
       cwd: '.',
       timeoutMs,
-      typecheck: ['node', 'node_modules/typescript/bin/tsc', '--project', 'tsconfig.json'],
+      typecheck: [nodeCommand, 'node_modules/typescript/bin/tsc', '--project', 'tsconfig.json'],
       test: testArgs,
       coverage: {command: coverageArgs, report: 'coverage/coverage-final.json'},
     }],
@@ -290,7 +290,7 @@ const dependencyRoot = values.deps ? resolve(values.deps) : join(work, 'fixture-
 if (!values.deps) {
   mkdirSync(dependencyRoot);
   for (const path of ['package.json', 'package-lock.json']) writeFileSync(join(dependencyRoot, path), fixtureBytes[path]);
-  await runCommand('npm', ['ci', '--ignore-scripts', '--no-audit', '--no-fund'], dependencyRoot, 0, npmEnv);
+  await runCommand(npmCommand, ['ci', '--ignore-scripts', '--no-audit', '--no-fund'], dependencyRoot, 0, npmEnv);
 }
 assert.ok(statSync(join(dependencyRoot, 'node_modules')).isDirectory(), 'fixture dependencies are missing');
 const environment = {node: process.version, tools: fixtureVersions(dependencyRoot)};
@@ -313,13 +313,15 @@ if (tarballArg) {
   const consumer = join(work, 'cli-consumer');
   mkdirSync(consumer);
   writeJson(join(consumer, 'package.json'), {name: 'seshat-jest-expo-consumer', private: true});
-  await runCommand('npm', [
+  await runCommand(npmCommand, [
     'install', '--offline', '--ignore-scripts', '--no-audit', '--no-fund',
     '--save-dev', '--save-exact', '--cache', npmEnv.npm_config_cache,
     '--userconfig', npmEnv.npm_config_userconfig,
     '--globalconfig', npmEnv.npm_config_globalconfig, tarball,
   ], consumer, 0, npmEnv);
-  cli = realpathSync(join(consumer, 'node_modules/.bin/seshat'));
+  const executable = process.platform === 'win32' ? 'seshat.cmd' : 'seshat';
+  const native = join(consumer, 'node_modules/@binary-balance/seshat/bin/seshat');
+  cli = realpathSync(existsSync(native) ? native : join(consumer, 'node_modules/.bin', executable));
   cliEvidence = {source: 'tarball', tarballSha256: sha256(tarball)};
 } else {
   cli = realpathSync(resolve(cliArg));
@@ -464,6 +466,7 @@ if (shouldRun('retry-baseline')) {
 }
 
 delete results.normalDefinition;
+results.checks = {requested: requestedCases.length, completed: Object.keys(results.runs).length};
 results.originalsPreserved = true;
 save();
-console.log(`Jest/Expo installed-command evidence: ${join(work, 'result.json')}`);
+console.log(`Jest/Expo installed-command evidence: ${results.checks.completed} checks; ${join(work, 'result.json')}`);
