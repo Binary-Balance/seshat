@@ -3,12 +3,16 @@
 This is a private, unpublished `@binary-balance/seshat` package for Linux x64
 with glibc. It is not the cross-platform release. The package is built against
 Debian 11 libraries and verified in a complete Debian 11/glibc 2.31 userspace.
-glibc 2.31 is the minimum supported userspace baseline. The verification uses a
-Linux 6.12 host kernel; it does not establish a minimum supported kernel.
+glibc 2.31 is the minimum supported userspace baseline. The native x64 package
+workflow records the Ubuntu 22.04 host kernel and fails below the candidate
+Linux 6.8 kernel family; it does not boot an older kernel or claim identical
+behaviour for every 6.8 patch. Debian 11 LTS ended on 2026-08-31; its pinned
+userspace is retained as a compatibility snapshot.
 Alpine/musl, glibc below 2.31, ARM64, macOS and Windows are not supported by this candidate. Node 24.20.0
 is the verified test runtime. See `BUILD.json` for the exact binary hash,
 native library requirements and dependency versions of a packed build.
-The complete installed-package proof and its limits are documented in
+The native protocol and its limits are documented in
+`docs/linux-x64-package.md`; the complete userspace proof is in
 `benchmarks/proofs/README.md`, under "Debian 11 installed-package verification".
 
 ## Install and use
@@ -59,6 +63,10 @@ Build and verify offline:
 node packaging/pack.mjs work/debian11-inputs
 SESHAT_PROOF_BINARY=/absolute/path/to/the/reported/proofBinary node benchmarks/proofs/npm-package.mjs /absolute/path/to/the/reported/package.tgz
 ```
+
+The native workflow derives its standalone archive from the six files in that
+tarball, then runs `standalone.mjs` with the same proof binary. The x64 packer
+does not publish or install a separate archive.
 
 Packing verifies archive hashes, extracts an isolated library directory and
 rebuilds against it from the locked dependencies. It rejects GLIBC requirements
