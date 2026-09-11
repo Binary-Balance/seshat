@@ -46,6 +46,62 @@ the isolated userspace. It records the same CLI/process controls, glibc 2.31,
 the actual shared host kernel and archive hashes. Ubuntu-only installation
 success is therefore not used as the minimum-userspace result.
 
+## Observed native proof
+
+The successful hosted proof is [workflow run 34558525165](https://github.com/Binary-Balance/seshat/actions/runs/34558525165)
+from [PR 21](https://github.com/Binary-Balance/seshat/pull/21). It tested the
+synthetic pull-request merge commit
+`19eb8fa380543ee40df4e7571075b88b52358e3f` at `refs/pull/21/merge`; the PR
+head was `b2b73186972c19e4e4e833321ca74dc1bff0913f` on
+`codex/linux-x64-package`. The merge commit is the tested source and workflow
+revision. It is kept separate from the PR head when describing provenance.
+
+The committed [portable summary](../outputs/linux-x64-package.json) has
+SHA-256
+`0c12ff043f7a36aff78a1f2b0cce7378a43487b555a879adeb5b382933a9b9d6`.
+It records `validation.passed: true`, all four package/npm/standalone/Debian11
+validation flags as true, and no failures. [Package metadata](../outputs/linux-x64-package-result.json),
+[preflight](../outputs/linux-x64-preflight.json), the normalized
+[pack log](../outputs/linux-x64-package-pack.log), [npm log](../outputs/linux-x64-package-npm.log),
+[standalone log](../outputs/linux-x64-package-standalone.log), [Debian11 log](../outputs/linux-x64-package-debian11.log)
+and [Rust test log](../outputs/linux-x64-package-rust-tests.log) are retained
+with it. The candidate archives remain in the hosted workflow artifact and are
+not committed here.
+
+The exact hosted inputs and results were:
+
+| Item | Observed result |
+| --- | --- |
+| Runner and userspace | `ubuntu-22.04`, Ubuntu 22.04.5 LTS/Jammy, host glibc 2.35, pinned Debian 11/glibc 2.31 installed proof, image `20260907.292.1` |
+| Architecture and target | Node `x64`, `uname -m` `x86_64`, `x86_64-unknown-linux-gnu`, ELF machine `62` |
+| Kernel | `6.8.0-1064-azure`; Linux 6.8 is the candidate kernel family for this proof |
+| Runtime | Node `v24.20.0`, npm `11.19.0` |
+| Native toolchain | rustc/Cargo `1.98.1`, Rust host `x86_64-unknown-linux-gnu`, GCC/G++ `11.4.0`, Clang `14.0.0`, GNU ld `2.38`, Make `4.3` |
+| Rust proof | `cargo test --locked --offline --manifest-path benchmarks/proofs/Cargo.toml`: 30 passed, 0 failed; the additional binary and doc-test targets ran 0 tests |
+| npm proof | 16 retained checks, including 43 installed CLI scenarios and legacy parity |
+| Standalone proof | 43 installed CLI scenarios and 11 parallel controls; archive listing and extraction passed |
+| Debian11 proof | Both installed routes passed in the pinned rootfs: npm 43 CLI/11 parallel and standalone 43 CLI/11 parallel; Rust was unavailable inside the proof |
+| GLIBC metadata | Required symbols through `GLIBC_2.30`, within the declared 2.31 ceiling; libraries `libgcc_s.so.1`, `libpthread.so.0`, `libm.so.6`, `libdl.so.2`, `libc.so.6` |
+
+The npm log intentionally records exit 2 for incomplete/invalid-input controls
+and exit 1 for threshold and platform-rejection controls. Those are expected
+scenario results; the 16-check verifier passed.
+
+The npm tarball is 973,904 bytes with SHA-256
+`e34054e4703d4343b41009b03bdd15397ec3e31d86de5f3570edd773a9c821bf`.
+The standalone archive is 964,574 bytes with SHA-256
+`de5dd9add7fef2a3df286b723aacb8b55ceb37e5c0da91c93fa3f8ff96574f0a`.
+The 2,449,008-byte binary has SHA-256
+`7a16e50a4e910467da94f44306003f2bc2633dffe7986a69d6fee14d3df0522a` in
+the package metadata, and the locked Cargo graph is identified by
+`bb820a335e5eb7b35e9185cedaabf68b1608f4712c48f73bafcd2bac180e757d`.
+
+These hashes identify the successful run's outputs. The run does not prove
+byte-identical reproducibility across separate builds: builds can retain
+identical executable sections while differing in symbol-table/build-ID
+ordering, and standalone archive timestamps vary. A later cross-platform
+reproducibility, lifecycle and runner audit remains separate work.
+
 ## Local checks
 
 These checks do not require a package build:
@@ -56,11 +112,14 @@ node benchmarks/proofs/linux-x64-summary.mjs --self-check
 node --check benchmarks/proofs/linux-debian.mjs
 ```
 
-The hosted workflow is the evidence milestone for the native Ubuntu 22.04
-environment. No x64 hosted result or hash is recorded here until that workflow
-has completed successfully; the retained artifact's summary is the source of
-the actual runner, kernel, userspace, package and proof values.
+The local checks are syntax and self-check coverage for the proof helpers. The
+hosted run above is the source of the actual runner, kernel, userspace, package
+and installed-proof values.
 
-This protocol does not establish support for glibc below 2.31, musl, another
-Linux userspace, macOS or Windows. It also does not publish the private npm
-candidate or close issue 2.
+The selected host verifies the candidate Linux 6.8 family floor on the exact
+recorded `6.8.0-1064-azure` patch; it does not boot an older kernel or claim
+that every 6.8 patch behaves identically. The pinned Debian 11 userspace is a
+compatibility snapshot after Debian 11 LTS ended on 2026-08-31. This protocol
+does not establish support for glibc below 2.31, musl, another Linux userspace,
+macOS or Windows. It also does not publish the private npm candidate or close
+issue 2.
