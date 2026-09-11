@@ -118,15 +118,16 @@ identical executable sections while differing in symbol-table/build-ID
 ordering, and standalone archive timestamps vary. A later cross-platform
 reproducibility, lifecycle and runner audit remains separate work.
 
-## Native binary reproducibility
+## Historical native binary reproducibility
 
-The release profile uses Cargo's standard `strip = "symbols"` setting. The
-Linux packer also passes `-Wl,--build-id=none` through `cc` in both native Linux
-modes. This removes link metadata during the normal build; it does not rewrite
-the binary after linking. The x64 Debian route keeps its existing sysroot flags
-alongside the linker control.
+The pair below predates the current native release policy. At source commit
+`655a10c`, `benchmarks/proofs/Cargo.toml` used `lto = "thin"` and
+`strip = "symbols"`. The Linux packer also passed `-Wl,--build-id=none` through
+`cc` in both native Linux modes. This removed link metadata during the normal
+build; it did not rewrite the binary after linking. The x64 Debian route kept
+its existing sysroot flags alongside the linker control.
 
-Two clean current-source x64 builds were run from main `655a10c` with the
+Two clean x64 builds were run from main `655a10c` with the
 pinned local Rust 1.98.1 toolchain, Node 24.20.0, npm 11.19.0, locked Cargo
 graph (`Cargo.lock` SHA-256
 `bb820a335e5eb7b35e9185cedaabf68b1608f4712c48f73bafcd2bac180e757d`) and the
@@ -151,6 +152,44 @@ Windows. macOS uses the standard Cargo stripping setting but has no byte
 identity evidence here; Windows linker rules remain separate. The current
 standalone artifact reuses the npm archive bytes, while the older historical
 standalone tarball evidence above retains its original metadata.
+
+## Current native reproducibility policy
+
+Native proof builds now use the source-controlled `benchmarks/proofs/Cargo.toml`
+release profile with explicit `lto = "off"` and `strip = "symbols"`. The packer
+continues to pass `-Wl,--build-id=none` for Linux and keeps `CARGO_BUILD_JOBS=1`
+for serial build scheduling. The repeat-pack gate remains strict: it publishes
+evidence only when every compared binary, `BUILD.json` and archive byte stream
+matches.
+
+The earlier [Linux x64 run 34570511950](https://github.com/Binary-Balance/seshat/actions/runs/34570511950)
+tested source `3251118dbc4612334bfff825f03ed2f04b8ed029` and correctly rejected a
+pair of different binaries. Both were 1,957,000 bytes; the first hash was
+`1f6030a792ce1210cb947cd73ff88cefc29eb4bc573a21d1c493a8e374996f78` and the
+second was `8942c72ad7a539793214fd3a539f820b13405b9c5a51b155e92ae25058699c44`.
+The first binary was not retained by that run, so this remains mismatch evidence
+and does not identify the differing bytes.
+
+A bounded [six-build diagnostic](https://github.com/Binary-Balance/seshat/actions/runs/34575675229)
+used that same source, pinned Rust 1.98.1/LLVM 22.1.8, Node/npm versions,
+Debian 11 inputs and serial Cargo scheduling. Four builds used the manifest's
+`lto = "thin"`; two controls used `CARGO_PROFILE_RELEASE_LTO=off`. All four
+ThinLTO builds matched at 1,957,000 bytes with SHA-256
+`8942c72ad7a539793214fd3a539f820b13405b9c5a51b155e92ae25058699c44`; both
+controls matched at 2,026,288 bytes with SHA-256
+`5f27cad598e8186907d827f114eebcd7fede502859eac07b44b0f6d5340f4de7`.
+The diagnostic therefore did not reproduce the earlier mismatch. It supports
+the bounded workaround without proving that ThinLTO caused the earlier failure.
+The explicit non-LTO policy costs 69,288 bytes, or about 3.54%, for this source,
+toolchain and input set.
+
+The [Rust issue 126976](https://github.com/rust-lang/rust/issues/126976) reports
+ThinLTO module-hash variance in LLVM 22 and a fix in LLVM 23; the related
+[LLVM change](https://github.com/llvm/llvm-project/commit/965f9d87adb0a7376454374fbc140ab69bd796a)
+is an upstream risk signal, not a Seshat root-cause diagnosis. Each repeat proof
+records its source commit, toolchain, host and build inputs; the source-controlled
+manifest at that commit supplies the release profile. These controls do not
+establish arbitrary cross-host or cross-platform byte identity.
 
 ## Local checks
 

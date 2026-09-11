@@ -81,6 +81,14 @@ the native executable and `BUILD.json`; native workflows upload this directory.
 The cheap retention path can be checked with
 `node packaging/repeat-pack-failure-check.mjs`.
 
+Native proof builds use the source-controlled `[profile.release]` in
+`benchmarks/proofs/Cargo.toml`, which explicitly sets `lto = "off"` and
+`strip = "symbols"`. The packer and Windows runtime workflow use this manifest;
+the Linux packer keeps its existing sysroot and `-Wl,--build-id=none` flags.
+This is a bounded workaround for the native x64 variance described in the
+[Linux x64 protocol](../docs/linux-x64-package.md), so the repeat gate still
+requires identical binary, `BUILD.json` and archive bytes.
+
 Packing verifies archive hashes, extracts an isolated library directory and
 rebuilds against it from the locked dependencies. It rejects GLIBC requirements
 above 2.31. An explicit Cargo target keeps these link flags away from host build
