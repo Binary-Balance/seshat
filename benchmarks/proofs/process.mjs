@@ -14,9 +14,10 @@ export function rustFreeEnvironment() {
   const rustExecutables = ['cargo', 'cargo.exe', 'cargo.cmd', 'rustc', 'rustc.exe', 'rustc.cmd'];
   const hasRust = path => rustExecutables.some(name => existsSync(join(path, name)));
   env.PATH = (env.PATH ?? '').split(delimiter).filter(path => path && !hasRust(path)).join(delimiter);
-  delete env.CARGO_HOME;
-  delete env.RUSTUP_HOME;
-  delete env.CARGO_TARGET_DIR;
+  // Keep removals explicit: runProcess merges this full env over its parent copy.
+  for (const name of ['CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'NODE_OPTIONS', 'SESHAT_MUTANT_ID']) {
+    env[name] = undefined;
+  }
   return env;
 }
 

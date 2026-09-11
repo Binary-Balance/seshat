@@ -50,6 +50,7 @@ After the installation above, build both binaries and run the regression:
 ```sh
 cargo build --release --locked --manifest-path benchmarks/proofs/Cargo.toml --bins
 node benchmarks/proofs/cli.mjs
+node benchmarks/proofs/process-environment-check.mjs
 benchmarks/rust/target/release/seshat --help
 benchmarks/rust/target/release/seshat check --config /absolute/path/to/seshat.json --json
 ```
