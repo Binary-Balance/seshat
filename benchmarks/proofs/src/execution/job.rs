@@ -47,11 +47,11 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
     let stdout = read_pipe(child.stdout.take().unwrap(), overflow.clone());
     let stderr = read_pipe(child.stderr.take().unwrap(), overflow.clone());
     let mut timed_out = false;
-    let mut group_stopped = false;
+    let mut termination_attempted = false;
     let status = loop {
         if super::cancellation_signal() != 0 {
+            termination_attempted = true;
             let result = super::kill_owned_group(&mut child);
-            group_stopped = result.is_ok();
             break result;
         }
         match child.try_wait() {
@@ -61,14 +61,14 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
         }
         if start.elapsed() >= timeout || overflow.load(Ordering::Relaxed) {
             timed_out = start.elapsed() >= timeout;
+            termination_attempted = true;
             let result = super::kill_owned_group(&mut child);
-            group_stopped = result.is_ok();
             break result;
         }
         thread::sleep(Duration::from_millis(2));
     };
     // kill_owned_group already signalled and waited for the group; natural exits still need descendant cleanup.
-    let cleanup = if group_stopped {
+    let cleanup = if termination_attempted {
         Ok(())
     } else {
         super::stop_owned_group(child.id())
