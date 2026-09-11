@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 import {gunzipSync} from 'node:zlib';
 
 export const packageFiles = ['BUILD.json', 'LICENSE', 'README.md', 'THIRD_PARTY_NOTICES.txt', 'bin/seshat', 'package.json'];
+export const windowsPackageFiles = packageFiles.map(path => path === 'bin/seshat' ? 'bin/seshat.exe' : path);
 export const repeatArtifacts = ['binary', 'build', 'npmArchive', 'standaloneArchive'];
 const isHash = value => typeof value === 'string' && /^[\da-f]{64}$/.test(value);
 const isCommit = value => typeof value === 'string' && /^(?!0{40})[\da-f]{40}$/.test(value);
@@ -32,22 +33,31 @@ export function readArchiveBuild(path) {
 
 export function repeatPassed(value, {
   sourceCommit, expectedTarget, expectedPlatform, expectedArch, expectedMachine, inputMode,
-  hostGlibc, expectedToolchain, packed, build, npm, standalone, artifacts, requireArtifacts, retainedBuild,
+  hostGlibc, expectedWindows, expectedToolchain, expectedPackageFiles, packed, build, npm, standalone,
+  artifacts, requireArtifacts, retainedBuild,
 } = {}) {
+  const packageFilesForTarget = [...(expectedPackageFiles ??
+    (expectedPlatform === 'win32' ? windowsPackageFiles : packageFiles))].sort();
   if (!value || value.schemaVersion !== 1 || value.validation?.passed !== true ||
       typeof value.validation.reason !== 'string' || !value.validation.reason) return false;
   if (!isCommit(sourceCommit) || !isCommit(value.sourceCommit) || value.sourceCommit !== sourceCommit ||
-      !isText(expectedTarget) || !['linux', 'darwin'].includes(expectedPlatform) ||
+      !isText(expectedTarget) || !['linux', 'darwin', 'win32'].includes(expectedPlatform) ||
       !isText(expectedArch) || !isText(expectedMachine) || !isText(inputMode) ||
       expectedPlatform === 'linux' && !isText(hostGlibc) ||
       expectedPlatform === 'darwin' && hostGlibc !== undefined && hostGlibc !== null ||
+      expectedPlatform === 'win32' && (!expectedWindows || !isText(expectedWindows.release) ||
+        !isText(expectedWindows.version) || !isText(expectedWindows.runner)) ||
       !expectedToolchain || !['node', 'npm', 'rustc', 'cargo'].every(name => isText(expectedToolchain[name]))) return false;
   const host = value.host;
   if (!host || host.platform !== expectedPlatform || host.arch !== expectedArch || !Object.hasOwn(host, 'glibc') ||
       expectedPlatform === 'linux' && host.glibc !== hostGlibc ||
       expectedPlatform === 'darwin' && host.glibc !== null ||
-      host.uname?.system !== (expectedPlatform === 'linux' ? 'Linux' : 'Darwin') ||
-      host.uname?.machine !== expectedMachine || !isText(host.uname.release)) return false;
+      expectedPlatform === 'win32' && host.glibc !== null ||
+      expectedPlatform !== 'win32' && (host.uname?.system !== (expectedPlatform === 'linux' ? 'Linux' : 'Darwin') ||
+        host.uname?.machine !== expectedMachine || !isText(host.uname.release)) ||
+      expectedPlatform === 'win32' && (!host.windows || host.windows.platform !== 'win32' ||
+        host.windows.architecture !== expectedArch || host.windows.release !== expectedWindows.release ||
+        host.windows.version !== expectedWindows.version || host.windows.runner !== expectedWindows.runner)) return false;
   const toolchain = value.toolchain;
   if (!toolchain || !['node', 'npm', 'rustc', 'cargo'].every(name =>
     isText(toolchain[name]) && toolchain[name] === expectedToolchain[name])) return false;
@@ -60,7 +70,7 @@ export function repeatPassed(value, {
   const runs = value.runs;
   if (!Array.isArray(runs) || runs.length !== 2 || !runs.every(run =>
     run && repeatArtifacts.every(name => isEvidence(run[name])) && Array.isArray(run.files) &&
-    sameJson([...run.files].sort(), packageFiles))) return false;
+    sameJson([...run.files].sort(), packageFilesForTarget))) return false;
   const [first, second] = runs;
   if (!repeatArtifacts.every(name => sameEvidence(first[name], second[name])) ||
       !repeatArtifacts.every(name => value.comparisons?.[name]?.passed === true &&
@@ -70,6 +80,8 @@ export function repeatPassed(value, {
       !sameEvidence({sha256: packed.tarballSha256, bytes: first.npmArchive.bytes}, first.npmArchive) ||
       packed.standalone?.sha256 !== first.standaloneArchive.sha256 ||
       packed.standalone?.bytes !== first.standaloneArchive.bytes) return false;
+  if (packed.files !== undefined && (!Array.isArray(packed.files) ||
+      !sameJson(packed.files.map(file => typeof file === 'string' ? file : file?.path).sort(), packageFilesForTarget))) return false;
   if (requireArtifacts && (!isEvidence(artifacts.tarball) || !isEvidence(artifacts.standalone))) return false;
   if (artifacts.tarball && !sameEvidence(artifacts.tarball, first.npmArchive)) return false;
   if (artifacts.standalone && !sameEvidence(artifacts.standalone, first.standaloneArchive)) return false;
