@@ -249,12 +249,13 @@ for (const [signal, , number] of [['SIGINT',130,2], ['SIGTERM',143,15]]) {
   let stdout = '', stderr = '', closed = false;
   child.stdout.on('data', data => stdout += data); child.stderr.on('data', data => stderr += data);
   const done = new Promise((resolve,reject) => {child.once('error',reject); child.once('close',(status) => {closed = true; resolve(status);});});
+  const forceKill = () => process.platform === 'win32' ? killTree(child.pid) : child.kill('SIGKILL');
   try {
     const deadline = performance.now() + 10000;
     while (!existsSync(ready) && !closed && performance.now() < deadline) await delay(20);
     assert.ok(existsSync(ready), stderr + stdout);
     if (process.platform !== 'win32') child.kill(signal);
-    const timeout = setTimeout(() => killTree(child.pid), 10000);
+    const timeout = setTimeout(forceKill, 10000);
     let status;
     try {status = await done;} finally {clearTimeout(timeout);}
     assert.equal(status, launched.expectedStatus, stderr + stdout);
@@ -271,7 +272,7 @@ for (const [signal, , number] of [['SIGINT',130,2], ['SIGTERM',143,15]]) {
     unchanged(); results[signal] = report;
     console.log(`${signal}: exit ${status}, score withheld, child stopped`);
   } finally {
-    if (!closed) killTree(child.pid);
+    if (!closed) forceKill();
     await done;
   }
 }
@@ -295,12 +296,13 @@ const receiptDone = new Promise((resolve, reject) => {
   receiptChild.once('error', reject);
   receiptChild.once('close', status => {receiptClosed = true; resolve(status);});
 });
+const forceKill = () => process.platform === 'win32' ? killTree(receiptChild.pid) : receiptChild.kill('SIGKILL');
 try {
   const deadline = performance.now() + 10000;
   while (!existsSync(receiptReady) && !receiptClosed && performance.now() < deadline) await delay(20);
   assert.ok(existsSync(receiptReady), receiptStderr + receiptStdout);
   if (process.platform !== 'win32') receiptChild.kill('SIGTERM');
-  const timeout = setTimeout(() => killTree(receiptChild.pid), 10000);
+  const timeout = setTimeout(forceKill, 10000);
   let status;
   try { status = await receiptDone; } finally { clearTimeout(timeout); }
   assert.equal(status, receiptLaunch.expectedStatus, receiptStderr + receiptStdout);
@@ -313,7 +315,7 @@ try {
   results['SIGTERM-after-receipt'] = report;
   console.log('SIGTERM after valid Node receipt: diagnostics retained');
 } finally {
-  if (!receiptClosed) killTree(receiptChild.pid);
+  if (!receiptClosed) forceKill();
   await receiptDone;
 }
 const resultPath = process.env.SESHAT_PROOF_OUTPUT ? resolve(process.env.SESHAT_PROOF_OUTPUT) : join(work, 'result.json');

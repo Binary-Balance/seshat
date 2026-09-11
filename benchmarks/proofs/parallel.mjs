@@ -160,7 +160,7 @@ async function check(name,workers,mode='normal',signal){
     console.log(name+': '+JSON.stringify({complete:result.complete,ms,workers:result.mutation.workersUsed,preparationMs:result.mutation.workerPreparationMs,mutationMs:result.mutation.mutationWallMs}));
     return result;
   } finally {
-    if(!exit){killTree(child.pid);try{await until(()=>exit,5000);}catch{killTree(child.pid);}}
+    if(!exit){const forceKill=()=>process.platform==='win32'?killTree(child.pid):child.kill('SIGKILL');forceKill();try{await until(()=>exit,5000);}catch{forceKill();}}
     await done;
     // The fixture records only its own process trees and descendant PIDs.
     for(const event of events(journal).filter(e=>e.kind==='start')){
