@@ -369,17 +369,52 @@ impl Session {
 fn kill_owned_group(child: &mut std::process::Child) -> Result<std::process::ExitStatus, String> {
     match stop_owned_group(child.id()) {
         Ok(()) => child.wait().map_err(|e| e.to_string()),
-        Err(error) => match child.try_wait().map_err(|e| e.to_string())? {
-            // macOS can report EPERM for a group containing only the exited
-            // child as a zombie. Reap it, then retry so live descendants are
-            // still signalled and genuine permission failures remain errors.
-            Some(status) => {
-                stop_owned_group(child.id())?;
-                Ok(status)
-            }
-            None => Err(error),
-        },
+        Err(error) => settle_owned_group_after_stop_error(child, error),
     }
+}
+
+const GROUP_SETTLEMENT_TIMEOUT: Duration = Duration::from_millis(100);
+const GROUP_SETTLEMENT_POLL: Duration = Duration::from_millis(2);
+
+fn settle_owned_group_after_stop_error(
+    child: &mut std::process::Child,
+    stop_error: String,
+) -> Result<std::process::ExitStatus, String> {
+    // A macOS group can briefly remain visible after its leader has exited.
+    // Wait without sending another signal: ESRCH is the only proof that the
+    // owned group is gone, while EPERM must still be reported for a live group.
+    let deadline = Instant::now() + GROUP_SETTLEMENT_TIMEOUT;
+    let status = loop {
+        match child.try_wait().map_err(|e| e.to_string())? {
+            Some(status) => break status,
+            None if Instant::now() >= deadline => return Err(stop_error),
+            None => thread::sleep(GROUP_SETTLEMENT_POLL),
+        }
+    };
+    loop {
+        if owned_group_is_gone(child.id()) {
+            return Ok(status);
+        }
+        if Instant::now() >= deadline {
+            return Err(stop_error);
+        }
+        thread::sleep(GROUP_SETTLEMENT_POLL);
+    }
+}
+
+fn owned_group_is_gone(pid: u32) -> bool {
+    let Ok(pid) = i32::try_from(pid) else {
+        return false;
+    };
+    if pid <= 1 {
+        return false;
+    }
+    // SAFETY: this is the dedicated process group created for the owned child;
+    // signal zero only probes its existence and sends no signal.
+    if unsafe { libc::kill(-pid, 0) } == 0 {
+        return false;
+    }
+    std::io::Error::last_os_error().raw_os_error() == Some(libc::ESRCH)
 }
 
 fn stop_owned_group(pid: u32) -> Result<(), String> {
