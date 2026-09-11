@@ -110,15 +110,24 @@ fn create_link(target: impl AsRef<Path>, link: impl AsRef<Path>) -> std::io::Res
     }
     #[cfg(windows)]
     {
-        let target_for_kind = if target.is_absolute() {
-            target.to_path_buf()
+        // Windows link APIs require native separators even when the project stores relative
+        // paths with `/` separators.
+        let native_target = PathBuf::from(target.to_string_lossy().replace('/', "\\"));
+        let target_for_kind = if native_target.is_absolute() {
+            native_target.clone()
         } else {
-            link.parent().unwrap_or(Path::new(".")).join(target)
+            link.parent().unwrap_or(Path::new(".")).join(&native_target)
         };
-        if fs::metadata(target_for_kind).is_ok_and(|metadata| metadata.is_dir()) {
-            symlink_dir(target, link)
+        let result = if fs::metadata(&target_for_kind).is_ok_and(|metadata| metadata.is_dir()) {
+            symlink_dir(&native_target, link)
         } else {
-            symlink_file(target, link)
+            symlink_file(&native_target, link)
+        };
+        result?;
+        if target_for_kind.exists() {
+            fs::canonicalize(link).map(|_| ())
+        } else {
+            Ok(())
         }
     }
 }

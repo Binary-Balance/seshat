@@ -137,6 +137,9 @@ function scenarioConfig(scenario, timeoutMs) {
     ...config,
     setups: [{
       ...config.setups[0],
+      // Cleanup scenarios exercise process ownership and pipe drainage; compiler startup is
+      // covered by the end-to-end check above and must not consume their bounded deadline.
+      typecheck: undefined,
       timeoutMs,
       test: [process.execPath, '-e', fixtureScript(scenario)],
     }],
@@ -248,7 +251,7 @@ try {
   }
   assert.ok(existsSync(workspaceLink), 'original workspace junction must survive');
   evidence.scenarios.baseline = report;
-  evidence.scenarios.timeout = runCleanupScenario('timeout', 100, 'timed-out');
+  evidence.scenarios.timeout = runCleanupScenario('timeout', 2_000, 'timed-out');
   evidence.scenarios.overflow = runCleanupScenario('overflow', 30_000, 'execution-error');
   evidence.scenarios.leaderExit = runCleanupScenario('leader-exit', 30_000, 'passed');
   evidence.scenarios.leaderExitRepeat = runCleanupScenario('leader-exit-repeat', 30_000, 'passed');
