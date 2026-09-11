@@ -1,0 +1,999 @@
+{
+  "schemaVersion": 1,
+  "kind": "seshat-linux-x64-package-proof",
+  "sourceCommit": "19eb8fa380543ee40df4e7571075b88b52358e3f",
+  "runner": "ubuntu-22.04",
+  "userspace": "Native Ubuntu 22.04 / glibc 2.35 host; pinned Debian 11 / glibc 2.31 installed proof",
+  "kernel": {
+    "candidateFloor": "Linux 6.8 family",
+    "native": "6.8.0-1064-azure",
+    "debian": "6.8.0-1064-azure"
+  },
+  "node": "24.20.0",
+  "rust": "1.98.1",
+  "architecture": "x86_64",
+  "elfMachine": 62,
+  "glibcFloor": "2.31",
+  "preflight": {
+    "environment": {
+      "platform": "linux",
+      "os": {
+        "release": {
+          "PRETTY_NAME": "Ubuntu 22.04.5 LTS",
+          "NAME": "Ubuntu",
+          "VERSION_ID": "22.04",
+          "VERSION": "22.04.5 LTS (Jammy Jellyfish)",
+          "VERSION_CODENAME": "jammy",
+          "ID": "ubuntu",
+          "ID_LIKE": "debian",
+          "HOME_URL": "https://www.ubuntu.com/",
+          "SUPPORT_URL": "https://help.ubuntu.com/",
+          "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+          "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+          "UBUNTU_CODENAME": "jammy"
+        }
+      },
+      "architecture": {
+        "node": "x64",
+        "unameMachine": "x86_64"
+      },
+      "kernel": {
+        "release": "6.8.0-1064-azure",
+        "unameRelease": "6.8.0-1064-azure",
+        "meetsCandidateFloor": true
+      },
+      "glibc": "2.35",
+      "node": {
+        "version": "v24.20.0"
+      },
+      "npm": {
+        "available": true,
+        "version": "11.19.0"
+      },
+      "toolchain": {
+        "rust": {
+          "rustc": {
+            "available": true,
+            "version": "rustc 1.98.1 (48a229cea 2026-09-01)"
+          },
+          "cargo": {
+            "available": true,
+            "version": "cargo 1.98.1 (797e8a9bc 2026-08-05)"
+          },
+          "host": "x86_64-unknown-linux-gnu"
+        },
+        "gcc": {
+          "available": true,
+          "version": "gcc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0"
+        },
+        "gxx": {
+          "available": true,
+          "version": "g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0"
+        },
+        "clang": {
+          "available": true,
+          "version": "Ubuntu clang version 14.0.0-1ubuntu1.1"
+        },
+        "cc": {
+          "available": true,
+          "version": "cc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0"
+        },
+        "linker": {
+          "available": true,
+          "version": "GNU ld (GNU Binutils for Ubuntu) 2.38"
+        },
+        "make": {
+          "available": true,
+          "version": "GNU Make 4.3"
+        },
+        "python": {
+          "available": true,
+          "version": "Python 3.10.12"
+        }
+      },
+      "kill": {
+        "available": true,
+        "status": 0,
+        "error": null,
+        "version": "kill from procps-ng 3.3.17"
+      },
+      "runnerImage": {
+        "label": "ubuntu-22.04",
+        "os": "Linux",
+        "architecture": "X64",
+        "name": "GitHub Actions 1000000590",
+        "imageOS": "ubuntu22",
+        "imageVersion": "20260907.292.1"
+      }
+    },
+    "validation": {
+      "passed": true,
+      "failures": []
+    },
+    "provenance": {
+      "repository": "Binary-Balance/seshat",
+      "ref": "refs/pull/21/merge",
+      "event": "pull_request",
+      "workflow": "Linux x64 package proof",
+      "workflowRef": "Binary-Balance/seshat/.github/workflows/linux-x64-package.yml@refs/pull/21/merge",
+      "workflowSha": "19eb8fa380543ee40df4e7571075b88b52358e3f",
+      "job": "package",
+      "runId": "34558525165",
+      "runAttempt": "1",
+      "sourceCommit": "19eb8fa380543ee40df4e7571075b88b52358e3f"
+    }
+  },
+  "artifacts": {
+    "npmTarball": {
+      "file": "seshat-linux-x64.tgz",
+      "sha256": "e34054e4703d4343b41009b03bdd15397ec3e31d86de5f3570edd773a9c821bf",
+      "bytes": 973904
+    },
+    "standalone": {
+      "file": "seshat-linux-x64-standalone.tar.gz",
+      "sha256": "de5dd9add7fef2a3df286b723aacb8b55ceb37e5c0da91c93fa3f8ff96574f0a",
+      "bytes": 964574
+    },
+    "binary": {
+      "sha256": "7a16e50a4e910467da94f44306003f2bc2633dffe7986a69d6fee14d3df0522a",
+      "bytes": 2449008
+    }
+  },
+  "npm": {
+    "build": {
+      "target": "x86_64-unknown-linux-gnu",
+      "rust": "rustc 1.98.1 (48a229cea 2026-09-01)",
+      "binarySha256": "7a16e50a4e910467da94f44306003f2bc2633dffe7986a69d6fee14d3df0522a",
+      "binaryBytes": 2449008,
+      "cargoLockSha256": "bb820a335e5eb7b35e9185cedaabf68b1608f4712c48f73bafcd2bac180e757d",
+      "glibcSymbols": [
+        "GLIBC_2.12",
+        "GLIBC_2.14",
+        "GLIBC_2.15",
+        "GLIBC_2.16",
+        "GLIBC_2.17",
+        "GLIBC_2.18",
+        "GLIBC_2.2.5",
+        "GLIBC_2.27",
+        "GLIBC_2.28",
+        "GLIBC_2.29",
+        "GLIBC_2.3",
+        "GLIBC_2.3.4",
+        "GLIBC_2.30",
+        "GLIBC_2.4",
+        "GLIBC_2.5",
+        "GLIBC_2.9"
+      ],
+      "nativeLibraries": [
+        "libgcc_s.so.1",
+        "libpthread.so.0",
+        "libm.so.6",
+        "libdl.so.2",
+        "libc.so.6"
+      ],
+      "dependencies": [
+        {
+          "name": "allocator-api2",
+          "version": "0.2.21",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "autocfg",
+          "version": "1.5.1",
+          "license": "Apache-2.0 OR MIT"
+        },
+        {
+          "name": "bitflags",
+          "version": "2.13.1",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "bytecount",
+          "version": "0.6.9",
+          "license": "Apache-2.0/MIT"
+        },
+        {
+          "name": "castaway",
+          "version": "0.2.4",
+          "license": "MIT"
+        },
+        {
+          "name": "cfg-if",
+          "version": "1.0.4",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "compact_str",
+          "version": "0.10.0",
+          "license": "MIT"
+        },
+        {
+          "name": "cow-utils",
+          "version": "0.1.3",
+          "license": "MIT"
+        },
+        {
+          "name": "dragonbox_ecma",
+          "version": "0.1.12",
+          "license": "Apache-2.0 WITH LLVM-exception OR BSL-1.0"
+        },
+        {
+          "name": "errno",
+          "version": "0.3.14",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "fastrand",
+          "version": "2.5.0",
+          "license": "Apache-2.0 OR MIT"
+        },
+        {
+          "name": "glob",
+          "version": "0.3.3",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "hashbrown",
+          "version": "0.17.1",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "itoa",
+          "version": "1.0.18",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "libc",
+          "version": "0.2.189",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "memchr",
+          "version": "2.8.3",
+          "license": "Unlicense OR MIT"
+        },
+        {
+          "name": "nonmax",
+          "version": "0.5.5",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "num-bigint",
+          "version": "0.5.1",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "num-integer",
+          "version": "0.1.47",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "num-traits",
+          "version": "0.2.19",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "oxc_allocator",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_ast",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_ast_macros",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_ast_visit",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_data_structures",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_diagnostics",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_ecmascript",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_estree",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_index",
+          "version": "5.0.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_parser",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_regular_expression",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_span",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_str",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_syntax",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "percent-encoding",
+          "version": "2.3.2",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "phf",
+          "version": "0.14.0",
+          "license": "MIT"
+        },
+        {
+          "name": "phf_generator",
+          "version": "0.14.0",
+          "license": "MIT"
+        },
+        {
+          "name": "phf_macros",
+          "version": "0.14.0",
+          "license": "MIT"
+        },
+        {
+          "name": "phf_shared",
+          "version": "0.14.0",
+          "license": "MIT"
+        },
+        {
+          "name": "proc-macro2",
+          "version": "1.0.107",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "quote",
+          "version": "1.0.47",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "rustc-hash",
+          "version": "2.1.3",
+          "license": "Apache-2.0 OR MIT"
+        },
+        {
+          "name": "rustversion",
+          "version": "1.0.23",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "seq-macro",
+          "version": "0.3.6",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "serde",
+          "version": "1.0.229",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "serde_core",
+          "version": "1.0.229",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "serde_derive",
+          "version": "1.0.229",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "serde_json",
+          "version": "1.0.151",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "signal-hook",
+          "version": "0.4.4",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "signal-hook-registry",
+          "version": "1.4.8",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "siphasher",
+          "version": "1.0.3",
+          "license": "MIT/Apache-2.0"
+        },
+        {
+          "name": "smallvec",
+          "version": "1.16.0",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "smawk",
+          "version": "0.3.3",
+          "license": "MIT"
+        },
+        {
+          "name": "static_assertions",
+          "version": "1.1.0",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "syn",
+          "version": "2.0.119",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "syn",
+          "version": "3.0.5",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "textwrap",
+          "version": "0.16.2",
+          "license": "MIT"
+        },
+        {
+          "name": "unicode-id-start",
+          "version": "1.4.0",
+          "license": "(MIT OR Apache-2.0) AND Unicode-3.0"
+        },
+        {
+          "name": "unicode-ident",
+          "version": "1.0.24",
+          "license": "(MIT OR Apache-2.0) AND Unicode-3.0"
+        },
+        {
+          "name": "unicode-linebreak",
+          "version": "0.1.5",
+          "license": "Apache-2.0"
+        },
+        {
+          "name": "unicode-segmentation",
+          "version": "1.13.3",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "unicode-width",
+          "version": "0.2.2",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "windows-link",
+          "version": "0.2.1",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "windows-sys",
+          "version": "0.61.2",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "zmij",
+          "version": "1.0.23",
+          "license": "MIT"
+        }
+      ],
+      "glibcPackages": [
+        {
+          "file": "libc6.deb",
+          "sha256": "05f7264da867b37f4c5ce49266b558ea1e81e05a9464f623152fca70f3550282"
+        },
+        {
+          "file": "libc6-dev.deb",
+          "sha256": "e7f7b45d9c5cfcf37609f0b6efd3c645272c812144703af89dfd32218fcb0fd3"
+        },
+        {
+          "file": "libgcc-s1.deb",
+          "sha256": "e478f2709d8474165bb664de42e16950c391f30eaa55bc9b3573281d83a29daf"
+        }
+      ]
+    },
+    "tarballSha256": "e34054e4703d4343b41009b03bdd15397ec3e31d86de5f3570edd773a9c821bf",
+    "cliScenarios": 43,
+    "checks": {
+      "offline-install": 0,
+      "installed-version": 0,
+      "npm-exec": 0,
+      "package-script": 0,
+      "script-exit-2": 2,
+      "offline-ci": 0,
+      "version-after-ci": 0,
+      "workspace-install": 0,
+      "workspace-script": 0,
+      "pack-os-control": 0,
+      "reject-os": 1,
+      "pack-cpu-control": 0,
+      "reject-cpu": 1,
+      "pack-libc-control": 0,
+      "reject-libc": 1,
+      "installed-cli-regression": 0
+    }
+  },
+  "standalone": {
+    "build": {
+      "target": "x86_64-unknown-linux-gnu",
+      "rust": "rustc 1.98.1 (48a229cea 2026-09-01)",
+      "binarySha256": "7a16e50a4e910467da94f44306003f2bc2633dffe7986a69d6fee14d3df0522a",
+      "binaryBytes": 2449008,
+      "cargoLockSha256": "bb820a335e5eb7b35e9185cedaabf68b1608f4712c48f73bafcd2bac180e757d",
+      "glibcSymbols": [
+        "GLIBC_2.12",
+        "GLIBC_2.14",
+        "GLIBC_2.15",
+        "GLIBC_2.16",
+        "GLIBC_2.17",
+        "GLIBC_2.18",
+        "GLIBC_2.2.5",
+        "GLIBC_2.27",
+        "GLIBC_2.28",
+        "GLIBC_2.29",
+        "GLIBC_2.3",
+        "GLIBC_2.3.4",
+        "GLIBC_2.30",
+        "GLIBC_2.4",
+        "GLIBC_2.5",
+        "GLIBC_2.9"
+      ],
+      "nativeLibraries": [
+        "libgcc_s.so.1",
+        "libpthread.so.0",
+        "libm.so.6",
+        "libdl.so.2",
+        "libc.so.6"
+      ],
+      "dependencies": [
+        {
+          "name": "allocator-api2",
+          "version": "0.2.21",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "autocfg",
+          "version": "1.5.1",
+          "license": "Apache-2.0 OR MIT"
+        },
+        {
+          "name": "bitflags",
+          "version": "2.13.1",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "bytecount",
+          "version": "0.6.9",
+          "license": "Apache-2.0/MIT"
+        },
+        {
+          "name": "castaway",
+          "version": "0.2.4",
+          "license": "MIT"
+        },
+        {
+          "name": "cfg-if",
+          "version": "1.0.4",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "compact_str",
+          "version": "0.10.0",
+          "license": "MIT"
+        },
+        {
+          "name": "cow-utils",
+          "version": "0.1.3",
+          "license": "MIT"
+        },
+        {
+          "name": "dragonbox_ecma",
+          "version": "0.1.12",
+          "license": "Apache-2.0 WITH LLVM-exception OR BSL-1.0"
+        },
+        {
+          "name": "errno",
+          "version": "0.3.14",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "fastrand",
+          "version": "2.5.0",
+          "license": "Apache-2.0 OR MIT"
+        },
+        {
+          "name": "glob",
+          "version": "0.3.3",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "hashbrown",
+          "version": "0.17.1",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "itoa",
+          "version": "1.0.18",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "libc",
+          "version": "0.2.189",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "memchr",
+          "version": "2.8.3",
+          "license": "Unlicense OR MIT"
+        },
+        {
+          "name": "nonmax",
+          "version": "0.5.5",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "num-bigint",
+          "version": "0.5.1",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "num-integer",
+          "version": "0.1.47",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "num-traits",
+          "version": "0.2.19",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "oxc_allocator",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_ast",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_ast_macros",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_ast_visit",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_data_structures",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_diagnostics",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_ecmascript",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_estree",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_index",
+          "version": "5.0.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_parser",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_regular_expression",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_span",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_str",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "oxc_syntax",
+          "version": "0.148.0",
+          "license": "MIT"
+        },
+        {
+          "name": "percent-encoding",
+          "version": "2.3.2",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "phf",
+          "version": "0.14.0",
+          "license": "MIT"
+        },
+        {
+          "name": "phf_generator",
+          "version": "0.14.0",
+          "license": "MIT"
+        },
+        {
+          "name": "phf_macros",
+          "version": "0.14.0",
+          "license": "MIT"
+        },
+        {
+          "name": "phf_shared",
+          "version": "0.14.0",
+          "license": "MIT"
+        },
+        {
+          "name": "proc-macro2",
+          "version": "1.0.107",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "quote",
+          "version": "1.0.47",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "rustc-hash",
+          "version": "2.1.3",
+          "license": "Apache-2.0 OR MIT"
+        },
+        {
+          "name": "rustversion",
+          "version": "1.0.23",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "seq-macro",
+          "version": "0.3.6",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "serde",
+          "version": "1.0.229",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "serde_core",
+          "version": "1.0.229",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "serde_derive",
+          "version": "1.0.229",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "serde_json",
+          "version": "1.0.151",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "signal-hook",
+          "version": "0.4.4",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "signal-hook-registry",
+          "version": "1.4.8",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "siphasher",
+          "version": "1.0.3",
+          "license": "MIT/Apache-2.0"
+        },
+        {
+          "name": "smallvec",
+          "version": "1.16.0",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "smawk",
+          "version": "0.3.3",
+          "license": "MIT"
+        },
+        {
+          "name": "static_assertions",
+          "version": "1.1.0",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "syn",
+          "version": "2.0.119",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "syn",
+          "version": "3.0.5",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "textwrap",
+          "version": "0.16.2",
+          "license": "MIT"
+        },
+        {
+          "name": "unicode-id-start",
+          "version": "1.4.0",
+          "license": "(MIT OR Apache-2.0) AND Unicode-3.0"
+        },
+        {
+          "name": "unicode-ident",
+          "version": "1.0.24",
+          "license": "(MIT OR Apache-2.0) AND Unicode-3.0"
+        },
+        {
+          "name": "unicode-linebreak",
+          "version": "0.1.5",
+          "license": "Apache-2.0"
+        },
+        {
+          "name": "unicode-segmentation",
+          "version": "1.13.3",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "unicode-width",
+          "version": "0.2.2",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "windows-link",
+          "version": "0.2.1",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "windows-sys",
+          "version": "0.61.2",
+          "license": "MIT OR Apache-2.0"
+        },
+        {
+          "name": "zmij",
+          "version": "1.0.23",
+          "license": "MIT"
+        }
+      ],
+      "glibcPackages": [
+        {
+          "file": "libc6.deb",
+          "sha256": "05f7264da867b37f4c5ce49266b558ea1e81e05a9464f623152fca70f3550282"
+        },
+        {
+          "file": "libc6-dev.deb",
+          "sha256": "e7f7b45d9c5cfcf37609f0b6efd3c645272c812144703af89dfd32218fcb0fd3"
+        },
+        {
+          "file": "libgcc-s1.deb",
+          "sha256": "e478f2709d8474165bb664de42e16950c391f30eaa55bc9b3573281d83a29daf"
+        }
+      ]
+    },
+    "archiveSha256": "de5dd9add7fef2a3df286b723aacb8b55ceb37e5c0da91c93fa3f8ff96574f0a",
+    "archiveBytes": 964574,
+    "cliScenarios": 43,
+    "checks": {
+      "archive-list": 0,
+      "extract": 0,
+      "installed-cli": 0,
+      "installed-parallel": 0
+    }
+  },
+  "debian11": {
+    "kernel": "6.8.0-1064-azure",
+    "glibc": "2.31",
+    "node": "v24.20.0",
+    "npm": "11.19.0",
+    "rustAvailable": false,
+    "network": "isolated namespace",
+    "npmCliScenarios": 43,
+    "npmParallelControls": 11,
+    "standaloneCliScenarios": 43,
+    "standaloneParallelControls": 11,
+    "checks": {
+      "npm-version": 0,
+      "node-libraries": 0,
+      "debian-packages": 0,
+      "installed-package": 0,
+      "installed-libraries": 0,
+      "installed-parallel": 0,
+      "installed-standalone": 0
+    },
+    "npmChecks": {
+      "check": 0,
+      "crap": 0,
+      "mutate": 0,
+      "default-config-and-scratch": 0,
+      "json-no-progress": 0,
+      "progress-on-0": 0,
+      "progress-off-0": 0,
+      "progress-off-1": 0,
+      "progress-on-1": 0,
+      "progress-on-2": 0,
+      "progress-off-2": 0,
+      "threshold-equality": 0,
+      "both-thresholds-fail": 1,
+      "crap-threshold-failure": 1,
+      "human-threshold-failure": 1,
+      "crap-ignores-mutation-threshold": 0,
+      "mutate-ignores-crap-threshold": 0,
+      "invalid-threshold-{\"maxCrap\":-1}": 2,
+      "invalid-threshold-{\"minMutationScore\":101}": 2,
+      "invalid-threshold-{\"maxCrap\":\"30\"}": 2,
+      "invalid-threshold-{\"maxCRAP\":30}": 2,
+      "invalid-threshold-null": 2,
+      "mutation-skips-coverage": 0,
+      "check-needs-coverage": 2,
+      "crap-needs-coverage": 2,
+      "mutate-needs-typecheck": 2,
+      "baseline-failure": 2,
+      "timeout-with-threshold": 2,
+      "--help": 0,
+      "check---help": 0,
+      "--version": 0,
+      "invalid-": 2,
+      "invalid-bogus": 2,
+      "invalid-check---wat": 2,
+      "invalid-check---config": 2,
+      "invalid-check---json---json": 2,
+      "invalid-check-extra": 2,
+      "invalid-config": 2,
+      "no-mutants": 0,
+      "no-mutants-with-threshold": 0
+    },
+    "standaloneChecks": {
+      "archive-list": 0,
+      "extract": 0,
+      "installed-cli": 0,
+      "installed-parallel": 0
+    }
+  },
+  "validation": {
+    "package": true,
+    "npm": true,
+    "standalone": true,
+    "debian11": true,
+    "passed": true,
+    "failures": []
+  },
+  "limits": "The Linux 6.8 family is a fail-closed candidate runner floor, verified on the recorded host kernel rather than by booting an older kernel. Debian 11 LTS ended 2026-08-31; its pinned userspace is retained as a compatibility snapshot. This proof does not establish support for glibc below 2.31, other Linux userspaces, macOS or Windows."
+}

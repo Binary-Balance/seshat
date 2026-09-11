@@ -498,7 +498,12 @@ archives once; the proof verifies their pinned SHA-256 hashes before extraction:
 curl --max-time 120 -fSL https://raw.githubusercontent.com/debuerreotype/docker-debian-artifacts/bae6d64d90b4068b09ff9d8b564c2773ef5d8d83/bullseye/oci/blobs/rootfs.tar.gz -o work/debian11-inputs/rootfs.tar.gz
 curl --max-time 120 -fSL https://nodejs.org/dist/v24.20.0/node-v24.20.0-linux-x64.tar.xz -o work/debian11-inputs/node.tar.xz
 node packaging/pack.mjs work/debian11-inputs > work/debian11-inputs/package-result.json
-node benchmarks/proofs/linux-debian.mjs work/debian11-inputs work/debian11-inputs/package-result.json
+mkdir -p work/debian11-standalone
+tar -xzf "$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/debian11-inputs/package-result.json")).tarball);')" \
+  -C work/debian11-standalone --strip-components=1 --no-same-owner
+tar -czf work/debian11-standalone.tar.gz --owner=0 --group=0 --numeric-owner -C work/debian11-standalone \
+  BUILD.json LICENSE README.md THIRD_PARTY_NOTICES.txt bin/seshat package.json
+node benchmarks/proofs/linux-debian.mjs work/debian11-inputs work/debian11-inputs/package-result.json work/debian11-standalone.tar.gz
 ```
 
 The filesystem is the pinned [official Debian image artifact](https://github.com/debuerreotype/docker-debian-artifacts/tree/bae6d64d90b4068b09ff9d8b564c2773ef5d8d83/bullseye).
@@ -518,13 +523,15 @@ the absence of `cargo` and `rustc`, then run:
 
 - All 16 package checks, including offline install and `npm ci`, workspace
   installation, executable hashes, invocation and platform rejection.
-- All 42 installed CLI scenarios plus legacy parity, including real typechecks,
+- All 43 installed CLI scenarios plus legacy parity, including real typechecks,
   fresh coverage, mutation outcomes, thresholds, incomplete results, timeouts,
   SIGINT/SIGTERM, source preservation and cleanup.
 - All 11 parallel-worker scenarios through that same installed executable,
   including one, two and four workers, worker capping, repeated outcomes,
   baseline/receipt/source failures, deadlines and cancellation. The controls
   check worker isolation, score withholding and termination of descendants.
+- The generated standalone archive repeats the 43 CLI scenarios and all 11
+  parallel-worker controls inside the same Debian 11 userspace.
 
 The verified userspace baseline is **Linux x64 with glibc 2.31**, tested with
 Debian's `libc6 2.31-13+deb11u14`, `libgcc-s1 10.2.1-6` and
