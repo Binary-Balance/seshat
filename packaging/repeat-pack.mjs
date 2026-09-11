@@ -1,10 +1,11 @@
-// Maintainer-only repeat pack proof. It writes evidence only after every comparison passes.
+// Maintainer-only repeat pack proof. Successful proof evidence requires every comparison to pass.
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {mkdirSync, mkdtempSync, readFileSync, writeFileSync} from 'node:fs';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {retainRepeatFailure} from './repeat-pack-evidence.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..');
@@ -12,6 +13,8 @@ assert.equal(process.argv.length, 3,
   'usage: SESHAT_REPEAT_OUTPUT=path node packaging/repeat-pack.mjs <Debian archive directory> | --native-arm64 | --native-macos');
 const output = process.env.SESHAT_REPEAT_OUTPUT;
 assert.ok(output, 'SESHAT_REPEAT_OUTPUT is required');
+const outputPath = resolve(output);
+const failureDirectory = join(dirname(outputPath), 'repeat-pack-failure');
 const packArgs = [process.argv[2]];
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const run = (command, args) => execFileSync(command, args, {cwd:repo, encoding:'utf8'}).trim();
@@ -36,15 +39,9 @@ const glibc = process.platform === 'linux' ? process.report.getReport().header.g
 
 mkdirSync(join(repo, 'work'), {recursive:true});
 const work = mkdtempSync(join(repo, 'work/repeat-pack-'));
-const results = [0, 1].map(index => {
-  const resultPath = join(work, `result-${index}.json`);
-  execFileSync(process.execPath, [join(here, 'pack.mjs'), ...packArgs], {
-    cwd:repo,
-    env:{...process.env, SESHAT_PACK_RESULT:resultPath},
-    stdio:'inherit',
-  });
-  return JSON.parse(readFileSync(resultPath, 'utf8'));
-});
+const results = [];
+let inspected = [];
+let comparisons = null;
 
 function inspect(result) {
   const npmBytes = readFileSync(result.tarball);
@@ -65,31 +62,56 @@ function inspect(result) {
   return {binary, build, npmArchive:npm, standaloneArchive:standalone, files:result.files.map(file => file.path).sort()};
 }
 
-const runs = results.map(inspect);
-const compare = (left, right) => ({
-  hash: left.sha256 === right.sha256,
-  bytes: left.bytes === right.bytes,
-  passed: left.sha256 === right.sha256 && left.bytes === right.bytes,
-});
-const comparisons = {
-  binary: compare(runs[0].binary, runs[1].binary),
-  build: compare(runs[0].build, runs[1].build),
-  npmArchive: compare(runs[0].npmArchive, runs[1].npmArchive),
-  standaloneArchive: compare(runs[0].standaloneArchive, runs[1].standaloneArchive),
-};
-assert.ok(Object.values(comparisons).every(value => value.passed), 'repeat pack outputs differ');
+try {
+  for (const index of [0, 1]) {
+    const resultPath = join(work, `result-${index}.json`);
+    execFileSync(process.execPath, [join(here, 'pack.mjs'), ...packArgs], {
+      cwd:repo,
+      env:{...process.env, SESHAT_PACK_RESULT:resultPath},
+      stdio:'inherit',
+    });
+    results.push(JSON.parse(readFileSync(resultPath, 'utf8')));
+  }
 
-const proof = {
-  schemaVersion:1,
-  sourceCommit,
-  host:{platform:process.platform, arch:process.arch, uname, glibc},
-  toolchain,
-  input:{mode:packArgs[0].startsWith('--') ? packArgs[0] : 'debian-x64', archives:inputHashes},
-  runs,
-  comparisons,
-  validation:{passed:true, reason:'two clean packer invocations produced identical native binary and archive bytes'},
-};
-const outputPath = resolve(output);
-mkdirSync(dirname(outputPath), {recursive:true});
-writeFileSync(outputPath, JSON.stringify(proof, null, 2) + '\n');
-console.log(`Repeat pack proof passed: ${outputPath}`);
+  inspected = results.map(inspect);
+  const compare = (left, right) => ({
+    hash: left.sha256 === right.sha256,
+    bytes: left.bytes === right.bytes,
+    passed: left.sha256 === right.sha256 && left.bytes === right.bytes,
+  });
+  comparisons = {
+    binary: compare(inspected[0].binary, inspected[1].binary),
+    build: compare(inspected[0].build, inspected[1].build),
+    npmArchive: compare(inspected[0].npmArchive, inspected[1].npmArchive),
+    standaloneArchive: compare(inspected[0].standaloneArchive, inspected[1].standaloneArchive),
+  };
+  assert.ok(Object.values(comparisons).every(value => value.passed), 'repeat pack outputs differ');
+
+  const proof = {
+    schemaVersion:1,
+    sourceCommit,
+    host:{platform:process.platform, arch:process.arch, uname, glibc},
+    toolchain,
+    input:{mode:packArgs[0].startsWith('--') ? packArgs[0] : 'debian-x64', archives:inputHashes},
+    runs:inspected,
+    comparisons,
+    validation:{passed:true, reason:'two clean packer invocations produced identical native binary and archive bytes'},
+  };
+  mkdirSync(dirname(outputPath), {recursive:true});
+  writeFileSync(outputPath, JSON.stringify(proof, null, 2) + '\n');
+  console.log(`Repeat pack proof passed: ${outputPath}`);
+} catch (error) {
+  retainRepeatFailure({
+    repo,
+    failureDirectory,
+    sourceCommit,
+    host:{platform:process.platform, arch:process.arch, uname, glibc},
+    toolchain,
+    input:{mode:packArgs[0].startsWith('--') ? packArgs[0] : 'debian-x64', archives:inputHashes},
+    results,
+    inspected,
+    comparisons,
+    error,
+  });
+  throw error;
+}

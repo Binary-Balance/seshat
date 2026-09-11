@@ -45,7 +45,9 @@ jobs:
           mkdir -p work/arm64
           node benchmarks/proofs/linux-arm64-preflight.mjs --output work/arm64/preflight.json
       - name: Check proof failure reporting
-        run: node benchmarks/proofs/linux-arm64-summary.mjs --self-check
+        run: |
+          node benchmarks/proofs/linux-arm64-summary.mjs --self-check
+          node packaging/repeat-pack-failure-check.mjs
       - name: Fetch locked dependencies
         run: |
           npm ci --prefix benchmarks

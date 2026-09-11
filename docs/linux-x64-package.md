@@ -159,6 +159,7 @@ These checks do not require a package build:
 ```sh
 node benchmarks/proofs/linux-x64-preflight.mjs --self-check
 node benchmarks/proofs/linux-x64-summary.mjs --self-check
+node packaging/repeat-pack-failure-check.mjs
 node --check benchmarks/proofs/linux-debian.mjs
 node --check packaging/repeat-pack.mjs
 node --check benchmarks/proofs/jest-expo-check.mjs
