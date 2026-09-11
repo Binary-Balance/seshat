@@ -11,6 +11,7 @@ const repo = resolve(here, '../..');
 const binary = process.env.SESHAT_CLI_BINARY
   ? resolve(process.env.SESHAT_CLI_BINARY)
   : join(repo, 'benchmarks/rust/target/release/seshat');
+mkdirSync(join(repo, 'work/assurance-proofs'), {recursive: true});
 const work = mkdtempSync(join(repo, 'work/assurance-proofs/cli-'));
 const project = join(work, 'input 🎸');
 const scratch = join(work, 'scratch');
