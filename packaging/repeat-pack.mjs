@@ -25,8 +25,9 @@ const run = (command, args) => execFileSync(commandName(command), args, {
 const probe = (command, args = [], identity = null) => {
   const result = spawnSync(commandName(command), args, {cwd:repo, encoding:'utf8', maxBuffer:128 * 1024});
   const text = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
-  assert.ok(!result.error && text && (!identity || identity.test(text)), `${command} is unavailable or is not the expected MSVC tool`);
-  return {command, version:text.split(/\r?\n/, 1)[0], status:result.status};
+  const version = identity ? text.match(identity)?.[0] ?? null : text.split(/\r?\n/, 1)[0];
+  assert.ok(!result.error && text && version, `${command} is unavailable or is not the expected MSVC tool`);
+  return {command, version, status:result.status};
 };
 const msvcIdentity = /^Microsoft \(R\) C\/C\+\+ Optimizing Compiler Version .+ for x64\b/m;
 const linkerIdentity = /^Microsoft \(R\) Incremental Linker Version \S+/m;

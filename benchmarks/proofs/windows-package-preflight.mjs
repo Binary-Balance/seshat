@@ -31,8 +31,9 @@ const msvcIdentity = /^Microsoft \(R\) C\/C\+\+ Optimizing Compiler Version .+ f
 const linkerIdentity = /^Microsoft \(R\) Incremental Linker Version \S+/m;
 
 function publicTool(result, identity) {
-  const valid = result.available && identity.test(result.text);
-  return {available:valid, version:valid ? result.version : null};
+  const version = result.text.match(identity)?.[0] ?? null;
+  const valid = result.available && version !== null;
+  return {available:valid, version};
 }
 
 function tool(command, identity) {
@@ -140,9 +141,11 @@ function outputPath() {
 
 function selfCheck() {
   const windows = {release:'10.0.20348', version:'Windows Server 2022 Datacenter'};
+  const compilerBanner = 'Microsoft (R) C/C++ Optimizing Compiler Version 19.44.35207 for x64';
   assert.equal(kernelBuild(windows.release), 20348);
   assert.notEqual(kernelBuild(windows.version), 20348);
-  assert.equal(publicTool({available:true, version:'Microsoft (R) C/C++ Optimizing Compiler Version 19.44 for x64', text:'Microsoft (R) C/C++ Optimizing Compiler Version 19.44 for x64'}, msvcIdentity).available, true);
+  assert.deepEqual(publicTool({available:true, version:'usage: cl [ option... ] filename... [ /link linkoption... ]', text:`usage: cl [ option... ] filename... [ /link linkoption... ]\n${compilerBanner}`}, msvcIdentity),
+    {available:true, version:compilerBanner});
   assert.equal(publicTool({available:true, version:'link: missing operand', text:'link: missing operand'}, linkerIdentity).available, false);
   const report = {
     candidate:{target:'x86_64-pc-windows-msvc'},

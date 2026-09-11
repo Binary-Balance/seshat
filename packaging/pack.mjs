@@ -80,8 +80,9 @@ const sha256 = data => createHash('sha256').update(data).digest('hex');
 const toolInfo = (command, identity) => {
   const result = spawnSync(commandName(command), [], {encoding:'utf8', maxBuffer:128 * 1024});
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
-  assert.ok(!result.error && output && identity.test(output), `${command} is unavailable or is not the expected MSVC tool`);
-  return {command, version:output.split(/\r?\n/, 1)[0], status:result.status};
+  const version = output.match(identity)?.[0] ?? null;
+  assert.ok(!result.error && output && version, `${command} is unavailable or is not the expected MSVC tool`);
+  return {command, version, status:result.status};
 };
 const msvcIdentity = /^Microsoft \(R\) C\/C\+\+ Optimizing Compiler Version .+ for x64\b/m;
 const linkerIdentity = /^Microsoft \(R\) Incremental Linker Version \S+/m;
