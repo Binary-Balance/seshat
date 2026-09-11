@@ -14,6 +14,11 @@ const lifecycleCases = [
   'SIGTERM-typecheck', 'SIGTERM-baseline', 'SIGTERM-coverage', 'SIGTERM-mutation',
   'timeout', 'overflow', 'leader-exit',
 ];
+const runnerCases = {
+  jestExpo: ['normal-1', 'assertion-kill', 'survivor', 'before-all'],
+  vitest: ['stack', 'assertion', 'survived', 'before-all'],
+};
+const environmentNames = ['CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'NODE_OPTIONS', 'SESHAT_MUTANT_ID'];
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 const hashFile = path => sha256(readFileSync(path));
 const repeatPassed = value => value?.validation?.passed === true &&
@@ -32,7 +37,52 @@ function validLifecycle(value) {
   });
 }
 
-function validate({preflight, packed, build, npm, standalone, lifecycle, repeat}, parseErrors = {}, artifactDirectory = null, artifacts = {}) {
+function validateRunner(label, value, cases, packed, artifacts, fail) {
+  if (!value) {
+    fail(`${label} result missing`);
+    return;
+  }
+  if (value.version !== 1) fail(`${label} result version missing`);
+  if (value.checks?.requested !== cases.length || value.checks?.completed !== cases.length) {
+    fail(`${label} did not retain ${cases.length} requested checks`);
+  }
+  if (!value.originalsPreserved) fail(`${label} source preservation check failed`);
+  const noRust = value.noConsumingRust;
+  if (!noRust) fail(`${label} no-Rust evidence missing`);
+  else {
+    for (const command of ['cargo', 'rustc']) {
+      if (noRust.probes?.find(probe => probe.command === command)?.unavailable !== true) {
+        fail(`${label} consuming ${command} probe was available`);
+      }
+    }
+    if (!environmentNames.every(name => noRust.environmentUnset?.includes(name))) {
+      fail(`${label} consuming environment was not sanitized`);
+    }
+  }
+  if (value.cli?.source !== 'tarball') fail(`${label} did not record tarball installation`);
+  if (value.cli?.version !== 'seshat 0.0.0 (candidate)') fail(`${label} candidate version missing`);
+  if (packed && value.cli?.binarySha256 !== packed.binary) fail(`${label} binary hash differs from package metadata`);
+  if (artifacts.tarball?.sha256 && value.cli?.tarballSha256 !== artifacts.tarball.sha256) {
+    fail(`${label} tarball hash differs from retained archive`);
+  }
+  const runs = value.runs;
+  if (!runs || Object.keys(runs).length !== cases.length) fail(`${label} result is partial`);
+  for (const name of cases) {
+    const run = runs?.[name];
+    if (!run) {
+      fail(`${label} check missing: ${name}`);
+      continue;
+    }
+    const result = run.result ?? run.report?.result;
+    const expectedComplete = name !== 'before-all';
+    if (!run.report || run.report.complete !== expectedComplete) fail(`${label} report incomplete: ${name}`);
+    if (result?.complete !== expectedComplete) fail(`${label} result verdict mismatch: ${name}`);
+    if (run.execution?.status !== (expectedComplete ? 0 : 2)) fail(`${label} exit status mismatch: ${name}`);
+    if (result?.mutation?.unresolved !== (expectedComplete ? 0 : 1)) fail(`${label} unresolved result mismatch: ${name}`);
+  }
+}
+
+function validate({preflight, packed, build, npm, standalone, jestExpo, vitest, lifecycle, repeat}, parseErrors = {}, artifactDirectory = null, artifacts = {}) {
   const failures = Object.entries(parseErrors).map(([name, message]) => `${name}: invalid JSON (${message})`);
   const fail = message => failures.push(message);
   if (!preflight) fail('preflight result missing');
@@ -47,9 +97,13 @@ function validate({preflight, packed, build, npm, standalone, lifecycle, repeat}
         if (!existsSync(join(artifactDirectory, name))) fail(`artifact missing: ${name}`);
       }
       if (!artifacts.tarball?.sha256) fail('npm tarball hash missing');
+      if (packed.tarballSha256 && artifacts.tarball?.sha256 && artifacts.tarball.sha256 !== packed.tarballSha256) {
+        fail('npm tarball hash differs from package evidence');
+      }
       if (!artifacts.standalone?.sha256) fail('standalone archive hash missing');
-      if (artifacts.tarball?.sha256 !== packed.tarballSha256) fail('npm tarball hash differs from package evidence');
-      if (artifacts.standalone?.sha256 !== packed.standalone.sha256) fail('standalone archive hash differs from package evidence');
+      if (packed.standalone?.sha256 && artifacts.standalone?.sha256 && artifacts.standalone.sha256 !== packed.standalone.sha256) {
+        fail('standalone archive hash differs from package evidence');
+      }
       if (artifacts.tarball?.sha256 !== artifacts.standalone?.sha256) fail('npm and standalone artifact hashes differ');
     }
   }
@@ -81,6 +135,8 @@ function validate({preflight, packed, build, npm, standalone, lifecycle, repeat}
     if (packed && standalone.build?.binarySha256 !== packed.binary) fail('standalone binary hash differs from package metadata');
     if (!/^\w+-apple-darwin$/.test(standalone.build?.target ?? '')) fail('standalone build target is not macOS');
   }
+  validateRunner('Jest/Expo', jestExpo, runnerCases.jestExpo, packed, artifacts, fail);
+  validateRunner('Vitest', vitest, runnerCases.vitest, packed, artifacts, fail);
   if (!lifecycle) fail('lifecycle result missing');
   else {
     if (!validLifecycle(lifecycle)) fail('lifecycle proof did not retain all 11 successful cases');
@@ -88,6 +144,24 @@ function validate({preflight, packed, build, npm, standalone, lifecycle, repeat}
   }
   return failures;
 }
+
+const selfCheckRunner = cases => ({
+  version: 1,
+  cli: {source: 'tarball', version: 'seshat 0.0.0 (candidate)', tarballSha256: 'tarball', binarySha256: 'binary'},
+  noConsumingRust: {
+    probes: [{command: 'cargo', unavailable: true}, {command: 'rustc', unavailable: true}],
+    environmentUnset: environmentNames,
+  },
+  checks: {requested: cases.length, completed: cases.length},
+  originalsPreserved: true,
+  runs: Object.fromEntries(cases.map(name => {
+    const complete = name !== 'before-all';
+    return [name, {
+      execution: {status: complete ? 0 : 2},
+      report: {complete, result: {complete, mutation: {unresolved: complete ? 0 : 1}}},
+    }];
+  })),
+});
 
 function selfCheckSummary() {
   const checks = Object.fromEntries(Array.from({length: 13}, (_, index) => [`check-${index}`, {status: 0}]));
@@ -102,16 +176,23 @@ function selfCheckSummary() {
       checks: {'installed-cli': {status: 0}, 'installed-parallel': {status: 0}},
       parallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
     },
+    jestExpo: selfCheckRunner(runnerCases.jestExpo),
+    vitest: selfCheckRunner(runnerCases.vitest),
     lifecycle: {...Object.fromEntries(lifecycleCases.map(name => [name, {
       ms: 1, exit: {code: name.startsWith('SIGINT') ? 130 : name.startsWith('SIGTERM') ? 143 : 2, signal: null},
       leaderAlive: false, descendantAlive: false, remainingScratch: [],
     }])), completed: true},
   };
+  const artifacts = {tarball: {sha256: 'tarball'}, standalone: {sha256: 'tarball'}};
   const repeat = {validation: {passed: true}, comparisons: {
     binary: {passed: true}, build: {passed: true}, npmArchive: {passed: true}, standaloneArchive: {passed: true},
   }};
-  assert.deepEqual(validate({...base, repeat}), []);
+  assert.deepEqual(validate({...base, repeat}, {}, null, artifacts), []);
   assert.match(validate({...base, npm: null}).join('\n'), /npm result missing/);
+  assert.match(validate({...base, vitest: null}).join('\n'), /Vitest result missing/);
+  const partial = structuredClone(base);
+  delete partial.jestExpo.runs['before-all'];
+  assert.match(validate(partial).join('\n'), /Jest\/Expo result is partial/);
   const failed = structuredClone(base);
   failed.standalone.checks['installed-parallel'].status = 1;
   assert.match(validate(failed).join('\n'), /standalone installed-parallel check failed/);
@@ -121,6 +202,9 @@ function selfCheckSummary() {
   const partialLastCase = structuredClone(base);
   delete partialLastCase.lifecycle.completed;
   assert.match(validate(partialLastCase).join('\n'), /lifecycle proof/);
+  const wrongArchive = structuredClone(base);
+  wrongArchive.jestExpo.cli.tarballSha256 = 'changed';
+  assert.match(validate(wrongArchive, {}, null, artifacts).join('\n'), /Jest\/Expo tarball hash differs/);
   assert.match(validate({...base, repeat: null}).join('\n'), /repeat pack result missing/);
   console.log('macOS package summary self-check passed');
 }
@@ -144,16 +228,18 @@ if (selfCheck) {
   const packed = read('package-result.json');
   const npm = read('npm-package.json');
   const standalone = read('standalone.json');
+  const jestExpo = read('jest-expo-check.json');
+  const vitest = read('vitest-check.json');
   const build = read('BUILD.json');
   const lifecycle = read('lifecycle.json');
   const repeat = read('repeat-pack.json');
-  const cpu = preflight?.candidate?.cpu ?? 'unknown';
   const artifacts = {};
-  for (const [key, name] of [['tarball', `seshat-macos-${cpu}.tgz`], ['standalone', `seshat-macos-${cpu}-standalone.tar.gz`]]) {
+  for (const [key, name] of [['tarball', `seshat-macos-${preflight?.candidate?.cpu ?? 'unknown'}.tgz`], ['standalone', `seshat-macos-${preflight?.candidate?.cpu ?? 'unknown'}-standalone.tar.gz`]]) {
     const path = join(directory, name);
     if (existsSync(path) && statSync(path).isFile()) artifacts[key] = {file: name, sha256: hashFile(path), bytes: statSync(path).size};
   }
-  const failures = validate({preflight, packed, build, npm, standalone, lifecycle, repeat}, parseErrors, directory, artifacts);
+  const failures = validate({preflight, packed, build, npm, standalone, jestExpo, vitest, lifecycle, repeat}, parseErrors, directory, artifacts);
+  const cpu = preflight?.candidate?.cpu ?? 'unknown';
   const buildPath = join(directory, 'BUILD.json');
   const buildArtifact = build && existsSync(buildPath) ? {
     file: 'BUILD.json', sha256: sha256(readFileSync(buildPath)), bytes: statSync(buildPath).size,
@@ -188,6 +274,10 @@ if (selfCheck) {
     } : null,
     npm: npm ? {build: npm.build, tarballSha256: packed?.tarballSha256 ?? null, cliScenarios: cliScenarios(npm), checks: statuses(npm)} : null,
     standalone: standalone ? {build: standalone.build, archiveSha256: standalone.archiveSha256, archiveBytes: standalone.archiveBytes, cliScenarios: standalone.cliScenarios, checks: statuses(standalone)} : null,
+    runners: {
+      jestExpo: jestExpo ? {environment: jestExpo.environment, cli: jestExpo.cli, dependencies: jestExpo.dependencies, noConsumingRust: jestExpo.noConsumingRust, checks: jestExpo.checks, originalsPreserved: jestExpo.originalsPreserved} : null,
+      vitest: vitest ? {environment: vitest.environment, cli: vitest.cli, dependencies: vitest.dependencies, noConsumingRust: vitest.noConsumingRust, checks: vitest.checks, originalsPreserved: vitest.originalsPreserved} : null,
+    },
     lifecycle: lifecycle ? {cases: Object.keys(lifecycle).filter(name => name !== 'completed').length, completed: lifecycle.completed === true, passed: validLifecycle(lifecycle)} : null,
     repeatPack: repeat ? {
       sourceCommit: repeat.sourceCommit,
@@ -198,7 +288,7 @@ if (selfCheck) {
       comparisons: repeat.comparisons,
       validation: repeat.validation,
     } : null,
-    validation: {package: Boolean(packed && portablePackage), npm: Boolean(npm), standalone: Boolean(standalone), repeatPack: Boolean(repeat && repeatPassed(repeat)), passed: failures.length === 0, failures},
+    validation: {package: Boolean(packed && portablePackage), npm: Boolean(npm), standalone: Boolean(standalone), jestExpo: Boolean(jestExpo), vitest: Boolean(vitest), lifecycle: Boolean(lifecycle), repeatPack: Boolean(repeat && repeatPassed(repeat)), passed: failures.length === 0, failures},
     limits: 'Native macOS 15 proof on the selected GitHub-hosted CPU runner. It does not establish support for older macOS versions, Rosetta execution, the other CPU architecture, signing, notarization or public release distribution.',
   };
   writeFileSync(join(directory, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
