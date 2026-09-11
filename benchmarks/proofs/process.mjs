@@ -21,6 +21,19 @@ export function rustFreeEnvironment() {
   return env;
 }
 
+export function killTree(pid) {
+  if (process.platform === 'win32') {
+    const result = spawnSync('taskkill.exe', ['/PID', String(pid), '/T', '/F'], {stdio: 'ignore'});
+    if (result.error && result.error.code !== 'ESRCH') throw result.error;
+    return;
+  }
+  try {
+    process.kill(-pid, 'SIGKILL');
+  } catch (error) {
+    if (error.code !== 'ESRCH') throw error;
+  }
+}
+
 export async function noRustProof(cwd) {
   const before = (process.env.PATH ?? '').split(delimiter).filter(Boolean);
   const env = rustFreeEnvironment();
@@ -65,13 +78,7 @@ export async function runProcess(command,args,cwd,extraEnv={},timeoutMs=30000) {
     const child=spawn(command,args,{cwd,env:{...env,...extraEnv},detached:true,stdio:['ignore','pipe','pipe']});
     let stdout='',stderr='',timedOut=false,overflow=false;
     const kill=()=>{
-      if (process.platform === 'win32') {
-        // A proof subprocess is trusted; taskkill is only an emergency tree cleanup.
-        const result=spawnSync('taskkill.exe',['/PID',String(child.pid),'/T','/F'],{stdio:'ignore'});
-        if (result.error && result.error.code !== 'ESRCH') reject(result.error);
-        return;
-      }
-      try{process.kill(-child.pid,'SIGKILL');}catch(error){if(error.code!=='ESRCH')reject(error);}
+      try { killTree(child.pid); } catch (error) { reject(error); }
     };
     const timer=setTimeout(()=>{timedOut=true;kill();},timeoutMs);
     const collect=(stream,text)=>{
