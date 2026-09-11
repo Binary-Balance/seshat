@@ -2,31 +2,17 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {existsSync, readFileSync, statSync, writeFileSync} from 'node:fs';
 import {join, resolve} from 'node:path';
+import {readArchiveBuild, repeatPassed as sharedRepeatPassed, windowsPackageFiles as packageFiles} from './repeat-proof.mjs';
 
 const selfCheckMode = process.argv[2] === '--self-check';
 assert.ok(selfCheckMode || process.argv.length === 3,
   'usage: node benchmarks/proofs/windows-package-summary.mjs <artifact directory> | --self-check');
 
 const runtimeCases = ['baseline', 'timeout', 'overflow', 'leaderExit', 'leaderExitRepeat', 'consoleCancellation'];
-const packageFiles = ['BUILD.json', 'LICENSE', 'README.md', 'THIRD_PARTY_NOTICES.txt', 'bin/seshat.exe', 'package.json'];
 const hash = value => createHash('sha256').update(value).digest('hex');
 const hashFile = path => hash(readFileSync(path));
-const listedFiles = value => value?.map(file => typeof file === 'string' ? file : file?.path).sort();
-const isCommit = value => typeof value === 'string' && /^[\da-f]{40}$/i.test(value);
+const isCommit = value => typeof value === 'string' && /^(?!0{40})[\da-f]{40}$/i.test(value);
 const sameJson = (left, right) => JSON.stringify(left) === JSON.stringify(right);
-
-function repeatPassed(value, packed, buildHash = null, sourceCommit = null) {
-  if (value?.validation?.passed !== true || !Array.isArray(value.runs) || value.runs.length !== 2) return false;
-  if (!isCommit(value.sourceCommit) || sourceCommit !== value.sourceCommit) return false;
-  if (!['binary', 'build', 'npmArchive', 'standaloneArchive'].every(name => value.comparisons?.[name]?.passed === true)) return false;
-  if (!Array.isArray(packed?.files) || JSON.stringify(listedFiles(packed.files)) !== JSON.stringify(packageFiles)) return false;
-  return value.runs.every(run => {
-    if (run.binary?.sha256 !== packed?.binary || run.binary?.bytes !== packed?.binaryBytes) return false;
-    if (run.npmArchive?.sha256 !== packed?.tarballSha256 || run.standaloneArchive?.sha256 !== packed?.standalone?.sha256) return false;
-    if (!Array.isArray(run.files) || JSON.stringify(listedFiles(run.files)) !== JSON.stringify(packageFiles)) return false;
-    return !buildHash || run.build?.sha256 === buildHash;
-  });
-}
 
 function validatePreflight(value, fail) {
   const candidate = value?.candidate;
@@ -42,14 +28,16 @@ function validatePreflight(value, fail) {
   }
   if (!environment || environment.platform !== 'win32' || environment.architecture?.node !== 'x64' ||
       environment.architecture?.os !== 'x64' || environment.os?.kernelBuild !== 20348 ||
-      environment.node?.version !== 'v24.20.0' || runner?.label !== 'windows-2022' || runner?.os !== 'Windows') {
+      !environment.os?.release || !environment.os?.version || environment.node?.version !== 'v24.20.0' ||
+      !environment.npm?.available || !environment.npm.version || runner?.label !== 'windows-2022' || runner?.os !== 'Windows') {
     fail('preflight environment does not describe the Windows Server 2022 x64 runner');
   }
   if (!rust?.rustc?.available || !rust.rustc.version?.startsWith('rustc 1.98.1') ||
       !rust.cargo?.available || !rust.cargo.version?.startsWith('cargo 1.98.1') || rust.host !== 'x86_64-pc-windows-msvc') {
     fail('preflight Rust/Cargo provenance is incomplete');
   }
-  if (!environment.toolchain?.msvc?.available || !environment.toolchain?.linker?.available || !sdk?.version) {
+  if (!environment.toolchain?.msvc?.available || !environment.toolchain.msvc.version ||
+      !environment.toolchain?.linker?.available || !environment.toolchain.linker.version || !sdk?.version) {
     fail('preflight MSVC/linker/SDK provenance is incomplete');
   }
   if (!environment.shell?.systemRoot || !environment.shell?.comspec) fail('preflight Windows shell provenance is incomplete');
@@ -88,6 +76,8 @@ function validate({preflight, packed, repeat, install, runtime, jestExpo, vitest
   }
 
   let buildHash = null;
+  let retainedBuild = null;
+  let archiveBuild = null;
   if (!packed) fail('package result missing');
   else {
     if (!packed.binary || !packed.binaryBytes || !packed.tarballSha256 || !packed.standalone?.sha256) fail('package hashes missing');
@@ -102,12 +92,20 @@ function validate({preflight, packed, repeat, install, runtime, jestExpo, vitest
       if (!artifacts.standalone?.sha256) fail('standalone archive hash missing');
       else if (artifacts.standalone.sha256 !== packed.standalone.sha256) fail('standalone archive hash differs from package evidence');
       const buildPath = join(artifactDirectory, 'BUILD.json');
-      if (existsSync(buildPath)) buildHash = hashFile(buildPath);
+      if (existsSync(buildPath)) {
+        buildHash = hashFile(buildPath);
+        try {
+          retainedBuild = {...artifacts.build, value:JSON.parse(readFileSync(buildPath, 'utf8'))};
+        } catch (error) {
+          fail(`BUILD.json is invalid: ${error.message}`);
+        }
+      }
       if (buildHash && (!artifacts.build?.sha256 || artifacts.build.sha256 !== buildHash)) fail('BUILD.json hash missing or changed');
+      if (artifacts.tarball?.file) archiveBuild = readArchiveBuild(join(artifactDirectory, artifacts.tarball.file));
+      if (!archiveBuild || !retainedBuild || archiveBuild.sha256 !== retainedBuild.sha256 ||
+          !sameJson(archiveBuild.value, retainedBuild.value)) fail('retained BUILD.json differs from archive BUILD.json');
     }
   }
-  if (!repeat) fail('repeat pack result missing');
-  else if (!repeatPassed(repeat, packed, buildHash, preflight?.provenance?.sourceCommit)) fail('repeat pack did not bind two complete runs to the retained package');
 
   if (!install) fail('Windows package install result missing');
   else {
@@ -160,6 +158,24 @@ function validate({preflight, packed, repeat, install, runtime, jestExpo, vitest
         !install.noConsumingRust?.preserved?.includes('npm.cmd')) fail('no-Rust consumer environment evidence is incomplete');
   }
 
+  const repeatValid = repeat && sharedRepeatPassed(repeat, {
+    sourceCommit:preflight?.provenance?.sourceCommit,
+    expectedTarget:'x86_64-pc-windows-msvc', expectedPlatform:'win32', expectedArch:'x64', expectedMachine:'0x8664',
+    inputMode:'--native-windows', expectedPackageFiles:packageFiles,
+    expectedWindows:{release:preflight?.environment?.os?.release, version:preflight?.environment?.os?.version,
+      runner:preflight?.environment?.runnerImage?.os},
+    expectedToolchain:{node:preflight?.environment?.node?.version, npm:preflight?.environment?.npm?.version,
+      rustc:preflight?.environment?.toolchain?.rust?.rustc?.version,
+      cargo:preflight?.environment?.toolchain?.rust?.cargo?.version},
+    packed, build:install?.build,
+    npm:install ? {build:install.build} : null,
+    standalone:install ? {build:install.build, archiveSha256:install.standaloneArchive?.sha256,
+      archiveBytes:install.standaloneArchive?.bytes} : null,
+    artifacts, requireArtifacts:Boolean(artifactDirectory), retainedBuild,
+  });
+  if (!repeat) fail('repeat pack result missing');
+  else if (!repeatValid) fail('repeat pack did not bind two complete runs to the retained package');
+
   if (!runtime) fail('Windows runtime CLI/lifecycle result missing');
   else {
     if (runtime.validation?.passed !== true) fail('Windows runtime CLI/lifecycle proof failed');
@@ -179,18 +195,22 @@ function validate({preflight, packed, repeat, install, runtime, jestExpo, vitest
   else checkInstalledControl(jestExpo, 'Jest/Expo', ['normal-1', 'assertion-kill', 'survivor', 'before-all'], packed, fail);
   if (!vitest) integrationGaps.push('installed Vitest four-case evidence was not retained');
   else checkInstalledControl(vitest, 'Vitest', ['stack', 'assertion', 'survived', 'before-all'], packed, fail);
-  return {failures, integrationGaps};
+  return {failures, integrationGaps, repeatPack:Boolean(repeatValid)};
 }
 
 function selfCheck() {
   const sourceCommit = 'a'.repeat(40);
-  const packed = {binary:'binary', binaryBytes:1, binaryName:'seshat.exe', tarballSha256:'archive', standalone:{sha256:'archive'}};
-  const repeat = {sourceCommit, toolchain:{rustc:'rustc 1.98.1', cargo:'cargo 1.98.1', msvc:{version:'cl'}, linker:{version:'link'}, sdk:{version:'sdk'}}, validation:{passed:true}, runs:[
-    {binary:{sha256:'binary', bytes:1}, build:{sha256:'build'}, npmArchive:{sha256:'archive'}, standaloneArchive:{sha256:'archive'}, files:packageFiles},
-    {binary:{sha256:'binary', bytes:1}, build:{sha256:'build'}, npmArchive:{sha256:'archive'}, standaloneArchive:{sha256:'archive'}, files:packageFiles},
-  ], comparisons:Object.fromEntries(['binary', 'build', 'npmArchive', 'standaloneArchive'].map(name => [name, {passed:true}]))};
-  const install = {sourceCommit, buildSha256:'build', tarball:{sha256:'archive'}, standaloneArchive:{sha256:'archive'}, binary:{sha256:'binary', bytes:1},
-    build:{binarySha256:'binary', target:'x86_64-pc-windows-msvc', peMachine:'0x8664', peFormat:'PE32+', crtStatic:true,
+  const binaryHash = 'b'.repeat(64);
+  const buildHash = 'c'.repeat(64);
+  const archiveHash = 'd'.repeat(64);
+  const packed = {binary:binaryHash, binaryBytes:1, binaryName:'seshat.exe', tarballSha256:archiveHash, standalone:{sha256:archiveHash, bytes:1}};
+  const repeat = {schemaVersion:1, sourceCommit, host:{platform:'win32', arch:'x64', windows:{platform:'win32', architecture:'x64', release:'10.0.20348', version:'10.0.20348', runner:'Windows'}, glibc:null},
+    toolchain:{node:'v24.20.0', npm:'11.0.0', rustc:'rustc 1.98.1', cargo:'cargo 1.98.1', msvc:{version:'cl'}, linker:{version:'link'}, sdk:{version:'sdk'}}, input:{mode:'--native-windows', archives:[]}, validation:{passed:true, reason:'self-check'}, runs:[
+    {binary:{sha256:binaryHash, bytes:1}, build:{sha256:buildHash, bytes:1}, npmArchive:{sha256:archiveHash, bytes:1}, standaloneArchive:{sha256:archiveHash, bytes:1}, files:packageFiles},
+    {binary:{sha256:binaryHash, bytes:1}, build:{sha256:buildHash, bytes:1}, npmArchive:{sha256:archiveHash, bytes:1}, standaloneArchive:{sha256:archiveHash, bytes:1}, files:packageFiles},
+  ], comparisons:Object.fromEntries(['binary', 'build', 'npmArchive', 'standaloneArchive'].map(name => [name, {hash:true, bytes:true, passed:true}]))};
+  const install = {sourceCommit, buildSha256:buildHash, tarball:{sha256:archiveHash, bytes:1}, standaloneArchive:{sha256:archiveHash, bytes:1}, binary:{sha256:binaryHash, bytes:1},
+    build:{binarySha256:binaryHash, binaryBytes:1, target:'x86_64-pc-windows-msvc', peMachine:'0x8664', peFormat:'PE32+', crtStatic:true,
       sourceCommit, rust:'rustc 1.98.1', cargo:'cargo 1.98.1', msvc:{available:true, version:'cl'}, linker:{available:true, version:'link'}, sdk:{version:'sdk'},
       os:{platform:'win32', architecture:'x64', release:'10.0.20348', version:'10.0.20348', runner:'Windows'},
       rustflags:['-C target-feature=+crt-static'], imports:['KERNEL32.dll']},
@@ -199,9 +219,9 @@ function selfCheck() {
     checks:Object.fromEntries([['offline-install',0], ['installed-version',0], ['installed-help',0], ['bin-cmd-version',0], ['npm-exec-help',0],
       ['package-script-version',0], ['offline-ci',0], ['cargo-probe',1], ['rustc-probe',1], ['standalone-list',0], ['standalone-extract',0],
       ['standalone-version',0], ['standalone-help',0]].map(([name,status]) => [name,{status}]))};
-  const runtime = {validation:{passed:true}, binary:{path:'seshat.exe', sha256:'binary'}, scenarios:Object.fromEntries(runtimeCases.map(name => [name, {}]))};
+  const runtime = {validation:{passed:true}, binary:{path:'seshat.exe', sha256:binaryHash}, scenarios:Object.fromEntries(runtimeCases.map(name => [name, {}]))};
   const base = {preflight:{validation:{passed:true}, provenance:{sourceCommit}, candidate:{runner:'windows-2022', os:'Windows Server 2022', kernelBuild:20348, node:'24.20.0', rust:'1.98.1', target:'x86_64-pc-windows-msvc', cpu:'x64', crtStatic:true}, environment:{
-      platform:'win32', architecture:{node:'x64', os:'x64'}, os:{kernelBuild:20348, release:'10.0.20348', version:'10.0.20348'}, node:{version:'v24.20.0'},
+      platform:'win32', architecture:{node:'x64', os:'x64'}, os:{kernelBuild:20348, release:'10.0.20348', version:'10.0.20348'}, node:{version:'v24.20.0'}, npm:{available:true, version:'11.0.0'},
       runnerImage:{label:'windows-2022', os:'Windows'}, toolchain:{rust:{rustc:{available:true, version:'rustc 1.98.1'}, cargo:{available:true, version:'cargo 1.98.1'}, host:'x86_64-pc-windows-msvc'}, msvc:{available:true, version:'cl'}, linker:{available:true, version:'link'}, sdk:{version:'sdk'}}, shell:{systemRoot:'C:', comspec:'C:'}},
     }, packed:{...packed, files:packageFiles.map(path => ({path}))}, repeat, install, runtime};
   assert.deepEqual(validate(base).failures, []);
@@ -241,7 +261,7 @@ if (selfCheckMode) {
     const path = join(directory, name);
     if (existsSync(path) && statSync(path).isFile()) artifacts[key] = {file:name, sha256:hashFile(path), bytes:statSync(path).size};
   }
-  const {failures, integrationGaps} = validate({preflight, packed, repeat, install, runtime, jestExpo, vitest, sharedCli, sharedParallel}, parseErrors, directory, artifacts);
+  const {failures, integrationGaps, repeatPack} = validate({preflight, packed, repeat, install, runtime, jestExpo, vitest, sharedCli, sharedParallel}, parseErrors, directory, artifacts);
   const sourceCommit = preflight?.provenance?.sourceCommit ?? process.env.GITHUB_SHA ?? repeat?.sourceCommit ?? null;
   const portablePackage = packed && artifacts.tarball && artifacts.standalone ? {...packed,
     tarball:artifacts.tarball.file, proofBinary:null, tarballSha256:artifacts.tarball.sha256,
@@ -274,7 +294,7 @@ if (selfCheckMode) {
       vitest:vitest ? {requested:vitest.checks?.requested, completed:vitest.checks?.completed} : null, gaps:integrationGaps},
     repeatPack:repeat ? {sourceCommit:repeat.sourceCommit, host:repeat.host, toolchain:repeat.toolchain, input:repeat.input,
       runs:repeat.runs, comparisons:repeat.comparisons, validation:repeat.validation} : null,
-    validation:{package:Boolean(packed && portablePackage), repeatPack:Boolean(repeat && repeatPassed(repeat, packed, artifacts.build?.sha256 ?? null, preflight?.provenance?.sourceCommit)),
+    validation:{package:Boolean(packed && portablePackage), repeatPack,
       npm:Boolean(install), standalone:Boolean(install), runtime:Boolean(runtime), passed:failures.length === 0, failures},
     limits:'Native Windows Server 2022 x64 proof on the windows-2022 runner. It does not establish support for desktop Windows versions, older Windows builds, Windows ARM64, POSIX signal semantics, signing, notarization or public release distribution.',
   };

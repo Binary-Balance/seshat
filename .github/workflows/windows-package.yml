@@ -12,6 +12,7 @@ on:
       - benchmarks/proofs/process.mjs
       - benchmarks/proofs/liveness.mjs
       - benchmarks/proofs/collect-node.mjs
+      - benchmarks/proofs/repeat-proof.mjs
       - benchmarks/proofs/jest-expo-check.mjs
       - benchmarks/proofs/jest-*.cjs
       - benchmarks/proofs/vitest-*.mjs
@@ -36,6 +37,7 @@ on:
       - benchmarks/proofs/process.mjs
       - benchmarks/proofs/liveness.mjs
       - benchmarks/proofs/collect-node.mjs
+      - benchmarks/proofs/repeat-proof.mjs
       - benchmarks/proofs/jest-expo-check.mjs
       - benchmarks/proofs/jest-*.cjs
       - benchmarks/proofs/vitest-*.mjs
