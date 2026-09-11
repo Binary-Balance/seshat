@@ -20,7 +20,10 @@ const kernelAtLeast = value => {
 };
 const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
 
-function validate({preflight, packed, npm, standalone, debian}, parseErrors = {}, artifactDirectory = null, artifacts = {}) {
+const repeatPassed = value => value?.validation?.passed === true &&
+  ['binary', 'build', 'npmArchive', 'standaloneArchive'].every(name => value.comparisons?.[name]?.passed === true);
+
+function validate({preflight, packed, npm, standalone, debian, repeat}, parseErrors = {}, artifactDirectory = null, artifacts = {}) {
   const failures = Object.entries(parseErrors).map(([name, message]) => `${name}: invalid JSON (${message})`);
   const fail = message => failures.push(message);
   if (!preflight) fail('preflight result missing');
@@ -29,6 +32,8 @@ function validate({preflight, packed, npm, standalone, debian}, parseErrors = {}
   if (!packed) fail('package result missing');
   else {
     if (!packed.binary || !packed.binaryBytes) fail('package binary metadata missing');
+    if (!packed.tarballSha256 || !packed.standalone?.sha256) fail('package archive hashes missing');
+    if (packed.tarballSha256 !== packed.standalone.sha256) fail('package npm and standalone hashes differ');
     if (artifactDirectory) {
       for (const name of ['seshat-linux-x64.tgz', 'seshat-linux-x64-standalone.tar.gz']) {
         if (!existsSync(join(artifactDirectory, name))) fail(`artifact missing: ${name}`);
@@ -39,6 +44,9 @@ function validate({preflight, packed, npm, standalone, debian}, parseErrors = {}
       if (packed.standalone?.sha256 && artifacts.standalone?.sha256 && artifacts.standalone.sha256 !== packed.standalone.sha256) fail('standalone archive hash differs from package evidence');
     }
   }
+
+  if (!repeat) fail('repeat pack result missing');
+  else if (!repeatPassed(repeat)) fail('repeat pack reproducibility proof failed');
 
   if (!npm) fail('npm result missing');
   else {
@@ -87,10 +95,10 @@ function selfCheckSummary() {
   checks['installed-cli-regression'] = {status: 0, stdout: 'CLI passed: 43 scenarios plus legacy parity'};
   const base = {
     preflight: {validation: {passed: true}, environment: {kernel: {release: '6.8.0-test'}}},
-    packed: {binary: 'binary', binaryBytes: 1, tarballSha256: 'tarball', standalone: {sha256: 'standalone'}},
+    packed: {binary: 'binary', binaryBytes: 1, tarballSha256: 'tarball', standalone: {sha256: 'tarball'}},
     npm: {build: {binarySha256: 'binary'}, checks},
     standalone: {
-      archiveSha256: 'standalone', cliScenarios: 43, build: {binarySha256: 'binary'},
+      archiveSha256: 'tarball', cliScenarios: 43, build: {binarySha256: 'binary'},
       checks: Object.fromEntries(['archive-list', 'extract', 'installed-cli', 'installed-parallel'].map(name => [name, {status: 0}])),
       parallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
     },
@@ -101,15 +109,19 @@ function selfCheckSummary() {
       parallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
       standaloneCliScenarios: 43,
       standaloneParallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
-      tarballSha256: 'tarball', standaloneArchiveSha256: 'standalone',
+      tarballSha256: 'tarball', standaloneArchiveSha256: 'tarball',
     },
   };
-  assert.deepEqual(validate(base, {}, null, {tarball: {sha256: 'tarball'}, standalone: {sha256: 'standalone'}}), []);
+  const repeat = {validation: {passed: true}, comparisons: {
+    binary: {passed: true}, build: {passed: true}, npmArchive: {passed: true}, standaloneArchive: {passed: true},
+  }};
+  assert.deepEqual(validate({...base, repeat}, {}, null, {tarball: {sha256: 'tarball'}, standalone: {sha256: 'tarball'}}), []);
   assert.equal(cliScenarios(base.debian.cliChecks), 43);
   assert.equal(Object.keys(statuses(base.debian.cliChecks)).length, 43);
   assert.match(validate({...base, standalone: null}).join('\n'), /standalone result missing/);
   assert.match(validate({...base, debian: {...base.debian, kernel: '6.7.0-test'}}).join('\n'), /below Linux 6.8/);
   assert.match(validate(base, {}, '/missing-linux-x64-archives', {tarball: {sha256: 'tarball'}}).join('\n'), /standalone archive hash missing/);
+  assert.match(validate({...base, repeat: null}).join('\n'), /repeat pack result missing/);
   console.log('Linux x64 summary self-check passed');
 }
 
@@ -133,12 +145,13 @@ if (selfCheck) {
   const npm = read('npm-package.json');
   const standalone = read('standalone.json');
   const debian = read('debian11.json');
+  const repeat = read('repeat-pack.json');
   const artifacts = {};
   for (const [key, name] of [['tarball', 'seshat-linux-x64.tgz'], ['standalone', 'seshat-linux-x64-standalone.tar.gz']]) {
     const path = join(directory, name);
     if (existsSync(path) && statSync(path).isFile()) artifacts[key] = {file: name, sha256: hash(path), bytes: statSync(path).size};
   }
-  const failures = validate({preflight, packed, npm, standalone, debian}, parseErrors, directory, artifacts);
+  const failures = validate({preflight, packed, npm, standalone, debian, repeat}, parseErrors, directory, artifacts);
   const portablePackage = packed && artifacts.tarball && artifacts.standalone ? {
     ...packed,
     tarball: artifacts.tarball.file,
@@ -185,11 +198,21 @@ if (selfCheck) {
       npmChecks: statuses(debian.cliChecks),
       standaloneChecks: statuses({checks: debian.standaloneChecks}),
     } : null,
+    repeatPack: repeat ? {
+      sourceCommit: repeat.sourceCommit,
+      host: repeat.host,
+      toolchain: repeat.toolchain,
+      input: repeat.input,
+      runs: repeat.runs,
+      comparisons: repeat.comparisons,
+      validation: repeat.validation,
+    } : null,
     validation: {
       package: Boolean(packed && portablePackage),
       npm: Boolean(npm),
       standalone: Boolean(standalone),
       debian11: Boolean(debian),
+      repeatPack: Boolean(repeat && repeatPassed(repeat)),
       passed: failures.length === 0,
       failures,
     },

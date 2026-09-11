@@ -33,13 +33,14 @@ The packer checks the host before compiling. It requires Linux, `arm64`, Ubuntu
 22.04 and glibc 2.35, then builds both the candidate and the legacy proof
 binary from the locked Cargo graph. `BUILD.json` records the target, CPU,
 glibc ceiling, symbols, linked libraries, dependency notices and binary hash.
-The npm tarball and standalone archive contain the binary, `BUILD.json`,
-`LICENSE`, `README.md`, `THIRD_PARTY_NOTICES.txt` and package metadata. The
-workflow passes both archive hashes into the corresponding proofs. The
-standalone proof checks its archive listing and hash before extraction into a
-path containing spaces. Both proofs compare the installed binary hash with the
-packer's recorded hash, so the standalone CLI run cannot silently switch to a
-different build.
+The packer produces one deterministic npm `.tgz` containing the binary,
+`BUILD.json`, `LICENSE`, `README.md`, `THIRD_PARTY_NOTICES.txt` and package
+metadata. The workflow retains that same byte stream under the npm and
+standalone artifact names and passes both hashes into the corresponding proofs.
+The standalone proof checks npm's `package/` listing, strips that prefix before
+extraction into a path containing spaces, and runs without npm. Both proofs
+compare the installed binary hash with the packer's recorded hash, so the
+standalone CLI run cannot silently switch to a different build.
 
 The workflow fetches Cargo and npm dependencies before any offline build or
 pack command. It then runs native Rust tests, the 16 npm installation checks,
@@ -51,9 +52,10 @@ SIGTERM and cleanup. The workspace install remains in the npm proof. The
 parallel proof runs the extracted standalone binary, including cancellation,
 deadlines, worker isolation, source-integrity and descendant cleanup checks.
 
-The workflow retains a portable preflight report, package metadata and hashes,
-proof JSON, raw command logs and the two candidate archives. Missing proof
-reports do not turn a failed command into a passing result. Artifact paths in
+The workflow retains a portable preflight report, repeat-pack provenance,
+package metadata and hashes, proof JSON, raw command logs and the two candidate
+archive names. Missing proof reports do not turn a failed command into a
+passing result. Artifact paths in
 the summary use the retained artifact names rather than the runner's temporary
 directories. The report also records the source commit supplied by GitHub;
 that commit can be a synthetic pull-request merge commit, so it must be kept

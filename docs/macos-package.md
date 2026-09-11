@@ -14,21 +14,30 @@ checks the Mach-O architecture with `file`, the minimum OS load command with
 architecture, minimum OS, deployment target, SDK, Clang, native libraries and
 binary hash.
 
-Both npm and standalone proofs install the candidate into disposable paths
-containing spaces and Unicode. They verify archive contents and hashes, npm
-exec and package scripts, exit status, offline installation, workspaces,
-source preservation, coverage, cancellation, deadlines, process-group and
-descendant cleanup, pipe closure, symlinks and parallel workers.
+The packer produces one deterministic npm `.tgz`, and the workflow retains that
+same byte stream under the npm and standalone artifact names. Both proofs
+install the candidate into disposable paths containing spaces and Unicode. The
+standalone proof strips npm's `package/` prefix before running without npm. The
+proofs verify archive contents and hashes, npm exec and package scripts, exit
+status, offline installation, workspaces, source preservation, coverage,
+cancellation, deadlines, process-group and descendant cleanup, pipe closure,
+symlinks and parallel workers.
 The installed consumer has no Rust or Cargo on its `PATH`. macOS has no libc
 package dimension, so its npm proof retains 14 checks. Wrong-OS and wrong-CPU
 controls remain active and invert the actual macOS platform. The shared
 lifecycle helper uses the same portable liveness path for separate process
 cleanup regressions.
 
-The matrix summary is fail-closed. A missing or invalid preflight, package,
-npm or standalone report fails the job. The uploaded artifact contains raw
-logs, reports, `BUILD.json`, package archives and the portable summary. It does
-not contain Cargo targets or npm dependency directories.
+The matrix summary is fail-closed. A missing or invalid preflight, repeat-pack
+proof, package, npm or standalone report, or a differing archive hash, fails
+the job. The uploaded artifact contains raw logs, reports, `BUILD.json`, the
+two retained archive names and the portable summary. It does not contain Cargo
+targets or npm dependency directories.
+
+The repeat-pack gate uses the same strict byte comparison on both native macOS
+runners. Native macOS byte identity remains unclaimed until those matrix jobs
+pass and their retained evidence is reviewed; the gate does not weaken the
+comparison or signing/publication boundaries.
 
 The workflow is implementation and verification scaffolding for a private
 candidate. It does not publish an npm package, claim public release support,

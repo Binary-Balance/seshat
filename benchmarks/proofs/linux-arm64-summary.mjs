@@ -1,6 +1,7 @@
 // Build the portable metadata file retained by the native ARM64 workflow.
 import assert from 'node:assert/strict';
-import {existsSync, readFileSync, writeFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {existsSync, readFileSync, statSync, writeFileSync} from 'node:fs';
 import {join, resolve} from 'node:path';
 
 const selfCheck = process.argv[2] === '--self-check';
@@ -9,8 +10,11 @@ assert.ok(selfCheck || process.argv.length === 3,
 
 const cliScenarios = value => Number(value?.checks?.['installed-cli-regression']?.stdout?.match(/CLI passed: (\d+) scenarios/)?.[1] ?? NaN) || null;
 const statuses = value => Object.fromEntries(Object.entries(value?.checks ?? {}).map(([name, check]) => [name, check.status]));
+const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
+const repeatPassed = value => value?.validation?.passed === true &&
+  ['binary', 'build', 'npmArchive', 'standaloneArchive'].every(name => value.comparisons?.[name]?.passed === true);
 
-function validate({preflight, packed, npm, standalone}, parseErrors = {}, artifactDirectory = null) {
+function validate({preflight, packed, npm, standalone, repeat}, parseErrors = {}, artifactDirectory = null, artifacts = {}) {
   const failures = Object.entries(parseErrors).map(([name, message]) => `${name}: invalid JSON (${message})`);
   const fail = message => failures.push(message);
   if (!preflight) fail('preflight result missing');
@@ -18,12 +22,20 @@ function validate({preflight, packed, npm, standalone}, parseErrors = {}, artifa
   if (!packed) fail('package result missing');
   else {
     if (!packed.tarballSha256 || !packed.binary || !packed.standalone?.sha256) fail('package hashes missing');
+    if (packed.tarballSha256 !== packed.standalone.sha256) fail('package npm and standalone hashes differ');
     if (artifactDirectory) {
       for (const name of ['seshat-linux-arm64.tgz', 'seshat-linux-arm64-standalone.tar.gz']) {
         if (!existsSync(join(artifactDirectory, name))) fail(`artifact missing: ${name}`);
       }
+      if (!artifacts.tarball?.sha256) fail('npm tarball hash missing');
+      if (!artifacts.standalone?.sha256) fail('standalone archive hash missing');
+      if (artifacts.tarball?.sha256 !== packed.tarballSha256) fail('npm tarball hash differs from package evidence');
+      if (artifacts.standalone?.sha256 !== packed.standalone.sha256) fail('standalone archive hash differs from package evidence');
+      if (artifacts.tarball?.sha256 !== artifacts.standalone?.sha256) fail('npm and standalone artifact hashes differ');
     }
   }
+  if (!repeat) fail('repeat pack result missing');
+  else if (!repeatPassed(repeat)) fail('repeat pack reproducibility proof failed');
   if (!npm) fail('npm result missing');
   else {
     if (Object.keys(npm.checks ?? {}).length !== 16) fail('npm proof did not retain 16 checks');
@@ -49,19 +61,23 @@ function selfCheckSummary() {
   checks['installed-cli-regression'] = {status: 0, stdout: 'CLI passed: 43 scenarios plus legacy parity'};
   const base = {
     preflight: {validation: {passed: true}},
-    packed: {tarballSha256: 'tarball', binary: 'binary', standalone: {sha256: 'standalone'}},
+    packed: {tarballSha256: 'tarball', binary: 'binary', standalone: {sha256: 'tarball'}},
     npm: {build: {binarySha256: 'binary'}, checks},
     standalone: {
-      archiveSha256: 'standalone', cliScenarios: 43, build: {binarySha256: 'binary'},
+      archiveSha256: 'tarball', cliScenarios: 43, build: {binarySha256: 'binary'},
       checks: {'installed-cli': {status: 0}, 'installed-parallel': {status: 0}},
-      parallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
+    parallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
     },
   };
-  assert.deepEqual(validate(base), []);
+  const repeat = {validation: {passed: true}, comparisons: {
+    binary: {passed: true}, build: {passed: true}, npmArchive: {passed: true}, standaloneArchive: {passed: true},
+  }};
+  assert.deepEqual(validate({...base, repeat}), []);
   assert.match(validate({...base, npm: null}).join('\n'), /npm result missing/);
   const failed = structuredClone(base);
   failed.standalone.checks['installed-parallel'].status = 1;
   assert.match(validate(failed).join('\n'), /standalone installed-parallel check failed/);
+  assert.match(validate({...base, repeat: null}).join('\n'), /repeat pack result missing/);
   console.log('Linux ARM64 summary self-check passed');
 }
 
@@ -84,11 +100,18 @@ if (selfCheck) {
   const packed = read('package-result.json');
   const npm = read('npm-package.json');
   const standalone = read('standalone.json');
-  const failures = validate({preflight, packed, npm, standalone}, parseErrors, directory);
-  const portablePackage = packed && {...packed,
+  const repeat = read('repeat-pack.json');
+  const artifacts = {};
+  for (const [key, name] of [['tarball', 'seshat-linux-arm64.tgz'], ['standalone', 'seshat-linux-arm64-standalone.tar.gz']]) {
+    const path = join(directory, name);
+    if (existsSync(path) && statSync(path).isFile()) artifacts[key] = {file: name, sha256: hash(path), bytes: statSync(path).size};
+  }
+  const failures = validate({preflight, packed, npm, standalone, repeat}, parseErrors, directory, artifacts);
+  const portablePackage = packed && artifacts.tarball && artifacts.standalone && {...packed,
     tarball: 'seshat-linux-arm64.tgz',
     proofBinary: null,
-    standalone: packed.standalone && {...packed.standalone, path: 'seshat-linux-arm64-standalone.tar.gz'},
+    tarballSha256: artifacts.tarball.sha256,
+    standalone: {...packed.standalone, path: 'seshat-linux-arm64-standalone.tar.gz', sha256: artifacts.standalone.sha256, bytes: artifacts.standalone.bytes},
   };
   const summary = {
     schemaVersion: 1,
@@ -101,13 +124,22 @@ if (selfCheck) {
     architecture: 'aarch64',
     preflight: preflight ? {environment: preflight.environment, validation: preflight.validation, provenance: preflight.provenance} : null,
     artifacts: packed ? {
-      npmTarball: {file: 'seshat-linux-arm64.tgz', sha256: packed.tarballSha256, bytes: packed.packedBytes},
-      standalone: {file: 'seshat-linux-arm64-standalone.tar.gz', sha256: packed.standalone?.sha256, bytes: packed.standalone?.bytes},
+      npmTarball: artifacts.tarball ?? null,
+      standalone: artifacts.standalone ?? null,
       binary: {sha256: packed.binary, bytes: packed.binaryBytes},
     } : null,
     npm: npm ? {build: npm.build, tarballSha256: packed?.tarballSha256 ?? null, cliScenarios: cliScenarios(npm), checks: statuses(npm)} : null,
     standalone: standalone ? {build: standalone.build, archiveSha256: standalone.archiveSha256, archiveBytes: standalone.archiveBytes, cliScenarios: standalone.cliScenarios, checks: statuses(standalone)} : null,
-    validation: {package: Boolean(packed), npm: Boolean(npm), standalone: Boolean(standalone), passed: failures.length === 0, failures},
+    repeatPack: repeat ? {
+      sourceCommit: repeat.sourceCommit,
+      host: repeat.host,
+      toolchain: repeat.toolchain,
+      input: repeat.input,
+      runs: repeat.runs,
+      comparisons: repeat.comparisons,
+      validation: repeat.validation,
+    } : null,
+    validation: {package: Boolean(packed && portablePackage), npm: Boolean(npm), standalone: Boolean(standalone), repeatPack: Boolean(repeat && repeatPassed(repeat)), passed: failures.length === 0, failures},
     limits: 'Native Ubuntu 22.04 ARM64 proof on the runner kernel. It does not establish a historical minimum kernel or support for other Linux userspaces, macOS or Windows.',
   };
   writeFileSync(join(directory, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
