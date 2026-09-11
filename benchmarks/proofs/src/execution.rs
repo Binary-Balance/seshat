@@ -377,9 +377,9 @@ fn kill_owned_group(child: &mut std::process::Child) -> Result<std::process::Exi
     }
 }
 
-fn cleanup_debug(pid: libc::pid_t, phase: &str, result: Option<&std::io::Error>) {
+fn cleanup_debug(pid: libc::pid_t, phase: &str, result: &std::io::Error) -> Option<String> {
     if std::env::var_os("SESHAT_DEBUG_CLEANUP").as_deref() != Some(std::ffi::OsStr::new("1")) {
-        return;
+        return None;
     }
     let group = unsafe { libc::getpgid(pid) };
     let group_error = if group == -1 {
@@ -400,7 +400,7 @@ fn cleanup_debug(pid: libc::pid_t, phase: &str, result: Option<&std::io::Error>)
         None
     };
     let target_group = pid.to_string();
-    let group_members = Command::new("ps")
+    let group_members = Command::new("/bin/ps")
         .args(["-axo", "pid=,ppid=,pgid=,stat=,comm="])
         .output()
         .map(|output| {
@@ -411,9 +411,9 @@ fn cleanup_debug(pid: libc::pid_t, phase: &str, result: Option<&std::io::Error>)
                 .join("\n")
         })
         .unwrap_or_else(|error| format!("ps error: {error}"));
-    eprintln!(
+    Some(format!(
         "[DEBUG-macos-cleanup] phase={phase} pid={pid} group={group} group_error={group_error:?} direct={direct} direct_error={direct_error:?} members={members} members_error={members_error:?} kill_error={result:?} group_members={group_members:?}"
-    );
+    ))
 }
 
 fn stop_owned_group(pid: u32, phase: &str) -> Result<(), String> {
@@ -427,11 +427,13 @@ fn stop_owned_group(pid: u32, phase: &str) -> Result<(), String> {
         return Ok(());
     }
     let error = std::io::Error::last_os_error();
-    cleanup_debug(pid, phase, Some(&error));
     if error.raw_os_error() == Some(libc::ESRCH) {
         Ok(())
     } else {
-        Err(format!("stop owned process group: {error}"))
+        let detail = cleanup_debug(pid, phase, &error)
+            .map(|detail| format!("; {detail}"))
+            .unwrap_or_default();
+        Err(format!("stop owned process group: {error}{detail}"))
     }
 }
 
