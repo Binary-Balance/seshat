@@ -1,0 +1,127 @@
+name: macOS package proof
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/macos-package.yml
+      - benchmarks/proofs/**
+      - packaging/**
+      - docs/macos-package.md
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/macos-package.yml
+      - benchmarks/proofs/**
+      - packaging/**
+      - docs/macos-package.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -eo pipefail {0}
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - cpu: x64
+            runner: macos-15-intel
+            target: x86_64-apple-darwin
+          - cpu: arm64
+            runner: macos-15
+            target: aarch64-apple-darwin
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      MACOSX_DEPLOYMENT_TARGET: '15.0'
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.20.0
+      - name: Set up Rust
+        run: |
+          rustup toolchain install 1.98.1 --profile minimal --no-self-update
+          rustup default 1.98.1
+          rustc -vV
+          test "$(rustc -vV | sed -n 's/^host: //p')" = "${{ matrix.target }}"
+      - name: Capture native preflight
+        run: |
+          mkdir -p "work/macos/${{ matrix.cpu }}"
+          node benchmarks/proofs/macos-preflight.mjs \
+            --cpu "${{ matrix.cpu }}" \
+            --target "${{ matrix.target }}" \
+            --runner "${{ matrix.runner }}" \
+            --output "work/macos/${{ matrix.cpu }}/preflight.json"
+          node benchmarks/proofs/macos-preflight.mjs --self-check
+      - name: Check summary failure reporting
+        run: node benchmarks/proofs/macos-package-summary.mjs --self-check
+      - name: Fetch locked dependencies
+        run: |
+          npm ci --prefix benchmarks
+          npm ci --prefix benchmarks/proofs
+          CARGO_TARGET_DIR="$RUNNER_TEMP/seshat-cargo" cargo fetch --locked --manifest-path benchmarks/proofs/Cargo.toml
+      - name: Run native Rust tests
+        run: |
+          CARGO_TARGET_DIR="$RUNNER_TEMP/seshat-cargo" \
+            cargo test --locked --offline --manifest-path benchmarks/proofs/Cargo.toml \
+            2>&1 | tee "work/macos/${{ matrix.cpu }}/rust-tests.log"
+      - name: Build native macOS package
+        env:
+          SESHAT_PACK_RESULT: work/macos/${{ matrix.cpu }}/package-result.json
+        run: node packaging/pack.mjs --native-macos 2>&1 | tee "work/macos/${{ matrix.cpu }}/pack.log"
+      - name: Verify npm installation
+        env:
+          SESHAT_PROOF_OUTPUT: work/macos/${{ matrix.cpu }}/npm-package.json
+        run: |
+          TARBALL="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; const result=JSON.parse(readFileSync(process.argv[1])); console.log(result.tarball);' "work/macos/${{ matrix.cpu }}/package-result.json")"
+          cp "$TARBALL" "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}.tgz"
+          tar -xOf "$TARBALL" package/BUILD.json > "work/macos/${{ matrix.cpu }}/BUILD.json"
+          PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/macos/${{ matrix.cpu }}/package-result.json")"
+          TARBALL_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).tarballSha256);' "work/macos/${{ matrix.cpu }}/package-result.json")"
+          BINARY_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).binary);' "work/macos/${{ matrix.cpu }}/package-result.json")"
+          SESHAT_PROOF_BINARY="$PROOF_BINARY" \
+          SESHAT_TARBALL_SHA256="$TARBALL_SHA256" \
+          SESHAT_BINARY_SHA256="$BINARY_SHA256" \
+            node benchmarks/proofs/npm-package.mjs "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}.tgz" \
+            2>&1 | tee "work/macos/${{ matrix.cpu }}/npm-package.log"
+      - name: Verify standalone installation
+        env:
+          SESHAT_PROOF_OUTPUT: work/macos/${{ matrix.cpu }}/standalone.json
+        run: |
+          STANDALONE="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).standalone.path);' "work/macos/${{ matrix.cpu }}/package-result.json")"
+          cp "$STANDALONE" "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}-standalone.tar.gz"
+          PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/macos/${{ matrix.cpu }}/package-result.json")"
+          STANDALONE_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).standalone.sha256);' "work/macos/${{ matrix.cpu }}/package-result.json")"
+          BINARY_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).binary);' "work/macos/${{ matrix.cpu }}/package-result.json")"
+          SESHAT_PROOF_BINARY="$PROOF_BINARY" \
+          SESHAT_STANDALONE_SHA256="$STANDALONE_SHA256" \
+          SESHAT_BINARY_SHA256="$BINARY_SHA256" \
+            node benchmarks/proofs/standalone.mjs "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}-standalone.tar.gz" "$PROOF_BINARY" \
+            2>&1 | tee "work/macos/${{ matrix.cpu }}/standalone.log"
+      - name: Verify native lifecycle
+        env:
+          SESHAT_PROOF_OUTPUT: work/macos/${{ matrix.cpu }}/lifecycle.json
+        run: |
+          mkdir -p work/assurance-proofs
+          PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/macos/${{ matrix.cpu }}/package-result.json")"
+          SESHAT_PROOF_BINARY="$PROOF_BINARY" \
+            node benchmarks/proofs/lifecycle.mjs \
+            2>&1 | tee "work/macos/${{ matrix.cpu }}/lifecycle.log"
+      - name: Write portable summary
+        if: always()
+        run: node benchmarks/proofs/macos-package-summary.mjs "work/macos/${{ matrix.cpu }}"
+      - name: Upload package proof evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: macos-${{ matrix.cpu }}-package-proof
+          path: work/macos/${{ matrix.cpu }}
+          if-no-files-found: error
