@@ -5,7 +5,8 @@ import {gunzipSync} from 'node:zlib';
 export const packageFiles = ['BUILD.json', 'LICENSE', 'README.md', 'THIRD_PARTY_NOTICES.txt', 'bin/seshat', 'package.json'];
 export const repeatArtifacts = ['binary', 'build', 'npmArchive', 'standaloneArchive'];
 const isHash = value => typeof value === 'string' && /^[\da-f]{64}$/.test(value);
-const isCommit = value => typeof value === 'string' && /^[\da-f]{40}$/.test(value);
+const isCommit = value => typeof value === 'string' && /^(?!0{40})[\da-f]{40}$/.test(value);
+const isText = value => typeof value === 'string' && value.trim().length > 0;
 const isEvidence = value => isHash(value?.sha256) && Number.isInteger(value?.bytes) && value.bytes > 0;
 const sameEvidence = (left, right) => isEvidence(left) && isEvidence(right) &&
   left.sha256 === right.sha256 && left.bytes === right.bytes;
@@ -31,19 +32,25 @@ export function readArchiveBuild(path) {
 
 export function repeatPassed(value, {
   sourceCommit, expectedTarget, expectedPlatform, expectedArch, expectedMachine, inputMode,
-  hostGlibc, nodeVersion, packed, build, npm, standalone, artifacts, requireArtifacts, retainedBuild,
+  hostGlibc, expectedToolchain, packed, build, npm, standalone, artifacts, requireArtifacts, retainedBuild,
 } = {}) {
   if (!value || value.schemaVersion !== 1 || value.validation?.passed !== true ||
       typeof value.validation.reason !== 'string' || !value.validation.reason) return false;
-  if (!isCommit(value.sourceCommit) || sourceCommit && value.sourceCommit !== sourceCommit) return false;
+  if (!isCommit(sourceCommit) || !isCommit(value.sourceCommit) || value.sourceCommit !== sourceCommit ||
+      !isText(expectedTarget) || !['linux', 'darwin'].includes(expectedPlatform) ||
+      !isText(expectedArch) || !isText(expectedMachine) || !isText(inputMode) ||
+      expectedPlatform === 'linux' && !isText(hostGlibc) ||
+      expectedPlatform === 'darwin' && hostGlibc !== undefined && hostGlibc !== null ||
+      !expectedToolchain || !['node', 'npm', 'rustc', 'cargo'].every(name => isText(expectedToolchain[name]))) return false;
   const host = value.host;
   if (!host || host.platform !== expectedPlatform || host.arch !== expectedArch || !Object.hasOwn(host, 'glibc') ||
-      hostGlibc !== undefined && host.glibc !== hostGlibc ||
+      expectedPlatform === 'linux' && host.glibc !== hostGlibc ||
+      expectedPlatform === 'darwin' && host.glibc !== null ||
       host.uname?.system !== (expectedPlatform === 'linux' ? 'Linux' : 'Darwin') ||
-      host.uname?.machine !== expectedMachine || typeof host.uname.release !== 'string' || !host.uname.release) return false;
+      host.uname?.machine !== expectedMachine || !isText(host.uname.release)) return false;
   const toolchain = value.toolchain;
-  if (!toolchain || !['node', 'npm', 'rustc', 'cargo'].every(name => typeof toolchain[name] === 'string' && toolchain[name])) return false;
-  if (nodeVersion && toolchain.node !== nodeVersion) return false;
+  if (!toolchain || !['node', 'npm', 'rustc', 'cargo'].every(name =>
+    isText(toolchain[name]) && toolchain[name] === expectedToolchain[name])) return false;
   const input = value.input;
   if (!input || input.mode !== inputMode || !Array.isArray(input.archives) ||
       input.archives.some(archive => typeof archive?.file !== 'string' || !isHash(archive.sha256))) return false;
@@ -74,6 +81,8 @@ export function repeatPassed(value, {
       standalone.archiveBytes !== first.standaloneArchive.bytes) return false;
   if (build && (build.binarySha256 !== first.binary.sha256 || build.binaryBytes !== first.binary.bytes ||
       build.target !== expectedTarget)) return false;
+  if (![npm.build, standalone.build, build, retainedBuild?.value].filter(Boolean)
+    .every(record => record.rust === toolchain.rustc)) return false;
   if (retainedBuild) {
     if (!sameEvidence(retainedBuild, first.build) || retainedBuild.value?.binarySha256 !== first.binary.sha256 ||
         retainedBuild.value?.binaryBytes !== first.binary.bytes || retainedBuild.value?.target !== expectedTarget ||
