@@ -62,7 +62,9 @@ jobs:
             --output "work/macos/${{ matrix.cpu }}/preflight.json"
           node benchmarks/proofs/macos-preflight.mjs --self-check
       - name: Check summary failure reporting
-        run: node benchmarks/proofs/macos-package-summary.mjs --self-check
+        run: |
+          node benchmarks/proofs/macos-package-summary.mjs --self-check
+          node packaging/repeat-pack-failure-check.mjs
       - name: Fetch locked dependencies
         run: |
           npm ci --prefix benchmarks
@@ -73,6 +75,10 @@ jobs:
           CARGO_TARGET_DIR="$RUNNER_TEMP/seshat-cargo" \
             cargo test --locked --offline --manifest-path benchmarks/proofs/Cargo.toml \
             2>&1 | tee "work/macos/${{ matrix.cpu }}/rust-tests.log"
+      - name: Prove repeat macOS package reproducibility
+        env:
+          SESHAT_REPEAT_OUTPUT: work/macos/${{ matrix.cpu }}/repeat-pack.json
+        run: node packaging/repeat-pack.mjs --native-macos 2>&1 | tee "work/macos/${{ matrix.cpu }}/repeat-pack.log"
       - name: Build native macOS package
         env:
           SESHAT_PACK_RESULT: work/macos/${{ matrix.cpu }}/package-result.json
@@ -98,6 +104,7 @@ jobs:
         run: |
           STANDALONE="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).standalone.path);' "work/macos/${{ matrix.cpu }}/package-result.json")"
           cp "$STANDALONE" "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}-standalone.tar.gz"
+          cmp "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}.tgz" "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}-standalone.tar.gz"
           PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/macos/${{ matrix.cpu }}/package-result.json")"
           STANDALONE_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).standalone.sha256);' "work/macos/${{ matrix.cpu }}/package-result.json")"
           BINARY_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).binary);' "work/macos/${{ matrix.cpu }}/package-result.json")"

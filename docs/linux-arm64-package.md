@@ -12,6 +12,11 @@ The candidate is deliberately narrow:
 - `aarch64-unknown-linux-gnu`, ELF machine `183`, package CPU `arm64`.
 - GLIBC symbol requirements no newer than 2.35.
 
+Native proof builds use the source-controlled `[profile.release]` in
+`benchmarks/proofs/Cargo.toml`, which explicitly sets `lto = "off"` and
+`strip = "symbols"`. The hosted package record below predates this policy and
+remains a historical observation.
+
 The existing x64 invocation still takes the three pinned Debian 11 archives:
 
 ```sh
@@ -33,13 +38,14 @@ The packer checks the host before compiling. It requires Linux, `arm64`, Ubuntu
 22.04 and glibc 2.35, then builds both the candidate and the legacy proof
 binary from the locked Cargo graph. `BUILD.json` records the target, CPU,
 glibc ceiling, symbols, linked libraries, dependency notices and binary hash.
-The npm tarball and standalone archive contain the binary, `BUILD.json`,
-`LICENSE`, `README.md`, `THIRD_PARTY_NOTICES.txt` and package metadata. The
-workflow passes both archive hashes into the corresponding proofs. The
-standalone proof checks its archive listing and hash before extraction into a
-path containing spaces. Both proofs compare the installed binary hash with the
-packer's recorded hash, so the standalone CLI run cannot silently switch to a
-different build.
+The packer produces one deterministic npm `.tgz` containing the binary,
+`BUILD.json`, `LICENSE`, `README.md`, `THIRD_PARTY_NOTICES.txt` and package
+metadata. The workflow retains that same byte stream under the npm and
+standalone artifact names and passes both hashes into the corresponding proofs.
+The standalone proof checks npm's `package/` listing, strips that prefix before
+extraction into a path containing spaces, and runs without npm. Both proofs
+compare the installed binary hash with the packer's recorded hash, so the
+standalone CLI run cannot silently switch to a different build.
 
 The workflow fetches Cargo and npm dependencies before any offline build or
 pack command. It then runs native Rust tests, the 16 npm installation checks,
@@ -60,12 +66,13 @@ lifecycle proof exercises all four cancellation phases for SIGINT and SIGTERM,
 plus timeout, output overflow and leader-exit handling, with the matching
 packaged proof binary.
 
-The workflow retains a portable preflight report, package metadata and hashes,
-the npm, standalone, Jest/Expo, Vitest and lifecycle JSON reports, raw command
-logs and the two candidate archives. Missing, invalid or partial proof reports
-do not turn a failed command into a passing result. Artifact paths in the
-summary use the retained artifact names rather than the runner's temporary
-directories. The report also records the source commit supplied by GitHub;
+The workflow retains a portable preflight report, repeat-pack provenance,
+package metadata and hashes, the npm, standalone, Jest/Expo, Vitest and
+lifecycle JSON reports, raw command logs and the two candidate archive names.
+Missing, invalid or partial proof reports do not turn a failed command into a
+passing result. Artifact paths in the summary use the retained artifact names
+rather than the runner's temporary directories. The report also records the
+source commit supplied by GitHub;
 that commit can be a synthetic pull-request merge commit, so it must be kept
 separate from the PR head when describing provenance.
 

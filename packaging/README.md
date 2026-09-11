@@ -62,11 +62,32 @@ Build and verify offline:
 ```sh
 node packaging/pack.mjs work/debian11-inputs
 SESHAT_PROOF_BINARY=/absolute/path/to/the/reported/proofBinary node benchmarks/proofs/npm-package.mjs /absolute/path/to/the/reported/package.tgz
+SESHAT_REPEAT_OUTPUT=work/repeat-pack.json node packaging/repeat-pack.mjs work/debian11-inputs
 ```
 
-The native workflow derives its standalone archive from the six files in that
-tarball, then runs `standalone.mjs` with the same proof binary. The x64 packer
-does not publish or install a separate archive.
+The packer reports the deterministic npm `.tgz` as both `tarball` and
+`standalone`. The native workflows retain that one file under both artifact
+names. `standalone.mjs` strips npm's `package/` prefix before running the binary
+without npm, so the standalone route does not create a second archive format.
+
+The native workflows also run `packaging/repeat-pack.mjs`, which invokes the
+ordinary packer twice from the same clean source and compares the native binary
+and both archive byte streams. It writes repeat evidence only after every
+comparison passes; the ordinary pack command still performs one build.
+If a comparison fails, it exits nonzero after writing
+`repeat-pack-failure/repeat-pack-failure.json` and one retained `.tgz` per
+completed pack beside the requested output. Each retained archive contains
+the native executable and `BUILD.json`; native workflows upload this directory.
+The cheap retention path can be checked with
+`node packaging/repeat-pack-failure-check.mjs`.
+
+Native proof builds use the source-controlled `[profile.release]` in
+`benchmarks/proofs/Cargo.toml`, which explicitly sets `lto = "off"` and
+`strip = "symbols"`. The packer and Windows runtime workflow use this manifest;
+the Linux packer keeps its existing sysroot and `-Wl,--build-id=none` flags.
+This is a bounded workaround for the native x64 variance described in the
+[Linux x64 protocol](../docs/linux-x64-package.md), so the repeat gate still
+requires identical binary, `BUILD.json` and archive bytes.
 
 Packing verifies archive hashes, extracts an isolated library directory and
 rebuilds against it from the locked dependencies. It rejects GLIBC requirements

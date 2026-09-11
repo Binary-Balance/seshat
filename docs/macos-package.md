@@ -14,6 +14,10 @@ checks the Mach-O architecture with `file`, the minimum OS load command with
 architecture, minimum OS, deployment target, SDK, Clang, native libraries and
 binary hash.
 
+Native proof builds use the source-controlled `[profile.release]` in
+`benchmarks/proofs/Cargo.toml`, which explicitly sets `lto = "off"` and
+`strip = "symbols"`.
+
 Both npm and standalone proofs install the candidate into disposable paths
 containing spaces and Unicode. They verify archive contents and hashes, npm
 exec and package scripts, exit status, offline installation, workspaces,
@@ -34,10 +38,19 @@ cleared-environment evidence, source-preservation checks and empty scratch
 directories. The summary rejects a missing or partial runner report, a changed
 archive identity or incomplete runner evidence.
 
-The matrix summary is fail-closed. A missing or invalid preflight, package,
-npm or standalone report fails the job. The uploaded artifact contains raw
-logs, reports, `BUILD.json`, package archives and the portable summary. It does
-not contain Cargo targets or npm dependency directories.
+The packer produces one deterministic npm `.tgz`, and the workflow retains that
+same byte stream under the npm and standalone artifact names. The standalone
+proof strips npm's `package/` prefix before running without npm. The matrix
+summary is fail-closed: a missing or invalid preflight, repeat-pack proof,
+package, npm or standalone report, a differing archive hash, or incomplete
+runner evidence fails the job. The uploaded artifact contains raw logs,
+reports, `BUILD.json`, the two retained archive names and the portable summary.
+It does not contain Cargo targets or npm dependency directories.
+
+The repeat-pack gate uses the same strict byte comparison on both native macOS
+runners. Native macOS byte identity remains unclaimed until those matrix jobs
+pass and their retained evidence is reviewed; the gate does not weaken the
+comparison or signing/publication boundaries.
 
 The workflow is implementation and verification scaffolding for a private
 candidate. It does not publish an npm package, claim public release support,
