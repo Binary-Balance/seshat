@@ -44,20 +44,47 @@ different build.
 The workflow fetches Cargo and npm dependencies before any offline build or
 pack command. It then runs native Rust tests, the 16 npm installation checks,
 the 43 installed CLI scenarios including legacy parity, and the 11 existing
-parallel controls. The npm and standalone consumers use a disposable `PATH`
-containing Node and `/bin/sh`; `cargo` and `rustc` must be absent. The CLI
-checks source preservation, fresh coverage, thresholds, timeouts, SIGINT,
-SIGTERM and cleanup. The workspace install remains in the npm proof. The
-parallel proof runs the extracted standalone binary, including cancellation,
-deadlines, worker isolation, source-integrity and descendant cleanup checks.
+parallel controls. Each native archive is also installed into the checked-in
+Jest/Expo fixture using its pinned lockfile and exercised through
+`normal-1,assertion-kill,survivor,before-all`, and into the checked-in Vitest
+fixture using the locked proof dependencies and
+`stack,assertion,survived,before-all`. The npm and standalone consumers use a
+disposable `PATH` containing Node and `/bin/sh`; `cargo` and `rustc` must be
+absent. The installed runner reports also record that the Rust environment,
+`NODE_OPTIONS` and `SESHAT_MUTANT_ID` are absent. The CLI checks source
+preservation, fresh coverage, thresholds, timeouts, SIGINT, SIGTERM and
+cleanup. The workspace install remains in the npm proof. The parallel proof
+runs the extracted standalone binary, including cancellation, deadlines,
+worker isolation, source-integrity and descendant cleanup checks. The native
+lifecycle proof exercises all four cancellation phases for SIGINT and SIGTERM,
+plus timeout, output overflow and leader-exit handling, with the matching
+packaged proof binary.
 
 The workflow retains a portable preflight report, package metadata and hashes,
-proof JSON, raw command logs and the two candidate archives. Missing proof
-reports do not turn a failed command into a passing result. Artifact paths in
-the summary use the retained artifact names rather than the runner's temporary
+the npm, standalone, Jest/Expo, Vitest and lifecycle JSON reports, raw command
+logs and the two candidate archives. Missing, invalid or partial proof reports
+do not turn a failed command into a passing result. Artifact paths in the
+summary use the retained artifact names rather than the runner's temporary
 directories. The report also records the source commit supplied by GitHub;
 that commit can be a synthetic pull-request merge commit, so it must be kept
 separate from the PR head when describing provenance.
+
+## Current protocol invocation
+
+The current ARM64 workflow invokes the added installed-runner and lifecycle
+checks after the package and standalone proofs:
+
+```sh
+node benchmarks/proofs/jest-expo-check.mjs \
+  --tarball work/arm64/seshat-linux-arm64.tgz \
+  --cases normal-1,assertion-kill,survivor,before-all
+node benchmarks/proofs/vitest-check.mjs \
+  --tarball work/arm64/seshat-linux-arm64.tgz \
+  --deps "$PWD/benchmarks/proofs" \
+  --cases stack,assertion,survived,before-all
+SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/lifecycle.mjs
+node benchmarks/proofs/linux-arm64-summary.mjs work/arm64
+```
 
 ## Observed native proof
 
@@ -96,8 +123,8 @@ The exact hosted inputs and results were:
 | Standalone proof | 43 installed CLI scenarios and 11 parallel controls; archive listing and extraction passed |
 | GLIBC metadata | Required symbols through `GLIBC_2.34`, within the declared 2.35 ceiling; libraries `libgcc_s.so.1`, `libm.so.6`, `libc.so.6` |
 
-The workflow ran the locked dependency fetches before the offline test and
-pack commands, then invoked:
+The historical run's locked dependency fetches, offline test and package proofs
+were:
 
 ```sh
 cargo test --locked --offline --manifest-path benchmarks/proofs/Cargo.toml

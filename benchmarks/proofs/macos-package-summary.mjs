@@ -17,9 +17,11 @@ const lifecycleCases = [
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 
 function validLifecycle(value) {
-  if (!value || JSON.stringify(Object.keys(value).sort()) !== JSON.stringify([...lifecycleCases].sort())) return false;
+  if (!value || value.completed !== true) return false;
+  const rows = Object.fromEntries(Object.entries(value).filter(([name]) => name !== 'completed'));
+  if (JSON.stringify(Object.keys(rows).sort()) !== JSON.stringify([...lifecycleCases].sort())) return false;
   return lifecycleCases.every(name => {
-    const result = value[name];
+    const result = rows[name];
     if (!result || typeof result.ms !== 'number' || !result.exit || !Array.isArray(result.remainingScratch)) return false;
     const expectedCode = name.startsWith('SIGINT') ? 130 : name.startsWith('SIGTERM') ? 143 : 2;
     return result.exit.code === expectedCode && result.exit.signal === null &&
@@ -89,10 +91,10 @@ function selfCheckSummary() {
       checks: {'installed-cli': {status: 0}, 'installed-parallel': {status: 0}},
       parallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
     },
-    lifecycle: Object.fromEntries(lifecycleCases.map(name => [name, {
+    lifecycle: {...Object.fromEntries(lifecycleCases.map(name => [name, {
       ms: 1, exit: {code: name.startsWith('SIGINT') ? 130 : name.startsWith('SIGTERM') ? 143 : 2, signal: null},
       leaderAlive: false, descendantAlive: false, remainingScratch: [],
-    }])),
+    }])), completed: true},
   };
   assert.deepEqual(validate(base), []);
   assert.match(validate({...base, npm: null}).join('\n'), /npm result missing/);
@@ -102,6 +104,9 @@ function selfCheckSummary() {
   const missingLifecycle = structuredClone(base);
   delete missingLifecycle.lifecycle['leader-exit'];
   assert.match(validate(missingLifecycle).join('\n'), /lifecycle proof/);
+  const partialLastCase = structuredClone(base);
+  delete partialLastCase.lifecycle.completed;
+  assert.match(validate(partialLastCase).join('\n'), /lifecycle proof/);
   console.log('macOS package summary self-check passed');
 }
 
@@ -161,7 +166,7 @@ if (selfCheck) {
     } : null,
     npm: npm ? {build: npm.build, tarballSha256: packed?.tarballSha256 ?? null, cliScenarios: cliScenarios(npm), checks: statuses(npm)} : null,
     standalone: standalone ? {build: standalone.build, archiveSha256: standalone.archiveSha256, archiveBytes: standalone.archiveBytes, cliScenarios: standalone.cliScenarios, checks: statuses(standalone)} : null,
-    lifecycle: lifecycle ? {cases: Object.keys(lifecycle).length, passed: validLifecycle(lifecycle)} : null,
+    lifecycle: lifecycle ? {cases: Object.keys(lifecycle).filter(name => name !== 'completed').length, completed: lifecycle.completed === true, passed: validLifecycle(lifecycle)} : null,
     validation: {package: Boolean(packed), npm: Boolean(npm), standalone: Boolean(standalone), passed: failures.length === 0, failures},
     limits: 'Native macOS 15 proof on the selected GitHub-hosted CPU runner. It does not establish support for older macOS versions, Rosetta execution, the other CPU architecture, signing, notarization or public release distribution.',
   };

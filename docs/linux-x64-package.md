@@ -25,11 +25,11 @@ not a claim that Debian 11 remains a maintained distribution.
 ## Workflow proof
 
 The workflow records `preflight.json`, package metadata, both archive hashes,
-native npm and standalone reports, the Debian11 report, raw logs, Rust tests and
-`summary.json`. It never uploads Cargo's target directory. The summary is
-fail-closed: missing or invalid reports, a missing archive, a changed hash, a
-kernel below 6.8, or an incomplete proof leaves `validation.passed` false and
-the workflow failed.
+native npm, standalone, Jest/Expo, Vitest and lifecycle reports, the Debian11
+report, raw logs, Rust tests and `summary.json`. It never uploads Cargo's target
+directory. The summary is fail-closed: missing or invalid reports, a missing
+archive, a changed hash, a kernel below 6.8, or an incomplete/partial proof
+leaves `validation.passed` false and the workflow failed.
 
 The native checks are:
 
@@ -40,6 +40,18 @@ The native checks are:
 - A standalone archive made from the exact six-file package payload, with the
   same 43 CLI scenarios and 11 parallel process controls. Both consumers run
   with a disposable `PATH` where Cargo and Rustc are absent.
+- The just-built archive installed into the checked-in Jest/Expo fixture using
+  its pinned lockfile, with `normal-1,assertion-kill,survivor,before-all`.
+- The just-built archive installed into the checked-in Vitest fixture using the
+  locked proof dependencies, with `stack,assertion,survived,before-all`.
+- The native lifecycle proof using the matching packaged proof binary. It runs
+  all four cancellation phases for SIGINT and SIGTERM, plus timeout, output
+  overflow and leader-exit handling, and retains cleanup and scratch results.
+
+The installed runner reports explicitly record that Cargo and Rustc are absent,
+the Rust environment settings and ambient `NODE_OPTIONS`/`SESHAT_MUTANT_ID` are
+cleared, the candidate archive and executable hashes match package metadata,
+source fixtures remain unchanged and each Seshat scratch directory is empty.
 
 The Debian11 proof repeats the npm route and the generated standalone route in
 the isolated userspace. It records the same CLI/process controls, glibc 2.31,
@@ -143,6 +155,9 @@ These checks do not require a package build:
 node benchmarks/proofs/linux-x64-preflight.mjs --self-check
 node benchmarks/proofs/linux-x64-summary.mjs --self-check
 node --check benchmarks/proofs/linux-debian.mjs
+node --check benchmarks/proofs/jest-expo-check.mjs
+node --check benchmarks/proofs/vitest-check.mjs
+node --check benchmarks/proofs/lifecycle.mjs
 ```
 
 The local checks are syntax and self-check coverage for the proof helpers. The
