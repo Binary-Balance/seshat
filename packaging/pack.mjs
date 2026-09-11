@@ -53,6 +53,8 @@ mkdirSync(join(repo,'work'),{recursive:true});
 const work = mkdtempSync(join(repo,'work/npm-pack-'));
 const target = join(work,'target');
 const env = {...process.env, CARGO_TARGET_DIR:target, ...(nativeMacos ? {MACOSX_DEPLOYMENT_TARGET:'15.0'} : {})};
+// Keep linker metadata out of release bytes; cc needs the linker flag forwarded.
+const buildIdRustflags = ['-C','link-arg=-Wl,--build-id=none'];
 const run = (command, args) => execFileSync(command, args, {
   cwd:repo, env, encoding:'utf8', maxBuffer:16*1024*1024,
   stdio:['ignore','pipe','inherit'],
@@ -80,7 +82,11 @@ if (!nativeArm64 && !nativeMacos) {
   delete env.RUSTFLAGS;
   env.CARGO_ENCODED_RUSTFLAGS = ['-C',`link-arg=--sysroot=${sysroot}`,
     '-C',`link-arg=-B${sysroot}/usr/lib/x86_64-linux-gnu/`,
-    '-C',`link-arg=-L${sysroot}/lib/x86_64-linux-gnu`].join('\x1f');
+    '-C',`link-arg=-L${sysroot}/lib/x86_64-linux-gnu`,
+    ...buildIdRustflags].join('\x1f');
+} else if (nativeArm64) {
+  delete env.RUSTFLAGS;
+  env.CARGO_ENCODED_RUSTFLAGS = buildIdRustflags.join('\x1f');
 }
 // The explicit target keeps older-library flags away from host build scripts.
 const triple = targetConfig.target;
