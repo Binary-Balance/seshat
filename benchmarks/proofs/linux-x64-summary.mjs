@@ -79,11 +79,13 @@ function validateLifecycle(value, fail) {
     fail('lifecycle result missing');
     return;
   }
-  if (Object.keys(value).length !== lifecycleCases.length || lifecycleCases.some(name => !value[name])) {
+  const rows = Object.fromEntries(Object.entries(value).filter(([name]) => name !== 'completed'));
+  if (value.completed !== true) fail('lifecycle completion marker missing');
+  if (Object.keys(rows).length !== lifecycleCases.length || lifecycleCases.some(name => !rows[name])) {
     fail('lifecycle result is partial');
   }
   for (const name of lifecycleCases) {
-    const row = value[name];
+    const row = rows[name];
     if (!row) continue;
     if (row.leaderAlive !== false || row.descendantAlive !== false) fail(`lifecycle cleanup failed: ${name}`);
     if (!Array.isArray(row.remainingScratch) || row.remainingScratch.length) fail(`lifecycle scratch was not empty: ${name}`);
@@ -194,6 +196,7 @@ const selfCheckLifecycle = Object.fromEntries(lifecycleCases.map(name => {
     stdout: JSON.stringify({complete: false, cancelled: Boolean(signal)}),
   }];
 }));
+selfCheckLifecycle.completed = true;
 
 function selfCheckSummary() {
   const checks = Object.fromEntries(Array.from({length: 15}, (_, index) => [`check-${index}`, {status: 0}]));
@@ -233,6 +236,9 @@ function selfCheckSummary() {
   const lifecycleFailure = structuredClone(base);
   lifecycleFailure.lifecycle.timeout.remainingScratch = ['left'];
   assert.match(validate(lifecycleFailure).join('\n'), /lifecycle scratch was not empty/);
+  const partialLastCase = structuredClone(base);
+  delete partialLastCase.lifecycle.completed;
+  assert.match(validate(partialLastCase).join('\n'), /lifecycle completion marker missing/);
   console.log('Linux x64 summary self-check passed');
 }
 
@@ -314,7 +320,7 @@ if (selfCheck) {
     runners: {
       jestExpo: jestExpo ? {environment: jestExpo.environment, cli: jestExpo.cli, dependencies: jestExpo.dependencies, noConsumingRust: jestExpo.noConsumingRust, checks: jestExpo.checks, originalsPreserved: jestExpo.originalsPreserved} : null,
       vitest: vitest ? {environment: vitest.environment, cli: vitest.cli, dependencies: vitest.dependencies, noConsumingRust: vitest.noConsumingRust, checks: vitest.checks, originalsPreserved: vitest.originalsPreserved} : null,
-      lifecycle: lifecycle ? {cases: Object.keys(lifecycle), cleanup: Object.fromEntries(Object.entries(lifecycle).map(([name, row]) => [name, {exit: row.exit, leaderAlive: row.leaderAlive, descendantAlive: row.descendantAlive, remainingScratch: row.remainingScratch}]))} : null,
+      lifecycle: lifecycle ? {completed: lifecycle.completed === true, cases: Object.keys(lifecycle).filter(name => name !== 'completed'), cleanup: Object.fromEntries(Object.entries(lifecycle).filter(([name]) => name !== 'completed').map(([name, row]) => [name, {exit: row.exit, leaderAlive: row.leaderAlive, descendantAlive: row.descendantAlive, remainingScratch: row.remainingScratch}]))} : null,
     },
     validation: {
       package: Boolean(packed && portablePackage),

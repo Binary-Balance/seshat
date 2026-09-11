@@ -69,6 +69,23 @@ directories. The report also records the source commit supplied by GitHub;
 that commit can be a synthetic pull-request merge commit, so it must be kept
 separate from the PR head when describing provenance.
 
+## Current protocol invocation
+
+The current ARM64 workflow invokes the added installed-runner and lifecycle
+checks after the package and standalone proofs:
+
+```sh
+node benchmarks/proofs/jest-expo-check.mjs \
+  --tarball work/arm64/seshat-linux-arm64.tgz \
+  --cases normal-1,assertion-kill,survivor,before-all
+node benchmarks/proofs/vitest-check.mjs \
+  --tarball work/arm64/seshat-linux-arm64.tgz \
+  --deps "$PWD/benchmarks/proofs" \
+  --cases stack,assertion,survived,before-all
+SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/lifecycle.mjs
+node benchmarks/proofs/linux-arm64-summary.mjs work/arm64
+```
+
 ## Observed native proof
 
 The successful hosted proof is [workflow run 34554949984](https://github.com/Binary-Balance/seshat/actions/runs/34554949984)
@@ -106,8 +123,8 @@ The exact hosted inputs and results were:
 | Standalone proof | 43 installed CLI scenarios and 11 parallel controls; archive listing and extraction passed |
 | GLIBC metadata | Required symbols through `GLIBC_2.34`, within the declared 2.35 ceiling; libraries `libgcc_s.so.1`, `libm.so.6`, `libc.so.6` |
 
-The workflow ran the locked dependency fetches before the offline test and
-pack commands, then invoked:
+The historical run's locked dependency fetches, offline test and package proofs
+were:
 
 ```sh
 cargo test --locked --offline --manifest-path benchmarks/proofs/Cargo.toml
@@ -115,14 +132,6 @@ node packaging/pack.mjs --native-arm64
 node benchmarks/proofs/npm-package.mjs work/arm64/seshat-linux-arm64.tgz
 SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/standalone.mjs \
   work/arm64/seshat-linux-arm64-standalone.tar.gz "$PROOF_BINARY"
-node benchmarks/proofs/jest-expo-check.mjs \
-  --tarball work/arm64/seshat-linux-arm64.tgz \
-  --cases normal-1,assertion-kill,survivor,before-all
-node benchmarks/proofs/vitest-check.mjs \
-  --tarball work/arm64/seshat-linux-arm64.tgz \
-  --deps "$PWD/benchmarks/proofs" \
-  --cases stack,assertion,survived,before-all
-SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/lifecycle.mjs
 node benchmarks/proofs/linux-arm64-summary.mjs work/arm64
 ```
 
