@@ -9,7 +9,7 @@ use serde_json::{Value, json};
 use std::{
     fs,
     io::Write,
-    path::{Path, PathBuf},
+    path::{Component, Path, PathBuf},
     process::{Command, Stdio},
     sync::{
         Arc, OnceLock,
@@ -32,6 +32,69 @@ fn stable_path(path: &Path) -> String {
     {
         value.into_owned()
     }
+}
+
+fn module_component_equal(left: &Component<'_>, right: &Component<'_>) -> bool {
+    #[cfg(windows)]
+    {
+        left.as_os_str()
+            .to_string_lossy()
+            .eq_ignore_ascii_case(&right.as_os_str().to_string_lossy())
+    }
+    #[cfg(not(windows))]
+    {
+        left == right
+    }
+}
+
+// Node module options accept relative specifiers but reject Windows `\\?\` paths as package names.
+// Resolve from the actual setup cwd so spaces and Unicode stay ordinary path components.
+fn relative_module_specifier(from: &Path, to: &Path) -> Result<String, String> {
+    if !from.is_absolute() || !to.is_absolute() {
+        return Err("module paths must be absolute".into());
+    }
+    let from_components: Vec<_> = from.components().collect();
+    let to_components: Vec<_> = to.components().collect();
+    let common = from_components
+        .iter()
+        .zip(&to_components)
+        .take_while(|(left, right)| module_component_equal(left, right))
+        .count();
+    let from_root = from_components
+        .iter()
+        .take_while(|component| matches!(component, Component::Prefix(_) | Component::RootDir))
+        .count();
+    let to_root = to_components
+        .iter()
+        .take_while(|component| matches!(component, Component::Prefix(_) | Component::RootDir))
+        .count();
+    if from_root != to_root || common < from_root {
+        return Err("module paths have different roots".into());
+    }
+    let mut parts = Vec::new();
+    for component in &from_components[common..] {
+        if !matches!(component, Component::Normal(_)) {
+            return Err("module paths contain non-normal components".into());
+        }
+        parts.push("..".into());
+    }
+    for component in &to_components[common..] {
+        let Component::Normal(name) = component else {
+            return Err("module paths contain non-normal components".into());
+        };
+        parts.push(
+            name.to_str()
+                .ok_or("module path is not valid UTF-8")?
+                .to_owned(),
+        );
+    }
+    if parts.is_empty() {
+        return Err("module target is empty".into());
+    }
+    if !matches!(parts[0].as_str(), "." | "..") {
+        parts.insert(0, ".".into());
+    }
+    Ok(parts.join("/"))
 }
 
 pub fn install_cancellation() -> Result<(), String> {
@@ -70,6 +133,7 @@ fn observe_node_loads(
     sources: &[(&Path, &str)],
     receipt: &Path,
     id: &str,
+    cwd: &Path,
 ) -> Result<(), String> {
     if sources.is_empty() {
         return Err("load evidence requires at least one source".into());
@@ -117,7 +181,10 @@ fn observe_node_loads(
     command
         .env(
             "NODE_OPTIONS",
-            format!("--import={}", serde_json::to_string(&observer).unwrap()),
+            format!(
+                "--import={}",
+                serde_json::to_string(&relative_module_specifier(cwd, &observer)?).unwrap()
+            ),
         )
         .env("SESHAT_LOAD_CONTEXT", context_path)
         .env("SESHAT_EXECUTION_ID", id);
@@ -225,7 +292,7 @@ impl Session {
                     .as_nanos()
             );
             let sources = [(self.source_path.as_path(), source.as_str())];
-            observe_node_loads(&mut command, &sources, &receipt, &id)?;
+            observe_node_loads(&mut command, &sources, &receipt, &id, &self.root)?;
         }
         let mut child = platform::ManagedChild::spawn(&mut command)?;
         let timeout = Duration::from_millis(self.config["timeoutMs"].as_u64().unwrap_or(10000));
@@ -453,4 +520,18 @@ fn observed_failures_require_complete_hook_evidence() {
         changed["report"][field] = value;
         assert_eq!(classify("observed", &changed), expected);
     }
+}
+
+#[test]
+fn module_paths_use_relative_native_specifiers() {
+    let root = std::env::temp_dir().join("input path 🎸");
+    let cwd = root.join("capture").join("project");
+    let target = root
+        .join("capture")
+        .join("evidence")
+        .join("node reporter.mjs");
+    assert_eq!(
+        relative_module_specifier(&cwd, &target).unwrap(),
+        "../evidence/node reporter.mjs"
+    );
 }
