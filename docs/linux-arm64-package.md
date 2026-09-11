@@ -12,6 +12,11 @@ The candidate is deliberately narrow:
 - `aarch64-unknown-linux-gnu`, ELF machine `183`, package CPU `arm64`.
 - GLIBC symbol requirements no newer than 2.35.
 
+Native proof builds use the source-controlled `[profile.release]` in
+`benchmarks/proofs/Cargo.toml`, which explicitly sets `lto = "off"` and
+`strip = "symbols"`. The hosted package record below predates this policy and
+remains a historical observation.
+
 The existing x64 invocation still takes the three pinned Debian 11 archives:
 
 ```sh
