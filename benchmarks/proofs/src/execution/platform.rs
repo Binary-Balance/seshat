@@ -72,10 +72,9 @@ mod unix {
 mod windows {
     use super::*;
     #[cfg(test)]
-    use std::sync::{
-        Mutex,
-        atomic::{AtomicBool, AtomicU32, Ordering},
-    };
+    use std::cell::RefCell;
+    #[cfg(test)]
+    use std::sync::Mutex;
     use std::{
         ffi::c_void,
         mem::size_of,
@@ -87,6 +86,8 @@ mod windows {
     };
     #[cfg(test)]
     use windows_sys::Win32::Foundation::WAIT_OBJECT_0;
+    #[cfg(test)]
+    use windows_sys::Win32::System::Threading::{OpenProcess, PROCESS_SYNCHRONIZE};
     use windows_sys::Win32::{
         Foundation::{CloseHandle, ERROR_NO_MORE_FILES, FALSE, HANDLE, INVALID_HANDLE_VALUE, TRUE},
         System::{
@@ -111,15 +112,65 @@ mod windows {
     static CONSOLE_INSTALL: OnceLock<Result<(), String>> = OnceLock::new();
 
     #[cfg(test)]
-    pub(super) static TEST_DISCOVERY_FAILURE: AtomicBool = AtomicBool::new(false);
+    #[derive(Clone, Copy, PartialEq, Eq)]
+    pub(super) enum TestFailure {
+        Discovery,
+        Assignment,
+        PostAssignment,
+    }
+
     #[cfg(test)]
-    pub(super) static TEST_ASSIGNMENT_FAILURE: AtomicBool = AtomicBool::new(false);
+    #[derive(Default)]
+    struct TestSpawnState {
+        failure: Option<TestFailure>,
+        wait_handle: HANDLE,
+    }
+
     #[cfg(test)]
-    pub(super) static TEST_POST_ASSIGNMENT_FAILURE: AtomicBool = AtomicBool::new(false);
-    #[cfg(test)]
-    pub(super) static TEST_LAST_SPAWN_PID: AtomicU32 = AtomicU32::new(0);
+    thread_local! {
+        static TEST_SPAWN_STATE: RefCell<TestSpawnState> = RefCell::new(TestSpawnState::default());
+    }
+
     #[cfg(test)]
     static TEST_SPAWN_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+
+    #[cfg(test)]
+    fn test_record_spawn(pid: u32) {
+        TEST_SPAWN_STATE.with(|state| {
+            let mut state = state.borrow_mut();
+            if state.failure.is_some() {
+                // SAFETY: the child PID was returned by Command::spawn and the handle is retained
+                // until the injecting test waits for cleanup to finish.
+                state.wait_handle = unsafe { OpenProcess(PROCESS_SYNCHRONIZE, FALSE, pid) };
+            }
+        });
+    }
+
+    #[cfg(test)]
+    fn test_take_failure(failure: TestFailure) -> bool {
+        TEST_SPAWN_STATE.with(|state| {
+            let mut state = state.borrow_mut();
+            if state.failure == Some(failure) {
+                state.failure = None;
+                true
+            } else {
+                false
+            }
+        })
+    }
+
+    #[cfg(test)]
+    pub(super) fn test_inject_failure(failure: TestFailure) {
+        TEST_SPAWN_STATE.with(|state| state.borrow_mut().failure = Some(failure));
+    }
+
+    #[cfg(test)]
+    pub(super) fn test_take_spawn_wait_handle() -> HANDLE {
+        TEST_SPAWN_STATE.with(|state| {
+            let mut state = state.borrow_mut();
+            std::mem::replace(&mut state.wait_handle, null_mut())
+        })
+    }
 
     #[cfg(test)]
     pub(super) fn test_spawn_lock() -> &'static Mutex<()> {
@@ -416,9 +467,9 @@ mod windows {
         };
         let pid = guard.child.as_ref().unwrap().id();
         #[cfg(test)]
-        TEST_LAST_SPAWN_PID.store(pid, Ordering::Relaxed);
+        test_record_spawn(pid);
         #[cfg(test)]
-        if TEST_DISCOVERY_FAILURE.swap(false, Ordering::Relaxed) {
+        if test_take_failure(TestFailure::Discovery) {
             return Err(guard.fail("injected child-thread discovery failure".into()));
         }
         let thread_id = match primary_thread_id(pid) {
@@ -434,7 +485,7 @@ mod windows {
             )));
         }
         #[cfg(test)]
-        let assign = if TEST_ASSIGNMENT_FAILURE.swap(false, Ordering::Relaxed) {
+        let assign = if test_take_failure(TestFailure::Assignment) {
             FALSE
         } else {
             // SAFETY: both handles are owned by the spawn guard and the process remains suspended.
@@ -465,7 +516,7 @@ mod windows {
         }
         guard.assigned = true;
         #[cfg(test)]
-        if TEST_POST_ASSIGNMENT_FAILURE.swap(false, Ordering::Relaxed) {
+        if test_take_failure(TestFailure::PostAssignment) {
             // SAFETY: thread is an owned handle opened above.
             unsafe { CloseHandle(thread) };
             return Err(guard.fail("injected post-assignment failure".into()));
@@ -547,15 +598,13 @@ mod windows {
 #[cfg(all(test, windows))]
 mod windows_tests {
     use super::windows::{
-        TEST_ASSIGNMENT_FAILURE, TEST_DISCOVERY_FAILURE, TEST_LAST_SPAWN_PID,
-        TEST_POST_ASSIGNMENT_FAILURE, test_spawn_lock,
+        TestFailure, test_inject_failure, test_spawn_lock, test_take_spawn_wait_handle,
     };
     use super::*;
     use std::{
         fs,
         io::Read,
         path::PathBuf,
-        sync::atomic::Ordering,
         thread,
         time::{Duration, SystemTime, UNIX_EPOCH},
     };
@@ -729,10 +778,8 @@ process.exit(0);
     }
 
     fn assert_last_spawn_exited() {
-        let pid = TEST_LAST_SPAWN_PID.load(Ordering::Relaxed);
-        assert_ne!(pid, 0);
-        // SAFETY: the PID was recorded immediately after this test's native spawn.
-        let process = unsafe { OpenProcess(PROCESS_SYNCHRONIZE, FALSE, pid) };
+        // The test hook retains this handle before injected cleanup closes the Child-owned handle.
+        let process = test_take_spawn_wait_handle();
         assert!(!process.is_null());
         // SAFETY: process is a live handle returned by OpenProcess.
         assert_eq!(
@@ -747,11 +794,11 @@ process.exit(0);
     fn injected_spawn_failures_reap_children_before_and_after_assignment() {
         let _lock = test_spawn_lock().lock().unwrap();
         for (failure, message) in [
-            (&TEST_DISCOVERY_FAILURE, "child-thread discovery"),
-            (&TEST_ASSIGNMENT_FAILURE, "assign child"),
-            (&TEST_POST_ASSIGNMENT_FAILURE, "post-assignment"),
+            (TestFailure::Discovery, "child-thread discovery"),
+            (TestFailure::Assignment, "assign child"),
+            (TestFailure::PostAssignment, "post-assignment"),
         ] {
-            failure.store(true, Ordering::Relaxed);
+            test_inject_failure(failure);
             let mut command = Command::new("node.exe");
             command.args(["-e", "setInterval(() => {}, 1000)"]);
             let error = match ManagedChild::spawn(&mut command) {
