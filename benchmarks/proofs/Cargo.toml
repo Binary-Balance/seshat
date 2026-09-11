@@ -15,6 +15,7 @@ oxc_span = "=0.148.0"
 serde_json = "1"
 serde = { version = "1", features = ["derive"] }
 glob = "=0.3.3"
+percent-encoding = "=2.3.2"
 
 [target.'cfg(unix)'.dependencies]
 signal-hook = { version = "=0.4.4", default-features = false }
