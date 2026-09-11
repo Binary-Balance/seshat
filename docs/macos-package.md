@@ -14,6 +14,10 @@ checks the Mach-O architecture with `file`, the minimum OS load command with
 architecture, minimum OS, deployment target, SDK, Clang, native libraries and
 binary hash.
 
+Native proof builds use the source-controlled `[profile.release]` in
+`benchmarks/proofs/Cargo.toml`, which explicitly sets `lto = "off"` and
+`strip = "symbols"`.
+
 Both npm and standalone proofs install the candidate into disposable paths
 containing spaces and Unicode. They verify archive contents and hashes, npm
 exec and package scripts, exit status, offline installation, workspaces,

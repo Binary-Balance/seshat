@@ -52,7 +52,7 @@ const targetConfig = nativeArm64
 mkdirSync(join(repo,'work'),{recursive:true});
 const work = mkdtempSync(join(repo,'work/npm-pack-'));
 const target = join(work,'target');
-// Serialize release codegen so Cargo does not vary linker input order between clean builds.
+// Keep Cargo build scheduling serial; the repeat proof still checks actual bytes.
 const env = {...process.env, CARGO_BUILD_JOBS:'1', CARGO_TARGET_DIR:target, ...(nativeMacos ? {MACOSX_DEPLOYMENT_TARGET:'15.0'} : {})};
 // Keep linker metadata out of release bytes; cc needs the linker flag forwarded.
 const buildIdRustflags = ['-C','link-arg=-Wl,--build-id=none'];
