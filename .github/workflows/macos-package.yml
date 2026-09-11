@@ -106,6 +106,25 @@ jobs:
           SESHAT_BINARY_SHA256="$BINARY_SHA256" \
             node benchmarks/proofs/standalone.mjs "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}-standalone.tar.gz" "$PROOF_BINARY" \
             2>&1 | tee "work/macos/${{ matrix.cpu }}/standalone.log"
+      - name: Verify installed Jest/Expo runner
+        if: always()
+        env:
+          SESHAT_PROOF_OUTPUT: work/macos/${{ matrix.cpu }}/jest-expo-check.json
+        run: |
+          node benchmarks/proofs/jest-expo-check.mjs \
+            --tarball "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}.tgz" \
+            --cases normal-1,assertion-kill,survivor,before-all \
+            2>&1 | tee "work/macos/${{ matrix.cpu }}/jest-expo-check.log"
+      - name: Verify installed Vitest runner
+        if: always()
+        env:
+          SESHAT_PROOF_OUTPUT: work/macos/${{ matrix.cpu }}/vitest-check.json
+        run: |
+          node benchmarks/proofs/vitest-check.mjs \
+            --tarball "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}.tgz" \
+            --deps "$GITHUB_WORKSPACE/benchmarks/proofs" \
+            --cases stack,assertion,survived,before-all \
+            2>&1 | tee "work/macos/${{ matrix.cpu }}/vitest-check.log"
       - name: Verify native lifecycle
         env:
           SESHAT_PROOF_OUTPUT: work/macos/${{ matrix.cpu }}/lifecycle.json
