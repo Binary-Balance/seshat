@@ -7,6 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {setTimeout as delay} from 'node:timers/promises';
 
 const here=dirname(fileURLToPath(import.meta.url)),repo=resolve(here,'../..');
+mkdirSync(join(repo,'work/assurance-proofs'),{recursive:true});
 const work=mkdtempSync(join(repo,'work/assurance-proofs/parallel-'));
 const candidate = process.env.SESHAT_PARALLEL_CLI === '1';
 const binary = candidate && process.env.SESHAT_CLI_BINARY
