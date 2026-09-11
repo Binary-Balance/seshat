@@ -19,7 +19,7 @@ const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 assert.equal(process.platform, 'win32', 'Windows package proof requires Windows');
 assert.equal(process.arch, 'x64', 'Windows package proof is x64 only');
 assert.equal(process.env.RUNNER_OS, 'Windows', 'Windows package proof requires the Windows runner');
-assert.equal(Number(osVersion().match(/\b10\.0\.(\d+)\b/)?.[1]), 20348,
+assert.equal(Number(release().match(/\b10\.0\.(\d+)\b/)?.[1]), 20348,
   'Windows package proof requires Windows Server 2022 build 20348');
 assert.equal(process.argv.length, 3, 'usage: node benchmarks/proofs/windows-package-install.mjs <npm tarball>');
 

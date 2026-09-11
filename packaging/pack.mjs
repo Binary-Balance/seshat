@@ -44,7 +44,7 @@ if (nativeArm64) {
   assert.equal(process.platform, 'win32', 'native Windows mode requires Windows');
   assert.equal(process.arch, 'x64', 'native Windows mode is x64 only');
   assert.equal(process.env.RUNNER_OS, 'Windows', 'native Windows mode requires the Windows runner');
-  assert.equal(Number(osVersion().match(/\b10\.0\.(\d+)\b/)?.[1]), 20348,
+  assert.equal(Number(release().match(/\b10\.0\.(\d+)\b/)?.[1]), 20348,
     'native Windows mode requires Windows Server 2022 build 20348');
 } else {
   assert.equal(process.platform, 'linux', 'the Debian archive mode requires Linux');
@@ -77,12 +77,14 @@ const run = (command, args) => execFileSync(commandName(command), args, {
   stdio:['ignore','pipe','inherit'],
 });
 const sha256 = data => createHash('sha256').update(data).digest('hex');
-const toolInfo = (command, args = []) => {
-  const result = spawnSync(commandName(command), args, {encoding:'utf8', maxBuffer:128 * 1024});
+const toolInfo = (command, identity) => {
+  const result = spawnSync(commandName(command), [], {encoding:'utf8', maxBuffer:128 * 1024});
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
-  assert.ok(!result.error && output, `${command} is unavailable`);
+  assert.ok(!result.error && output && identity.test(output), `${command} is unavailable or is not the expected MSVC tool`);
   return {command, version:output.split(/\r?\n/, 1)[0], status:result.status};
 };
+const msvcIdentity = /^Microsoft \(R\) C\/C\+\+ Optimizing Compiler Version .+ for x64\b/m;
+const linkerIdentity = /^Microsoft \(R\) Incremental Linker Version \S+/m;
 const sdkInfo = () => {
   const directory = process.env.WindowsSdkDir?.replace(/[\\/]+$/, '') ??
     join(process.env['ProgramFiles(x86)'] ?? process.env.ProgramFiles ?? 'C:\\Program Files (x86)', 'Windows Kits', '10');
@@ -236,8 +238,8 @@ const build = {
     nativeLibraries:pe.imports,
     crtStatic:true,
     rustflags:['-C target-feature=+crt-static', '-C link-arg=/Brepro'],
-    msvc:toolInfo('cl.exe'),
-    linker:toolInfo('link.exe'),
+    msvc:toolInfo('cl.exe', msvcIdentity),
+    linker:toolInfo('link.exe', linkerIdentity),
     cargo:run('cargo',['--version']).trim(),
     sdk:sdkInfo(),
     os:{platform:process.platform, architecture:arch(), release:release(), version:osVersion(), runner:process.env.RUNNER_OS ?? null,

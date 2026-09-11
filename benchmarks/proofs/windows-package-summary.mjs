@@ -204,7 +204,7 @@ function selfCheck() {
   const buildHash = 'c'.repeat(64);
   const archiveHash = 'd'.repeat(64);
   const packed = {binary:binaryHash, binaryBytes:1, binaryName:'seshat.exe', tarballSha256:archiveHash, standalone:{sha256:archiveHash, bytes:1}};
-  const repeat = {schemaVersion:1, sourceCommit, host:{platform:'win32', arch:'x64', windows:{platform:'win32', architecture:'x64', release:'10.0.20348', version:'10.0.20348', runner:'Windows'}, glibc:null},
+  const repeat = {schemaVersion:1, sourceCommit, host:{platform:'win32', arch:'x64', windows:{platform:'win32', architecture:'x64', release:'10.0.20348', version:'Windows Server 2022 Datacenter', runner:'Windows'}, glibc:null},
     toolchain:{node:'v24.20.0', npm:'11.0.0', rustc:'rustc 1.98.1', cargo:'cargo 1.98.1', msvc:{version:'cl'}, linker:{version:'link'}, sdk:{version:'sdk'}}, input:{mode:'--native-windows', archives:[]}, validation:{passed:true, reason:'self-check'}, runs:[
     {binary:{sha256:binaryHash, bytes:1}, build:{sha256:buildHash, bytes:1}, npmArchive:{sha256:archiveHash, bytes:1}, standaloneArchive:{sha256:archiveHash, bytes:1}, files:packageFiles},
     {binary:{sha256:binaryHash, bytes:1}, build:{sha256:buildHash, bytes:1}, npmArchive:{sha256:archiveHash, bytes:1}, standaloneArchive:{sha256:archiveHash, bytes:1}, files:packageFiles},
@@ -212,7 +212,7 @@ function selfCheck() {
   const install = {sourceCommit, buildSha256:buildHash, tarball:{sha256:archiveHash, bytes:1}, standaloneArchive:{sha256:archiveHash, bytes:1}, binary:{sha256:binaryHash, bytes:1},
     build:{binarySha256:binaryHash, binaryBytes:1, target:'x86_64-pc-windows-msvc', peMachine:'0x8664', peFormat:'PE32+', crtStatic:true,
       sourceCommit, rust:'rustc 1.98.1', cargo:'cargo 1.98.1', msvc:{available:true, version:'cl'}, linker:{available:true, version:'link'}, sdk:{version:'sdk'},
-      os:{platform:'win32', architecture:'x64', release:'10.0.20348', version:'10.0.20348', runner:'Windows'},
+      os:{platform:'win32', architecture:'x64', release:'10.0.20348', version:'Windows Server 2022 Datacenter', runner:'Windows'},
       rustflags:['-C target-feature=+crt-static'], imports:['KERNEL32.dll']},
     noConsumingRust:{environmentUnset:['CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'RUSTC_WRAPPER', 'CARGO_BUILD_RUSTC', 'RUSTFLAGS', 'CARGO_ENCODED_RUSTFLAGS', 'RUSTUP_TOOLCHAIN'],
       preserved:['SystemRoot', 'ComSpec', 'System32', 'Node', 'npm.cmd']},
@@ -221,7 +221,7 @@ function selfCheck() {
       ['standalone-version',0], ['standalone-help',0]].map(([name,status]) => [name,{status}]))};
   const runtime = {validation:{passed:true}, binary:{path:'seshat.exe', sha256:binaryHash}, scenarios:Object.fromEntries(runtimeCases.map(name => [name, {}]))};
   const base = {preflight:{validation:{passed:true}, provenance:{sourceCommit}, candidate:{runner:'windows-2022', os:'Windows Server 2022', kernelBuild:20348, node:'24.20.0', rust:'1.98.1', target:'x86_64-pc-windows-msvc', cpu:'x64', crtStatic:true}, environment:{
-      platform:'win32', architecture:{node:'x64', os:'x64'}, os:{kernelBuild:20348, release:'10.0.20348', version:'10.0.20348'}, node:{version:'v24.20.0'}, npm:{available:true, version:'11.0.0'},
+      platform:'win32', architecture:{node:'x64', os:'x64'}, os:{kernelBuild:20348, release:'10.0.20348', version:'Windows Server 2022 Datacenter'}, node:{version:'v24.20.0'}, npm:{available:true, version:'11.0.0'},
       runnerImage:{label:'windows-2022', os:'Windows'}, toolchain:{rust:{rustc:{available:true, version:'rustc 1.98.1'}, cargo:{available:true, version:'cargo 1.98.1'}, host:'x86_64-pc-windows-msvc'}, msvc:{available:true, version:'cl'}, linker:{available:true, version:'link'}, sdk:{version:'sdk'}}, shell:{systemRoot:'C:', comspec:'C:'}},
     }, packed:{...packed, files:packageFiles.map(path => ({path}))}, repeat, install, runtime};
   assert.deepEqual(validate(base).failures, []);
