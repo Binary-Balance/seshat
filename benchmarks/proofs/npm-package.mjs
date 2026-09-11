@@ -13,6 +13,7 @@ assert.ok(statSync(tarball).isFile());
 if (process.env.SESHAT_TARBALL_SHA256) {
   assert.equal(createHash('sha256').update(readFileSync(tarball)).digest('hex'), process.env.SESHAT_TARBALL_SHA256);
 }
+mkdirSync(join(repo, 'work/assurance-proofs'), {recursive: true});
 const work = mkdtempSync(join(repo,'work/assurance-proofs/npm-package-'));
 const tools = join(work,'tools'); mkdirSync(tools);
 const npm = process.env.PATH.split(delimiter).map(path => join(path,'npm')).find(existsSync);

@@ -13,6 +13,7 @@ const archive = realpathSync(process.argv[2]);
 const legacy = realpathSync(process.argv[3] ?? process.env.SESHAT_PROOF_BINARY ?? '');
 assert.ok(statSync(archive).isFile());
 assert.ok(statSync(legacy).isFile());
+mkdirSync(join(repo, 'work/assurance-proofs'), {recursive: true});
 const work = mkdtempSync(join(repo, 'work/assurance-proofs/standalone-'));
 const consumer = join(work, 'consumer 🎸');
 mkdirSync(consumer);

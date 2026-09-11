@@ -19,6 +19,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash --noprofile --norc -eo pipefail {0}
+
 jobs:
   package:
     runs-on: ubuntu-22.04-arm
@@ -40,13 +44,16 @@ jobs:
         run: |
           mkdir -p work/arm64
           node benchmarks/proofs/linux-arm64-preflight.mjs --output work/arm64/preflight.json
+      - name: Check proof failure reporting
+        run: node benchmarks/proofs/linux-arm64-summary.mjs --self-check
       - name: Fetch locked dependencies
         run: |
           npm ci --prefix benchmarks
           npm ci --prefix benchmarks/proofs
           cargo fetch --locked --manifest-path benchmarks/proofs/Cargo.toml
       - name: Run native Rust tests
-        run: cargo test --locked --offline --manifest-path benchmarks/proofs/Cargo.toml
+        run: |
+          cargo test --locked --offline --manifest-path benchmarks/proofs/Cargo.toml 2>&1 | tee work/arm64/rust-tests.log
       - name: Build native ARM64 package
         env:
           SESHAT_PACK_RESULT: work/arm64/package-result.json
