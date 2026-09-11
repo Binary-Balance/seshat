@@ -62,11 +62,18 @@ Build and verify offline:
 ```sh
 node packaging/pack.mjs work/debian11-inputs
 SESHAT_PROOF_BINARY=/absolute/path/to/the/reported/proofBinary node benchmarks/proofs/npm-package.mjs /absolute/path/to/the/reported/package.tgz
+SESHAT_REPEAT_OUTPUT=work/repeat-pack.json node packaging/repeat-pack.mjs work/debian11-inputs
 ```
 
-The native workflow derives its standalone archive from the six files in that
-tarball, then runs `standalone.mjs` with the same proof binary. The x64 packer
-does not publish or install a separate archive.
+The packer reports the deterministic npm `.tgz` as both `tarball` and
+`standalone`. The native workflows retain that one file under both artifact
+names. `standalone.mjs` strips npm's `package/` prefix before running the binary
+without npm, so the standalone route does not create a second archive format.
+
+The native workflows also run `packaging/repeat-pack.mjs`, which invokes the
+ordinary packer twice from the same clean source and compares the native binary
+and both archive byte streams. It writes repeat evidence only after every
+comparison passes; the ordinary pack command still performs one build.
 
 Packing verifies archive hashes, extracts an isolated library directory and
 rebuilds against it from the locked dependencies. It rejects GLIBC requirements

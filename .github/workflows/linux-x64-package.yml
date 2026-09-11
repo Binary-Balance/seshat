@@ -75,34 +75,30 @@ jobs:
             -o work/x64/debian11-inputs/libc6-dev.deb
           curl --max-time 60 -fSL https://deb.debian.org/debian/pool/main/g/gcc-10/libgcc-s1_10.2.1-6_amd64.deb \
             -o work/x64/debian11-inputs/libgcc-s1.deb
+      - name: Prove repeat x64 package reproducibility
+        env:
+          SESHAT_REPEAT_OUTPUT: work/x64/repeat-pack.json
+        run: |
+          set -euo pipefail
+          node packaging/repeat-pack.mjs work/x64/debian11-inputs 2>&1 | tee work/x64/repeat-pack.log
       - name: Build x64 package against Debian 11 libraries
         env:
           SESHAT_PACK_RESULT: work/x64/package-result.json
         run: |
           set -euo pipefail
           node packaging/pack.mjs work/x64/debian11-inputs 2>&1 | tee work/x64/pack.log
-      - name: Create standalone archive from the packed payload
+      - name: Retain npm payload for both installation routes
         run: |
           set -euo pipefail
           tarball="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/x64/package-result.json")).tarball);')"
+          standalone="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/x64/package-result.json")).standalone.path);')"
           cp "$tarball" work/x64/seshat-linux-x64.tgz
-          stage="$(mktemp -d)"
-          tar -xzf work/x64/seshat-linux-x64.tgz -C "$stage" --strip-components=1 --no-same-owner
-          tar -czf work/x64/seshat-linux-x64-standalone.tar.gz --owner=0 --group=0 --numeric-owner -C "$stage" \
-            BUILD.json LICENSE README.md THIRD_PARTY_NOTICES.txt bin/seshat package.json
-          node --input-type=module -e '
-            import {createHash} from "node:crypto";
-            import {readFileSync, statSync, writeFileSync} from "node:fs";
-            const hash = path => createHash("sha256").update(readFileSync(path)).digest("hex");
-            const result = JSON.parse(readFileSync("work/x64/package-result.json"));
-            result.tarballSha256 = hash("work/x64/seshat-linux-x64.tgz");
-            result.standalone = {
-              path: "work/x64/seshat-linux-x64-standalone.tar.gz",
-              sha256: hash("work/x64/seshat-linux-x64-standalone.tar.gz"),
-              bytes: statSync("work/x64/seshat-linux-x64-standalone.tar.gz").size,
-            };
-            writeFileSync("work/x64/package-result.json", JSON.stringify(result, null, 2) + "\n");
-          '
+          cp "$standalone" work/x64/seshat-linux-x64-standalone.tar.gz
+          cmp work/x64/seshat-linux-x64.tgz work/x64/seshat-linux-x64-standalone.tar.gz
+          test "$(sha256sum work/x64/seshat-linux-x64.tgz | cut -d' ' -f1)" = \
+            "$(node --input-type=module -e 'import {readFileSync} from "node:fs"; const result=JSON.parse(readFileSync("work/x64/package-result.json")); console.log(result.tarballSha256);')"
+          test "$(sha256sum work/x64/seshat-linux-x64-standalone.tar.gz | cut -d' ' -f1)" = \
+            "$(node --input-type=module -e 'import {readFileSync} from "node:fs"; const result=JSON.parse(readFileSync("work/x64/package-result.json")); console.log(result.standalone.sha256);')"
       - name: Verify native npm installation
         env:
           SESHAT_PROOF_OUTPUT: work/x64/npm-package.json
@@ -160,6 +156,8 @@ jobs:
             work/x64/debian11.json
             work/x64/debian11.log
             work/x64/rust-tests.log
+            work/x64/repeat-pack.json
+            work/x64/repeat-pack.log
             work/x64/pack.log
             work/x64/summary.json
           if-no-files-found: error
