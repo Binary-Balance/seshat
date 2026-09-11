@@ -7,11 +7,24 @@ use std::{
 #[cfg(unix)]
 mod unix {
     use super::*;
-    use std::os::unix::process::CommandExt;
+    use std::{
+        os::unix::process::CommandExt,
+        thread,
+        time::{Duration, Instant},
+    };
+
+    // macOS can report EPERM while an exited group is being reaped. Keep the
+    // read-only settlement bounded and preserve EPERM if the group remains.
+    const GROUP_SETTLEMENT_TIMEOUT: Duration = Duration::from_millis(100);
+    const GROUP_SETTLEMENT_POLL: Duration = Duration::from_millis(2);
 
     pub(super) struct Supervisor {
         pid: u32,
         stopped: bool,
+        #[cfg(test)]
+        fail_next_stop: bool,
+        #[cfg(test)]
+        stop_attempts: usize,
     }
 
     impl Supervisor {
@@ -19,12 +32,26 @@ mod unix {
             Self {
                 pid,
                 stopped: false,
+                #[cfg(test)]
+                fail_next_stop: false,
+                #[cfg(test)]
+                stop_attempts: 0,
             }
         }
 
         fn stop(&mut self) -> Result<(), String> {
             if self.stopped {
                 return Ok(());
+            }
+            #[cfg(test)]
+            {
+                self.stop_attempts += 1;
+                if self.fail_next_stop {
+                    self.fail_next_stop = false;
+                    return Err(
+                        "stop owned process group: Operation not permitted (os error 1)".into(),
+                    );
+                }
             }
             let pid = i32::try_from(self.pid)
                 .ok()
@@ -40,6 +67,55 @@ mod unix {
             self.stopped = true;
             Ok(())
         }
+
+        fn settle_after_stop_error(
+            &mut self,
+            child: &mut Child,
+            stop_error: String,
+        ) -> Result<ExitStatus, String> {
+            let deadline = Instant::now() + GROUP_SETTLEMENT_TIMEOUT;
+            let status = loop {
+                match child.try_wait().map_err(|e| e.to_string())? {
+                    Some(status) => break status,
+                    None if Instant::now() >= deadline => return Err(stop_error),
+                    None => thread::sleep(GROUP_SETTLEMENT_POLL),
+                }
+            };
+            loop {
+                if owned_group_is_gone(self.pid) {
+                    self.stopped = true;
+                    return Ok(status);
+                }
+                if Instant::now() >= deadline {
+                    return Err(stop_error);
+                }
+                thread::sleep(GROUP_SETTLEMENT_POLL);
+            }
+        }
+
+        #[cfg(test)]
+        pub(super) fn test_fail_next_stop(&mut self) {
+            self.fail_next_stop = true;
+        }
+
+        #[cfg(test)]
+        pub(super) fn test_stop_attempts(&self) -> usize {
+            self.stop_attempts
+        }
+    }
+
+    fn owned_group_is_gone(pid: u32) -> bool {
+        let Ok(pid) = i32::try_from(pid) else {
+            return false;
+        };
+        if pid <= 1 {
+            return false;
+        }
+        // SAFETY: signal zero only probes the dedicated process group's existence.
+        if unsafe { libc::kill(-pid, 0) } == 0 {
+            return false;
+        }
+        io::Error::last_os_error().raw_os_error() == Some(libc::ESRCH)
     }
 
     impl Drop for Supervisor {
@@ -65,6 +141,14 @@ mod unix {
 
     pub(super) fn stop(supervisor: &mut Supervisor) -> Result<(), String> {
         supervisor.stop()
+    }
+
+    pub(super) fn settle(
+        supervisor: &mut Supervisor,
+        child: &mut Child,
+        stop_error: String,
+    ) -> Result<ExitStatus, String> {
+        supervisor.settle_after_stop_error(child, stop_error)
     }
 }
 
@@ -851,6 +935,19 @@ mod unix_tests {
     use std::process::Command;
 
     #[test]
+    fn kill_tree_settles_stop_error_without_retrying_group_signal() {
+        let mut command = Command::new("sh");
+        command.args(["-c", "exit 0"]);
+        let mut child = ManagedChild::spawn(&mut command).unwrap();
+        child.test_fail_next_stop();
+        let status = child.kill_tree().unwrap();
+        assert_eq!(status.code(), Some(0));
+        assert_eq!(child.test_stop_attempts(), 1);
+        child.force_cleanup().unwrap();
+        assert_eq!(child.test_stop_attempts(), 1);
+    }
+
+    #[test]
     fn dropping_managed_child_reaps_the_leader() {
         let pid = {
             let mut command = Command::new("sh");
@@ -904,25 +1001,59 @@ impl ManagedChild {
         native::stop(&mut self.supervisor)
     }
 
+    fn settle_after_stop_error(&mut self, error: String) -> Result<ExitStatus, String> {
+        #[cfg(unix)]
+        {
+            native::settle(&mut self.supervisor, &mut self.child, error)
+        }
+        #[cfg(windows)]
+        {
+            Err(error)
+        }
+    }
+
+    pub(super) fn stop_tree_with_settlement(&mut self) -> Result<(), String> {
+        match self.stop_tree() {
+            Ok(()) => Ok(()),
+            Err(error) => self.settle_after_stop_error(error).map(|_| ()),
+        }
+    }
+
+    #[cfg(all(test, unix))]
+    fn test_fail_next_stop(&mut self) {
+        self.supervisor.test_fail_next_stop();
+    }
+
+    #[cfg(all(test, unix))]
+    fn test_stop_attempts(&self) -> usize {
+        self.supervisor.test_stop_attempts()
+    }
+
     pub(super) fn kill_tree(&mut self) -> Result<ExitStatus, String> {
         match self.stop_tree() {
             Ok(()) => self.wait().map_err(|e| e.to_string()),
-            Err(error) => match self.try_wait().map_err(|e| e.to_string())? {
-                // macOS can report EPERM for a group containing only the exited child as a
-                // zombie. Reap confirmation lets us retry the owned-tree stop without masking
-                // a real failure while the leader is still running.
-                Some(status) => {
-                    self.stop_tree()?;
-                    Ok(status)
+            Err(error) => {
+                #[cfg(unix)]
+                {
+                    self.settle_after_stop_error(error)
                 }
-                None => Err(error),
-            },
+                #[cfg(windows)]
+                {
+                    match self.try_wait().map_err(|e| e.to_string())? {
+                        Some(status) => {
+                            self.stop_tree()?;
+                            Ok(status)
+                        }
+                        None => Err(error),
+                    }
+                }
+            }
         }
     }
 
     pub(super) fn force_cleanup(&mut self) -> Result<(), String> {
         let mut errors = Vec::new();
-        if let Err(error) = self.stop_tree() {
+        if let Err(error) = self.stop_tree_with_settlement() {
             errors.push(format!("stop tree: {error}"));
             if let Err(error) = self.kill_leader() {
                 errors.push(format!("terminate leader fallback: {error}"));
