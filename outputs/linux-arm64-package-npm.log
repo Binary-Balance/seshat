@@ -1,0 +1,17 @@
+offline-install: exit 0
+installed-version: exit 0
+npm-exec: exit 0
+package-script: exit 0
+script-exit-2: exit 2
+offline-ci: exit 0
+version-after-ci: exit 0
+workspace-install: exit 0
+workspace-script: exit 0
+pack-os-control: exit 0
+reject-os: exit 1
+pack-cpu-control: exit 0
+reject-cpu: exit 1
+pack-libc-control: exit 0
+reject-libc: exit 1
+installed-cli-regression: exit 0
+npm package passed: 16 checks, including 43 installed CLI scenarios. Results: work/arm64/npm-package.json
