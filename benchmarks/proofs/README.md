@@ -403,6 +403,11 @@ Disposable control packages invert one OS/CPU/libc requirement at a time, becaus
 npm 11's platform overrides do not apply to this required dependency. These
 controls test metadata enforcement, not execution on those other platforms.
 
+The standalone proof consumes the same npm `.tgz` bytes. It requires npm's
+`package/` archive prefix, strips that prefix into a disposable consumer and
+runs the binary without npm, preserving the same archive and `BUILD.json`
+checks.
+
 It then reruns all 42 CLI scenarios through the installed command by setting
 `SESHAT_CLI_BINARY`, including real coverage/mutation work, thresholds, progress,
 timeouts, SIGINT/SIGTERM, source preservation and cleanup. This reuses the fixture
@@ -504,14 +509,16 @@ archives once; the proof verifies their pinned SHA-256 hashes before extraction:
 ```sh
 curl --max-time 120 -fSL https://raw.githubusercontent.com/debuerreotype/docker-debian-artifacts/bae6d64d90b4068b09ff9d8b564c2773ef5d8d83/bullseye/oci/blobs/rootfs.tar.gz -o work/debian11-inputs/rootfs.tar.gz
 curl --max-time 120 -fSL https://nodejs.org/dist/v24.20.0/node-v24.20.0-linux-x64.tar.xz -o work/debian11-inputs/node.tar.xz
-node packaging/pack.mjs work/debian11-inputs > work/debian11-inputs/package-result.json
-mkdir -p work/debian11-standalone
-tar -xzf "$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/debian11-inputs/package-result.json")).tarball);')" \
-  -C work/debian11-standalone --strip-components=1 --no-same-owner
-tar -czf work/debian11-standalone.tar.gz --owner=0 --group=0 --numeric-owner -C work/debian11-standalone \
-  BUILD.json LICENSE README.md THIRD_PARTY_NOTICES.txt bin/seshat package.json
+SESHAT_PACK_RESULT=work/debian11-inputs/package-result.json node packaging/pack.mjs work/debian11-inputs
+cp "$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/debian11-inputs/package-result.json")).standalone.path);')" \
+  work/debian11-standalone.tar.gz
 node benchmarks/proofs/linux-debian.mjs work/debian11-inputs work/debian11-inputs/package-result.json work/debian11-standalone.tar.gz
 ```
+
+The standalone filename is retained for the existing proof interface; its
+contents are the npm `.tgz` with the `package/` prefix. The proof strips that
+prefix during extraction and checks that its bytes and hash equal the npm
+payload.
 
 The filesystem is the pinned [official Debian image artifact](https://github.com/debuerreotype/docker-debian-artifacts/tree/bae6d64d90b4068b09ff9d8b564c2773ef5d8d83/bullseye).
 Node's archive hash comes from its [release checksums](https://nodejs.org/dist/v24.20.0/SHASUMS256.txt).
