@@ -35,9 +35,12 @@ node packaging/repeat-pack.mjs --native-windows
 ```
 
 The package and standalone checks consume the same deterministic npm `.tgz`.
-The standalone check extracts it with Windows `tar.exe` and runs the extracted
-`bin\seshat.exe` without npm. The package workflow also runs the native Windows
-CLI and cleanup proof against the installed executable. It retains the source,
-toolchain, PE imports, build metadata, archive and binary hashes in its evidence.
+The standalone check extracts it with Windows `tar.exe` into its Unicode child
+`cwd` without `-C` and runs the extracted `bin\seshat.exe` without npm; this
+keeps the spaces+Unicode consumer path intact. The package workflow also
+retains `seshat-proofs.exe` for the shared legacy parity check and runs the
+native Windows CLI and cleanup proof against the installed executable. It
+retains the source, toolchain, PE imports, build metadata, archive and binary
+hashes in its evidence.
 
 This is a local proof artifact. It is not signed, notarized or published.

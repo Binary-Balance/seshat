@@ -134,7 +134,9 @@ assert.ok(noRustEnv.PATH.split(delimiter).includes(nodeDirectory));
 assert.ok(noRustEnv.PATH.split(delimiter).includes(join(systemRoot, 'System32')));
 
 run('standalone-list', 'tar.exe', ['-tzf', tarball], standalone);
-run('standalone-extract', 'tar.exe', ['-xzf', tarball, '-C', standalone, '--strip-components=1'], standalone);
+// Stock Windows tar converts this Unicode path when it arrives through -C. Node preserves
+// the same path as the child cwd, so extract there and keep the spaces+Unicode consumer.
+run('standalone-extract', 'tar.exe', ['-xzf', tarball, '--strip-components=1'], standalone);
 const standaloneBinary = join(standalone, 'bin', 'seshat.exe');
 assert.ok(existsSync(standaloneBinary), 'standalone extraction did not produce bin/seshat.exe');
 assert.equal(hash(readFileSync(join(standalone, 'BUILD.json'))), hash(readFileSync(join(installed, 'BUILD.json'))));

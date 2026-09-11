@@ -23,11 +23,15 @@ artifact hashes before writing its summary.
 The installed proof uses a disposable consumer under a path containing spaces
 and Unicode. It runs the installed executable, npm's generated `.bin\seshat.cmd`
 launcher, `npm exec`, a package script and offline `npm ci`. It extracts the same
-archive with the Windows `tar.exe` and runs the extracted executable. Consumer
-PATH keeps `SystemRoot`, `ComSpec`, `System32`, Node and `npm.cmd`, while
-`cargo`, `rustc` and Cargo environment variables are absent. It then runs
-`windows-runtime-cli.mjs` against the installed executable, retaining cleanup,
-timeout, overflow, repeated leader-exit and console-cancellation evidence.
+archive with the Windows `tar.exe`, using the Unicode standalone directory as the
+child `cwd` and omitting `-C` because stock `tar.exe` cannot reliably receive
+that path argument, then runs the extracted executable. Consumer PATH keeps
+`SystemRoot`, `ComSpec`, `System32`, Node and `npm.cmd`, while `cargo`, `rustc`
+and Cargo environment variables are absent. The workflow also retains the
+separately built `seshat-proofs.exe` for the shared 43-scenario legacy parity
+check. It then runs `windows-runtime-cli.mjs` against the installed executable,
+retaining cleanup, timeout, overflow, repeated leader-exit and
+console-cancellation evidence.
 
 The package summary is fail-closed for the preflight, two-run reproducibility,
 archive identity, install, no-Rust and native Windows runtime checks. The
