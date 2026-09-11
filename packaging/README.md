@@ -76,6 +76,12 @@ The native workflows also run `packaging/repeat-pack.mjs`, which invokes the
 ordinary packer twice from the same clean source and compares the native binary
 and both archive byte streams. It writes repeat evidence only after every
 comparison passes; the ordinary pack command still performs one build.
+If a comparison fails, it exits nonzero after writing
+`repeat-pack-failure/repeat-pack-failure.json` and one retained `.tgz` per
+completed pack beside the requested output. Each retained archive contains
+the native executable and `BUILD.json`; native workflows upload this directory.
+The cheap retention path can be checked with
+`node packaging/repeat-pack-failure-check.mjs`.
 
 Packing verifies archive hashes, extracts an isolated library directory and
 rebuilds against it from the locked dependencies. It rejects GLIBC requirements
