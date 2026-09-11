@@ -260,6 +260,8 @@ commands as implemented functionality.
 
 ## Release evidence
 
+The accumulated performance and size records are audited in the [issue 5 release performance and size evidence](release-performance-evidence.md).
+
 - Correctness: hand-checked scoring and mutation outcomes covering nested
   functions, TSX, initialisation code, missing coverage, timeouts and execution
   failures.
