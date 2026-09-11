@@ -337,6 +337,20 @@ phase timings overlap or nest under worker parallelism, so they are not additive
 These results are descriptive and do not establish a production performance
 bound or a general claim about Vitest projects.
 
+The separate [installed Jest/Expo switching comparison protocol](installed-jest-expo-switching-comparison.md)
+records the same installed candidate through the existing Jest/Expo React TSX
+fixture. Its [measured report](../../outputs/installed-jest-expo-switching-comparison.md)
+and [JSON evidence](../../outputs/installed-jest-expo-switching-comparison.json)
+retain the 24-run replacement/switching matrix with three killed mutants, one
+survived mutant and a 75% mutation score. Switching’s worker-1 median was 5.56%
+lower, while its worker-2 median was 2.33% higher; wall ranges were
+20,221.173–36,334.171 ms for switching at worker 1 and
+30,117.430–39,700.116 ms at worker 2, with replacement ranges of
+20,302.937–26,634.058 ms and 27,246.927–49,863.655 ms. The build timing is
+reused from an earlier candidate measurement, and phase timings overlap or nest
+under worker parallelism, so they are not additive. The direction change and
+broad ranges provide no dependable speedup claim.
+
 Exit 0 means complete execution with no failed applicable threshold. Without
 configured thresholds, surviving mutants and high CRAP do not fail the command.
 Exit 1 means a complete run exceeded `thresholds.maxCrap` for a measured function
