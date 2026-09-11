@@ -52,7 +52,8 @@ const targetConfig = nativeArm64
 mkdirSync(join(repo,'work'),{recursive:true});
 const work = mkdtempSync(join(repo,'work/npm-pack-'));
 const target = join(work,'target');
-const env = {...process.env, CARGO_TARGET_DIR:target, ...(nativeMacos ? {MACOSX_DEPLOYMENT_TARGET:'15.0'} : {})};
+// Keep Cargo build scheduling serial; the repeat proof still checks actual bytes.
+const env = {...process.env, CARGO_BUILD_JOBS:'1', CARGO_TARGET_DIR:target, ...(nativeMacos ? {MACOSX_DEPLOYMENT_TARGET:'15.0'} : {})};
 // Keep linker metadata out of release bytes; cc needs the linker flag forwarded.
 const buildIdRustflags = ['-C','link-arg=-Wl,--build-id=none'];
 const run = (command, args) => execFileSync(command, args, {
@@ -181,17 +182,12 @@ writeFileSync(join(stage,'THIRD_PARTY_NOTICES.txt'),notices.join('\n\n'));
 const [packed] = JSON.parse(run('npm',['pack',stage,'--json','--offline','--ignore-scripts','--update-notifier=false','--pack-destination',work,
   '--cache',join(work,'cache'),'--userconfig',join(work,'user.npmrc'),'--globalconfig',join(work,'global.npmrc')]));
 assert.deepEqual(packed.files.map(f => f.path).sort(), ['BUILD.json','LICENSE','README.md','THIRD_PARTY_NOTICES.txt','bin/seshat','package.json'].sort());
-let standalone;
-if (nativeArm64 || nativeMacos) {
-  const path = join(work, `${packed.filename.slice(0,-4)}-standalone.tar.gz`);
-  run('tar',['-czf',path,'-C',stage,
-    'BUILD.json','LICENSE','README.md','THIRD_PARTY_NOTICES.txt','bin/seshat','package.json']);
-  standalone = {path, sha256:sha256(readFileSync(path)), bytes:statSync(path).size};
-}
-const result = {tarball:join(work,packed.filename), proofBinary:join(target,triple,'release/seshat-proofs'), binary:build.binarySha256, binaryBytes:bytes.length,
-  packedBytes:packed.size, unpackedBytes:packed.unpackedSize, integrity:packed.integrity, files:packed.files};
-if (nativeArm64 || nativeMacos) result.tarballSha256 = sha256(readFileSync(result.tarball));
-if (standalone) result.standalone = standalone;
+const tarball = join(work,packed.filename);
+const tarballSha256 = sha256(readFileSync(tarball));
+const result = {tarball, tarballSha256, proofBinary:join(target,triple,'release/seshat-proofs'), binary:build.binarySha256, binaryBytes:bytes.length,
+  packedBytes:packed.size, unpackedBytes:packed.unpackedSize, integrity:packed.integrity, files:packed.files,
+  // The standalone route deliberately reuses npm's deterministic payload. Its verifier strips package/ before running it.
+  standalone:{path:tarball, sha256:tarballSha256, bytes:packed.size}};
 writeFileSync(join(work,'result.json'),JSON.stringify(result,null,2)+'\n');
 if (process.env.SESHAT_PACK_RESULT) writeFileSync(resolve(process.env.SESHAT_PACK_RESULT),JSON.stringify(result,null,2)+'\n');
 console.log(JSON.stringify(result,null,2));

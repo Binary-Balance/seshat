@@ -45,7 +45,9 @@ jobs:
           mkdir -p work/arm64
           node benchmarks/proofs/linux-arm64-preflight.mjs --output work/arm64/preflight.json
       - name: Check proof failure reporting
-        run: node benchmarks/proofs/linux-arm64-summary.mjs --self-check
+        run: |
+          node benchmarks/proofs/linux-arm64-summary.mjs --self-check
+          node packaging/repeat-pack-failure-check.mjs
       - name: Fetch locked dependencies
         run: |
           npm ci --prefix benchmarks
@@ -54,6 +56,11 @@ jobs:
       - name: Run native Rust tests
         run: |
           cargo test --locked --offline --manifest-path benchmarks/proofs/Cargo.toml 2>&1 | tee work/arm64/rust-tests.log
+      - name: Prove repeat ARM64 package reproducibility
+        env:
+          SESHAT_REPEAT_OUTPUT: work/arm64/repeat-pack.json
+        run: |
+          node packaging/repeat-pack.mjs --native-arm64 2>&1 | tee work/arm64/repeat-pack.log
       - name: Build native ARM64 package
         env:
           SESHAT_PACK_RESULT: work/arm64/package-result.json
@@ -75,6 +82,7 @@ jobs:
         run: |
           STANDALONE="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; const result=JSON.parse(readFileSync("work/arm64/package-result.json")); console.log(result.standalone.path);')"
           cp "$STANDALONE" work/arm64/seshat-linux-arm64-standalone.tar.gz
+          cmp work/arm64/seshat-linux-arm64.tgz work/arm64/seshat-linux-arm64-standalone.tar.gz
           PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/arm64/package-result.json")).proofBinary);')"
           STANDALONE_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/arm64/package-result.json")).standalone.sha256);')"
           BINARY_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/arm64/package-result.json")).binary);')"
