@@ -119,6 +119,33 @@ jobs:
           binary_sha256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/x64/package-result.json")).binary);')"
           SESHAT_PROOF_BINARY="$proof_binary" SESHAT_STANDALONE_SHA256="$standalone_sha256" SESHAT_BINARY_SHA256="$binary_sha256" \
             node benchmarks/proofs/standalone.mjs work/x64/seshat-linux-x64-standalone.tar.gz "$proof_binary" 2>&1 | tee work/x64/standalone.log
+      - name: Verify installed Jest/Expo runner
+        env:
+          SESHAT_PROOF_OUTPUT: work/x64/jest-expo-check.json
+        run: |
+          set -euo pipefail
+          node benchmarks/proofs/jest-expo-check.mjs \
+            --tarball work/x64/seshat-linux-x64.tgz \
+            --cases normal-1,assertion-kill,survivor,before-all \
+            2>&1 | tee work/x64/jest-expo-check.log
+      - name: Verify installed Vitest runner
+        env:
+          SESHAT_PROOF_OUTPUT: work/x64/vitest-check.json
+        run: |
+          set -euo pipefail
+          node benchmarks/proofs/vitest-check.mjs \
+            --tarball work/x64/seshat-linux-x64.tgz \
+            --deps "$GITHUB_WORKSPACE/benchmarks/proofs" \
+            --cases stack,assertion,survived,before-all \
+            2>&1 | tee work/x64/vitest-check.log
+      - name: Verify native lifecycle
+        env:
+          SESHAT_DEBUG_CLEANUP: '1'
+          SESHAT_PROOF_OUTPUT: work/x64/lifecycle.json
+        run: |
+          set -euo pipefail
+          proof_binary="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/x64/package-result.json")).proofBinary);')"
+          SESHAT_PROOF_BINARY="$proof_binary" node benchmarks/proofs/lifecycle.mjs 2>&1 | tee work/x64/lifecycle.log
       - name: Install Bubblewrap for Debian proof
         run: |
           set -euo pipefail
@@ -153,6 +180,12 @@ jobs:
             work/x64/npm-package.log
             work/x64/standalone.json
             work/x64/standalone.log
+            work/x64/jest-expo-check.json
+            work/x64/jest-expo-check.log
+            work/x64/vitest-check.json
+            work/x64/vitest-check.log
+            work/x64/lifecycle.json
+            work/x64/lifecycle.log
             work/x64/debian11.json
             work/x64/debian11.log
             work/x64/rust-tests.log

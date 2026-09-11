@@ -345,7 +345,12 @@ const results = {
   work: portable(work),
   runs: {},
 };
-const save = () => writeJson(join(work, 'result.json'), sanitize(results));
+const resultPath = process.env.SESHAT_PROOF_OUTPUT;
+const save = () => {
+  const output = sanitize(results);
+  writeJson(join(work, 'result.json'), output);
+  if (resultPath) writeJson(resultPath, output);
+};
 const shouldRun = name => wanted.has(name);
 
 async function check(name, config, expected, control = null) {

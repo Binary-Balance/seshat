@@ -130,6 +130,7 @@ for(const {name,phase,signal} of cases) {
     await sentinelDone;
   }
 }
+results.completed = true;
 const resultPath = process.env.SESHAT_PROOF_OUTPUT ?? join(work,'result.json');
-if (process.env.SESHAT_PROOF_OUTPUT) writeFileSync(resultPath, JSON.stringify(results, null, 2) + '\n');
+writeFileSync(resultPath, JSON.stringify(results, null, 2) + '\n');
 console.log('Lifecycle evidence: '+resultPath);

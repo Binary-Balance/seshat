@@ -27,6 +27,15 @@ export async function noRustProof(cwd) {
   const after = (env.PATH ?? '').split(delimiter).filter(Boolean);
   const probes = await Promise.all(['cargo', 'rustc'].map(command => probeMissing(command, cwd, env)));
   if (probes.some(probe => !probe.unavailable)) throw new Error('Rust tool is available in the consuming PATH');
+  const environmentNames = ['CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'NODE_OPTIONS', 'SESHAT_MUTANT_ID'];
+  const environmentProbe = await runProcess(nodeCommand, ['-e',
+    `process.stdout.write(JSON.stringify(Object.fromEntries(${JSON.stringify(environmentNames)}.map(name => [name, process.env[name]]))));setTimeout(() => {}, 50)`,
+  ], cwd, env, 5000);
+  if (environmentProbe.status !== 0) throw new Error(`consuming environment probe failed: ${environmentProbe.stderr}`);
+  const observed = JSON.parse(environmentProbe.stdout);
+  if (environmentNames.some(name => observed[name] !== undefined)) {
+    throw new Error('ambient consuming environment leaked into installed proof');
+  }
   return {
     env,
     evidence: {
@@ -34,6 +43,7 @@ export async function noRustProof(cwd) {
       rustPathEntriesRemoved: before.filter(path => !after.includes(path)).length,
       probes,
       rustEnvironmentUnset: ['CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR'],
+      environmentUnset: environmentNames,
     },
   };
 }

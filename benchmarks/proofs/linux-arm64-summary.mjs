@@ -10,11 +10,94 @@ assert.ok(selfCheck || process.argv.length === 3,
 
 const cliScenarios = value => Number(value?.checks?.['installed-cli-regression']?.stdout?.match(/CLI passed: (\d+) scenarios/)?.[1] ?? NaN) || null;
 const statuses = value => Object.fromEntries(Object.entries(value?.checks ?? {}).map(([name, check]) => [name, check.status]));
+const runnerCases = {
+  jestExpo: ['normal-1', 'assertion-kill', 'survivor', 'before-all'],
+  vitest: ['stack', 'assertion', 'survived', 'before-all'],
+};
+const lifecycleCases = [
+  ...['SIGINT', 'SIGTERM'].flatMap(signal => ['typecheck', 'baseline', 'coverage', 'mutation'].map(phase => `${signal}-${phase}`)),
+  'timeout', 'overflow', 'leader-exit',
+];
+const environmentNames = ['CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'NODE_OPTIONS', 'SESHAT_MUTANT_ID'];
 const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
 const repeatPassed = value => value?.validation?.passed === true &&
   ['binary', 'build', 'npmArchive', 'standaloneArchive'].every(name => value.comparisons?.[name]?.passed === true);
 
-function validate({preflight, packed, npm, standalone, repeat}, parseErrors = {}, artifactDirectory = null, artifacts = {}) {
+function validateRunner(label, value, cases, packed, artifacts, fail) {
+  if (!value) {
+    fail(`${label} result missing`);
+    return;
+  }
+  if (value.version !== 1) fail(`${label} result version missing`);
+  if (value.checks?.requested !== cases.length || value.checks?.completed !== cases.length) {
+    fail(`${label} did not retain ${cases.length} requested checks`);
+  }
+  if (!value.originalsPreserved) fail(`${label} source preservation check failed`);
+  const noRust = value.noConsumingRust;
+  if (!noRust) fail(`${label} no-Rust evidence missing`);
+  else {
+    for (const command of ['cargo', 'rustc']) {
+      if (noRust.probes?.find(probe => probe.command === command)?.unavailable !== true) {
+        fail(`${label} consuming ${command} probe was available`);
+      }
+    }
+    if (!environmentNames.every(name => noRust.environmentUnset?.includes(name))) {
+      fail(`${label} consuming environment was not sanitized`);
+    }
+  }
+  if (value.cli?.source !== 'tarball') fail(`${label} did not record tarball installation`);
+  if (value.cli?.version !== 'seshat 0.0.0 (candidate)') fail(`${label} candidate version missing`);
+  if (packed && value.cli?.binarySha256 !== packed.binary) fail(`${label} binary hash differs from package metadata`);
+  if (artifacts.tarball?.sha256 && value.cli?.tarballSha256 !== artifacts.tarball.sha256) {
+    fail(`${label} tarball hash differs from retained archive`);
+  }
+  const runs = value.runs;
+  if (!runs || Object.keys(runs).length !== cases.length) fail(`${label} result is partial`);
+  for (const name of cases) {
+    const run = runs?.[name];
+    if (!run) {
+      fail(`${label} check missing: ${name}`);
+      continue;
+    }
+    const result = run.result ?? run.report?.result;
+    const expectedComplete = name !== 'before-all';
+    if (!run.report || run.report.complete !== expectedComplete) fail(`${label} report incomplete: ${name}`);
+    if (result?.complete !== expectedComplete) fail(`${label} result verdict mismatch: ${name}`);
+    if (run.execution?.status !== (expectedComplete ? 0 : 2)) fail(`${label} exit status mismatch: ${name}`);
+    if (result?.mutation?.unresolved !== (expectedComplete ? 0 : 1)) fail(`${label} unresolved result mismatch: ${name}`);
+  }
+}
+
+function validateLifecycle(value, fail) {
+  if (!value) {
+    fail('lifecycle result missing');
+    return;
+  }
+  const rows = Object.fromEntries(Object.entries(value).filter(([name]) => name !== 'completed'));
+  if (value.completed !== true) fail('lifecycle completion marker missing');
+  if (Object.keys(rows).length !== lifecycleCases.length || lifecycleCases.some(name => !rows[name])) {
+    fail('lifecycle result is partial');
+  }
+  for (const name of lifecycleCases) {
+    const row = rows[name];
+    if (!row) continue;
+    if (row.leaderAlive !== false || row.descendantAlive !== false) fail(`lifecycle cleanup failed: ${name}`);
+    if (!Array.isArray(row.remainingScratch) || row.remainingScratch.length) fail(`lifecycle scratch was not empty: ${name}`);
+    let report;
+    try { report = JSON.parse(row.stdout); } catch { report = null; }
+    if (!report || report.complete !== false) fail(`lifecycle report incomplete: ${name}`);
+    const signal = name.match(/^(SIGINT|SIGTERM)-/)?.[1];
+    if (signal) {
+      if (report.cancelled !== true || row.exit?.code !== (signal === 'SIGINT' ? 130 : 143)) {
+        fail(`lifecycle cancellation verdict mismatch: ${name}`);
+      }
+    } else if (report.cancelled === true || row.exit?.code !== 2) {
+      fail(`lifecycle failure verdict mismatch: ${name}`);
+    }
+  }
+}
+
+function validate({preflight, packed, npm, standalone, jestExpo, vitest, lifecycle, repeat}, parseErrors = {}, artifactDirectory = null, artifacts = {}) {
   const failures = Object.entries(parseErrors).map(([name, message]) => `${name}: invalid JSON (${message})`);
   const fail = message => failures.push(message);
   if (!preflight) fail('preflight result missing');
@@ -22,15 +105,15 @@ function validate({preflight, packed, npm, standalone, repeat}, parseErrors = {}
   if (!packed) fail('package result missing');
   else {
     if (!packed.tarballSha256 || !packed.binary || !packed.standalone?.sha256) fail('package hashes missing');
-    if (packed.tarballSha256 !== packed.standalone.sha256) fail('package npm and standalone hashes differ');
+    if (packed.tarballSha256 !== packed.standalone?.sha256) fail('package npm and standalone hashes differ');
     if (artifactDirectory) {
       for (const name of ['seshat-linux-arm64.tgz', 'seshat-linux-arm64-standalone.tar.gz']) {
         if (!existsSync(join(artifactDirectory, name))) fail(`artifact missing: ${name}`);
       }
       if (!artifacts.tarball?.sha256) fail('npm tarball hash missing');
+      if (packed.tarballSha256 && artifacts.tarball?.sha256 && artifacts.tarball.sha256 !== packed.tarballSha256) fail('npm tarball hash differs from package evidence');
       if (!artifacts.standalone?.sha256) fail('standalone archive hash missing');
-      if (artifacts.tarball?.sha256 !== packed.tarballSha256) fail('npm tarball hash differs from package evidence');
-      if (artifacts.standalone?.sha256 !== packed.standalone.sha256) fail('standalone archive hash differs from package evidence');
+      if (packed.standalone?.sha256 && artifacts.standalone?.sha256 && artifacts.standalone.sha256 !== packed.standalone.sha256) fail('standalone archive hash differs from package evidence');
       if (artifacts.tarball?.sha256 !== artifacts.standalone?.sha256) fail('npm and standalone artifact hashes differ');
     }
   }
@@ -53,8 +136,41 @@ function validate({preflight, packed, npm, standalone, repeat}, parseErrors = {}
     if (packed?.standalone?.sha256 !== standalone.archiveSha256) fail('standalone archive hash differs from package metadata');
     if (packed && standalone.build?.binarySha256 !== packed.binary) fail('standalone binary hash differs from package metadata');
   }
+  validateRunner('Jest/Expo', jestExpo, runnerCases.jestExpo, packed, artifacts, fail);
+  validateRunner('Vitest', vitest, runnerCases.vitest, packed, artifacts, fail);
+  validateLifecycle(lifecycle, fail);
   return failures;
 }
+
+const selfCheckRunner = cases => ({
+  version: 1,
+  cli: {source: 'tarball', version: 'seshat 0.0.0 (candidate)', tarballSha256: 'tarball', binarySha256: 'binary'},
+  noConsumingRust: {
+    probes: [{command: 'cargo', unavailable: true}, {command: 'rustc', unavailable: true}],
+    environmentUnset: environmentNames,
+  },
+  checks: {requested: cases.length, completed: cases.length},
+  originalsPreserved: true,
+  runs: Object.fromEntries(cases.map(name => {
+    const complete = name !== 'before-all';
+    return [name, {
+      execution: {status: complete ? 0 : 2},
+      report: {complete, result: {complete, mutation: {unresolved: complete ? 0 : 1}}},
+    }];
+  })),
+});
+
+const selfCheckLifecycle = Object.fromEntries(lifecycleCases.map(name => {
+  const signal = name.match(/^(SIGINT|SIGTERM)-/)?.[1];
+  return [name, {
+    exit: {code: signal ? (signal === 'SIGINT' ? 130 : 143) : 2},
+    leaderAlive: false,
+    descendantAlive: false,
+    remainingScratch: [],
+    stdout: JSON.stringify({complete: false, cancelled: Boolean(signal)}),
+  }];
+}));
+selfCheckLifecycle.completed = true;
 
 function selfCheckSummary() {
   const checks = Object.fromEntries(Array.from({length: 15}, (_, index) => [`check-${index}`, {status: 0}]));
@@ -66,14 +182,27 @@ function selfCheckSummary() {
     standalone: {
       archiveSha256: 'tarball', cliScenarios: 43, build: {binarySha256: 'binary'},
       checks: {'installed-cli': {status: 0}, 'installed-parallel': {status: 0}},
-    parallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
+      parallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
     },
+    jestExpo: selfCheckRunner(runnerCases.jestExpo),
+    vitest: selfCheckRunner(runnerCases.vitest),
+    lifecycle: selfCheckLifecycle,
   };
   const repeat = {validation: {passed: true}, comparisons: {
     binary: {passed: true}, build: {passed: true}, npmArchive: {passed: true}, standaloneArchive: {passed: true},
   }};
   assert.deepEqual(validate({...base, repeat}), []);
   assert.match(validate({...base, npm: null}).join('\n'), /npm result missing/);
+  assert.match(validate({...base, vitest: null}).join('\n'), /Vitest result missing/);
+  const partial = structuredClone(base);
+  delete partial.jestExpo.runs['before-all'];
+  assert.match(validate(partial).join('\n'), /Jest\/Expo result is partial/);
+  const lifecycleFailure = structuredClone(base);
+  lifecycleFailure.lifecycle.timeout.remainingScratch = ['left'];
+  assert.match(validate(lifecycleFailure).join('\n'), /lifecycle scratch was not empty/);
+  const partialLastCase = structuredClone(base);
+  delete partialLastCase.lifecycle.completed;
+  assert.match(validate(partialLastCase).join('\n'), /lifecycle completion marker missing/);
   const failed = structuredClone(base);
   failed.standalone.checks['installed-parallel'].status = 1;
   assert.match(validate(failed).join('\n'), /standalone installed-parallel check failed/);
@@ -100,13 +229,16 @@ if (selfCheck) {
   const packed = read('package-result.json');
   const npm = read('npm-package.json');
   const standalone = read('standalone.json');
+  const jestExpo = read('jest-expo-check.json');
+  const vitest = read('vitest-check.json');
+  const lifecycle = read('lifecycle.json');
   const repeat = read('repeat-pack.json');
   const artifacts = {};
   for (const [key, name] of [['tarball', 'seshat-linux-arm64.tgz'], ['standalone', 'seshat-linux-arm64-standalone.tar.gz']]) {
     const path = join(directory, name);
     if (existsSync(path) && statSync(path).isFile()) artifacts[key] = {file: name, sha256: hash(path), bytes: statSync(path).size};
   }
-  const failures = validate({preflight, packed, npm, standalone, repeat}, parseErrors, directory, artifacts);
+  const failures = validate({preflight, packed, npm, standalone, jestExpo, vitest, lifecycle, repeat}, parseErrors, directory, artifacts);
   const portablePackage = packed && artifacts.tarball && artifacts.standalone && {...packed,
     tarball: 'seshat-linux-arm64.tgz',
     proofBinary: null,
@@ -128,8 +260,13 @@ if (selfCheck) {
       standalone: artifacts.standalone ?? null,
       binary: {sha256: packed.binary, bytes: packed.binaryBytes},
     } : null,
-    npm: npm ? {build: npm.build, tarballSha256: packed?.tarballSha256 ?? null, cliScenarios: cliScenarios(npm), checks: statuses(npm)} : null,
+    npm: npm ? {build: npm.build, tarballSha256: artifacts.tarball?.sha256 ?? null, cliScenarios: cliScenarios(npm), checks: statuses(npm)} : null,
     standalone: standalone ? {build: standalone.build, archiveSha256: standalone.archiveSha256, archiveBytes: standalone.archiveBytes, cliScenarios: standalone.cliScenarios, checks: statuses(standalone)} : null,
+    runners: {
+      jestExpo: jestExpo ? {environment: jestExpo.environment, cli: jestExpo.cli, dependencies: jestExpo.dependencies, noConsumingRust: jestExpo.noConsumingRust, checks: jestExpo.checks, originalsPreserved: jestExpo.originalsPreserved} : null,
+      vitest: vitest ? {environment: vitest.environment, cli: vitest.cli, dependencies: vitest.dependencies, noConsumingRust: vitest.noConsumingRust, checks: vitest.checks, originalsPreserved: vitest.originalsPreserved} : null,
+      lifecycle: lifecycle ? {completed: lifecycle.completed === true, cases: Object.keys(lifecycle).filter(name => name !== 'completed'), cleanup: Object.fromEntries(Object.entries(lifecycle).filter(([name]) => name !== 'completed').map(([name, row]) => [name, {exit: row.exit, leaderAlive: row.leaderAlive, descendantAlive: row.descendantAlive, remainingScratch: row.remainingScratch}]))} : null,
+    },
     repeatPack: repeat ? {
       sourceCommit: repeat.sourceCommit,
       host: repeat.host,
@@ -139,7 +276,7 @@ if (selfCheck) {
       comparisons: repeat.comparisons,
       validation: repeat.validation,
     } : null,
-    validation: {package: Boolean(packed && portablePackage), npm: Boolean(npm), standalone: Boolean(standalone), repeatPack: Boolean(repeat && repeatPassed(repeat)), passed: failures.length === 0, failures},
+    validation: {package: Boolean(packed && portablePackage), npm: Boolean(npm), standalone: Boolean(standalone), jestExpo: Boolean(jestExpo), vitest: Boolean(vitest), lifecycle: Boolean(lifecycle), repeatPack: Boolean(repeat && repeatPassed(repeat)), passed: failures.length === 0, failures},
     limits: 'Native Ubuntu 22.04 ARM64 proof on the runner kernel. It does not establish a historical minimum kernel or support for other Linux userspaces, macOS or Windows.',
   };
   writeFileSync(join(directory, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
