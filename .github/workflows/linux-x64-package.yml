@@ -123,6 +123,12 @@ jobs:
           binary_sha256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/x64/package-result.json")).binary);')"
           SESHAT_PROOF_BINARY="$proof_binary" SESHAT_STANDALONE_SHA256="$standalone_sha256" SESHAT_BINARY_SHA256="$binary_sha256" \
             node benchmarks/proofs/standalone.mjs work/x64/seshat-linux-x64-standalone.tar.gz "$proof_binary" 2>&1 | tee work/x64/standalone.log
+      - name: Install Bubblewrap for Debian proof
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends --yes bubblewrap
+          bwrap --version
       - name: Verify Debian 11 minimum userspace
         env:
           SESHAT_DEBIAN_OUTPUT: work/x64/debian11.json

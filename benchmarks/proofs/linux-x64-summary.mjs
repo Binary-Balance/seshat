@@ -7,8 +7,13 @@ const selfCheck = process.argv[2] === '--self-check';
 assert.ok(selfCheck || process.argv.length === 3,
   'usage: node benchmarks/proofs/linux-x64-summary.mjs <artifact directory> | --self-check');
 
-const cliScenarios = value => Number(value?.checks?.['installed-cli-regression']?.stdout?.match(/CLI passed: (\d+) scenarios/)?.[1] ?? NaN) || null;
-const statuses = value => Object.fromEntries(Object.entries(value?.checks ?? {}).map(([name, check]) => [name, check.status]));
+const cliScenarios = value => {
+  const summary = value?.checks?.['installed-cli-regression']?.stdout?.match(/CLI passed: (\d+) scenarios/);
+  if (summary) return Number(summary[1]);
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  return Object.keys(value).length;
+};
+const statuses = value => Object.fromEntries(Object.entries(value?.checks ?? value ?? {}).map(([name, check]) => [name, check.status]));
 const kernelAtLeast = value => {
   const match = String(value ?? '').match(/^(\d+)\.(\d+)/);
   return Boolean(match) && (Number(match[1]) > 6 || Number(match[1]) === 6 && Number(match[2]) >= 8);
@@ -29,9 +34,9 @@ function validate({preflight, packed, npm, standalone, debian}, parseErrors = {}
         if (!existsSync(join(artifactDirectory, name))) fail(`artifact missing: ${name}`);
       }
       if (!artifacts.tarball?.sha256) fail('npm tarball hash missing');
-      if (packed.tarballSha256 && artifacts.tarball.sha256 !== packed.tarballSha256) fail('npm tarball hash differs from package evidence');
+      if (packed.tarballSha256 && artifacts.tarball?.sha256 && artifacts.tarball.sha256 !== packed.tarballSha256) fail('npm tarball hash differs from package evidence');
       if (!artifacts.standalone?.sha256) fail('standalone archive hash missing');
-      if (packed.standalone?.sha256 && artifacts.standalone.sha256 !== packed.standalone.sha256) fail('standalone archive hash differs from package evidence');
+      if (packed.standalone?.sha256 && artifacts.standalone?.sha256 && artifacts.standalone.sha256 !== packed.standalone.sha256) fail('standalone archive hash differs from package evidence');
     }
   }
 
@@ -92,7 +97,7 @@ function selfCheckSummary() {
     debian: {
       architecture: 'x64', glibc: '2.31', rustAvailable: false, network: 'isolated namespace', kernel: '6.8.0-test',
       checks: { 'installed-package': {status: 0}, 'installed-parallel': {status: 0}, 'installed-standalone': {status: 0} },
-      cliChecks: {checks: {'installed-cli-regression': {status: 0, stdout: 'CLI passed: 43 scenarios plus legacy parity'}}},
+      cliChecks: Object.fromEntries(Array.from({length: 43}, (_, index) => [`scenario-${index}`, {status: 0}])),
       parallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
       standaloneCliScenarios: 43,
       standaloneParallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
@@ -100,8 +105,11 @@ function selfCheckSummary() {
     },
   };
   assert.deepEqual(validate(base, {}, null, {tarball: {sha256: 'tarball'}, standalone: {sha256: 'standalone'}}), []);
+  assert.equal(cliScenarios(base.debian.cliChecks), 43);
+  assert.equal(Object.keys(statuses(base.debian.cliChecks)).length, 43);
   assert.match(validate({...base, standalone: null}).join('\n'), /standalone result missing/);
   assert.match(validate({...base, debian: {...base.debian, kernel: '6.7.0-test'}}).join('\n'), /below Linux 6.8/);
+  assert.match(validate(base, {}, '/missing-linux-x64-archives', {tarball: {sha256: 'tarball'}}).join('\n'), /standalone archive hash missing/);
   console.log('Linux x64 summary self-check passed');
 }
 
