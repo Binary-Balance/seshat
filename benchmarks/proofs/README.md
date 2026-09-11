@@ -387,8 +387,9 @@ Prepare `work/debian11-inputs` with the three pinned library archives using the
 
 Packing stages only an explicit file list in a fresh ignored directory. It does
 not publish, modify either consuming application, install globally or add a
-package-install hook. Cargo applies the release symbol-stripping and Linux
-build-ID settings during linking; the resulting native binary is copied without
+package-install hook. Cargo applies the `benchmarks/proofs/Cargo.toml`
+`[profile.release]` with `lto = "off"` and `strip = "symbols"`; Linux also uses
+`-Wl,--build-id=none`. The resulting native binary is copied without
 post-build rewriting, and the installed hash must match its recorded build
 hash. The private package has no npm dependency tree beyond itself. Cargo
 dependencies remain compiled into the native executable; see `BUILD.json` and
