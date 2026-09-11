@@ -51,6 +51,7 @@ const defaultCases = [
   'normal-1',
   'normal-repeat',
   'normal-2',
+  'nested-root',
   'assertion-kill',
   'survivor',
   'before-all',
@@ -144,12 +145,17 @@ function fixtureVersions(root) {
   ]));
 }
 
-function jestArgs(testPath, {reporter = true, environment = true} = {}) {
+function jestArgs(testPath, {
+  reporter = true,
+  environment = true,
+  config = 'jest.config.cjs',
+  jestBin = 'node_modules/jest/bin/jest.js',
+} = {}) {
   const args = [
     nodeCommand,
-    'node_modules/jest/bin/jest.js',
+    jestBin,
     '--config',
-    'jest.config.cjs',
+    config,
     '--runInBand',
     '--runTestsByPath',
     testPath,
@@ -160,15 +166,18 @@ function jestArgs(testPath, {reporter = true, environment = true} = {}) {
   return args;
 }
 
-function configFor({source, test, workers = 1, testArgs = jestArgs(test), timeoutMs = 60000, extraCapture = []}) {
+function configFor({source, test, workers = 1, testArgs = jestArgs(test), timeoutMs = 60000,
+  extraCapture = [], cwd = '.', typecheckProject = 'tsconfig.json',
+  typecheckBinary = 'node_modules/typescript/bin/tsc', coverageDirectory = 'coverage',
+  coverageReport = 'coverage/coverage-final.json', coverageSource = source}) {
   const coverageArgs = [
     ...testArgs,
     '--coverage',
     '--coverageProvider=babel',
     '--coverageReporters=json',
-    '--coverageDirectory=coverage',
+    `--coverageDirectory=${coverageDirectory}`,
     '--collectCoverageFrom',
-    source,
+    coverageSource,
   ];
   return {
     source: {include: [source]},
@@ -187,11 +196,11 @@ function configFor({source, test, workers = 1, testArgs = jestArgs(test), timeou
     setups: [{
       name: 'jest-expo',
       runner: 'jest',
-      cwd: '.',
+      cwd,
       timeoutMs,
-      typecheck: [nodeCommand, 'node_modules/typescript/bin/tsc', '--project', 'tsconfig.json'],
+      typecheck: [nodeCommand, typecheckBinary, '--project', typecheckProject],
       test: testArgs,
-      coverage: {command: coverageArgs, report: 'coverage/coverage-final.json'},
+      coverage: {command: coverageArgs, report: coverageReport},
     }],
   };
 }
@@ -228,7 +237,7 @@ function stableMutation(result) {
     ({id, path, localId, offset, original, replacement, verdict}));
 }
 
-function assertNormal(result, workers) {
+function assertNormal(result, workers, sourcePath = 'src/status.tsx') {
   assert.equal(result.complete, true, JSON.stringify(result));
   const setup = result.setups[0];
   assert.equal(setup.typecheck.state, 'passed');
@@ -244,7 +253,7 @@ function assertNormal(result, workers) {
   assert.deepEqual(result.sources.map(source => ({path: source.path, complete: source.result.complete,
     functions: source.result.functions.map(({name, complexity, coverage, covered, total, crap, status}) =>
       ({name, complexity, coverage, covered, total, crap, status})), problems: source.result.problems})),
-  [{path: 'src/status.tsx', complete: true, functions: [
+  [{path: sourcePath, complete: true, functions: [
     {complexity: 2, coverage: 1, covered: 3, total: 3, crap: 2, name: 'classify', status: 'measured'},
     {complexity: 1, coverage: 1, covered: 1, total: 1, crap: 1, name: 'isPositive', status: 'measured'},
     {complexity: 1, coverage: 1, covered: 1, total: 1, crap: 1, name: 'statusCard', status: 'measured'},
@@ -393,6 +402,35 @@ if (shouldRun('normal-2')) {
   const parallel = configFor({source: 'src/status.tsx', test: 'tests/status.test.tsx', workers: 2});
   const report = await check('normal-2', parallel, {assert: value => assertNormal(value, 2)});
   assert.deepEqual(stableMutation(report.result.mutation), results.normalDefinition);
+}
+
+if (shouldRun('nested-root')) {
+  mkdirSync(join(project, 'runner/src'), {recursive: true});
+  mkdirSync(join(project, 'runner/tests'), {recursive: true});
+  for (const path of ['package.json', 'package-lock.json', 'tsconfig.json', 'babel.config.cjs']) {
+    writeFileSync(join(project, 'runner', path), fixtureBytes[path]);
+  }
+  writeFileSync(join(project, 'runner/src/status.tsx'), fixtureBytes['src/status.tsx']);
+  writeFileSync(join(project, 'runner/tests/status.test.tsx'), fixtureBytes['tests/status.test.tsx']);
+  writeFileSync(join(project, 'runner/jest.config.cjs'), `module.exports = {
+  preset: 'jest-expo',
+  rootDir: __dirname,
+  testMatch: ['<rootDir>/tests/**/*.test.tsx'],
+  maxWorkers: 1,
+};
+`);
+  const nested = configFor({
+    source: 'runner/src/status.tsx',
+    test: 'runner/tests/status.test.tsx',
+    testArgs: jestArgs('runner/tests/status.test.tsx', {
+      config: 'runner/jest.config.cjs',
+    }),
+    typecheckProject: 'runner/tsconfig.json',
+    coverageReport: 'runner/coverage/coverage-final.json',
+    coverageSource: 'src/status.tsx',
+    extraCapture: ['runner'],
+  });
+  await check('nested-root', nested, {assert: value => assertNormal(value, 1, 'runner/src/status.tsx')});
 }
 
 const controls = [
