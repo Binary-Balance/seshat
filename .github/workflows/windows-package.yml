@@ -1,0 +1,260 @@
+name: Windows x64 package proof
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/windows-package.yml
+      - benchmarks/proofs/Cargo.toml
+      - benchmarks/proofs/Cargo.lock
+      - benchmarks/proofs/src/**
+      - benchmarks/proofs/cli.mjs
+      - benchmarks/proofs/parallel.mjs
+      - benchmarks/proofs/process.mjs
+      - benchmarks/proofs/liveness.mjs
+      - benchmarks/proofs/collect-node.mjs
+      - benchmarks/proofs/repeat-proof.mjs
+      - benchmarks/proofs/jest-expo-check.mjs
+      - benchmarks/proofs/jest-*.cjs
+      - benchmarks/proofs/vitest-*.mjs
+      - benchmarks/proofs/fixtures/**
+      - benchmarks/package.json
+      - benchmarks/package-lock.json
+      - benchmarks/proofs/package.json
+      - benchmarks/proofs/package-lock.json
+      - benchmarks/proofs/windows-package-*.mjs
+      - benchmarks/proofs/windows-runtime-cli.mjs
+      - packaging/**
+      - docs/windows-package.md
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/windows-package.yml
+      - benchmarks/proofs/Cargo.toml
+      - benchmarks/proofs/Cargo.lock
+      - benchmarks/proofs/src/**
+      - benchmarks/proofs/cli.mjs
+      - benchmarks/proofs/parallel.mjs
+      - benchmarks/proofs/process.mjs
+      - benchmarks/proofs/liveness.mjs
+      - benchmarks/proofs/collect-node.mjs
+      - benchmarks/proofs/repeat-proof.mjs
+      - benchmarks/proofs/jest-expo-check.mjs
+      - benchmarks/proofs/jest-*.cjs
+      - benchmarks/proofs/vitest-*.mjs
+      - benchmarks/proofs/fixtures/**
+      - benchmarks/package.json
+      - benchmarks/package-lock.json
+      - benchmarks/proofs/package.json
+      - benchmarks/proofs/package-lock.json
+      - benchmarks/proofs/windows-package-*.mjs
+      - benchmarks/proofs/windows-runtime-cli.mjs
+      - packaging/**
+      - docs/windows-package.md
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: windows-2022
+    timeout-minutes: 90
+    env:
+      CARGO_TARGET_DIR: benchmarks/rust/target
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.20.0
+      - name: Set up x64 MSVC and Windows SDK
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+        with:
+          arch: x64
+      - name: Set up Rust 1.98.1
+        shell: pwsh
+        run: |
+          rustup toolchain install 1.98.1-x86_64-pc-windows-msvc --profile minimal --no-self-update
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          rustup default 1.98.1-x86_64-pc-windows-msvc
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Check proof failure reporting
+        shell: pwsh
+        run: |
+          node benchmarks/proofs/windows-package-preflight.mjs --self-check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node benchmarks/proofs/windows-package-summary.mjs --self-check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Capture package preflight
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force work/windows | Out-Null
+          node benchmarks/proofs/windows-package-preflight.mjs --output work/windows/preflight.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Install locked JavaScript dependencies
+        shell: pwsh
+        run: |
+          npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm ci --prefix benchmarks/proofs --ignore-scripts --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Fetch locked Rust dependencies
+        shell: pwsh
+        run: |
+          cargo fetch --locked --manifest-path benchmarks/proofs/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Run native Rust tests
+        shell: pwsh
+        run: |
+          cargo test --locked --offline --manifest-path benchmarks/proofs/Cargo.toml 2>&1 | Tee-Object -FilePath work/windows/rust-tests.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Prove repeat Windows package reproducibility
+        shell: pwsh
+        env:
+          SESHAT_REPEAT_OUTPUT: work/windows/repeat-pack.json
+        run: |
+          node packaging/repeat-pack.mjs --native-windows 2>&1 | Tee-Object -FilePath work/windows/repeat-pack.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build native Windows package
+        shell: pwsh
+        env:
+          SESHAT_PACK_RESULT: work/windows/package-result.json
+        run: |
+          node packaging/pack.mjs --native-windows 2>&1 | Tee-Object -FilePath work/windows/pack.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Install locked Jest/Expo fixture dependencies
+        shell: pwsh
+        run: |
+          npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Retain package payload and legacy proof binary
+        shell: pwsh
+        run: |
+          $result = Get-Content work/windows/package-result.json -Raw | ConvertFrom-Json
+          if (-not $result.proofBinary -or -not (Test-Path -LiteralPath $result.proofBinary)) {
+            throw 'legacy proof executable is missing from the native pack result'
+          }
+          Copy-Item -LiteralPath $result.proofBinary -Destination work/windows/seshat-proofs.exe
+          Copy-Item -LiteralPath $result.tarball -Destination work/windows/seshat-windows-x64.tgz
+          Copy-Item -LiteralPath $result.tarball -Destination work/windows/seshat-windows-x64-standalone.tar.gz
+          $extract = Join-Path $env:RUNNER_TEMP 'seshat-windows-package-build'
+          New-Item -ItemType Directory -Force $extract | Out-Null
+          tar.exe -xf work/windows/seshat-windows-x64.tgz -C $extract
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item -LiteralPath (Join-Path $extract 'package\BUILD.json') -Destination work/windows/BUILD.json
+          if ((Get-FileHash work/windows/seshat-windows-x64.tgz -Algorithm SHA256).Hash.ToLower() -ne $result.tarballSha256) { throw 'npm archive hash mismatch' }
+          if ((Get-FileHash work/windows/seshat-windows-x64-standalone.tar.gz -Algorithm SHA256).Hash.ToLower() -ne $result.standalone.sha256) { throw 'standalone archive hash mismatch' }
+      - name: Verify installed npm and standalone package
+        shell: pwsh
+        env:
+          SESHAT_PROOF_OUTPUT: work/windows/windows-package-install.json
+        run: |
+          $package = Get-Content work/windows/package-result.json -Raw | ConvertFrom-Json
+          $env:SESHAT_TARBALL_SHA256 = $package.tarballSha256
+          $env:SESHAT_BINARY_SHA256 = $package.binary
+          node benchmarks/proofs/windows-package-install.mjs work/windows/seshat-windows-x64.tgz 2>&1 | Tee-Object -FilePath work/windows/windows-package-install.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify installed native Windows CLI and lifecycle
+        shell: pwsh
+        env:
+          SESHAT_WINDOWS_EVIDENCE_PATH: ${{ github.workspace }}\work\windows\windows-runtime-cli-evidence.json
+        run: |
+          $package = Get-Content work/windows/package-result.json -Raw | ConvertFrom-Json
+          $install = Get-Content work/windows/windows-package-install.json -Raw | ConvertFrom-Json
+          $nodeDirectory = Split-Path -Parent (Get-Command node.exe).Source
+          $env:PATH = "$nodeDirectory;$env:SystemRoot\System32"
+          foreach ($name in @('CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'RUSTC_WRAPPER', 'CARGO_BUILD_RUSTC', 'RUSTFLAGS', 'CARGO_ENCODED_RUSTFLAGS', 'RUSTUP_TOOLCHAIN')) {
+            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+          }
+          $env:SESHAT_CLI_BINARY = $install.installedBinary
+          $env:SESHAT_CONSOLE_HELPER_BINARY = $package.consoleHelper
+          node benchmarks/proofs/windows-runtime-cli.mjs 2>&1 | Tee-Object -FilePath work/windows/windows-runtime-cli.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify installed shared CLI fixtures
+        if: always()
+        shell: pwsh
+        env:
+          SESHAT_PROOF_OUTPUT: ${{ github.workspace }}\work\windows\shared-cli.json
+        run: |
+          New-Item -ItemType Directory -Force work/windows | Out-Null
+          $package = Get-Content work/windows/package-result.json -Raw | ConvertFrom-Json
+          $install = Get-Content work/windows/windows-package-install.json -Raw | ConvertFrom-Json
+          $nodeDirectory = Split-Path -Parent (Get-Command node.exe).Source
+          $env:PATH = "$nodeDirectory;$env:SystemRoot\System32"
+          foreach ($name in @('CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'RUSTC_WRAPPER', 'CARGO_BUILD_RUSTC', 'RUSTFLAGS', 'CARGO_ENCODED_RUSTFLAGS', 'RUSTUP_TOOLCHAIN')) {
+            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+          }
+          $env:SESHAT_CLI_BINARY = $install.installedBinary
+          $proofBinary = Join-Path $env:GITHUB_WORKSPACE 'work\windows\seshat-proofs.exe'
+          if (-not (Test-Path -LiteralPath $proofBinary)) { throw 'retained legacy proof executable is missing' }
+          $env:SESHAT_PROOF_BINARY = $proofBinary
+          $env:SESHAT_CONSOLE_HELPER_BINARY = $package.consoleHelper
+          node benchmarks/proofs/cli.mjs 2>&1 | Tee-Object -FilePath work/windows/shared-cli.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify installed shared parallel fixtures
+        if: always()
+        shell: pwsh
+        env:
+          SESHAT_PROOF_OUTPUT: ${{ github.workspace }}\work\windows\shared-parallel.json
+        run: |
+          New-Item -ItemType Directory -Force work/windows | Out-Null
+          $package = Get-Content work/windows/package-result.json -Raw | ConvertFrom-Json
+          $install = Get-Content work/windows/windows-package-install.json -Raw | ConvertFrom-Json
+          $nodeDirectory = Split-Path -Parent (Get-Command node.exe).Source
+          $env:PATH = "$nodeDirectory;$env:SystemRoot\System32"
+          foreach ($name in @('CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'RUSTC_WRAPPER', 'CARGO_BUILD_RUSTC', 'RUSTFLAGS', 'CARGO_ENCODED_RUSTFLAGS', 'RUSTUP_TOOLCHAIN')) {
+            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+          }
+          $env:SESHAT_CLI_BINARY = $install.installedBinary
+          $env:SESHAT_CONSOLE_HELPER_BINARY = $package.consoleHelper
+          $env:SESHAT_PARALLEL_CLI = '1'
+          node benchmarks/proofs/parallel.mjs 2>&1 | Tee-Object -FilePath work/windows/shared-parallel.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify installed Jest/Expo controls
+        if: always()
+        shell: pwsh
+        env:
+          SESHAT_PROOF_OUTPUT: ${{ github.workspace }}\work\windows\jest-expo-check.json
+        run: |
+          New-Item -ItemType Directory -Force work/windows | Out-Null
+          $install = Get-Content work/windows/windows-package-install.json -Raw | ConvertFrom-Json
+          $nodeDirectory = Split-Path -Parent (Get-Command node.exe).Source
+          $env:PATH = "$nodeDirectory;$env:SystemRoot\System32"
+          foreach ($name in @('CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'RUSTC_WRAPPER', 'CARGO_BUILD_RUSTC', 'RUSTFLAGS', 'CARGO_ENCODED_RUSTFLAGS', 'RUSTUP_TOOLCHAIN')) {
+            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+          }
+          node benchmarks/proofs/jest-expo-check.mjs `
+            --cli $install.installedBinary `
+            --deps "${{ github.workspace }}\benchmarks\proofs\fixtures\jest-expo" `
+            --cases normal-1,assertion-kill,survivor,before-all 2>&1 | Tee-Object -FilePath work/windows/jest-expo-check.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify installed Vitest controls
+        if: always()
+        shell: pwsh
+        env:
+          SESHAT_PROOF_OUTPUT: ${{ github.workspace }}\work\windows\vitest-check.json
+        run: |
+          New-Item -ItemType Directory -Force work/windows | Out-Null
+          $install = Get-Content work/windows/windows-package-install.json -Raw | ConvertFrom-Json
+          $nodeDirectory = Split-Path -Parent (Get-Command node.exe).Source
+          $env:PATH = "$nodeDirectory;$env:SystemRoot\System32"
+          foreach ($name in @('CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'RUSTC_WRAPPER', 'CARGO_BUILD_RUSTC', 'RUSTFLAGS', 'CARGO_ENCODED_RUSTFLAGS', 'RUSTUP_TOOLCHAIN')) {
+            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+          }
+          node benchmarks/proofs/vitest-check.mjs `
+            --cli $install.installedBinary `
+            --deps "${{ github.workspace }}\benchmarks\proofs" `
+            --cases stack,assertion,survived,before-all 2>&1 | Tee-Object -FilePath work/windows/vitest-check.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Write portable summary
+        if: always()
+        shell: pwsh
+        run: node benchmarks/proofs/windows-package-summary.mjs work/windows
+      - name: Upload package proof evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-x64-package-proof
+          path: work/windows
+          if-no-files-found: warn
