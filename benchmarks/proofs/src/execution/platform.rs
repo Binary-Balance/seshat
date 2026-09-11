@@ -905,8 +905,19 @@ impl ManagedChild {
     }
 
     pub(super) fn kill_tree(&mut self) -> Result<ExitStatus, String> {
-        self.stop_tree()?;
-        self.wait().map_err(|e| e.to_string())
+        match self.stop_tree() {
+            Ok(()) => self.wait().map_err(|e| e.to_string()),
+            Err(error) => match self.try_wait().map_err(|e| e.to_string())? {
+                // macOS can report EPERM for a group containing only the exited child as a
+                // zombie. Reap confirmation lets us retry the owned-tree stop without masking
+                // a real failure while the leader is still running.
+                Some(status) => {
+                    self.stop_tree()?;
+                    Ok(status)
+                }
+                None => Err(error),
+            },
+        }
     }
 
     pub(super) fn force_cleanup(&mut self) -> Result<(), String> {

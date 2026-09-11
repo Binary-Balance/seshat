@@ -5,6 +5,7 @@ import {mkdirSync,mkdtempSync,readFileSync,readdirSync,writeFileSync} from 'node
 import {dirname,join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {setTimeout as delay} from 'node:timers/promises';
+import {alive} from './liveness.mjs';
 
 const here=dirname(fileURLToPath(import.meta.url)),repo=resolve(here,'../..');
 mkdirSync(join(repo,'work/assurance-proofs'),{recursive:true});
@@ -47,7 +48,6 @@ main().catch(error=>{console.error(error);process.exit(2);});`
 for(const [name,bytes] of Object.entries(originals))writeFileSync(join(input,name),bytes);
 const read=path=>JSON.parse(readFileSync(path,'utf8'));
 const events=path=>readdirSync(path).filter(name=>name.endsWith('.json')).map(name=>read(join(path,name)));
-function alive(pid){try {const stat=readFileSync('/proc/'+pid+'/stat','utf8');return !['Z','X'].includes(stat.slice(stat.lastIndexOf(')')+2).split(' ')[0]);}catch(e){if(e.code==='ENOENT')return false;throw e;}}
 async function until(predicate,timeout=30000){const end=performance.now()+timeout;while(performance.now()<end){if(predicate())return;await delay(10);}throw Error('Timed out waiting for proof processes');}
 const results={};
 async function check(name,workers,mode='normal',signal){
@@ -70,7 +70,9 @@ async function check(name,workers,mode='normal',signal){
     await until(()=>exit,90000);await done;
     const report=JSON.parse(stdout),result=candidate?report.result:report,observed=events(journal),ms=performance.now()-start;
     results[name]={ms,result,progress:stderr,events:observed};
-    if(candidate){
+    writeFileSync(join(work,'result.json'),JSON.stringify(results,null,2)+'\n');
+    try {
+      if(candidate){
       const snapshots=[...stderr.matchAll(/mutation: completed (\d+)\/(\d+), running (\d+), remaining (\d+)/g)];
       for(const snapshot of snapshots){
         const [completed,total,running,remaining]=snapshot.slice(1).map(Number);
@@ -81,8 +83,7 @@ async function check(name,workers,mode='normal',signal){
       assert.equal(result.mutation.completed+result.mutation.notRun,4);
       assert.equal(result.mutation.unresolved,4-result.mutation.killed-result.mutation.survived);
       if(mode==='normal')assert.ok(snapshots.some(s=>Number(s[3])>0));
-    }
-    writeFileSync(join(work,'result.json'),JSON.stringify(results,null,2)+'\n');
+      }
     assert.equal(exit.code,signal==='SIGINT'?130:signal==='SIGTERM'?143:result.complete?0:2,stdout+stderr);
     assert.deepEqual(readdirSync(scratch),[]);
     for(const [name,bytes] of Object.entries(originals))assert.equal(readFileSync(join(input,name),'utf8'),bytes);
@@ -119,6 +120,10 @@ async function check(name,workers,mode='normal',signal){
         assert.ok(result.mutation.outcomes.some(m=>m.verdict==='not-run'));
         assert.ok(result.mutation.outcomes.some(m=>m.verdict===(mode==='timeout'?'timed-out':'execution-error')));
       }
+      }
+    } catch (error) {
+      console.error(`[parallel-failure-report] ${name}\nstdout:\n${stdout}\nstderr:\n${stderr}`);
+      throw error;
     }
     console.log(name+': '+JSON.stringify({complete:result.complete,ms,workers:result.mutation.workersUsed,preparationMs:result.mutation.workerPreparationMs,mutationMs:result.mutation.mutationWallMs}));
     return result;

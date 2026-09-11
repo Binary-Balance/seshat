@@ -1,50 +1,182 @@
 // Native combined assessment of the checked-in React, Fastify and Vitest fixture.
 import assert from 'node:assert/strict';
-import {cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
-import {dirname, join, resolve} from 'node:path';
+import {createHash} from 'node:crypto';
+import {cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync} from 'node:fs';
+import {basename, dirname, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {runProcess} from './process.mjs';
+import {parseArgs} from 'node:util';
+import {nodeCommand, noRustProof, npmArgs, npmCommand, runProcess} from './process.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
 const workers = Number(process.env.SESHAT_CHECK_WORKERS ?? 1);
 assert.ok(Number.isSafeInteger(workers) && workers > 0, 'SESHAT_CHECK_WORKERS must be a positive integer');
+const {values} = parseArgs({
+  args: process.argv.slice(2),
+  allowPositionals: false,
+  options: {
+    cli: {type: 'string'},
+    deps: {type: 'string'},
+    tarball: {type: 'string'},
+    cases: {type: 'string'},
+  },
+});
+const tarballArg = values.tarball ?? process.env.SESHAT_CLI_TARBALL;
+const cliArg = values.cli ?? process.env.SESHAT_CLI_BINARY;
+assert.ok(!(tarballArg && cliArg),
+  'usage: node benchmarks/proofs/vitest-check.mjs [--tarball PATH | --cli PATH] [--deps PATH] [--cases LIST]');
 const original = join(here, 'fixtures/vitest');
 const expectedScores = {
   'tempo.ts': [[3,5,5,3]],
   'view.tsx': [[1,1,1,1]],
   'server.ts': [[1,3,3,1],[1,1,1,1]],
 };
-const environment = {node:process.version, tools:Object.fromEntries(
-  ['vitest','@vitest/coverage-istanbul','fastify','@sinclair/typebox','react','react-dom'].map(name =>
-    [name, JSON.parse(readFileSync(join(here,'node_modules',name,'package.json'),'utf8')).version]))};
+const defaultCases = [
+  'stack', 'stack-repeat', 'worker-config-override', 'worker-project-override',
+  'assertion', 'survived', 'clean-hooks', 'assertion-count', 'before-all',
+  'before-each', 'after-each', 'cleanup', 'mixed', 'timeout', 'hook-timeout',
+  'import-error', 'unhandled', 'around-each', 'missing-runner', 'retry', 'repeat',
+  'expected-failure', 'concurrent',
+];
+const casesArg = values.cases ?? process.env.SESHAT_VITEST_CHECK_CASES;
+const requestedCases = (casesArg ?? defaultCases.join(','))
+  .split(',').map(name => name.trim());
+assert.ok(requestedCases.length > 0 && requestedCases.every(name => name.length > 0),
+  '--cases must contain at least one non-empty case name');
+assert.ok(requestedCases.every(name => defaultCases.includes(name)),
+  `unknown --cases name (expected one of: ${defaultCases.join(', ')})`);
+const wantedCases = new Set(requestedCases);
+const wanted = name => wantedCases.has(name);
+const installed = Boolean(tarballArg || cliArg);
+mkdirSync(join(repo, 'work/assurance-proofs'), {recursive: true});
 const work = mkdtempSync(join(repo, 'work/assurance-proofs/vitest-check-'));
 const project = join(work, 'input 🎸');
 const scratch = join(work, 'scratch');
 mkdirSync(project); mkdirSync(scratch);
+const npmEnv = {
+  npm_config_cache: join(work, 'npm-cache'),
+  npm_config_userconfig: join(work, 'user.npmrc'),
+  npm_config_globalconfig: join(work, 'global.npmrc'),
+  npm_config_update_notifier: 'false',
+};
+const rustProof = installed ? await noRustProof(repo) : {env: {}, evidence: null};
+const portable = path => relative(repo, path) || '.';
+const sha256 = path => createHash('sha256').update(readFileSync(path)).digest('hex');
+const writeJson = (path, value) => writeFileSync(path, JSON.stringify(value, null, 2) + '\n');
+const packageVersion = path => JSON.parse(readFileSync(path, 'utf8')).version;
+const toolNames = [
+  'vitest', '@vitest/coverage-istanbul', 'fastify', '@sinclair/typebox',
+  'react', 'react-dom',
+];
+
+async function runCommand(command, args, cwd, expected = 0, extraEnv = {}) {
+  const child = await runProcess(command, args, cwd, extraEnv, 180000);
+  assert.equal(child.timedOut, false, `${command} timed out`);
+  assert.equal(child.overflow, false, `${command} overflowed output`);
+  assert.equal(child.status, expected, `${command} ${args.join(' ')}\n${child.stdout}\n${child.stderr}`);
+  return child;
+}
+
+function dependencyNodeModules(root) {
+  const path = basename(root) === 'node_modules' ? root : join(root, 'node_modules');
+  assert.ok(statSync(path).isDirectory(), `Vitest dependencies are missing: ${path}`);
+  return path;
+}
+
+function fixtureVersions(root) {
+  return Object.fromEntries(toolNames.map(name => [name, packageVersion(join(root, name, 'package.json'))]));
+}
+
+function sanitize(value) {
+  return JSON.parse(JSON.stringify(value).replaceAll(work, '<work>').replaceAll(project, '<project>'));
+}
+
+const dependencyRoot = values.deps ? resolve(values.deps) : here;
+const dependencyModules = dependencyNodeModules(dependencyRoot);
+const environment = {node: process.version, tools: fixtureVersions(dependencyModules)};
+const originalTypeScript = [
+  join(repo, 'benchmarks/node_modules/typescript'),
+  join(dependencyModules, '..', '..', 'node_modules/typescript'),
+  join(dependencyModules, '..', 'node_modules/typescript'),
+].find(existsSync);
+assert.ok(originalTypeScript, 'TypeScript dependencies are missing');
 const names = ['package.json','tsconfig.json','tempo.ts','view.tsx','server.ts','stack.test.tsx'];
 const inputs = Object.fromEntries(names.map(name => [name, readFileSync(join(original, name), 'utf8')]));
 for (const [name, source] of Object.entries(inputs)) writeFileSync(join(project, name), source);
 // Native capture rejects dependency links that escape the project.
-cpSync(join(here, 'node_modules'), join(project, 'node_modules'), {recursive:true, verbatimSymlinks:true});
-if (!existsSync(join(project, 'node_modules/typescript'))) cpSync(join(repo, 'benchmarks/node_modules/typescript'), join(project, 'node_modules/typescript'), {recursive:true});
-for (const [name, version] of Object.entries(environment.tools)) assert.equal(JSON.parse(readFileSync(join(project, 'node_modules', name, 'package.json'), 'utf8')).version, version);
+cpSync(dependencyModules, join(project, 'node_modules'), {recursive:true, verbatimSymlinks:true});
+if (!existsSync(join(project, 'node_modules/typescript'))) cpSync(originalTypeScript, join(project, 'node_modules/typescript'), {recursive:true});
+environment.tools.typescript = packageVersion(join(project, 'node_modules/typescript/package.json'));
+for (const [name, version] of Object.entries(environment.tools)) assert.equal(packageVersion(join(project, 'node_modules', name, 'package.json')), version);
 writeFileSync(join(project, 'vitest.config.mjs'), `export default {cacheDir:'.vite',test:{runner:process.env.SESHAT_VITEST_RUNNER,include:['stack.test.tsx'],coverage:{provider:'istanbul',include:['tempo.ts','view.tsx','server.ts'],reporter:['json'],reportsDirectory:'coverage'}}};\n`);
-const args = [process.execPath, 'node_modules/vitest/vitest.mjs', 'run', '--config', 'vitest.config.mjs',
+const args = [nodeCommand, 'node_modules/vitest/vitest.mjs', 'run', '--config', 'vitest.config.mjs',
   '--maxWorkers=1', '--no-file-parallelism', '--maxConcurrency=1', '--reporter=default', '--reporter={seshatReporter}'];
 const config = {workers, source:{include:['tempo.ts','view.tsx','server.ts']},
   capture:[...names, 'vitest.config.mjs', 'node_modules'], setups:[{name:'stack',runner:'vitest',cwd:'.',timeoutMs:30000,
-    typecheck:[process.execPath,'node_modules/typescript/bin/tsc','--project','tsconfig.json'],
+    typecheck:[nodeCommand,'node_modules/typescript/bin/tsc','--project','tsconfig.json'],
     test:args, coverage:{command:[...args,'--coverage'],report:'coverage/coverage-final.json'}}]};
-const selected = process.env.SESHAT_VITEST_CHECK_CASES?.split(',');
-const wanted = name => !selected || selected.includes(name);
-const results = {representativeOnly:true, environment, runs:{}};
-const save = () => writeFileSync(join(work, 'result.json'), JSON.stringify(results,null,2)+'\n');
+const save = () => writeJson(join(work, 'result.json'), sanitize(results));
+
+let cli;
+let cliEvidence;
+if (tarballArg) {
+  const tarball = realpathSync(resolve(tarballArg));
+  assert.ok(statSync(tarball).isFile(), 'CLI tarball is missing');
+  const consumer = join(work, 'cli-consumer');
+  mkdirSync(consumer);
+  writeJson(join(consumer, 'package.json'), {name: 'seshat-vitest-consumer', private: true});
+  await runCommand(npmCommand, [...npmArgs,
+    'install', '--offline', '--ignore-scripts', '--no-audit', '--no-fund',
+    '--save-dev', '--save-exact', '--cache', npmEnv.npm_config_cache,
+    '--userconfig', npmEnv.npm_config_userconfig,
+    '--globalconfig', npmEnv.npm_config_globalconfig, tarball,
+  ], consumer, 0, {...rustProof.env, ...npmEnv});
+  const executable = process.platform === 'win32' ? 'seshat.cmd' : 'seshat';
+  const native = join(consumer, 'node_modules/@binary-balance/seshat/bin/seshat');
+  cli = realpathSync(existsSync(native) ? native : join(consumer, 'node_modules/.bin', executable));
+  cliEvidence = {source: 'tarball', tarballSha256: sha256(tarball)};
+} else if (cliArg) {
+  cli = realpathSync(resolve(cliArg));
+  assert.ok(statSync(cli).isFile(), 'CLI executable is missing');
+  cliEvidence = {source: 'executable'};
+} else {
+  cli = join(repo, 'benchmarks/rust/target/release/seshat-proofs');
+  assert.ok(statSync(cli).isFile(), 'legacy proof executable is missing');
+  cliEvidence = {source: 'legacy-proof'};
+}
+if (installed) {
+  const version = (await runCommand(cli, ['--version'], repo, 0, rustProof.env)).stdout.trim();
+  assert.match(version, /^seshat 0\.0\.0 \(candidate\)$/);
+  cliEvidence = {...cliEvidence, version, binarySha256: sha256(cli)};
+}
+const results = {
+  version: 1,
+  representativeOnly: true,
+  environment,
+  cli: cliEvidence,
+  dependencies: {versions: environment.tools},
+  noConsumingRust: rustProof.evidence,
+  work: portable(work),
+  requestedCases,
+  runs: {},
+};
 async function check(name, input) {
   const path = join(project,'seshat.json'); writeFileSync(path,JSON.stringify(input));
-  const run = await runProcess(join(repo,'benchmarks/rust/target/release/seshat-proofs'), ['check',path,scratch], repo, {}, 120000);
+  const command = installed
+    ? ['check','--config',path,'--scratch',scratch,'--json','--no-progress']
+    : ['check',path,scratch];
+  const run = await runProcess(cli, command, installed ? project : repo, rustProof.env, 600000);
   assert.equal(run.timedOut,false); assert.equal(run.overflow,false);
-  const result = JSON.parse(run.stdout); results.runs[name]={config:input,result,wallMs:run.ms}; save();
+  const report = JSON.parse(run.stdout);
+  const result = installed ? report.result : report;
+  results.runs[name] = {
+    config: input,
+    execution: {status: run.status, signal: run.signal, stderr: run.stderr},
+    result: sanitize(result),
+    ...(installed ? {report: sanitize(report)} : {}),
+    wallMs: run.ms,
+  };
+  save();
   assert.equal(run.status,result.complete?0:2,run.stderr);
   assert.deepEqual(readdirSync(scratch),[],'Native session must clean up');
   if (result.setups?.[0].coverage.state==='passed' && result.mutation?.planned > 0) {
@@ -54,12 +186,14 @@ async function check(name, input) {
     const receipts=[...result.mutation.workerBaselines,...result.mutation.outcomes.flatMap(m=>m.setups)].filter(s=>s.report).map(s=>s.report.executionId);
     assert.equal(new Set(receipts).size,receipts.length,'Workers reused a receipt identity');
   }
-  for (const [name, source] of Object.entries(inputs)) assert.equal(readFileSync(join(original,name),'utf8'),source);
+  for (const [name, source] of Object.entries(inputs)) {
+    assert.equal(readFileSync(join(original,name),'utf8'),source);
+    assert.equal(readFileSync(join(project,name),'utf8'),source);
+  }
   console.log(`${name}: complete=${result.complete}, score=${result.mutation?.score}, ${Math.round(run.ms)}ms`);
   return result;
 }
 for (const name of ['stack','stack-repeat']) {
-  if (name==='stack-repeat' && !selected?.includes(name)) continue;
   if (!wanted(name)) continue;
   const result = await check(name,config);
   assert.equal(result.complete,true,JSON.stringify(result));
@@ -158,10 +292,11 @@ for (const [name, body] of [
   assert.equal(result.setups[0].baseline.state,'execution-error');
   assert.equal(result.mutation.jobsAttempted,0);
 }
-if (selected) assert.deepEqual(Object.keys(results.runs).sort(),[...selected].sort());
+if (casesArg) assert.deepEqual(Object.keys(results.runs).sort(),[...wantedCases].sort());
 for (const [name,source] of Object.entries(inputs)) {
   assert.equal(readFileSync(join(original,name),'utf8'),source);
   assert.equal(readFileSync(join(project,name),'utf8'),source);
 }
+results.checks = {requested: requestedCases.length, completed: Object.keys(results.runs).length};
 results.originalsPreserved=true; save();
-console.log(`Vitest native evidence: ${join(work,'result.json')}`);
+console.log(`Vitest ${installed ? 'installed-command' : 'native'} evidence: ${results.checks.completed} checks; ${join(work,'result.json')}`);

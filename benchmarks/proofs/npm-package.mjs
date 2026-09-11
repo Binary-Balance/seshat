@@ -31,8 +31,13 @@ const npmOptions = ['--offline','--ignore-scripts','--no-audit','--no-fund','--c
 const read = path => JSON.parse(readFileSync(path,'utf8'));
 const json = (path,value) => writeFileSync(path,JSON.stringify(value,null,2)+'\n');
 const evidence = {};
+const candidateOs = process.platform;
+assert.ok(candidateOs === 'linux' || candidateOs === 'darwin', `unsupported proof OS: ${candidateOs}`);
 const candidateCpu = process.arch;
 assert.ok(candidateCpu === 'x64' || candidateCpu === 'arm64', `unsupported proof CPU: ${candidateCpu}`);
+const expectedLibc = candidateOs === 'linux' ? ['glibc'] : undefined;
+const expectedChecks = candidateOs === 'linux' ? 16 : 14;
+const unsupportedOs = candidateOs === 'darwin' ? 'linux' : 'darwin';
 const unsupportedCpu = candidateCpu === 'arm64' ? 'x64' : 'arm64';
 function run(name, command, args, cwd, status = 0) {
   const started = performance.now();
@@ -55,12 +60,20 @@ assert.equal(manifest.license,'MIT');
 assert.equal(manifest.scripts,undefined);
 assert.equal(manifest.dependencies,undefined);
 assert.equal(manifest.optionalDependencies,undefined);
-assert.deepEqual(manifest.os,['linux']); assert.deepEqual(manifest.cpu,[candidateCpu]); assert.deepEqual(manifest.libc,['glibc']);
+assert.deepEqual(manifest.os,[candidateOs]); assert.deepEqual(manifest.cpu,[candidateCpu]);
+if (expectedLibc) assert.deepEqual(manifest.libc, expectedLibc); else assert.equal(manifest.libc, undefined);
 assert.deepEqual(readdirSync(installed).sort(),['BUILD.json','LICENSE','README.md','THIRD_PARTY_NOTICES.txt','bin','package.json'].sort());
 assert.deepEqual(Object.keys(read(join(consumer,'package-lock.json')).packages).sort(),['','node_modules/@binary-balance/seshat']);
 const build = read(join(installed,'BUILD.json'));
 if (candidateCpu === 'arm64') assert.equal(build.cpu,candidateCpu);
-assert.equal(build.target,candidateCpu === 'arm64' ? 'aarch64-unknown-linux-gnu' : 'x86_64-unknown-linux-gnu');
+const expectedTarget = candidateOs === 'darwin'
+  ? `${candidateCpu === 'arm64' ? 'aarch64' : 'x86_64'}-apple-darwin`
+  : `${candidateCpu === 'arm64' ? 'aarch64' : 'x86_64'}-unknown-linux-gnu`;
+assert.equal(build.target, expectedTarget);
+if (candidateOs === 'darwin') {
+  assert.equal(build.minimumMacos, '15.0');
+  assert.equal(build.deploymentTarget, '15.0');
+}
 const binary = readFileSync(executable);
 const binarySha256 = createHash('sha256').update(binary).digest('hex');
 assert.equal(binarySha256,build.binarySha256);
@@ -84,7 +97,9 @@ run('workspace-script','npm',['run','--silent','--workspace','workspace-app','as
 
 // npm 11's overrides apply to optional dependencies, not this required dependency.
 // Invert one requirement in disposable control packages to test actual rejection here.
-for(const [field,value] of [['os','darwin'],['cpu',unsupportedCpu],['libc','musl']]) {
+const rejectedPlatforms = [['os',unsupportedOs],['cpu',unsupportedCpu]];
+if (candidateOs === 'linux') rejectedPlatforms.push(['libc','musl']);
+for(const [field,value] of rejectedPlatforms) {
   const control = join(work,`${field}-control`); mkdirSync(control);
   json(join(control,'package.json'),{...manifest,name:`seshat-${field}-control`,[field]:[value],bin:undefined,files:[]});
   const packed = run(`pack-${field}-control`,'npm',['pack',control,'--json','--pack-destination',control,...npmOptions],work);
@@ -103,9 +118,9 @@ const cliSummary = regression.stdout.match(/CLI passed: (\d+) scenarios plus leg
 assert.ok(cliSummary && Number(cliSummary[1]) === 43, regression.stdout);
 const cliScenarioCount = Number(cliSummary[1]);
 assert.equal(createHash('sha256').update(readFileSync(executable)).digest('hex'),binarySha256);
-assert.equal(Object.keys(evidence).length,16);
+assert.equal(Object.keys(evidence).length,expectedChecks);
 const result = {tarball,work,installedBinary:executable,build,checks:evidence};
 const resultPath = process.env.SESHAT_PROOF_OUTPUT ?? join(work,'result.json');
 json(join(work,'result.json'),result);
 if (process.env.SESHAT_PROOF_OUTPUT) json(resultPath,result);
-console.log(`npm package passed: ${Object.keys(evidence).length} checks, including ${cliScenarioCount} installed CLI scenarios. Results: ${resultPath}`);
+console.log(`npm package passed: ${Object.keys(evidence).length} checks, including ${cliScenarioCount} installed CLI scenarios${candidateOs === 'darwin' ? ' (macOS omits Linux libc controls)' : ''}. Results: ${resultPath}`);
