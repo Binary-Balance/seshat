@@ -1,4 +1,4 @@
-// Linux-only process supervision for controlled, disposable proof fixtures.
+// Unix process supervision for controlled, disposable proof fixtures.
 mod job;
 mod project;
 use crate::{analysis::Analysis, assessment};
@@ -226,22 +226,23 @@ impl Session {
         let mut child = command.spawn().map_err(|e| format!("spawn: {e}"))?;
         let timeout = Duration::from_millis(self.config["timeoutMs"].as_u64().unwrap_or(10000));
         let mut timed_out = false;
+        let mut group_stopped = false;
         let status = loop {
             if let Some(status) = child.try_wait().map_err(|e| e.to_string())? {
                 break status;
             }
             if start.elapsed() >= timeout {
                 timed_out = true;
-                break kill_owned_group(&mut child)?;
+                let status = kill_owned_group(&mut child)?;
+                group_stopped = true;
+                break status;
             }
             thread::sleep(Duration::from_millis(2));
         };
         // The leader can finish while descendants are still alive. Only this owned group is targeted.
-        let _ = Command::new("kill")
-            .args(["-KILL", "--", &format!("-{}", child.id())])
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status();
+        if !group_stopped {
+            let _ = stop_owned_group(child.id());
+        }
         let report = if receipt.exists() {
             let raw = fs::read_to_string(&receipt).map_err(|e| e.to_string())?;
             serde_json::from_str::<Value>(&raw).ok()
@@ -366,8 +367,19 @@ impl Session {
 }
 
 fn kill_owned_group(child: &mut std::process::Child) -> Result<std::process::ExitStatus, String> {
-    stop_owned_group(child.id())?;
-    child.wait().map_err(|e| e.to_string())
+    match stop_owned_group(child.id()) {
+        Ok(()) => child.wait().map_err(|e| e.to_string()),
+        Err(error) => match child.try_wait().map_err(|e| e.to_string())? {
+            // macOS can report EPERM for a group containing only the exited
+            // child as a zombie. Reap it, then retry so live descendants are
+            // still signalled and genuine permission failures remain errors.
+            Some(status) => {
+                stop_owned_group(child.id())?;
+                Ok(status)
+            }
+            None => Err(error),
+        },
+    }
 }
 
 fn stop_owned_group(pid: u32) -> Result<(), String> {

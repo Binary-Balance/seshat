@@ -5,8 +5,10 @@ import {mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync, exists
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {setTimeout as delay} from 'node:timers/promises';
+import {alive} from './liveness.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const proofBinary = process.env.SESHAT_PROOF_BINARY ?? join(repo,'benchmarks/rust/target/release/seshat-proofs');
 const work = mkdtempSync(join(repo,'work/assurance-proofs/lifecycle-'));
 const input = join(work,'input');
 mkdirSync(input);
@@ -18,22 +20,17 @@ writeFileSync(join(input,'package.json'),'{"type":"module"}');
 for(const [name,age] of [['high',20],['low',10]]) {
   writeFileSync(join(input,name+'.mjs'),`import {test} from 'node:test';import assert from 'node:assert/strict';import {adult,initial} from './subject.ts';test('age',()=>{assert.equal(adult(${age}),${age>=18});assert.equal(initial,true);});`);
 }
-writeFileSync(join(input,'job.cjs'),`const {spawn}=require('node:child_process');const fs=require('node:fs');
+writeFileSync(join(input,'job.cjs'),`const {spawn,spawnSync}=require('node:child_process');const fs=require('node:fs');
 const role=process.argv[2],out=process.argv[3],mode=process.argv[4];
 process.on('SIGTERM',()=>{});process.on('SIGINT',()=>{});
 if(role==='leader')spawn(process.execPath,[__filename,'descendant',out],{stdio:'inherit'});
-const stat=fs.readFileSync('/proc/self/stat','utf8');
-const group=Number(stat.slice(stat.lastIndexOf(')')+2).split(' ')[2]);
+const group=Number(spawnSync('/bin/ps',['-o','pgid=','-p',String(process.pid)],{encoding:'utf8'}).stdout.trim());
 fs.writeFileSync(out+'.'+role+'.tmp',JSON.stringify({pid:process.pid,group,cwd:process.cwd()}));
 fs.renameSync(out+'.'+role+'.tmp',out+'.'+role);
 setInterval(()=>{if(role==='leader'&&fs.existsSync(out+'.descendant')){
   if(mode==='leader-exit')process.exit(0);
   if(mode==='overflow')process.stdout.write('x'.repeat(5*1024*1024));
 }},10);\n`);
-function alive(pid) {
-  try { const stat=readFileSync('/proc/'+pid+'/stat','utf8'); return !['Z','X'].includes(stat.slice(stat.lastIndexOf(')')+2).split(' ')[0]); }
-  catch(e) { if(e.code==='ENOENT')return false; throw e; }
-}
 async function until(predicate,label,timeout=5000) {
   const deadline=performance.now()+timeout;
   while(performance.now()<deadline){if(predicate())return;await delay(10);}
@@ -66,7 +63,7 @@ for(const {name,phase,signal} of cases) {
   json(join(input,'seshat.json'),{source:{include:['subject.ts']},capture:['subject.ts','package.json','job.cjs','high.mjs','low.mjs'],setups});
   const sentinel=spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{stdio:'ignore'});
   const sentinelDone=new Promise(resolve=>sentinel.once('close',resolve));
-  const child=spawn(join(repo,'benchmarks/rust/target/release/seshat-proofs'),[phase==='mutation'?'check':'collect',join(input,'seshat.json'),scratch],{detached:true,stdio:['ignore','pipe','pipe']});
+  const child=spawn(proofBinary,[phase==='mutation'?'check':'collect',join(input,'seshat.json'),scratch],{detached:true,stdio:['ignore','pipe','pipe']});
   let stdout='',stderr='';child.stdout.on('data',d=>stdout+=d);child.stderr.on('data',d=>stderr+=d);
   let exit;
   const done=new Promise((resolve,reject)=>{child.once('error',reject);child.once('close',(code,exitSignal)=>{exit={code,signal:exitSignal};resolve();});});
@@ -81,7 +78,10 @@ for(const {name,phase,signal} of cases) {
     await until(()=>exit,'Seshat exit');
     await delay(100);
     const result={exit,ms:performance.now()-started,stdout,stderr,leaderAlive:alive(leader.pid),descendantAlive:alive(descendant.pid),remainingScratch:readdirSync(scratch)};
-    results[name]=result;json(join(work,'result.json'),results);
+    results[name]=result;
+    json(join(work,'result.json'),results);
+    // Keep the configured CI artifact when a later assertion stops the proof.
+    if(process.env.SESHAT_PROOF_OUTPUT) json(process.env.SESHAT_PROOF_OUTPUT,results);
     assert.equal(readFileSync(join(input,'subject.ts'),'utf8'),source);
     assert.equal(alive(sentinel.pid),true,'cleanup affected an unrelated process');
     if(signal!=='SIGKILL') {
@@ -130,4 +130,6 @@ for(const {name,phase,signal} of cases) {
     await sentinelDone;
   }
 }
-console.log('Lifecycle evidence: '+join(work,'result.json'));
+const resultPath = process.env.SESHAT_PROOF_OUTPUT ?? join(work,'result.json');
+if (process.env.SESHAT_PROOF_OUTPUT) writeFileSync(resultPath, JSON.stringify(results, null, 2) + '\n');
+console.log('Lifecycle evidence: '+resultPath);
