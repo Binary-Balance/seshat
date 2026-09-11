@@ -114,6 +114,39 @@ identical executable sections while differing in symbol-table/build-ID
 ordering, and standalone archive timestamps vary. A later cross-platform
 reproducibility, lifecycle and runner audit remains separate work.
 
+## Native binary reproducibility
+
+The release profile uses Cargo's standard `strip = "symbols"` setting. The
+Linux packer also passes `-Wl,--build-id=none` through `cc` in both native Linux
+modes. This removes link metadata during the normal build; it does not rewrite
+the binary after linking. The x64 Debian route keeps its existing sysroot flags
+alongside the linker control.
+
+Two clean current-source x64 builds were run from main `655a10c` with the
+pinned local Rust 1.98.1 toolchain, Node 24.20.0, npm 11.19.0, locked Cargo
+graph (`Cargo.lock` SHA-256
+`bb820a335e5eb7b35e9185cedaabf68b1608f4712c48f73bafcd2bac180e757d`) and the
+existing Debian 11 input archives. The host was Debian 13, x86_64, Linux
+6.12.107 with host glibc 2.41; the package was linked against the pinned
+sysroot and required no symbol newer than `GLIBC_2.30`. Both binaries ran
+`seshat --version`, and the binary, `BUILD.json` and npm archive compared
+byte-for-byte:
+
+| Item | SHA-256 | Bytes |
+| --- | --- | ---: |
+| Native binary | `6ab68bebbb33974443a5d584380dde96e4eb794c2740742b85227f1b5a5b4493` | 1,939,872 |
+| `BUILD.json` | `396fcaa9fb9a9ddabb66d9cbcc8b9fe2cbbc2b488f892f2ed65332940add8476` | 7,692 |
+| npm archive | `ddc1779d84bb3a0436db746b96fa3a6ed9dc484338dd25f625cf165d7015544c` | 889,270 |
+
+The final archive was installed twice into disposable consumers with offline
+npm and real child-process spawning. Each installed executable passed
+`--version` and `--help` with Cargo and Rustc absent from `PATH`. This is
+reproducibility evidence for the named Linux x64 source, host, toolchain and
+sysroot only. It does not claim byte identity for Linux ARM64, macOS or
+Windows. macOS uses the standard Cargo stripping setting but has no byte
+identity evidence here; Windows linker rules remain separate. Standalone tar
+timestamps remain a later reproducibility gap.
+
 ## Local checks
 
 These checks do not require a package build:
