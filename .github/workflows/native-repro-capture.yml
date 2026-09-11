@@ -1,0 +1,80 @@
+name: Temporary native x64 reproducibility diagnostic
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/native-repro-capture.yml
+      - packaging/native-repro-capture.mjs
+      - packaging/rustc-capture.mjs
+      - packaging/pack.mjs
+      - benchmarks/proofs/Cargo.toml
+      - benchmarks/proofs/Cargo.lock
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -eo pipefail {0}
+
+jobs:
+  capture:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - name: Check out frozen diagnostic source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Check out exact frozen PR28 build source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: 3251118dbc4612334bfff825f03ed2f04b8ed029
+          path: work/frozen-source
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.20.0
+      - name: Set up Rust
+        run: |
+          rustup toolchain install 1.98.1 --profile minimal --no-self-update
+          rustup default 1.98.1
+          rustc -vV
+          test "$(rustc -vV | sed -n 's/^host: //p')" = x86_64-unknown-linux-gnu
+      - name: Capture native preflight
+        run: |
+          mkdir -p work
+          node benchmarks/proofs/linux-x64-preflight.mjs --output work/native-repro-preflight.json
+      - name: Check diagnostic scripts
+        run: |
+          node --check packaging/native-repro-capture.mjs
+          node --check packaging/rustc-capture.mjs
+      - name: Fetch locked dependencies
+        run: |
+          npm ci --prefix benchmarks
+          npm ci --prefix benchmarks/proofs
+          cargo fetch --locked --manifest-path benchmarks/proofs/Cargo.toml
+      - name: Fetch pinned Debian 11 proof inputs
+        run: |
+          mkdir -p work/debian11-inputs
+          curl --max-time 60 -fSL https://deb.debian.org/debian/pool/main/g/glibc/libc6_2.31-13+deb11u11_amd64.deb \
+            -o work/debian11-inputs/libc6.deb
+          curl --max-time 60 -fSL https://deb.debian.org/debian/pool/main/g/glibc/libc6-dev_2.31-13+deb11u11_amd64.deb \
+            -o work/debian11-inputs/libc6-dev.deb
+          curl --max-time 60 -fSL https://deb.debian.org/debian/pool/main/g/gcc-10/libgcc-s1_10.2.1-6_amd64.deb \
+            -o work/debian11-inputs/libgcc-s1.deb
+      - name: Run exactly four default and two LTO-off clean packs
+        env:
+          SESHAT_CAPTURE_OUTPUT: work/native-repro-capture
+          SESHAT_NATIVE_SOURCE: work/frozen-source
+        run: node packaging/native-repro-capture.mjs work/debian11-inputs
+      - name: Upload diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-repro-capture
+          path: |
+            work/native-repro-preflight.json
+            work/native-repro-capture
+          if-no-files-found: error
