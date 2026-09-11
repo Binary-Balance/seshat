@@ -70,7 +70,7 @@ jobs:
           CARGO_TARGET_DIR="$RUNNER_TEMP/seshat-cargo" cargo fetch --locked --manifest-path benchmarks/proofs/Cargo.toml
       - name: Run native Rust tests
         run: |
-          SESHAT_DEBUG_CLEANUP=1 CARGO_TARGET_DIR="$RUNNER_TEMP/seshat-cargo" \
+          CARGO_TARGET_DIR="$RUNNER_TEMP/seshat-cargo" \
             cargo test --locked --offline --manifest-path benchmarks/proofs/Cargo.toml \
             2>&1 | tee "work/macos/${{ matrix.cpu }}/rust-tests.log"
       - name: Build native macOS package
@@ -108,7 +108,6 @@ jobs:
             2>&1 | tee "work/macos/${{ matrix.cpu }}/standalone.log"
       - name: Verify native lifecycle
         env:
-          SESHAT_DEBUG_CLEANUP: '1'
           SESHAT_PROOF_OUTPUT: work/macos/${{ matrix.cpu }}/lifecycle.json
         run: |
           mkdir -p work/assurance-proofs

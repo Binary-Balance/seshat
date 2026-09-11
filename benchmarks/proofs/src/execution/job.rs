@@ -97,15 +97,29 @@ mod tests {
     use super::*;
 
     #[test]
+    fn exited_child_group_is_reaped_before_cleanup_retry() {
+        let mut command = Command::new("sh");
+        command.args(["-c", "exit 0"]);
+        command.process_group(0);
+        let mut child = command.spawn().unwrap();
+        thread::sleep(Duration::from_millis(100));
+        let status = super::super::kill_owned_group(&mut child).unwrap();
+        assert_eq!(status.code(), Some(0));
+    }
+
+    #[test]
     fn output_and_deadline_are_bounded() {
         let mut command = Command::new("node");
         command.args(["-e", "setInterval(()=>{},1000)"]);
         let result = run(&mut command, Duration::from_millis(100)).unwrap();
         assert_eq!(result["timedOut"], true);
-        let mut command = Command::new("node");
-        command.args(["-e", "process.stdout.write('x'.repeat(5*1024*1024))"]);
-        let result = run(&mut command, Duration::from_secs(5)).unwrap();
-        assert_eq!(result["overflow"], true);
-        assert!(result["diagnostic"].as_str().unwrap().len() <= 2000);
+        // Repeat the capped write to exercise the exit/reap race between try_wait and group cleanup.
+        for _ in 0..8 {
+            let mut command = Command::new("node");
+            command.args(["-e", "process.stdout.write('x'.repeat(5*1024*1024))"]);
+            let result = run(&mut command, Duration::from_secs(5)).unwrap();
+            assert_eq!(result["overflow"], true);
+            assert!(result["diagnostic"].as_str().unwrap().len() <= 2000);
+        }
     }
 }

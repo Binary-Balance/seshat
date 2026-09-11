@@ -362,40 +362,19 @@ impl Session {
 }
 
 fn kill_owned_group(child: &mut std::process::Child) -> Result<std::process::ExitStatus, String> {
-    stop_owned_group(child.id())?;
-    child.wait().map_err(|e| e.to_string())
-}
-
-fn cleanup_debug(pid: libc::pid_t, result: Option<&std::io::Error>) {
-    if std::env::var_os("SESHAT_DEBUG_CLEANUP").as_deref() != Some(std::ffi::OsStr::new("1")) {
-        return;
+    match stop_owned_group(child.id()) {
+        Ok(()) => child.wait().map_err(|e| e.to_string()),
+        Err(error) => match child.try_wait().map_err(|e| e.to_string())? {
+            // macOS can report EPERM for a group containing only the exited
+            // child as a zombie. Reap it, then retry so live descendants are
+            // still signalled and genuine permission failures remain errors.
+            Some(status) => {
+                stop_owned_group(child.id())?;
+                Ok(status)
+            }
+            None => Err(error),
+        },
     }
-    let group = unsafe { libc::getpgid(pid) };
-    let group_error = if group == -1 {
-        Some(std::io::Error::last_os_error().to_string())
-    } else {
-        None
-    };
-    let direct = unsafe { libc::kill(pid, 0) };
-    let direct_error = if direct == -1 {
-        Some(std::io::Error::last_os_error().to_string())
-    } else {
-        None
-    };
-    let members = unsafe { libc::kill(-pid, 0) };
-    let members_error = if members == -1 {
-        Some(std::io::Error::last_os_error().to_string())
-    } else {
-        None
-    };
-    let ps = Command::new("ps")
-        .args(["-o", "pid=,ppid=,pgid=,stat=,comm=", "-p", &pid.to_string()])
-        .output()
-        .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_owned())
-        .unwrap_or_else(|error| format!("ps error: {error}"));
-    eprintln!(
-        "[DEBUG-macos-cleanup] pid={pid} group={group} group_error={group_error:?} direct={direct} direct_error={direct_error:?} members={members} members_error={members_error:?} kill_error={result:?} ps={ps:?}"
-    );
 }
 
 fn stop_owned_group(pid: u32) -> Result<(), String> {
@@ -409,7 +388,6 @@ fn stop_owned_group(pid: u32) -> Result<(), String> {
         return Ok(());
     }
     let error = std::io::Error::last_os_error();
-    cleanup_debug(pid, Some(&error));
     if error.raw_os_error() == Some(libc::ESRCH) {
         Ok(())
     } else {
