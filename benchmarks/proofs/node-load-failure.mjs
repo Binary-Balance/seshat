@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
 import {mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
 import {dirname, join, resolve} from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath, pathToFileURL} from 'node:url';
 import {runProcess} from './process.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -16,7 +16,7 @@ const plain = 'export const ready = 1 === 1;\n';
 const test = "import {test} from 'node:test';import {ready} from './subject.ts';test('ready',()=>{if(!ready)throw Error('not ready')});\n";
 writeFileSync(join(project, 'package.json'), '{"type":"module"}');
 const config = {template:project,scratch:work,source:'subject.ts',runner:'node',timeoutMs:5000,
-  test:[process.execPath,'--test',`--test-reporter=${join(here,'node-reporter.mjs')}`,'@ROOT@/check.mjs']};
+  test:[process.execPath,'--test',`--test-reporter=${pathToFileURL(join(here,'node-reporter.mjs')).href}`,'@ROOT@/check.mjs']};
 const results = {};
 async function execute(name, app, tests, expected, other) {
   writeFileSync(join(project, 'subject.ts'), app);

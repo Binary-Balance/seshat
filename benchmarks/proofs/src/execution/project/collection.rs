@@ -3,8 +3,8 @@ use crate::{
     assessment::{self, TestState},
     coverage,
     execution::{
-        CommandEvidence, cancellation_signal, classify, job, observe_node_loads,
-        module_path,
+        CommandEvidence, cancellation_signal, classify, job, module_file_url, module_path,
+        observe_node_loads,
     },
 };
 use std::{
@@ -678,7 +678,13 @@ impl CapturedProject {
             Runner::Vitest => "vitest-reporter.mjs",
             Runner::Node => "node-reporter.mjs",
         });
-        let reporter = module_path(&reporter)?;
+        // Jest and Vitest resolve runner/reporters as filesystem references from their configured
+        // root. Node's test loader instead parses the reporter as an ESM specifier, so its
+        // Windows drive path must be a file URL.
+        let reporter = match setup.runner {
+            Runner::Node => module_file_url(&reporter)?,
+            Runner::Jest | Runner::Vitest => module_path(&reporter)?,
+        };
         let environment = module_path(&evidence.join("jest-expo-environment.cjs"))?;
         let vitest_runner = module_path(&evidence.join("vitest-runner.mjs"))?;
         let receipt = evidence.join(format!("{id}.json"));
@@ -1378,47 +1384,46 @@ impl CapturedProject {
             if !with_coverage {
                 continue;
             }
-            let collect = || -> Result<(Value, Value), String> {
-                let cwd = fs::canonicalize(self.directory.0.join(&setup.cwd))
-                    .map_err(|e| e.to_string())?;
-                let path = cwd.join(&setup.coverage.report);
-                regular_path(&self.directory.0, &path, true)?;
-                if self
-                    .sources
-                    .iter()
-                    .any(|(source, _)| path_key(&self.directory.0.join(source)) == path_key(&path))
-                {
-                    return Err("coverage report destination is assessment source".into());
-                }
-                // Only discard the configured output inside our copy, never in the checkout.
-                if path.exists() {
-                    fs::remove_file(&path).map_err(|e| e.to_string())?;
-                }
-                let id = format!(
-                    "{}-{index}-coverage",
-                    evidence.0.file_name().unwrap().to_str().unwrap()
-                );
-                let mut result = self
-                    .run_job(
-                        setup,
-                        &setup.coverage.command,
-                        &evidence.0,
-                        &id,
-                        JobKind::Coverage(&path),
-                    )?
-                    .into_json();
-                if result["state"] != "passed" {
-                    return Ok((result, Value::Null));
-                }
-                match validate_coverage_report(&self.directory.0, &path) {
-                    Ok(report) => Ok((result, report)),
-                    Err(error) => {
-                        result["state"] = json!("execution-error");
-                        result["coverageError"] = json!(error);
-                        Ok((result, Value::Null))
+            let collect =
+                || -> Result<(Value, Value), String> {
+                    let cwd = fs::canonicalize(self.directory.0.join(&setup.cwd))
+                        .map_err(|e| e.to_string())?;
+                    let path = cwd.join(&setup.coverage.report);
+                    regular_path(&self.directory.0, &path, true)?;
+                    if self.sources.iter().any(|(source, _)| {
+                        path_key(&self.directory.0.join(source)) == path_key(&path)
+                    }) {
+                        return Err("coverage report destination is assessment source".into());
                     }
-                }
-            };
+                    // Only discard the configured output inside our copy, never in the checkout.
+                    if path.exists() {
+                        fs::remove_file(&path).map_err(|e| e.to_string())?;
+                    }
+                    let id = format!(
+                        "{}-{index}-coverage",
+                        evidence.0.file_name().unwrap().to_str().unwrap()
+                    );
+                    let mut result = self
+                        .run_job(
+                            setup,
+                            &setup.coverage.command,
+                            &evidence.0,
+                            &id,
+                            JobKind::Coverage(&path),
+                        )?
+                        .into_json();
+                    if result["state"] != "passed" {
+                        return Ok((result, Value::Null));
+                    }
+                    match validate_coverage_report(&self.directory.0, &path) {
+                        Ok(report) => Ok((result, report)),
+                        Err(error) => {
+                            result["state"] = json!("execution-error");
+                            result["coverageError"] = json!(error);
+                            Ok((result, Value::Null))
+                        }
+                    }
+                };
             commands_run += 1;
             progress.phase(format_args!("coverage {:?}", setup.name));
             let phase_started = Instant::now();
@@ -1598,9 +1603,11 @@ mod tests {
             .unwrap(),
         )
         .unwrap();
-        assert!(validate_coverage_report(root, &report_path)
-            .unwrap_err()
-            .contains("duplicate normalized"));
+        assert!(
+            validate_coverage_report(root, &report_path)
+                .unwrap_err()
+                .contains("duplicate normalized")
+        );
         directory.close().unwrap();
     }
 

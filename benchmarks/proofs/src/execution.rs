@@ -4,8 +4,8 @@ mod platform;
 mod project;
 use crate::{analysis::Analysis, assessment};
 use assessment::TestState;
-pub use project::{AssessmentMode, CapturedProject, Thresholds};
 use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
+pub use project::{AssessmentMode, CapturedProject, Thresholds};
 use serde_json::{Value, json};
 use std::{
     fs,
@@ -68,10 +68,7 @@ fn module_file_url(path: &Path) -> Result<String, String> {
         let value = if let Some(rest) = value.strip_prefix("\\\\?\\UNC\\") {
             format!("\\\\{rest}")
         } else {
-            value
-                .strip_prefix("\\\\?\\")
-                .unwrap_or(value)
-                .to_owned()
+            value.strip_prefix("\\\\?\\").unwrap_or(value).to_owned()
         };
         let value = value.replace('\\', "/");
         if value.starts_with("//") {
