@@ -10,14 +10,16 @@ const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 assert.ok(process.argv.length === 3 || process.argv.length === 4,
   'usage: node benchmarks/proofs/standalone.mjs <archive> [legacy proof binary]');
 const archive = realpathSync(process.argv[2]);
-const legacy = realpathSync(process.argv[3] ?? process.env.SESHAT_PROOF_BINARY ?? '');
 assert.ok(statSync(archive).isFile());
+const hash = bytes => createHash('sha256').update(bytes).digest('hex');
+const archiveSha256 = hash(readFileSync(archive));
+if (process.env.SESHAT_STANDALONE_SHA256) assert.equal(archiveSha256, process.env.SESHAT_STANDALONE_SHA256);
+const legacy = realpathSync(process.argv[3] ?? process.env.SESHAT_PROOF_BINARY ?? '');
 assert.ok(statSync(legacy).isFile());
 mkdirSync(join(repo, 'work/assurance-proofs'), {recursive: true});
 const work = mkdtempSync(join(repo, 'work/assurance-proofs/standalone-'));
 const consumer = join(work, 'consumer 🎸');
 mkdirSync(consumer);
-const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const checks = {};
 function run(name, command, args, env = process.env, status = 0) {
   const started = performance.now();
@@ -74,7 +76,7 @@ assert.equal(Object.keys(parallelChecks).length, 11);
 
 const result = {
   archive,
-  archiveSha256: hash(readFileSync(archive)),
+  archiveSha256,
   archiveBytes: statSync(archive).size,
   installedBinary: installed,
   build,
@@ -82,7 +84,6 @@ const result = {
   parallelChecks,
   checks,
 };
-if (process.env.SESHAT_STANDALONE_SHA256) assert.equal(result.archiveSha256, process.env.SESHAT_STANDALONE_SHA256);
 const resultPath = process.env.SESHAT_PROOF_OUTPUT ?? join(work, 'result.json');
 writeFileSync(join(work, 'result.json'), JSON.stringify(result, null, 2) + '\n');
 if (process.env.SESHAT_PROOF_OUTPUT) writeFileSync(resultPath, JSON.stringify(result, null, 2) + '\n');
