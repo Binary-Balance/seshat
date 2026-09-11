@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
-import {writeFileSync} from 'node:fs';
+import {readFileSync, writeFileSync} from 'node:fs';
 import {release} from 'node:os';
 
 const expectedNode = 'v24.20.0';
@@ -27,10 +27,33 @@ function publicProbe(result) {
   return {available: result.available, version: result.version};
 }
 
+function translatedProbe() {
+  // Native Intel lacks this key; omit sysctl -i so only its diagnostic is treated as absence.
+  const result = spawnSync('sysctl', ['-n', 'sysctl.proc_translated'], {encoding: 'utf8'});
+  const stderr = (result.stderr ?? '').trim();
+  const absentKey = result.status !== 0 && /unknown oid/i.test(stderr);
+  return {
+    value: result.status === 0 ? firstLine(result.stdout) : absentKey ? '0' : null,
+    status: result.status ?? null,
+    absentKey,
+    error: result.error?.code ?? null,
+  };
+}
+
 function sourceCommit() {
   if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
   const result = probe('git', ['rev-parse', 'HEAD']);
   return result.available ? result.version : null;
+}
+
+function pullRequestHead() {
+  const eventPath = process.env.GITHUB_EVENT_PATH;
+  if (!eventPath) return null;
+  try {
+    return JSON.parse(readFileSync(eventPath, 'utf8')).pull_request?.head?.sha ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function rustInfo() {
@@ -59,10 +82,7 @@ function options() {
 
 function collect({cpu, target, runner}) {
   const productVersion = probe('sw_vers', ['-productVersion']).version;
-  const translated = probe('sysctl', ['-in', 'sysctl.proc_translated']);
-  const translatedValue = translated.status === 0
-    ? translated.version
-    : /unknown oid|No such file/i.test(translated.text) ? '0' : translated.version;
+  const translated = translatedProbe();
   const machine = probe('sysctl', ['-n', 'hw.machine']);
   const unameMachine = probe('uname', ['-m']);
   const unameRelease = probe('uname', ['-r']);
@@ -87,7 +107,11 @@ function collect({cpu, target, runner}) {
     environment: {
       platform: process.platform,
       os: {productVersion},
-      architecture: {node: process.arch, unameMachine: unameMachine.version, machine: machine.version, translated: translatedValue},
+      architecture: {
+        node: process.arch, unameMachine: unameMachine.version, machine: machine.version,
+        translated: translated.value,
+        translatedProbe: {status: translated.status, absentKey: translated.absentKey, error: translated.error},
+      },
       kernel: {release: release(), unameRelease},
       node: {version: process.version},
       npm: publicProbe(npm),
@@ -106,6 +130,7 @@ function collect({cpu, target, runner}) {
       runId: process.env.GITHUB_RUN_ID ?? null,
       runAttempt: process.env.GITHUB_RUN_ATTEMPT ?? null,
       sourceCommit: sourceCommit(),
+      pullRequestHead: pullRequestHead(),
     },
   };
 }
@@ -164,6 +189,13 @@ function selfCheck() {
     const changed = structuredClone(report);
     change(changed);
     assert.match(validate(changed).join('\n'), new RegExp(message));
+  }
+  if (process.platform === 'darwin') {
+    const actual = translatedProbe();
+    assert.equal(actual.value, '0');
+    assert.equal(actual.error, null);
+    assert.equal(actual.status === 0 || actual.absentKey, true);
+    if (process.arch === 'x64') assert.equal(actual.absentKey, true);
   }
   console.log('macOS preflight self-check passed');
 }

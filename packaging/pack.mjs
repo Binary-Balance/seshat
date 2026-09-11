@@ -30,10 +30,13 @@ if (nativeArm64) {
   const expectedMachine = process.arch === 'arm64' ? 'arm64' : 'x86_64';
   assert.equal(machine, expectedMachine,
     'native macOS mode requires a matching native architecture');
-  const translatedProbe = spawnSync('sysctl', ['-in', 'sysctl.proc_translated'], {encoding:'utf8'});
+  // Native Intel lacks this key; omit sysctl -i so other probe failures still reject the pack.
+  const translatedProbe = spawnSync('sysctl', ['-n', 'sysctl.proc_translated'], {encoding:'utf8'});
+  const translatedError = (translatedProbe.stderr ?? '').trim();
+  const absentKey = translatedProbe.status !== 0 && /unknown oid/i.test(translatedError);
   const translated = translatedProbe.status === 0
     ? translatedProbe.stdout.trim()
-    : /unknown oid|No such file/i.test(translatedProbe.stderr ?? '') ? '0' : '';
+    : absentKey ? '0' : null;
   assert.equal(translated, '0', 'native macOS mode must not run through Rosetta');
 } else {
   assert.equal(process.platform, 'linux', 'the Debian archive mode requires Linux');
