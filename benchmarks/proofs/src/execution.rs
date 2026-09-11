@@ -313,7 +313,7 @@ impl Session {
         };
         // The leader can finish while descendants are still alive. The supervisor targets only
         // this invocation's owned process tree.
-        child.stop_tree()?;
+        child.stop_tree_with_settlement()?;
         let report = if receipt.exists() {
             let raw = fs::read_to_string(&receipt).map_err(|e| e.to_string())?;
             serde_json::from_str::<Value>(&raw).ok()
