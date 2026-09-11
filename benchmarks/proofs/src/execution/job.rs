@@ -47,9 +47,12 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
     let stdout = read_pipe(child.stdout.take().unwrap(), overflow.clone());
     let stderr = read_pipe(child.stderr.take().unwrap(), overflow.clone());
     let mut timed_out = false;
+    let mut group_stopped = false;
     let status = loop {
         if super::cancellation_signal() != 0 {
-            break super::kill_owned_group(&mut child);
+            let result = super::kill_owned_group(&mut child);
+            group_stopped = result.is_ok();
+            break result;
         }
         match child.try_wait() {
             Ok(Some(status)) => break Ok(status),
@@ -58,12 +61,18 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
         }
         if start.elapsed() >= timeout || overflow.load(Ordering::Relaxed) {
             timed_out = start.elapsed() >= timeout;
-            break super::kill_owned_group(&mut child);
+            let result = super::kill_owned_group(&mut child);
+            group_stopped = result.is_ok();
+            break result;
         }
         thread::sleep(Duration::from_millis(2));
     };
-    // Also stop descendants when their leader has already exited.
-    let cleanup = super::stop_owned_group(child.id(), "job-post-status");
+    // kill_owned_group already signalled and waited for the group; natural exits still need descendant cleanup.
+    let cleanup = if group_stopped {
+        Ok(())
+    } else {
+        super::stop_owned_group(child.id())
+    };
     if status.is_err() {
         let _ = child.kill();
         let _ = child.wait();
@@ -108,12 +117,12 @@ mod tests {
     }
 
     #[test]
-    fn output_and_deadline_are_bounded() {
+    fn output_and_deadline_are_bounded_without_redundant_cleanup() {
         let mut command = Command::new("node");
         command.args(["-e", "setInterval(()=>{},1000)"]);
         let result = run(&mut command, Duration::from_millis(100)).unwrap();
         assert_eq!(result["timedOut"], true);
-        // Repeat the capped write to exercise the exit/reap race between try_wait and group cleanup.
+        // Overflow termination already stops and waits for the group; post-status cleanup must not signal it again.
         for _ in 0..8 {
             let mut command = Command::new("node");
             command.args(["-e", "process.stdout.write('x'.repeat(5*1024*1024))"]);
