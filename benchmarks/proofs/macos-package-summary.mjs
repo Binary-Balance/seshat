@@ -21,6 +21,8 @@ const runnerCases = {
 const environmentNames = ['CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'NODE_OPTIONS', 'SESHAT_MUTANT_ID'];
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 const hashFile = path => sha256(readFileSync(path));
+const repeatPassed = value => value?.validation?.passed === true &&
+  ['binary', 'build', 'npmArchive', 'standaloneArchive'].every(name => value.comparisons?.[name]?.passed === true);
 
 function validLifecycle(value) {
   if (!value || value.completed !== true) return false;
@@ -80,7 +82,7 @@ function validateRunner(label, value, cases, packed, artifacts, fail) {
   }
 }
 
-function validate({preflight, packed, build, npm, standalone, jestExpo, vitest, lifecycle}, parseErrors = {}, artifactDirectory = null, artifacts = {}) {
+function validate({preflight, packed, build, npm, standalone, jestExpo, vitest, lifecycle, repeat}, parseErrors = {}, artifactDirectory = null, artifacts = {}) {
   const failures = Object.entries(parseErrors).map(([name, message]) => `${name}: invalid JSON (${message})`);
   const fail = message => failures.push(message);
   if (!preflight) fail('preflight result missing');
@@ -88,6 +90,7 @@ function validate({preflight, packed, build, npm, standalone, jestExpo, vitest, 
   if (!packed) fail('package result missing');
   else {
     if (!packed.tarballSha256 || !packed.binary || !packed.standalone?.sha256) fail('package hashes missing');
+    if (packed.tarballSha256 !== packed.standalone?.sha256) fail('package npm and standalone hashes differ');
     if (artifactDirectory) {
       const cpu = preflight?.candidate?.cpu;
       for (const name of [`seshat-macos-${cpu}.tgz`, `seshat-macos-${cpu}-standalone.tar.gz`]) {
@@ -101,8 +104,11 @@ function validate({preflight, packed, build, npm, standalone, jestExpo, vitest, 
       if (packed.standalone?.sha256 && artifacts.standalone?.sha256 && artifacts.standalone.sha256 !== packed.standalone.sha256) {
         fail('standalone archive hash differs from package evidence');
       }
+      if (artifacts.tarball?.sha256 !== artifacts.standalone?.sha256) fail('npm and standalone artifact hashes differ');
     }
   }
+  if (!repeat) fail('repeat pack result missing');
+  else if (!repeatPassed(repeat)) fail('repeat pack reproducibility proof failed');
   if (!build) fail('BUILD.json missing');
   else {
     if (!build.binarySha256) fail('BUILD.json binary hash missing');
@@ -162,11 +168,11 @@ function selfCheckSummary() {
   checks['installed-cli-regression'] = {status: 0, stdout: 'CLI passed: 43 scenarios plus legacy parity'};
   const base = {
     preflight: {candidate: {cpu: 'arm64'}, validation: {passed: true}},
-    packed: {tarballSha256: 'tarball', binary: 'binary', standalone: {sha256: 'standalone'}},
+    packed: {tarballSha256: 'tarball', binary: 'binary', standalone: {sha256: 'tarball'}},
     build: {target: 'aarch64-apple-darwin', binarySha256: 'binary'},
     npm: {build: {target: 'aarch64-apple-darwin', binarySha256: 'binary'}, checks},
     standalone: {
-      archiveSha256: 'standalone', cliScenarios: 43, build: {target: 'aarch64-apple-darwin', binarySha256: 'binary'},
+      archiveSha256: 'tarball', cliScenarios: 43, build: {target: 'aarch64-apple-darwin', binarySha256: 'binary'},
       checks: {'installed-cli': {status: 0}, 'installed-parallel': {status: 0}},
       parallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
     },
@@ -177,8 +183,11 @@ function selfCheckSummary() {
       leaderAlive: false, descendantAlive: false, remainingScratch: [],
     }])), completed: true},
   };
-  const artifacts = {tarball: {sha256: 'tarball'}, standalone: {sha256: 'standalone'}};
-  assert.deepEqual(validate(base, {}, null, artifacts), []);
+  const artifacts = {tarball: {sha256: 'tarball'}, standalone: {sha256: 'tarball'}};
+  const repeat = {validation: {passed: true}, comparisons: {
+    binary: {passed: true}, build: {passed: true}, npmArchive: {passed: true}, standaloneArchive: {passed: true},
+  }};
+  assert.deepEqual(validate({...base, repeat}, {}, null, artifacts), []);
   assert.match(validate({...base, npm: null}).join('\n'), /npm result missing/);
   assert.match(validate({...base, vitest: null}).join('\n'), /Vitest result missing/);
   const partial = structuredClone(base);
@@ -196,6 +205,7 @@ function selfCheckSummary() {
   const wrongArchive = structuredClone(base);
   wrongArchive.jestExpo.cli.tarballSha256 = 'changed';
   assert.match(validate(wrongArchive, {}, null, artifacts).join('\n'), /Jest\/Expo tarball hash differs/);
+  assert.match(validate({...base, repeat: null}).join('\n'), /repeat pack result missing/);
   console.log('macOS package summary self-check passed');
 }
 
@@ -222,21 +232,23 @@ if (selfCheck) {
   const vitest = read('vitest-check.json');
   const build = read('BUILD.json');
   const lifecycle = read('lifecycle.json');
+  const repeat = read('repeat-pack.json');
   const artifacts = {};
   for (const [key, name] of [['tarball', `seshat-macos-${preflight?.candidate?.cpu ?? 'unknown'}.tgz`], ['standalone', `seshat-macos-${preflight?.candidate?.cpu ?? 'unknown'}-standalone.tar.gz`]]) {
     const path = join(directory, name);
     if (existsSync(path) && statSync(path).isFile()) artifacts[key] = {file: name, sha256: hashFile(path), bytes: statSync(path).size};
   }
-  const failures = validate({preflight, packed, build, npm, standalone, jestExpo, vitest, lifecycle}, parseErrors, directory, artifacts);
+  const failures = validate({preflight, packed, build, npm, standalone, jestExpo, vitest, lifecycle, repeat}, parseErrors, directory, artifacts);
   const cpu = preflight?.candidate?.cpu ?? 'unknown';
   const buildPath = join(directory, 'BUILD.json');
   const buildArtifact = build && existsSync(buildPath) ? {
     file: 'BUILD.json', sha256: sha256(readFileSync(buildPath)), bytes: statSync(buildPath).size,
   } : null;
-  const portablePackage = packed && {...packed,
+  const portablePackage = packed && artifacts.tarball && artifacts.standalone && {...packed,
     tarball: `seshat-macos-${cpu}.tgz`,
     proofBinary: null,
-    standalone: packed.standalone && {...packed.standalone, path: `seshat-macos-${cpu}-standalone.tar.gz`},
+    tarballSha256: artifacts.tarball.sha256,
+    standalone: {...packed.standalone, path: `seshat-macos-${cpu}-standalone.tar.gz`, sha256: artifacts.standalone.sha256, bytes: artifacts.standalone.bytes},
   };
   const summary = {
     schemaVersion: 1,
@@ -256,8 +268,8 @@ if (selfCheck) {
     preflight: preflight ? {environment: preflight.environment, validation: preflight.validation, provenance: preflight.provenance} : null,
     artifacts: packed ? {
       build: buildArtifact,
-      npmTarball: artifacts.tarball ?? {file: `seshat-macos-${cpu}.tgz`, sha256: packed.tarballSha256, bytes: packed.packedBytes},
-      standalone: artifacts.standalone ?? {file: `seshat-macos-${cpu}-standalone.tar.gz`, sha256: packed.standalone?.sha256, bytes: packed.standalone?.bytes},
+      npmTarball: artifacts.tarball ?? null,
+      standalone: artifacts.standalone ?? null,
       binary: {sha256: packed.binary, bytes: packed.binaryBytes},
     } : null,
     npm: npm ? {build: npm.build, tarballSha256: packed?.tarballSha256 ?? null, cliScenarios: cliScenarios(npm), checks: statuses(npm)} : null,
@@ -267,7 +279,16 @@ if (selfCheck) {
       vitest: vitest ? {environment: vitest.environment, cli: vitest.cli, dependencies: vitest.dependencies, noConsumingRust: vitest.noConsumingRust, checks: vitest.checks, originalsPreserved: vitest.originalsPreserved} : null,
     },
     lifecycle: lifecycle ? {cases: Object.keys(lifecycle).filter(name => name !== 'completed').length, completed: lifecycle.completed === true, passed: validLifecycle(lifecycle)} : null,
-    validation: {package: Boolean(packed), npm: Boolean(npm), standalone: Boolean(standalone), jestExpo: Boolean(jestExpo), vitest: Boolean(vitest), lifecycle: Boolean(lifecycle), passed: failures.length === 0, failures},
+    repeatPack: repeat ? {
+      sourceCommit: repeat.sourceCommit,
+      host: repeat.host,
+      toolchain: repeat.toolchain,
+      input: repeat.input,
+      runs: repeat.runs,
+      comparisons: repeat.comparisons,
+      validation: repeat.validation,
+    } : null,
+    validation: {package: Boolean(packed && portablePackage), npm: Boolean(npm), standalone: Boolean(standalone), jestExpo: Boolean(jestExpo), vitest: Boolean(vitest), lifecycle: Boolean(lifecycle), repeatPack: Boolean(repeat && repeatPassed(repeat)), passed: failures.length === 0, failures},
     limits: 'Native macOS 15 proof on the selected GitHub-hosted CPU runner. It does not establish support for older macOS versions, Rosetta execution, the other CPU architecture, signing, notarization or public release distribution.',
   };
   writeFileSync(join(directory, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');

@@ -33,9 +33,9 @@ function run(name, command, args, env = process.env, status = 0) {
 
 const listing = run('archive-list', 'tar', ['-tzf', archive]).stdout.trim().split('\n').filter(Boolean).sort();
 const files = ['BUILD.json', 'LICENSE', 'README.md', 'THIRD_PARTY_NOTICES.txt', 'bin/seshat', 'package.json'];
-assert.deepEqual(listing, files);
+assert.deepEqual(listing, files.map(path => `package/${path}`).sort());
 assert.ok(listing.every(path => !path.startsWith('/') && !path.split('/').includes('..')));
-run('extract', 'tar', ['-xzf', archive, '-C', consumer]);
+run('extract', 'tar', ['-xzf', archive, '-C', consumer, '--strip-components=1', '--no-same-owner']);
 assert.ok(consumer.includes('🎸'));
 const installed = join(consumer, 'bin/seshat');
 const manifest = JSON.parse(readFileSync(join(consumer, 'package.json'), 'utf8'));

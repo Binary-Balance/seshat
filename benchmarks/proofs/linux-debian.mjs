@@ -21,7 +21,9 @@ const inputs = [
 ];
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 for (const input of inputs) assert.equal(hash(readFileSync(join(archives,input.file))),input.sha256,input.file);
+const tarballSha256 = hash(readFileSync(packed.tarball));
 const standaloneSha256 = hash(readFileSync(standaloneArchive));
+assert.equal(standaloneSha256, tarballSha256, 'standalone archive must reuse the npm payload');
 const work = mkdtempSync(join(repo,'work/debian11-'));
 const rootfs = join(work,'rootfs'), node = join(work,'node'), consumer = join(work,'consumer');
 for (const directory of [rootfs,node,join(consumer,'assurance-proofs')]) mkdirSync(directory,{recursive:true});
@@ -111,7 +113,7 @@ run('debian-consumer','bwrap',['--unshare-all','--uid','0','--gid','0','--die-wi
   '--bind',consumer,'/seshat/work','--chdir','/seshat','--clearenv',
   '--setenv','PATH','/opt/node/bin:/usr/bin:/bin','--setenv','LANG','C.UTF-8',
   '/opt/node/bin/node','--input-type=module','-e',script]);
-const result = {inputs,tarballSha256:hash(readFileSync(packed.tarball)),standaloneArchiveSha256:standaloneSha256,
+const result = {inputs,tarballSha256,standaloneArchiveSha256:standaloneSha256,
   proofBinarySha256:hash(readFileSync(packed.proofBinary)),
   ...JSON.parse(readFileSync(join(consumer,'result.json'),'utf8')),
   limits:'Debian 11 userspace on the recorded host kernel, not a Debian 11 kernel test. Node runner controls only; Jest/Expo and Vitest compatibility are tracked separately.'};

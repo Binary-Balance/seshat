@@ -24,12 +24,12 @@ not a claim that Debian 11 remains a maintained distribution.
 
 ## Workflow proof
 
-The workflow records `preflight.json`, package metadata, both archive hashes,
-native npm, standalone, Jest/Expo, Vitest and lifecycle reports, the Debian11
+The workflow records `preflight.json`, package metadata, the repeat-pack proof,
+both retained archive hashes, native npm and standalone reports, the Debian11
 report, raw logs, Rust tests and `summary.json`. It never uploads Cargo's target
-directory. The summary is fail-closed: missing or invalid reports, a missing
-archive, a changed hash, a kernel below 6.8, or an incomplete/partial proof
-leaves `validation.passed` false and the workflow failed.
+directory. The summary is fail-closed: missing or invalid reports, a missing or
+changed archive, a failed repeat comparison, a kernel below 6.8, or an
+incomplete proof leaves `validation.passed` false and the workflow failed.
 
 The native checks are:
 
@@ -37,9 +37,13 @@ The native checks are:
 - The x64 package built with `pack.mjs` and the three existing pinned Debian
   build archives. The packer continues to verify their SHA-256 values.
 - The npm route's 16 package checks and 43 installed CLI scenarios.
-- A standalone archive made from the exact six-file package payload, with the
-  same 43 CLI scenarios and 11 parallel process controls. Both consumers run
-  with a disposable `PATH` where Cargo and Rustc are absent.
+- The same npm `.tgz` retained under the standalone artifact name. The
+  standalone verifier strips npm's `package/` prefix, then runs the exact
+  six-file payload with the same 43 CLI scenarios and 11 parallel process
+  controls. Both consumers run with a disposable `PATH` where Cargo and Rustc
+  are absent.
+- Two clean packer invocations whose native binary, npm archive and standalone
+  archive bytes and hashes must all match before the proof is published.
 - The just-built archive installed into the checked-in Jest/Expo fixture using
   its pinned lockfile, with `normal-1,assertion-kill,survivor,before-all`.
 - The just-built archive installed into the checked-in Vitest fixture using the
@@ -138,14 +142,15 @@ byte-for-byte:
 | `BUILD.json` | `396fcaa9fb9a9ddabb66d9cbcc8b9fe2cbbc2b488f892f2ed65332940add8476` | 7,692 |
 | npm archive | `ddc1779d84bb3a0436db746b96fa3a6ed9dc484338dd25f625cf165d7015544c` | 889,270 |
 
-The final archive was installed twice into disposable consumers with offline
+The final npm archive was installed twice into disposable consumers with offline
 npm and real child-process spawning. Each installed executable passed
 `--version` and `--help` with Cargo and Rustc absent from `PATH`. This is
 reproducibility evidence for the named Linux x64 source, host, toolchain and
 sysroot only. It does not claim byte identity for Linux ARM64, macOS or
 Windows. macOS uses the standard Cargo stripping setting but has no byte
-identity evidence here; Windows linker rules remain separate. Standalone tar
-timestamps remain a later reproducibility gap.
+identity evidence here; Windows linker rules remain separate. The current
+standalone artifact reuses the npm archive bytes, while the older historical
+standalone tarball evidence above retains its original metadata.
 
 ## Local checks
 
@@ -155,6 +160,7 @@ These checks do not require a package build:
 node benchmarks/proofs/linux-x64-preflight.mjs --self-check
 node benchmarks/proofs/linux-x64-summary.mjs --self-check
 node --check benchmarks/proofs/linux-debian.mjs
+node --check packaging/repeat-pack.mjs
 node --check benchmarks/proofs/jest-expo-check.mjs
 node --check benchmarks/proofs/vitest-check.mjs
 node --check benchmarks/proofs/lifecycle.mjs
