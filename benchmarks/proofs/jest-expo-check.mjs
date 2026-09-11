@@ -51,6 +51,7 @@ const defaultCases = [
   'normal-1',
   'normal-repeat',
   'normal-2',
+  'nested-root',
   'assertion-kill',
   'survivor',
   'before-all',
@@ -143,12 +144,17 @@ function fixtureVersions(root) {
   ]));
 }
 
-function jestArgs(testPath, {reporter = true, environment = true} = {}) {
+function jestArgs(testPath, {
+  reporter = true,
+  environment = true,
+  config = 'jest.config.cjs',
+  jestBin = 'node_modules/jest/bin/jest.js',
+} = {}) {
   const args = [
     'node',
-    'node_modules/jest/bin/jest.js',
+    jestBin,
     '--config',
-    'jest.config.cjs',
+    config,
     '--runInBand',
     '--runTestsByPath',
     testPath,
@@ -159,7 +165,8 @@ function jestArgs(testPath, {reporter = true, environment = true} = {}) {
   return args;
 }
 
-function configFor({source, test, workers = 1, testArgs = jestArgs(test), timeoutMs = 60000, extraCapture = []}) {
+function configFor({source, test, workers = 1, testArgs = jestArgs(test), timeoutMs = 60000,
+  extraCapture = [], cwd = '.', typecheckProject = 'tsconfig.json'}) {
   const coverageArgs = [
     ...testArgs,
     '--coverage',
@@ -186,9 +193,9 @@ function configFor({source, test, workers = 1, testArgs = jestArgs(test), timeou
     setups: [{
       name: 'jest-expo',
       runner: 'jest',
-      cwd: '.',
+      cwd,
       timeoutMs,
-      typecheck: ['node', 'node_modules/typescript/bin/tsc', '--project', 'tsconfig.json'],
+      typecheck: ['node', 'node_modules/typescript/bin/tsc', '--project', typecheckProject],
       test: testArgs,
       coverage: {command: coverageArgs, report: 'coverage/coverage-final.json'},
     }],
@@ -383,6 +390,22 @@ if (shouldRun('normal-2')) {
   const parallel = configFor({source: 'src/status.tsx', test: 'tests/status.test.tsx', workers: 2});
   const report = await check('normal-2', parallel, {assert: value => assertNormal(value, 2)});
   assert.deepEqual(stableMutation(report.result.mutation), results.normalDefinition);
+}
+
+if (shouldRun('nested-root')) {
+  mkdirSync(join(project, 'runner'), {recursive: true});
+  const nested = configFor({
+    source: 'src/status.tsx',
+    test: '../tests/status.test.tsx',
+    testArgs: jestArgs('../tests/status.test.tsx', {
+      config: '../jest.config.cjs',
+      jestBin: '../node_modules/jest/bin/jest.js',
+    }),
+    cwd: 'runner',
+    typecheckProject: '../tsconfig.json',
+    extraCapture: ['runner'],
+  });
+  await check('nested-root', nested, {assert: value => assertNormal(value, 1)});
 }
 
 const controls = [

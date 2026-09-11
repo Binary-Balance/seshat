@@ -4,7 +4,7 @@ use crate::{
     coverage,
     execution::{
         CommandEvidence, cancellation_signal, classify, job, observe_node_loads,
-        relative_module_specifier,
+        module_path,
     },
 };
 use std::{
@@ -194,6 +194,31 @@ fn read_report(root: &Path, path: &Path) -> Result<Value, String> {
         return Err("report exceeds the 32 MiB proof limit".into());
     }
     serde_json::from_slice(&bytes).map_err(|e| format!("invalid report JSON: {e}"))
+}
+
+fn validate_coverage_report(root: &Path, path: &Path) -> Result<Value, String> {
+    let report = read_report(root, path)?;
+    let entries = report
+        .as_object()
+        .ok_or("coverage report must be an Istanbul file map")?;
+    let mut normalized = serde_json::Map::new();
+    for (name, file) in entries {
+        // Validate the raw identity before changing separators. This keeps containment and
+        // key/entry matching fail-closed on untrusted coverage data.
+        if !within(root, Path::new(name)) || file["path"] != *name {
+            return Err(
+                "coverage contains a path outside the captured project or a mismatched file identity".into(),
+            );
+        }
+        regular_path(root, Path::new(name), false)?;
+        let identity = stable_path(Path::new(name));
+        let mut file = file.clone();
+        file["path"] = json!(identity);
+        if normalized.insert(identity, file).is_some() {
+            return Err("coverage contains duplicate normalized file identities".into());
+        }
+    }
+    Ok(Value::Object(normalized))
 }
 
 fn per_second(count: usize, wall_ms: f64) -> Value {
@@ -653,10 +678,9 @@ impl CapturedProject {
             Runner::Vitest => "vitest-reporter.mjs",
             Runner::Node => "node-reporter.mjs",
         });
-        let reporter = relative_module_specifier(&cwd, &reporter)?;
-        let environment =
-            relative_module_specifier(&cwd, &evidence.join("jest-expo-environment.cjs"))?;
-        let vitest_runner = relative_module_specifier(&cwd, &evidence.join("vitest-runner.mjs"))?;
+        let reporter = module_path(&reporter)?;
+        let environment = module_path(&evidence.join("jest-expo-environment.cjs"))?;
+        let vitest_runner = module_path(&evidence.join("vitest-runner.mjs"))?;
         let receipt = evidence.join(format!("{id}.json"));
         let args: Vec<_> = args
             .iter()
@@ -707,7 +731,7 @@ impl CapturedProject {
                     )
                 })
                 .collect();
-            observe_node_loads(&mut command, &sources, &receipt, id, &cwd)?;
+            observe_node_loads(&mut command, &sources, &receipt, id)?;
         }
         let mut result = job::run(&mut command, Duration::from_millis(setup.timeout_ms))?;
         let mut state = if matches!(kind, JobKind::Typecheck) {
@@ -1386,20 +1410,7 @@ impl CapturedProject {
                 if result["state"] != "passed" {
                     return Ok((result, Value::Null));
                 }
-                let validated = || -> Result<Value, String> {
-                    let report = read_report(&self.directory.0, &path)?;
-                    let entries = report
-                        .as_object()
-                        .ok_or("coverage report must be an Istanbul file map")?;
-                    for (name, file) in entries {
-                        if !within(&self.directory.0, Path::new(name)) || file["path"] != *name {
-                            return Err("coverage contains a path outside the captured project or a mismatched file identity".into());
-                        }
-                        regular_path(&self.directory.0, Path::new(name), false)?;
-                    }
-                    Ok(report)
-                };
-                match validated() {
+                match validate_coverage_report(&self.directory.0, &path) {
                     Ok(report) => Ok((result, report)),
                     Err(error) => {
                         result["state"] = json!("execution-error");
@@ -1540,6 +1551,52 @@ mod tests {
             fs::read_to_string(root.join("original.json")).unwrap(),
             "{}"
         );
+        directory.close().unwrap();
+    }
+
+    #[test]
+    fn coverage_report_normalizes_validated_file_identities() {
+        let directory = OwnedDirectory::create(&std::env::temp_dir()).unwrap();
+        let root = &directory.0;
+        let source = root.join("src").join("subject 🎸.ts");
+        fs::create_dir(source.parent().unwrap()).unwrap();
+        fs::write(&source, "export const value = 1;\n").unwrap();
+        let raw = source.to_string_lossy().replace('/', "\\");
+        let report_path = root.join("coverage.json");
+        fs::write(
+            &report_path,
+            serde_json::to_vec(&json!({(raw.clone()): {"path": raw.clone()}})).unwrap(),
+        )
+        .unwrap();
+        let normalized = validate_coverage_report(root, &report_path).unwrap();
+        let identity = stable_path(Path::new(&raw));
+        assert_eq!(normalized.get(&identity).unwrap()["path"], identity);
+        directory.close().unwrap();
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn coverage_report_rejects_colliding_normalized_identities() {
+        let directory = OwnedDirectory::create(&std::env::temp_dir()).unwrap();
+        let root = &directory.0;
+        let source = root.join("src").join("subject 🎸.ts");
+        fs::create_dir(source.parent().unwrap()).unwrap();
+        fs::write(&source, "export const value = 1;\n").unwrap();
+        let raw = source.to_string_lossy().into_owned();
+        let slash = raw.replace('\\', "/");
+        let report_path = root.join("coverage.json");
+        fs::write(
+            &report_path,
+            serde_json::to_vec(&json!({
+                (raw.clone()): {"path": raw},
+                (slash.clone()): {"path": slash},
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        assert!(validate_coverage_report(root, &report_path)
+            .unwrap_err()
+            .contains("duplicate normalized"));
         directory.close().unwrap();
     }
 

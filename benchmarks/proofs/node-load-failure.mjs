@@ -1,5 +1,6 @@
 // Minimal native-executor regression: a comparison changes module initialisation.
 import assert from 'node:assert/strict';
+import {spawnSync} from 'node:child_process';
 import {mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -40,6 +41,8 @@ async function execute(name, app, tests, expected, other) {
 }
 const guard = await execute('module-guard', source, test, 'killed');
 assert.equal(guard.outcomes[0].evidence.report.moduleFailures.length, 1);
+const nested = "import {test} from 'node:test';import assert from 'node:assert/strict';import {spawnSync} from 'node:child_process';import {ready} from './subject.ts';test('nested child cwd',()=>{if(!ready)throw Error('not ready');const child=spawnSync(process.execPath,['-e','if(!process.env.SESHAT_LOAD_CONTEXT)process.exit(1)'],{cwd:'..',env:process.env,encoding:'utf8'});assert.equal(child.status,0,child.stderr);});";
+await execute('nested-child-cwd', source, nested, 'killed');
 await execute('unicode-crlf', 'const label="🎸";\r\n'+source.replace('\n','\r\n'), test, 'killed');
 const called = "import {test} from 'node:test';import {load} from './subject.ts';load();test('pass',()=>{});";
 await execute('called-guard', plain+"export function load(){if(!ready)throw new Error('called guard');}", called, 'killed');
