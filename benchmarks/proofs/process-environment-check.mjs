@@ -4,7 +4,7 @@ import {nodeCommand, runProcess, rustFreeEnvironment} from './process.mjs';
 const names = ['CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'NODE_OPTIONS', 'SESHAT_MUTANT_ID'];
 const ambient = Object.fromEntries(names.map(name => [name, `ambient-${name.toLowerCase()}`]));
 const previous = Object.fromEntries(names.map(name => [name, process.env[name]]));
-const script = `process.stdout.write(JSON.stringify(Object.fromEntries(${JSON.stringify(names)}.map(name => [name, process.env[name]]))));setTimeout(() => {}, 50)`;
+const script = `process.stdout.write(JSON.stringify(Object.fromEntries(${JSON.stringify([...names, 'SESHAT_ENVIRONMENT_OVERRIDE'])}.map(name => [name, process.env[name]]))));setTimeout(() => {}, 50)`;
 
 Object.assign(process.env, ambient);
 try {
