@@ -6,7 +6,6 @@ use crate::{
 };
 use std::{
     io::{Read, Write},
-    os::unix::fs::MetadataExt,
     process::Command,
     sync::{
         Mutex,
@@ -14,6 +13,17 @@ use std::{
     },
     thread,
     time::{Duration, Instant},
+};
+
+#[cfg(unix)]
+use std::os::unix::fs::MetadataExt;
+
+#[cfg(windows)]
+use std::os::windows::io::AsRawHandle;
+
+#[cfg(windows)]
+use windows_sys::Win32::Storage::FileSystem::{
+    BY_HANDLE_FILE_INFORMATION, GetFileInformationByHandle,
 };
 
 const REPORT_LIMIT: u64 = 32 * 1024 * 1024;
@@ -109,6 +119,29 @@ enum JobKind<'a> {
 }
 
 // Never follow an output link when removing stale evidence or reading new data.
+fn independent_file(path: &Path) -> Result<bool, String> {
+    #[cfg(unix)]
+    {
+        return fs::metadata(path)
+            .map(|metadata| metadata.nlink() == 1)
+            .map_err(|e| e.to_string());
+    }
+    #[cfg(windows)]
+    {
+        let file = fs::File::open(path).map_err(|e| e.to_string())?;
+        let mut information = BY_HANDLE_FILE_INFORMATION::default();
+        // SAFETY: the file handle is live for this call and the structure is writable.
+        if unsafe { GetFileInformationByHandle(file.as_raw_handle(), &mut information) } == 0 {
+            return Err(format!(
+                "read file identity {}: {}",
+                path.display(),
+                std::io::Error::last_os_error()
+            ));
+        }
+        return Ok(information.nNumberOfLinks == 1);
+    }
+}
+
 fn regular_path(root: &Path, path: &Path, missing_ok: bool) -> Result<(), String> {
     let root_type = fs::symlink_metadata(root)
         .map_err(|e| e.to_string())?
@@ -116,21 +149,21 @@ fn regular_path(root: &Path, path: &Path, missing_ok: bool) -> Result<(), String
     if !root_type.is_dir() {
         return Err("captured root is no longer a real directory".into());
     }
-    let relative = path
-        .strip_prefix(root)
-        .map_err(|_| "path escapes captured project")?;
+    let relative = relative_path(root, path).ok_or("path escapes captured project")?;
     let mut current = root.to_path_buf();
-    for component in relative.components() {
+    let components = relative.components().collect::<Vec<_>>();
+    for (index, component) in components.iter().enumerate() {
         if !matches!(component, std::path::Component::Normal(_)) {
             return Err("non-normal path in captured project".into());
         }
-        current.push(component);
+        current.push(component.as_os_str());
+        let final_component = index + 1 == components.len();
         match fs::symlink_metadata(&current) {
             Ok(metadata) => {
-                if metadata.file_type().is_symlink() || (current != path && !metadata.is_dir()) {
+                if is_link(&metadata) || (!final_component && !metadata.is_dir()) {
                     return Err(format!("unsafe path: {}", relative.display()));
                 }
-                if current == path && (!metadata.is_file() || metadata.nlink() != 1) {
+                if final_component && (!metadata.is_file() || !independent_file(&current)?) {
                     return Err(format!(
                         "expected independent regular file: {}",
                         relative.display()
@@ -288,7 +321,7 @@ fn locked_version(
     }
     let packages = lock["packages"].as_object()?;
     let setup = root.join(setup_cwd);
-    let prefix = setup.strip_prefix(lock_directory).ok()?.to_str()?;
+    let prefix = stable_path(setup.strip_prefix(lock_directory).ok()?);
     let prefix = prefix.trim_matches('/');
     let prefix = if prefix == "." { "" } else { prefix };
     let mut keys = vec![format!("node_modules/{name}")];
@@ -365,7 +398,11 @@ fn runner_option_args(args: &[String]) -> &[String] {
 
 fn direct_runner_args<'a>(runner: Runner, args: &'a [String]) -> Option<&'a [String]> {
     let program = args.first()?;
-    let program_name = Path::new(program).file_name()?.to_str()?;
+    let program_name = Path::new(program)
+        .file_name()?
+        .to_str()?
+        .to_ascii_lowercase();
+    let program_name = program_name.strip_suffix(".exe").unwrap_or(&program_name);
     match runner {
         Runner::Node => (matches!(program_name, "node" | "nodejs")
             && args.get(1).is_some_and(|arg| arg == "--test"))
@@ -552,7 +589,7 @@ impl CapturedProject {
         let paths: Vec<_> = self
             .sources
             .iter()
-            .map(|(path, _)| self.directory.0.join(path))
+            .map(|(path, _)| stable_path(&self.directory.0.join(path)))
             .collect();
         fs::write(
             evidence.0.join("sources.json"),
@@ -605,7 +642,7 @@ impl CapturedProject {
         }
         self.unchanged()?;
         let cwd = fs::canonicalize(self.directory.0.join(&setup.cwd)).map_err(|e| e.to_string())?;
-        if !cwd.starts_with(&self.directory.0) || !cwd.is_dir() {
+        if !within(&self.directory.0, &cwd) || !cwd.is_dir() {
             return Err("setup cwd escaped captured project".into());
         }
         let reporter = evidence.join(match setup.runner {
@@ -902,7 +939,7 @@ impl CapturedProject {
                     let mut row = definition.clone();
                     row["id"] = json!(plan.len());
                     row["localId"] = json!(local_id);
-                    row["path"] = json!(self.sources[source_index].0);
+                    row["path"] = json!(stable_path(&self.sources[source_index].0));
                     row["setups"] = json!(
                         self.config
                             .setups
@@ -1244,7 +1281,7 @@ impl CapturedProject {
         let facts: Vec<_> = self
             .sources
             .iter()
-            .map(|(path, source)| Analysis::inspect(path.to_str().unwrap(), source))
+            .map(|(path, source)| Analysis::inspect(&stable_path(path), source))
             .collect();
         let mut timings = json!({"analysisMs":started.elapsed().as_secs_f64()*1000.0,
             "preparationMs":null,"typecheckMs":null,"baselineMs":null,"coverageMs":null,"attributionMs":null,"cleanupMs":null});
@@ -1321,7 +1358,7 @@ impl CapturedProject {
                 if self
                     .sources
                     .iter()
-                    .any(|(source, _)| self.directory.0.join(source) == path)
+                    .any(|(source, _)| path_key(&self.directory.0.join(source)) == path_key(&path))
                 {
                     return Err("coverage report destination is assessment source".into());
                 }
@@ -1351,8 +1388,7 @@ impl CapturedProject {
                         .as_object()
                         .ok_or("coverage report must be an Istanbul file map")?;
                     for (name, file) in entries {
-                        if !Path::new(name).starts_with(&self.directory.0) || file["path"] != *name
-                        {
+                        if !within(&self.directory.0, Path::new(name)) || file["path"] != *name {
                             return Err("coverage contains a path outside the captured project or a mismatched file identity".into());
                         }
                         regular_path(&self.directory.0, Path::new(name), false)?;
@@ -1405,24 +1441,20 @@ impl CapturedProject {
             .map(|((relative, source), analysis)| {
                 let path = self.directory.0.join(relative);
                 match analysis {
-                    Err(error) => json!({"path":relative,"error":error}),
-                    Ok(_) if !with_coverage => json!({"path":relative}),
+                    Err(error) => json!({"path":stable_path(relative),"error":error}),
+                    Ok(_) if !with_coverage => json!({"path":stable_path(relative)}),
                     Ok(analysis) => {
                         // A setup may cover a different package. Merge only its entries for this file;
                         // failed collection still makes the whole run incomplete above.
                         let applicable = reports
                             .iter()
-                            .filter(|report| report.get(path.to_str().unwrap()).is_some());
-                        let measured = coverage::attribute(
-                            analysis,
-                            path.to_str().unwrap(),
-                            source,
-                            applicable,
-                        );
+                            .filter(|report| report.get(&stable_path(&path)).is_some());
+                        let measured =
+                            coverage::attribute(analysis, &stable_path(&path), source, applicable);
                         if measured["complete"] != true {
                             complete = false;
                         }
-                        json!({"path":relative,"result":measured})
+                        json!({"path":stable_path(relative),"result":measured})
                     }
                 }
             })
@@ -1486,8 +1518,8 @@ mod tests {
         let root = &directory.0;
         fs::write(root.join("original.json"), "{}").unwrap();
         fs::create_dir(root.join("reports")).unwrap();
-        symlink("original.json", root.join("linked.json")).unwrap();
-        symlink("reports", root.join("linked-parent")).unwrap();
+        create_link(Path::new("original.json"), &root.join("linked.json")).unwrap();
+        create_link(Path::new("reports"), &root.join("linked-parent")).unwrap();
         fs::hard_link(root.join("original.json"), root.join("hard.json")).unwrap();
         for relative in [
             "linked.json",

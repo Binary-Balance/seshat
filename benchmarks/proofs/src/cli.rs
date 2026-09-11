@@ -11,7 +11,7 @@ use std::{
     time::Instant,
 };
 
-const HELP: &str = "Seshat CLI candidate (Linux, not a published release)
+const HELP: &str = "Seshat CLI candidate (not a published release)
 
 Usage: seshat <check|crap|mutate> [options]
   check           CRAP analysis and mutation testing
@@ -30,7 +30,7 @@ Options:
 
 Use the same explicit source, capture and setup configuration for all commands.
 Optional config thresholds: maxCrap and minMutationScore under thresholds.
-Threshold failures exit 1; incomplete runs exit 2; cancellation exits 130/143.
+Threshold failures exit 1; incomplete runs exit 2; cancellation uses the host's console/signal status.
 ";
 
 struct Options {

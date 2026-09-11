@@ -1,8 +1,7 @@
-// Bounded Linux jobs for the captured-project path. No shell interpretation.
+// Bounded process jobs for the captured-project path. No shell interpretation.
 use serde_json::{Value, json};
 use std::{
     io::Read,
-    os::unix::process::CommandExt,
     process::{Command, Stdio},
     sync::{
         Arc,
@@ -37,19 +36,25 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
         return Ok(json!({"cancelled":true,"exit":null,"ms":0}));
     }
     command
-        .process_group(0)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
     let start = Instant::now();
-    let mut child = command.spawn().map_err(|e| format!("start command: {e}"))?;
+    let mut child =
+        super::platform::ManagedChild::spawn(command).map_err(|e| format!("start command: {e}"))?;
     let overflow = Arc::new(AtomicBool::new(false));
-    let stdout = read_pipe(child.stdout.take().unwrap(), overflow.clone());
-    let stderr = read_pipe(child.stderr.take().unwrap(), overflow.clone());
+    let stdout = read_pipe(
+        child.take_stdout().ok_or("child stdout was not piped")?,
+        overflow.clone(),
+    );
+    let stderr = read_pipe(
+        child.take_stderr().ok_or("child stderr was not piped")?,
+        overflow.clone(),
+    );
     let mut timed_out = false;
     let status = loop {
         if super::cancellation_signal() != 0 {
-            break super::kill_owned_group(&mut child);
+            break child.kill_tree();
         }
         match child.try_wait() {
             Ok(Some(status)) => break Ok(status),
@@ -58,16 +63,16 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
         }
         if start.elapsed() >= timeout || overflow.load(Ordering::Relaxed) {
             timed_out = start.elapsed() >= timeout;
-            break super::kill_owned_group(&mut child);
+            break child.kill_tree();
         }
         thread::sleep(Duration::from_millis(2));
     };
     // Also stop descendants when their leader has already exited.
-    let cleanup = super::stop_owned_group(child.id());
-    if status.is_err() {
-        let _ = child.kill();
-        let _ = child.wait();
-    }
+    let cleanup = if status.is_err() {
+        child.force_cleanup()
+    } else {
+        child.stop_tree()
+    };
     let mut diagnostic = String::new();
     let mut pipe_error = None;
     for receiver in [stdout, stderr] {
@@ -76,7 +81,7 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
             Ok(Err(error)) => pipe_error = Some(error),
             Err(_) => {
                 pipe_error =
-                    Some("output pipe did not close after stopping the process group".into())
+                    Some("output pipe did not close after stopping the process tree".into())
             }
         }
     }
@@ -84,7 +89,7 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
     let diagnostic: String = diagnostic.chars().take(2000).collect();
     let status = status?;
     if let Err(error) = cleanup {
-        return Err(format!("process group cleanup: {error}"));
+        return Err(format!("process tree cleanup: {error}"));
     }
     Ok(
         json!({"exit":status.code(),"cancelled":super::cancellation_signal()!=0,"timedOut":timed_out,"overflow":overflow.load(Ordering::Relaxed),
