@@ -2,7 +2,10 @@ use super::*;
 use crate::{
     assessment::{self, TestState},
     coverage,
-    execution::{CommandEvidence, cancellation_signal, classify, job, observe_node_loads},
+    execution::{
+        CommandEvidence, cancellation_signal, classify, job, observe_node_loads,
+        relative_module_specifier,
+    },
 };
 use std::{
     io::{Read, Write},
@@ -650,15 +653,16 @@ impl CapturedProject {
             Runner::Vitest => "vitest-reporter.mjs",
             Runner::Node => "node-reporter.mjs",
         });
+        let reporter = relative_module_specifier(&cwd, &reporter)?;
+        let environment =
+            relative_module_specifier(&cwd, &evidence.join("jest-expo-environment.cjs"))?;
+        let vitest_runner = relative_module_specifier(&cwd, &evidence.join("vitest-runner.mjs"))?;
         let receipt = evidence.join(format!("{id}.json"));
         let args: Vec<_> = args
             .iter()
             .map(|arg| {
-                arg.replace("{seshatReporter}", reporter.to_str().unwrap())
-                    .replace(
-                        "{seshatEnvironment}",
-                        evidence.join("jest-expo-environment.cjs").to_str().unwrap(),
-                    )
+                arg.replace("{seshatReporter}", &reporter)
+                    .replace("{seshatEnvironment}", &environment)
             })
             .collect();
         let mut command = Command::new(&args[0]);
@@ -674,7 +678,7 @@ impl CapturedProject {
             .env("SESHAT_EXECUTION_ID", id)
             .env("SESHAT_RECEIPT", &receipt)
             .env("SESHAT_NODE_REPORTER", &reporter)
-            .env("SESHAT_VITEST_RUNNER", evidence.join("vitest-runner.mjs"))
+            .env("SESHAT_VITEST_RUNNER", &vitest_runner)
             .env("SESHAT_SOURCES", evidence.join("sources.json"));
         if let Some(id) = self.active_mutant {
             command.env("SESHAT_MUTANT_ID", id.to_string());
@@ -703,7 +707,7 @@ impl CapturedProject {
                     )
                 })
                 .collect();
-            observe_node_loads(&mut command, &sources, &receipt, id)?;
+            observe_node_loads(&mut command, &sources, &receipt, id, &cwd)?;
         }
         let mut result = job::run(&mut command, Duration::from_millis(setup.timeout_ms))?;
         let mut state = if matches!(kind, JobKind::Typecheck) {
