@@ -22,12 +22,14 @@ const commandName = command => process.platform !== 'win32' ? command
 const run = (command, args) => execFileSync(commandName(command), args, {
   cwd:repo, encoding:'utf8', shell:process.platform === 'win32' && command === 'npm',
 }).trim();
-const probe = (command, args = []) => {
+const probe = (command, args = [], identity = null) => {
   const result = spawnSync(commandName(command), args, {cwd:repo, encoding:'utf8', maxBuffer:128 * 1024});
   const text = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
-  assert.ok(!result.error && text, `${command} is unavailable`);
+  assert.ok(!result.error && text && (!identity || identity.test(text)), `${command} is unavailable or is not the expected MSVC tool`);
   return {command, version:text.split(/\r?\n/, 1)[0], status:result.status};
 };
+const msvcIdentity = /^Microsoft \(R\) C\/C\+\+ Optimizing Compiler Version .+ for x64\b/m;
+const linkerIdentity = /^Microsoft \(R\) Incremental Linker Version \S+/m;
 const sourceCommit = run('git', ['rev-parse', 'HEAD']);
 assert.equal(run('git', ['status', '--porcelain']), '', 'repeat proof requires a clean source tree');
 const nativeWindows = packArgs[0] === '--native-windows';
@@ -42,8 +44,8 @@ const toolchain = {
   cargo: run('cargo', ['--version']),
 };
 if (nativeWindows) {
-  toolchain.msvc = probe('cl.exe');
-  toolchain.linker = probe('link.exe');
+  toolchain.msvc = probe('cl.exe', [], msvcIdentity);
+  toolchain.linker = probe('link.exe', [], linkerIdentity);
   toolchain.sdk = {
     directory:process.env.WindowsSdkDir?.replace(/[\\/]+$/, '') ??
       join(process.env['ProgramFiles(x86)'] ?? process.env.ProgramFiles ?? 'C:\\Program Files (x86)', 'Windows Kits', '10'),
