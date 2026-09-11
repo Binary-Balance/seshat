@@ -64,6 +64,41 @@ Run the validation branches locally without a framework or dependency install:
 node benchmarks/proofs/linux-arm64-preflight.mjs --self-check
 ```
 
+## Observed run
+
+The first hosted run is [workflow run 34552058821](https://github.com/Binary-Balance/seshat/actions/runs/34552058821)
+from [PR 18](https://github.com/Binary-Balance/seshat/pull/18). Its
+[retained JSON report](../outputs/linux-arm64-preflight.json) has SHA-256
+`8e62ec60daa077377b168b954a380b031b985df328749b56d4e1f1c939ee613c`.
+Validation passed with these observations:
+
+| Field | Observation |
+| --- | --- |
+| Userspace | Ubuntu 22.04.5 LTS, Jammy, glibc 2.35 |
+| Architecture | Node `arm64`, `uname -m` `aarch64` |
+| Kernel | `6.8.0-1064-azure` |
+| Node and npm | Node `v24.20.0`, npm `11.19.0` |
+| Rust | rustc and Cargo `1.98.1`, host `aarch64-unknown-linux-gnu` |
+| Compilers and tools | GCC/G++ `11.4.0`, Clang `14.0.0`, GNU ld `2.38`, Make `4.3` |
+| Runner image | `ubuntu22-arm64`, version `20260907.126.1` |
+| Process cleanup probe | POSIX `kill -0` available |
+
+The workflow tested the synthetic pull-request merge commit
+`15b4a9b4c541a946c7a197d42f6e6cb482757d77`, recorded in the report's
+`sourceCommit` and `workflowSha` fields. The PR head was
+`13fd0f1cadd1accee861a2f4ced0556d12ffdde9`; the two commits are intentionally
+distinct, so this is evidence for the tested merge result rather than a claim
+about an unmerged branch head. The report records the exact workflow ref and
+run ID.
+
+For source provenance, the preflight script SHA-256 is
+`c975a1d8135d1219e863c40d2d57ec67b997348d59d013284708db8b9940b649`, and the
+workflow SHA-256 is
+`6ef8134d5d4717a3ae59d13c68e83996693292d767f1e2ed46ba7c5c704ce7cc`.
+
+This verifies the candidate environment only. It does not establish Seshat
+build or installation support, and it does not claim a minimum kernel.
+
 ## Remaining issue 2 acceptance
 
 This preflight does not satisfy the rest of issue 2. The later platform proof

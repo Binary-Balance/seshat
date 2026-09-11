@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "kind": "seshat-linux-arm64-preflight",
+  "capturedAt": "2026-09-11T01:47:30.060Z",
+  "candidate": {
+    "runner": "ubuntu-22.04-arm",
+    "userspace": "Ubuntu 22.04 / glibc 2.35",
+    "node": "24.20.0"
+  },
+  "environment": {
+    "platform": "linux",
+    "os": {
+      "release": {
+        "PRETTY_NAME": "Ubuntu 22.04.5 LTS",
+        "NAME": "Ubuntu",
+        "VERSION_ID": "22.04",
+        "VERSION": "22.04.5 LTS (Jammy Jellyfish)",
+        "VERSION_CODENAME": "jammy",
+        "ID": "ubuntu",
+        "ID_LIKE": "debian",
+        "HOME_URL": "https://www.ubuntu.com/",
+        "SUPPORT_URL": "https://help.ubuntu.com/",
+        "BUG_REPORT_URL": "https://bugs.launchpad.net/ubuntu/",
+        "PRIVACY_POLICY_URL": "https://www.ubuntu.com/legal/terms-and-policies/privacy-policy",
+        "UBUNTU_CODENAME": "jammy"
+      }
+    },
+    "architecture": {
+      "node": "arm64",
+      "unameMachine": "aarch64"
+    },
+    "kernel": {
+      "release": "6.8.0-1064-azure",
+      "unameRelease": "6.8.0-1064-azure"
+    },
+    "glibc": "2.35",
+    "node": {
+      "version": "v24.20.0"
+    },
+    "npm": {
+      "available": true,
+      "version": "11.19.0"
+    },
+    "toolchain": {
+      "rust": {
+        "rustc": {
+          "available": true,
+          "version": "rustc 1.98.1 (48a229cea 2026-09-01)"
+        },
+        "cargo": {
+          "available": true,
+          "version": "cargo 1.98.1 (797e8a9bc 2026-08-05)"
+        },
+        "host": "aarch64-unknown-linux-gnu"
+      },
+      "gcc": {
+        "available": true,
+        "version": "gcc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0"
+      },
+      "gxx": {
+        "available": true,
+        "version": "g++ (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0"
+      },
+      "clang": {
+        "available": true,
+        "version": "Ubuntu clang version 14.0.0-1ubuntu1.1"
+      },
+      "cc": {
+        "available": true,
+        "version": "cc (Ubuntu 11.4.0-1ubuntu1~22.04.3) 11.4.0"
+      },
+      "linker": {
+        "available": true,
+        "version": "GNU ld (GNU Binutils for Ubuntu) 2.38"
+      },
+      "make": {
+        "available": true,
+        "version": "GNU Make 4.3"
+      },
+      "python": {
+        "available": true,
+        "version": "Python 3.10.12"
+      }
+    },
+    "kill": {
+      "available": true,
+      "status": 0,
+      "error": null,
+      "version": "kill from procps-ng 3.3.17"
+    },
+    "runnerImage": {
+      "label": "ubuntu-22.04-arm",
+      "os": "Linux",
+      "architecture": "ARM64",
+      "name": "GitHub Actions 1000000569",
+      "imageOS": "ubuntu22-arm64",
+      "imageVersion": "20260907.126.1"
+    }
+  },
+  "provenance": {
+    "repository": "Binary-Balance/seshat",
+    "ref": "refs/pull/18/merge",
+    "event": "pull_request",
+    "workflow": "Linux ARM64 preflight",
+    "workflowRef": "Binary-Balance/seshat/.github/workflows/linux-arm64-preflight.yml@refs/pull/18/merge",
+    "workflowSha": "15b4a9b4c541a946c7a197d42f6e6cb482757d77",
+    "job": "preflight",
+    "runId": "34552058821",
+    "runAttempt": "1",
+    "sourceCommit": "15b4a9b4c541a946c7a197d42f6e6cb482757d77"
+  },
+  "validation": {
+    "passed": true,
+    "failures": []
+  }
+}
