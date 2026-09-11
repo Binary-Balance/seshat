@@ -14,6 +14,8 @@ native library requirements and dependency versions of a packed build.
 The native protocol and its limits are documented in
 `docs/linux-x64-package.md`; the complete userspace proof is in
 `benchmarks/proofs/README.md`, under "Debian 11 installed-package verification".
+The separate Windows x64 candidate is documented in
+`docs/windows-package.md` and `README-windows.md`.
 
 ## Install and use
 
