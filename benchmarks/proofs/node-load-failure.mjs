@@ -1,8 +1,9 @@
 // Minimal native-executor regression: a comparison changes module initialisation.
 import assert from 'node:assert/strict';
+import {spawnSync} from 'node:child_process';
 import {mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
 import {dirname, join, resolve} from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath, pathToFileURL} from 'node:url';
 import {runProcess} from './process.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -15,7 +16,7 @@ const plain = 'export const ready = 1 === 1;\n';
 const test = "import {test} from 'node:test';import {ready} from './subject.ts';test('ready',()=>{if(!ready)throw Error('not ready')});\n";
 writeFileSync(join(project, 'package.json'), '{"type":"module"}');
 const config = {template:project,scratch:work,source:'subject.ts',runner:'node',timeoutMs:5000,
-  test:[process.execPath,'--test',`--test-reporter=${join(here,'node-reporter.mjs')}`,'@ROOT@/check.mjs']};
+  test:[process.execPath,'--test',`--test-reporter=${pathToFileURL(join(here,'node-reporter.mjs')).href}`,'@ROOT@/check.mjs']};
 const results = {};
 async function execute(name, app, tests, expected, other) {
   writeFileSync(join(project, 'subject.ts'), app);
@@ -40,6 +41,8 @@ async function execute(name, app, tests, expected, other) {
 }
 const guard = await execute('module-guard', source, test, 'killed');
 assert.equal(guard.outcomes[0].evidence.report.moduleFailures.length, 1);
+const nested = "import {test} from 'node:test';import assert from 'node:assert/strict';import {spawnSync} from 'node:child_process';import {ready} from './subject.ts';test('nested child cwd',()=>{if(!ready)throw Error('not ready');const child=spawnSync(process.execPath,['-e','if(!process.env.SESHAT_LOAD_CONTEXT)process.exit(1)'],{cwd:'..',env:process.env,encoding:'utf8'});assert.equal(child.status,0,child.stderr);});";
+await execute('nested-child-cwd', source, nested, 'killed');
 await execute('unicode-crlf', 'const label="🎸";\r\n'+source.replace('\n','\r\n'), test, 'killed');
 const called = "import {test} from 'node:test';import {load} from './subject.ts';load();test('pass',()=>{});";
 await execute('called-guard', plain+"export function load(){if(!ready)throw new Error('called guard');}", called, 'killed');

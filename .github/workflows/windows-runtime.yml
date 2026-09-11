@@ -1,0 +1,106 @@
+name: Windows runtime foundation
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/windows-runtime.yml
+      - benchmarks/proofs/Cargo.toml
+      - benchmarks/proofs/Cargo.lock
+      - benchmarks/proofs/src/**
+      - benchmarks/proofs/windows-runtime-preflight.mjs
+      - benchmarks/proofs/windows-runtime-cli.mjs
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/windows-runtime.yml
+      - benchmarks/proofs/Cargo.toml
+      - benchmarks/proofs/Cargo.lock
+      - benchmarks/proofs/src/**
+      - benchmarks/proofs/windows-runtime-preflight.mjs
+      - benchmarks/proofs/windows-runtime-cli.mjs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runtime:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    env:
+      CARGO_TARGET_DIR: benchmarks/rust/target
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.20.0
+      - name: Set up Rust 1.98.1
+        shell: pwsh
+        run: |
+          rustup toolchain install 1.98.1-x86_64-pc-windows-msvc --profile minimal --no-self-update
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          rustup default 1.98.1-x86_64-pc-windows-msvc
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          rustc -vV
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo -V
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Run environment preflight
+        shell: pwsh
+        run: |
+          node benchmarks/proofs/windows-runtime-preflight.mjs --output windows-runtime-preflight.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload preflight report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-runtime-preflight
+          path: windows-runtime-preflight.json
+          if-no-files-found: error
+      - name: Install locked JavaScript dependencies
+        shell: pwsh
+        run: |
+          npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm ci --prefix benchmarks/proofs --ignore-scripts --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Fetch locked Rust dependencies
+        shell: pwsh
+        run: |
+          cargo fetch --locked --manifest-path benchmarks/proofs/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build complete CLI binaries
+        shell: pwsh
+        run: |
+          cargo build --release --locked --manifest-path benchmarks/proofs/Cargo.toml --bins
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Run Rust tests
+        shell: pwsh
+        run: |
+          cargo test --locked --manifest-path benchmarks/proofs/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Check CLI entry points
+        shell: pwsh
+        run: |
+          & "${{ github.workspace }}\benchmarks\rust\target\release\seshat.exe" --help
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $source = Join-Path $env:RUNNER_TEMP 'seshat-runtime-subject.ts'
+          Set-Content -Path $source -Value 'export const value = (input: number) => input >= 0;' -NoNewline
+          & "${{ github.workspace }}\benchmarks\rust\target\release\seshat-proofs.exe" inspect $source
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Run native CLI proof
+        shell: pwsh
+        run: |
+          $env:SESHAT_CONSOLE_HELPER_BINARY = "${{ github.workspace }}\benchmarks\rust\target\release\windows-console-helper.exe"
+          $env:SESHAT_WINDOWS_EVIDENCE_PATH = "${{ github.workspace }}\windows-runtime-cli-evidence.json"
+          node benchmarks/proofs/windows-runtime-cli.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload native CLI evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-runtime-cli-evidence
+          path: windows-runtime-cli-evidence.json
+          if-no-files-found: warn
