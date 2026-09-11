@@ -30,7 +30,7 @@ writeFileSync(hook, `import {registerHooks} from 'node:module';import {writeFile
 const prepared=${JSON.stringify(prepared)};
 registerHooks({load(url,context,next){return Object.hasOwn(prepared,url)?{format:'module',shortCircuit:true,source:prepared[url]}:next(url,context);}});
 process.on('exit',()=>{if(globalThis.__coverage__)writeFileSync(${JSON.stringify(counters)}+'/'+process.pid+'.json',JSON.stringify(globalThis.__coverage__));});`);
-const run = spawnSync(process.execPath, ['--import', hook, '--test', '--test-concurrency=1',
+const run = spawnSync(process.execPath, ['--import', pathToFileURL(hook).href, '--test', '--test-concurrency=1',
   `--test-reporter=${process.env.SESHAT_NODE_REPORTER}`, ...process.argv.slice(2)], {stdio:'inherit'});
 assert.ifError(run.error);
 if (run.status !== 0) process.exit(run.status ?? 2);

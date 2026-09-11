@@ -7,10 +7,130 @@ use serde_json::{Value, json};
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs,
-    os::unix::fs::{DirBuilderExt, symlink},
     path::{Path, PathBuf},
     time::{SystemTime, UNIX_EPOCH},
 };
+
+#[cfg(unix)]
+use std::os::unix::fs::{DirBuilderExt, symlink};
+
+#[cfg(windows)]
+use std::os::windows::fs::{symlink_dir, symlink_file};
+
+fn stable_path(path: &Path) -> String {
+    let value = path.to_string_lossy();
+    #[cfg(windows)]
+    {
+        return value.replace('\\', "/");
+    }
+    #[cfg(not(windows))]
+    {
+        value.into_owned()
+    }
+}
+
+fn path_key(path: &Path) -> String {
+    let value = stable_path(path);
+    #[cfg(windows)]
+    {
+        return value.to_ascii_lowercase();
+    }
+    #[cfg(not(windows))]
+    {
+        value
+    }
+}
+
+fn same_component(left: &std::path::Component<'_>, right: &std::path::Component<'_>) -> bool {
+    #[cfg(windows)]
+    {
+        left.as_os_str()
+            .to_string_lossy()
+            .eq_ignore_ascii_case(&right.as_os_str().to_string_lossy())
+    }
+    #[cfg(not(windows))]
+    {
+        left == right
+    }
+}
+
+fn has_path_prefix(path: &Path, prefix: &Path) -> bool {
+    let mut path = path.components();
+    let mut prefix = prefix.components();
+    loop {
+        match prefix.next() {
+            None => return true,
+            Some(expected) => match path.next() {
+                Some(actual) if same_component(&actual, &expected) => {}
+                _ => return false,
+            },
+        }
+    }
+}
+
+fn relative_path(root: &Path, path: &Path) -> Option<PathBuf> {
+    if !has_path_prefix(path, root) {
+        return None;
+    }
+    let prefix_length = root.components().count();
+    Some(
+        path.components()
+            .skip(prefix_length)
+            .fold(PathBuf::new(), |mut relative, component| {
+                relative.push(component.as_os_str());
+                relative
+            }),
+    )
+}
+
+fn within(root: &Path, path: &Path) -> bool {
+    relative_path(root, path).is_some()
+}
+
+fn is_link(metadata: &fs::Metadata) -> bool {
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::MetadataExt;
+        const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x0400;
+        return metadata.file_type().is_symlink()
+            || metadata.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0;
+    }
+    #[cfg(not(windows))]
+    {
+        metadata.file_type().is_symlink()
+    }
+}
+
+fn create_link(target: impl AsRef<Path>, link: impl AsRef<Path>) -> std::io::Result<()> {
+    let target = target.as_ref();
+    let link = link.as_ref();
+    #[cfg(unix)]
+    {
+        symlink(target, link)
+    }
+    #[cfg(windows)]
+    {
+        // Windows link APIs require native separators even when the project stores relative
+        // paths with `/` separators.
+        let native_target = PathBuf::from(target.to_string_lossy().replace('/', "\\"));
+        let target_for_kind = if native_target.is_absolute() {
+            native_target.clone()
+        } else {
+            link.parent().unwrap_or(Path::new(".")).join(&native_target)
+        };
+        let result = if fs::metadata(&target_for_kind).is_ok_and(|metadata| metadata.is_dir()) {
+            symlink_dir(&native_target, link)
+        } else {
+            symlink_file(&native_target, link)
+        };
+        result?;
+        if target_for_kind.exists() {
+            fs::canonicalize(link).map(|_| ())
+        } else {
+            Ok(())
+        }
+    }
+}
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -169,7 +289,8 @@ impl Config {
                 ));
             }
             if config.capture[..i].iter().any(|previous| {
-                Path::new(entry).starts_with(previous) || Path::new(previous).starts_with(entry)
+                has_path_prefix(Path::new(entry), Path::new(previous))
+                    || has_path_prefix(Path::new(previous), Path::new(entry))
             }) {
                 return Err(format!("overlapping capture entry: {entry}"));
             }
@@ -203,7 +324,7 @@ impl Config {
             } else {
                 Path::new(&setup.cwd)
             };
-            if !reports.insert(cwd.join(&setup.coverage.report)) {
+            if !reports.insert(path_key(&cwd.join(&setup.coverage.report))) {
                 return Err("setups must have distinct coverage report destinations".into());
             }
         }
@@ -221,8 +342,14 @@ impl OwnedDirectory {
             .as_nanos();
         let path = parent.join(format!("capture-{}-{stamp}", std::process::id()));
         // create, never create_dir_all: a collision must not adopt someone else's directory.
-        fs::DirBuilder::new()
-            .mode(0o700)
+        let builder = fs::DirBuilder::new();
+        #[cfg(unix)]
+        let builder = {
+            let mut builder = builder;
+            builder.mode(0o700);
+            builder
+        };
+        builder
             .create(&path)
             .map_err(|e| format!("create capture: {e}"))?;
         Ok(Self(path))
@@ -272,7 +399,7 @@ fn walk(
     let metadata =
         fs::symlink_metadata(&path).map_err(|e| format!("read {}: {e}", path.display()))?;
     let kind = metadata.file_type();
-    let entry = if kind.is_symlink() {
+    let entry = if is_link(&metadata) {
         Entry::Link
     } else if kind.is_dir() {
         Entry::Directory
@@ -284,7 +411,7 @@ fn walk(
     if !relative.as_os_str().is_empty() {
         entries.insert(relative.into(), entry);
     }
-    if kind.is_dir() {
+    if matches!(entry, Entry::Directory) {
         let mut children = fs::read_dir(&path)
             .map_err(|e| e.to_string())?
             .map(|entry| entry.map(|e| e.file_name()))
@@ -302,11 +429,7 @@ fn no_link_parents(root: &Path, relative: &Path) -> Result<(), String> {
     let mut path = root.to_path_buf();
     for part in relative.parent().unwrap_or(Path::new("")).components() {
         path.push(part);
-        if fs::symlink_metadata(&path)
-            .map_err(|e| e.to_string())?
-            .file_type()
-            .is_symlink()
-        {
+        if is_link(&fs::symlink_metadata(&path).map_err(|e| e.to_string())?) {
             return Err(format!(
                 "capture entry has a symbolic-link parent: {}",
                 relative.display()
@@ -320,7 +443,7 @@ fn source_paths(root: &Path, config: &Config) -> Result<Vec<PathBuf>, String> {
     let include = patterns(&config.source.include)?;
     let exclude = patterns(&config.source.exclude)?;
     let options = MatchOptions {
-        case_sensitive: true,
+        case_sensitive: !cfg!(windows),
         require_literal_separator: true,
         require_literal_leading_dot: false,
     };
@@ -340,7 +463,10 @@ fn source_paths(root: &Path, config: &Config) -> Result<Vec<PathBuf>, String> {
     prefixes.sort();
     let mut visited = Vec::<PathBuf>::new();
     for prefix in prefixes {
-        if visited.iter().any(|parent| prefix.starts_with(parent)) {
+        if visited
+            .iter()
+            .any(|parent| has_path_prefix(&prefix, parent))
+        {
             continue;
         }
         match fs::symlink_metadata(root.join(&prefix)) {
@@ -359,10 +485,10 @@ fn source_paths(root: &Path, config: &Config) -> Result<Vec<PathBuf>, String> {
         if matches!(kind, Entry::Directory) {
             continue;
         }
-        let name = path.to_str().ok_or("source paths must be UTF-8")?;
+        let name = stable_path(&path);
         let mut included = false;
         for (i, pattern) in include.iter().enumerate() {
-            if pattern.matches_with(name, options) {
+            if pattern.matches_with(&name, options) {
                 included = true;
                 matched[i] = true;
             }
@@ -370,7 +496,7 @@ fn source_paths(root: &Path, config: &Config) -> Result<Vec<PathBuf>, String> {
         if !included
             || exclude
                 .iter()
-                .any(|pattern| pattern.matches_with(name, options))
+                .any(|pattern| pattern.matches_with(&name, options))
         {
             continue;
         }
@@ -433,7 +559,7 @@ impl CapturedProject {
 
     pub fn scope(&self) -> Value {
         json!({"include":self.config.source.include,"exclude":self.config.source.exclude,
-            "files":self.sources.iter().map(|(path, _)| path).collect::<Vec<_>>(),
+            "files":self.sources.iter().map(|(path, _)| stable_path(path)).collect::<Vec<_>>(),
             "setups":self.config.setups.iter().map(|s| json!({"name":s.name,"runner":s.runner.label(),"cwd":s.cwd})).collect::<Vec<_>>()})
     }
 
@@ -468,7 +594,7 @@ impl CapturedProject {
             .ok_or("configuration has no project directory")?;
         let config = Config::parse(&fs::read(&config_path).map_err(|e| e.to_string())?)?;
         let scratch = fs::canonicalize(scratch).map_err(|e| format!("scratch directory: {e}"))?;
-        if !scratch.is_dir() || scratch.starts_with(root) {
+        if !scratch.is_dir() || within(root, &scratch) {
             return Err("scratch must be an existing directory outside the project".into());
         }
         let selected = source_paths(root, &config)?;
@@ -518,9 +644,8 @@ impl CapturedProject {
             super::check_cancellation()?;
             let resolved = fs::canonicalize(root.join(relative))
                 .map_err(|e| format!("resolve link {}: {e}", relative.display()))?;
-            let local = resolved
-                .strip_prefix(root)
-                .map_err(|_| format!("link escapes project: {}", relative.display()))?;
+            let local = relative_path(root, &resolved)
+                .ok_or_else(|| format!("link escapes project: {}", relative.display()))?;
             let target = directory.0.join(local);
             if !target.exists() {
                 return Err(format!(
@@ -528,7 +653,7 @@ impl CapturedProject {
                     relative.display()
                 ));
             }
-            symlink(&target, directory.0.join(relative)).map_err(|e| e.to_string())?;
+            create_link(&target, &directory.0.join(relative)).map_err(|e| e.to_string())?;
         }
         for setup in &config.setups {
             let cwd = directory.0.join(&setup.cwd);
@@ -538,7 +663,7 @@ impl CapturedProject {
                     setup.name
                 )
             })?;
-            if !resolved.starts_with(&directory.0) || !resolved.is_dir() {
+            if !within(&directory.0, &resolved) || !resolved.is_dir() {
                 return Err(format!(
                     "invalid captured working directory for setup {}",
                     setup.name
@@ -572,11 +697,11 @@ impl CapturedProject {
             .sources
             .iter()
             .map(
-                |(path, source)| match Analysis::inspect(path.to_str().unwrap(), source) {
-                    Ok(analysis) => json!({"path":path,"analysis":analysis.json()}),
+                |(path, source)| match Analysis::inspect(&stable_path(path), source) {
+                    Ok(analysis) => json!({"path":stable_path(path),"analysis":analysis.json()}),
                     Err(error) => {
                         complete = false;
-                        json!({"path":path,"error":error})
+                        json!({"path":stable_path(path),"error":error})
                     }
                 },
             )
@@ -602,7 +727,6 @@ impl CapturedProject {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::os::unix::fs::MetadataExt;
 
     struct Fixture {
         _directory: OwnedDirectory,
@@ -662,7 +786,7 @@ mod tests {
             )
             .unwrap();
             fs::write(project.join(".git/config"), "must not copy\n").unwrap();
-            symlink(
+            create_link(
                 "../../packages/rules",
                 project.join("node_modules/@fixture/rules"),
             )
@@ -712,11 +836,7 @@ mod tests {
             fs::read(second.directory.0.join(source)).unwrap(),
             fs::read(original.directory.0.join(source)).unwrap()
         );
-        assert_ne!(
-            fs::metadata(first.directory.0.join(source)).unwrap().ino(),
-            fs::metadata(second.directory.0.join(source)).unwrap().ino()
-        );
-        symlink(
+        create_link(
             &fixture.project,
             original.directory.0.join("escaped-output"),
         )
@@ -845,7 +965,7 @@ mod tests {
             captured
                 .sources
                 .iter()
-                .map(|(path, _)| path.to_str().unwrap())
+                .map(|(path, _)| stable_path(path))
                 .collect::<Vec<_>>(),
             [
                 "packages/rules/index.ts",
@@ -853,17 +973,13 @@ mod tests {
                 "src/nested/render.tsx"
             ]
         );
-        let original = fs::metadata(&external).unwrap();
-        let copy = fs::metadata(captured.directory.0.join("src/calc.ts")).unwrap();
-        assert_ne!((original.dev(), original.ino()), (copy.dev(), copy.ino()));
         assert!(!captured.directory.0.join(".git").exists());
         assert!(!captured.directory.0.join("COMMAND-RAN").exists());
         let link = captured.directory.0.join("node_modules/@fixture/rules");
-        assert!(
-            fs::canonicalize(&link)
-                .unwrap()
-                .starts_with(&captured.directory.0)
-        );
+        assert!(within(
+            &captured.directory.0,
+            &fs::canonicalize(&link).unwrap()
+        ));
         // Mutating both a copied file and a workspace dependency cannot write back.
         fs::write(captured.directory.0.join("src/calc.ts"), "changed\n").unwrap();
         fs::write(link.join("index.ts"), "changed\n").unwrap();
@@ -958,13 +1074,13 @@ mod tests {
                 "outside" => {
                     let outside = fixture._directory.0.join("outside.txt");
                     fs::write(&outside, "untouched").unwrap();
-                    symlink(outside, &link).unwrap();
+                    create_link(&outside, &link).unwrap();
                 }
-                "dangling" => symlink("absent", &link).unwrap(),
-                "cycle" => symlink("link", &link).unwrap(),
+                "dangling" => create_link(Path::new("absent"), &link).unwrap(),
+                "cycle" => create_link(Path::new("link"), &link).unwrap(),
                 "omitted" => {
                     fs::write(fixture.project.join("omitted.txt"), "not captured").unwrap();
-                    symlink("../omitted.txt", &link).unwrap();
+                    create_link(Path::new("../omitted.txt"), &link).unwrap();
                 }
                 _ => unreachable!(),
             }
@@ -976,7 +1092,7 @@ mod tests {
     #[test]
     fn selected_links_and_link_parents_are_rejected() {
         let mut fixture = Fixture::new();
-        symlink("calc.ts", fixture.project.join("src/alias.ts")).unwrap();
+        create_link(Path::new("calc.ts"), &fixture.project.join("src/alias.ts")).unwrap();
         assert!(
             fixture
                 .capture()
@@ -985,7 +1101,7 @@ mod tests {
                 .contains("selected source must not")
         );
         fs::remove_file(fixture.project.join("src/alias.ts")).unwrap();
-        symlink("src", fixture.project.join("alias")).unwrap();
+        create_link(Path::new("src"), &fixture.project.join("alias")).unwrap();
         fixture.config["capture"]
             .as_array_mut()
             .unwrap()

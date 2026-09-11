@@ -484,9 +484,11 @@ dependencies = [
  "oxc_ast_visit",
  "oxc_parser",
  "oxc_span",
+ "percent-encoding",
  "serde",
  "serde_json",
  "signal-hook",
+ "windows-sys",
 ]
 
 [[package]]

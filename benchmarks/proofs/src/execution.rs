@@ -1,11 +1,12 @@
-// Unix process supervision for controlled, disposable proof fixtures.
+// Platform process supervision for controlled, disposable proof fixtures.
 mod job;
+mod platform;
 mod project;
 use crate::{analysis::Analysis, assessment};
 use assessment::TestState;
+use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 pub use project::{AssessmentMode, CapturedProject, Thresholds};
 use serde_json::{Value, json};
-use std::os::unix::process::CommandExt;
 use std::{
     fs,
     io::Write,
@@ -22,13 +23,91 @@ use std::{
 // ponytail: one CLI run per process; pass cancellation explicitly if this becomes a library.
 static CANCEL_SIGNAL: OnceLock<Arc<AtomicUsize>> = OnceLock::new();
 
+fn stable_path(path: &Path) -> String {
+    let value = path.to_string_lossy();
+    #[cfg(windows)]
+    {
+        return value.replace('\\', "/");
+    }
+    #[cfg(not(windows))]
+    {
+        value.into_owned()
+    }
+}
+
+const FILE_URL_SEGMENT: &AsciiSet = &CONTROLS
+    .add(b' ')
+    .add(b'"')
+    .add(b'#')
+    .add(b'%')
+    .add(b'<')
+    .add(b'>')
+    .add(b'?')
+    .add(b'[')
+    .add(b']')
+    .add(b'`')
+    .add(b'{')
+    .add(b'}');
+
+fn encode_file_url_path(path: &str) -> String {
+    path.split('/')
+        .map(|part| percent_encode(part.as_bytes(), FILE_URL_SEGMENT).to_string())
+        .collect::<Vec<_>>()
+        .join("/")
+}
+
+// Node's inherited --import option is resolved from every descendant's cwd. A file URL keeps
+// that preload independent of cwd and lets the URL encoder handle spaces, Unicode and '#'.
+fn module_file_url(path: &Path) -> Result<String, String> {
+    let value = path.to_str().ok_or("module path is not valid UTF-8")?;
+    if !path.is_absolute() {
+        return Err("module paths must be absolute".into());
+    }
+    #[cfg(windows)]
+    {
+        let value = if let Some(rest) = value.strip_prefix("\\\\?\\UNC\\") {
+            format!("\\\\{rest}")
+        } else {
+            value.strip_prefix("\\\\?\\").unwrap_or(value).to_owned()
+        };
+        let value = value.replace('\\', "/");
+        if value.starts_with("//") {
+            return Ok(format!("file:{}", encode_file_url_path(&value)));
+        }
+        if value.as_bytes().get(1) == Some(&b':') && value.as_bytes().get(2) == Some(&b'/') {
+            return Ok(format!("file:///{}", encode_file_url_path(&value)));
+        }
+        return Err("module path is not a supported Windows absolute path".into());
+    }
+    #[cfg(not(windows))]
+    {
+        Ok(format!("file://{}", encode_file_url_path(value)))
+    }
+}
+
+// Jest and Vitest accept absolute filesystem references, but Windows' verbatim prefix is a Node
+// package specifier rather than a filesystem path. Keep each runner's resolver base intact.
+fn module_path(path: &Path) -> Result<String, String> {
+    if !path.is_absolute() {
+        return Err("module paths must be absolute".into());
+    }
+    let value = path.to_str().ok_or("module path is not valid UTF-8")?;
+    #[cfg(windows)]
+    {
+        if let Some(rest) = value.strip_prefix("\\\\?\\UNC\\") {
+            return Ok(format!("\\\\{rest}"));
+        }
+        return Ok(value.strip_prefix("\\\\?\\").unwrap_or(value).to_owned());
+    }
+    #[cfg(not(windows))]
+    {
+        Ok(value.to_owned())
+    }
+}
+
 pub fn install_cancellation() -> Result<(), String> {
     let flag = CANCEL_SIGNAL.get_or_init(|| Arc::new(AtomicUsize::new(0)));
-    for signal in [signal_hook::consts::SIGINT, signal_hook::consts::SIGTERM] {
-        signal_hook::flag::register_usize(signal, flag.clone(), signal as usize)
-            .map_err(|e| format!("install cancellation handler: {e}"))?;
-    }
-    Ok(())
+    platform::install_cancellation(flag.clone())
 }
 
 pub fn cancellation_signal() -> usize {
@@ -78,18 +157,15 @@ fn observe_node_loads(
     let source_contexts = sources
         .iter()
         .map(|(source_path, source)| {
-            let analysis = Analysis::inspect(
-                source_path.to_str().ok_or("source path must be UTF-8")?,
-                source,
-            )?;
+            let analysis = Analysis::inspect(&stable_path(source_path), source)?;
             Ok::<_, String>(json!({
-                "source":source_path,
+                "source":stable_path(source_path),
                 "sites":analysis.load_failure_sites(source),
             }))
         })
         .collect::<Result<Vec<_>, _>>()?;
     let context = if let [source_context] = source_contexts.as_slice() {
-        json!({"version":1,"executionId":id,"source":sources[0].0,"sites":source_context["sites"]})
+        json!({"version":1,"executionId":id,"source":stable_path(sources[0].0),"sites":source_context["sites"]})
     } else {
         json!({"version":1,"executionId":id,"sources":source_contexts})
     };
@@ -112,7 +188,7 @@ fn observe_node_loads(
     command
         .env(
             "NODE_OPTIONS",
-            format!("--import={}", serde_json::to_string(&observer).unwrap()),
+            format!("--import={}", module_file_url(&observer)?),
         )
         .env("SESHAT_LOAD_CONTEXT", context_path)
         .env("SESHAT_EXECUTION_ID", id);
@@ -197,7 +273,6 @@ impl Session {
         command
             .args(args)
             .current_dir(&self.root)
-            .process_group(0)
             .env(
                 "SESHAT_MUTANT_ID",
                 id.map(|n| n.to_string()).unwrap_or_else(|| "-1".into()),
@@ -223,26 +298,22 @@ impl Session {
             let sources = [(self.source_path.as_path(), source.as_str())];
             observe_node_loads(&mut command, &sources, &receipt, &id)?;
         }
-        let mut child = command.spawn().map_err(|e| format!("spawn: {e}"))?;
+        let mut child = platform::ManagedChild::spawn(&mut command)?;
         let timeout = Duration::from_millis(self.config["timeoutMs"].as_u64().unwrap_or(10000));
         let mut timed_out = false;
-        let mut group_stopped = false;
         let status = loop {
             if let Some(status) = child.try_wait().map_err(|e| e.to_string())? {
                 break status;
             }
             if start.elapsed() >= timeout {
                 timed_out = true;
-                let status = kill_owned_group(&mut child)?;
-                group_stopped = true;
-                break status;
+                break child.kill_tree()?;
             }
             thread::sleep(Duration::from_millis(2));
         };
-        // The leader can finish while descendants are still alive. Only this owned group is targeted.
-        if !group_stopped {
-            let _ = stop_owned_group(child.id());
-        }
+        // The leader can finish while descendants are still alive. The supervisor targets only
+        // this invocation's owned process tree.
+        child.stop_tree_with_settlement()?;
         let report = if receipt.exists() {
             let raw = fs::read_to_string(&receipt).map_err(|e| e.to_string())?;
             serde_json::from_str::<Value>(&raw).ok()
@@ -366,75 +437,6 @@ impl Session {
     }
 }
 
-fn kill_owned_group(child: &mut std::process::Child) -> Result<std::process::ExitStatus, String> {
-    match stop_owned_group(child.id()) {
-        Ok(()) => child.wait().map_err(|e| e.to_string()),
-        Err(error) => settle_owned_group_after_stop_error(child, error),
-    }
-}
-
-const GROUP_SETTLEMENT_TIMEOUT: Duration = Duration::from_millis(100);
-const GROUP_SETTLEMENT_POLL: Duration = Duration::from_millis(2);
-
-fn settle_owned_group_after_stop_error(
-    child: &mut std::process::Child,
-    stop_error: String,
-) -> Result<std::process::ExitStatus, String> {
-    // A macOS group can briefly remain visible after its leader has exited.
-    // Wait without sending another signal: ESRCH is the only proof that the
-    // owned group is gone, while EPERM must still be reported for a live group.
-    let deadline = Instant::now() + GROUP_SETTLEMENT_TIMEOUT;
-    let status = loop {
-        match child.try_wait().map_err(|e| e.to_string())? {
-            Some(status) => break status,
-            None if Instant::now() >= deadline => return Err(stop_error),
-            None => thread::sleep(GROUP_SETTLEMENT_POLL),
-        }
-    };
-    loop {
-        if owned_group_is_gone(child.id()) {
-            return Ok(status);
-        }
-        if Instant::now() >= deadline {
-            return Err(stop_error);
-        }
-        thread::sleep(GROUP_SETTLEMENT_POLL);
-    }
-}
-
-fn owned_group_is_gone(pid: u32) -> bool {
-    let Ok(pid) = i32::try_from(pid) else {
-        return false;
-    };
-    if pid <= 1 {
-        return false;
-    }
-    // SAFETY: this is the dedicated process group created for the owned child;
-    // signal zero only probes its existence and sends no signal.
-    if unsafe { libc::kill(-pid, 0) } == 0 {
-        return false;
-    }
-    std::io::Error::last_os_error().raw_os_error() == Some(libc::ESRCH)
-}
-
-fn stop_owned_group(pid: u32) -> Result<(), String> {
-    let pid = i32::try_from(pid)
-        .ok()
-        .filter(|pid| *pid > 1)
-        .ok_or("invalid owned process group")?;
-    // SAFETY: a positive child PID identifies the dedicated group created by process_group(0).
-    // Negative PID targets only that group, never the caller's group or all processes.
-    if unsafe { libc::kill(-pid, libc::SIGKILL) } == 0 {
-        return Ok(());
-    }
-    let error = std::io::Error::last_os_error();
-    if error.raw_os_error() == Some(libc::ESRCH) {
-        Ok(())
-    } else {
-        Err(format!("stop owned process group: {error}"))
-    }
-}
-
 fn classify(runner: &str, evidence: &Value) -> TestState {
     if evidence["cancelled"] == true {
         return TestState::Cancelled;
@@ -522,4 +524,16 @@ fn observed_failures_require_complete_hook_evidence() {
         changed["report"][field] = value;
         assert_eq!(classify("observed", &changed), expected);
     }
+}
+
+#[test]
+fn module_file_urls_encode_paths_and_are_absolute() {
+    let target = std::env::temp_dir()
+        .join("input path 🎸")
+        .join("node#reporter.mjs");
+    let url = module_file_url(&target).unwrap();
+    assert!(url.starts_with("file://"));
+    assert!(url.contains("input%20path%20%F0%9F%8E%B8"));
+    assert!(url.contains("node%23reporter.mjs"));
+    assert_eq!(module_path(&target).unwrap(), target.to_str().unwrap());
 }
