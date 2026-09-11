@@ -52,8 +52,10 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
         overflow.clone(),
     );
     let mut timed_out = false;
+    let mut termination_attempted = false;
     let status = loop {
         if super::cancellation_signal() != 0 {
+            termination_attempted = true;
             break child.kill_tree();
         }
         match child.try_wait() {
@@ -63,15 +65,17 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
         }
         if start.elapsed() >= timeout || overflow.load(Ordering::Relaxed) {
             timed_out = start.elapsed() >= timeout;
+            termination_attempted = true;
             break child.kill_tree();
         }
         thread::sleep(Duration::from_millis(2));
     };
-    // Also stop descendants when their leader has already exited.
-    let cleanup = if status.is_err() {
-        child.force_cleanup()
+    // A successful owned termination already stopped and reaped its group. Natural leader exits
+    // still need descendant cleanup, and failed termination attempts must get a fail-closed retry.
+    let cleanup = if termination_attempted && status.is_ok() {
+        Ok(())
     } else {
-        child.stop_tree()
+        child.force_cleanup()
     };
     let mut diagnostic = String::new();
     let mut pipe_error = None;
@@ -101,16 +105,31 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
 mod tests {
     use super::*;
 
+    #[cfg(unix)]
     #[test]
-    fn output_and_deadline_are_bounded() {
+    fn exited_child_group_is_reaped_before_cleanup_retry() {
+        let mut command = Command::new("sh");
+        command.args(["-c", "exit 0"]);
+        let mut child = super::super::platform::ManagedChild::spawn(&mut command).unwrap();
+        thread::sleep(Duration::from_millis(100));
+        let status = child.kill_tree().unwrap();
+        assert_eq!(status.code(), Some(0));
+    }
+
+    #[test]
+    fn output_and_deadline_are_bounded_without_redundant_cleanup() {
         let mut command = Command::new("node");
         command.args(["-e", "setInterval(()=>{},1000)"]);
         let result = run(&mut command, Duration::from_millis(100)).unwrap();
         assert_eq!(result["timedOut"], true);
-        let mut command = Command::new("node");
-        command.args(["-e", "process.stdout.write('x'.repeat(5*1024*1024))"]);
-        let result = run(&mut command, Duration::from_secs(5)).unwrap();
-        assert_eq!(result["overflow"], true);
-        assert!(result["diagnostic"].as_str().unwrap().len() <= 2000);
+        // Overflow termination already stops and waits for the owned tree; repeat it to catch
+        // platform races that a second post-status signal would expose.
+        for _ in 0..8 {
+            let mut command = Command::new("node");
+            command.args(["-e", "process.stdout.write('x'.repeat(5*1024*1024))"]);
+            let result = run(&mut command, Duration::from_secs(5)).unwrap();
+            assert_eq!(result["overflow"], true);
+            assert!(result["diagnostic"].as_str().unwrap().len() <= 2000);
+        }
     }
 }
