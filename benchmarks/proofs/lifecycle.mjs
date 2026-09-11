@@ -78,7 +78,10 @@ for(const {name,phase,signal} of cases) {
     await until(()=>exit,'Seshat exit');
     await delay(100);
     const result={exit,ms:performance.now()-started,stdout,stderr,leaderAlive:alive(leader.pid),descendantAlive:alive(descendant.pid),remainingScratch:readdirSync(scratch)};
-    results[name]=result;json(join(work,'result.json'),results);
+    results[name]=result;
+    json(join(work,'result.json'),results);
+    // Keep the configured CI artifact when a later assertion stops the proof.
+    if(process.env.SESHAT_PROOF_OUTPUT) json(process.env.SESHAT_PROOF_OUTPUT,results);
     assert.equal(readFileSync(join(input,'subject.ts'),'utf8'),source);
     assert.equal(alive(sentinel.pid),true,'cleanup affected an unrelated process');
     if(signal!=='SIGKILL') {
