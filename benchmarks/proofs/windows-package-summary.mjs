@@ -9,6 +9,10 @@ assert.ok(selfCheckMode || process.argv.length === 3,
   'usage: node benchmarks/proofs/windows-package-summary.mjs <artifact directory> | --self-check');
 
 const runtimeCases = ['baseline', 'timeout', 'overflow', 'leaderExit', 'leaderExitRepeat', 'consoleCancellation'];
+const runnerCases = {
+  jestExpo: ['normal-1', 'assertion-kill', 'survivor', 'before-all'],
+  vitest: ['stack', 'assertion', 'survived', 'before-all'],
+};
 const hash = value => createHash('sha256').update(value).digest('hex');
 const hashFile = path => hash(readFileSync(path));
 const isCommit = value => typeof value === 'string' && /^(?!0{40})[\da-f]{40}$/i.test(value);
@@ -194,9 +198,9 @@ function validate({preflight, packed, repeat, install, runtime, jestExpo, vitest
   if (!sharedParallel) integrationGaps.push('shared 11-case parallel fixture evidence was not retained');
   else if (Object.keys(sharedParallel).length !== 11) fail('shared parallel fixture evidence did not retain 11 cases');
   if (!jestExpo) integrationGaps.push('installed Jest/Expo four-case evidence was not retained');
-  else checkInstalledControl(jestExpo, 'Jest/Expo', ['normal-1', 'assertion-kill', 'survivor', 'before-all'], packed, fail);
+  else checkInstalledControl(jestExpo, 'Jest/Expo', runnerCases.jestExpo, packed, fail);
   if (!vitest) integrationGaps.push('installed Vitest four-case evidence was not retained');
-  else checkInstalledControl(vitest, 'Vitest', ['stack', 'assertion', 'survived', 'before-all'], packed, fail);
+  else checkInstalledControl(vitest, 'Vitest', runnerCases.vitest, packed, fail);
   return {failures, integrationGaps, repeatPack:Boolean(repeatValid)};
 }
 
@@ -227,6 +231,18 @@ function selfCheck() {
       runnerImage:{label:'windows-2022', os:'Windows'}, toolchain:{rust:{rustc:{available:true, version:'rustc 1.98.1'}, cargo:{available:true, version:'cargo 1.98.1'}, host:'x86_64-pc-windows-msvc'}, msvc:{available:true, version:'cl'}, linker:{available:true, version:'link'}, sdk:{version:'sdk'}}, shell:{systemRoot:'C:', comspec:'C:'}},
     }, packed:{...packed, files:packageFiles.map(path => ({path}))}, repeat, install, runtime};
   assert.deepEqual(validate(base).failures, []);
+  const runnerEvidence = cases => ({
+    checks: {requested: cases.length, completed: cases.length},
+    requestedCases: cases,
+    cli: {source:'executable', binarySha256:binaryHash, version:'seshat 0.0.0 (candidate)'},
+    originalsPreserved: true,
+    noConsumingRust: {probes:[{unavailable:true}], environmentUnset:['CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'NODE_OPTIONS', 'SESHAT_MUTANT_ID']},
+  });
+  const runners = {jestExpo:runnerEvidence(runnerCases.jestExpo), vitest:runnerEvidence(runnerCases.vitest)};
+  assert.deepEqual(validate({...base, ...runners}).failures, []);
+  const missingRunnerCases = structuredClone(runners);
+  delete missingRunnerCases.jestExpo.requestedCases;
+  assert.match(validate({...base, ...missingRunnerCases}).failures.join('\n'), /Jest\/Expo evidence did not retain its four requested cases/);
   const incompletePackage = structuredClone(base);
   incompletePackage.packed = {};
   assert.match(validate(incompletePackage).failures.join('\n'), /package hashes missing/);
