@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {existsSync, readFileSync, statSync, writeFileSync} from 'node:fs';
 import {join, resolve} from 'node:path';
+import {packageFiles, readArchiveBuild, repeatArtifacts, repeatPassed} from './repeat-proof.mjs';
 
 const selfCheck = process.argv[2] === '--self-check';
 assert.ok(selfCheck || process.argv.length === 3,
@@ -20,8 +21,6 @@ const lifecycleCases = [
 ];
 const environmentNames = ['CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'NODE_OPTIONS', 'SESHAT_MUTANT_ID'];
 const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
-const repeatPassed = value => value?.validation?.passed === true &&
-  ['binary', 'build', 'npmArchive', 'standaloneArchive'].every(name => value.comparisons?.[name]?.passed === true);
 
 function validateRunner(label, value, cases, packed, artifacts, fail) {
   if (!value) {
@@ -100,6 +99,8 @@ function validateLifecycle(value, fail) {
 function validate({preflight, packed, npm, standalone, jestExpo, vitest, lifecycle, repeat}, parseErrors = {}, artifactDirectory = null, artifacts = {}) {
   const failures = Object.entries(parseErrors).map(([name, message]) => `${name}: invalid JSON (${message})`);
   const fail = message => failures.push(message);
+  const retainedPackageBuild = artifactDirectory && artifacts.tarball?.file
+    ? readArchiveBuild(join(artifactDirectory, artifacts.tarball.file)) : null;
   if (!preflight) fail('preflight result missing');
   else if (preflight.validation?.passed !== true) fail('preflight validation failed');
   if (!packed) fail('package result missing');
@@ -118,7 +119,12 @@ function validate({preflight, packed, npm, standalone, jestExpo, vitest, lifecyc
     }
   }
   if (!repeat) fail('repeat pack result missing');
-  else if (!repeatPassed(repeat)) fail('repeat pack reproducibility proof failed');
+  else if (!repeatPassed(repeat, {
+    sourceCommit: preflight?.provenance?.sourceCommit,
+    expectedTarget: 'aarch64-unknown-linux-gnu', expectedPlatform: 'linux', expectedArch: 'arm64', expectedMachine: 'aarch64',
+    inputMode: '--native-arm64', hostGlibc: preflight?.environment?.glibc, nodeVersion: preflight?.environment?.node?.version,
+    packed, npm, standalone, artifacts, requireArtifacts: Boolean(artifactDirectory), retainedBuild: retainedPackageBuild,
+  })) fail('repeat pack reproducibility proof failed');
   if (!npm) fail('npm result missing');
   else {
     if (Object.keys(npm.checks ?? {}).length !== 16) fail('npm proof did not retain 16 checks');
@@ -142,9 +148,9 @@ function validate({preflight, packed, npm, standalone, jestExpo, vitest, lifecyc
   return failures;
 }
 
-const selfCheckRunner = cases => ({
+const selfCheckRunner = (cases, binary = 'binary', tarball = 'tarball') => ({
   version: 1,
-  cli: {source: 'tarball', version: 'seshat 0.0.0 (candidate)', tarballSha256: 'tarball', binarySha256: 'binary'},
+  cli: {source: 'tarball', version: 'seshat 0.0.0 (candidate)', tarballSha256: tarball, binarySha256: binary},
   noConsumingRust: {
     probes: [{command: 'cargo', unavailable: true}, {command: 'rustc', unavailable: true}],
     environmentUnset: environmentNames,
@@ -173,25 +179,40 @@ const selfCheckLifecycle = Object.fromEntries(lifecycleCases.map(name => {
 selfCheckLifecycle.completed = true;
 
 function selfCheckSummary() {
+  const binaryHash = 'b'.repeat(64);
+  const archiveHash = 'c'.repeat(64);
   const checks = Object.fromEntries(Array.from({length: 15}, (_, index) => [`check-${index}`, {status: 0}]));
   checks['installed-cli-regression'] = {status: 0, stdout: 'CLI passed: 43 scenarios plus legacy parity'};
   const base = {
-    preflight: {validation: {passed: true}},
-    packed: {tarballSha256: 'tarball', binary: 'binary', standalone: {sha256: 'tarball'}},
-    npm: {build: {binarySha256: 'binary'}, checks},
+    preflight: {validation: {passed: true}, provenance: {sourceCommit: 'a'.repeat(40)}, environment: {
+      glibc: '2.35', node: {version: 'v24.20.0'},
+    }},
+    packed: {tarballSha256: archiveHash, binary: binaryHash, binaryBytes: 1, standalone: {sha256: archiveHash, bytes: 2}},
+    npm: {build: {target: 'aarch64-unknown-linux-gnu', binarySha256: binaryHash, binaryBytes: 1}, checks},
     standalone: {
-      archiveSha256: 'tarball', cliScenarios: 43, build: {binarySha256: 'binary'},
+      archiveSha256: archiveHash, archiveBytes: 2, cliScenarios: 43,
+      build: {target: 'aarch64-unknown-linux-gnu', binarySha256: binaryHash, binaryBytes: 1},
       checks: {'installed-cli': {status: 0}, 'installed-parallel': {status: 0}},
       parallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
     },
-    jestExpo: selfCheckRunner(runnerCases.jestExpo),
-    vitest: selfCheckRunner(runnerCases.vitest),
+    jestExpo: selfCheckRunner(runnerCases.jestExpo, binaryHash, archiveHash),
+    vitest: selfCheckRunner(runnerCases.vitest, binaryHash, archiveHash),
     lifecycle: selfCheckLifecycle,
   };
-  const repeat = {validation: {passed: true}, comparisons: {
-    binary: {passed: true}, build: {passed: true}, npmArchive: {passed: true}, standaloneArchive: {passed: true},
-  }};
-  assert.deepEqual(validate({...base, repeat}), []);
+  const repeat = {
+    schemaVersion: 1, sourceCommit: 'a'.repeat(40),
+    host: {platform: 'linux', arch: 'arm64', uname: {system: 'Linux', release: '6.8.0-test', machine: 'aarch64'}, glibc: '2.35'},
+    toolchain: {node: 'v24.20.0', npm: '11.0.0', rustc: 'rustc 1.98.1', cargo: 'cargo 1.98.1'},
+    input: {mode: '--native-arm64', archives: []},
+    runs: Array.from({length: 2}, () => ({
+      binary: {sha256: binaryHash, bytes: 1}, build: {sha256: '1'.repeat(64), bytes: 3},
+      npmArchive: {sha256: archiveHash, bytes: 2}, standaloneArchive: {sha256: archiveHash, bytes: 2}, files: packageFiles,
+    })),
+    comparisons: Object.fromEntries(repeatArtifacts.map(name => [name, {hash: true, bytes: true, passed: true}])),
+    validation: {passed: true, reason: 'two clean packer invocations produced identical native binary and archive bytes'},
+  };
+  const artifacts = {tarball: {sha256: archiveHash, bytes: 2}, standalone: {sha256: archiveHash, bytes: 2}};
+  assert.deepEqual(validate({...base, repeat}, {}, null, artifacts), []);
   assert.match(validate({...base, npm: null}).join('\n'), /npm result missing/);
   assert.match(validate({...base, vitest: null}).join('\n'), /Vitest result missing/);
   const partial = structuredClone(base);
@@ -207,6 +228,10 @@ function selfCheckSummary() {
   failed.standalone.checks['installed-parallel'].status = 1;
   assert.match(validate(failed).join('\n'), /standalone installed-parallel check failed/);
   assert.match(validate({...base, repeat: null}).join('\n'), /repeat pack result missing/);
+  assert.match(validate({...base, repeat: {...repeat, runs: [repeat.runs[0]]}}).join('\n'), /repeat pack reproducibility proof failed/);
+  assert.match(validate({...base, repeat: {...repeat, runs: undefined}}).join('\n'), /repeat pack reproducibility proof failed/);
+  assert.match(validate({...base, repeat: {...repeat, sourceCommit: '0'.repeat(40)}}).join('\n'), /repeat pack reproducibility proof failed/);
+  assert.match(validate({...base, repeat, packed: {...base.packed, binary: '0'.repeat(64)}}).join('\n'), /repeat pack reproducibility proof failed/);
   console.log('Linux ARM64 summary self-check passed');
 }
 
@@ -238,6 +263,8 @@ if (selfCheck) {
     const path = join(directory, name);
     if (existsSync(path) && statSync(path).isFile()) artifacts[key] = {file: name, sha256: hash(path), bytes: statSync(path).size};
   }
+  const retainedBuild = artifacts.tarball?.file
+    ? readArchiveBuild(join(directory, artifacts.tarball.file)) : null;
   const failures = validate({preflight, packed, npm, standalone, jestExpo, vitest, lifecycle, repeat}, parseErrors, directory, artifacts);
   const portablePackage = packed && artifacts.tarball && artifacts.standalone && {...packed,
     tarball: 'seshat-linux-arm64.tgz',
@@ -276,7 +303,12 @@ if (selfCheck) {
       comparisons: repeat.comparisons,
       validation: repeat.validation,
     } : null,
-    validation: {package: Boolean(packed && portablePackage), npm: Boolean(npm), standalone: Boolean(standalone), jestExpo: Boolean(jestExpo), vitest: Boolean(vitest), lifecycle: Boolean(lifecycle), repeatPack: Boolean(repeat && repeatPassed(repeat)), passed: failures.length === 0, failures},
+    validation: {package: Boolean(packed && portablePackage), npm: Boolean(npm), standalone: Boolean(standalone), jestExpo: Boolean(jestExpo), vitest: Boolean(vitest), lifecycle: Boolean(lifecycle), repeatPack: Boolean(repeat && repeatPassed(repeat, {
+      sourceCommit: preflight?.provenance?.sourceCommit,
+      expectedTarget: 'aarch64-unknown-linux-gnu', expectedPlatform: 'linux', expectedArch: 'arm64', expectedMachine: 'aarch64',
+      inputMode: '--native-arm64', hostGlibc: preflight?.environment?.glibc, nodeVersion: preflight?.environment?.node?.version,
+      packed, npm, standalone, artifacts, requireArtifacts: true, retainedBuild,
+    })), passed: failures.length === 0, failures},
     limits: 'Native Ubuntu 22.04 ARM64 proof on the runner kernel. It does not establish a historical minimum kernel or support for other Linux userspaces, macOS or Windows.',
   };
   writeFileSync(join(directory, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
