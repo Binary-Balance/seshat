@@ -115,7 +115,12 @@ const config = {workers, source:{include:['tempo.ts','view.tsx','server.ts']},
   capture:[...names, 'vitest.config.mjs', 'node_modules'], setups:[{name:'stack',runner:'vitest',cwd:'.',timeoutMs:30000,
     typecheck:[nodeCommand,'node_modules/typescript/bin/tsc','--project','tsconfig.json'],
     test:args, coverage:{command:[...args,'--coverage'],report:'coverage/coverage-final.json'}}]};
-const save = () => writeJson(join(work, 'result.json'), sanitize(results));
+const resultPath = process.env.SESHAT_PROOF_OUTPUT;
+const save = () => {
+  const output = sanitize(results);
+  writeJson(join(work, 'result.json'), output);
+  if (resultPath) writeJson(resultPath, output);
+};
 
 let cli;
 let cliEvidence;
