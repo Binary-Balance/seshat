@@ -20,3 +20,4 @@ libc = "=0.2.189"
 
 [profile.release]
 lto = "thin"
+strip = "symbols"
