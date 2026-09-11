@@ -79,6 +79,30 @@ jobs:
           STANDALONE_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/arm64/package-result.json")).standalone.sha256);')"
           BINARY_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/arm64/package-result.json")).binary);')"
           SESHAT_PROOF_BINARY="$PROOF_BINARY" SESHAT_STANDALONE_SHA256="$STANDALONE_SHA256" SESHAT_BINARY_SHA256="$BINARY_SHA256" node benchmarks/proofs/standalone.mjs work/arm64/seshat-linux-arm64-standalone.tar.gz "$PROOF_BINARY" 2>&1 | tee work/arm64/standalone.log
+      - name: Verify installed Jest/Expo runner
+        env:
+          SESHAT_PROOF_OUTPUT: work/arm64/jest-expo-check.json
+        run: |
+          node benchmarks/proofs/jest-expo-check.mjs \
+            --tarball work/arm64/seshat-linux-arm64.tgz \
+            --cases normal-1,assertion-kill,survivor,before-all \
+            2>&1 | tee work/arm64/jest-expo-check.log
+      - name: Verify installed Vitest runner
+        env:
+          SESHAT_PROOF_OUTPUT: work/arm64/vitest-check.json
+        run: |
+          node benchmarks/proofs/vitest-check.mjs \
+            --tarball work/arm64/seshat-linux-arm64.tgz \
+            --deps "$GITHUB_WORKSPACE/benchmarks/proofs" \
+            --cases stack,assertion,survived,before-all \
+            2>&1 | tee work/arm64/vitest-check.log
+      - name: Verify native lifecycle
+        env:
+          SESHAT_DEBUG_CLEANUP: '1'
+          SESHAT_PROOF_OUTPUT: work/arm64/lifecycle.json
+        run: |
+          PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/arm64/package-result.json")).proofBinary);')"
+          SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/lifecycle.mjs 2>&1 | tee work/arm64/lifecycle.log
       - name: Write portable summary
         if: always()
         run: node benchmarks/proofs/linux-arm64-summary.mjs work/arm64
