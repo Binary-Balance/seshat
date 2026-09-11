@@ -203,9 +203,14 @@ fn validate_coverage_report(root: &Path, path: &Path) -> Result<Value, String> {
         .ok_or("coverage report must be an Istanbul file map")?;
     let mut normalized = serde_json::Map::new();
     for (name, file) in entries {
-        // Validate the raw identity before changing separators. This keeps containment and
-        // key/entry matching fail-closed on untrusted coverage data.
-        if !within(root, Path::new(name)) || file["path"] != *name {
+        // Validate containment and file identity before normalizing coverage keys. Windows
+        // runners can emit an ordinary path for a file Rust canonicalized with a verbatim prefix.
+        let Some(entry_path) = file["path"].as_str() else {
+            return Err(
+                "coverage contains a path outside the captured project or a mismatched file identity".into(),
+            );
+        };
+        if !within(root, Path::new(name)) || !same_path_identity(name, entry_path) {
             return Err(
                 "coverage contains a path outside the captured project or a mismatched file identity".into(),
             );
@@ -1579,6 +1584,50 @@ mod tests {
         .unwrap();
         let normalized = validate_coverage_report(root, &report_path).unwrap();
         let identity = stable_path(Path::new(&raw));
+        assert_eq!(normalized.get(&identity).unwrap()["path"], identity);
+        directory.close().unwrap();
+    }
+
+    #[test]
+    fn coverage_report_rejects_mismatched_file_identity() {
+        let directory = OwnedDirectory::create(&std::env::temp_dir()).unwrap();
+        let root = &directory.0;
+        let source = root.join("src").join("subject.ts");
+        let other = root.join("src").join("other.ts");
+        fs::create_dir(source.parent().unwrap()).unwrap();
+        fs::write(&source, "export const value = 1;\n").unwrap();
+        fs::write(&other, "export const value = 2;\n").unwrap();
+        let source_path = source.to_string_lossy().into_owned();
+        let other_path = other.to_string_lossy().into_owned();
+        let report_path = root.join("coverage.json");
+        fs::write(
+            &report_path,
+            serde_json::to_vec(&json!({(source_path): {"path": other_path}})).unwrap(),
+        )
+        .unwrap();
+        let error = validate_coverage_report(root, &report_path).unwrap_err();
+        assert!(error.contains("mismatched file identity"));
+        directory.close().unwrap();
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn coverage_report_accepts_runner_paths_without_verbatim_prefix() {
+        let directory = OwnedDirectory::create(&std::env::temp_dir()).unwrap();
+        let root = &directory.0;
+        let source = root.join("src").join("subject 🎸.ts");
+        fs::create_dir(source.parent().unwrap()).unwrap();
+        fs::write(&source, "export const value = 1;\n").unwrap();
+        let root_verbatim = PathBuf::from(format!(r"\\?\{}", root.display()));
+        let raw = source.to_string_lossy().into_owned();
+        let report_path = root.join("coverage.json");
+        fs::write(
+            &report_path,
+            serde_json::to_vec(&json!({(raw.clone()): {"path": raw.clone()}})).unwrap(),
+        )
+        .unwrap();
+        let normalized = validate_coverage_report(&root_verbatim, &report_path).unwrap();
+        let identity = stable_path(&source);
         assert_eq!(normalized.get(&identity).unwrap()["path"], identity);
         directory.close().unwrap();
     }
