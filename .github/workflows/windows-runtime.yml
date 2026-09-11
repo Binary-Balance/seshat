@@ -1,4 +1,4 @@
-name: Windows runtime foundation
+name: Windows runtime and shared fixture proof
 
 on:
   pull_request:
@@ -9,6 +9,11 @@ on:
       - benchmarks/proofs/src/**
       - benchmarks/proofs/windows-runtime-preflight.mjs
       - benchmarks/proofs/windows-runtime-cli.mjs
+      - benchmarks/proofs/cli.mjs
+      - benchmarks/proofs/parallel.mjs
+      - benchmarks/proofs/process.mjs
+      - benchmarks/proofs/liveness.mjs
+      - benchmarks/proofs/collect-node.mjs
   push:
     branches: [main]
     paths:
@@ -18,6 +23,11 @@ on:
       - benchmarks/proofs/src/**
       - benchmarks/proofs/windows-runtime-preflight.mjs
       - benchmarks/proofs/windows-runtime-cli.mjs
+      - benchmarks/proofs/cli.mjs
+      - benchmarks/proofs/parallel.mjs
+      - benchmarks/proofs/process.mjs
+      - benchmarks/proofs/liveness.mjs
+      - benchmarks/proofs/collect-node.mjs
   workflow_dispatch:
 
 permissions:
@@ -26,7 +36,7 @@ permissions:
 jobs:
   runtime:
     runs-on: windows-2022
-    timeout-minutes: 30
+    timeout-minutes: 60
     env:
       CARGO_TARGET_DIR: benchmarks/rust/target
     steps:
@@ -103,4 +113,33 @@ jobs:
         with:
           name: windows-runtime-cli-evidence
           path: windows-runtime-cli-evidence.json
+          if-no-files-found: warn
+      - name: Run shared CLI fixtures
+        shell: pwsh
+        env:
+          SESHAT_CLI_BINARY: ${{ github.workspace }}\benchmarks\rust\target\release\seshat.exe
+          SESHAT_PROOF_BINARY: ${{ github.workspace }}\benchmarks\rust\target\release\seshat-proofs.exe
+          SESHAT_CONSOLE_HELPER_BINARY: ${{ github.workspace }}\benchmarks\rust\target\release\windows-console-helper.exe
+          SESHAT_PROOF_OUTPUT: ${{ github.workspace }}\work\windows\shared-cli.json
+        run: |
+          New-Item -ItemType Directory -Force work/windows | Out-Null
+          node benchmarks/proofs/cli.mjs 2>&1 | Tee-Object -FilePath work/windows/shared-cli.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Run shared parallel fixtures
+        shell: pwsh
+        env:
+          SESHAT_CLI_BINARY: ${{ github.workspace }}\benchmarks\rust\target\release\seshat.exe
+          SESHAT_CONSOLE_HELPER_BINARY: ${{ github.workspace }}\benchmarks\rust\target\release\windows-console-helper.exe
+          SESHAT_PARALLEL_CLI: '1'
+          SESHAT_PROOF_OUTPUT: ${{ github.workspace }}\work\windows\shared-parallel.json
+        run: |
+          New-Item -ItemType Directory -Force work/windows | Out-Null
+          node benchmarks/proofs/parallel.mjs 2>&1 | Tee-Object -FilePath work/windows/shared-parallel.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload shared fixture evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-shared-fixture-evidence
+          path: work/windows
           if-no-files-found: warn
