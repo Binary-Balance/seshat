@@ -5,7 +5,7 @@ import {cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, r
 import {basename, dirname, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {parseArgs} from 'node:util';
-import {nodeCommand, npmCommand, runProcess} from './process.mjs';
+import {nodeCommand, noRustProof, npmArgs, npmCommand, runProcess} from './process.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
@@ -59,6 +59,7 @@ const npmEnv = {
   npm_config_globalconfig: join(work, 'global.npmrc'),
   npm_config_update_notifier: 'false',
 };
+const rustProof = installed ? await noRustProof(repo) : {env: {}, evidence: null};
 const portable = path => relative(repo, path) || '.';
 const sha256 = path => createHash('sha256').update(readFileSync(path)).digest('hex');
 const writeJson = (path, value) => writeFileSync(path, JSON.stringify(value, null, 2) + '\n');
@@ -124,12 +125,12 @@ if (tarballArg) {
   const consumer = join(work, 'cli-consumer');
   mkdirSync(consumer);
   writeJson(join(consumer, 'package.json'), {name: 'seshat-vitest-consumer', private: true});
-  await runCommand(npmCommand, [
+  await runCommand(npmCommand, [...npmArgs,
     'install', '--offline', '--ignore-scripts', '--no-audit', '--no-fund',
     '--save-dev', '--save-exact', '--cache', npmEnv.npm_config_cache,
     '--userconfig', npmEnv.npm_config_userconfig,
     '--globalconfig', npmEnv.npm_config_globalconfig, tarball,
-  ], consumer, 0, npmEnv);
+  ], consumer, 0, {...rustProof.env, ...npmEnv});
   const executable = process.platform === 'win32' ? 'seshat.cmd' : 'seshat';
   const native = join(consumer, 'node_modules/@binary-balance/seshat/bin/seshat');
   cli = realpathSync(existsSync(native) ? native : join(consumer, 'node_modules/.bin', executable));
@@ -144,7 +145,7 @@ if (tarballArg) {
   cliEvidence = {source: 'legacy-proof'};
 }
 if (installed) {
-  const version = (await runCommand(cli, ['--version'], repo)).stdout.trim();
+  const version = (await runCommand(cli, ['--version'], repo, 0, rustProof.env)).stdout.trim();
   assert.match(version, /^seshat 0\.0\.0 \(candidate\)$/);
   cliEvidence = {...cliEvidence, version, binarySha256: sha256(cli)};
 }
@@ -154,6 +155,7 @@ const results = {
   environment,
   cli: cliEvidence,
   dependencies: {versions: environment.tools},
+  noConsumingRust: rustProof.evidence,
   work: portable(work),
   requestedCases,
   runs: {},
@@ -163,7 +165,7 @@ async function check(name, input) {
   const command = installed
     ? ['check','--config',path,'--scratch',scratch,'--json','--no-progress']
     : ['check',path,scratch];
-  const run = await runProcess(cli, command, installed ? project : repo, {}, 600000);
+  const run = await runProcess(cli, command, installed ? project : repo, rustProof.env, 600000);
   assert.equal(run.timedOut,false); assert.equal(run.overflow,false);
   const report = JSON.parse(run.stdout);
   const result = installed ? report.result : report;
