@@ -62,7 +62,9 @@ jobs:
             --output "work/macos/${{ matrix.cpu }}/preflight.json"
           node benchmarks/proofs/macos-preflight.mjs --self-check
       - name: Check summary failure reporting
-        run: node benchmarks/proofs/macos-package-summary.mjs --self-check
+        run: |
+          node benchmarks/proofs/macos-package-summary.mjs --self-check
+          node packaging/repeat-pack-failure-check.mjs
       - name: Fetch locked dependencies
         run: |
           npm ci --prefix benchmarks

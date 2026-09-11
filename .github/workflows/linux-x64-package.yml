@@ -51,6 +51,7 @@ jobs:
           set -euo pipefail
           node benchmarks/proofs/linux-x64-preflight.mjs --self-check
           node benchmarks/proofs/linux-x64-summary.mjs --self-check
+          node packaging/repeat-pack-failure-check.mjs
       - name: Fetch locked dependencies
         run: |
           set -euo pipefail
@@ -191,6 +192,7 @@ jobs:
             work/x64/rust-tests.log
             work/x64/repeat-pack.json
             work/x64/repeat-pack.log
+            work/x64/repeat-pack-failure/**
             work/x64/pack.log
             work/x64/summary.json
           if-no-files-found: error
