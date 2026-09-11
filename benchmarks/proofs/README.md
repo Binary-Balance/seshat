@@ -6,9 +6,11 @@ The earlier benchmark under `benchmarks/rust/` is unchanged.
 
 ## Run
 
-Requirements: Linux x64, Node 24, npm, Rust 1.98.1 and a `kill` executable that
-supports process-group IDs. The recorded run used Node 24.20.0. Dependencies are
-pinned in the two npm lockfiles and this directory's Cargo lockfile.
+Requirements: Linux x64 or Windows x64, Node 24, npm and Rust 1.98.1. Linux
+requires a `kill` executable that supports process-group IDs; Windows runtime
+proofs require the checked native symlink and junction capabilities on the
+Windows Server 2022 runner. The recorded run used Node 24.20.0. Dependencies
+are pinned in the two npm lockfiles and this directory's Cargo lockfile.
 
 From the repository root:
 

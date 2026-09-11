@@ -2,11 +2,13 @@ use super::*;
 use crate::{
     assessment::{self, TestState},
     coverage,
-    execution::{CommandEvidence, cancellation_signal, classify, job, observe_node_loads},
+    execution::{
+        CommandEvidence, cancellation_signal, classify, job, module_file_url, module_path,
+        observe_node_loads,
+    },
 };
 use std::{
     io::{Read, Write},
-    os::unix::fs::MetadataExt,
     process::Command,
     sync::{
         Mutex,
@@ -14,6 +16,17 @@ use std::{
     },
     thread,
     time::{Duration, Instant},
+};
+
+#[cfg(unix)]
+use std::os::unix::fs::MetadataExt;
+
+#[cfg(windows)]
+use std::os::windows::io::AsRawHandle;
+
+#[cfg(windows)]
+use windows_sys::Win32::Storage::FileSystem::{
+    BY_HANDLE_FILE_INFORMATION, GetFileInformationByHandle,
 };
 
 const REPORT_LIMIT: u64 = 32 * 1024 * 1024;
@@ -109,6 +122,29 @@ enum JobKind<'a> {
 }
 
 // Never follow an output link when removing stale evidence or reading new data.
+fn independent_file(path: &Path) -> Result<bool, String> {
+    #[cfg(unix)]
+    {
+        return fs::metadata(path)
+            .map(|metadata| metadata.nlink() == 1)
+            .map_err(|e| e.to_string());
+    }
+    #[cfg(windows)]
+    {
+        let file = fs::File::open(path).map_err(|e| e.to_string())?;
+        let mut information = BY_HANDLE_FILE_INFORMATION::default();
+        // SAFETY: the file handle is live for this call and the structure is writable.
+        if unsafe { GetFileInformationByHandle(file.as_raw_handle(), &mut information) } == 0 {
+            return Err(format!(
+                "read file identity {}: {}",
+                path.display(),
+                std::io::Error::last_os_error()
+            ));
+        }
+        return Ok(information.nNumberOfLinks == 1);
+    }
+}
+
 fn regular_path(root: &Path, path: &Path, missing_ok: bool) -> Result<(), String> {
     let root_type = fs::symlink_metadata(root)
         .map_err(|e| e.to_string())?
@@ -116,21 +152,21 @@ fn regular_path(root: &Path, path: &Path, missing_ok: bool) -> Result<(), String
     if !root_type.is_dir() {
         return Err("captured root is no longer a real directory".into());
     }
-    let relative = path
-        .strip_prefix(root)
-        .map_err(|_| "path escapes captured project")?;
+    let relative = relative_path(root, path).ok_or("path escapes captured project")?;
     let mut current = root.to_path_buf();
-    for component in relative.components() {
+    let components = relative.components().collect::<Vec<_>>();
+    for (index, component) in components.iter().enumerate() {
         if !matches!(component, std::path::Component::Normal(_)) {
             return Err("non-normal path in captured project".into());
         }
-        current.push(component);
+        current.push(component.as_os_str());
+        let final_component = index + 1 == components.len();
         match fs::symlink_metadata(&current) {
             Ok(metadata) => {
-                if metadata.file_type().is_symlink() || (current != path && !metadata.is_dir()) {
+                if is_link(&metadata) || (!final_component && !metadata.is_dir()) {
                     return Err(format!("unsafe path: {}", relative.display()));
                 }
-                if current == path && (!metadata.is_file() || metadata.nlink() != 1) {
+                if final_component && (!metadata.is_file() || !independent_file(&current)?) {
                     return Err(format!(
                         "expected independent regular file: {}",
                         relative.display()
@@ -158,6 +194,31 @@ fn read_report(root: &Path, path: &Path) -> Result<Value, String> {
         return Err("report exceeds the 32 MiB proof limit".into());
     }
     serde_json::from_slice(&bytes).map_err(|e| format!("invalid report JSON: {e}"))
+}
+
+fn validate_coverage_report(root: &Path, path: &Path) -> Result<Value, String> {
+    let report = read_report(root, path)?;
+    let entries = report
+        .as_object()
+        .ok_or("coverage report must be an Istanbul file map")?;
+    let mut normalized = serde_json::Map::new();
+    for (name, file) in entries {
+        // Validate the raw identity before changing separators. This keeps containment and
+        // key/entry matching fail-closed on untrusted coverage data.
+        if !within(root, Path::new(name)) || file["path"] != *name {
+            return Err(
+                "coverage contains a path outside the captured project or a mismatched file identity".into(),
+            );
+        }
+        regular_path(root, Path::new(name), false)?;
+        let identity = stable_path(Path::new(name));
+        let mut file = file.clone();
+        file["path"] = json!(identity);
+        if normalized.insert(identity, file).is_some() {
+            return Err("coverage contains duplicate normalized file identities".into());
+        }
+    }
+    Ok(Value::Object(normalized))
 }
 
 fn per_second(count: usize, wall_ms: f64) -> Value {
@@ -288,7 +349,7 @@ fn locked_version(
     }
     let packages = lock["packages"].as_object()?;
     let setup = root.join(setup_cwd);
-    let prefix = setup.strip_prefix(lock_directory).ok()?.to_str()?;
+    let prefix = stable_path(setup.strip_prefix(lock_directory).ok()?);
     let prefix = prefix.trim_matches('/');
     let prefix = if prefix == "." { "" } else { prefix };
     let mut keys = vec![format!("node_modules/{name}")];
@@ -365,7 +426,11 @@ fn runner_option_args(args: &[String]) -> &[String] {
 
 fn direct_runner_args<'a>(runner: Runner, args: &'a [String]) -> Option<&'a [String]> {
     let program = args.first()?;
-    let program_name = Path::new(program).file_name()?.to_str()?;
+    let program_name = Path::new(program)
+        .file_name()?
+        .to_str()?
+        .to_ascii_lowercase();
+    let program_name = program_name.strip_suffix(".exe").unwrap_or(&program_name);
     match runner {
         Runner::Node => (matches!(program_name, "node" | "nodejs")
             && args.get(1).is_some_and(|arg| arg == "--test"))
@@ -552,7 +617,7 @@ impl CapturedProject {
         let paths: Vec<_> = self
             .sources
             .iter()
-            .map(|(path, _)| self.directory.0.join(path))
+            .map(|(path, _)| stable_path(&self.directory.0.join(path)))
             .collect();
         fs::write(
             evidence.0.join("sources.json"),
@@ -605,7 +670,7 @@ impl CapturedProject {
         }
         self.unchanged()?;
         let cwd = fs::canonicalize(self.directory.0.join(&setup.cwd)).map_err(|e| e.to_string())?;
-        if !cwd.starts_with(&self.directory.0) || !cwd.is_dir() {
+        if !within(&self.directory.0, &cwd) || !cwd.is_dir() {
             return Err("setup cwd escaped captured project".into());
         }
         let reporter = evidence.join(match setup.runner {
@@ -613,15 +678,21 @@ impl CapturedProject {
             Runner::Vitest => "vitest-reporter.mjs",
             Runner::Node => "node-reporter.mjs",
         });
+        // Jest and Vitest resolve runner/reporters as filesystem references from their configured
+        // root. Node's test loader instead parses the reporter as an ESM specifier, so its
+        // Windows drive path must be a file URL.
+        let reporter = match setup.runner {
+            Runner::Node => module_file_url(&reporter)?,
+            Runner::Jest | Runner::Vitest => module_path(&reporter)?,
+        };
+        let environment = module_path(&evidence.join("jest-expo-environment.cjs"))?;
+        let vitest_runner = module_path(&evidence.join("vitest-runner.mjs"))?;
         let receipt = evidence.join(format!("{id}.json"));
         let args: Vec<_> = args
             .iter()
             .map(|arg| {
-                arg.replace("{seshatReporter}", reporter.to_str().unwrap())
-                    .replace(
-                        "{seshatEnvironment}",
-                        evidence.join("jest-expo-environment.cjs").to_str().unwrap(),
-                    )
+                arg.replace("{seshatReporter}", &reporter)
+                    .replace("{seshatEnvironment}", &environment)
             })
             .collect();
         let mut command = Command::new(&args[0]);
@@ -637,7 +708,7 @@ impl CapturedProject {
             .env("SESHAT_EXECUTION_ID", id)
             .env("SESHAT_RECEIPT", &receipt)
             .env("SESHAT_NODE_REPORTER", &reporter)
-            .env("SESHAT_VITEST_RUNNER", evidence.join("vitest-runner.mjs"))
+            .env("SESHAT_VITEST_RUNNER", &vitest_runner)
             .env("SESHAT_SOURCES", evidence.join("sources.json"));
         if let Some(id) = self.active_mutant {
             command.env("SESHAT_MUTANT_ID", id.to_string());
@@ -902,7 +973,7 @@ impl CapturedProject {
                     let mut row = definition.clone();
                     row["id"] = json!(plan.len());
                     row["localId"] = json!(local_id);
-                    row["path"] = json!(self.sources[source_index].0);
+                    row["path"] = json!(stable_path(&self.sources[source_index].0));
                     row["setups"] = json!(
                         self.config
                             .setups
@@ -1244,7 +1315,7 @@ impl CapturedProject {
         let facts: Vec<_> = self
             .sources
             .iter()
-            .map(|(path, source)| Analysis::inspect(path.to_str().unwrap(), source))
+            .map(|(path, source)| Analysis::inspect(&stable_path(path), source))
             .collect();
         let mut timings = json!({"analysisMs":started.elapsed().as_secs_f64()*1000.0,
             "preparationMs":null,"typecheckMs":null,"baselineMs":null,"coverageMs":null,"attributionMs":null,"cleanupMs":null});
@@ -1313,61 +1384,46 @@ impl CapturedProject {
             if !with_coverage {
                 continue;
             }
-            let collect = || -> Result<(Value, Value), String> {
-                let cwd = fs::canonicalize(self.directory.0.join(&setup.cwd))
-                    .map_err(|e| e.to_string())?;
-                let path = cwd.join(&setup.coverage.report);
-                regular_path(&self.directory.0, &path, true)?;
-                if self
-                    .sources
-                    .iter()
-                    .any(|(source, _)| self.directory.0.join(source) == path)
-                {
-                    return Err("coverage report destination is assessment source".into());
-                }
-                // Only discard the configured output inside our copy, never in the checkout.
-                if path.exists() {
-                    fs::remove_file(&path).map_err(|e| e.to_string())?;
-                }
-                let id = format!(
-                    "{}-{index}-coverage",
-                    evidence.0.file_name().unwrap().to_str().unwrap()
-                );
-                let mut result = self
-                    .run_job(
-                        setup,
-                        &setup.coverage.command,
-                        &evidence.0,
-                        &id,
-                        JobKind::Coverage(&path),
-                    )?
-                    .into_json();
-                if result["state"] != "passed" {
-                    return Ok((result, Value::Null));
-                }
-                let validated = || -> Result<Value, String> {
-                    let report = read_report(&self.directory.0, &path)?;
-                    let entries = report
-                        .as_object()
-                        .ok_or("coverage report must be an Istanbul file map")?;
-                    for (name, file) in entries {
-                        if !Path::new(name).starts_with(&self.directory.0) || file["path"] != *name
-                        {
-                            return Err("coverage contains a path outside the captured project or a mismatched file identity".into());
+            let collect =
+                || -> Result<(Value, Value), String> {
+                    let cwd = fs::canonicalize(self.directory.0.join(&setup.cwd))
+                        .map_err(|e| e.to_string())?;
+                    let path = cwd.join(&setup.coverage.report);
+                    regular_path(&self.directory.0, &path, true)?;
+                    if self.sources.iter().any(|(source, _)| {
+                        path_key(&self.directory.0.join(source)) == path_key(&path)
+                    }) {
+                        return Err("coverage report destination is assessment source".into());
+                    }
+                    // Only discard the configured output inside our copy, never in the checkout.
+                    if path.exists() {
+                        fs::remove_file(&path).map_err(|e| e.to_string())?;
+                    }
+                    let id = format!(
+                        "{}-{index}-coverage",
+                        evidence.0.file_name().unwrap().to_str().unwrap()
+                    );
+                    let mut result = self
+                        .run_job(
+                            setup,
+                            &setup.coverage.command,
+                            &evidence.0,
+                            &id,
+                            JobKind::Coverage(&path),
+                        )?
+                        .into_json();
+                    if result["state"] != "passed" {
+                        return Ok((result, Value::Null));
+                    }
+                    match validate_coverage_report(&self.directory.0, &path) {
+                        Ok(report) => Ok((result, report)),
+                        Err(error) => {
+                            result["state"] = json!("execution-error");
+                            result["coverageError"] = json!(error);
+                            Ok((result, Value::Null))
                         }
-                        regular_path(&self.directory.0, Path::new(name), false)?;
                     }
-                    Ok(report)
                 };
-                match validated() {
-                    Ok(report) => Ok((result, report)),
-                    Err(error) => {
-                        result["state"] = json!("execution-error");
-                        result["coverageError"] = json!(error);
-                        Ok((result, Value::Null))
-                    }
-                }
-            };
             commands_run += 1;
             progress.phase(format_args!("coverage {:?}", setup.name));
             let phase_started = Instant::now();
@@ -1405,24 +1461,20 @@ impl CapturedProject {
             .map(|((relative, source), analysis)| {
                 let path = self.directory.0.join(relative);
                 match analysis {
-                    Err(error) => json!({"path":relative,"error":error}),
-                    Ok(_) if !with_coverage => json!({"path":relative}),
+                    Err(error) => json!({"path":stable_path(relative),"error":error}),
+                    Ok(_) if !with_coverage => json!({"path":stable_path(relative)}),
                     Ok(analysis) => {
                         // A setup may cover a different package. Merge only its entries for this file;
                         // failed collection still makes the whole run incomplete above.
                         let applicable = reports
                             .iter()
-                            .filter(|report| report.get(path.to_str().unwrap()).is_some());
-                        let measured = coverage::attribute(
-                            analysis,
-                            path.to_str().unwrap(),
-                            source,
-                            applicable,
-                        );
+                            .filter(|report| report.get(&stable_path(&path)).is_some());
+                        let measured =
+                            coverage::attribute(analysis, &stable_path(&path), source, applicable);
                         if measured["complete"] != true {
                             complete = false;
                         }
-                        json!({"path":relative,"result":measured})
+                        json!({"path":stable_path(relative),"result":measured})
                     }
                 }
             })
@@ -1486,8 +1538,8 @@ mod tests {
         let root = &directory.0;
         fs::write(root.join("original.json"), "{}").unwrap();
         fs::create_dir(root.join("reports")).unwrap();
-        symlink("original.json", root.join("linked.json")).unwrap();
-        symlink("reports", root.join("linked-parent")).unwrap();
+        create_link(Path::new("original.json"), &root.join("linked.json")).unwrap();
+        create_link(Path::new("reports"), &root.join("linked-parent")).unwrap();
         fs::hard_link(root.join("original.json"), root.join("hard.json")).unwrap();
         for relative in [
             "linked.json",
@@ -1503,6 +1555,58 @@ mod tests {
         assert_eq!(
             fs::read_to_string(root.join("original.json")).unwrap(),
             "{}"
+        );
+        directory.close().unwrap();
+    }
+
+    #[test]
+    fn coverage_report_normalizes_validated_file_identities() {
+        let directory = OwnedDirectory::create(&std::env::temp_dir()).unwrap();
+        let root = &directory.0;
+        let source = root.join("src").join("subject 🎸.ts");
+        fs::create_dir(source.parent().unwrap()).unwrap();
+        fs::write(&source, "export const value = 1;\n").unwrap();
+        let raw = if cfg!(windows) {
+            source.to_string_lossy().replace('/', "\\")
+        } else {
+            source.to_string_lossy().into_owned()
+        };
+        let report_path = root.join("coverage.json");
+        fs::write(
+            &report_path,
+            serde_json::to_vec(&json!({(raw.clone()): {"path": raw.clone()}})).unwrap(),
+        )
+        .unwrap();
+        let normalized = validate_coverage_report(root, &report_path).unwrap();
+        let identity = stable_path(Path::new(&raw));
+        assert_eq!(normalized.get(&identity).unwrap()["path"], identity);
+        directory.close().unwrap();
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn coverage_report_rejects_colliding_normalized_identities() {
+        let directory = OwnedDirectory::create(&std::env::temp_dir()).unwrap();
+        let root = &directory.0;
+        let source = root.join("src").join("subject 🎸.ts");
+        fs::create_dir(source.parent().unwrap()).unwrap();
+        fs::write(&source, "export const value = 1;\n").unwrap();
+        let raw = source.to_string_lossy().into_owned();
+        let slash = raw.replace('\\', "/");
+        let report_path = root.join("coverage.json");
+        fs::write(
+            &report_path,
+            serde_json::to_vec(&json!({
+                (raw.clone()): {"path": raw},
+                (slash.clone()): {"path": slash},
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+        assert!(
+            validate_coverage_report(root, &report_path)
+                .unwrap_err()
+                .contains("duplicate normalized")
         );
         directory.close().unwrap();
     }

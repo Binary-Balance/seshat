@@ -3,7 +3,8 @@ import {tracingChannel} from 'node:diagnostics_channel';
 import {readFileSync, writeFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
 
-if (process.env.NODE_TEST_CONTEXT === 'child-v8' && process.versions.node === '24.20.0' && process.env.SESHAT_LOAD_CONTEXT) {
+if (process.env.NODE_TEST_CONTEXT === 'child-v8' && process.versions.node === '24.20.0'
+  && process.env.SESHAT_LOAD_CONTEXT && typeof process.argv[1] === 'string') {
   const context = JSON.parse(readFileSync(process.env.SESHAT_LOAD_CONTEXT, 'utf8'));
   const sources = Array.isArray(context.sources) ? context.sources : [context];
   const entry = process.argv[1];
