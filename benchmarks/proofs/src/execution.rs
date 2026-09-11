@@ -237,7 +237,7 @@ impl Session {
             thread::sleep(Duration::from_millis(2));
         };
         // The leader can finish while descendants are still alive. Only this owned group is targeted.
-        let _ = stop_owned_group(child.id());
+        let _ = stop_owned_group(child.id(), "command-post-status");
         let report = if receipt.exists() {
             let raw = fs::read_to_string(&receipt).map_err(|e| e.to_string())?;
             serde_json::from_str::<Value>(&raw).ok()
@@ -362,14 +362,14 @@ impl Session {
 }
 
 fn kill_owned_group(child: &mut std::process::Child) -> Result<std::process::ExitStatus, String> {
-    match stop_owned_group(child.id()) {
+    match stop_owned_group(child.id(), "kill-owned-group") {
         Ok(()) => child.wait().map_err(|e| e.to_string()),
         Err(error) => match child.try_wait().map_err(|e| e.to_string())? {
             // macOS can report EPERM for a group containing only the exited
             // child as a zombie. Reap it, then retry so live descendants are
             // still signalled and genuine permission failures remain errors.
             Some(status) => {
-                stop_owned_group(child.id())?;
+                stop_owned_group(child.id(), "kill-owned-retry")?;
                 Ok(status)
             }
             None => Err(error),
@@ -377,7 +377,46 @@ fn kill_owned_group(child: &mut std::process::Child) -> Result<std::process::Exi
     }
 }
 
-fn stop_owned_group(pid: u32) -> Result<(), String> {
+fn cleanup_debug(pid: libc::pid_t, phase: &str, result: Option<&std::io::Error>) {
+    if std::env::var_os("SESHAT_DEBUG_CLEANUP").as_deref() != Some(std::ffi::OsStr::new("1")) {
+        return;
+    }
+    let group = unsafe { libc::getpgid(pid) };
+    let group_error = if group == -1 {
+        Some(std::io::Error::last_os_error().to_string())
+    } else {
+        None
+    };
+    let direct = unsafe { libc::kill(pid, 0) };
+    let direct_error = if direct == -1 {
+        Some(std::io::Error::last_os_error().to_string())
+    } else {
+        None
+    };
+    let members = unsafe { libc::kill(-pid, 0) };
+    let members_error = if members == -1 {
+        Some(std::io::Error::last_os_error().to_string())
+    } else {
+        None
+    };
+    let target_group = pid.to_string();
+    let group_members = Command::new("ps")
+        .args(["-axo", "pid=,ppid=,pgid=,stat=,comm="])
+        .output()
+        .map(|output| {
+            String::from_utf8_lossy(&output.stdout)
+                .lines()
+                .filter(|line| line.split_whitespace().nth(2) == Some(target_group.as_str()))
+                .collect::<Vec<_>>()
+                .join("\n")
+        })
+        .unwrap_or_else(|error| format!("ps error: {error}"));
+    eprintln!(
+        "[DEBUG-macos-cleanup] phase={phase} pid={pid} group={group} group_error={group_error:?} direct={direct} direct_error={direct_error:?} members={members} members_error={members_error:?} kill_error={result:?} group_members={group_members:?}"
+    );
+}
+
+fn stop_owned_group(pid: u32, phase: &str) -> Result<(), String> {
     let pid = i32::try_from(pid)
         .ok()
         .filter(|pid| *pid > 1)
@@ -388,6 +427,7 @@ fn stop_owned_group(pid: u32) -> Result<(), String> {
         return Ok(());
     }
     let error = std::io::Error::last_os_error();
+    cleanup_debug(pid, phase, Some(&error));
     if error.raw_os_error() == Some(libc::ESRCH) {
         Ok(())
     } else {
