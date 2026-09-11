@@ -5,6 +5,7 @@ import {mkdirSync,mkdtempSync,readFileSync,readdirSync,writeFileSync} from 'node
 import {dirname,join,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {setTimeout as delay} from 'node:timers/promises';
+import {alive} from './liveness.mjs';
 
 const here=dirname(fileURLToPath(import.meta.url)),repo=resolve(here,'../..');
 mkdirSync(join(repo,'work/assurance-proofs'),{recursive:true});
@@ -47,7 +48,6 @@ main().catch(error=>{console.error(error);process.exit(2);});`
 for(const [name,bytes] of Object.entries(originals))writeFileSync(join(input,name),bytes);
 const read=path=>JSON.parse(readFileSync(path,'utf8'));
 const events=path=>readdirSync(path).filter(name=>name.endsWith('.json')).map(name=>read(join(path,name)));
-function alive(pid){try {const stat=readFileSync('/proc/'+pid+'/stat','utf8');return !['Z','X'].includes(stat.slice(stat.lastIndexOf(')')+2).split(' ')[0]);}catch(e){if(e.code==='ENOENT')return false;throw e;}}
 async function until(predicate,timeout=30000){const end=performance.now()+timeout;while(performance.now()<end){if(predicate())return;await delay(10);}throw Error('Timed out waiting for proof processes');}
 const results={};
 async function check(name,workers,mode='normal',signal){

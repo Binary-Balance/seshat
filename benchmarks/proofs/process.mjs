@@ -1,4 +1,4 @@
-// Shared Linux-only supervision for trusted local proof commands, not a sandbox.
+// Shared Unix supervision for trusted local proof commands, not a sandbox.
 import {spawn} from 'node:child_process';
 import {performance} from 'node:perf_hooks';
 
