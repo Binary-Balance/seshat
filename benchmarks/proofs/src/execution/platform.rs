@@ -111,18 +111,18 @@ mod windows {
     static CONSOLE_INSTALL: OnceLock<Result<(), String>> = OnceLock::new();
 
     #[cfg(test)]
-    static TEST_DISCOVERY_FAILURE: AtomicBool = AtomicBool::new(false);
+    pub(super) static TEST_DISCOVERY_FAILURE: AtomicBool = AtomicBool::new(false);
     #[cfg(test)]
-    static TEST_ASSIGNMENT_FAILURE: AtomicBool = AtomicBool::new(false);
+    pub(super) static TEST_ASSIGNMENT_FAILURE: AtomicBool = AtomicBool::new(false);
     #[cfg(test)]
-    static TEST_POST_ASSIGNMENT_FAILURE: AtomicBool = AtomicBool::new(false);
+    pub(super) static TEST_POST_ASSIGNMENT_FAILURE: AtomicBool = AtomicBool::new(false);
     #[cfg(test)]
-    static TEST_LAST_SPAWN_PID: AtomicU32 = AtomicU32::new(0);
+    pub(super) static TEST_LAST_SPAWN_PID: AtomicU32 = AtomicU32::new(0);
     #[cfg(test)]
     static TEST_SPAWN_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
     #[cfg(test)]
-    fn test_spawn_lock() -> &'static Mutex<()> {
+    pub(super) fn test_spawn_lock() -> &'static Mutex<()> {
         TEST_SPAWN_LOCK.get_or_init(|| Mutex::new(()))
     }
 
@@ -546,18 +546,22 @@ mod windows {
 
 #[cfg(all(test, windows))]
 mod windows_tests {
+    use super::windows::{
+        TEST_ASSIGNMENT_FAILURE, TEST_DISCOVERY_FAILURE, TEST_LAST_SPAWN_PID,
+        TEST_POST_ASSIGNMENT_FAILURE, test_spawn_lock,
+    };
     use super::*;
     use std::{
         fs,
         io::Read,
         path::PathBuf,
+        sync::atomic::Ordering,
         thread,
         time::{Duration, SystemTime, UNIX_EPOCH},
     };
     use windows_sys::Win32::{
         Foundation::{CloseHandle, FALSE, WAIT_OBJECT_0},
-        Storage::FileSystem::SYNCHRONIZE,
-        System::Threading::{OpenProcess, WaitForSingleObject},
+        System::Threading::{OpenProcess, PROCESS_SYNCHRONIZE, WaitForSingleObject},
     };
 
     fn temporary_directory(label: &str) -> PathBuf {
@@ -585,7 +589,7 @@ mod windows_tests {
 
     fn exited(pid: u32) -> bool {
         // SAFETY: SYNCHRONIZE is sufficient for waiting and the PID came from the child.
-        let process = unsafe { OpenProcess(SYNCHRONIZE, FALSE, pid) };
+        let process = unsafe { OpenProcess(PROCESS_SYNCHRONIZE, FALSE, pid) };
         if process.is_null() {
             return true;
         }
