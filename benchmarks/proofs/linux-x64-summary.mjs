@@ -132,8 +132,13 @@ function validate({preflight, packed, npm, standalone, debian, jestExpo, vitest,
   if (!repeat) fail('repeat pack result missing');
   else if (!repeatPassed(repeat, {
     sourceCommit: preflight?.provenance?.sourceCommit,
-    expectedTarget: 'x86_64-unknown-linux-gnu', expectedPlatform: 'linux', expectedArch: 'x64', expectedMachine: 'x86_64',
-    inputMode: 'debian-x64', hostGlibc: preflight?.environment?.glibc, nodeVersion: preflight?.environment?.node?.version,
+    expectedTarget: 'x86_64-unknown-linux-gnu', expectedPlatform: preflight?.environment?.platform,
+    expectedArch: preflight?.environment?.architecture?.node, expectedMachine: preflight?.environment?.architecture?.unameMachine,
+    inputMode: 'debian-x64', hostGlibc: preflight?.environment?.glibc, expectedToolchain: {
+      node: preflight?.environment?.node?.version, npm: preflight?.environment?.npm?.version,
+      rustc: preflight?.environment?.toolchain?.rust?.rustc?.version,
+      cargo: preflight?.environment?.toolchain?.rust?.cargo?.version,
+    },
     packed, npm, standalone, artifacts, requireArtifacts: Boolean(artifactDirectory), retainedBuild: retainedPackageBuild,
   })) fail('repeat pack reproducibility proof failed');
 
@@ -219,13 +224,15 @@ function selfCheckSummary() {
   checks['installed-cli-regression'] = {status: 0, stdout: 'CLI passed: 43 scenarios plus legacy parity'};
   const base = {
     preflight: {validation: {passed: true}, provenance: {sourceCommit: 'a'.repeat(40)}, environment: {
-      kernel: {release: '6.8.0-test'}, glibc: '2.35', node: {version: 'v24.20.0'},
+      platform: 'linux', architecture: {node: 'x64', unameMachine: 'x86_64'},
+      kernel: {release: '6.8.0-test'}, glibc: '2.35', node: {version: 'v24.20.0'}, npm: {version: '11.0.0'},
+      toolchain: {rust: {rustc: {version: 'rustc 1.98.1'}, cargo: {version: 'cargo 1.98.1'}}},
     }},
     packed: {binary: binaryHash, binaryBytes: 1, tarballSha256: archiveHash, standalone: {sha256: archiveHash, bytes: 2}},
-    npm: {build: {target: 'x86_64-unknown-linux-gnu', binarySha256: binaryHash, binaryBytes: 1}, checks},
+    npm: {build: {target: 'x86_64-unknown-linux-gnu', rust: 'rustc 1.98.1', binarySha256: binaryHash, binaryBytes: 1}, checks},
     standalone: {
       archiveSha256: archiveHash, archiveBytes: 2, cliScenarios: 43,
-      build: {target: 'x86_64-unknown-linux-gnu', binarySha256: binaryHash, binaryBytes: 1},
+      build: {target: 'x86_64-unknown-linux-gnu', rust: 'rustc 1.98.1', binarySha256: binaryHash, binaryBytes: 1},
       checks: Object.fromEntries(['archive-list', 'extract', 'installed-cli', 'installed-parallel'].map(name => [name, {status: 0}])),
       parallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
     },
@@ -264,6 +271,16 @@ function selfCheckSummary() {
   assert.match(validate({...base, repeat: {...repeat, runs: [repeat.runs[0]]}}).join('\n'), /repeat pack reproducibility proof failed/);
   assert.match(validate({...base, repeat: {...repeat, runs: undefined}}).join('\n'), /repeat pack reproducibility proof failed/);
   assert.match(validate({...base, repeat: {...repeat, sourceCommit: '0'.repeat(40)}}).join('\n'), /repeat pack reproducibility proof failed/);
+  const missingProvenance = structuredClone(base);
+  delete missingProvenance.preflight.provenance;
+  assert.match(validate({...missingProvenance, repeat: {...repeat, sourceCommit: '0'.repeat(40)}}).join('\n'), /repeat pack reproducibility proof failed/);
+  const missingEnvironment = structuredClone(base);
+  delete missingEnvironment.preflight.environment.glibc;
+  assert.match(validate({...missingEnvironment, repeat}).join('\n'), /repeat pack reproducibility proof failed/);
+  const contradictoryCompiler = {...base, repeat: {...repeat, toolchain: {...repeat.toolchain, rustc: 'rustc 0.0.0'}}};
+  assert.match(validate(contradictoryCompiler).join('\n'), /repeat pack reproducibility proof failed/);
+  const contradictoryBuild = {...base, repeat, npm: {...base.npm, build: {...base.npm.build, rust: 'rustc 0.0.0'}}};
+  assert.match(validate(contradictoryBuild).join('\n'), /repeat pack reproducibility proof failed/);
   assert.match(validate({...base, repeat, packed: {...base.packed, binary: '0'.repeat(64)}}).join('\n'), /repeat pack reproducibility proof failed/);
   assert.match(validate({...base, repeat}, {}, null, {tarball: {sha256: '0'.repeat(64), bytes: 2}, standalone: {sha256: archiveHash, bytes: 2}}).join('\n'), /repeat pack reproducibility proof failed/);
   assert.match(validate({...base, vitest: null}).join('\n'), /Vitest result missing/);
@@ -378,8 +395,13 @@ if (selfCheck) {
       debian11: Boolean(debian),
       repeatPack: Boolean(repeat && repeatPassed(repeat, {
         sourceCommit: preflight?.provenance?.sourceCommit,
-        expectedTarget: 'x86_64-unknown-linux-gnu', expectedPlatform: 'linux', expectedArch: 'x64', expectedMachine: 'x86_64',
-        inputMode: 'debian-x64', hostGlibc: preflight?.environment?.glibc, nodeVersion: preflight?.environment?.node?.version,
+        expectedTarget: 'x86_64-unknown-linux-gnu', expectedPlatform: preflight?.environment?.platform,
+        expectedArch: preflight?.environment?.architecture?.node, expectedMachine: preflight?.environment?.architecture?.unameMachine,
+        inputMode: 'debian-x64', hostGlibc: preflight?.environment?.glibc, expectedToolchain: {
+          node: preflight?.environment?.node?.version, npm: preflight?.environment?.npm?.version,
+          rustc: preflight?.environment?.toolchain?.rust?.rustc?.version,
+          cargo: preflight?.environment?.toolchain?.rust?.cargo?.version,
+        },
         packed, npm, standalone, artifacts, requireArtifacts: true, retainedBuild,
       })),
       jestExpo: Boolean(jestExpo),

@@ -112,9 +112,13 @@ function validate({preflight, packed, build, npm, standalone, jestExpo, vitest, 
   else if (!repeatPassed(repeat, {
     sourceCommit: preflight?.provenance?.sourceCommit,
     expectedTarget: preflight?.candidate?.target,
-    expectedPlatform: 'darwin', expectedArch: preflight?.candidate?.cpu,
-    expectedMachine: preflight?.candidate?.cpu === 'arm64' ? 'arm64' : 'x86_64', inputMode: '--native-macos',
-    nodeVersion: preflight?.environment?.node?.version,
+    expectedPlatform: preflight?.environment?.platform, expectedArch: preflight?.environment?.architecture?.node,
+    expectedMachine: preflight?.environment?.architecture?.unameMachine, inputMode: '--native-macos',
+    expectedToolchain: {
+      node: preflight?.environment?.node?.version, npm: preflight?.environment?.npm?.version,
+      rustc: preflight?.environment?.toolchain?.rust?.rustc?.version,
+      cargo: preflight?.environment?.toolchain?.rust?.cargo?.version,
+    },
     packed, build, npm, standalone, artifacts, requireArtifacts: Boolean(artifactDirectory), retainedBuild: retainedPackageBuild,
   })) fail('repeat pack reproducibility proof failed');
   if (!build) fail('BUILD.json missing');
@@ -178,14 +182,16 @@ function selfCheckSummary() {
   checks['installed-cli-regression'] = {status: 0, stdout: 'CLI passed: 43 scenarios plus legacy parity'};
   const base = {
     preflight: {candidate: {cpu: 'arm64', target: 'aarch64-apple-darwin'}, validation: {passed: true}, provenance: {sourceCommit: 'a'.repeat(40)}, environment: {
-      node: {version: 'v24.20.0'},
+      platform: 'darwin', architecture: {node: 'arm64', unameMachine: 'arm64'},
+      node: {version: 'v24.20.0'}, npm: {version: '11.0.0'},
+      toolchain: {rust: {rustc: {version: 'rustc 1.98.1'}, cargo: {version: 'cargo 1.98.1'}}},
     }},
     packed: {tarballSha256: archiveHash, binary: binaryHash, binaryBytes: 1, standalone: {sha256: archiveHash, bytes: 2}},
-    build: {target: 'aarch64-apple-darwin', binarySha256: binaryHash, binaryBytes: 1},
-    npm: {build: {target: 'aarch64-apple-darwin', binarySha256: binaryHash, binaryBytes: 1}, checks},
+    build: {target: 'aarch64-apple-darwin', rust: 'rustc 1.98.1', binarySha256: binaryHash, binaryBytes: 1},
+    npm: {build: {target: 'aarch64-apple-darwin', rust: 'rustc 1.98.1', binarySha256: binaryHash, binaryBytes: 1}, checks},
     standalone: {
       archiveSha256: archiveHash, archiveBytes: 2, cliScenarios: 43,
-      build: {target: 'aarch64-apple-darwin', binarySha256: binaryHash, binaryBytes: 1},
+      build: {target: 'aarch64-apple-darwin', rust: 'rustc 1.98.1', binarySha256: binaryHash, binaryBytes: 1},
       checks: {'installed-cli': {status: 0}, 'installed-parallel': {status: 0}},
       parallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
     },
@@ -231,6 +237,16 @@ function selfCheckSummary() {
   assert.match(validate({...base, repeat: {...repeat, runs: [repeat.runs[0]]}}).join('\n'), /repeat pack reproducibility proof failed/);
   assert.match(validate({...base, repeat: {...repeat, runs: undefined}}).join('\n'), /repeat pack reproducibility proof failed/);
   assert.match(validate({...base, repeat: {...repeat, sourceCommit: '0'.repeat(40)}}).join('\n'), /repeat pack reproducibility proof failed/);
+  const missingProvenance = structuredClone(base);
+  delete missingProvenance.preflight.provenance;
+  assert.match(validate({...missingProvenance, repeat: {...repeat, sourceCommit: '0'.repeat(40)}}).join('\n'), /repeat pack reproducibility proof failed/);
+  const missingEnvironment = structuredClone(base);
+  delete missingEnvironment.preflight.environment.node.version;
+  assert.match(validate({...missingEnvironment, repeat}).join('\n'), /repeat pack reproducibility proof failed/);
+  const contradictoryCompiler = {...base, repeat: {...repeat, toolchain: {...repeat.toolchain, rustc: 'rustc 0.0.0'}}};
+  assert.match(validate(contradictoryCompiler).join('\n'), /repeat pack reproducibility proof failed/);
+  const contradictoryBuild = {...base, repeat, npm: {...base.npm, build: {...base.npm.build, rust: 'rustc 0.0.0'}}};
+  assert.match(validate(contradictoryBuild).join('\n'), /repeat pack reproducibility proof failed/);
   assert.match(validate({...base, repeat, packed: {...base.packed, binary: '0'.repeat(64)}}).join('\n'), /repeat pack reproducibility proof failed/);
   assert.match(validate({...base, repeat}, {}, null, {tarball: {sha256: '0'.repeat(64), bytes: 2}, standalone: {sha256: archiveHash, bytes: 2}}).join('\n'), /repeat pack reproducibility proof failed/);
   console.log('macOS package summary self-check passed');
@@ -320,9 +336,13 @@ if (selfCheck) {
     validation: {package: Boolean(packed && portablePackage), npm: Boolean(npm), standalone: Boolean(standalone), jestExpo: Boolean(jestExpo), vitest: Boolean(vitest), lifecycle: Boolean(lifecycle), repeatPack: Boolean(repeat && repeatPassed(repeat, {
       sourceCommit: preflight?.provenance?.sourceCommit,
       expectedTarget: preflight?.candidate?.target,
-      expectedPlatform: 'darwin', expectedArch: preflight?.candidate?.cpu,
-      expectedMachine: preflight?.candidate?.cpu === 'arm64' ? 'arm64' : 'x86_64', inputMode: '--native-macos',
-      nodeVersion: preflight?.environment?.node?.version,
+      expectedPlatform: preflight?.environment?.platform, expectedArch: preflight?.environment?.architecture?.node,
+      expectedMachine: preflight?.environment?.architecture?.unameMachine, inputMode: '--native-macos',
+      expectedToolchain: {
+        node: preflight?.environment?.node?.version, npm: preflight?.environment?.npm?.version,
+        rustc: preflight?.environment?.toolchain?.rust?.rustc?.version,
+        cargo: preflight?.environment?.toolchain?.rust?.cargo?.version,
+      },
       packed, build, npm, standalone, artifacts, requireArtifacts: true, retainedBuild,
     })), passed: failures.length === 0, failures},
     limits: 'Native macOS 15 proof on the selected GitHub-hosted CPU runner. It does not establish support for older macOS versions, Rosetta execution, the other CPU architecture, signing, notarization or public release distribution.',

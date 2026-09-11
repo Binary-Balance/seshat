@@ -121,8 +121,13 @@ function validate({preflight, packed, npm, standalone, jestExpo, vitest, lifecyc
   if (!repeat) fail('repeat pack result missing');
   else if (!repeatPassed(repeat, {
     sourceCommit: preflight?.provenance?.sourceCommit,
-    expectedTarget: 'aarch64-unknown-linux-gnu', expectedPlatform: 'linux', expectedArch: 'arm64', expectedMachine: 'aarch64',
-    inputMode: '--native-arm64', hostGlibc: preflight?.environment?.glibc, nodeVersion: preflight?.environment?.node?.version,
+    expectedTarget: 'aarch64-unknown-linux-gnu', expectedPlatform: preflight?.environment?.platform,
+    expectedArch: preflight?.environment?.architecture?.node, expectedMachine: preflight?.environment?.architecture?.unameMachine,
+    inputMode: '--native-arm64', hostGlibc: preflight?.environment?.glibc, expectedToolchain: {
+      node: preflight?.environment?.node?.version, npm: preflight?.environment?.npm?.version,
+      rustc: preflight?.environment?.toolchain?.rust?.rustc?.version,
+      cargo: preflight?.environment?.toolchain?.rust?.cargo?.version,
+    },
     packed, npm, standalone, artifacts, requireArtifacts: Boolean(artifactDirectory), retainedBuild: retainedPackageBuild,
   })) fail('repeat pack reproducibility proof failed');
   if (!npm) fail('npm result missing');
@@ -185,13 +190,15 @@ function selfCheckSummary() {
   checks['installed-cli-regression'] = {status: 0, stdout: 'CLI passed: 43 scenarios plus legacy parity'};
   const base = {
     preflight: {validation: {passed: true}, provenance: {sourceCommit: 'a'.repeat(40)}, environment: {
-      glibc: '2.35', node: {version: 'v24.20.0'},
+      platform: 'linux', architecture: {node: 'arm64', unameMachine: 'aarch64'},
+      glibc: '2.35', node: {version: 'v24.20.0'}, npm: {version: '11.0.0'},
+      toolchain: {rust: {rustc: {version: 'rustc 1.98.1'}, cargo: {version: 'cargo 1.98.1'}}},
     }},
     packed: {tarballSha256: archiveHash, binary: binaryHash, binaryBytes: 1, standalone: {sha256: archiveHash, bytes: 2}},
-    npm: {build: {target: 'aarch64-unknown-linux-gnu', binarySha256: binaryHash, binaryBytes: 1}, checks},
+    npm: {build: {target: 'aarch64-unknown-linux-gnu', rust: 'rustc 1.98.1', binarySha256: binaryHash, binaryBytes: 1}, checks},
     standalone: {
       archiveSha256: archiveHash, archiveBytes: 2, cliScenarios: 43,
-      build: {target: 'aarch64-unknown-linux-gnu', binarySha256: binaryHash, binaryBytes: 1},
+      build: {target: 'aarch64-unknown-linux-gnu', rust: 'rustc 1.98.1', binarySha256: binaryHash, binaryBytes: 1},
       checks: {'installed-cli': {status: 0}, 'installed-parallel': {status: 0}},
       parallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
     },
@@ -231,6 +238,16 @@ function selfCheckSummary() {
   assert.match(validate({...base, repeat: {...repeat, runs: [repeat.runs[0]]}}).join('\n'), /repeat pack reproducibility proof failed/);
   assert.match(validate({...base, repeat: {...repeat, runs: undefined}}).join('\n'), /repeat pack reproducibility proof failed/);
   assert.match(validate({...base, repeat: {...repeat, sourceCommit: '0'.repeat(40)}}).join('\n'), /repeat pack reproducibility proof failed/);
+  const missingProvenance = structuredClone(base);
+  delete missingProvenance.preflight.provenance;
+  assert.match(validate({...missingProvenance, repeat: {...repeat, sourceCommit: '0'.repeat(40)}}).join('\n'), /repeat pack reproducibility proof failed/);
+  const missingEnvironment = structuredClone(base);
+  delete missingEnvironment.preflight.environment.glibc;
+  assert.match(validate({...missingEnvironment, repeat}).join('\n'), /repeat pack reproducibility proof failed/);
+  const contradictoryCompiler = {...base, repeat: {...repeat, toolchain: {...repeat.toolchain, rustc: 'rustc 0.0.0'}}};
+  assert.match(validate(contradictoryCompiler).join('\n'), /repeat pack reproducibility proof failed/);
+  const contradictoryBuild = {...base, repeat, npm: {...base.npm, build: {...base.npm.build, rust: 'rustc 0.0.0'}}};
+  assert.match(validate(contradictoryBuild).join('\n'), /repeat pack reproducibility proof failed/);
   assert.match(validate({...base, repeat, packed: {...base.packed, binary: '0'.repeat(64)}}).join('\n'), /repeat pack reproducibility proof failed/);
   assert.match(validate({...base, repeat}, {}, null, {tarball: {sha256: '0'.repeat(64), bytes: 2}, standalone: {sha256: archiveHash, bytes: 2}}).join('\n'), /repeat pack reproducibility proof failed/);
   console.log('Linux ARM64 summary self-check passed');
@@ -306,8 +323,13 @@ if (selfCheck) {
     } : null,
     validation: {package: Boolean(packed && portablePackage), npm: Boolean(npm), standalone: Boolean(standalone), jestExpo: Boolean(jestExpo), vitest: Boolean(vitest), lifecycle: Boolean(lifecycle), repeatPack: Boolean(repeat && repeatPassed(repeat, {
       sourceCommit: preflight?.provenance?.sourceCommit,
-      expectedTarget: 'aarch64-unknown-linux-gnu', expectedPlatform: 'linux', expectedArch: 'arm64', expectedMachine: 'aarch64',
-      inputMode: '--native-arm64', hostGlibc: preflight?.environment?.glibc, nodeVersion: preflight?.environment?.node?.version,
+      expectedTarget: 'aarch64-unknown-linux-gnu', expectedPlatform: preflight?.environment?.platform,
+      expectedArch: preflight?.environment?.architecture?.node, expectedMachine: preflight?.environment?.architecture?.unameMachine,
+      inputMode: '--native-arm64', hostGlibc: preflight?.environment?.glibc, expectedToolchain: {
+        node: preflight?.environment?.node?.version, npm: preflight?.environment?.npm?.version,
+        rustc: preflight?.environment?.toolchain?.rust?.rustc?.version,
+        cargo: preflight?.environment?.toolchain?.rust?.cargo?.version,
+      },
       packed, npm, standalone, artifacts, requireArtifacts: true, retainedBuild,
     })), passed: failures.length === 0, failures},
     limits: 'Native Ubuntu 22.04 ARM64 proof on the runner kernel. It does not establish a historical minimum kernel or support for other Linux userspaces, macOS or Windows.',
