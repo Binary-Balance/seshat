@@ -1,0 +1,752 @@
+{
+  "schemaVersion": 1,
+  "issue": 2,
+  "status": "passed",
+  "capturedDate": "2026-09-11",
+  "source": {
+    "testedMergeCommit": "0edd0a3a546d2a94f8ddac59aa52123a22c821c8",
+    "testedMergeUrl": "https://github.com/Binary-Balance/seshat/commit/0edd0a3a546d2a94f8ddac59aa52123a22c821c8",
+    "pullRequestHead": "97a19aa27ac7c78e95ccf3dcfac68befbabf3460",
+    "pullRequestUrl": "https://github.com/Binary-Balance/seshat/pull/31",
+    "mergedMain": "b1a35c594854cbb0f9958be90ec254902b56a9c9",
+    "mergedMainUrl": "https://github.com/Binary-Balance/seshat/commit/b1a35c594854cbb0f9958be90ec254902b56a9c9",
+    "testedTree": "e3ece89464d5c440839331bf749f7bda49b5e7e3",
+    "mergedMainTree": "e3ece89464d5c440839331bf749f7bda49b5e7e3",
+    "treeMatchesMergedMain": true
+  },
+  "artifactRetention": {
+    "rawArtifactsExpireAt": "2026-12-10T08:21:24Z",
+    "normalizedRecordHasNoRunnerPaths": true
+  },
+  "proofRequirements": {
+    "buildProfile": "non-LTO (lto = off, strip = symbols)",
+    "cliScenarios": 43,
+    "parallelControls": 11,
+    "jestExpoCases": [
+      "normal-1",
+      "assertion-kill",
+      "survivor",
+      "before-all"
+    ],
+    "vitestCases": [
+      "stack",
+      "assertion",
+      "survived",
+      "before-all"
+    ],
+    "unixLifecycleCases": 11,
+    "windowsLifecycleScenarios": 6
+  },
+  "targets": [
+    {
+      "id": "linux-x64",
+      "status": "passed",
+      "target": "x86_64-unknown-linux-gnu",
+      "binaryFormat": "ELF",
+      "machine": 62,
+      "declaredFloor": {
+        "userspace": "Debian 11 / glibc 2.31 pinned compatibility snapshot",
+        "host": "Ubuntu 22.04 / glibc 2.35",
+        "kernel": "Linux 6.8 is the oldest tested kernel series; no lower-kernel incompatibility claim"
+      },
+      "cancellation": "SIGINT and SIGTERM, exits 130 and 143; SIGKILL cannot run cleanup",
+      "evidence": {
+        "runId": "34578770930",
+        "jobId": "103197240824",
+        "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34578770930",
+        "jobUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34578770930/job/103197240824",
+        "artifactId": "10191037534",
+        "artifactName": "linux-x64-package-proof",
+        "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34578770930/artifacts/10191037534",
+        "artifactExpiresAt": "2026-12-10T08:21:24Z",
+        "capturedAt": "2026-09-11T08:21:46.002Z",
+        "sourceCommit": "0edd0a3a546d2a94f8ddac59aa52123a22c821c8",
+        "pullRequestHead": "97a19aa27ac7c78e95ccf3dcfac68befbabf3460"
+      },
+      "host": {
+        "runner": "ubuntu-22.04",
+        "image": "20260907.292.1",
+        "os": "Ubuntu 22.04.5 LTS (Jammy)",
+        "architecture": "x86_64",
+        "kernel": "6.8.0-1064-azure",
+        "glibc": "2.35"
+      },
+      "toolchain": {
+        "node": "v24.20.0",
+        "npm": "11.19.0",
+        "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+        "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+        "rustHost": "x86_64-unknown-linux-gnu",
+        "gcc": "11.4.0",
+        "clang": "14.0.0",
+        "ld": "2.38",
+        "make": "4.3"
+      },
+      "build": {
+        "profile": "lto = off, strip = symbols",
+        "glibcRequiredSymbolsMax": "GLIBC_2.30",
+        "nativeLibraries": [
+          "libgcc_s.so.1",
+          "libpthread.so.0",
+          "libm.so.6",
+          "libdl.so.2",
+          "libc.so.6",
+          "ld-linux-x86-64.so.2"
+        ]
+      },
+      "artifacts": {
+        "npmArchive": {
+          "file": "seshat-linux-x64.tgz",
+          "sha256": "d7119c9ff3d57ab852a0d0e8d6e57849b872f6c6f9a5293283a0395c2aa13f69",
+          "bytes": 906584
+        },
+        "standaloneArchive": {
+          "file": "seshat-linux-x64-standalone.tar.gz",
+          "sha256": "d7119c9ff3d57ab852a0d0e8d6e57849b872f6c6f9a5293283a0395c2aa13f69",
+          "bytes": 906584
+        },
+        "binary": {
+          "sha256": "0a2af3a7f412b7f8ea6e9ef18ae2124a7fc4fbf53105a6c466ae621bd91fba23",
+          "bytes": 2026496
+        },
+        "build": {
+          "file": "BUILD.json",
+          "sha256": "38440c9abb91510696411168d3a0de014b21f0dce270f13ecb8fed0fcdcd991f",
+          "bytes": 7720
+        },
+        "cargoLockSha256": "398dac4d72bc372aa1fb50dd893020998c3e3125f2cc2b9a3e7d3ef6f7523562"
+      },
+      "repeatPack": {
+        "runs": 2,
+        "sourceCommit": "0edd0a3a546d2a94f8ddac59aa52123a22c821c8",
+        "compared": [
+          "binary",
+          "BUILD.json",
+          "npm archive",
+          "standalone archive"
+        ],
+        "allComparisonsMatch": true,
+        "boundToInstalledArtifact": true,
+        "validationPassed": true
+      },
+      "proof": {
+        "npm": {
+          "passed": true,
+          "checks": 16,
+          "noCargoOrRustc": true,
+          "cliScenarios": 43,
+          "workspaceInstall": true,
+          "sourcePreserved": true,
+          "archiveBound": true
+        },
+        "standalone": {
+          "passed": true,
+          "noCargoOrRustc": true,
+          "cliScenarios": 43,
+          "parallelControls": 11,
+          "archiveBound": true
+        },
+        "jestExpo": {
+          "passed": true,
+          "requested": 4,
+          "completed": 4,
+          "originalsPreserved": true
+        },
+        "vitest": {
+          "passed": true,
+          "requested": 4,
+          "completed": 4,
+          "originalsPreserved": true
+        },
+        "lifecycle": {
+          "passed": true,
+          "cases": 11,
+          "cleanup": true,
+          "deadlines": true,
+          "scratchEmpty": true
+        },
+        "thresholdAndFailureExits": true,
+        "captureAndLinks": true,
+        "summaryPassed": true
+      },
+      "retainedReports": [
+        "preflight.json",
+        "repeat-pack.json",
+        "package-result.json",
+        "npm-package.json",
+        "standalone.json",
+        "debian11.json",
+        "jest-expo-check.json",
+        "vitest-check.json",
+        "lifecycle.json",
+        "summary.json"
+      ]
+    },
+    {
+      "id": "linux-arm64",
+      "status": "passed",
+      "target": "aarch64-unknown-linux-gnu",
+      "binaryFormat": "ELF",
+      "machine": 183,
+      "declaredFloor": {
+        "userspace": "Ubuntu 22.04 / glibc 2.35",
+        "kernel": "Linux 6.8 is the oldest tested kernel series; no lower-kernel incompatibility claim"
+      },
+      "cancellation": "SIGINT and SIGTERM, exits 130 and 143; SIGKILL cannot run cleanup",
+      "evidence": {
+        "runId": "34578770757",
+        "jobId": "103197240097",
+        "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34578770757",
+        "jobUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34578770757/job/103197240097",
+        "artifactId": "10190932097",
+        "artifactName": "linux-arm64-package-proof",
+        "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34578770757/artifacts/10190932097",
+        "artifactExpiresAt": "2026-12-10T08:21:24Z",
+        "capturedAt": "2026-09-11T08:21:49.552Z",
+        "sourceCommit": "0edd0a3a546d2a94f8ddac59aa52123a22c821c8",
+        "pullRequestHead": "97a19aa27ac7c78e95ccf3dcfac68befbabf3460"
+      },
+      "host": {
+        "runner": "ubuntu-22.04-arm",
+        "image": "20260907.126.1",
+        "os": "Ubuntu 22.04.5 LTS (Jammy)",
+        "architecture": "aarch64",
+        "kernel": "6.8.0-1064-azure",
+        "glibc": "2.35"
+      },
+      "toolchain": {
+        "node": "v24.20.0",
+        "npm": "11.19.0",
+        "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+        "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+        "rustHost": "aarch64-unknown-linux-gnu",
+        "gcc": "11.4.0",
+        "clang": "14.0.0",
+        "ld": "2.38",
+        "make": "4.3"
+      },
+      "build": {
+        "profile": "lto = off, strip = symbols",
+        "glibcRequiredSymbolsMax": "GLIBC_2.34",
+        "nativeLibraries": [
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6"
+        ]
+      },
+      "artifacts": {
+        "npmArchive": {
+          "file": "seshat-linux-arm64.tgz",
+          "sha256": "c9fa2f430479d2934738d6bc3df5e486091da3de9d1861f230728659ba0a2b5d",
+          "bytes": 862472
+        },
+        "standaloneArchive": {
+          "file": "seshat-linux-arm64-standalone.tar.gz",
+          "sha256": "c9fa2f430479d2934738d6bc3df5e486091da3de9d1861f230728659ba0a2b5d",
+          "bytes": 862472
+        },
+        "binary": {
+          "sha256": "1875ee97580d955079313e3ca4181cd96acb8b32db4488b540093adc963e6da0",
+          "bytes": 1815248
+        },
+        "build": {
+          "file": "BUILD.json",
+          "sha256": "e7308a6b07cfb2c8d29cf84676589d202d8e0e10915c033a0c374907e213a6dc",
+          "bytes": 7193
+        },
+        "cargoLockSha256": "398dac4d72bc372aa1fb50dd893020998c3e3125f2cc2b9a3e7d3ef6f7523562"
+      },
+      "repeatPack": {
+        "runs": 2,
+        "sourceCommit": "0edd0a3a546d2a94f8ddac59aa52123a22c821c8",
+        "compared": [
+          "binary",
+          "BUILD.json",
+          "npm archive",
+          "standalone archive"
+        ],
+        "allComparisonsMatch": true,
+        "boundToInstalledArtifact": true,
+        "validationPassed": true
+      },
+      "proof": {
+        "npm": {
+          "passed": true,
+          "checks": 16,
+          "noCargoOrRustc": true,
+          "cliScenarios": 43,
+          "workspaceInstall": true,
+          "sourcePreserved": true,
+          "archiveBound": true
+        },
+        "standalone": {
+          "passed": true,
+          "noCargoOrRustc": true,
+          "cliScenarios": 43,
+          "parallelControls": 11,
+          "archiveBound": true
+        },
+        "jestExpo": {
+          "passed": true,
+          "requested": 4,
+          "completed": 4,
+          "originalsPreserved": true
+        },
+        "vitest": {
+          "passed": true,
+          "requested": 4,
+          "completed": 4,
+          "originalsPreserved": true
+        },
+        "lifecycle": {
+          "passed": true,
+          "cases": 11,
+          "cleanup": true,
+          "deadlines": true,
+          "scratchEmpty": true
+        },
+        "thresholdAndFailureExits": true,
+        "captureAndLinks": true,
+        "summaryPassed": true
+      },
+      "retainedReports": [
+        "preflight.json",
+        "repeat-pack.json",
+        "package-result.json",
+        "npm-package.json",
+        "standalone.json",
+        "jest-expo-check.json",
+        "vitest-check.json",
+        "lifecycle.json",
+        "summary.json"
+      ]
+    },
+    {
+      "id": "macos-x64",
+      "status": "passed",
+      "target": "x86_64-apple-darwin",
+      "binaryFormat": "Mach-O",
+      "declaredFloor": {
+        "deploymentTarget": "15.0",
+        "host": "macOS 15.7.9"
+      },
+      "cancellation": "SIGINT and SIGTERM, exits 130 and 143; SIGKILL cannot run cleanup",
+      "evidence": {
+        "runId": "34578770831",
+        "jobId": "103197240025",
+        "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34578770831",
+        "jobUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34578770831/job/103197240025",
+        "artifactId": "10191201858",
+        "artifactName": "macos-x64-package-proof",
+        "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34578770831/artifacts/10191201858",
+        "artifactExpiresAt": "2026-12-10T08:21:24Z",
+        "capturedAt": "2026-09-11T08:23:40.594Z",
+        "sourceCommit": "0edd0a3a546d2a94f8ddac59aa52123a22c821c8",
+        "pullRequestHead": "97a19aa27ac7c78e95ccf3dcfac68befbabf3460"
+      },
+      "host": {
+        "runner": "macos-15-intel",
+        "image": "20260824.0482.1",
+        "os": "macOS 15.7.9",
+        "kernel": "Darwin 24.6.0",
+        "architecture": "x86_64",
+        "rosetta": false
+      },
+      "toolchain": {
+        "node": "v24.20.0",
+        "npm": "11.19.0",
+        "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+        "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+        "rustHost": "x86_64-apple-darwin",
+        "clang": "Apple clang 17.0.0",
+        "sdk": "15.5",
+        "deploymentTarget": "15.0"
+      },
+      "build": {
+        "profile": "lto = off, strip = symbols",
+        "nativeLibraries": [
+          "/usr/lib/libiconv.2.dylib",
+          "/usr/lib/libSystem.B.dylib"
+        ]
+      },
+      "artifacts": {
+        "npmArchive": {
+          "file": "seshat-macos-x64.tgz",
+          "sha256": "a6aa3f8b80ea9c94995ab8fe3191dc5318c0a9d0af3617bcbe51deed5ad0b01f",
+          "bytes": 858410
+        },
+        "standaloneArchive": {
+          "file": "seshat-macos-x64-standalone.tar.gz",
+          "sha256": "a6aa3f8b80ea9c94995ab8fe3191dc5318c0a9d0af3617bcbe51deed5ad0b01f",
+          "bytes": 858410
+        },
+        "binary": {
+          "sha256": "069dcc588b30be6034343599eb830b9005088110efd816ac280e0409bca00883",
+          "bytes": 1867488
+        },
+        "build": {
+          "file": "BUILD.json",
+          "sha256": "b921ae331a4fdb4b1b0cb4f965fc43b9669b3354172e9edf387a8320374d13e5",
+          "bytes": 7152
+        },
+        "cargoLockSha256": "398dac4d72bc372aa1fb50dd893020998c3e3125f2cc2b9a3e7d3ef6f7523562"
+      },
+      "repeatPack": {
+        "runs": 2,
+        "sourceCommit": "0edd0a3a546d2a94f8ddac59aa52123a22c821c8",
+        "compared": [
+          "binary",
+          "BUILD.json",
+          "npm archive",
+          "standalone archive"
+        ],
+        "allComparisonsMatch": true,
+        "boundToInstalledArtifact": true,
+        "validationPassed": true
+      },
+      "proof": {
+        "npm": {
+          "passed": true,
+          "checks": 14,
+          "noCargoOrRustc": true,
+          "cliScenarios": 43,
+          "workspaceInstall": true,
+          "sourcePreserved": true,
+          "archiveBound": true
+        },
+        "standalone": {
+          "passed": true,
+          "noCargoOrRustc": true,
+          "cliScenarios": 43,
+          "parallelControls": 11,
+          "archiveBound": true
+        },
+        "jestExpo": {
+          "passed": true,
+          "requested": 4,
+          "completed": 4,
+          "originalsPreserved": true
+        },
+        "vitest": {
+          "passed": true,
+          "requested": 4,
+          "completed": 4,
+          "originalsPreserved": true
+        },
+        "lifecycle": {
+          "passed": true,
+          "cases": 11,
+          "cleanup": true,
+          "deadlines": true,
+          "scratchEmpty": true
+        },
+        "thresholdAndFailureExits": true,
+        "captureAndLinks": true,
+        "summaryPassed": true
+      },
+      "retainedReports": [
+        "preflight.json",
+        "repeat-pack.json",
+        "package-result.json",
+        "npm-package.json",
+        "standalone.json",
+        "jest-expo-check.json",
+        "vitest-check.json",
+        "lifecycle.json",
+        "summary.json"
+      ]
+    },
+    {
+      "id": "macos-arm64",
+      "status": "passed",
+      "target": "aarch64-apple-darwin",
+      "binaryFormat": "Mach-O",
+      "declaredFloor": {
+        "deploymentTarget": "15.0",
+        "host": "macOS 15.7.9"
+      },
+      "cancellation": "SIGINT and SIGTERM, exits 130 and 143; SIGKILL cannot run cleanup",
+      "evidence": {
+        "runId": "34578770831",
+        "jobId": "103197240243",
+        "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34578770831",
+        "jobUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34578770831/job/103197240243",
+        "artifactId": "10191030456",
+        "artifactName": "macos-arm64-package-proof",
+        "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34578770831/artifacts/10191030456",
+        "artifactExpiresAt": "2026-12-10T08:21:24Z",
+        "capturedAt": "2026-09-11T08:23:39.241Z",
+        "sourceCommit": "0edd0a3a546d2a94f8ddac59aa52123a22c821c8",
+        "pullRequestHead": "97a19aa27ac7c78e95ccf3dcfac68befbabf3460"
+      },
+      "host": {
+        "runner": "macos-15",
+        "image": "20260907.0337.1",
+        "os": "macOS 15.7.9",
+        "kernel": "Darwin 24.6.0",
+        "architecture": "arm64",
+        "rosetta": false
+      },
+      "toolchain": {
+        "node": "v24.20.0",
+        "npm": "11.19.0",
+        "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+        "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+        "rustHost": "aarch64-apple-darwin",
+        "clang": "Apple clang 17.0.0",
+        "sdk": "15.5",
+        "deploymentTarget": "15.0"
+      },
+      "build": {
+        "profile": "lto = off, strip = symbols",
+        "nativeLibraries": [
+          "/usr/lib/libiconv.2.dylib",
+          "/usr/lib/libSystem.B.dylib"
+        ]
+      },
+      "artifacts": {
+        "npmArchive": {
+          "file": "seshat-macos-arm64.tgz",
+          "sha256": "4de118e36f9b173c093f508da2437ba05756671e6b47786ce6798ef14e7a8e6d",
+          "bytes": 838416
+        },
+        "standaloneArchive": {
+          "file": "seshat-macos-arm64-standalone.tar.gz",
+          "sha256": "4de118e36f9b173c093f508da2437ba05756671e6b47786ce6798ef14e7a8e6d",
+          "bytes": 838416
+        },
+        "binary": {
+          "sha256": "39baf5a607bc210ad340ccfa88267d23918cabac33ecba19c7c86c4d8110b0c7",
+          "bytes": 1823648
+        },
+        "build": {
+          "file": "BUILD.json",
+          "sha256": "554fe3c012e173bc280396d7b4676f6e4b5b30218926ab6942dcbfdb59741f0e",
+          "bytes": 7154
+        },
+        "cargoLockSha256": "398dac4d72bc372aa1fb50dd893020998c3e3125f2cc2b9a3e7d3ef6f7523562"
+      },
+      "repeatPack": {
+        "runs": 2,
+        "sourceCommit": "0edd0a3a546d2a94f8ddac59aa52123a22c821c8",
+        "compared": [
+          "binary",
+          "BUILD.json",
+          "npm archive",
+          "standalone archive"
+        ],
+        "allComparisonsMatch": true,
+        "boundToInstalledArtifact": true,
+        "validationPassed": true
+      },
+      "proof": {
+        "npm": {
+          "passed": true,
+          "checks": 14,
+          "noCargoOrRustc": true,
+          "cliScenarios": 43,
+          "workspaceInstall": true,
+          "sourcePreserved": true,
+          "archiveBound": true
+        },
+        "standalone": {
+          "passed": true,
+          "noCargoOrRustc": true,
+          "cliScenarios": 43,
+          "parallelControls": 11,
+          "archiveBound": true
+        },
+        "jestExpo": {
+          "passed": true,
+          "requested": 4,
+          "completed": 4,
+          "originalsPreserved": true
+        },
+        "vitest": {
+          "passed": true,
+          "requested": 4,
+          "completed": 4,
+          "originalsPreserved": true
+        },
+        "lifecycle": {
+          "passed": true,
+          "cases": 11,
+          "cleanup": true,
+          "deadlines": true,
+          "scratchEmpty": true
+        },
+        "thresholdAndFailureExits": true,
+        "captureAndLinks": true,
+        "summaryPassed": true
+      },
+      "retainedReports": [
+        "preflight.json",
+        "repeat-pack.json",
+        "package-result.json",
+        "npm-package.json",
+        "standalone.json",
+        "jest-expo-check.json",
+        "vitest-check.json",
+        "lifecycle.json",
+        "summary.json"
+      ]
+    },
+    {
+      "id": "windows-x64",
+      "status": "passed",
+      "target": "x86_64-pc-windows-msvc",
+      "binaryFormat": "PE32+",
+      "machine": "0x8664",
+      "declaredFloor": {
+        "host": "Windows Server 2022 Datacenter build 20348",
+        "desktopWindows": "not claimed"
+      },
+      "cancellation": "CTRL_BREAK_EVENT through the native console helper; POSIX signal semantics are not claimed",
+      "evidence": {
+        "runId": "34578770812",
+        "jobId": "103197240188",
+        "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34578770812",
+        "jobUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34578770812/job/103197240188",
+        "artifactId": "10191061364",
+        "artifactName": "windows-x64-package-proof",
+        "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34578770812/artifacts/10191061364",
+        "artifactExpiresAt": "2026-12-10T08:21:24Z",
+        "capturedAt": "2026-09-11T08:21:56.276Z",
+        "sourceCommit": "0edd0a3a546d2a94f8ddac59aa52123a22c821c8",
+        "pullRequestHead": "97a19aa27ac7c78e95ccf3dcfac68befbabf3460"
+      },
+      "host": {
+        "runner": "windows-2022",
+        "image": "20260907.297.1",
+        "os": "Windows Server 2022 Datacenter",
+        "release": "10.0.20348",
+        "architecture": "x64"
+      },
+      "toolchain": {
+        "node": "v24.20.0",
+        "npm": "11.19.0",
+        "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+        "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+        "rustHost": "x86_64-pc-windows-msvc",
+        "msvc": "19.44.35228",
+        "linker": "14.44.35228.0",
+        "sdk": "10.0.26100.0",
+        "ucrt": "10.0.26100.0"
+      },
+      "build": {
+        "profile": "lto = off, strip = symbols",
+        "crtStatic": true,
+        "rustflags": [
+          "-C target-feature=+crt-static",
+          "-C link-arg=/Brepro"
+        ],
+        "imports": [
+          "KERNEL32.dll",
+          "api-ms-win-core-synch-l1-2-0.dll",
+          "kernel32.dll",
+          "ntdll.dll"
+        ]
+      },
+      "artifacts": {
+        "npmArchive": {
+          "file": "seshat-windows-x64.tgz",
+          "sha256": "5b7651eb45900ab291b2434175a195d77870a06d8fc84523a6306056cdf0e33d",
+          "bytes": 880937
+        },
+        "standaloneArchive": {
+          "file": "seshat-windows-x64-standalone.tar.gz",
+          "sha256": "5b7651eb45900ab291b2434175a195d77870a06d8fc84523a6306056cdf0e33d",
+          "bytes": 880937
+        },
+        "binary": {
+          "sha256": "ab2e49aacd41c34b0e256eaddbb61a4c728801e141bea3381b9e74ee3408a912",
+          "bytes": 2066944
+        },
+        "build": {
+          "file": "BUILD.json",
+          "sha256": "e807c04e5518b43c1bfc3de831a89ae7df4076dd84eeccedf23c080c22f515f7",
+          "bytes": 8054
+        },
+        "cargoLockSha256": "7a4ad1a11ac1c0bd12f98850b0ad2b06a2a657f076aab1b1dd4ffa85eac28ab3"
+      },
+      "repeatPack": {
+        "runs": 2,
+        "sourceCommit": "0edd0a3a546d2a94f8ddac59aa52123a22c821c8",
+        "compared": [
+          "binary",
+          "BUILD.json",
+          "npm archive",
+          "standalone archive"
+        ],
+        "allComparisonsMatch": true,
+        "boundToInstalledArtifact": true,
+        "validationPassed": true
+      },
+      "proof": {
+        "npm": {
+          "passed": true,
+          "checks": 12,
+          "noCargoOrRustc": true,
+          "cliScenarios": 43,
+          "sourcePreserved": true,
+          "archiveBound": true
+        },
+        "standalone": {
+          "passed": true,
+          "noCargoOrRustc": true,
+          "cliScenarios": 43,
+          "parallelControls": 11,
+          "archiveBound": true
+        },
+        "jestExpo": {
+          "passed": true,
+          "requested": 4,
+          "completed": 4,
+          "originalsPreserved": true
+        },
+        "vitest": {
+          "passed": true,
+          "requested": 4,
+          "completed": 4,
+          "originalsPreserved": true
+        },
+        "lifecycle": {
+          "passed": true,
+          "scenarios": [
+            "baseline",
+            "timeout",
+            "overflow",
+            "leaderExit",
+            "leaderExitRepeat",
+            "consoleCancellation"
+          ],
+          "cases": 6,
+          "cleanup": true,
+          "deadlines": true,
+          "scratchEmpty": true
+        },
+        "thresholdAndFailureExits": true,
+        "captureAndLinks": true,
+        "summaryPassed": true,
+        "summaryGaps": []
+      },
+      "retainedReports": [
+        "preflight.json",
+        "repeat-pack.json",
+        "package-result.json",
+        "windows-package-install.json",
+        "windows-runtime-cli-evidence.json",
+        "shared-cli.json",
+        "shared-parallel.json",
+        "jest-expo-check.json",
+        "vitest-check.json",
+        "summary.json"
+      ]
+    }
+  ],
+  "unsupported": [
+    "Windows ARM64",
+    "Alpine Linux"
+  ],
+  "separateReleaseWork": "Signing, notarization and public npm publication remain issue 6 work."
+}

@@ -1,8 +1,8 @@
 # Linux x64 package protocol
 
-This is the remaining native Linux x64 slice of issue 2. It reruns the x64
-package after shared runtime changes settle, while preserving the existing
-Debian 11/glibc 2.31 build route.
+This is the final native Linux x64 slice of issue 2. It preserves the existing
+Debian 11/glibc 2.31 userspace route while using the current non-LTO release
+profile.
 
 The candidate is deliberately bounded:
 
@@ -62,7 +62,42 @@ the isolated userspace. It records the same CLI/process controls, glibc 2.31,
 the actual shared host kernel and archive hashes. Ubuntu-only installation
 success is therefore not used as the minimum-userspace result.
 
-## Observed native proof
+## Final native proof
+
+The final proof is [workflow run 34578770930](https://github.com/Binary-Balance/seshat/actions/runs/34578770930),
+with [job 103197240824](https://github.com/Binary-Balance/seshat/actions/runs/34578770930/job/103197240824)
+and the retained [Linux x64 artifact](https://github.com/Binary-Balance/seshat/actions/runs/34578770930/artifacts/10191037534).
+It tested merge source
+`0edd0a3a546d2a94f8ddac59aa52123a22c821c8` from `refs/pull/31/merge`, with PR
+head `97a19aa27ac7c78e95ccf3dcfac68befbabf3460`. The tested source tree matches
+merged `main` `b1a35c594854cbb0f9958be90ec254902b56a9c9`.
+
+The native host was Ubuntu 22.04.5 with glibc 2.35, x86_64 target
+`x86_64-unknown-linux-gnu`, ELF machine `62`, and kernel `6.8.0-1064-azure`.
+The pinned Debian 11/glibc 2.31 userspace proof also passed. Node was
+`v24.20.0`, npm `11.19.0`, and rustc/Cargo `1.98.1`, with GCC 11.4.0, Clang
+14.0.0 and GNU ld 2.38. Required symbols reached `GLIBC_2.30`; the highest
+observed symbol is below the declared glibc 2.31 userspace ceiling.
+
+Both npm and standalone routes passed with Cargo and Rustc absent from the
+consumer environment. The installed archive passed 43 CLI scenarios and the
+standalone route passed 11 parallel controls. Jest/Expo and Vitest each ran
+four requested cases to completion with originals preserved. The native
+lifecycle record passed all 11 SIGINT/SIGTERM, timeout, overflow and leader-exit
+cases, including bounded deadlines, descendant cleanup and empty scratch
+directories. The summary had no failures.
+
+The npm and standalone archives are each 906,584 bytes with SHA-256
+`d7119c9ff3d57ab852a0d0e8d6e57849b872f6c6f9a5293283a0395c2aa13f69`. The
+2,026,496-byte binary has SHA-256
+`0a2af3a7f412b7f8ea6e9ef18ae2124a7fc4fbf53105a6c466ae621bd91fba23`; the
+7,720-byte `BUILD.json` has SHA-256
+`38440c9abb91510696411168d3a0de014b21f0dce270f13ecb8fed0fcdcd991f`. Two
+clean packs matched all four identities and the retained installed artifact.
+The complete path-free record is [outputs/platform-support.json](../outputs/platform-support.json).
+The raw artifact is retained by GitHub until 2026-12-10T08:21:24Z.
+
+## Earlier native proof
 
 The successful hosted proof is [workflow run 34558525165](https://github.com/Binary-Balance/seshat/actions/runs/34558525165)
 from [PR 21](https://github.com/Binary-Balance/seshat/pull/21). It tested the
@@ -112,11 +147,12 @@ The 2,449,008-byte binary has SHA-256
 the package metadata, and the locked Cargo graph is identified by
 `bb820a335e5eb7b35e9185cedaabf68b1608f4712c48f73bafcd2bac180e757d`.
 
-These hashes identify the successful run's outputs. The run does not prove
+These hashes identify that historical run's outputs. That run did not prove
 byte-identical reproducibility across separate builds: builds can retain
 identical executable sections while differing in symbol-table/build-ID
-ordering, and standalone archive timestamps vary. A later cross-platform
-reproducibility, lifecycle and runner audit remains separate work.
+ordering, and standalone archive timestamps vary. The final current-profile
+reproducibility and lifecycle records are documented above and in the
+[platform matrix](platform-support.md).
 
 ## Historical native binary reproducibility
 
@@ -218,10 +254,10 @@ The local checks are syntax and self-check coverage for the proof helpers. The
 hosted run above is the source of the actual runner, kernel, userspace, package
 and installed-proof values.
 
-The selected host verifies the candidate Linux 6.8 family floor on the exact
-recorded `6.8.0-1064-azure` patch; it does not boot an older kernel or claim
-that every 6.8 patch behaves identically. The pinned Debian 11 userspace is a
-compatibility snapshot after Debian 11 LTS ended on 2026-08-31. This protocol
-does not establish support for glibc below 2.31, musl, another Linux userspace,
-macOS or Windows. It also does not publish the private npm candidate or close
-issue 2.
+The selected host verifies the candidate Linux 6.8 family on the exact recorded
+`6.8.0-1064-azure` patch; it does not boot an older kernel or claim that every
+6.8 patch behaves identically. The pinned Debian 11 userspace is a
+compatibility snapshot after Debian 11 LTS ended on 2026-08-31. This target does
+not claim glibc below 2.31, musl or another Linux userspace. The consolidated
+[platform matrix](platform-support.md) records the final support boundary and
+the other four targets. This private candidate is not a public npm release.
