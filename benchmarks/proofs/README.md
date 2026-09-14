@@ -419,6 +419,14 @@ timing samples in that suite now include the installed command path. npm's own
 
 See [packaging instructions and remaining limits](../../packaging/README.md).
 
+The Windows x64 package slice uses the native `windows-2022` workflow and is
+documented in the [Windows package protocol](../../docs/windows-package.md).
+Its install proof covers the packaged executable, npm's `.cmd` launcher and
+the same npm archive extracted with `tar.exe`. The workflow also runs the
+shared 43 CLI scenarios, 11 parallel controls and four installed Jest/Expo and
+Vitest cases against that executable. The summary records missing or partial
+integration evidence as a gap.
+
 The initial host-linked verification passed 16 packaging checks, including all 42 installed CLI
 scenarios, on Node 24.20.0/npm 11.19.0/Linux x64/glibc 2.41. Two packs from the
 same checkout and toolchain produced identical tarball bytes. The archive is
