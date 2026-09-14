@@ -1,0 +1,20 @@
+{
+  "name": "seshat-example-workspaces",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": "24.20.0"
+  },
+  "workspaces": ["packages/rules"],
+  "scripts": {
+    "test": "node --test --test-concurrency=1 tests/check.mjs",
+    "typecheck": "tsc --project tsconfig.json"
+  },
+  "devDependencies": {
+    "istanbul-lib-coverage": "3.2.2",
+    "istanbul-lib-instrument": "6.0.3",
+    "istanbul-lib-source-maps": "5.0.6",
+    "typescript": "6.0.3"
+  }
+}
