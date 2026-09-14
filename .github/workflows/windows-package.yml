@@ -4,9 +4,13 @@ on:
   pull_request:
     paths:
       - .github/workflows/windows-package.yml
-      - benchmarks/proofs/Cargo.toml
-      - benchmarks/proofs/Cargo.lock
-      - benchmarks/proofs/src/**
+      - crates/seshat/Cargo.toml
+      - crates/seshat/Cargo.lock
+      - crates/seshat/src/**
+      - packages/**
+      - examples/**
+      - benchmarks/proofs/npm-package.mjs
+      - benchmarks/proofs/release-consumer-summary.mjs
       - benchmarks/proofs/cli.mjs
       - benchmarks/proofs/parallel.mjs
       - benchmarks/proofs/process.mjs
@@ -29,9 +33,13 @@ on:
     branches: [main]
     paths:
       - .github/workflows/windows-package.yml
-      - benchmarks/proofs/Cargo.toml
-      - benchmarks/proofs/Cargo.lock
-      - benchmarks/proofs/src/**
+      - crates/seshat/Cargo.toml
+      - crates/seshat/Cargo.lock
+      - crates/seshat/src/**
+      - packages/**
+      - examples/**
+      - benchmarks/proofs/npm-package.mjs
+      - benchmarks/proofs/release-consumer-summary.mjs
       - benchmarks/proofs/cli.mjs
       - benchmarks/proofs/parallel.mjs
       - benchmarks/proofs/process.mjs
@@ -60,7 +68,7 @@ jobs:
     runs-on: windows-2022
     timeout-minutes: 90
     env:
-      CARGO_TARGET_DIR: benchmarks/rust/target
+      CARGO_TARGET_DIR: crates/seshat/target
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -102,12 +110,12 @@ jobs:
       - name: Fetch locked Rust dependencies
         shell: pwsh
         run: |
-          cargo fetch --locked --manifest-path benchmarks/proofs/Cargo.toml
+          cargo fetch --locked --manifest-path crates/seshat/Cargo.toml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Run native Rust tests
         shell: pwsh
         run: |
-          cargo test --locked --offline --manifest-path benchmarks/proofs/Cargo.toml 2>&1 | Tee-Object -FilePath work/windows/rust-tests.log
+          cargo test --locked --offline --manifest-path crates/seshat/Cargo.toml 2>&1 | Tee-Object -FilePath work/windows/rust-tests.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Prove repeat Windows package reproducibility
         shell: pwsh
@@ -123,6 +131,24 @@ jobs:
         run: |
           node packaging/pack.mjs --native-windows 2>&1 | Tee-Object -FilePath work/windows/pack.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Stage release entry and native packages
+        shell: pwsh
+        run: |
+          $result = Get-Content work/windows/package-result.json -Raw | ConvertFrom-Json
+          New-Item -ItemType Directory -Force work/windows/release | Out-Null
+          tar.exe -xOf $result.tarball package/BUILD.json > work/windows/BUILD.json
+          tar.exe -xOf $result.tarball package/THIRD_PARTY_NOTICES.txt > work/windows/THIRD_PARTY_NOTICES.txt
+          node packaging/release.mjs `
+            --output work/windows/release `
+            --binary "win32-x64=$($result.binaryPath)" `
+            --build-info win32-x64=work/windows/BUILD.json `
+            --notices win32-x64=work/windows/THIRD_PARTY_NOTICES.txt `
+            --manifest work/windows/release.json 2>&1 | Tee-Object -FilePath work/windows/release.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $release = Get-Content work/windows/release.json -Raw | ConvertFrom-Json
+          Copy-Item (Join-Path work/windows/release $release.entry.archive.file) work/windows/seshat-entry.tgz
+          $nativeArchive = ($release.native | Where-Object key -eq 'win32-x64').archive.file
+          Copy-Item (Join-Path work/windows/release $nativeArchive) work/windows/seshat-win32-x64-release.tgz
       - name: Install locked Jest/Expo fixture dependencies
         shell: pwsh
         run: |
@@ -246,6 +272,19 @@ jobs:
             --cli $install.installedBinary `
             --deps "${{ github.workspace }}\benchmarks\proofs" `
             --cases stack,assertion,survived,before-all 2>&1 | Tee-Object -FilePath work/windows/vitest-check.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify release npm entry, shim and public examples
+        shell: pwsh
+        env:
+          SESHAT_PROOF_OUTPUT: work/windows/npm-package.json
+          SESHAT_EXAMPLES_OUTPUT: work/windows/public-consumer-examples.json
+        run: |
+          $package = Get-Content work/windows/package-result.json -Raw | ConvertFrom-Json
+          $env:SESHAT_ENTRY_TARBALL_SHA256 = (Get-FileHash work/windows/seshat-entry.tgz -Algorithm SHA256).Hash.ToLower()
+          $env:SESHAT_NATIVE_TARBALL_SHA256 = (Get-FileHash work/windows/seshat-win32-x64-release.tgz -Algorithm SHA256).Hash.ToLower()
+          $env:SESHAT_NATIVE_BINARY_SHA256 = $package.binary
+          $env:SESHAT_CONSOLE_HELPER_BINARY = $package.consoleHelper
+          node benchmarks/proofs/npm-package.mjs work/windows/seshat-entry.tgz work/windows/seshat-win32-x64-release.tgz 2>&1 | Tee-Object -FilePath work/windows/npm-package.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Write portable summary
         if: always()

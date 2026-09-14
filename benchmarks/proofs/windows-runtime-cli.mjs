@@ -20,11 +20,11 @@ import {fileURLToPath} from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
 const binary = resolve(
-  process.env.SESHAT_CLI_BINARY ?? join(repo, 'benchmarks/rust/target/release/seshat.exe'),
+  process.env.SESHAT_CLI_BINARY ?? join(repo, 'crates/seshat/target/release/seshat.exe'),
 );
 const consoleHelper = resolve(
   process.env.SESHAT_CONSOLE_HELPER_BINARY ??
-    join(repo, 'benchmarks/rust/target/release/windows-console-helper.exe'),
+    join(repo, 'crates/seshat/target/release/windows-console-helper.exe'),
 );
 assert.ok(existsSync(binary), `Windows CLI binary is missing: ${binary}`);
 assert.ok(existsSync(consoleHelper), `Windows console helper is missing: ${consoleHelper}`);

@@ -1,0 +1,44 @@
+{
+  "source": {
+    "include": ["src/**/*.ts"],
+    "exclude": ["src/ignored.ts"]
+  },
+  "capture": [
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "collect-node.mjs",
+    "src",
+    "tests",
+    "node_modules"
+  ],
+  "setups": [
+    {
+      "name": "node",
+      "runner": "node",
+      "cwd": ".",
+      "timeoutMs": 30000,
+      "typecheck": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--project",
+        "tsconfig.json"
+      ],
+      "test": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter={seshatReporter}",
+        "tests/rules.test.mjs"
+      ],
+      "coverage": {
+        "command": [
+          "node",
+          "collect-node.mjs",
+          "tests/rules.test.mjs"
+        ],
+        "report": "coverage/coverage-final.json"
+      }
+    }
+  ]
+}

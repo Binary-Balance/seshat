@@ -41,7 +41,7 @@ for (const entry of readdirSync(sysroot,{recursive:true,withFileTypes:true})) {
 const target = 'x86_64-unknown-linux-gnu';
 const libraries = join(sysroot,'lib/x86_64-linux-gnu');
 const loader = join(libraries,'ld-2.31.so');
-const hostBinary = join(repo,'benchmarks/rust/target/release/seshat');
+const hostBinary = join(repo,'crates/seshat/target/release/seshat');
 const hostVersions = run('host-symbols','readelf',['-W','--version-info',hostBinary]);
 assert.match(hostVersions,/GLIBC_2\.39/, 'negative control requires the original host-linked candidate');
 run('host-binary-rejected',loader,['--library-path',libraries,hostBinary,'--version'],process.env,1);
@@ -51,7 +51,7 @@ const env = {...process.env,CARGO_TARGET_DIR:join(work,'target'),CARGO_ENCODED_R
 ].join('\x1f')};
 delete env.RUSTFLAGS;
 // Explicit target keeps the old-library flags away from host build scripts/macros.
-run('build','cargo',['build','--release','--locked','--offline','--target',target,'--manifest-path','benchmarks/proofs/Cargo.toml','--bin','seshat'],env);
+run('build','cargo',['build','--release','--locked','--offline','--target',target,'--manifest-path','crates/seshat/Cargo.toml','--bin','seshat'],env);
 const binary = join(env.CARGO_TARGET_DIR,target,'release/seshat');
 const versions = run('symbols','readelf',['-W','--version-info',binary]);
 const glibcSymbols = [...new Set([...versions.matchAll(/Name: (GLIBC_\S+)/g)].map(match=>match[1]))];

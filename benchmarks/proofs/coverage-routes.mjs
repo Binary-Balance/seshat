@@ -13,7 +13,7 @@ import sourceMaps from 'istanbul-lib-source-maps';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here,'../..');
-const binary = join(repo,'benchmarks/rust/target/release/seshat-proofs');
+const binary = join(repo,'crates/seshat/target/release/seshat-proofs');
 const modules = join(here,'node_modules');
 const scratch = join(repo,'work/assurance-proofs');
 mkdirSync(scratch,{recursive:true});

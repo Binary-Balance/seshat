@@ -89,17 +89,16 @@ json(join(consumer, 'package.json'), {
 npm('offline-install', ['install', '--save-dev', '--save-exact', '--ignore-scripts', '--offline', '--no-audit', '--no-fund',
   '--cache',join(work, 'cache'), '--userconfig',join(work, 'user.npmrc'), '--globalconfig',join(work, 'global.npmrc'), tarball], consumer);
 
-const installed = join(consumer, 'node_modules', '@binary-balance', 'seshat');
+const installed = join(consumer, 'node_modules', '@binary-balance', 'seshat-win32-x64');
 const executable = join(installed, 'bin', 'seshat.exe');
-const shim = join(consumer, 'node_modules', '.bin', 'seshat.cmd');
-assert.ok(existsSync(executable), 'npm install did not retain bin/seshat.exe');
-assert.ok(existsSync(shim), 'npm install did not create the Windows .cmd launcher');
-assert.match(readFileSync(shim, 'utf8'), /seshat\.exe/i);
+assert.ok(existsSync(executable), 'npm install did not retain native bin/seshat.exe');
+assert.equal(existsSync(join(consumer, 'node_modules', '.bin', 'seshat.cmd')), false,
+  'native payload must not own the npm seshat bin');
 const manifest = JSON.parse(readFileSync(join(installed, 'package.json'), 'utf8'));
 assert.deepEqual(manifest.os, ['win32']);
 assert.deepEqual(manifest.cpu, ['x64']);
 assert.equal(manifest.libc, undefined);
-assert.deepEqual(manifest.bin, {seshat: 'bin/seshat.exe'});
+assert.equal(manifest.bin, undefined);
 assert.deepEqual(readdirSync(installed).sort(), ['BUILD.json', 'LICENSE', 'README.md', 'THIRD_PARTY_NOTICES.txt', 'bin', 'package.json'].sort());
 assert.deepEqual(readdirSync(join(installed, 'bin')).sort(), ['seshat.exe']);
 const build = JSON.parse(readFileSync(join(installed, 'BUILD.json'), 'utf8'));
@@ -120,9 +119,6 @@ assert.ok(build.sourceCommit);
 
 run('installed-version', executable, ['--version'], consumer);
 run('installed-help', executable, ['--help'], consumer);
-run('bin-cmd-version', comspec, ['/d', '/c', shim, '--version'], consumer);
-npm('npm-exec-help', ['exec', '--offline', '--', 'seshat', '--help'], consumer);
-npm('package-script-version', ['run', '--silent', 'assurance'], consumer);
 npm('offline-ci', ['ci', '--ignore-scripts', '--offline', '--no-audit', '--no-fund',
   '--cache',join(work, 'cache'), '--userconfig',join(work, 'user.npmrc'), '--globalconfig',join(work, 'global.npmrc')], consumer);
 
@@ -156,6 +152,7 @@ const result = {
   installedBinary:executable,
   standaloneBinary,
   binary:{sha256:binarySha256, bytes:binaryBytes.length},
+  nativeBinOmitted:true,
   buildSha256,
   build,
   noConsumingRust:{

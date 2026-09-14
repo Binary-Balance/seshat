@@ -12,10 +12,10 @@ const repo = resolve(here, '../..');
 const executableSuffix = process.platform === 'win32' ? '.exe' : '';
 const binary = process.env.SESHAT_CLI_BINARY
   ? resolve(process.env.SESHAT_CLI_BINARY)
-  : join(repo, `benchmarks/rust/target/release/seshat${executableSuffix}`);
+  : join(repo, `crates/seshat/target/release/seshat${executableSuffix}`);
 const consoleHelper = resolve(
   process.env.SESHAT_CONSOLE_HELPER_BINARY ??
-    join(repo, `benchmarks/rust/target/release/windows-console-helper${executableSuffix}`),
+    join(repo, `crates/seshat/target/release/windows-console-helper${executableSuffix}`),
 );
 mkdirSync(join(repo, 'work/assurance-proofs'), {recursive: true});
 const work = mkdtempSync(join(repo, 'work/assurance-proofs/cli-'));
@@ -118,7 +118,7 @@ assert.equal(mutated.result.mutation.unresolved, 0);
 assert.deepEqual(stableMutation(mutated.result.mutation), stableMutation(checked.result.mutation));
 const proofBinary = process.env.SESHAT_PROOF_BINARY
   ? resolve(process.env.SESHAT_PROOF_BINARY)
-  : join(repo, `benchmarks/rust/target/release/seshat-proofs${executableSuffix}`);
+  : join(repo, `crates/seshat/target/release/seshat-proofs${executableSuffix}`);
 const legacy = spawnSync(proofBinary, ['check', configPath, scratch], {encoding:'utf8', timeout:60000});
 assert.ifError(legacy.error); assert.equal(legacy.status, 0, legacy.stderr);
 const proof = JSON.parse(legacy.stdout);

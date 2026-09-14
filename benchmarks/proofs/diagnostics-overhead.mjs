@@ -111,6 +111,7 @@ const reportOutput = selfCheck ? null : resolve(cli.report ?? (cli.output
   ? cli.output.replace(/\.json$/i, '.md')
   : join(work, switchingMode && switchingFixtureName !== 'node' ? `${switchingOutputStem}.md` : 'report.md')));
 const proofHere = join(repo, 'benchmarks/proofs');
+const crateHere = join(repo, 'crates/seshat');
 const proofModules = join(proofHere, 'node_modules');
 const compiler = join(repo, 'benchmarks/node_modules/typescript/bin/tsc');
 const collector = join(proofHere, 'collect-node.mjs');
@@ -277,11 +278,19 @@ function installTarball(label, tarball) {
     '--globalconfig', npmEnv.npm_config_globalconfig, tarball,
   ], consumer, npmEnv, 180000);
   assertCommand(installed, `${label} offline npm install`);
-  const executable = realpathSync(join(consumer, 'node_modules/.bin/seshat'));
+  const scope = join(consumer, 'node_modules/@binary-balance');
+  const nativeName = existsSync(scope)
+    ? readdirSync(scope).find(name => /^seshat-(linux|darwin|win32)-/.test(name))
+    : null;
+  const packageName = nativeName ? `@binary-balance/${nativeName}` : '@binary-balance/seshat';
+  const packageRoot = join(consumer, 'node_modules', packageName);
+  const linkedExecutable = join(consumer, 'node_modules/.bin/seshat');
+  const executable = realpathSync(existsSync(linkedExecutable)
+    ? linkedExecutable
+    : join(packageRoot, 'bin', process.platform === 'win32' ? 'seshat.exe' : 'seshat'));
   assert.ok(statSync(executable).isFile(), `${label} installed executable missing`);
   const version = assertCommand(run(executable, ['--version'], consumer), `${label} --version`).stdout.trim();
-  const packageRoot = join(consumer, 'node_modules/@binary-balance/seshat');
-  const packageFiles = walkInputs(consumer, ['node_modules/@binary-balance/seshat']);
+  const packageFiles = walkInputs(consumer, [`node_modules/${packageName}`]);
   const buildMetadataPath = join(packageRoot, 'BUILD.json');
   const buildMetadata = JSON.parse(readFileSync(buildMetadataPath, 'utf8'));
   const packageBytes = packageFiles.reduce((total, file) => total + (file.bytes ?? 0), 0);
@@ -1172,14 +1181,14 @@ function toolVersions() {
 }
 
 function maintainedCounts() {
-  const codePaths = ['benchmarks/proofs/src', 'benchmarks/proofs/diagnostics-overhead.mjs'];
+  const codePaths = ['crates/seshat/src', 'benchmarks/proofs/diagnostics-overhead.mjs'];
   const codeFiles = walkInputs(repo, codePaths).filter(file => file.kind === 'file');
   const codeRows = codeFiles.filter(file => /\.(?:rs|mjs)$/.test(file.path));
   const lines = codeRows.reduce((total, file) => {
     const source = readFileSync(join(repo, file.path), 'utf8');
     return total + source.split(/\r?\n/).length - (source.endsWith('\n') ? 1 : 0);
   }, 0);
-  const cargoLock = readFileSync(join(proofHere, 'Cargo.lock'), 'utf8');
+  const cargoLock = readFileSync(join(crateHere, 'Cargo.lock'), 'utf8');
   return {
     code: {
       scope: codePaths,
@@ -1187,7 +1196,7 @@ function maintainedCounts() {
       lines,
     },
     cargoDependencies: {
-      scope: 'benchmarks/proofs/Cargo.lock [[package]] entries',
+      scope: 'crates/seshat/Cargo.lock [[package]] entries',
       packages: (cargoLock.match(/^\[\[package\]\]$/gm) ?? []).length,
       type: 'locked Cargo package entries',
     },

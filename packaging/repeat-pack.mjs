@@ -77,19 +77,32 @@ function inspect(result) {
   const npmBytes = readFileSync(result.tarball);
   const standaloneBytes = readFileSync(result.standalone.path);
   const buildBytes = execFileSync(commandName('tar'), ['-xOf', result.tarball, 'package/BUILD.json'], {maxBuffer:2 * 1024 * 1024});
+  const packageBytes = execFileSync(commandName('tar'), ['-xOf', result.tarball, 'package/package.json'], {maxBuffer:128 * 1024});
   const binaryBytes = execFileSync(commandName('tar'), ['-xOf', result.tarball, `package/bin/${result.binaryName ?? 'seshat'}`], {maxBuffer:32 * 1024 * 1024});
   const npm = {sha256:sha256(npmBytes), bytes:npmBytes.length};
   const standalone = {sha256:sha256(standaloneBytes), bytes:standaloneBytes.length};
   const build = {sha256:sha256(buildBytes), bytes:buildBytes.length};
+  const packageManifest = JSON.parse(packageBytes);
+  const buildManifest = JSON.parse(buildBytes);
   const binary = {sha256:sha256(binaryBytes), bytes:binaryBytes.length};
   assert.equal(result.tarballSha256, npm.sha256, 'npm archive hash differs from pack metadata');
   assert.deepEqual(result.standalone, {path:result.tarball, sha256:npm.sha256, bytes:npm.bytes});
-  assert.equal(JSON.parse(buildBytes).binarySha256, result.binary, 'BUILD.json binary hash differs from pack metadata');
+  assert.equal(buildManifest.binarySha256, result.binary, 'BUILD.json binary hash differs from pack metadata');
+  assert.equal(buildManifest.sourceCommit, sourceCommit, 'BUILD.json source commit differs from repeat proof');
+  assert.equal(buildManifest.package, result.packageName, 'BUILD.json package differs from pack metadata');
+  assert.equal(buildManifest.packageVersion, result.version, 'BUILD.json version differs from pack metadata');
+  assert.equal(packageManifest.name, result.packageName, 'native package name differs from pack metadata');
+  assert.equal(packageManifest.version, result.version, 'native package version differs from pack metadata');
+  assert.equal(packageManifest.bin, undefined, 'native payload must not own the seshat npm bin');
+  assert.equal(packageManifest.dependencies, undefined, 'native payload must not add runtime dependencies');
+  assert.equal(packageManifest.optionalDependencies, undefined, 'native payload must not add optional dependencies');
+  assert.equal(packageManifest.scripts, undefined, 'native payload must not run install scripts');
   assert.deepEqual(binary, {sha256:result.binary, bytes:result.binaryBytes});
   assert.equal(npm.sha256, standalone.sha256, 'npm and standalone hashes differ within one pack');
   assert.equal(npm.bytes, standalone.bytes, 'npm and standalone sizes differ within one pack');
   assert.ok(npmBytes.equals(standaloneBytes), 'npm and standalone bytes differ within one pack');
-  return {binary, build, npmArchive:npm, standaloneArchive:standalone, files:result.files.map(file => file.path).sort()};
+  return {binary, build, packageManifest, npmArchive:npm, standaloneArchive:standalone,
+    files:result.files.map(file => file.path).sort()};
 }
 
 try {

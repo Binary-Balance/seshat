@@ -1,0 +1,7 @@
+{
+  "name": "@seshat/example-rules",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./index.ts"
+}

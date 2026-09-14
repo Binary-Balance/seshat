@@ -6,11 +6,14 @@ import {chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSyn
 import {arch, release, version as osVersion} from 'node:os';
 import {dirname, isAbsolute, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {assertArchiveNotice, loadRuntimeNoticeAssets, renderRuntimeNotice, validateRustToolchain} from './runtime-notice-check.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..');
-const manifest = JSON.parse(readFileSync(join(here, 'package.json'), 'utf8'));
-const cargoManifest = join(repo, 'benchmarks/proofs/Cargo.toml');
+const cargoManifest = join(repo, 'crates/seshat/Cargo.toml');
+const runtimeNoticeDirectory = join(here, 'runtime-notices', 'rust-1.98.1');
+const version = readFileSync(cargoManifest, 'utf8').match(/^version\s*=\s*"([^"]+)"/m)?.[1];
+assert.ok(version, `version is missing from ${cargoManifest}`);
 const nativeArm64 = process.argv.length === 3 && process.argv[2] === '--native-arm64';
 const nativeMacos = process.argv.length === 3 && process.argv[2] === '--native-macos';
 const nativeWindows = process.argv.length === 3 && process.argv[2] === '--native-windows';
@@ -53,12 +56,12 @@ if (nativeArm64) {
 if (!nativeMacos && !nativeWindows) assert.ok(process.report.getReport().header.glibcVersionRuntime, 'glibc is required');
 const archives = nativeArm64 || nativeMacos || nativeWindows ? null : resolve(process.argv[2]);
 const targetConfig = nativeArm64
-  ? {target:'aarch64-unknown-linux-gnu', cpu:'arm64', elfMachine:183, glibcCeiling:'2.35'}
+  ? {key:'linux-arm64', packageName:'@binary-balance/seshat-linux-arm64', target:'aarch64-unknown-linux-gnu', cpu:'arm64', os:'linux', elfMachine:183, glibcCeiling:'2.35'}
   : nativeMacos
-    ? {target:process.arch === 'arm64' ? 'aarch64-apple-darwin' : 'x86_64-apple-darwin', cpu:process.arch, machoArch:process.arch === 'arm64' ? 'arm64' : 'x86_64', minimumMacos:'15.0'}
+    ? {key:`darwin-${process.arch}`, packageName:`@binary-balance/seshat-darwin-${process.arch}`, target:process.arch === 'arm64' ? 'aarch64-apple-darwin' : 'x86_64-apple-darwin', cpu:process.arch, os:'darwin', machoArch:process.arch === 'arm64' ? 'arm64' : 'x86_64', minimumMacos:'15.0'}
     : nativeWindows
-      ? {target:'x86_64-pc-windows-msvc', cpu:'x64', peMachine:0x8664, binaryName:'seshat.exe'}
-      : {target:'x86_64-unknown-linux-gnu', cpu:'x64', elfMachine:62, glibcCeiling:'2.31'};
+      ? {key:'win32-x64', packageName:'@binary-balance/seshat-win32-x64', target:'x86_64-pc-windows-msvc', cpu:'x64', os:'win32', peMachine:0x8664, binaryName:'seshat.exe'}
+      : {key:'linux-x64', packageName:'@binary-balance/seshat-linux-x64', target:'x86_64-unknown-linux-gnu', cpu:'x64', os:'linux', elfMachine:62, glibcCeiling:'2.31'};
 mkdirSync(join(repo,'work'),{recursive:true});
 const work = mkdtempSync(join(repo,'work/npm-pack-'));
 const target = join(work,'target');
@@ -77,6 +80,16 @@ const run = (command, args) => execFileSync(commandName(command), args, {
   stdio:['ignore','pipe','inherit'],
 });
 const sha256 = data => createHash('sha256').update(data).digest('hex');
+const runtimeNotices = loadRuntimeNoticeAssets(runtimeNoticeDirectory);
+const rustcVersion = run('rustc', ['--version']).trim();
+const rustcVerbose = run('rustc', ['-vV']);
+validateRustToolchain(runtimeNotices.provenance, {versionOutput:rustcVersion, verboseOutput:rustcVerbose});
+const runtimeNotice = renderRuntimeNotice(runtimeNotices);
+const runtimeLicenseText = path => {
+  const asset = runtimeNotices.files.find(file => file.path === path);
+  assert.ok(asset, `runtime notice asset is missing: ${path}`);
+  return asset.data.toString('utf8');
+};
 const toolInfo = (command, identity) => {
   const result = spawnSync(commandName(command), [], {encoding:'utf8', maxBuffer:128 * 1024});
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
@@ -173,9 +186,9 @@ if (nativeWindows) cargoBuildArgs.splice(1, 0, '--config',
   'target.x86_64-pc-windows-msvc.rustflags=["-C","target-feature=+crt-static","-C","link-arg=/Brepro"]');
 run('cargo', cargoBuildArgs);
 const metadata = JSON.parse(run('cargo',['metadata','--locked','--offline','--format-version','1','--manifest-path',cargoManifest]));
-assert.equal(metadata.packages.find(p => p.id === metadata.resolve.root).version, manifest.version);
+assert.equal(metadata.packages.find(p => p.id === metadata.resolve.root).version, version);
 const binary = join(target,triple,`release/${nativeWindows ? targetConfig.binaryName : 'seshat'}`);
-assert.equal(run(binary, ['--version']).trim(), `seshat ${manifest.version} (candidate)`);
+assert.equal(run(binary, ['--version']).trim(), `seshat ${version} (candidate)`);
 const bytes = readFileSync(binary);
 if (nativeMacos) {
   const fileType = run('file', ['-b', binary]);
@@ -196,7 +209,7 @@ const notices = [];
 const dependencies = metadata.packages.filter(p => p.source).sort((a,b) => a.name.localeCompare(b.name));
 for (const dependency of dependencies) {
   const directory = dirname(dependency.manifest_path);
-  const files = readdirSync(directory).filter(name => /^(licen[cs]e|copying|notice)/i.test(name) && statSync(join(directory,name)).isFile()).sort();
+  const files = readdirSync(directory).filter(name => /^(licen[cs]e|copying|notice|copyright|unlicense)/i.test(name) && statSync(join(directory,name)).isFile()).sort();
   notices.push(`${dependency.name} ${dependency.version}\nDeclared licence: ${dependency.license}\n`);
   if (files.length) {
     for (const file of files) notices.push(`${file}\n${readFileSync(join(directory,file),'utf8')}`);
@@ -208,6 +221,20 @@ for (const dependency of dependencies) {
     assert.equal(vcs.git.sha1, index ? '8e09fe324eb6df02f56e4eacdfac958930300380' : '894c8f9cd89508391b01eb26a4b5ac2b846ab39b');
     notices.push(readFileSync(join(here,'OXC-LICENSE'),'utf8'));
   }
+  if (dependency.name === 'siphasher') {
+    assert.equal(dependency.version, '1.0.3', 'unexpected siphasher revision');
+    assert.ok(files.includes('COPYING'), 'siphasher COPYING attribution is missing');
+    notices.push(`LICENSE-MIT (siphasher declared MIT option)\n${runtimeLicenseText('licenses/MIT.txt')}`);
+    notices.push(`LICENSE-APACHE-2.0 (siphasher declared Apache-2.0 option)\n${runtimeLicenseText('licenses/Apache-2.0.txt')}`);
+  }
+}
+const noticeText = Buffer.concat([Buffer.from(notices.join('\n\n'), 'utf8'), Buffer.from('\n\n', 'utf8'), runtimeNotice]);
+const noticeString = noticeText.toString('utf8');
+if (dependencies.some(({name}) => name === 'unicode-segmentation' || name === 'unicode-width')) {
+  assert.match(noticeString, /\nCOPYRIGHT\n/, 'expected COPYRIGHT in dependency notices');
+}
+if (dependencies.some(({name}) => name === 'memchr')) {
+  assert.match(noticeString, /\nUNLICENSE\n/, 'expected UNLICENSE in dependency notices');
 }
 const pe = nativeWindows ? peInfo(bytes) : null;
 const versions = nativeMacos || nativeWindows ? '' : run('readelf',['-W','--version-info',binary]);
@@ -227,6 +254,9 @@ if (nativeMacos) {
   assert.equal(minimum, targetConfig.minimumMacos, `expected macOS minimum ${targetConfig.minimumMacos}`);
 }
 const build = {
+  schemaVersion:1,
+  package:targetConfig.packageName,
+  packageVersion:version,
   target:targetConfig.target,
   ...(nativeArm64 ? {cpu:targetConfig.cpu, glibcCeiling:targetConfig.glibcCeiling} : {}),
   ...(nativeMacos ? {cpu:targetConfig.cpu, minimumMacos:targetConfig.minimumMacos, deploymentTarget:env.MACOSX_DEPLOYMENT_TARGET,
@@ -245,11 +275,21 @@ const build = {
     sdk:sdkInfo(),
     os:{platform:process.platform, architecture:arch(), release:release(), version:osVersion(), runner:process.env.RUNNER_OS ?? null,
       image:process.env.ImageOS ?? null, imageVersion:process.env.ImageVersion ?? null},
-    sourceCommit:sourceCommit(),
   } : {}),
-  rust:run('rustc',['--version']).trim(),
+  rust:rustcVersion,
+  runtimeNotices:{
+    format:runtimeNotices.provenance.format,
+    formatVersion:runtimeNotices.provenance.formatVersion,
+    rustcVersion:runtimeNotices.provenance.toolchain.rustcVersion,
+    rustcBuild:runtimeNotices.provenance.toolchain.rustcBuild,
+    rustCommit:runtimeNotices.provenance.toolchain.rustCommit,
+    noticeSha256:sha256(noticeText), noticeBytes:noticeText.length,
+    assets:runtimeNotices.files.map(({path,bytes,sha256}) => ({path,bytes,sha256})),
+  },
+  dependencyInventoryScope:'Cargo.lock source/build inventory; includes proc-macro, build-only, and target-specific packages and is not an exact linked-runtime subset',
   binarySha256:sha256(bytes), binaryBytes:bytes.length,
-  cargoLockSha256:sha256(readFileSync(join(repo,'benchmarks/proofs/Cargo.lock'))),
+  cargoLockSha256:sha256(readFileSync(join(repo,'crates/seshat/Cargo.lock'))),
+  sourceCommit:sourceCommit(),
   ...(nativeMacos ? {machoArchitecture:targetConfig.machoArch} : nativeWindows ? {} : {glibcSymbols:[...new Set([...versions.matchAll(/Name: (GLIBC_[\d.]+)/g)].map(match => match[1]))].sort()}),
   nativeLibraries,
   dependencies:dependencies.map(({name,version,license}) => ({name,version,license})),
@@ -268,40 +308,33 @@ mkdirSync(join(stage,'bin'),{recursive:true});
 const packagedBinary = `bin/${nativeWindows ? targetConfig.binaryName : 'seshat'}`;
 copyFileSync(binary,join(stage,packagedBinary));
 if (!nativeWindows) chmodSync(join(stage,packagedBinary),0o755);
-const packageManifest = nativeWindows ? (() => {
-  const value = {...manifest,
-    description:'Local Windows x64 MSVC candidate for native TypeScript code assurance',
-    os:['win32'], cpu:['x64'], bin:{seshat:packagedBinary},
-    files:[packagedBinary,'BUILD.json','THIRD_PARTY_NOTICES.txt'],
-  };
-  delete value.libc;
-  return value;
-})() : nativeArm64 ? {...manifest,
-  description:'Local Linux ARM64 candidate for native TypeScript code assurance',
-  cpu:['arm64'],
-} : nativeMacos ? (() => {
-  const value = {...manifest,
-    description:`Local macOS ${process.arch === 'arm64' ? 'ARM64' : 'x64'} candidate for native TypeScript code assurance`,
-    os:['darwin'], cpu:[process.arch],
-  };
-  delete value.libc;
-  return value;
-})() : manifest;
-if (nativeArm64 || nativeMacos || nativeWindows) writeFileSync(join(stage,'package.json'),JSON.stringify(packageManifest,null,2)+'\n');
-else copyFileSync(join(here,'package.json'),join(stage,'package.json'));
-copyFileSync(join(here,nativeWindows ? 'README-windows.md' : nativeArm64 ? 'README-arm64.md' : nativeMacos ? 'README-macos.md' : 'README.md'),join(stage,'README.md'));
+const packageManifest = {
+  name:targetConfig.packageName,
+  version,
+  description:`Native Seshat payload for ${targetConfig.key}`,
+  license:'MIT',
+  engines:{node:'24.20.0'},
+  os:[targetConfig.os], cpu:[targetConfig.cpu],
+  ...(targetConfig.os === 'linux' ? {libc:['glibc']} : {}),
+  files:[packagedBinary,'BUILD.json','LICENSE','README.md','THIRD_PARTY_NOTICES.txt'],
+};
+writeFileSync(join(stage,'package.json'),JSON.stringify(packageManifest,null,2)+'\n');
+writeFileSync(join(stage,'README.md'),`# Seshat native payload\n\nTarget: ${targetConfig.key}.\nThe \`@binary-balance/seshat\` package selects this payload for matching hosts.\n`);
 copyFileSync(join(repo,'LICENSE'),join(stage,'LICENSE'));
 writeFileSync(join(stage,'BUILD.json'),JSON.stringify(build,null,2)+'\n');
-writeFileSync(join(stage,'THIRD_PARTY_NOTICES.txt'),notices.join('\n\n'));
+writeFileSync(join(stage,'THIRD_PARTY_NOTICES.txt'),noticeText);
 const [packed] = JSON.parse(run('npm',['pack',stage,'--json','--offline','--ignore-scripts','--update-notifier=false','--pack-destination',work,
   '--cache',join(work,'cache'),'--userconfig',join(work,'user.npmrc'),'--globalconfig',join(work,'global.npmrc')]));
 assert.deepEqual(packed.files.map(f => f.path).sort(), ['BUILD.json','LICENSE','README.md','THIRD_PARTY_NOTICES.txt',packagedBinary,'package.json'].sort());
 const tarball = join(work,packed.filename);
+assertArchiveNotice(tarball, noticeText);
 const tarballSha256 = sha256(readFileSync(tarball));
-const result = {tarball, tarballSha256, proofBinary:join(target,triple,`release/seshat-proofs${nativeWindows ? '.exe' : ''}`),
+const result = {packageName:targetConfig.packageName, version, target:targetConfig.target,
+  tarball, tarballSha256, proofBinary:join(target,triple,`release/seshat-proofs${nativeWindows ? '.exe' : ''}`),
   ...(nativeWindows ? {consoleHelper:join(target,triple,'release/windows-console-helper.exe'), binaryName:targetConfig.binaryName} : {}),
-  binary:build.binarySha256, binaryBytes:bytes.length,
+  binary:build.binarySha256, binaryBytes:bytes.length, binaryPath:binary, packageStage:stage,
   packedBytes:packed.size, unpackedBytes:packed.unpackedSize, integrity:packed.integrity, files:packed.files,
+  notice:{sha256:sha256(noticeText), bytes:noticeText.length},
   // The standalone route deliberately reuses npm's deterministic payload. Its verifier strips package/ before running it.
   standalone:{path:tarball, sha256:tarballSha256, bytes:packed.size}};
 writeFileSync(join(work,'result.json'),JSON.stringify(result,null,2)+'\n');

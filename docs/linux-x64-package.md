@@ -36,7 +36,8 @@ The native checks are:
 - Rust tests from the locked Cargo graph on the x64 host.
 - The x64 package built with `pack.mjs` and the three existing pinned Debian
   build archives. The packer continues to verify their SHA-256 values.
-- The npm route's 16 package checks and 43 installed CLI scenarios.
+- The npm route's 14 package controls, including the four public consumer
+  examples, and 43 installed CLI scenarios.
 - The same npm `.tgz` retained under the standalone artifact name. The
   standalone verifier strips npm's `package/` prefix, then runs the exact
   six-file payload with the same 43 CLI scenarios and 11 parallel process

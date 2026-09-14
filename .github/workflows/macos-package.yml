@@ -4,14 +4,20 @@ on:
   pull_request:
     paths:
       - .github/workflows/macos-package.yml
+      - crates/seshat/**
       - benchmarks/proofs/**
+      - packages/**
+      - examples/**
       - packaging/**
       - docs/macos-package.md
   push:
     branches: [main]
     paths:
       - .github/workflows/macos-package.yml
+      - crates/seshat/**
       - benchmarks/proofs/**
+      - packages/**
+      - examples/**
       - packaging/**
       - docs/macos-package.md
   workflow_dispatch:
@@ -69,11 +75,11 @@ jobs:
         run: |
           npm ci --prefix benchmarks
           npm ci --prefix benchmarks/proofs
-          CARGO_TARGET_DIR="$RUNNER_TEMP/seshat-cargo" cargo fetch --locked --manifest-path benchmarks/proofs/Cargo.toml
+          CARGO_TARGET_DIR="$RUNNER_TEMP/seshat-cargo" cargo fetch --locked --manifest-path crates/seshat/Cargo.toml
       - name: Run native Rust tests
         run: |
           CARGO_TARGET_DIR="$RUNNER_TEMP/seshat-cargo" \
-            cargo test --locked --offline --manifest-path benchmarks/proofs/Cargo.toml \
+            cargo test --locked --offline --manifest-path crates/seshat/Cargo.toml \
             2>&1 | tee "work/macos/${{ matrix.cpu }}/rust-tests.log"
       - name: Prove repeat macOS package reproducibility
         env:
@@ -83,20 +89,38 @@ jobs:
         env:
           SESHAT_PACK_RESULT: work/macos/${{ matrix.cpu }}/package-result.json
         run: node packaging/pack.mjs --native-macos 2>&1 | tee "work/macos/${{ matrix.cpu }}/pack.log"
+      - name: Stage release entry and native packages
+        run: |
+          mkdir -p "work/macos/${{ matrix.cpu }}/release"
+          native_tarball="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).tarball);' "work/macos/${{ matrix.cpu }}/package-result.json")"
+          native_binary="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).binaryPath);' "work/macos/${{ matrix.cpu }}/package-result.json")"
+          tar -xOf "$native_tarball" package/BUILD.json > "work/macos/${{ matrix.cpu }}/BUILD.json"
+          tar -xOf "$native_tarball" package/THIRD_PARTY_NOTICES.txt > "work/macos/${{ matrix.cpu }}/THIRD_PARTY_NOTICES.txt"
+          node packaging/release.mjs \
+            --output "work/macos/${{ matrix.cpu }}/release" \
+            --binary "darwin-${{ matrix.cpu }}=$native_binary" \
+            --build-info "darwin-${{ matrix.cpu }}=work/macos/${{ matrix.cpu }}/BUILD.json" \
+            --notices "darwin-${{ matrix.cpu }}=work/macos/${{ matrix.cpu }}/THIRD_PARTY_NOTICES.txt" \
+            --manifest "work/macos/${{ matrix.cpu }}/release.json" 2>&1 | tee "work/macos/${{ matrix.cpu }}/release.log"
+          entry_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).entry.archive.file);' "work/macos/${{ matrix.cpu }}/release.json")"
+          native_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).native.find(target => target.key === `darwin-${process.argv[2]}`).archive.file);' "work/macos/${{ matrix.cpu }}/release.json" "${{ matrix.cpu }}")"
+          cp "work/macos/${{ matrix.cpu }}/release/$entry_archive" "work/macos/${{ matrix.cpu }}/seshat-entry.tgz"
+          cp "work/macos/${{ matrix.cpu }}/release/$native_archive" "work/macos/${{ matrix.cpu }}/seshat-darwin-${{ matrix.cpu }}-release.tgz"
       - name: Verify npm installation
         env:
           SESHAT_PROOF_OUTPUT: work/macos/${{ matrix.cpu }}/npm-package.json
+          SESHAT_EXAMPLES_OUTPUT: work/macos/${{ matrix.cpu }}/public-consumer-examples.json
         run: |
           TARBALL="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; const result=JSON.parse(readFileSync(process.argv[1])); console.log(result.tarball);' "work/macos/${{ matrix.cpu }}/package-result.json")"
           cp "$TARBALL" "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}.tgz"
           tar -xOf "$TARBALL" package/BUILD.json > "work/macos/${{ matrix.cpu }}/BUILD.json"
-          PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/macos/${{ matrix.cpu }}/package-result.json")"
-          TARBALL_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).tarballSha256);' "work/macos/${{ matrix.cpu }}/package-result.json")"
+          ENTRY_SHA256="$(shasum -a 256 "work/macos/${{ matrix.cpu }}/seshat-entry.tgz" | cut -d' ' -f1)"
+          NATIVE_SHA256="$(shasum -a 256 "work/macos/${{ matrix.cpu }}/seshat-darwin-${{ matrix.cpu }}-release.tgz" | cut -d' ' -f1)"
           BINARY_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).binary);' "work/macos/${{ matrix.cpu }}/package-result.json")"
-          SESHAT_PROOF_BINARY="$PROOF_BINARY" \
-          SESHAT_TARBALL_SHA256="$TARBALL_SHA256" \
-          SESHAT_BINARY_SHA256="$BINARY_SHA256" \
-            node benchmarks/proofs/npm-package.mjs "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}.tgz" \
+          SESHAT_ENTRY_TARBALL_SHA256="$ENTRY_SHA256" \
+          SESHAT_NATIVE_TARBALL_SHA256="$NATIVE_SHA256" \
+          SESHAT_NATIVE_BINARY_SHA256="$BINARY_SHA256" \
+            node benchmarks/proofs/npm-package.mjs "work/macos/${{ matrix.cpu }}/seshat-entry.tgz" "work/macos/${{ matrix.cpu }}/seshat-darwin-${{ matrix.cpu }}-release.tgz" \
             2>&1 | tee "work/macos/${{ matrix.cpu }}/npm-package.log"
       - name: Verify standalone installation
         env:

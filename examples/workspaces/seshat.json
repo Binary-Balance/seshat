@@ -1,0 +1,44 @@
+{
+  "source": {
+    "include": ["src/**/*.ts", "packages/**/*.ts"]
+  },
+  "capture": [
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "collect-node.mjs",
+    "src",
+    "packages",
+    "tests",
+    "node_modules"
+  ],
+  "setups": [
+    {
+      "name": "node-workspace",
+      "runner": "node",
+      "cwd": ".",
+      "timeoutMs": 30000,
+      "typecheck": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--project",
+        "tsconfig.json"
+      ],
+      "test": [
+        "node",
+        "--test",
+        "--test-concurrency=1",
+        "--test-reporter={seshatReporter}",
+        "tests/check.mjs"
+      ],
+      "coverage": {
+        "command": [
+          "node",
+          "collect-node.mjs",
+          "tests/check.mjs"
+        ],
+        "report": "coverage/coverage-final.json"
+      }
+    }
+  ]
+}

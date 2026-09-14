@@ -15,10 +15,10 @@ const candidate = process.env.SESHAT_PARALLEL_CLI === '1';
 const executableSuffix = process.platform === 'win32' ? '.exe' : '';
 const binary = candidate && process.env.SESHAT_CLI_BINARY
   ? resolve(process.env.SESHAT_CLI_BINARY)
-  : join(repo,'benchmarks/rust/target/release',`${candidate?'seshat':'seshat-proofs'}${executableSuffix}`);
+  : join(repo,'crates/seshat/target/release',`${candidate?'seshat':'seshat-proofs'}${executableSuffix}`);
 const consoleHelper = resolve(
   process.env.SESHAT_CONSOLE_HELPER_BINARY ??
-    join(repo, `benchmarks/rust/target/release/windows-console-helper${executableSuffix}`),
+    join(repo, `crates/seshat/target/release/windows-console-helper${executableSuffix}`),
 );
 const input=join(work,'input');mkdirSync(input);
 const source='export function adult(age: number) { return age >= 18; }\nexport const initial = 2 < 3;\n';

@@ -1,0 +1,57 @@
+{
+  "source": {
+    "include": ["src/**/*.ts", "src/**/*.tsx"],
+    "exclude": ["src/ignored.ts"]
+  },
+  "capture": [
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "vitest.config.mjs",
+    "src",
+    "tests",
+    "node_modules"
+  ],
+  "setups": [
+    {
+      "name": "vitest",
+      "runner": "vitest",
+      "cwd": ".",
+      "timeoutMs": 30000,
+      "typecheck": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--project",
+        "tsconfig.json"
+      ],
+      "test": [
+        "node",
+        "node_modules/vitest/vitest.mjs",
+        "run",
+        "--config",
+        "vitest.config.mjs",
+        "--maxWorkers=1",
+        "--no-file-parallelism",
+        "--maxConcurrency=1",
+        "--reporter=default",
+        "--reporter={seshatReporter}"
+      ],
+      "coverage": {
+        "command": [
+          "node",
+          "node_modules/vitest/vitest.mjs",
+          "run",
+          "--config",
+          "vitest.config.mjs",
+          "--maxWorkers=1",
+          "--no-file-parallelism",
+          "--maxConcurrency=1",
+          "--reporter=default",
+          "--reporter={seshatReporter}",
+          "--coverage"
+        ],
+        "report": "coverage/coverage-final.json"
+      }
+    }
+  ]
+}

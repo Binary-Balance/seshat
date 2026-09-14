@@ -17,9 +17,9 @@ From the repository root:
 ```sh
 npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund
 npm ci --prefix benchmarks/proofs --ignore-scripts --no-audit --no-fund
-export CARGO_TARGET_DIR="$PWD/benchmarks/rust/target"
-cargo test --locked --manifest-path benchmarks/proofs/Cargo.toml
-cargo build --release --locked --manifest-path benchmarks/proofs/Cargo.toml
+export CARGO_TARGET_DIR="$PWD/crates/seshat/target"
+cargo test --locked --manifest-path crates/seshat/Cargo.toml
+cargo build --release --locked --manifest-path crates/seshat/Cargo.toml
 node benchmarks/proofs/run.mjs
 ```
 
@@ -43,18 +43,18 @@ project or writes mutants into the source fixture.
 ## CLI candidate
 
 The `seshat` and `seshat-proofs` binaries share the existing private Rust modules.
-No CLI framework or new dependency was added. The Cargo package remains the
-unpublished `seshat-proofs` version `0.0.0`; moving and packaging release code is
-separate work. `cargo run` still defaults to the legacy proof entry point.
+No CLI framework or new dependency was added. The release crate is `seshat`
+version `0.1.0-rc.1`, and `cargo run` still defaults to the legacy proof entry
+point. The Windows console helper is built only for proof checks.
 
 After the installation above, build both binaries and run the regression:
 
 ```sh
-cargo build --release --locked --manifest-path benchmarks/proofs/Cargo.toml --bins
+cargo build --release --locked --manifest-path crates/seshat/Cargo.toml --bins
 node benchmarks/proofs/cli.mjs
 node benchmarks/proofs/process-environment-check.mjs
-benchmarks/rust/target/release/seshat --help
-benchmarks/rust/target/release/seshat check --config /absolute/path/to/seshat.json --json
+crates/seshat/target/release/seshat --help
+crates/seshat/target/release/seshat check --config /absolute/path/to/seshat.json --json
 ```
 
 The regression uses disposable Node tests, the real TypeScript compiler and the
@@ -240,8 +240,8 @@ completes with the pinned Debian inputs and records the resulting artifact
 hashes in the retained JSON evidence. Set these paths to the resulting files:
 
 ```sh
-BASELINE_TARBALL=/absolute/path/to/baseline/binary-balance-seshat-0.0.0.tgz
-CANDIDATE_TARBALL=/absolute/path/to/candidate/binary-balance-seshat-0.0.0.tgz
+BASELINE_TARBALL=/absolute/path/to/baseline/native-seshat-package.tgz
+CANDIDATE_TARBALL=/absolute/path/to/candidate/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz
 JEST_DEPS=/absolute/path/to/jest-expo-fixture
 ```
 
@@ -375,54 +375,54 @@ automatic tuning or new runner compatibility claims are implied. The legacy
 
 ## Local npm packaging proof
 
-From the repository root, with the local Rust environment configured:
+From the repository root, with the local Rust environment configured, build one
+native payload and stage the entry package plus that payload as described in the
+[package build instructions](../../packaging/README.md#build-a-native-payload)
+and [release staging instructions](../../packaging/README.md#stage-the-package-set).
+Then run the real installed proof with the two resulting archives:
 
 ```sh
-node packaging/pack.mjs work/debian11-inputs
-SESHAT_PROOF_BINARY=/absolute/path/to/the/reported/proofBinary node benchmarks/proofs/npm-package.mjs /absolute/path/to/the/reported/package.tgz
+node benchmarks/proofs/npm-package.mjs \
+  /absolute/path/to/binary-balance-seshat-0.1.0-rc.1.tgz \
+  /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz
 ```
 
-Prepare `work/debian11-inputs` with the three pinned library archives using the
-[package build instructions](../../packaging/README.md#build-and-verify-from-the-source-checkout).
+The entry archive owns npm's `seshat` bin and pins all five native payloads as
+optional dependencies. The native archive has no npm `bin` field, but retains
+`bin/seshat` for direct standalone execution. Neither package adds runtime
+dependencies, install hooks or downloads. Cargo applies the
+`crates/seshat/Cargo.toml` `[profile.release]` with `lto = "off"` and
+`strip = "symbols"`; Linux also uses `-Wl,--build-id=none`. The resulting
+native binary is copied without post-build rewriting, and the installed hash
+must match its recorded build hash. Cargo dependencies remain compiled into
+the native executable; see `BUILD.json` and the bundled notices.
 
-Packing stages only an explicit file list in a fresh ignored directory. It does
-not publish, modify either consuming application, install globally or add a
-package-install hook. Cargo applies the `benchmarks/proofs/Cargo.toml`
-`[profile.release]` with `lto = "off"` and `strip = "symbols"`; Linux also uses
-`-Wl,--build-id=none`. The resulting native binary is copied without
-post-build rewriting, and the installed hash must match its recorded build
-hash. The private package has no npm dependency tree beyond itself. Cargo
-dependencies remain compiled into the native executable; see `BUILD.json` and
-the bundled notices.
-
-The regression installs the tarball offline into disposable single-package and
-npm-workspace consumers, using a fresh npm cache. Its PATH contains only Node,
-npm and a shell, and it checks that `cargo` and `rustc` cannot be found. It checks
-the executable link, archive contents, binary hash, package-script/`npm exec`
-invocation, exit-code propagation, offline `npm ci`, and npm's platform rejection.
-Disposable control packages invert one OS/CPU/libc requirement at a time, because
-npm 11's platform overrides do not apply to this required dependency. These
-controls test metadata enforcement, not execution on those other platforms.
+The regression installs the entry and matching native archives into a disposable
+consumer with a fresh npm cache. Its PATH contains only Node, npm and a shell,
+and it checks that `cargo` and `rustc` cannot be found. It checks the entry bin
+link, archive contents, binary hash, launcher package-script/`npm exec`
+invocation, JSON bootstrap failures, signal forwarding, exit status and offline
+`npm ci`. The loopback registry supplies metadata for the four omitted optional
+payloads so npm's normal platform selection can be observed without publishing.
 
 The standalone proof consumes the same npm `.tgz` bytes. It requires npm's
 `package/` archive prefix, strips that prefix into a disposable consumer and
 runs the binary without npm, preserving the same archive and `BUILD.json`
 checks.
 
-It then reruns all 42 CLI scenarios through the installed command by setting
-`SESHAT_CLI_BINARY`, including real coverage/mutation work, thresholds, progress,
-timeouts, SIGINT/SIGTERM, source preservation and cleanup. This reuses the fixture
-compiler and coverage collector from the source checkout; it does not claim the
-package installs or configures those consuming-project tools. Whole-command
-timing samples in that suite now include the installed command path. npm's own
-`exec`/script startup is checked separately and is not included in those samples.
+The selected native CLI and runner proofs separately rerun the broad 43-scenario
+CLI fixture, parallel controls, lifecycle checks and Jest/Expo/Vitest cases
+through the installed native executable. They reuse fixture compilers and
+coverage collectors from the source checkout; the package does not install or
+configure those consuming-project tools.
 
 See [packaging instructions and remaining limits](../../packaging/README.md).
 
 The Windows x64 package slice uses the native `windows-2022` workflow and is
 documented in the [Windows package protocol](../../docs/windows-package.md).
-Its install proof covers the packaged executable, npm's `.cmd` launcher and
-the same npm archive extracted with `tar.exe`. The workflow also runs the
+Its current native install proof covers the packaged executable and the same
+archive extracted with `tar.exe`; the entry launcher and Windows npm ownership
+proof are staged separately for the release package set. The workflow also runs the
 shared 43 CLI scenarios, 11 parallel controls and four installed Jest/Expo and
 Vitest cases against that executable. The summary records missing or partial
 integration evidence as a gap.
@@ -511,7 +511,7 @@ collector, test processes and Seshat all run with Debian's libraries. The
 consumer has no Rust toolchain and no network access.
 
 Prepare the three build archives and locked dependencies using the
-[package build instructions](../../packaging/README.md#build-and-verify-from-the-source-checkout).
+[package build instructions](../../packaging/README.md#build-a-native-payload).
 Also install Bubblewrap on the Linux x64 test host. Obtain these two runtime
 archives once; the proof verifies their pinned SHA-256 hashes before extraction:
 
@@ -521,13 +521,27 @@ curl --max-time 120 -fSL https://nodejs.org/dist/v24.20.0/node-v24.20.0-linux-x6
 SESHAT_PACK_RESULT=work/debian11-inputs/package-result.json node packaging/pack.mjs work/debian11-inputs
 cp "$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/debian11-inputs/package-result.json")).standalone.path);')" \
   work/debian11-standalone.tar.gz
-node benchmarks/proofs/linux-debian.mjs work/debian11-inputs work/debian11-inputs/package-result.json work/debian11-standalone.tar.gz
+native_binary="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/debian11-inputs/package-result.json")).binaryPath);')"
+native_stage="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/debian11-inputs/package-result.json")).packageStage);')"
+node packaging/release.mjs \
+  --output work/debian11-release \
+  --binary "linux-x64=$native_binary" \
+  --build-info "linux-x64=$native_stage/BUILD.json" \
+  --notices "linux-x64=$native_stage/THIRD_PARTY_NOTICES.txt" \
+  --manifest work/debian11-release.json
+entry_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/debian11-release.json")).entry.archive.file);')"
+native_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/debian11-release.json")).native.find(target => target.key === "linux-x64").archive.file);')"
+cp "work/debian11-release/$entry_archive" work/seshat-entry.tgz
+cp "work/debian11-release/$native_archive" work/seshat-linux-x64-release.tgz
+node benchmarks/proofs/linux-debian.mjs \
+  work/debian11-inputs work/debian11-inputs/package-result.json \
+  work/debian11-standalone.tar.gz work/seshat-entry.tgz \
+  work/seshat-linux-x64-release.tgz examples work/debian11-examples-npm-cache
 ```
 
-The standalone filename is retained for the existing proof interface; its
-contents are the npm `.tgz` with the `package/` prefix. The proof strips that
-prefix during extraction and checks that its bytes and hash equal the npm
-payload.
+The standalone input is the same deterministic npm `.tgz` under a distinct
+filename. The proof strips its `package/` prefix during extraction and checks
+that its bytes and hash equal the npm payload.
 
 The filesystem is the pinned [official Debian image artifact](https://github.com/debuerreotype/docker-debian-artifacts/tree/bae6d64d90b4068b09ff9d8b564c2773ef5d8d83/bullseye).
 Node's archive hash comes from its [release checksums](https://nodejs.org/dist/v24.20.0/SHASUMS256.txt).
@@ -541,11 +555,16 @@ No host `/usr`, `/lib`, Node executable or Rust toolchain is mounted. The
 separate legacy proof executable is built against the same Debian libraries
 and mounted only for the existing CLI parity comparison.
 
-The checks verify Debian 11, glibc 2.31, Node 24.20.0, npm, linked libraries and
-the absence of `cargo` and `rustc`, then run:
+Before the proof, run locked `npm ci --ignore-scripts --no-audit --no-fund` for
+each of `node`, `jest-expo`, `vitest` and `workspaces` with
+`--cache work/debian11-examples-npm-cache`. The proof mounts the
+checked-in `examples` and this cache read-only, then sets npm offline inside the
+isolated namespace. The checks verify Debian 11, glibc 2.31, Node 24.20.0, npm,
+linked libraries and the absence of `cargo` and `rustc`, then run:
 
-- All 16 package checks, including offline install and `npm ci`, workspace
-  installation, executable hashes, invocation and platform rejection.
+- All 14 npm package controls, including offline install and `npm ci`, package
+  metadata, launcher paths, failure handling, cancellation, versioning and the
+  four public consumer examples.
 - All 43 installed CLI scenarios plus legacy parity, including real typechecks,
   fresh coverage, mutation outcomes, thresholds, incomplete results, timeouts,
   SIGINT/SIGTERM, source preservation and cleanup.
@@ -726,7 +745,7 @@ earlier benchmark measurements are not overwritten.
 The native command is:
 
 ```sh
-benchmarks/rust/target/release/seshat-proofs capture /path/to/project/seshat.json /path/to/existing/scratch
+crates/seshat/target/release/seshat-proofs capture /path/to/project/seshat.json /path/to/existing/scratch
 ```
 
 The configuration file's directory is the project root. Scratch must exist outside
@@ -833,7 +852,7 @@ node benchmarks/proofs/collection.mjs
 To use a trusted project's configuration and existing scratch outside that project:
 
 ```sh
-benchmarks/rust/target/release/seshat-proofs collect /path/to/project/seshat.json /path/to/existing/scratch
+crates/seshat/target/release/seshat-proofs collect /path/to/project/seshat.json /path/to/existing/scratch
 ```
 
 This Linux proof supports **Node 24.20.0**, with its built-in runner,
@@ -904,7 +923,7 @@ The combined proof uses the same configuration and isolation rules as `collect`:
 ```sh
 node benchmarks/proofs/check.mjs
 node benchmarks/proofs/switching.mjs
-benchmarks/rust/target/release/seshat-proofs check /path/to/project/seshat.json /path/to/existing/scratch
+crates/seshat/target/release/seshat-proofs check /path/to/project/seshat.json /path/to/existing/scratch
 ```
 
 Add a `typecheck` command to **each** setup. For a package whose captured dependencies
@@ -1031,7 +1050,7 @@ or obtaining a local Seshat package:
 
 ```sh
 node benchmarks/proofs/jest-expo-check.mjs \
-  --tarball /absolute/path/to/binary-balance-seshat-0.0.0.tgz
+  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz
 ```
 
 The driver installs the fixture's pinned lockfile into a fresh ignored proof
@@ -1044,12 +1063,13 @@ cp benchmarks/proofs/fixtures/jest-expo/package.json \
   benchmarks/proofs/fixtures/jest-expo/package-lock.json work/jest-expo-fixture/
 npm ci --prefix work/jest-expo-fixture --ignore-scripts --no-audit --no-fund
 node benchmarks/proofs/jest-expo-check.mjs \
-  --tarball /absolute/path/to/binary-balance-seshat-0.0.0.tgz \
+  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz \
   --deps work/jest-expo-fixture
 ```
 
-`--cli /absolute/path/to/node_modules/.bin/seshat` runs the same checks against
-an installed executable. The driver records the candidate version and SHA-256
+`--cli /absolute/path/to/node_modules/@binary-balance/seshat-linux-x64/bin/seshat`
+runs the same checks against an installed executable. The driver records the
+candidate version and SHA-256
 hashes, checks each expected exit status and verdict, compares a repeated run,
 and checks both one and two Seshat workers. A focused invocation accepts a comma
 separated `--cases` list; `normal-repeat` and `normal-2` automatically include
@@ -1110,12 +1130,13 @@ the dependency directory is never resolved or downloaded during the proof:
 
 ```sh
 node benchmarks/proofs/vitest-check.mjs \
-  --tarball /absolute/path/to/binary-balance-seshat-0.0.0.tgz \
+  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz \
   --deps /absolute/path/to/vitest-dependencies
 ```
 
-Use `--cli /absolute/path/to/node_modules/.bin/seshat` for an already installed
-candidate. Both installed and legacy modes accept `--cases` (or
+Use `--cli /absolute/path/to/node_modules/@binary-balance/seshat-linux-x64/bin/seshat`
+for an already installed candidate. Both installed and legacy modes accept
+`--cases` (or
 `SESHAT_VITEST_CHECK_CASES`) for a focused run. The installed result records the
 candidate version and hashes, each report/check count, source preservation and
 the empty scratch-directory check.
