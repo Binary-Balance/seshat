@@ -1,8 +1,10 @@
 # Release notice and runtime audit
 
-Status: candidate audit for `0.1.0-rc.1`, with five retained target proof
-runs. This records artifact, source, runtime, dependency, and notice evidence
-for issue #6. It does not record publication or merge approval.
+Status: current artifact and notice review completed for `0.1.0-rc.1`; native
+final proof on the integrated head and the five-host local-install matrix are
+still pending. This records artifact, source, runtime, dependency, and notice
+evidence for issue #6. It does not record publication, merge approval, or legal
+clearance.
 
 The release support boundary is the one in [`docs/release-scope.md`](../release-scope.md):
 Linux x64 and ARM64, macOS x64 and ARM64, and Windows x64. The current
@@ -11,13 +13,18 @@ candidate was built from the GitHub PR 40 merge checkout
 which is the merge result for direct PR head
 [`08561afd0070260b6f295604a8ac3fdcb2629681`](https://github.com/Binary-Balance/seshat/commit/08561afd0070260b6f295604a8ac3fdcb2629681).
 The merge checkout is the source of the retained bytes; it is not the direct
-head. Final proof wiring is still being integrated.
+head. The later proof wiring is integrated at `b104e01`, but new native proof
+runs have not replaced these coordinates.
 
 The machine-readable form of the records in this note is
 [`release-notice-audit.json`](release-notice-audit.json). It uses portable
 labels and GitHub run coordinates. The retained raw archives and proof bundles
 remain external to this repository; the hashes below make those bytes
 checkable after download.
+
+The repository and linked CI runs are public. The npm package and GitHub
+release remain unpublished; these records describe an unpublished release
+candidate in a public repository, not a proven private distribution.
 
 ## Current artifact coordinates
 
@@ -125,22 +132,22 @@ used by the workflows are in the companion JSON.
 ## Functional acceptance state
 
 Archive integrity is a separate result from consumer behavior. The retained
-proof state is:
+and current proof state is:
 
-| target | retained result | remaining target work |
+| target | retained and current result | remaining target work |
 | --- | --- | --- |
-| Linux ARM64 | Full package, npm, public-example, standalone, repeat-pack, Jest, Vitest, and lifecycle checks passed in [run 34856550810](https://github.com/Binary-Balance/seshat/actions/runs/34856550810). | Re-run against the final integrated proof head. |
-| macOS x64 | The same full check set passed in [run 34856550939](https://github.com/Binary-Balance/seshat/actions/runs/34856550939). | Re-run against the final integrated proof head. |
-| macOS ARM64 | The same full check set passed in [run 34856550939](https://github.com/Binary-Balance/seshat/actions/runs/34856550939). | Re-run against the final integrated proof head. |
-| Linux x64 | The package, npm, public-example, standalone, repeat-pack, Jest, Expo, Vitest, and lifecycle portions passed. The Debian 11 consumer proof in retained run 34856550822 failed because its container did not contain `examples/verify.mjs`. The fix in local commit `8fe0541` passes the full Debian proof locally. | Run the hosted Debian proof after the final fix is integrated. |
-| Windows x64 | Retained run 34856550809 recorded the preflight and package install checks, then hit the old outer 600-second public-example timeout. Follow-up run [34860332470](https://github.com/Binary-Balance/seshat/actions/runs/34860332470) reached public examples, which passed after 507 seconds; its assertion then failed because the missing-path regex omitted `The system cannot find the path specified. (os error 3)`. | Apply the minimal assertion correction and rerun the Windows package consumer checks. |
+| Linux ARM64 | Full package, npm, public-example, standalone, repeat-pack, Jest, Vitest, and lifecycle checks passed in [run 34856550810](https://github.com/Binary-Balance/seshat/actions/runs/34856550810). | New native package proof on the final integrated head. |
+| macOS x64 | The same full check set passed in [run 34856550939](https://github.com/Binary-Balance/seshat/actions/runs/34856550939). | New native package proof on the final integrated head. |
+| macOS ARM64 | The same full check set passed in [run 34856550939](https://github.com/Binary-Balance/seshat/actions/runs/34856550939). | New native package proof on the final integrated head. |
+| Linux x64 | The retained package proof passed its package, npm, public-example, standalone, repeat-pack, Jest, Expo, Vitest, and lifecycle portions. Its Debian 11 consumer proof failed because the container lacked `examples/verify.mjs`; local commit `8fe0541` passes that proof. The newer all-six-archive local proof passed all four Linux consumer examples and 11 checks. | New native package proof on the final integrated head. |
+| Windows x64 | The retained package proof passed preflight and package install checks. Its aggregate 600-second budget covered a 406-second Jest/Expo install and a 95-second normal check that passed; the next check was killed by the budget. Follow-up run [34860332470](https://github.com/Binary-Balance/seshat/actions/runs/34860332470) reached public examples, which passed after 507 seconds, then failed only because the missing-path regex omitted `The system cannot find the path specified. (os error 3)`. | New native package proof after the phase-watchdog fix integrated at `b104e01`. |
 
-The latest `8fe0541` correction has Linux ARM64, Linux x64, both macOS
-targets, and the Windows runtime-only checks succeeding. The older Windows
-600-second timeout is historical evidence from the pre-correction run; the
-follow-up provides no confirmed native runtime defect. The separate Windows
+The latest available evidence has Linux x64 and Linux ARM64, both macOS
+targets, and the separate Windows runtime-only check succeeding. The Windows
 runtime-only check is [run 34856550801](https://github.com/Binary-Balance/seshat/actions/runs/34856550801);
-it is not package acceptance.
+it is not package acceptance. The phase-watchdog fix from `bb3302a` is
+integrated at `b104e01`; new native CI is still pending. These results do not
+claim an all-target pass.
 
 ## Source and dependency review
 
@@ -312,43 +319,46 @@ runtime DLL, raw library, SDK, or installer in the archive. Microsoft's [DLL
 determination guidance](https://learn.microsoft.com/en-us/cpp/windows/determining-which-dlls-to-redistribute?view=msvc-170)
 therefore does not call for adding a VC runtime DLL to this payload. Its
 [redistribution guidance](https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files?view=msvc-170)
-still governs any future DLL, merge module, individual runtime binary, or
-redistributable package. It also says that only files in the applicable
-`Redist.txt` or online REDIST list may be redistributed, and that debug
-runtime files are excluded.
+governs any later DLL, merge module, individual runtime binary, or
+redistributable package added to the payload. It also says that only files in
+the applicable `Redist.txt` or online REDIST list may be redistributed, and
+debug runtime files are excluded.
 
 The retained Enterprise/Professional terms make the current static-link
-obligation concrete. The full-use Section 5 grant requires a validly licensed
-copy of Visual Studio and permits unmodified object code listed in the
-applicable REDIST list to be distributed with an application. Its conditions
-include adding significant primary functionality, requiring distributors and
-external users to accept terms protecting the Microsoft code, and indemnifying
-Microsoft for distribution claims. It excludes preview, pre-release, and beta
-components and source distribution under an excluded license. The [VS 2022
-REDIST list](https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution)
-lists the unmodified VC runtime redist folder, merge modules, and individual
-runtime binaries for licensed users. It does not list the raw static input
-libraries as package files. The observed embedded CRT code therefore remains
-within this review: the final record must map the release static inputs to the
-current VS 2022 REDIST/distributable-code terms and state which of those
-conditions and notice delivery requirements apply to the embedded code.
+conditions concrete. Section 5 requires a valid full-use Visual Studio
+license and sets conditions for distributing covered unmodified object code,
+including significant primary functionality, downstream terms that protect the
+Microsoft code, and an indemnity for distribution claims. It excludes preview,
+pre-release, beta, and debug components. The [VS 2022 REDIST
+list](https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution)
+lists separately deployable VC runtime files, merge modules, and redist-folder
+files for licensed users.
 
-The final preflight searched for local Visual Studio license, Visual Studio
-REDIST, and Windows SDK license groups and found all three missing. This is a
-missing terms-input record, not evidence that the executable has a missing
-runtime DLL. The exact product, installation, toolset, redist directory, SDK,
-and UCRT are recorded above, and the applicable primary sources are the [VS
-2022 license terms](https://visualstudio.microsoft.com/license-terms/vs2022-ga-proenterprise/),
-[Microsoft Visual Studio licensing guidance](https://www.microsoft.com/licensing/guidance/Visual-Studio),
-and [Windows SDK downloads and terms](https://learn.microsoft.com/en-us/windows/apps/windows-sdk/downloads).
-The retained official Enterprise/Professional terms document has SHA-256
+Microsoft's [Visual Studio licensing
+guidance](https://www.microsoft.com/licensing/guidance/Visual-Studio) says that
+distributable `.lib` code must be linked into the application and that the
+resulting output can be distributed. Microsoft's [C++ deployment
+guidance](https://learn.microsoft.com/en-us/cpp/windows/deployment-in-visual-cpp?view=msvc-170)
+says static linking puts library object code into one binary without a DLL
+dependency. The cited sources do not prescribe a link-map file or a separate
+Microsoft notice file for this embedded output.
+
+The focused review is complete for the current public CI artifact and its
+hash-bound notice. The preflight's missing local Visual Studio license, REDIST,
+and Windows SDK license groups are a record of files absent from that runner;
+they do not show a missing runtime dependency or block this artifact review.
+The exact product, installation, toolset, redist directory, SDK, and UCRT are
+recorded above. The retained official Enterprise/Professional terms document
+has SHA-256
 `9c0cd52b20db9d081854c75bd1b50c75514b8f8cb09c8cad15e89d90b97b5bf3`; its
 extracted text has SHA-256
 `3f8ed5a873fcea9e41b0f7bba1b39c284a7a986405ca335c5f446cece0d86c4a`.
-The specific unresolved evidence is the static-library/link-map mapping and
-the resulting decision on required Microsoft terms or attribution for this
-embedded release CRT. No VC DLL or SDK notice should be added while those
-files remain absent from the package.
+No additional package member or notice change is identified. Before public npm
+or GitHub publication, the release owner must record the valid full-use Visual
+Studio license basis and the Section 5 decision for downstream terms that
+protect the embedded Microsoft code. The package's MIT license is not assumed
+to satisfy that Microsoft-specific condition. This scoped record is not legal
+clearance.
 
 ### Node launcher boundary
 
@@ -357,8 +367,9 @@ the host platform. Its `optionalDependencies` name all five native packages at
 `0.1.0-rc.1`; the native manifests carry their `os`/`cpu` filters and Linux
 `glibc` filter. The packages have no third-party JavaScript dependencies,
 bundled dependencies, lifecycle scripts, or copied Node binary. Node 24.20.0
-is consumer-supplied. The final integrated package manifests still need the
-same file-list and install check described below.
+is consumer-supplied. The committed manifests and file list match this
+boundary. Refresh this check only if the package payload or linked runtime
+changes.
 
 ## Reproducible audit and extraction commands
 
@@ -434,38 +445,30 @@ npm ci --ignore-scripts --offline
 The retained `all-real-local` proof reports `npm ci` status 0, installed
 version `seshat 0.1.0-rc.1 (candidate)`, and a complete check with four
 mutants, three killed, one survived, zero unresolved, and score 75 on Node
-24.20.0. The final documented-install check must run this same six-archive
-set on all five target hosts. That check also exercises the canonical Unix
-entry archive on Windows. It does not replace the hosted target proof runs.
+24.20.0. The newer all-six-archive local proof passed all four Linux consumer
+examples and 11 checks. The five-host local-install matrix remains pending;
+that matrix and the hosted native proof runs are separate evidence.
 
 ## Remaining acceptance scope
 
-The final review has these concrete checks:
+The artifact and notice review is complete for the retained public CI
+artifacts. The remaining release-candidate checks are:
 
-1. Integrate the remaining proof wiring at the final source head and rerun the
-   five native package proofs. The Linux x64 hosted Debian 11 proof must use
-   the `8fe0541` input fix. The Windows package proof must use the minimal
-   missing-path assertion correction and rerun its consumer checks.
+1. Run the new native package proof on the integrated head for all five
+   targets. The Windows package proof must retain the aggregate timeout and
+   phase evidence if it fails again.
 2. Run the documented six-archive offline install on each of the five target
    hosts, recording the exact six coordinates from
    [`release-notice-audit.json`](release-notice-audit.json).
-3. Recheck the manifest and lock hashes, target metadata, and 65-entry
-   inventory if source inputs change. Keep the source/build inventory separate
-   from exact native import evidence.
-4. Complete the Windows static-CRT review: retain the valid full-use license
-   basis, map the release link inputs selected by `+crt-static` to the
-   applicable VS 2022 REDIST/distributable-code terms, and record the required
-   Microsoft terms or attribution for the embedded code. Recheck the exact
-   edition, toolset, SDK/UCRT, and release output. Record any copied runtime
-   file and its exact terms if the final package changes the current payload
-   boundary.
-5. Recheck final package manifests, lifecycle behavior, archive members,
-   notice hashes, and Unix entry versus Windows host-produced entry mode. Keep
-   the Unix entry as the canonical prepared archive only after this scoped
-   equivalence review.
-6. Run `git diff --check` and verify the links and hashes in this note and the
-   companion JSON. Publication, merge, and release clearance remain outside
-   this audit.
+3. Before public npm or GitHub publication, record the release-owner
+   full-use Visual Studio license basis and the Section 5 downstream-terms
+   decision. This is a publication condition, not an additional package-file
+   or notice change in the current audit.
+4. If source inputs, the package payload, linked runtime, or notice changes,
+   refresh the corresponding hashes and this scoped review. Otherwise, keep
+   the completed review and current coordinates.
+5. Run `git diff --check` and verify the links and hashes in this note and the
+   companion JSON. Publication and merge approval remain outside this audit.
 
 The old `0.0.0 (candidate)` archives and the earlier clean Linux integration
 pack are historical evidence only. They explain prior notice and package

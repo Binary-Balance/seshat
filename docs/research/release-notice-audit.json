@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "seshat-release-notice-audit",
   "issue": 6,
-  "status": "candidate-audit-incomplete",
+  "status": "candidate-audit-reviewed-pending-native-proof",
   "candidate": {
     "packageVersion": "0.1.0-rc.1",
     "sourceCommit": "b48ce50c206056b3eabb45c687b9edf1f035528f",
@@ -477,8 +477,8 @@
           "lifecycle"
         ],
         "failure": "Debian 11 consumer image did not contain examples/verify.mjs",
-        "localCorrection": "8fe0541 passes the full Debian proof locally",
-        "pending": "Hosted Debian proof on the final integrated head"
+        "localCorrection": "8fe0541 passes the full Debian proof locally; the all-six-archive local proof passed four Linux consumer examples and 11 checks",
+        "pending": "New native package proof on the final integrated head"
       }
     },
     {
@@ -549,7 +549,7 @@
           "Vitest",
           "lifecycle"
         ],
-        "pending": "Rerun on the final integrated head"
+        "pending": "New native package proof on the final integrated head"
       }
     },
     {
@@ -619,7 +619,7 @@
           "Vitest",
           "lifecycle"
         ],
-        "pending": "Rerun on the final integrated head"
+        "pending": "New native package proof on the final integrated head"
       }
     },
     {
@@ -689,7 +689,7 @@
           "Vitest",
           "lifecycle"
         ],
-        "pending": "Rerun on the final integrated head"
+        "pending": "New native package proof on the final integrated head"
       }
     },
     {
@@ -765,14 +765,14 @@
           "npm-exec",
           "package-script"
         ],
-        "historicalFailure": "The old run reached the outer 600-second public-example timeout",
+        "historicalFailure": "The package proof exhausted its aggregate 600-second budget: the Jest/Expo install took 406 seconds, its normal check passed after 95 seconds, and the next check was killed by the budget",
         "followUpRun": {
           "runId": 34860332470,
           "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34860332470",
           "publicExamples": "passed after 507 seconds",
           "assertionFailure": "Missing-path regex omitted The system cannot find the path specified. (os error 3)"
         },
-        "pending": "Minimal assertion correction and final Windows package consumer rerun"
+        "pending": "New native package proof after the phase-watchdog fix from bb3302a was integrated at b104e01"
       }
     }
   ],
@@ -1056,27 +1056,23 @@
       }
     ],
     "unresolvedEvidence": [
-      "The retained BUILD.json records +crt-static and tool versions but not the final link map or exact static archive members; map the release inputs to the VS 2022 REDIST/distributable-code terms",
-      "Confirm the valid full-use Enterprise license basis for the build and distribution owner",
-      "Decide and record the Microsoft terms or attribution delivery required for the embedded release CRT and SDK/UCRT code",
-      "Recheck the same mapping after any final package or toolchain change"
+      "Before public npm or GitHub publication, record the valid full-use Visual Studio license basis for the build and distribution owner",
+      "Before public npm or GitHub publication, record the Section 5 downstream-terms decision for the embedded Microsoft code; do not assume the package MIT license satisfies this Microsoft-specific condition"
     ],
-    "reviewStatus": "Static CRT object code is in the executable; the payload has no runtime DLL or raw library, while license coverage and required term delivery for the embedded code remain to be recorded"
+    "reviewStatus": "Completed for the current public CI artifact and hash-bound notice: +crt-static embeds release CRT object code, the PE imports only Windows OS/API DLLs, and the archive delivers no separate Microsoft runtime file. The cited sources do not require a link map or separate Microsoft notice file, and no package-member or notice change is identified. This scoped result is not legal clearance; refresh only if the package payload, linked runtime, or notice changes"
   },
   "functionalAcceptance": {
     "archiveIntegrity": "All five retained root artifact audits verified archive members, binary and notice hashes, and nine pinned runtime assets",
     "latestCorrectionContext": {
-      "localCommit": "8fe0541",
-      "linuxArm64": "passed",
-      "linuxX64": "passed locally including Debian proof",
-      "macosX64": "passed",
-      "macosArm64": "passed",
-      "windowsRuntimeOnly": "passed"
+      "localCommit": "b104e01",
+      "linuxArm64": "passed in retained run 34856550810",
+      "linuxX64": "passed locally including Debian proof; the all-six-archive proof passed four Linux consumer examples and 11 checks",
+      "macosX64": "passed in retained run 34856550939",
+      "macosArm64": "passed in retained run 34856550939",
+      "windowsRuntimeOnly": "passed in run 34856550801"
     },
     "pending": [
-      "Hosted Linux x64 Debian proof on the final integrated head",
-      "Minimal Windows missing-path assertion correction and package consumer rerun",
-      "Final source and proof wiring rerun for all five native targets",
+      "New native package proof on the integrated head for all five targets",
       "Documented six-archive install on all five target hosts"
     ]
   },
@@ -1114,17 +1110,14 @@
       "score": 75,
       "node": "24.20.0"
     },
-    "requiredFinalUse": "Run this same six-archive set on each of the five target hosts"
+    "requiredFinalUse": "The Linux x64 local proof passed all four consumer examples and 11 checks; run this same six-archive set on each of the five target hosts"
   },
   "remainingChecks": [
-    "Integrate final proof wiring and rerun all five native package proofs",
-    "Run the hosted Linux x64 Debian proof with the 8fe0541 input fix",
-    "Apply the minimal Windows missing-path assertion correction and rerun the Windows package consumer checks",
+    "Run the new native package proof on the integrated head for all five targets",
     "Run the documented six-archive offline install on all five target hosts",
-    "Recheck source, lock, metadata, notice, manifest, member, and runtime hashes if final source inputs change",
-    "Revalidate Windows edition, toolset, SDK/UCRT, REDIST applicability, and actual static CRT output",
-    "Review the Unix canonical entry and Windows host-produced entry mode equivalence",
-    "Run git diff --check and verify external links"
+    "Before public npm or GitHub publication, record the release-owner full-use Visual Studio license basis and Section 5 downstream-terms decision",
+    "If source inputs, the package payload, linked runtime, or notice changes, refresh the corresponding hashes and this scoped review",
+    "Run git diff --check and verify the external links, hashes, and companion audit"
   ],
   "historicalEvidence": [
     {
