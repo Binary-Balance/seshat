@@ -1,0 +1,158 @@
+{
+  "format": "seshat-runtime-notices",
+  "formatVersion": 1,
+  "toolchain": {
+    "rustcVersion": "1.98.1",
+    "rustcBuild": "rustc 1.98.1 (48a229cea 2026-09-01)",
+    "rustCommit": "48a229ceaefd4985c50990b14116b6d856af0985",
+    "rustCommitUrl": "https://github.com/rust-lang/rust/tree/48a229ceaefd4985c50990b14116b6d856af0985",
+    "inventoryScope": "Rust standard-library source and third-party build dependencies across target sysroots",
+    "supportedTargets": [
+      "x86_64-unknown-linux-gnu",
+      "aarch64-unknown-linux-gnu",
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin",
+      "x86_64-pc-windows-msvc"
+    ]
+  },
+  "noticeFiles": [
+    {
+      "path": "COPYRIGHT-library.html",
+      "bytes": 1512520,
+      "sha256": "68129500b616d5838629e68f55ff3aed5e096dacf60ce9eb41bbe599a563afa6",
+      "role": "Complete generated standard-library copyright inventory",
+      "sysrootPath": "share/doc/rust/COPYRIGHT-library.html",
+      "sourceUrl": "https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/COPYRIGHT",
+      "sourceNote": "The pinned Rust COPYRIGHT file directs distributors to the generated COPYRIGHT-library.html shipped in the matching toolchain."
+    },
+    {
+      "path": "licenses/Apache-2.0.txt",
+      "bytes": 10280,
+      "sha256": "074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff",
+      "role": "Canonical Apache-2.0 terms from the matching Rust sysroot",
+      "sysrootPath": "share/doc/rust/licenses/Apache-2.0.txt",
+      "sourceUrl": "https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/LICENSE-APACHE"
+    },
+    {
+      "path": "licenses/MIT.txt",
+      "bytes": 1078,
+      "sha256": "b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0",
+      "role": "Canonical MIT terms from the matching Rust sysroot",
+      "sysrootPath": "share/doc/rust/licenses/MIT.txt",
+      "sourceUrl": "https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/LICENSE-MIT"
+    },
+    {
+      "path": "licenses/Unicode-3.0.txt",
+      "bytes": 1995,
+      "sha256": "f5062c9a188d81dfe66b56db4182dcf9e4b17c0d9b0d311a8e20b3a1b075c443",
+      "role": "Unicode-3.0 terms used by Rust standard-library data",
+      "sysrootPath": "share/doc/rust/licenses/Unicode-3.0.txt",
+      "sourceUrl": "https://www.unicode.org/license.txt"
+    },
+    {
+      "path": "licenses/BSD-2-Clause.txt",
+      "bytes": 1267,
+      "sha256": "f32fb3b417a194167cfad068223fc975ba96c5960513a10f66a3c28720aec1df",
+      "role": "BSD-2-Clause terms used by the Fuchsia standard-library source",
+      "sysrootPath": "share/doc/rust/licenses/BSD-2-Clause.txt",
+      "sourceUrl": "https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/library/std/src/sys/sync/mutex/fuchsia.rs",
+      "canonicalTermsUrl": "https://spdx.org/licenses/BSD-2-Clause.html"
+    },
+    {
+      "path": "licenses/LLVM-exception.txt",
+      "bytes": 919,
+      "sha256": "e34c58338bd89d43e709e226610d8f32b3e3c47f4ad9a99a8dc1d4ac7842488e",
+      "role": "LLVM exception terms used by compiler-builtins",
+      "sysrootPath": "share/doc/rust/licenses/LLVM-exception.txt",
+      "sourceUrl": "https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/library/compiler-builtins/LICENSE.txt"
+    },
+    {
+      "path": "compiler-builtins-LICENSE.txt",
+      "bytes": 15078,
+      "sha256": "ab6eec6caf0fa5775e411c7a8bc6a45c4ef2956b0980b157ab74fc5cd62a928b",
+      "role": "Complete compiler-builtins license and third-party attribution",
+      "sourceUrl": "https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/library/compiler-builtins/LICENSE.txt",
+      "gitBlobSha": "00ae6140bd54e1b538d833f60438e11ed8be12cf",
+      "licenseExpression": "MIT AND Apache-2.0 WITH LLVM-exception"
+    },
+    {
+      "path": "compiler-builtins-CREDITS.TXT",
+      "bytes": 1049,
+      "sha256": "a9901f47a089da41e4690682d00ce4cedaa2baf41fedbe79beee366d43ac2461",
+      "role": "Pinned compiler-rt contributor credits referenced by compiler-builtins",
+      "sourceUrl": "https://raw.githubusercontent.com/llvm/llvm-project/52ed14fcd56afc30f9cccd8ca8ce237c2eef7e04/compiler-rt/CREDITS.TXT",
+      "gitBlobSha": "6964eba020b8aa7a08629b249e3b9aea3ce3e448"
+    },
+    {
+      "path": "libm-LICENSE.txt",
+      "bytes": 14088,
+      "sha256": "3823dda7cf046602f4b4e77ec8e227863dc4736037cc85bb33d9f19febe16bb7",
+      "role": "Complete libm license, math attributions, and credits",
+      "sourceUrl": "https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/library/compiler-builtins/libm/LICENSE.txt",
+      "gitBlobSha": "2f8e41f147472510b05e0adeadf350df6f5a6b96",
+      "licenseExpression": "MIT"
+    }
+  ],
+  "sourceFacts": [
+    {
+      "path": "source-facts/std-Cargo.toml",
+      "bytes": 5587,
+      "sha256": "ff5272b18cb16a9e67256a1045dc35d9d08ae38916a218f684a2ae2f4360f078",
+      "sourceUrl": "https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/library/std/Cargo.toml",
+      "gitBlobSha": "4c433d4970cda2579c3835c49663da9b4fa182a5",
+      "role": "Target selection evidence for Fortanix SGX and UEFI dependencies"
+    },
+    {
+      "path": "source-facts/unwind-lib.rs",
+      "bytes": 6979,
+      "sha256": "100fee67ea83b2e149f5bd6e10eec3af336f14c046901da764aec0ff38886630",
+      "sourceUrl": "https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/library/unwind/src/lib.rs",
+      "gitBlobSha": "cb4a3593c51d6081baa8094c2752790244d67cb5",
+      "role": "Target unwinder and gcc_s linkage evidence"
+    }
+  ],
+  "compilerBuiltins": {
+    "rustSourceTreeSha": "8aa0bb1447bf3216600fccfc3e6e392604563d67",
+    "rustSourceTreeUrl": "https://github.com/rust-lang/rust/tree/48a229ceaefd4985c50990b14116b6d856af0985/library/compiler-builtins",
+    "llvmSubmoduleCommit": "52ed14fcd56afc30f9cccd8ca8ce237c2eef7e04",
+    "llvmSubmoduleUrl": "https://github.com/llvm/llvm-project/tree/52ed14fcd56afc30f9cccd8ca8ce237c2eef7e04",
+    "licenseExpression": "MIT AND Apache-2.0 WITH LLVM-exception",
+    "libmLicenseExpression": "MIT"
+  },
+  "targetSelection": {
+    "fortanixSgx": {
+      "condition": "x86_64-fortanix-unknown-sgx",
+      "dependency": "fortanix-sgx-abi 0.6.1",
+      "license": "MPL-2.0",
+      "appliesToSupportedTargets": false
+    },
+    "uefi": {
+      "condition": "target_os = uefi",
+      "dependencies": ["r-efi 5.2.0", "r-efi-alloc 2.0.0"],
+      "license": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
+      "appliesToSupportedTargets": false
+    },
+    "msvcUnwinder": {
+      "condition": "target_env = msvc",
+      "sourceFact": "unwind-lib.rs",
+      "extraUnwinder": false
+    }
+  },
+  "integration": {
+    "versionGuard": "Require rustc 1.98.1 with commit 48a229ceaefd4985c50990b14116b6d856af0985 before using this directory.",
+    "noticeHeading": "Rust standard-library and compiler-builtins runtime attribution for rustc 1.98.1; inventory spans multiple targets and standard-library build dependencies.",
+    "appendOrder": [
+      "COPYRIGHT-library.html",
+      "licenses/Apache-2.0.txt",
+      "licenses/MIT.txt",
+      "licenses/Unicode-3.0.txt",
+      "licenses/BSD-2-Clause.txt",
+      "licenses/LLVM-exception.txt",
+      "compiler-builtins-LICENSE.txt",
+      "compiler-builtins-CREDITS.TXT",
+      "libm-LICENSE.txt"
+    ],
+    "sourceFactsAreNoticePayload": false,
+    "failClosedOnAssetHashChange": true
+  }
+}
