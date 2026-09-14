@@ -1,9 +1,8 @@
 # Release notice and runtime audit
 
-Status: current artifact and notice review completed for `0.1.0-rc.1`; native
-final proof on the integrated head and the five-host local-install matrix are
-still pending. This records artifact, source, runtime, dependency, and notice
-evidence for issue #6.
+Status: current artifact, notice review, native proof and five-host local-install
+matrix completed for `0.1.0-rc.1`. This records artifact, source, runtime,
+dependency, and notice evidence for issue #6.
 
 The release support boundary is the one in [`docs/release-scope.md`](../release-scope.md):
 Linux x64 and ARM64, macOS x64 and ARM64, and Windows x64. The current
@@ -12,8 +11,10 @@ candidate was built from the GitHub PR 40 merge checkout
 which is the merge result for direct PR head
 [`08561afd0070260b6f295604a8ac3fdcb2629681`](https://github.com/Binary-Balance/seshat/commit/08561afd0070260b6f295604a8ac3fdcb2629681).
 The merge checkout is the source of the retained bytes; it is not the direct
-head. The later proof wiring is integrated at `b104e01`, but new native proof
-runs have not replaced these coordinates.
+head. The later full native proof ran at direct head
+`bb3302ad0ae904eb9e1826178eef2a0d1d8a4f7c` with merge source
+`e0c6efc7574aef8df438ab8f2bc40443812f579b`; its binaries match the retained
+canonical binaries, so those later archives remain supplemental evidence.
 
 The machine-readable form of the records in this note is
 [`release-notice-audit.json`](release-notice-audit.json). It uses portable
@@ -43,6 +44,13 @@ download.
 | `@binary-balance/seshat-darwin-x64` | `x86_64-apple-darwin` | [34856550939](https://github.com/Binary-Balance/seshat/actions/runs/34856550939), `macos-x64-package-proof` | `seshat-darwin-x64-release.tgz` | 902,004 | `d0a2ff9665bd94a0b9401f792f71e413c662c029295fbbe23e459db478e52dac` |
 | `@binary-balance/seshat-darwin-arm64` | `aarch64-apple-darwin` | [34856550939](https://github.com/Binary-Balance/seshat/actions/runs/34856550939), `macos-arm64-package-proof` | `seshat-darwin-arm64-release.tgz` | 881,850 | `7f1cb4a1ad7e06c900baf9499e5e0c1a12a882b8c9d386108f6651bb8f46aac8` |
 | `@binary-balance/seshat-win32-x64` | `x86_64-pc-windows-msvc` | [34856550809](https://github.com/Binary-Balance/seshat/actions/runs/34856550809), `windows-x64-package-proof` | `seshat-win32-x64-release.tgz` | 924,356 | `52e276dc0d662a5804b3ef338390b69d86158c59995e9a7909e0db19f88ba02e` |
+
+The live GitHub Actions API reports all five canonical package-proof artifact
+groups as `expired: false`, with expiry `2026-12-13T14:35:05Z`: Linux x64
+`10353487966`, Linux ARM64 `10353675499`, macOS x64 `10354870694`, macOS ARM64
+`10353294074`, and Windows x64 `10354365105`. Durable copies of the exact
+archives and proof evidence remain outside the repository for the final review
+bundle.
 
 Every native coordinate has `version: 0.1.0-rc.1`, source commit
 `b48ce50c206056b3eabb45c687b9edf1f035528f`, a `BUILD.json` hash, a binary
@@ -130,29 +138,37 @@ used by the workflows are in the companion JSON.
 
 ## Functional acceptance state
 
-Archive integrity is a separate result from consumer behavior. The retained
-and current proof state is:
+Archive integrity is a separate result from consumer behavior. The full PR 40
+native proof passed all configured checks at direct head
+`bb3302ad0ae904eb9e1826178eef2a0d1d8a4f7c`, using merge source
+`e0c6efc7574aef8df438ab8f2bc40443812f579b`. Its later archives are supplemental
+evidence. The six canonical archive coordinates and their b48 source records
+remain unchanged.
 
-| target | retained and current result | remaining target work |
+| target | native proof | local install matrix job and artifact |
 | --- | --- | --- |
-| Linux ARM64 | Full package, npm, public-example, standalone, repeat-pack, Jest, Vitest, and lifecycle checks passed in [run 34856550810](https://github.com/Binary-Balance/seshat/actions/runs/34856550810). | New native package proof on the final integrated head. |
-| macOS x64 | The same full check set passed in [run 34856550939](https://github.com/Binary-Balance/seshat/actions/runs/34856550939). | New native package proof on the final integrated head. |
-| macOS ARM64 | The same full check set passed in [run 34856550939](https://github.com/Binary-Balance/seshat/actions/runs/34856550939). | New native package proof on the final integrated head. |
-| Linux x64 | The retained package proof passed its package, npm, public-example, standalone, repeat-pack, Jest, Expo, Vitest, and lifecycle portions. Its Debian 11 consumer proof failed because the container lacked `examples/verify.mjs`; local commit `8fe0541` passes that proof. The newer all-six-archive local proof passed all four Linux consumer examples and 11 checks. | New native package proof on the final integrated head. |
-| Windows x64 | The retained package proof [34856550809](https://github.com/Binary-Balance/seshat/actions/runs/34856550809) at direct head `08561afd` passed preflight and package install checks, then exhausted its aggregate 600-second budget before the next check. Follow-up [34860332470](https://github.com/Binary-Balance/seshat/actions/runs/34860332470) at direct head `8fe0541b` reached the public examples, which passed after 507 seconds, then failed only because the missing-path regex omitted `The system cannot find the path specified. (os error 3)`. After that regex fix, diagnostic [34863375890](https://github.com/Binary-Balance/seshat/actions/runs/34863375890) at direct head `4e8fc189` recorded a 406-second Jest/Expo install and a 95-second normal check before its workers=2 phase exhausted the aggregate 600-second budget. The later [34866863343](https://github.com/Binary-Balance/seshat/actions/runs/34866863343) passed all configured checks at direct head `bb3302ad`, using merge source `e0c6efc`; its Windows binary hash matches the retained binary. This supplemental proof does not replace the retained archive coordinate. | New native package proof on the final integrated head. |
+| Linux x64 | [34866863420](https://github.com/Binary-Balance/seshat/actions/runs/34866863420), `linux-x64-package-proof` | [104061685980](https://github.com/Binary-Balance/seshat/actions/runs/34869523860/job/104061685980), `release-local-install-linux-x64` |
+| Linux ARM64 | [34866863330](https://github.com/Binary-Balance/seshat/actions/runs/34866863330), `linux-arm64-package-proof` | [104061685927](https://github.com/Binary-Balance/seshat/actions/runs/34869523860/job/104061685927), `release-local-install-linux-arm64` |
+| macOS x64 | [34866863429](https://github.com/Binary-Balance/seshat/actions/runs/34866863429), `macos-x64-package-proof` | [104061686012](https://github.com/Binary-Balance/seshat/actions/runs/34869523860/job/104061686012), `release-local-install-darwin-x64` |
+| macOS ARM64 | [34866863429](https://github.com/Binary-Balance/seshat/actions/runs/34866863429), `macos-arm64-package-proof` | [104061685481](https://github.com/Binary-Balance/seshat/actions/runs/34869523860/job/104061685481), `release-local-install-darwin-arm64` |
+| Windows x64 | [34866863343](https://github.com/Binary-Balance/seshat/actions/runs/34866863343), `windows-x64-package-proof`; runtime [34866863438](https://github.com/Binary-Balance/seshat/actions/runs/34866863438) | [104061685935](https://github.com/Binary-Balance/seshat/actions/runs/34869523860/job/104061685935), `release-local-install-win32-x64` |
 
-The latest available evidence has Linux x64 and Linux ARM64, both macOS
-targets, the supplemental successful Windows package proof in [run
-34866863343](https://github.com/Binary-Balance/seshat/actions/runs/34866863343),
-and the separate Windows runtime-only check succeeding. The Windows
-runtime-only check is [run 34856550801](https://github.com/Binary-Balance/seshat/actions/runs/34856550801);
-it is not package acceptance. The supplemental Windows proof uses merge source
-`e0c6efc7574aef8df438ab8f2bc40443812f579b` and direct head
-`bb3302ad0ae904eb9e1826178eef2a0d1d8a4f7c`; its binary hash is the retained
-`2ead8510b4b395385d0d2303a8dd4a17698bd1f9b5acc61acd7146125791ff8c`. It does
-not replace the six canonical archive coordinates above. The phase-watchdog
-fix from `bb3302a` is integrated at `b104e01`; new native CI is still
-pending. These results do not claim an all-target pass.
+The local-install matrix [run 34869523860](https://github.com/Binary-Balance/seshat/actions/runs/34869523860)
+ran at PR 41 head `ce4eb880f2072ec99cf3924d95f4d8cfff4d8073`, with actual merge
+checkout `0e76160a9f990c7fb933b9c2db546fe1c683e4db`. Every job staged the same
+six canonical archives, ran the two documented npm installs and offline `npm
+ci`, and passed report validation. Each host completed the Node, Jest/Expo,
+Vitest and workspace examples, worker-1/worker-2 parity, and the Node equality,
+failure and incomplete threshold states. The installed native package and
+project `.bin` route matched the host; Windows also produced the 342-byte
+`seshat.cmd` shim with SHA-256
+`1191b67f67135ddf57b4d2345906de34e8c51fc8ed160ea78c4ccf54fb3b7056`, while its
+2,066,432-byte binary retained SHA-256
+`2ead8510b4b395385d0d2303a8dd4a17698bd1f9b5acc61acd7146125791ff8c`.
+
+Earlier timeout and assertion failures remain historical evidence in the
+Windows functional record and the companion JSON; they do not change the
+canonical archive coordinate or the completed proof state.
 
 ## Source and dependency review
 
@@ -406,26 +422,23 @@ npm ci --ignore-scripts --offline
 The retained `all-real-local` proof reports `npm ci` status 0, installed
 version `seshat 0.1.0-rc.1 (candidate)`, and a complete check with four
 mutants, three killed, one survived, zero unresolved, and score 75 on Node
-24.20.0. The newer all-six-archive local proof passed all four Linux consumer
-examples and 11 checks. The five-host local-install matrix remains pending;
-that matrix and the hosted native proof runs are separate evidence.
+24.20.0. The five-host local-install matrix above then passed all four
+consumer examples and 11 checks on every target. Its five verifier reports
+record the same six archive sizes and SHA-256 values as the canonical table,
+the host-selected native binary, the project `.bin` route, worker parity, and
+the passed, failed and incomplete threshold states. The companion JSON stores
+the report, staging record and log coordinates and hashes for each job.
 
-## Remaining acceptance scope
+## Audit status
 
-The artifact and notice review is complete for the retained public CI
-artifacts. The remaining release-candidate checks are:
+The review of the artifact, notice, native proof and local installation is
+complete for the unpublished candidate. Issue #6 remains open while the
+repository completion audit, fresh review and required delivery checks are
+handled by the coordinator;
+this note does not claim final PR readiness or issue closure.
 
-1. Run the new native package proof on the integrated head for all five
-   targets. The Windows package proof must retain the aggregate timeout and
-   phase evidence if it fails again.
-2. Run the documented six-archive offline install on each of the five target
-   hosts, recording the exact six coordinates from
-   [`release-notice-audit.json`](release-notice-audit.json).
-3. If source inputs, the package payload, linked runtime, or notice changes,
-   refresh the corresponding hashes and this scoped review. Otherwise, keep
-   the completed review and current coordinates.
-4. Run `git diff --check` and verify the links and hashes in this note and the
-   companion JSON.
+If source inputs, the package payload, linked runtime, or notice changes,
+refresh the corresponding hashes and this scoped review.
 
 The old `0.0.0 (candidate)` archives and the earlier clean Linux integration
 pack are historical evidence only. They explain prior notice and package

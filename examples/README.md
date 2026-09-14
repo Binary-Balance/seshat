@@ -94,10 +94,11 @@ SESHAT=./seshat-standalone/bin/seshat
 ```
 
 For a standalone Windows run, extract `vendor\seshat\win32-x64.tgz` with
-`tar.exe` and invoke `package\bin\seshat.exe` directly. Hosted Windows
-consumer verification of the local npm recipe remains pending. Both routes
-still need the example project's Node, test runner, TypeScript and coverage
-dependencies.
+`tar.exe` and invoke `package\bin\seshat.exe` directly. The [five-host
+local-install matrix](https://github.com/Binary-Balance/seshat/actions/runs/34869523860)
+passed the documented npm recipe on every supported target, including the
+Windows shim and host-selected native payload. Both routes still need the
+example project's Node, test runner, TypeScript and coverage dependencies.
 
 Run the focused verifier from the repository root with either an installed
 launcher, a native executable, or the six-archive directory:
