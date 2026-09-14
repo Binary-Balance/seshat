@@ -1,0 +1,3 @@
+# These upstream files retain their original trailing spaces byte-for-byte.
+rust-1.98.1/COPYRIGHT-library.html whitespace=-trailing-space
+rust-1.98.1/licenses/BSD-2-Clause.txt whitespace=-trailing-space
