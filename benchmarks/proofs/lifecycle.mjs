@@ -8,7 +8,7 @@ import {setTimeout as delay} from 'node:timers/promises';
 import {alive} from './liveness.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const proofBinary = process.env.SESHAT_PROOF_BINARY ?? join(repo,'benchmarks/rust/target/release/seshat-proofs');
+const proofBinary = process.env.SESHAT_PROOF_BINARY ?? join(repo,'crates/seshat/target/release/seshat-proofs');
 const work = mkdtempSync(join(repo,'work/assurance-proofs/lifecycle-'));
 const input = join(work,'input');
 mkdirSync(input);

@@ -4,14 +4,18 @@ on:
   pull_request:
     paths:
       - .github/workflows/linux-x64-package.yml
+      - crates/seshat/**
       - benchmarks/proofs/**
+      - packages/**
       - packaging/**
       - docs/linux-x64-package.md
   push:
     branches: [main]
     paths:
       - .github/workflows/linux-x64-package.yml
+      - crates/seshat/**
       - benchmarks/proofs/**
+      - packages/**
       - packaging/**
       - docs/linux-x64-package.md
   workflow_dispatch:
@@ -57,11 +61,11 @@ jobs:
           set -euo pipefail
           npm ci --prefix benchmarks
           npm ci --prefix benchmarks/proofs
-          cargo fetch --locked --manifest-path benchmarks/proofs/Cargo.toml
+          cargo fetch --locked --manifest-path crates/seshat/Cargo.toml
       - name: Run native Rust tests
         run: |
           set -euo pipefail
-          cargo test --locked --offline --manifest-path benchmarks/proofs/Cargo.toml 2>&1 | tee work/x64/rust-tests.log
+          cargo test --locked --offline --manifest-path crates/seshat/Cargo.toml 2>&1 | tee work/x64/rust-tests.log
       - name: Fetch pinned Debian 11 proof inputs
         run: |
           set -euo pipefail
@@ -88,6 +92,24 @@ jobs:
         run: |
           set -euo pipefail
           node packaging/pack.mjs work/x64/debian11-inputs 2>&1 | tee work/x64/pack.log
+      - name: Stage release entry and native packages
+        run: |
+          set -euo pipefail
+          mkdir -p work/x64/release
+          native_tarball="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/x64/package-result.json")).tarball);')"
+          native_binary="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/x64/package-result.json")).binaryPath);')"
+          tar -xOf "$native_tarball" package/BUILD.json > work/x64/BUILD.json
+          tar -xOf "$native_tarball" package/THIRD_PARTY_NOTICES.txt > work/x64/THIRD_PARTY_NOTICES.txt
+          node packaging/release.mjs \
+            --output work/x64/release \
+            --binary "linux-x64=$native_binary" \
+            --build-info linux-x64=work/x64/BUILD.json \
+            --notices linux-x64=work/x64/THIRD_PARTY_NOTICES.txt \
+            --manifest work/x64/release.json 2>&1 | tee work/x64/release.log
+          entry_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).entry.archive.file);' work/x64/release.json)"
+          native_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).native.find(target => target.key === "linux-x64").archive.file);' work/x64/release.json)"
+          cp "work/x64/release/$entry_archive" work/x64/seshat-entry.tgz
+          cp "work/x64/release/$native_archive" work/x64/seshat-linux-x64-release.tgz
       - name: Retain npm payload for both installation routes
         run: |
           set -euo pipefail
@@ -105,11 +127,11 @@ jobs:
           SESHAT_PROOF_OUTPUT: work/x64/npm-package.json
         run: |
           set -euo pipefail
-          proof_binary="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/x64/package-result.json")).proofBinary);')"
-          tarball_sha256="$(sha256sum work/x64/seshat-linux-x64.tgz | cut -d' ' -f1)"
+          entry_sha256="$(sha256sum work/x64/seshat-entry.tgz | cut -d' ' -f1)"
+          native_sha256="$(sha256sum work/x64/seshat-linux-x64-release.tgz | cut -d' ' -f1)"
           binary_sha256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/x64/package-result.json")).binary);')"
-          SESHAT_PROOF_BINARY="$proof_binary" SESHAT_TARBALL_SHA256="$tarball_sha256" SESHAT_BINARY_SHA256="$binary_sha256" \
-            node benchmarks/proofs/npm-package.mjs work/x64/seshat-linux-x64.tgz 2>&1 | tee work/x64/npm-package.log
+          SESHAT_ENTRY_TARBALL_SHA256="$entry_sha256" SESHAT_NATIVE_TARBALL_SHA256="$native_sha256" SESHAT_NATIVE_BINARY_SHA256="$binary_sha256" \
+            node benchmarks/proofs/npm-package.mjs work/x64/seshat-entry.tgz work/x64/seshat-linux-x64-release.tgz 2>&1 | tee work/x64/npm-package.log
       - name: Verify native standalone installation
         env:
           SESHAT_PROOF_OUTPUT: work/x64/standalone.json
@@ -175,6 +197,10 @@ jobs:
           path: |
             work/x64/preflight.json
             work/x64/package-result.json
+            work/x64/release.json
+            work/x64/release.log
+            work/x64/seshat-entry.tgz
+            work/x64/seshat-linux-x64-release.tgz
             work/x64/seshat-linux-x64.tgz
             work/x64/seshat-linux-x64-standalone.tar.gz
             work/x64/npm-package.json

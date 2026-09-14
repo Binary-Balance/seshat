@@ -515,11 +515,19 @@ function installSeshat(tarball, workRoot) {
     '--save-dev', '--save-exact', '--cache', npmCache, tarball,
   ], consumer, 180000);
   assertCommand(installation, 'Seshat candidate install');
-  const binary = realpathSync(resolve(consumer, 'node_modules/.bin/seshat'));
+  const scope = join(consumer, 'node_modules/@binary-balance');
+  const nativeName = existsSync(scope)
+    ? readdirSync(scope).find(name => /^seshat-(linux|darwin|win32)-/.test(name))
+    : null;
+  const packageName = nativeName ? `@binary-balance/${nativeName}` : '@binary-balance/seshat';
+  const packageRoot = join(consumer, 'node_modules', packageName);
+  const linkedBinary = join(consumer, 'node_modules/.bin/seshat');
+  const binary = realpathSync(existsSync(linkedBinary)
+    ? linkedBinary
+    : join(packageRoot, 'bin', process.platform === 'win32' ? 'seshat.exe' : 'seshat'));
   assert.ok(statSync(binary).isFile(), `Seshat executable missing: ${binary}`);
   const version = assertCommand(run(binary, ['--version'], consumer), 'Seshat --version').stdout.trim();
-  const packageRoot = join(consumer, 'node_modules/@binary-balance/seshat');
-  const packageFiles = walkInputs(consumer, ['node_modules/@binary-balance/seshat']);
+  const packageFiles = walkInputs(consumer, [`node_modules/${packageName}`]);
   return {
     binary,
     version,

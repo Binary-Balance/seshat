@@ -2,7 +2,8 @@
 
 Seshat uses one Rust crate with private analysis, coverage, assessment and execution
 modules. The `seshat` CLI and `seshat-proofs` development command share that crate.
-The source currently lives in `benchmarks/proofs/src/`.
+The source lives in `crates/seshat/src/`. Proof fixtures and JavaScript drivers
+remain under `benchmarks/proofs/`.
 
 ## Analysis
 

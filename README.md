@@ -18,12 +18,10 @@ project's purpose: measuring code and recording evidence about its tests.
 
 ## Status
 
-Seshat is experimental and has not been published to npm. The first-release
-matrix covers native Linux x64 and ARM64, macOS x64 and ARM64, and Windows x64.
-The final native proofs for those targets use source `0edd0a3` and are recorded
-in the [native platform support matrix](docs/platform-support.md). Consuming
-projects do not need a Rust toolchain to run a locally built, platform-specific
-npm package.
+Seshat is experimental and has not been published to npm. Release candidate
+`0.1.0-rc.1` covers native Linux x64 and ARM64, macOS x64 and ARM64, and
+Windows x64. Consuming projects do not need a Rust toolchain to run a locally
+built, platform-specific native payload.
 
 Node's test runner, Jest/Expo and Vitest have self-contained regression fixtures.
 The verified Jest/Expo route is pinned to Jest 29.7.0, jest-expo 57.0.5 and
@@ -39,24 +37,25 @@ installation routes and retained evidence, and
 Building the Linux x64 candidate requires Rust 1.98.1, Node 24, npm, GCC,
 binutils and `dpkg-deb`. Prepare the locked dependencies and Debian library
 archives using the
-[package build instructions](packaging/README.md#build-and-verify-from-the-source-checkout),
+[package build instructions](packaging/README.md#build-a-native-payload),
 then run from this checkout:
 
 ```sh
 node packaging/pack.mjs work/debian11-inputs
 ```
 
-The packaging command prints a tarball path. Install that file in the project
-you want to assess:
+The native packaging command prints a tarball path. Install that payload in the
+project you want to assess:
 
 ```sh
 npm install --save-dev --save-exact --ignore-scripts /absolute/path/to/package.tgz
-./node_modules/.bin/seshat --help
+./node_modules/@binary-balance/seshat-linux-x64/bin/seshat --help
 ```
 
 The installed package runs the native executable directly and needs no Rust
-toolchain or npm runtime dependencies. Your project supplies its test runner,
-TypeScript checks and coverage tools. See [package details](packaging/README.md).
+toolchain or npm runtime dependencies. The user-facing entry package and its
+launcher are staged separately by `packaging/release.mjs`; see
+[package details](packaging/README.md).
 
 The same package bytes are also usable without npm. Extract the standalone
 archive and run its binary directly:
@@ -75,12 +74,12 @@ release downloads.
 ## Usage
 
 Create a `seshat.json` file using the [configuration guide](docs/configuration.md),
-then run:
+then run the matching native payload (the examples use Linux x64):
 
 ```sh
-./node_modules/.bin/seshat check --config ./seshat.json
-./node_modules/.bin/seshat crap --config ./seshat.json
-./node_modules/.bin/seshat mutate --config ./seshat.json
+./node_modules/@binary-balance/seshat-linux-x64/bin/seshat check --config ./seshat.json
+./node_modules/@binary-balance/seshat-linux-x64/bin/seshat crap --config ./seshat.json
+./node_modules/@binary-balance/seshat-linux-x64/bin/seshat mutate --config ./seshat.json
 ```
 
 `check` runs both assessments. `crap` runs coverage and CRAP analysis.
@@ -96,7 +95,7 @@ For automation, use `--json` to write a report to stdout. Progress goes to stder
 `--no-progress` suppresses it.
 
 ```sh
-./node_modules/.bin/seshat check --config ./seshat.json --json > seshat-report.json
+./node_modules/@binary-balance/seshat-linux-x64/bin/seshat check --config ./seshat.json --json > seshat-report.json
 ```
 
 Run only trusted test commands. Source copies protect your checkout; tests still

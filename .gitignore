@@ -5,3 +5,4 @@ benchmarks/stryker/node_modules/
 benchmarks/generated/
 benchmarks/proofs/node_modules/
 benchmarks/proofs/target/
+crates/seshat/target/

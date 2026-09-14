@@ -150,9 +150,9 @@ function validate({preflight, packed, repeat, install, runtime, jestExpo, vitest
     if (!Array.isArray(install.build?.imports) || install.build.imports.some(name => /^(MSVCP|VCRUNTIME)/i.test(name))) {
       fail('Windows build imports include an external Visual C++ runtime');
     }
+    if (install.nativeBinOmitted !== true) fail('native Windows payload owns an npm bin');
     checkStatuses(install, [
-      ['offline-install', 0], ['installed-version', 0], ['installed-help', 0], ['bin-cmd-version', 0],
-      ['npm-exec-help', 0], ['package-script-version', 0], ['offline-ci', 0], ['cargo-probe', 1], ['rustc-probe', 1],
+      ['offline-install', 0], ['installed-version', 0], ['installed-help', 0], ['offline-ci', 0], ['cargo-probe', 1], ['rustc-probe', 1],
       ['standalone-list', 0], ['standalone-extract', 0], ['standalone-version', 0], ['standalone-help', 0],
     ], fail);
     if (!['CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'RUSTC_WRAPPER', 'CARGO_BUILD_RUSTC', 'RUSTFLAGS', 'CARGO_ENCODED_RUSTFLAGS', 'RUSTUP_TOOLCHAIN']
@@ -215,15 +215,14 @@ function selfCheck() {
     {binary:{sha256:binaryHash, bytes:1}, build:{sha256:buildHash, bytes:1}, npmArchive:{sha256:archiveHash, bytes:1}, standaloneArchive:{sha256:archiveHash, bytes:1}, files:packageFiles},
     {binary:{sha256:binaryHash, bytes:1}, build:{sha256:buildHash, bytes:1}, npmArchive:{sha256:archiveHash, bytes:1}, standaloneArchive:{sha256:archiveHash, bytes:1}, files:packageFiles},
   ], comparisons:Object.fromEntries(['binary', 'build', 'npmArchive', 'standaloneArchive'].map(name => [name, {hash:true, bytes:true, passed:true}]))};
-  const install = {sourceCommit, buildSha256:buildHash, tarball:{sha256:archiveHash, bytes:1}, standaloneArchive:{sha256:archiveHash, bytes:1}, binary:{sha256:binaryHash, bytes:1},
+  const install = {sourceCommit, nativeBinOmitted:true, buildSha256:buildHash, tarball:{sha256:archiveHash, bytes:1}, standaloneArchive:{sha256:archiveHash, bytes:1}, binary:{sha256:binaryHash, bytes:1},
     build:{binarySha256:binaryHash, binaryBytes:1, target:'x86_64-pc-windows-msvc', peMachine:'0x8664', peFormat:'PE32+', crtStatic:true,
       sourceCommit, rust:'rustc 1.98.1', cargo:'cargo 1.98.1', msvc:{available:true, version:'cl'}, linker:{available:true, version:'link'}, sdk:{version:'sdk'},
       os:{platform:'win32', architecture:'x64', release:'10.0.20348', version:'Windows Server 2022 Datacenter', runner:'Windows'},
       rustflags:['-C target-feature=+crt-static'], imports:['KERNEL32.dll']},
     noConsumingRust:{environmentUnset:['CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'RUSTC_WRAPPER', 'CARGO_BUILD_RUSTC', 'RUSTFLAGS', 'CARGO_ENCODED_RUSTFLAGS', 'RUSTUP_TOOLCHAIN'],
       preserved:['SystemRoot', 'ComSpec', 'System32', 'Node', 'npm.cmd']},
-    checks:Object.fromEntries([['offline-install',0], ['installed-version',0], ['installed-help',0], ['bin-cmd-version',0], ['npm-exec-help',0],
-      ['package-script-version',0], ['offline-ci',0], ['cargo-probe',1], ['rustc-probe',1], ['standalone-list',0], ['standalone-extract',0],
+    checks:Object.fromEntries([['offline-install',0], ['installed-version',0], ['installed-help',0], ['offline-ci',0], ['cargo-probe',1], ['rustc-probe',1], ['standalone-list',0], ['standalone-extract',0],
       ['standalone-version',0], ['standalone-help',0]].map(([name,status]) => [name,{status}]))};
   const runtime = {validation:{passed:true}, binary:{path:'seshat.exe', sha256:binaryHash}, scenarios:Object.fromEntries(runtimeCases.map(name => [name, {}]))};
   const base = {preflight:{validation:{passed:true}, provenance:{sourceCommit}, candidate:{runner:'windows-2022', os:'Windows Server 2022', kernelBuild:20348, node:'24.20.0', rust:'1.98.1', target:'x86_64-pc-windows-msvc', cpu:'x64', crtStatic:true}, environment:{

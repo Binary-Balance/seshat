@@ -25,7 +25,7 @@ async function execute(name, app, tests, expected, other) {
   if (other) { writeFileSync(join(project, 'other.mjs'), other); input.test.push('@ROOT@/other.mjs'); }
   const path = join(work, 'config.json');
   writeFileSync(path, JSON.stringify(input));
-  const run = await runProcess(join(repo, 'benchmarks/rust/target/release/seshat-proofs'), ['execute',path,'replace'], repo);
+  const run = await runProcess(join(repo, 'crates/seshat/target/release/seshat-proofs'), ['execute',path,'replace'], repo);
   assert.equal(run.timedOut, false);
   assert.equal(run.overflow, false);
   const result = JSON.parse(run.stdout);

@@ -1,7 +1,7 @@
-# Seshat local Windows x64 candidate
+# Seshat local Windows x64 native payload
 
-This is a private, unpublished `@binary-balance/seshat` package for native
-Windows x64 on the GitHub `windows-2022` runner. The tested OS baseline is
+This is the `@binary-balance/seshat-win32-x64` native payload for Windows x64
+on the GitHub `windows-2022` runner. The tested OS baseline is
 Windows Server 2022, kernel build 20348. It does not claim support for desktop
 Windows versions or other CPU architectures. Node 24.20.0 is the verified
 consumer runtime.
@@ -16,14 +16,13 @@ DLLs remain Windows OS components and are not copied into the package.
 Install the local tarball in a consuming project:
 
 ```powershell
-npm install --save-dev --save-exact --ignore-scripts --offline C:\path\to\binary-balance-seshat-0.0.0.tgz
-& .\node_modules\.bin\seshat.cmd --help
-npm exec --offline -- seshat --help
+npm install --save-dev --save-exact --ignore-scripts --offline C:\path\to\binary-balance-seshat-win32-x64-0.1.0-rc.1.tgz
+& .\node_modules\@binary-balance\seshat-win32-x64\bin\seshat.exe --help
 ```
 
-The package has no install hook or npm runtime dependency. Consumers need no
-Rust toolchain. npm creates the normal `.bin\seshat.cmd` launcher, and package
-scripts can invoke `seshat` through that launcher.
+The package has no install hook, npm bin alias or npm runtime dependency.
+Consumers need no Rust toolchain. The user-facing entry package owns the npm
+`.bin\seshat.cmd` launcher and selects this payload.
 
 Build and verify from a clean Windows Server 2022 runner after installing the
 locked proof dependencies and Rust 1.98.1:

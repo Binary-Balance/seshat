@@ -12,7 +12,7 @@ const work = mkdtempSync(join(repo, 'work/assurance-proofs/switching-'));
 const project = join(work, 'input');
 const scratch = join(work, 'scratch');
 const events = join(work, 'events.jsonl');
-const binary = resolve(process.env.SESHAT_SWITCHING_BINARY ?? join(repo, 'benchmarks/proofs/target/debug/seshat'));
+const binary = resolve(process.env.SESHAT_SWITCHING_BINARY ?? join(repo, 'crates/seshat/target/debug/seshat'));
 mkdirSync(join(project, 'src'), {recursive: true});
 mkdirSync(join(project, 'tests'));
 mkdirSync(scratch);

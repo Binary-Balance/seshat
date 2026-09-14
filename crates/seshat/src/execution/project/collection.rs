@@ -598,23 +598,23 @@ impl CapturedProject {
         for (name, content) in [
             (
                 "node-reporter.mjs",
-                include_str!("../../../node-reporter.mjs"),
+                include_str!("../../../../../benchmarks/proofs/node-reporter.mjs"),
             ),
             (
                 "vitest-reporter.mjs",
-                include_str!("../../../vitest-reporter.mjs"),
+                include_str!("../../../../../benchmarks/proofs/vitest-reporter.mjs"),
             ),
             (
                 "vitest-runner.mjs",
-                include_str!("../../../vitest-runner.mjs"),
+                include_str!("../../../../../benchmarks/proofs/vitest-runner.mjs"),
             ),
             (
                 "jest-reporter.cjs",
-                include_str!("../../../jest-reporter.cjs"),
+                include_str!("../../../../../benchmarks/proofs/jest-reporter.cjs"),
             ),
             (
                 "jest-expo-environment.cjs",
-                include_str!("../../../jest-expo-environment.cjs"),
+                include_str!("../../../../../benchmarks/proofs/jest-expo-environment.cjs"),
             ),
         ] {
             fs::write(evidence.0.join(name), content).map_err(|e| e.to_string())?;

@@ -1,7 +1,7 @@
-# Seshat local npm candidate for macOS
+# Seshat local macOS native payload
 
-This is a private, unpublished `@binary-balance/seshat` package for native
-macOS 15 on one CPU architecture. The package records its target, Mach-O
+This is one of the `@binary-balance/seshat-darwin-x64` or
+`@binary-balance/seshat-darwin-arm64` native payloads for macOS 15. The package records its target, Mach-O
 architecture, macOS minimum load command, deployment target, SDK, native
 libraries, binary hash and dependency versions in `BUILD.json`. Node 24.20.0
 is the verified test runtime. The x64 and ARM64 packages are built on their
@@ -10,14 +10,14 @@ matching native GitHub-hosted runners and do not run through Rosetta.
 Install the local tarball as a development dependency:
 
 ```sh
-npm install --save-dev --save-exact --ignore-scripts --offline /absolute/path/to/binary-balance-seshat-0.0.0.tgz
-./node_modules/.bin/seshat --help
+npm install --save-dev --save-exact --ignore-scripts --offline /absolute/path/to/binary-balance-seshat-darwin-x64-0.1.0-rc.1.tgz
+./node_modules/@binary-balance/seshat-darwin-x64/bin/seshat --help
 ```
 
 The installed command runs the packaged Rust executable directly. Consumers
-need no Rust toolchain. The package has no install hook or npm runtime
-dependency. Use the direct installed command for clean JSON and direct signal
-handling. npm also links `seshat` for package scripts and `npm exec --offline`.
+need no Rust toolchain. The package has no install hook, npm bin alias or npm
+runtime dependency. Use the direct installed command for clean JSON and direct
+signal handling. The user-facing entry package supplies the npm launcher.
 
 The candidate uses `MACOSX_DEPLOYMENT_TARGET=15.0` and declares macOS in npm
 metadata. It does not claim support for older macOS versions, the other CPU

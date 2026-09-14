@@ -474,8 +474,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "seshat-proofs"
-version = "0.0.0"
+name = "seshat"
+version = "0.1.0-rc.1"
 dependencies = [
  "glob",
  "libc",
