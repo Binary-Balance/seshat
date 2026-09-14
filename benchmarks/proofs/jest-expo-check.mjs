@@ -21,6 +21,9 @@ import {nodeCommand, noRustProof, npmArgs, npmCommand, runProcess} from './proce
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
 const fixture = join(here, 'fixtures/jest-expo');
+const sourceVersion = readFileSync(join(repo, 'crates/seshat/Cargo.toml'), 'utf8')
+  .match(/^version\s*=\s*"([^"]+)"/m)?.[1];
+assert.ok(sourceVersion, 'Seshat version is missing from crates/seshat/Cargo.toml');
 const baseFiles = [
   'package.json',
   'package-lock.json',
@@ -342,8 +345,10 @@ if (tarballArg) {
   cliEvidence = {source: 'executable'};
 }
 const version = (await runCommand(cli, ['--version'], repo, 0, rustProof.env)).stdout.trim();
-const nativeManifest = JSON.parse(readFileSync(join(dirname(cli), '..', 'package.json'), 'utf8'));
-assert.equal(version, `seshat ${nativeManifest.version} (candidate)`);
+const expectedVersion = tarballArg
+  ? JSON.parse(readFileSync(join(dirname(cli), '..', 'package.json'), 'utf8')).version
+  : sourceVersion;
+assert.equal(version, `seshat ${expectedVersion} (candidate)`);
 cliEvidence = {...cliEvidence, version, binarySha256: sha256(cli)};
 
 copyBaseProject(dependencyRoot);

@@ -59,29 +59,23 @@ const copy = (source, destination) => {
 };
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const portable = path => relative(repo, path).replaceAll('\\', '/') || '.';
+// npm is a .cmd shim on Windows; invoke its JavaScript entrypoint through Node.
+const npmCommand = process.platform === 'win32' ? process.execPath : 'npm';
+const npmArgs = process.platform === 'win32'
+  ? [process.env.npm_execpath || join(dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js')]
+  : [];
 const npm = (stage, destination) => {
-  const result = JSON.parse(execFileSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', [
+  const result = JSON.parse(execFileSync(npmCommand, [...npmArgs,
     'pack', stage, '--json', '--offline', '--ignore-scripts', '--no-audit', '--no-fund',
     '--update-notifier=false', '--pack-destination', destination,
   ], {cwd: repo, encoding: 'utf8'}));
   assert.equal(result.length, 1);
   return result[0];
 };
-function sourceCommit() {
-  const dotGit = join(repo, '.git');
-  const pointer = statSync(dotGit).isFile() ? readFileSync(dotGit, 'utf8').trim() : null;
-  const gitDirectory = pointer?.startsWith('gitdir: ')
-    ? resolve(repo, pointer.slice('gitdir: '.length))
-    : dotGit;
-  const head = readFileSync(join(gitDirectory, 'HEAD'), 'utf8').trim();
-  const commonDirectory = existsSync(join(gitDirectory, 'commondir'))
-    ? resolve(gitDirectory, readFileSync(join(gitDirectory, 'commondir'), 'utf8').trim())
-    : gitDirectory;
-  return head.startsWith('ref: ')
-    ? readFileSync(join(commonDirectory, head.slice('ref: '.length)), 'utf8').trim()
-    : head;
-}
-const sourceRevision = sourceCommit();
+const sourceRevision = execFileSync('git', ['rev-parse', 'HEAD'], {
+  cwd: repo,
+  encoding: 'utf8',
+}).trim();
 assert.match(sourceRevision, /^[0-9a-f]{40}$/i, 'HEAD must resolve to a commit');
 const rootSource = join(repo, 'packages/seshat');
 const rootStage = join(output, 'seshat');

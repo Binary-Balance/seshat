@@ -9,6 +9,9 @@ import {nodeCommand, noRustProof, npmArgs, npmCommand, runProcess} from './proce
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
+const sourceVersion = readFileSync(join(repo, 'crates/seshat/Cargo.toml'), 'utf8')
+  .match(/^version\s*=\s*"([^"]+)"/m)?.[1];
+assert.ok(sourceVersion, 'Seshat version is missing from crates/seshat/Cargo.toml');
 const workers = Number(process.env.SESHAT_CHECK_WORKERS ?? 1);
 assert.ok(Number.isSafeInteger(workers) && workers > 0, 'SESHAT_CHECK_WORKERS must be a positive integer');
 const {values} = parseArgs({
@@ -154,8 +157,10 @@ if (tarballArg) {
 }
 if (installed) {
   const version = (await runCommand(cli, ['--version'], repo, 0, rustProof.env)).stdout.trim();
-  const nativeManifest = JSON.parse(readFileSync(join(dirname(cli), '..', 'package.json'), 'utf8'));
-  assert.equal(version, `seshat ${nativeManifest.version} (candidate)`);
+  const expectedVersion = tarballArg
+    ? JSON.parse(readFileSync(join(dirname(cli), '..', 'package.json'), 'utf8')).version
+    : sourceVersion;
+  assert.equal(version, `seshat ${expectedVersion} (candidate)`);
   cliEvidence = {...cliEvidence, version, binarySha256: sha256(cli)};
 }
 const results = {
