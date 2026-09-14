@@ -48,7 +48,7 @@ compare the installed binary hash with the packer's recorded hash, so the
 standalone CLI run cannot silently switch to a different build.
 
 The workflow fetches Cargo and npm dependencies before any offline build or
-pack command. It then runs native Rust tests, the 16 npm installation checks,
+pack command. It then runs native Rust tests, the 13 npm installation controls,
 the 43 installed CLI scenarios including legacy parity, and the 11 existing
 parallel controls. Each native archive is also installed into the checked-in
 Jest/Expo fixture using its pinned lockfile and exercised through
