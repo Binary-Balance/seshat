@@ -7,6 +7,7 @@ on:
       - crates/seshat/**
       - benchmarks/proofs/**
       - packages/**
+      - examples/**
       - packaging/**
       - docs/linux-arm64-package.md
   push:
@@ -16,6 +17,7 @@ on:
       - crates/seshat/**
       - benchmarks/proofs/**
       - packages/**
+      - examples/**
       - packaging/**
       - docs/linux-arm64-package.md
   workflow_dispatch:
@@ -90,6 +92,7 @@ jobs:
       - name: Verify npm installation
         env:
           SESHAT_PROOF_OUTPUT: work/arm64/npm-package.json
+          SESHAT_EXAMPLES_OUTPUT: work/arm64/public-consumer-examples.json
         run: |
           ENTRY_SHA256="$(sha256sum work/arm64/seshat-entry.tgz | cut -d' ' -f1)"
           NATIVE_SHA256="$(sha256sum work/arm64/seshat-linux-arm64-release.tgz | cut -d' ' -f1)"

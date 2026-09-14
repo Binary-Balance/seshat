@@ -7,6 +7,7 @@ on:
       - crates/seshat/**
       - benchmarks/proofs/**
       - packages/**
+      - examples/**
       - packaging/**
       - docs/linux-x64-package.md
   push:
@@ -16,6 +17,7 @@ on:
       - crates/seshat/**
       - benchmarks/proofs/**
       - packages/**
+      - examples/**
       - packaging/**
       - docs/linux-x64-package.md
   workflow_dispatch:
@@ -125,6 +127,7 @@ jobs:
       - name: Verify native npm installation
         env:
           SESHAT_PROOF_OUTPUT: work/x64/npm-package.json
+          SESHAT_EXAMPLES_OUTPUT: work/x64/public-consumer-examples.json
         run: |
           set -euo pipefail
           entry_sha256="$(sha256sum work/x64/seshat-entry.tgz | cut -d' ' -f1)"
@@ -205,6 +208,7 @@ jobs:
             work/x64/seshat-linux-x64-standalone.tar.gz
             work/x64/npm-package.json
             work/x64/npm-package.log
+            work/x64/public-consumer-examples.json
             work/x64/standalone.json
             work/x64/standalone.log
             work/x64/jest-expo-check.json

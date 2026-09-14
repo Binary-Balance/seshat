@@ -6,6 +6,7 @@ import {spawn, spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {
   existsSync,
+  copyFileSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -32,14 +33,15 @@ const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const sha512 = bytes => createHash('sha512').update(bytes).digest('base64');
 const sha1 = bytes => createHash('sha1').update(bytes).digest('hex');
 const archiveBytes = path => readFileSync(path);
+const tarCommand = process.platform === 'win32' ? 'tar.exe' : 'tar';
 const archiveJson = path => {
-  const result = spawnSync('tar', ['-xOf', path, 'package/package.json'], {encoding: 'utf8'});
+  const result = spawnSync(tarCommand, ['-xOf', path, 'package/package.json'], {encoding: 'utf8'});
   assert.ifError(result.error);
   assert.equal(result.status, 0, result.stderr);
   return JSON.parse(result.stdout);
 };
 const archiveText = (path, name) => {
-  const result = spawnSync('tar', ['-xOf', path, `package/${name}`], {encoding: 'utf8'});
+  const result = spawnSync(tarCommand, ['-xOf', path, `package/${name}`], {encoding: 'utf8'});
   assert.ifError(result.error);
   assert.equal(result.status, 0, result.stderr);
   return result.stdout;
@@ -75,6 +77,7 @@ const targetForHost = {
   'linux-arm64': '@binary-balance/seshat-linux-arm64',
   'darwin-x64': '@binary-balance/seshat-darwin-x64',
   'darwin-arm64': '@binary-balance/seshat-darwin-arm64',
+  'win32-x64': '@binary-balance/seshat-win32-x64',
 }[`${process.platform}-${process.arch}`];
 assert.ok(targetForHost, `unsupported proof host: ${process.platform}/${process.arch}`);
 assert.equal(nativeArchiveManifest.name, targetForHost);
@@ -161,14 +164,22 @@ mkdirSync(join(repo, 'work/assurance-proofs'), {recursive: true});
 const work = mkdtempSync(join(repo, 'work/assurance-proofs/npm-package-'));
 const tools = join(work, 'tools');
 mkdirSync(tools);
-const npm = process.env.PATH.split(delimiter).map(path => join(path, 'npm')).find(existsSync);
-assert.ok(npm, 'npm must be installed');
-symlinkSync(process.execPath, join(tools, 'node'));
-symlinkSync(realpathSync(npm), join(tools, 'npm'));
+const npm = process.platform === 'win32'
+  ? (process.env.npm_execpath && !/\.(?:cmd|bat)$/i.test(process.env.npm_execpath)
+    ? process.env.npm_execpath
+    : join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js'))
+  : process.env.PATH.split(delimiter).map(path => join(path, 'npm')).find(existsSync);
+assert.ok(npm && existsSync(npm), `npm CLI must be installed: ${npm ?? 'unknown'}`);
+const npmCli = realpathSync(npm);
+if (process.platform === 'win32') copyFileSync(process.execPath, join(tools, 'node.exe'));
+else symlinkSync(process.execPath, join(tools, 'node'));
 if (process.platform !== 'win32') symlinkSync('/bin/sh', join(tools, 'sh'));
 const env = {
   ...process.env,
-  PATH: tools,
+  PATH: process.platform === 'win32'
+    ? [tools, join(process.env.SystemRoot ?? process.env.SYSTEMROOT ?? 'C:\\Windows', 'System32')].join(delimiter)
+    : tools,
+  npm_execpath: npmCli,
   npm_config_userconfig: join(work, 'user.npmrc'),
   npm_config_globalconfig: join(work, 'global.npmrc'),
   npm_config_cache: join(work, 'cache'),
@@ -181,6 +192,9 @@ for (const command of ['cargo', 'rustc']) {
   assert.equal(spawnSync(command, ['--version'], {env}).error?.code, 'ENOENT');
 }
 
+const npmCommand = process.execPath;
+const npmPrefix = [npmCli];
+
 const commonNpmOptions = [
   '--ignore-scripts', '--no-audit', '--no-fund',
   '--cache', join(work, 'cache'),
@@ -190,7 +204,7 @@ const commonNpmOptions = [
 const read = path => JSON.parse(readFileSync(path, 'utf8'));
 const json = (path, value) => writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
 const evidence = {};
-async function run(name, command, args, cwd, status = 0, runEnv = env) {
+async function run(name, command, args, cwd, status = 0, runEnv = env, timeoutMs = 120_000) {
   const started = performance.now();
   const child = spawn(command, args, {
     cwd,
@@ -222,10 +236,13 @@ async function run(name, command, args, cwd, status = 0, runEnv = env) {
       console.log(`${name}: exit ${completed.status}`);
       resolveRun(completed);
     };
-    const timer = setTimeout(() => child.kill('SIGTERM'), 120_000);
+    const timer = setTimeout(() => child.kill('SIGTERM'), timeoutMs);
     child.once('error', error => finish({error, status: null, signal: null}));
     child.once('close', (code, signal) => finish({error: null, status: code, signal}));
   });
+}
+async function runNpm(name, args, cwd, status = 0, timeoutMs = 120_000) {
+  return await run(name, npmCommand, [...npmPrefix, ...args], cwd, status, env, timeoutMs);
 }
 async function runLauncher(name, args, cwd, status = 0) {
   return await run(name, process.execPath, [join(cwd, 'node_modules/@binary-balance/seshat/bin/seshat.mjs'), ...args], cwd, status);
@@ -240,6 +257,20 @@ function report(child) {
   return value;
 }
 
+const publicExampleNames = ['node', 'jest-expo', 'vitest', 'workspaces'];
+function validatePublicExamples(value, expectedCliKind) {
+  assert.equal(value?.schemaVersion, 1);
+  assert.equal(value?.validation?.passed, true, value?.validation?.error ?? 'public examples failed');
+  assert.equal(value?.cli?.kind, expectedCliKind);
+  assert.deepEqual(Object.keys(value.examples ?? {}).sort(), [...publicExampleNames].sort());
+  for (const name of publicExampleNames) {
+    const example = value.examples[name];
+    assert.deepEqual(example?.workers, {one: 1, two: 2, parity: true}, `${name}: worker evidence is incomplete`);
+    assert.ok(Array.isArray(example.sourceFiles) && example.sourceFiles.length > 0,
+      `${name}: source file evidence is missing`);
+  }
+}
+
 const consumer = join(work, 'consumer 🎸 with spaces');
 mkdirSync(consumer);
 json(join(consumer, 'package.json'), {
@@ -248,7 +279,7 @@ json(join(consumer, 'package.json'), {
   private: true,
   scripts: {assurance: 'seshat'},
 });
-await run('registry-install', 'npm', [
+await runNpm('registry-install', [
   'install', '--save-dev', '--save-exact', `${entryArchiveManifest.name}@${version}`,
   ...commonNpmOptions, '--registry', registryUrl,
 ], consumer);
@@ -258,12 +289,14 @@ const nativeInstalled = join(consumer, 'node_modules', targetForHost);
 const launcher = join(rootInstalled, 'bin/seshat.mjs');
 const npmBin = join(consumer, 'node_modules/.bin');
 const npmBinEntries = readdirSync(npmBin).filter(name => name.startsWith('seshat'));
+const commandShim = process.platform === 'win32' ? join(npmBin, 'seshat.cmd') : null;
+const comspec = process.env.ComSpec ?? process.env.COMSPEC ?? 'cmd.exe';
 if (process.platform === 'win32') {
   assert.ok(npmBinEntries.includes('seshat.cmd'));
-  const commandShim = readFileSync(join(npmBin, 'seshat.cmd'), 'utf8')
+  const commandShimContents = readFileSync(commandShim, 'utf8')
     .replaceAll('\\', '/').toLowerCase();
-  assert.match(commandShim, /@binary-balance\/seshat\/bin\/seshat\.mjs/);
-  assert.doesNotMatch(commandShim, /seshat-(linux|darwin|win32)/);
+  assert.match(commandShimContents, /@binary-balance\/seshat\/bin\/seshat\.mjs/);
+  assert.doesNotMatch(commandShimContents, /seshat-(linux|darwin|win32)/);
 } else {
   assert.deepEqual(npmBinEntries, ['seshat']);
   assert.equal(realpathSync(join(npmBin, 'seshat')), realpathSync(launcher));
@@ -303,8 +336,22 @@ const nativeVersion = (await run('native-version', nativeExecutable, ['--version
 assert.equal(nativeVersion, `seshat ${version} (candidate)\n`);
 const launcherVersion = (await run('launcher-version', process.execPath, [launcher, '--version'], consumer)).stdout;
 assert.equal(launcherVersion, nativeVersion);
-await run('npm-exec', 'npm', ['exec', '--offline', ...commonNpmOptions, '--', 'seshat', '--help'], consumer);
-await run('package-script', 'npm', ['run', '--silent', 'assurance', '--', '--version'], consumer);
+await runNpm('npm-exec', ['exec', '--offline', ...commonNpmOptions, '--', 'seshat', '--help'], consumer);
+await runNpm('package-script', ['run', '--silent', 'assurance', '--', '--version'], consumer);
+
+if (process.platform === 'win32') {
+  const shimVersion = await run('windows-shim-version', comspec,
+    ['/d', '/s', '/c', 'call', commandShim, '--version'], consumer);
+  assert.equal(shimVersion.stdout, nativeVersion);
+}
+
+const publicExamplesPath = resolve(process.env.SESHAT_EXAMPLES_OUTPUT ?? join(work, 'public-consumer-examples.json'));
+const publicCli = process.platform === 'win32' ? commandShim : launcher;
+const publicExamples = await run('public-examples', process.execPath, [
+  join(repo, 'examples/verify.mjs'), '--cli', publicCli, '--output', publicExamplesPath,
+], consumer, 0, env, 600_000);
+const publicExamplesReport = read(publicExamplesPath);
+validatePublicExamples(publicExamplesReport, process.platform === 'win32' ? 'windows-npm-shim' : 'node-launcher');
 
 const invalidJson = await runLauncher('unknown-command-json', ['bogus', '--json'], consumer, 2);
 const invalidReport = report(invalidJson);
@@ -319,6 +366,17 @@ const argumentReport = report(argumentJson);
 assert.equal(argumentReport.command, 'check');
 assert.match(argumentReport.result.error, /missing|configuration|no such file/i);
 assert.equal(existsSync(shellMarker), false, 'launcher interpreted a user argument as shell input');
+
+if (process.platform === 'win32') {
+  const shimArgument = await run('windows-shim-argument-forwarding', comspec, [
+    '/d', '/s', '/c', 'call', commandShim, 'check', '--config', trickyConfig,
+    '--scratch', work, '--json', '--no-progress',
+  ], consumer, 2);
+  const shimReport = report(shimArgument);
+  assert.equal(shimReport.command, 'check');
+  assert.match(shimReport.result.error, /missing|configuration|no such file/i);
+  assert.equal(existsSync(shellMarker), false, 'Windows shim interpreted a user argument as shell input');
+}
 
 const unsupported = await run('unsupported-platform-json', process.execPath, ['-e', [
   `Object.defineProperty(process, 'platform', {value: 'freebsd'});`,
@@ -345,11 +403,15 @@ try {
   json(nativeManifestPath, originalNativeManifest);
 }
 
-// The native CLI owns cancellation; this child proves the launcher forwards the
-// signal and preserves its report, exit status and scratch cleanup.
+// The native CLI owns cancellation. Unix uses the launcher signal path; Windows
+// drives the generated npm shim through the existing console helper so the
+// proof exercises the real console event route.
 const signalProject = join(work, 'signal project 🎸');
 const signalScratch = join(work, 'signal scratch');
 const signalReady = join(work, 'signal-ready.json');
+const consoleReady = join(work, 'console-ready');
+const consoleStdout = join(work, 'console.stdout');
+const consoleStderr = join(work, 'console.stderr');
 mkdirSync(signalProject);
 mkdirSync(signalScratch);
 writeFileSync(join(signalProject, 'package.json'), '{"type":"module"}\n');
@@ -357,7 +419,7 @@ writeFileSync(join(signalProject, 'subject.ts'), 'export const value = (input: n
 writeFileSync(join(signalProject, 'hang.mjs'), [
   "import {test} from 'node:test';",
   "import {writeFileSync} from 'node:fs';",
-  `test('launcher cancellation', async () => { writeFileSync(${JSON.stringify(signalReady)}, JSON.stringify({cwd: process.cwd(), pid: process.pid})); await new Promise(() => {}); });`,
+  `test('launcher cancellation', async () => { if (process.env.SESHAT_CONSOLE_READY) writeFileSync(process.env.SESHAT_CONSOLE_READY, 'ready\\n'); writeFileSync(${JSON.stringify(signalReady)}, JSON.stringify({cwd: process.cwd(), pid: process.pid})); await new Promise(() => {}); });`,
 ].join('\n'));
 const signalConfig = {
   source: {include: ['subject.ts']},
@@ -376,8 +438,17 @@ const signalConfig = {
 };
 const signalConfigPath = join(signalProject, 'seshat.json');
 json(signalConfigPath, signalConfig);
-const signalChild = spawn(process.execPath, [launcher, 'crap', '--config', signalConfigPath,
-  '--scratch', signalScratch, '--json', '--no-progress'], {
+const signalArguments = ['crap', '--config', signalConfigPath, '--scratch', signalScratch, '--json', '--no-progress'];
+const consoleHelper = process.env.SESHAT_CONSOLE_HELPER_BINARY;
+if (process.platform === 'win32') {
+  assert.ok(consoleHelper && existsSync(consoleHelper),
+    'SESHAT_CONSOLE_HELPER_BINARY must point to the built Windows console helper');
+}
+const signalProgram = process.platform === 'win32' ? consoleHelper : process.execPath;
+const signalProgramArgs = process.platform === 'win32'
+  ? [consoleReady, consoleStdout, consoleStderr, comspec, '/d', '/s', '/c', 'call', commandShim, ...signalArguments]
+  : [launcher, ...signalArguments];
+const signalChild = spawn(signalProgram, signalProgramArgs, {
   cwd: signalProject,
   env,
   stdio: ['ignore', 'pipe', 'pipe'],
@@ -403,7 +474,7 @@ try {
   await waitFor(() => existsSync(signalReady), 'launcher native test readiness');
   const ready = read(signalReady);
   assert.ok(ready.cwd.includes('capture-'));
-  signalChild.kill('SIGTERM');
+  if (process.platform !== 'win32') signalChild.kill('SIGTERM');
   signalExit = await signalClosed;
   assert.equal(signalExit.signal, null);
   assert.equal(signalExit.code, process.platform === 'win32' ? 2 : 143);
@@ -416,7 +487,13 @@ try {
   assert.equal(signalReport.cancelled, true);
   assert.ok(Array.isArray(signalReport.result.setups));
   await waitFor(() => readdirSync(signalScratch).length === 0, 'launcher scratch cleanup');
-  evidence['signal-lifecycle'] = {status: signalExit.code, ms: 0, stdout: signalStdout, stderr: signalStderr};
+  evidence['signal-lifecycle'] = {
+    status: signalExit.code,
+    ms: 0,
+    route: process.platform === 'win32' ? 'windows-console-helper/cmd-shim' : 'node-launcher/sigterm',
+    stdout: signalStdout,
+    stderr: signalStderr,
+  };
 } finally {
   if (!signalExit && signalChild.exitCode === null) signalChild.kill('SIGKILL');
   if (!signalExit) signalExit = await signalClosed;
@@ -425,7 +502,7 @@ try {
 // Keep the lockfile from the registry install, remove installed files, and make
 // npm ci prove that its cache is sufficient while the registry is unavailable.
 rmSync(join(consumer, 'node_modules'), {recursive: true, force: true});
-const offline = await run('offline-ci', 'npm', [
+const offline = await runNpm('offline-ci', [
   'ci', '--offline', ...commonNpmOptions, '--registry', 'http://127.0.0.1:9',
 ], consumer);
 assert.match(offline.stdout + offline.stderr, /added|up to date|audited/i);
@@ -438,8 +515,20 @@ const result = {
   kind: 'seshat-release-npm-install',
   version,
   host: {platform: process.platform, architecture: process.arch},
-  entryArchive: {path: entryArchive, sha256: sha256(entryArchiveBytes), bytes: entryArchiveBytes.length},
-  nativeArchive: {path: nativeArchive, sha256: sha256(nativeArchiveBytes), bytes: nativeArchiveBytes.length},
+  entryArchive: {
+    path: entryArchive,
+    name: entryArchiveManifest.name,
+    version: entryArchiveManifest.version,
+    sha256: sha256(entryArchiveBytes),
+    bytes: entryArchiveBytes.length,
+  },
+  nativeArchive: {
+    path: nativeArchive,
+    name: nativeArchiveManifest.name,
+    version: nativeArchiveManifest.version,
+    sha256: sha256(nativeArchiveBytes),
+    bytes: nativeArchiveBytes.length,
+  },
   nativeNotices: {
     bytes: Buffer.byteLength(nativeNotices),
     hasCopyright: /\nCOPYRIGHT\n/.test(nativeNotices),
@@ -448,6 +537,15 @@ const result = {
   installedEntry: rootInstalled,
   installedNative: nativeInstalled,
   build,
+  publicExamples: {
+    path: publicExamplesPath,
+    cli: publicExamplesReport.cli,
+    examples: Object.fromEntries(Object.entries(publicExamplesReport.examples).map(([name, value]) => [name, {
+      sourceFiles: value.sourceFiles,
+      workers: value.workers,
+    }])),
+    validation: publicExamplesReport.validation,
+  },
   cachePrerequisite: 'registry-install populated the disposable npm cache before offline ci',
   checks: evidence,
 };

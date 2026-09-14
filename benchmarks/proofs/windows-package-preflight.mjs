@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
-import {existsSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
+import {existsSync, readdirSync, writeFileSync} from 'node:fs';
 import {arch, release, version as osVersion} from 'node:os';
 import {basename, join} from 'node:path';
 
@@ -10,6 +10,7 @@ const expected = {
   rustHost:'x86_64-pc-windows-msvc',
   kernelBuild:20348,
 };
+
 
 function probe(command, args = [], options = {}) {
   const result = spawnSync(command, args, {encoding:'utf8', maxBuffer:256 * 1024, ...options});
@@ -76,8 +77,50 @@ function sdkInfo() {
   };
 }
 
+function visualStudioInfo() {
+  const installRoot = process.env.VSINSTALLDIR?.replace(/[\\/]+$/, '') ?? null;
+  const vswhere = join(process.env['ProgramFiles(x86)'] ?? process.env.ProgramFiles ?? 'C:\\Program Files (x86)',
+    'Microsoft Visual Studio', 'Installer', 'vswhere.exe');
+  let instance = null;
+  if (existsSync(vswhere)) {
+    const result = spawnSync(vswhere, [
+      '-latest', '-products', '*', '-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64', '-format', 'json',
+    ], {encoding:'utf8', maxBuffer:256 * 1024});
+    if (!result.error && result.status === 0) {
+      try { instance = JSON.parse(result.stdout)?.[0] ?? null; } catch { instance = null; }
+    }
+  }
+  const displayName = instance?.displayName ?? '';
+  const catalog = instance?.catalog ?? {};
+  const edition = instance?.productId?.match(/Product\.([^./]+)$/i)?.[1] ??
+    displayName.match(/Visual Studio\s+(.+?)\s+20\d{2}/i)?.[1] ??
+    installRoot?.match(/\\(Enterprise|Professional|Community|BuildTools)\\?$/i)?.[1] ?? null;
+  const productVersion = catalog.productDisplayVersion ?? instance?.catalog_productDisplayVersion ?? instance?.installationVersion ??
+    process.env.VisualStudioVersion ?? null;
+  const toolset = process.env.VCToolsVersion ??
+    process.env.VCToolsInstallDir?.match(/[\\/]MSVC[\\/]([^\\/]+)[\\/]?$/i)?.[1] ?? null;
+  return {
+    available: Boolean(edition && productVersion && toolset),
+    edition,
+    productVersion,
+    installationVersion: instance?.installationVersion ?? null,
+    installationPath: instance?.installationPath ?? installRoot,
+    toolsetPath:process.env.VCToolsInstallDir?.replace(/[\\/]+$/, '') ?? null,
+    redistPath:process.env.VCToolsRedistDir?.replace(/[\\/]+$/, '') ?? null,
+    toolset,
+    productLine:catalog.productLine ?? instance?.catalog_productLine ?? null,
+    productLineVersion:catalog.productLineVersion ?? instance?.catalog_productLineVersion ?? null,
+    vswhere: existsSync(vswhere) ? vswhere : null,
+  };
+}
+
+
+
+
+
 function collect() {
   const sdk = sdkInfo();
+  const visualStudio = visualStudioInfo();
   return {
     schemaVersion:1,
     kind:'seshat-windows-package-preflight',
@@ -90,7 +133,8 @@ function collect() {
       architecture:{node:process.arch, os:arch(), processor:process.env.PROCESSOR_ARCHITECTURE ?? null},
       node:{version:process.version},
       npm:npmInfo(),
-      toolchain:{rust:rustInfo(), msvc:tool('cl.exe', msvcIdentity), linker:tool('link.exe', linkerIdentity), sdk},
+      toolchain:{rust:rustInfo(), msvc:tool('cl.exe', msvcIdentity), linker:tool('link.exe', linkerIdentity),
+        visualStudio, sdk},
       shell:{comspec:process.env.ComSpec ?? process.env.COMSPEC ?? null,
         systemRoot:process.env.SystemRoot ?? process.env.SYSTEMROOT ?? null},
       runnerImage:{label:'windows-2022', os:process.env.RUNNER_OS ?? null, architecture:process.env.RUNNER_ARCH ?? null,
@@ -124,6 +168,10 @@ function validate(report) {
   if (rust.host !== expected.rustHost) failures.push(`Rust host: expected ${expected.rustHost}`);
   if (!environment.toolchain?.msvc?.available) failures.push('MSVC compiler is unavailable');
   if (!environment.toolchain?.linker?.available) failures.push('MSVC linker is unavailable');
+  const visualStudio = environment.toolchain?.visualStudio;
+  if (!visualStudio?.available || !visualStudio.edition || !visualStudio.productVersion || !visualStudio.toolset) {
+    failures.push('Visual Studio edition/productVersion/toolset provenance is unavailable');
+  }
   if (!environment.toolchain?.sdk?.version) failures.push('Windows SDK version is unavailable');
   if (!environment.shell?.systemRoot || !environment.shell?.comspec || !existsSync(environment.shell.comspec)) {
     failures.push('SystemRoot and ComSpec are required');
@@ -152,7 +200,10 @@ function selfCheck() {
     environment:{platform:'win32', os:{...windows, kernelBuild:kernelBuild(windows.release)}, architecture:{node:'x64', os:'x64'},
       node:{version:expected.node}, npm:{available:true},
       toolchain:{rust:{rustc:{available:true, version:`rustc ${expected.rust}`}, cargo:{available:true, version:`cargo ${expected.rust}`}, host:expected.rustHost},
-        msvc:{available:true}, linker:{available:true}, sdk:{version:'10.0.26100.0'}},
+        msvc:{available:true}, linker:{available:true},
+        visualStudio:{available:true, edition:'Enterprise', productVersion:'17.14.20', toolset:'14.44.35207'},
+        sdk:{version:'10.0.26100.0'},
+      },
       shell:{systemRoot:'C:\\Windows', comspec:process.execPath},
       runnerImage:{label:'windows-2022', os:'Windows'},
     },
@@ -163,6 +214,7 @@ function selfCheck() {
     [value => { value.environment.os.kernelBuild = 19041; }, 'kernel build'],
     [value => { value.environment.toolchain.rust.host = 'x86_64-unknown-linux-gnu'; }, 'Rust host'],
     [value => { value.environment.toolchain.sdk.version = null; }, 'SDK'],
+    [value => { value.environment.toolchain.visualStudio.toolset = null; }, 'Visual Studio edition/productVersion/toolset'],
   ]) {
     const changed = structuredClone(report);
     change(changed);

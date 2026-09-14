@@ -113,11 +113,17 @@ if (host.error) {
     const forward = signal => {
       if (child.exitCode === null) child.kill(signal);
     };
+    // A CTRL_BREAK_EVENT is broadcast to the console process group. Keep the
+    // launcher alive on Windows so the native child can handle that event and
+    // return its cancellation report through inherited stdio.
+    const preserveConsole = () => {};
     process.on('SIGINT', forward);
     process.on('SIGTERM', forward);
+    if (process.platform === 'win32') process.on('SIGBREAK', preserveConsole);
     const cleanup = () => {
       process.removeListener('SIGINT', forward);
       process.removeListener('SIGTERM', forward);
+      if (process.platform === 'win32') process.removeListener('SIGBREAK', preserveConsole);
     };
     child.once('error', error => {
       spawnFailed = true;
