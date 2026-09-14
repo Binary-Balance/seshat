@@ -39,67 +39,119 @@ archive, as described in the [packaging guide](packaging/README.md).
 
 ## Install an unpublished local candidate
 
-Install the entry archive and the native archive for the host together. This
-Linux x64 example uses local files, because the candidate is not in the npm
-registry:
+The candidate is not in npm yet. Run this recipe from the consuming project's
+root. For an npm workspace, use the workspace root that owns `package.json`
+and `package-lock.json`, not a child workspace. Keep all six candidate archives
+under `vendor/seshat`; npm records those project-relative `file:` paths in the
+lockfile.
+
+On POSIX, install the consuming project's dependencies, stage the six archives,
+then add the entry and native packages in two commands:
 
 ```sh
 npm ci
-ENTRY_TGZ=/absolute/path/to/binary-balance-seshat-0.1.0-rc.1.tgz
-NATIVE_TGZ=/absolute/path/to/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz
+mkdir -p vendor/seshat
+cp /path/to/seshat-entry.tgz vendor/seshat/entry.tgz
+cp /path/to/seshat-linux-x64-release.tgz vendor/seshat/linux-x64.tgz
+cp /path/to/seshat-linux-arm64-release.tgz vendor/seshat/linux-arm64.tgz
+cp /path/to/seshat-darwin-x64-release.tgz vendor/seshat/darwin-x64.tgz
+cp /path/to/seshat-darwin-arm64-release.tgz vendor/seshat/darwin-arm64.tgz
+cp /path/to/seshat-win32-x64-release.tgz vendor/seshat/win32-x64.tgz
 
-npm install --save-dev --save-exact --ignore-scripts "$ENTRY_TGZ" "$NATIVE_TGZ"
+npm install --save-dev --save-exact --ignore-scripts \
+  vendor/seshat/entry.tgz
+npm install --save-optional --save-exact --ignore-scripts \
+  vendor/seshat/linux-x64.tgz \
+  vendor/seshat/linux-arm64.tgz \
+  vendor/seshat/darwin-x64.tgz \
+  vendor/seshat/darwin-arm64.tgz \
+  vendor/seshat/win32-x64.tgz
+
+npm ci --ignore-scripts --offline
 ./node_modules/.bin/seshat --version
 ```
 
-Use the matching `linux-arm64`, `darwin-x64`, `darwin-arm64` or `win32-x64`
-archive on another supported host. `./node_modules/.bin/seshat` is the Node
-launcher. It selects the exact native optional package installed for the host.
-The native package itself has no npm command. To invoke that executable
-directly on Linux, use:
+The entry archive becomes a root `devDependency`. The five native archives
+become root `optionalDependencies`. npm rejects `--save-dev` and
+`--save-optional` together, so the two install commands are required. npm
+installs only the optional package matching the current OS and CPU. The other
+four remain in the lockfile for matching hosts and for a complete
+cross-platform lock.
+
+Use the matching host archive for `linux-arm64`, `darwin-x64`, `darwin-arm64`
+or `win32-x64` when invoking the native executable directly. On Linux x64:
 
 ```sh
 ./node_modules/@binary-balance/seshat-linux-x64/bin/seshat --version
 ```
 
-PowerShell uses the same local archives and the npm-generated command shim:
+The final offline `npm ci` needs npm cache metadata and package bytes for the
+consuming project's registry dependencies. Run the first `npm ci` and both
+local installs with a network connection or a populated cache, then keep the
+six files under `vendor/seshat` beside `package.json` and `package-lock.json`
+for later reinstalls.
+
+PowerShell uses the same recipe from the project or workspace root:
 
 ```powershell
 npm ci
-$entryTgz = 'C:\path\to\binary-balance-seshat-0.1.0-rc.1.tgz'
-$nativeTgz = 'C:\path\to\binary-balance-seshat-win32-x64-0.1.0-rc.1.tgz'
-npm install --save-dev --save-exact --ignore-scripts $entryTgz $nativeTgz
+$artifactDir = 'C:\path\to\candidate-archives'
+New-Item -ItemType Directory -Force vendor\seshat | Out-Null
+Copy-Item "$artifactDir\seshat-entry.tgz" vendor\seshat\entry.tgz
+Copy-Item "$artifactDir\seshat-linux-x64-release.tgz" vendor\seshat\linux-x64.tgz
+Copy-Item "$artifactDir\seshat-linux-arm64-release.tgz" vendor\seshat\linux-arm64.tgz
+Copy-Item "$artifactDir\seshat-darwin-x64-release.tgz" vendor\seshat\darwin-x64.tgz
+Copy-Item "$artifactDir\seshat-darwin-arm64-release.tgz" vendor\seshat\darwin-arm64.tgz
+Copy-Item "$artifactDir\seshat-win32-x64-release.tgz" vendor\seshat\win32-x64.tgz
+
+npm install --save-dev --save-exact --ignore-scripts .\vendor\seshat\entry.tgz
+npm install --save-optional --save-exact --ignore-scripts `
+  .\vendor\seshat\linux-x64.tgz `
+  .\vendor\seshat\linux-arm64.tgz `
+  .\vendor\seshat\darwin-x64.tgz `
+  .\vendor\seshat\darwin-arm64.tgz `
+  .\vendor\seshat\win32-x64.tgz
+
+npm ci --ignore-scripts --offline
 & .\node_modules\.bin\seshat.cmd --version
 ```
 
-The Windows command shim is part of the remaining hosted release integration
-proof. The command above is the intended consumer route.
+The npm-generated `seshat.cmd` shim selects the matching Windows optional
+package. Hosted Windows consumer verification of this local recipe remains
+part of release integration.
 
-The native archive is also the standalone route. Extract it into a disposable
-directory and run its binary directly:
+Standalone execution remains a host-archive-only route. It does not use npm or
+the cross-platform lockfile. On POSIX, extract the matching native archive into
+a disposable directory and run its binary directly. Replace `linux-x64` below
+with the matching host target when needed:
 
 ```sh
+NATIVE_TGZ=vendor/seshat/linux-x64.tgz
 STANDALONE_DIR="$PWD/seshat-standalone"
 mkdir -p "$STANDALONE_DIR"
 tar -xzf "$NATIVE_TGZ" --strip-components=1 -C "$STANDALONE_DIR"
 "$STANDALONE_DIR/bin/seshat" --version
 ```
 
-Standalone execution does not install npm packages or need Rust. The commands
-in your `seshat.json` still run with the project's Node, test runner and
-coverage dependencies.
+On Windows, set `$nativeTgz` to `vendor\seshat\win32-x64.tgz`, extract it with
+the host `tar.exe`, and invoke `package\bin\seshat.exe` from the extracted
+directory. Standalone execution does not need Rust. The commands in your
+`seshat.json` still run with the project's Node, test runner and coverage
+dependencies.
 
-Maintainers can check npm's platform selection with the prepared local
-archives:
+Maintainers can check the separate npm packaging proof with an entry archive
+and the native archive for the current host:
 
 ```sh
-node benchmarks/proofs/npm-package.mjs "$ENTRY_TGZ" "$NATIVE_TGZ"
+node benchmarks/proofs/npm-package.mjs \
+  /absolute/path/to/seshat-entry.tgz \
+  /absolute/path/to/seshat-linux-x64-release.tgz
 ```
 
-That proof uses a disposable loopback registry because the exact optional
-packages are unpublished. Its offline `npm ci` step reuses metadata and package
-bytes cached by the earlier registry install. It proves populated-cache replay,
-not fresh-cache offline installation or a public registry release.
+That separate proof uses a disposable loopback registry because the exact
+optional packages are unpublished. Its offline `npm ci` step reuses metadata
+and package bytes cached by the earlier registry install. It proves populated-
+cache replay, not the six-archive consumer recipe or a public registry release.
 
 ## Run an assessment
 

@@ -15,52 +15,89 @@ are in the [report format](../docs/report-format.md).
 
 ## Install and run a local candidate
 
-The rc.1 candidate is unpublished. Install the entry archive and the matching
-platform archive from local paths. The entry package is
-`@binary-balance/seshat@0.1.0-rc.1`; its five optional native package names
-use the same version, and the selected host must have its matching archive.
-The npm frontend selects that native package. A standalone invocation runs a
-native executable directly. Both routes still need the example project's Node,
-test runner, TypeScript and coverage dependencies.
+The rc.1 candidate is unpublished. Follow the same six-archive recipe as the
+[root README](../README.md#install-an-unpublished-local-candidate), from the
+example project's root. For `workspaces`, that is `examples/workspaces`, not
+`packages/rules`. The root `package.json` and `package-lock.json` must receive
+the candidate dependencies. Keep all six archives under the example root's
+`vendor/seshat` directory.
 
-From an example directory on Linux or macOS:
+On POSIX, from an example project root:
 
 ```sh
 npm ci
-ENTRY_TGZ=/absolute/path/to/binary-balance-seshat-0.1.0-rc.1.tgz
-NATIVE_TGZ=/absolute/path/to/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz
-npm install --save-dev --save-exact --ignore-scripts "$ENTRY_TGZ" "$NATIVE_TGZ"
+mkdir -p vendor/seshat
+cp /path/to/seshat-entry.tgz vendor/seshat/entry.tgz
+cp /path/to/seshat-linux-x64-release.tgz vendor/seshat/linux-x64.tgz
+cp /path/to/seshat-linux-arm64-release.tgz vendor/seshat/linux-arm64.tgz
+cp /path/to/seshat-darwin-x64-release.tgz vendor/seshat/darwin-x64.tgz
+cp /path/to/seshat-darwin-arm64-release.tgz vendor/seshat/darwin-arm64.tgz
+cp /path/to/seshat-win32-x64-release.tgz vendor/seshat/win32-x64.tgz
+
+npm install --save-dev --save-exact --ignore-scripts \
+  vendor/seshat/entry.tgz
+npm install --save-optional --save-exact --ignore-scripts \
+  vendor/seshat/linux-x64.tgz \
+  vendor/seshat/linux-arm64.tgz \
+  vendor/seshat/darwin-x64.tgz \
+  vendor/seshat/darwin-arm64.tgz \
+  vendor/seshat/win32-x64.tgz
+npm ci --ignore-scripts --offline
 
 ./node_modules/.bin/seshat check --config ./seshat.json \
   --json --no-progress > seshat-report.json
 ```
 
-Extract the native archive for a standalone run:
+The first archive is a root `devDependency`. The five native archives are root
+`optionalDependencies`; npm installs only the one matching the current host
+and keeps all five `file:vendor/seshat/...` entries in the lockfile. npm does
+not accept `--save-dev` and `--save-optional` in one command, so keep the two
+install commands separate. The final offline `npm ci` needs the consuming
+project's registry dependencies and metadata in the npm cache.
 
-```sh
-mkdir -p .seshat-native
-tar -xzf "$NATIVE_TGZ" -C .seshat-native
-SESHAT=./.seshat-native/package/bin/seshat
-"$SESHAT" check --config ./seshat.json --json --no-progress \
-  > seshat-report.json
-```
-
-The same candidate install on Windows uses the generated npm shim. Hosted
-Windows consumer verification of that shim remains pending:
+PowerShell uses the same commands from the example or workspace root:
 
 ```powershell
 npm ci
-$entryTgz = 'C:\path\to\binary-balance-seshat-0.1.0-rc.1.tgz'
-$nativeTgz = 'C:\path\to\binary-balance-seshat-win32-x64-0.1.0-rc.1.tgz'
-npm install --save-dev --save-exact --ignore-scripts $entryTgz $nativeTgz
+$artifactDir = 'C:\path\to\candidate-archives'
+New-Item -ItemType Directory -Force vendor\seshat | Out-Null
+Copy-Item "$artifactDir\seshat-entry.tgz" vendor\seshat\entry.tgz
+Copy-Item "$artifactDir\seshat-linux-x64-release.tgz" vendor\seshat\linux-x64.tgz
+Copy-Item "$artifactDir\seshat-linux-arm64-release.tgz" vendor\seshat\linux-arm64.tgz
+Copy-Item "$artifactDir\seshat-darwin-x64-release.tgz" vendor\seshat\darwin-x64.tgz
+Copy-Item "$artifactDir\seshat-darwin-arm64-release.tgz" vendor\seshat\darwin-arm64.tgz
+Copy-Item "$artifactDir\seshat-win32-x64-release.tgz" vendor\seshat\win32-x64.tgz
+
+npm install --save-dev --save-exact --ignore-scripts .\vendor\seshat\entry.tgz
+npm install --save-optional --save-exact --ignore-scripts `
+  .\vendor\seshat\linux-x64.tgz `
+  .\vendor\seshat\linux-arm64.tgz `
+  .\vendor\seshat\darwin-x64.tgz `
+  .\vendor\seshat\darwin-arm64.tgz `
+  .\vendor\seshat\win32-x64.tgz
+npm ci --ignore-scripts --offline
+
 & .\node_modules\.bin\seshat.cmd check --config .\seshat.json `
   --json --no-progress | Tee-Object -FilePath .\seshat-report.json
 ```
 
-For a standalone Windows run, extract the native archive and invoke
-`package\bin\seshat.exe` directly. A registry install command is not available
-yet; these paths refer to unpublished local candidate archives. The release
-artifact, hash and platform support summary remain pending.
+For a standalone run, use only the matching native archive. Replace `linux-x64`
+below with the matching host target when needed. On POSIX:
+
+```sh
+NATIVE_TGZ=vendor/seshat/linux-x64.tgz
+mkdir -p seshat-standalone
+tar -xzf "$NATIVE_TGZ" --strip-components=1 -C seshat-standalone
+SESHAT=./seshat-standalone/bin/seshat
+"$SESHAT" check --config ./seshat.json --json --no-progress \
+  > seshat-report.json
+```
+
+For a standalone Windows run, extract `vendor\seshat\win32-x64.tgz` with
+`tar.exe` and invoke `package\bin\seshat.exe` directly. Hosted Windows
+consumer verification of the local npm recipe remains pending. Both routes
+still need the example project's Node, test runner, TypeScript and coverage
+dependencies.
 
 Run the focused verifier from the repository root with either an installed
 launcher or a native executable:
