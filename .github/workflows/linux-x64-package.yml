@@ -178,6 +178,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install --no-install-recommends --yes bubblewrap
           bwrap --version
+      - name: Warm locked public example npm cache
+        run: |
+          set -euo pipefail
+          cache=work/x64/examples-npm-cache
+          mkdir -p "$cache"
+          for example in node jest-expo vitest workspaces; do
+            npm ci --prefix "examples/$example" --ignore-scripts --no-audit --no-fund --cache "$cache"
+          done
       - name: Verify Debian 11 minimum userspace
         env:
           SESHAT_DEBIAN_OUTPUT: work/x64/debian11.json
@@ -185,7 +193,7 @@ jobs:
           set -euo pipefail
           node benchmarks/proofs/linux-debian.mjs \
             work/x64/debian11-inputs work/x64/package-result.json work/x64/seshat-linux-x64-standalone.tar.gz \
-            work/x64/seshat-entry.tgz work/x64/seshat-linux-x64-release.tgz \
+            work/x64/seshat-entry.tgz work/x64/seshat-linux-x64-release.tgz examples work/x64/examples-npm-cache \
             2>&1 | tee work/x64/debian11.log
       - name: Write portable summary
         if: always()
