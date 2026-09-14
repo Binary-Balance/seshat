@@ -8,11 +8,13 @@ import {fileURLToPath} from 'node:url';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 assert.equal(process.platform,'linux'); assert.equal(process.arch,'x64');
-assert.equal(process.argv.length,5,'usage: node benchmarks/proofs/linux-debian.mjs <archive directory> <pack result.json> <standalone archive>');
+assert.equal(process.argv.length,7,'usage: node benchmarks/proofs/linux-debian.mjs <archive directory> <pack result.json> <standalone archive> <entry tarball> <native tarball>');
 const archives = resolve(process.argv[2]);
 const packed = JSON.parse(readFileSync(resolve(process.argv[3]),'utf8'));
 const standaloneArchive = resolve(process.argv[4]);
-assert.ok(statSync(standaloneArchive).isFile());
+const entryArchive = resolve(process.argv[5]);
+const nativeArchive = resolve(process.argv[6]);
+for (const archive of [standaloneArchive, entryArchive, nativeArchive]) assert.ok(statSync(archive).isFile());
 const inputs = [
   {file:'rootfs.tar.gz',sha256:'94b0efe6d4f788b1b894c04a6c6885d53a41bcd0b85757fffacd2bc4de142847',
     url:'https://raw.githubusercontent.com/debuerreotype/docker-debian-artifacts/bae6d64d90b4068b09ff9d8b564c2773ef5d8d83/bullseye/oci/blobs/rootfs.tar.gz'},
@@ -45,6 +47,7 @@ import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {release} from 'node:os';
+import {join} from 'node:path';
 const read = path => JSON.parse(readFileSync(path,'utf8'));
 const checks = {};
 const kernel = release();
@@ -68,14 +71,19 @@ const npm=run('npm-version','npm',['--version']).trim();
 const libraries=run('node-libraries','ldd',[process.execPath]);
 assert.doesNotMatch(libraries,/not found/);
 run('debian-packages','dpkg-query',['-W','libc6','libgcc-s1','libstdc++6']);
-const output=run('installed-package',process.execPath,['/seshat/benchmarks/proofs/npm-package.mjs','/opt/package.tgz']);
+const output=run('installed-package',process.execPath,
+  ['/seshat/benchmarks/proofs/npm-package.mjs','/opt/entry.tgz','/opt/native.tgz']);
 const install=read(output.match(/Results: (.+)/)[1]);
-const cliSummary=install.checks['installed-cli-regression'].stdout.match(/CLI passed: (\d+) scenarios plus legacy parity/);
-assert.ok(cliSummary && Number(cliSummary[1]) > 0, install.checks['installed-cli-regression'].stdout);
-assert.equal(install.checks['installed-cli-regression'].status,0);
-assert.doesNotMatch(run('installed-libraries','ldd',[install.installedBinary]),/not found/);
+assert.equal(Object.keys(install.checks).length,13);
+const installedBinary=join(install.installedNative,'bin','seshat');
+assert.doesNotMatch(run('installed-libraries','ldd',[installedBinary]),/not found/);
+const cliOutput=run('installed-cli',process.execPath,['/seshat/benchmarks/proofs/cli.mjs'],
+  {...process.env,SESHAT_CLI_BINARY:installedBinary});
+const cliPath=cliOutput.match(/Results: (.+)/)[1];
+const cliChecks=read(cliPath);
+assert.equal(Object.keys(cliChecks).length,43);
 const parallel=run('installed-parallel',process.execPath,['/seshat/benchmarks/proofs/parallel.mjs'],
-  {...process.env,SESHAT_PARALLEL_CLI:'1',SESHAT_CLI_BINARY:install.installedBinary});
+  {...process.env,SESHAT_PARALLEL_CLI:'1',SESHAT_CLI_BINARY:installedBinary});
 const parallelPath=parallel.match(/Parallel evidence: (.+)/)[1];
 assert.equal(Object.keys(read(parallelPath)).length,11);
 const standaloneOutput=run('installed-standalone',process.execPath,
@@ -97,7 +105,7 @@ const result={os,kernel,kernelFloor:'6.8',architecture:process.arch,glibc:'2.31'
   standaloneReport:standalonePath,standaloneArchiveSha256:'${standaloneSha256}',
   standaloneCliScenarios:standalone.cliScenarios,
   checks,
-  cliChecks:read(install.checks['installed-cli-regression'].stdout.match(/Results: (.+)/)[1]),
+  cliChecks,
   parallelChecks:read(parallelPath),standaloneChecks:standalone.checks,
   standaloneParallelChecks:standalone.parallelChecks};
 writeFileSync('/seshat/work/result.json',JSON.stringify(result,null,2)+'\n');
@@ -105,7 +113,8 @@ writeFileSync('/seshat/work/result.json',JSON.stringify(result,null,2)+'\n');
 // Keep the consumer filesystem read-only except disposable inputs, scratch and reports.
 run('debian-consumer','bwrap',['--unshare-all','--uid','0','--gid','0','--die-with-parent',
   '--ro-bind',rootfs,'/','--proc','/proc','--dev','/dev','--tmpfs','/tmp','--tmpfs','/root',
-  '--tmpfs','/opt','--ro-bind',node,'/opt/node','--ro-bind',packed.tarball,'/opt/package.tgz',
+  '--tmpfs','/opt','--ro-bind',node,'/opt/node',
+  '--ro-bind',entryArchive,'/opt/entry.tgz','--ro-bind',nativeArchive,'/opt/native.tgz',
   '--ro-bind',standaloneArchive,'/opt/standalone.tar.gz',
   '--tmpfs','/seshat','--ro-bind',join(repo,'benchmarks/proofs'),'/seshat/benchmarks/proofs',
   '--ro-bind',join(repo,'benchmarks/node_modules'),'/seshat/benchmarks/node_modules',

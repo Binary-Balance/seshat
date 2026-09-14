@@ -182,6 +182,7 @@ jobs:
           set -euo pipefail
           node benchmarks/proofs/linux-debian.mjs \
             work/x64/debian11-inputs work/x64/package-result.json work/x64/seshat-linux-x64-standalone.tar.gz \
+            work/x64/seshat-entry.tgz work/x64/seshat-linux-x64-release.tgz \
             2>&1 | tee work/x64/debian11.log
       - name: Write portable summary
         if: always()
