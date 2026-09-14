@@ -59,12 +59,13 @@ and the Windows SDK/UCRT was `10.0.26100.0`. The final executable imports
 `KERNEL32.dll`, `api-ms-win-core-synch-l1-2-0.dll`, `kernel32.dll` and
 `ntdll.dll`, with no VCRUNTIME or MSVCP dependency.
 
-Both npm and standalone routes passed with Cargo and Rustc unavailable to the
-consumer. The installed archive passed 43 CLI scenarios and the standalone
-route passed 11 parallel controls. Jest/Expo and Vitest each ran four requested
-cases to completion with originals preserved. The Windows runtime proof passed
-baseline, timeout, output overflow, leader exit, repeated leader exit and
-console cancellation, including Unicode/space paths, junction capture,
+Both routes passed with Cargo and Rustc unavailable to the consumer. The npm
+route passed 43 CLI scenarios and 11 parallel controls. The standalone route
+passed archive listing and extraction, matching archive, binary and `BUILD.json`
+hashes, version and help checks. Jest/Expo and Vitest each ran four requested
+cases against the npm installation, with originals preserved. The Windows runtime
+proof passed baseline, timeout, output overflow, leader exit, repeated leader
+exit and console cancellation, including Unicode/space paths, junction capture,
 deadlines, descendant cleanup and empty scratch directories. The summary had no
 integration gaps. Windows cancellation uses `CTRL_BREAK_EVENT` through the
 native console helper; this proof does not claim POSIX signal semantics.

@@ -688,14 +688,19 @@
           "checks": 12,
           "noCargoOrRustc": true,
           "cliScenarios": 43,
+          "parallelControls": 11,
           "sourcePreserved": true,
           "archiveBound": true
         },
         "standalone": {
           "passed": true,
           "noCargoOrRustc": true,
-          "cliScenarios": 43,
-          "parallelControls": 11,
+          "checks": {
+            "standalone-list": 0,
+            "standalone-extract": 0,
+            "standalone-version": 0,
+            "standalone-help": 0
+          },
           "archiveBound": true
         },
         "jestExpo": {
