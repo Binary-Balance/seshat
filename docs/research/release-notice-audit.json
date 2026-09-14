@@ -756,6 +756,7 @@
       },
       "functional": {
         "retainedRunId": 34856550809,
+        "retainedHeadSha": "08561afd0070260b6f295604a8ac3fdcb2629681",
         "status": "partial",
         "passedGroups": [
           "preflight",
@@ -765,12 +766,36 @@
           "npm-exec",
           "package-script"
         ],
-        "historicalFailure": "The package proof exhausted its aggregate 600-second budget: the Jest/Expo install took 406 seconds, its normal check passed after 95 seconds, and the next check was killed by the budget",
+        "historicalFailure": "Run 34856550809 at direct head 08561afd0070260b6f295604a8ac3fdcb2629681 exhausted its aggregate 600-second budget before the next check; its retained records do not contain the later phase timings",
         "followUpRun": {
           "runId": 34860332470,
           "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34860332470",
+          "headSha": "8fe0541b7b40a8ade898a486937e7a1ab799c0f8",
           "publicExamples": "passed after 507 seconds",
           "assertionFailure": "Missing-path regex omitted The system cannot find the path specified. (os error 3)"
+        },
+        "phaseDiagnosticRun": {
+          "runId": 34863375890,
+          "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34863375890",
+          "headSha": "4e8fc189b1aa3c2c81c9beea32e342f81979415b",
+          "jestExpoInstallSeconds": 406,
+          "normalCheckSeconds": 95,
+          "workers": 2,
+          "historicalFailure": "The aggregate 600-second budget was exhausted during the workers=2 phase"
+        },
+        "successfulSupplementalProof": {
+          "runId": 34866863343,
+          "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/34866863343",
+          "sourceCommit": "e0c6efc7574aef8df438ab8f2bc40443812f579b",
+          "directHead": "bb3302ad0ae904eb9e1826178eef2a0d1d8a4f7c",
+          "status": "passed",
+          "binarySha256": "2ead8510b4b395385d0d2303a8dd4a17698bd1f9b5acc61acd7146125791ff8c",
+          "releaseArchive": {
+            "file": "seshat-win32-x64-release.tgz",
+            "bytes": 924357,
+            "sha256": "6638cf9b01cf7cbdd91583e90a2af66582618f7b079c590f4c388f313a70acdb"
+          },
+          "limits": "Later supplemental proof only; its archive does not replace the canonical native-win32-x64 coordinate"
         },
         "pending": "New native package proof after the phase-watchdog fix from bb3302a was integrated at b104e01"
       }
@@ -1126,8 +1151,28 @@
     },
     {
       "runId": 34856550809,
-      "description": "Pre-correction Windows package proof with old 600-second public-example timeout",
-      "use": "Historical failure context; follow-up run reached public examples"
+      "headSha": "08561afd0070260b6f295604a8ac3fdcb2629681",
+      "description": "Canonical Windows package proof with the old aggregate timeout",
+      "use": "Canonical archive coordinate and its own timeout result; later diagnostics are separate"
+    },
+    {
+      "runId": 34860332470,
+      "headSha": "8fe0541b7b40a8ade898a486937e7a1ab799c0f8",
+      "description": "Windows package proof after the Debian consumer input fix",
+      "use": "Public examples passed after 507 seconds; the missing-path assertion then exposed a Windows wording gap"
+    },
+    {
+      "runId": 34863375890,
+      "headSha": "4e8fc189b1aa3c2c81c9beea32e342f81979415b",
+      "description": "Windows package proof after the missing-path regex fix",
+      "use": "Phase-timing diagnostic; the aggregate timeout occurred during the workers=2 phase"
+    },
+    {
+      "runId": 34866863343,
+      "headSha": "bb3302ad0ae904eb9e1826178eef2a0d1d8a4f7c",
+      "sourceCommit": "e0c6efc7574aef8df438ab8f2bc40443812f579b",
+      "description": "Supplemental successful Windows package proof after the phase-watchdog fix",
+      "use": "Later proof only; its Windows binary matches the canonical binary but its archive is not a replacement coordinate"
     }
   ]
 }

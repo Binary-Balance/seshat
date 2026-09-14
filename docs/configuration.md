@@ -82,8 +82,8 @@ workspace inputs:
 }
 ```
 
-Keep the `setups` block from the single-package example. The full tested version
-is in [examples/workspaces/seshat.json](../examples/workspaces/seshat.json).
+Use the `setups` block from the [workspace configuration](../examples/workspaces/seshat.json);
+both its test and coverage commands target `tests/check.mjs`.
 After `npm ci`, npm workspace links must resolve inside the captured inputs.
 Seshat rewrites those internal links in its execution copy.
 

@@ -140,14 +140,20 @@ and current proof state is:
 | macOS x64 | The same full check set passed in [run 34856550939](https://github.com/Binary-Balance/seshat/actions/runs/34856550939). | New native package proof on the final integrated head. |
 | macOS ARM64 | The same full check set passed in [run 34856550939](https://github.com/Binary-Balance/seshat/actions/runs/34856550939). | New native package proof on the final integrated head. |
 | Linux x64 | The retained package proof passed its package, npm, public-example, standalone, repeat-pack, Jest, Expo, Vitest, and lifecycle portions. Its Debian 11 consumer proof failed because the container lacked `examples/verify.mjs`; local commit `8fe0541` passes that proof. The newer all-six-archive local proof passed all four Linux consumer examples and 11 checks. | New native package proof on the final integrated head. |
-| Windows x64 | The retained package proof passed preflight and package install checks. Its aggregate 600-second budget covered a 406-second Jest/Expo install and a 95-second normal check that passed; the next check was killed by the budget. Follow-up run [34860332470](https://github.com/Binary-Balance/seshat/actions/runs/34860332470) reached public examples, which passed after 507 seconds, then failed only because the missing-path regex omitted `The system cannot find the path specified. (os error 3)`. | New native package proof after the phase-watchdog fix integrated at `b104e01`. |
+| Windows x64 | The retained package proof [34856550809](https://github.com/Binary-Balance/seshat/actions/runs/34856550809) at direct head `08561afd` passed preflight and package install checks, then exhausted its aggregate 600-second budget before the next check. Follow-up [34860332470](https://github.com/Binary-Balance/seshat/actions/runs/34860332470) at direct head `8fe0541b` reached the public examples, which passed after 507 seconds, then failed only because the missing-path regex omitted `The system cannot find the path specified. (os error 3)`. After that regex fix, diagnostic [34863375890](https://github.com/Binary-Balance/seshat/actions/runs/34863375890) at direct head `4e8fc189` recorded a 406-second Jest/Expo install and a 95-second normal check before its workers=2 phase exhausted the aggregate 600-second budget. The later [34866863343](https://github.com/Binary-Balance/seshat/actions/runs/34866863343) passed all configured checks at direct head `bb3302ad`, using merge source `e0c6efc`; its Windows binary hash matches the retained binary. This supplemental proof does not replace the retained archive coordinate. | New native package proof on the final integrated head. |
 
 The latest available evidence has Linux x64 and Linux ARM64, both macOS
-targets, and the separate Windows runtime-only check succeeding. The Windows
+targets, the supplemental successful Windows package proof in [run
+34866863343](https://github.com/Binary-Balance/seshat/actions/runs/34866863343),
+and the separate Windows runtime-only check succeeding. The Windows
 runtime-only check is [run 34856550801](https://github.com/Binary-Balance/seshat/actions/runs/34856550801);
-it is not package acceptance. The phase-watchdog fix from `bb3302a` is
-integrated at `b104e01`; new native CI is still pending. These results do not
-claim an all-target pass.
+it is not package acceptance. The supplemental Windows proof uses merge source
+`e0c6efc7574aef8df438ab8f2bc40443812f579b` and direct head
+`bb3302ad0ae904eb9e1826178eef2a0d1d8a4f7c`; its binary hash is the retained
+`2ead8510b4b395385d0d2303a8dd4a17698bd1f9b5acc61acd7146125791ff8c`. It does
+not replace the six canonical archive coordinates above. The phase-watchdog
+fix from `bb3302a` is integrated at `b104e01`; new native CI is still
+pending. These results do not claim an all-target pass.
 
 ## Source and dependency review
 
