@@ -54,10 +54,10 @@ into its own ignored proof directory; `--cli` accepts an already installed binar
 
 ```sh
 node benchmarks/proofs/jest-expo-check.mjs \
-  --tarball /absolute/path/to/binary-balance-seshat-0.0.0.tgz
+  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz
 # or:
 node benchmarks/proofs/jest-expo-check.mjs \
-  --cli /absolute/path/to/node_modules/.bin/seshat
+  --cli /absolute/path/to/node_modules/@binary-balance/seshat-linux-x64/bin/seshat
 ```
 
 The integration uses `{seshatReporter}` and `{seshatEnvironment}` with the

@@ -1,115 +1,104 @@
-# Seshat local npm candidate
+# Seshat release packaging
 
-This is a private, unpublished `@binary-balance/seshat` package for Linux x64
-with glibc. It is not the cross-platform release. The package is built against
-Debian 11 libraries and verified in a complete Debian 11/glibc 2.31 userspace.
-glibc 2.31 is the minimum supported userspace baseline. The native x64 package
-workflow records the Ubuntu 22.04 host kernel and fails below the candidate
-Linux 6.8 kernel family; it does not boot an older kernel or claim identical
-behaviour for every 6.8 patch. Debian 11 LTS ended on 2026-08-31; its pinned
-userspace is retained as a compatibility snapshot.
-Alpine/musl, glibc below 2.31, ARM64, macOS and Windows are not supported by this candidate. Node 24.20.0
-is the verified test runtime. See `BUILD.json` for the exact binary hash,
-native library requirements and dependency versions of a packed build.
-The native protocol and its limits are documented in
-`docs/linux-x64-package.md`; the complete userspace proof is in
-`benchmarks/proofs/README.md`, under "Debian 11 installed-package verification".
-The separate Windows x64 candidate is documented in
-`docs/windows-package.md` and `README-windows.md`.
+The release crate in `crates/seshat/Cargo.toml` owns version `0.1.0-rc.1`.
+`pack.mjs` builds one native payload for the current platform. `release.mjs`
+stages the user-facing `@binary-balance/seshat` package and the five exact
+optional native package names:
 
-## Install and use
+- `@binary-balance/seshat-linux-x64`
+- `@binary-balance/seshat-linux-arm64`
+- `@binary-balance/seshat-darwin-x64`
+- `@binary-balance/seshat-darwin-arm64`
+- `@binary-balance/seshat-win32-x64`
 
-Install the local tarball as a development dependency in a consuming project:
+The entry package is the only package with an npm `seshat` bin. Each native
+archive still contains `bin/seshat` or `bin/seshat.exe` for direct execution,
+but leaves the npm `bin` field unset so npm always links the Node launcher.
+The launcher resolves the matching optional package, checks its name and
+version, preserves the child process contract, and reports bootstrap failures
+using the CLI's schemaVersion 1 JSON envelope when `--json` is requested.
 
-```sh
-npm install --save-dev --save-exact --ignore-scripts /absolute/path/to/binary-balance-seshat-0.0.0.tgz
-./node_modules/.bin/seshat --help
-./node_modules/.bin/seshat check --config ./seshat.json --json > seshat-report.json
-```
+No package is published by these scripts. The staged release manifest records
+the package names, versions, platform metadata and archive identities for a
+later publication or hosted proof step.
 
-The installed command runs the packaged Rust executable directly. There is no
-JavaScript launcher, download, install hook or npm runtime dependency. Consumers
-need no Rust toolchain. Their configured test runners, typechecker and coverage
-tools are still required. npm's normal command linking also permits
-`npm exec --offline -- seshat --help`, or `seshat` inside a package script.
-Use the direct installed command for clean JSON and direct signal handling.
+## Build a native payload
 
-Prepare `seshat.json` using `docs/configuration.md` in the source checkout. This package does not configure tests
-or bundle the proof's coverage collector. Commands run only explicitly captured,
-trusted project inputs; this is source isolation, not a security sandbox.
-
-`check` runs CRAP and mutation testing, `crap` only CRAP, and `mutate` only mutation
-testing with original typechecks and baselines. Exit 0 means complete with no
-failed applicable threshold; 1 means unmet thresholds; 2 means invalid input or
-incomplete assurance. Handled SIGINT/SIGTERM exits 130/143. `--json` keeps one
-report on stdout; progress uses stderr and `--no-progress` disables it.
-
-## Build and verify from the source checkout
-
-With the proof dependencies and Rust toolchain already installed, prepare the
-locked Cargo dependencies and three pinned Debian archives from the repository
-root. Building also requires GCC, binutils and `dpkg-deb`. The archives are build
-inputs; nothing is installed on the host or bundled into the package.
+With locked Cargo and proof dependencies already available, the Linux x64
+packer needs the three pinned Debian 11 archives. They are build inputs and
+are not installed on the host or bundled into the package.
 
 ```sh
-cargo fetch --locked --manifest-path benchmarks/proofs/Cargo.toml
+cargo fetch --locked --manifest-path crates/seshat/Cargo.toml
 mkdir -p work/debian11-inputs
 curl --max-time 60 -fSL https://deb.debian.org/debian/pool/main/g/glibc/libc6_2.31-13+deb11u11_amd64.deb -o work/debian11-inputs/libc6.deb
 curl --max-time 60 -fSL https://deb.debian.org/debian/pool/main/g/glibc/libc6-dev_2.31-13+deb11u11_amd64.deb -o work/debian11-inputs/libc6-dev.deb
 curl --max-time 60 -fSL https://deb.debian.org/debian/pool/main/g/gcc-10/libgcc-s1_10.2.1-6_amd64.deb -o work/debian11-inputs/libgcc-s1.deb
+node packaging/pack.mjs work/debian11-inputs
 ```
 
-Build and verify offline:
+The packer builds `seshat` and retains `seshat-proofs` for the existing
+proof-only regression checks. It records the exact Cargo lock hash, native
+library requirements, dependency licences, binary hash, release version and
+source commit in `BUILD.json`. The Linux payload is checked against glibc
+2.31; the ARM64, macOS and Windows workflows use their target-specific
+preflight checks. A fresh target directory is used for every pack.
+
+The deterministic native archive is also the standalone route. Extract it
+under a disposable directory and run `bin/seshat` directly; no npm install or
+compiler is needed at runtime.
+
+## Stage the package set
+
+Pass one built binary per target to produce packed entry and native archives:
 
 ```sh
-node packaging/pack.mjs work/debian11-inputs
-SESHAT_PROOF_BINARY=/absolute/path/to/the/reported/proofBinary node benchmarks/proofs/npm-package.mjs /absolute/path/to/the/reported/package.tgz
-SESHAT_REPEAT_OUTPUT=work/repeat-pack.json node packaging/repeat-pack.mjs work/debian11-inputs
+node packaging/release.mjs \
+  --output work/release-0.1.0-rc.1 \
+  --binary linux-x64=/absolute/path/to/seshat \
+  --notices linux-x64=/absolute/path/to/THIRD_PARTY_NOTICES.txt \
+  --manifest work/release-0.1.0-rc.1/release.json
 ```
 
-The packer reports the deterministic npm `.tgz` as both `tarball` and
-`standalone`. The native workflows retain that one file under both artifact
-names. `standalone.mjs` strips npm's `package/` prefix before running the binary
-without npm, so the standalone route does not create a second archive format.
+Use `--layout-only` to inspect all six manifests without creating archives.
+The staged native `BUILD.json` is augmented with package identity and binary
+hash fields. Supply `--build-info target=/path/to/BUILD.json` when a target's
+native packer already produced full build metadata; pass its staged
+`THIRD_PARTY_NOTICES.txt` with `--notices`. A final release evidence
+run must use a clean committed source so `sourceCommit` binds every artifact
+to the reviewed revision.
 
-The native workflows also run `packaging/repeat-pack.mjs`, which invokes the
-ordinary packer twice from the same clean source and compares the native binary
-and both archive byte streams. It writes repeat evidence only after every
-comparison passes; the ordinary pack command still performs one build.
-If a comparison fails, it exits nonzero after writing
-`repeat-pack-failure/repeat-pack-failure.json` and one retained `.tgz` per
-completed pack beside the requested output. Each retained archive contains
-the native executable and `BUILD.json`; native workflows upload this directory.
-The cheap retention path can be checked with
-`node packaging/repeat-pack-failure-check.mjs`.
+## Verify a local npm installation
 
-Native proof builds use the source-controlled `[profile.release]` in
-`benchmarks/proofs/Cargo.toml`, which explicitly sets `lto = "off"` and
-`strip = "symbols"`. The packer and Windows runtime workflow use this manifest;
-the Linux packer keeps its existing sysroot and `-Wl,--build-id=none` flags.
-This is a bounded workaround for the native x64 variance described in the
-[Linux x64 protocol](../docs/linux-x64-package.md), so the repeat gate still
-requires identical binary, `BUILD.json` and archive bytes.
+The real npm proof uses a disposable loopback registry because the exact
+optional packages are unpublished. It installs the entry package and the
+matching native package with normal npm platform selection, checks that the
+entry package owns `.bin/seshat`, exercises launcher argument, output, exit,
+unsupported, missing and version-mismatch paths, forwards cancellation, and
+then runs `npm ci --offline` with the loopback registry unavailable.
 
-Packing verifies archive hashes, extracts an isolated library directory and
-rebuilds against it from the locked dependencies. It rejects GLIBC requirements
-above 2.31. An explicit Cargo target keeps these link flags away from host build
-scripts. It also builds the legacy proof executable for regression comparison;
-only `seshat` enters the package. Each build uses a fresh directory under
-`work/npm-pack-*`. Use its reported `proofBinary` path for the legacy comparison
-when running the installed regression. It prints the tarball path,
-integrity and sizes. Only the executable, package metadata, this README, build
-metadata and licence texts are included. The source packaging directory is a
-template, not directly installable. Nothing is published or globally installed.
+The first install must populate the disposable npm cache. The retained lockfile
+and that cache are prerequisites for the offline step.
 
-The private flag prevents accidental npm publication, and platform fields
-restrict normal installation. These are standard [npm package metadata](https://docs.npmjs.com/cli/v11/configuring-npm/package-json/).
-Creating a local tarball does not claim the npm scope or package name.
+```sh
+node benchmarks/proofs/npm-package.mjs \
+  work/release-0.1.0-rc.1/binary-balance-seshat-0.1.0-rc.1.tgz \
+  work/release-0.1.0-rc.1/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz
+```
 
-Seshat is MIT-licensed. `THIRD_PARTY_NOTICES.txt` preserves available licence
-texts from all locked Cargo packages, including build-only and other-platform
-dependencies. Missing Oxc texts come from the [recorded upstream revision](https://github.com/oxc-project/oxc/blob/894c8f9cd89508391b01eb26a4b5ac2b846ab39b/LICENSE).
-The separate [oxc_index revision](https://github.com/oxc-project/oxc-index-vec/blob/8e09fe324eb6df02f56e4eacdfac958930300380/LICENSE)
-has the same text; packing checks both recorded revisions.
-This collection is not a completed public-release redistribution audit; review
-toolchain/runtime notices and platform compatibility before public distribution.
+The existing standalone, lifecycle and runner proofs remain separate native
+evidence. The package checkpoint does not claim the full hosted cross-platform
+release acceptance or public redistribution audit; those follow-up slices
+must add native Windows console proof and the remaining public setup, notices
+and release evidence before publication.
+
+`repeat-pack.mjs` invokes the ordinary native packer twice from a clean source
+and compares the native binary, `BUILD.json`, npm archive and standalone bytes.
+It writes evidence only after every comparison passes. A failed comparison
+retains one archive per completed run in `repeat-pack-failure/` and records the
+failure before discarding large temporary target trees. Run
+`node packaging/repeat-pack-failure-check.mjs` for the cheap retention check.
+
+Seshat is MIT-licensed. Native package notices preserve licence text available
+from all locked Cargo packages, including the recorded Oxc revisions. Review
+toolchain, runtime and platform notices before any public distribution.

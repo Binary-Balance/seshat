@@ -79,7 +79,7 @@ const parallel=run('installed-parallel',process.execPath,['/seshat/benchmarks/pr
 const parallelPath=parallel.match(/Parallel evidence: (.+)/)[1];
 assert.equal(Object.keys(read(parallelPath)).length,11);
 const standaloneOutput=run('installed-standalone',process.execPath,
-  ['/seshat/benchmarks/proofs/standalone.mjs','/opt/standalone.tar.gz','/seshat/benchmarks/rust/target/release/seshat-proofs'],
+  ['/seshat/benchmarks/proofs/standalone.mjs','/opt/standalone.tar.gz','/seshat/crates/seshat/target/release/seshat-proofs'],
   {...process.env,SESHAT_STANDALONE_SHA256:'${standaloneSha256}',SESHAT_BINARY_SHA256:install.build.binarySha256});
 const standalonePath=standaloneOutput.match(/Results: (.+)/)[1];
 const standalone=read(standalonePath);
@@ -109,7 +109,7 @@ run('debian-consumer','bwrap',['--unshare-all','--uid','0','--gid','0','--die-wi
   '--ro-bind',standaloneArchive,'/opt/standalone.tar.gz',
   '--tmpfs','/seshat','--ro-bind',join(repo,'benchmarks/proofs'),'/seshat/benchmarks/proofs',
   '--ro-bind',join(repo,'benchmarks/node_modules'),'/seshat/benchmarks/node_modules',
-  '--ro-bind',packed.proofBinary,'/seshat/benchmarks/rust/target/release/seshat-proofs',
+  '--ro-bind',packed.proofBinary,'/seshat/crates/seshat/target/release/seshat-proofs',
   '--bind',consumer,'/seshat/work','--chdir','/seshat','--clearenv',
   '--setenv','PATH','/opt/node/bin:/usr/bin:/bin','--setenv','LANG','C.UTF-8',
   '/opt/node/bin/node','--input-type=module','-e',script]);

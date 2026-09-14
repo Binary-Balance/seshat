@@ -1,10 +1,24 @@
 [package]
-name = "seshat-proofs"
-version = "0.0.0"
+name = "seshat"
+version = "0.1.0-rc.1"
 edition = "2024"
 publish = false
 default-run = "seshat-proofs"
 license = "MIT"
+
+[[bin]]
+name = "seshat"
+path = "src/bin/seshat.rs"
+
+[[bin]]
+name = "seshat-proofs"
+path = "src/bin/seshat-proofs.rs"
+
+[[bin]]
+name = "windows-console-helper"
+path = "src/bin/windows-console-helper.rs"
+test = false
+bench = false
 
 [dependencies]
 oxc_allocator = "=0.148.0"

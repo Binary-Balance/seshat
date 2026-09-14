@@ -330,9 +330,11 @@ if (tarballArg) {
     '--userconfig', npmEnv.npm_config_userconfig,
     '--globalconfig', npmEnv.npm_config_globalconfig, tarball,
   ], consumer, 0, {...rustProof.env, ...npmEnv});
-  const executable = process.platform === 'win32' ? 'seshat.cmd' : 'seshat';
-  const native = join(consumer, 'node_modules/@binary-balance/seshat/bin/seshat');
-  cli = realpathSync(existsSync(native) ? native : join(consumer, 'node_modules/.bin', executable));
+  const executable = process.platform === 'win32' ? 'seshat.exe' : 'seshat';
+  const scope = join(consumer, 'node_modules/@binary-balance');
+  const packageName = readdirSync(scope).find(name => name.startsWith('seshat-'));
+  assert.ok(packageName, 'npm did not install a native Seshat payload');
+  cli = realpathSync(join(scope, packageName, 'bin', executable));
   cliEvidence = {source: 'tarball', tarballSha256: sha256(tarball)};
 } else {
   cli = realpathSync(resolve(cliArg));
@@ -340,7 +342,8 @@ if (tarballArg) {
   cliEvidence = {source: 'executable'};
 }
 const version = (await runCommand(cli, ['--version'], repo, 0, rustProof.env)).stdout.trim();
-assert.match(version, /^seshat 0\.0\.0 \(candidate\)$/);
+const nativeManifest = JSON.parse(readFileSync(join(dirname(cli), '..', 'package.json'), 'utf8'));
+assert.equal(version, `seshat ${nativeManifest.version} (candidate)`);
 cliEvidence = {...cliEvidence, version, binarySha256: sha256(cli)};
 
 copyBaseProject(dependencyRoot);

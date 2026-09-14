@@ -9,7 +9,7 @@ import {createHash} from 'node:crypto';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
-const binary = join(repo, 'benchmarks/rust/target/release/seshat-proofs');
+const binary = join(repo, 'crates/seshat/target/release/seshat-proofs');
 const scratch = join(repo, 'work/assurance-proofs');
 mkdirSync(scratch, {recursive: true});
 const work = mkdtempSync(join(scratch, 'run-'));

@@ -32,7 +32,7 @@ const config = {
 const configPath = join(project, 'seshat.json');
 writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
 function capture() {
-  const child = spawnSync(join(repo, 'benchmarks/rust/target/release/seshat-proofs'), ['capture', configPath, scratch], {encoding:'utf8', timeout:30000});
+  const child = spawnSync(join(repo, 'crates/seshat/target/release/seshat-proofs'), ['capture', configPath, scratch], {encoding:'utf8', timeout:30000});
   assert.ifError(child.error);
   const result = JSON.parse(child.stdout);
   assert.equal(child.status, result.complete ? 0 : 2, child.stderr + child.stdout);

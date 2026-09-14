@@ -53,7 +53,8 @@ function validateRunner(label, value, cases, packed, artifacts, fail) {
     }
   }
   if (value.cli?.source !== 'tarball') fail(`${label} did not record tarball installation`);
-  if (value.cli?.version !== 'seshat 0.0.0 (candidate)') fail(`${label} candidate version missing`);
+  const expectedVersion = packed?.version;
+  if (expectedVersion && value.cli?.version !== `seshat ${expectedVersion} (candidate)`) fail(`${label} candidate version missing`);
   if (packed && value.cli?.binarySha256 !== packed.binary) fail(`${label} binary hash differs from package metadata`);
   if (artifacts.tarball?.sha256 && value.cli?.tarballSha256 !== artifacts.tarball.sha256) {
     fail(`${label} tarball hash differs from retained archive`);
@@ -73,6 +74,26 @@ function validateRunner(label, value, cases, packed, artifacts, fail) {
     if (run.execution?.status !== (expectedComplete ? 0 : 2)) fail(`${label} exit status mismatch: ${name}`);
     if (result?.mutation?.unresolved !== (expectedComplete ? 0 : 1)) fail(`${label} unresolved result mismatch: ${name}`);
   }
+}
+
+function validateReleaseNpm(value, packed, fail) {
+  if (value?.kind !== 'seshat-release-npm-install') return false;
+  if (value.schemaVersion !== 1 || value.version !== packed?.version) fail('release npm version missing');
+  for (const name of ['registry-install', 'native-version', 'launcher-version',
+    'npm-exec', 'package-script', 'unknown-command-json', 'argument-forwarding-json',
+    'unsupported-platform-json', 'missing-payload-json', 'version-mismatch-json',
+    'signal-lifecycle', 'offline-ci', 'version-after-ci']) {
+    if (value.checks?.[name]?.status !== 0) fail(`release npm check failed: ${name}`);
+  }
+  if (packed && value.build?.binarySha256 !== packed.binary) fail('release npm binary hash differs from package metadata');
+  if (value.build?.packageVersion !== value.version) fail('release npm BUILD version differs from package');
+  if (!/^@binary-balance\/seshat-(linux|darwin|win32)-/.test(value.build?.package ?? '')) {
+    fail('release npm BUILD package identity is invalid');
+  }
+  if (value.nativeNotices?.hasCopyright !== true || value.nativeNotices?.hasUnlicense !== true) {
+    fail('release npm native notices are incomplete');
+  }
+  return true;
 }
 
 function validateLifecycle(value, fail) {
@@ -143,7 +164,7 @@ function validate({preflight, packed, npm, standalone, debian, jestExpo, vitest,
   })) fail('repeat pack reproducibility proof failed');
 
   if (!npm) fail('npm result missing');
-  else {
+  else if (!validateReleaseNpm(npm, packed, fail)) {
     if (Object.keys(npm.checks ?? {}).length !== 16) fail('npm proof did not retain 16 checks');
     if (npm.checks?.['installed-cli-regression']?.status !== 0) fail('npm installed CLI check failed');
     if (cliScenarios(npm) !== 43) fail('npm proof did not retain 43 CLI scenarios');

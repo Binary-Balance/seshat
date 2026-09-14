@@ -172,7 +172,7 @@ fn observe_node_loads(
     for (path, bytes) in [
         (
             &observer,
-            include_str!("../node-load-observer.mjs")
+            include_str!("../../../benchmarks/proofs/node-load-observer.mjs")
                 .as_bytes()
                 .to_vec(),
         ),

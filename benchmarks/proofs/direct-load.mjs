@@ -9,7 +9,7 @@ import {createHash} from 'node:crypto';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
-const binary = join(repo, 'benchmarks/rust/target/release/seshat-proofs');
+const binary = join(repo, 'crates/seshat/target/release/seshat-proofs');
 const modules = join(here, 'node_modules');
 const tsRoot = join(repo, 'benchmarks/node_modules/typescript');
 const scratch = join(repo, 'work/assurance-proofs');
