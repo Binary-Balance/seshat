@@ -1,96 +1,188 @@
-# Release notice audit
+# Release notice and runtime audit
 
-Status: bounded runtime notice integration for issue #6. This records the
-single clean Linux x64 pack produced after the package layout and the remaining
-five-target audit gap. It is not final release clearance or legal advice.
+Status: candidate audit for `0.1.0-rc.1`, with five retained target proof
+runs. This records artifact, source, runtime, dependency, and notice evidence
+for issue #6. It does not record publication or merge approval.
 
-There was no existing `docs/research` convention in this checkout. This file
-is the single research note for the audit. The pinned Rust runtime notice
-assets live under
-[`packaging/runtime-notices/`](../../packaging/runtime-notices/); they are
-validated source material now appended to the native package notice. The final
-five-target audit still needs to be repeated against each native archive.
+The release support boundary is the one in [`docs/release-scope.md`](../release-scope.md):
+Linux x64 and ARM64, macOS x64 and ARM64, and Windows x64. The current
+candidate was built from the GitHub PR 40 merge checkout
+[`b48ce50c206056b3eabb45c687b9edf1f035528f`](https://github.com/Binary-Balance/seshat/commit/b48ce50c206056b3eabb45c687b9edf1f035528f),
+which is the merge result for direct PR head
+[`08561afd0070260b6f295604a8ac3fdcb2629681`](https://github.com/Binary-Balance/seshat/commit/08561afd0070260b6f295604a8ac3fdcb2629681).
+The merge checkout is the source of the retained bytes; it is not the direct
+head. Final proof wiring is still being integrated.
 
-## Scope and evidence
+The machine-readable form of the records in this note is
+[`release-notice-audit.json`](release-notice-audit.json). It uses portable
+labels and GitHub run coordinates. The retained raw archives and proof bundles
+remain external to this repository; the hashes below make those bytes
+checkable after download.
 
-The preliminary review used [`packaging/pack.mjs`](../../packaging/pack.mjs) at
-`0edd0a3` and the earlier proof package evidence below. The bounded integration
-pack uses the moved [`crates/seshat/Cargo.toml`](../../crates/seshat/Cargo.toml),
-its [`Cargo.lock`](../../crates/seshat/Cargo.lock), and Rust 1.98.1.
+## Current artifact coordinates
 
-| target | binary evidence | package archive evidence | notice evidence |
-| --- | --- | --- | --- |
-| Linux x64, `x86_64-unknown-linux-gnu` | 2,026,496 bytes, SHA-256 `0a2af3a7f412b7f8ea6e9ef18ae2124a7fc4fbf53105a6c466ae621bd91fba23` | 906,584 bytes, SHA-256 `d7119c9ff3d57ab852a0d0e8d6e57849b872f6c6f9a5293283a0395c2aa13f69` | 485,480 bytes, SHA-256 `38b043790a3e0b57d0e6df6ae03ea97022b401a2b07c2ef03f38a050d3cdbad3` |
-| Linux ARM64, `aarch64-unknown-linux-gnu` | 1,815,248 bytes, SHA-256 `1875ee97580d955079313e3ca4181cd96acb8b32db4488b540093adc963e6da0` | 862,472 bytes, SHA-256 `c9fa2f430479d2934738d6bc3df5e486091da3de9d1861f230728659ba0a2b5d` | same 485,480-byte Unix notice as Linux x64 |
-| macOS x64, `x86_64-apple-darwin` | 1,867,488 bytes, SHA-256 `069dcc588b30be6034343599eb830b9005088110efd816ac280e0409bca00883` | 858,410 bytes, SHA-256 `a6aa3f8b80ea9c94995ab8fe3191dc5318c0a9d0af3617bcbe51deed5ad0b01f` | same 485,480-byte Unix notice |
-| macOS ARM64, `aarch64-apple-darwin` | 1,823,648 bytes, SHA-256 `39baf5a607bc210ad340ccfa88267d23918cabac33ecba19c7c86c4d8110b0c7` | 838,416 bytes, SHA-256 `4de118e36f9b173c093f508da2437ba05756671e6b47786ce6798ef14e7a8e6d` | same 485,480-byte Unix notice |
-| Windows x64 MSVC, `x86_64-pc-windows-msvc` | 2,066,944 bytes, SHA-256 `ab2e49aacd41c34b0e256eaddbb61a4c728801e141bea3381b9e74ee3408a912` | 880,937 bytes, SHA-256 `5b7651eb45900ab291b2434175a195d77870a06d8fc84523a6306056cdf0e33d` | 485,788 bytes, SHA-256 `bd36a6400cfdcbd14fac87355f0263b0e928806ac4c91b4f83692e5a14f3174e` (CRLF) |
+The six archives below are the coordinates for the documented local-tarball
+install. The entry archive is the Unix-produced canonical entry because its
+member bytes match every host-produced entry and its launcher member is
+executable. Each native coordinate names the release archive, not the ordinary
+standalone pack. `archivePath` is the direct path inside the named downloaded
+GitHub artifact; the workflow staging directory is stripped by artifact
+download.
 
-The historical five archives contain the same six package paths, with the platform
-binary name adjusted on Windows: `BUILD.json`, `LICENSE`, `README.md`,
-`THIRD_PARTY_NOTICES.txt`, `bin/seshat` or `bin/seshat.exe`, and
-`package.json`. The npm and standalone archives are byte-identical in each
-proof. The current proof packages identify themselves as version `0.0.0
-(candidate)`, which is why their hashes cannot serve as v0.1.0 release hashes.
+| package | target | GitHub run and artifact | archive path | bytes | SHA-256 |
+| --- | --- | --- | --- | ---: | --- |
+| `@binary-balance/seshat` | universal entry | [34856550822](https://github.com/Binary-Balance/seshat/actions/runs/34856550822), `linux-x64-package-proof` | `seshat-entry.tgz` | 2,923 | `679ab5a167d3a509261585048ae46f992592e4cdb06e4ab22bc0c4428edfd7ef` |
+| `@binary-balance/seshat-linux-x64` | `x86_64-unknown-linux-gnu` | [34856550822](https://github.com/Binary-Balance/seshat/actions/runs/34856550822), `linux-x64-package-proof` | `seshat-linux-x64-release.tgz` | 948,076 | `187c062053aa81d6f4e08cadbe1afc7cb5888c2dc4255f472dc5fadb7b315734` |
+| `@binary-balance/seshat-linux-arm64` | `aarch64-unknown-linux-gnu` | [34856550810](https://github.com/Binary-Balance/seshat/actions/runs/34856550810), `linux-arm64-package-proof` | `seshat-linux-arm64-release.tgz` | 906,609 | `df5fb8f7739a5cdbbec19ea2874459e47100db54026e6c065c103a4fd84e803e` |
+| `@binary-balance/seshat-darwin-x64` | `x86_64-apple-darwin` | [34856550939](https://github.com/Binary-Balance/seshat/actions/runs/34856550939), `macos-x64-package-proof` | `seshat-darwin-x64-release.tgz` | 902,004 | `d0a2ff9665bd94a0b9401f792f71e413c662c029295fbbe23e459db478e52dac` |
+| `@binary-balance/seshat-darwin-arm64` | `aarch64-apple-darwin` | [34856550939](https://github.com/Binary-Balance/seshat/actions/runs/34856550939), `macos-arm64-package-proof` | `seshat-darwin-arm64-release.tgz` | 881,850 | `7f1cb4a1ad7e06c900baf9499e5e0c1a12a882b8c9d386108f6651bb8f46aac8` |
+| `@binary-balance/seshat-win32-x64` | `x86_64-pc-windows-msvc` | [34856550809](https://github.com/Binary-Balance/seshat/actions/runs/34856550809), `windows-x64-package-proof` | `seshat-win32-x64-release.tgz` | 924,356 | `52e276dc0d662a5804b3ef338390b69d86158c59995e9a7909e0db19f88ba02e` |
 
-### Bounded Linux x64 integration pack
+Every native coordinate has `version: 0.1.0-rc.1`, source commit
+`b48ce50c206056b3eabb45c687b9edf1f035528f`, a `BUILD.json` hash, a binary
+hash, and a notice hash in the companion JSON. Those fields preserve the
+build provenance needed to check a downloaded archive against the proof
+bundle. The source and run coordinates are also recorded in each retained
+`preflight.json`, `release.json`, `package-result.json`, or
+the downloaded proof records. `root-artifact-audit.json` is a locally
+generated audit over those downloaded bytes.
 
-One clean-source pack was run at commit `595f93472843d2e0d29cf252d84e52bcd29b1fed`
-with Rust `1.98.1 (48a229ceaefd4985c50990b14116b6d856af0985)`, Node
-`24.20.0`, npm `11.19.0`, and the pinned Debian 11 input directory. The command
-was `node packaging/pack.mjs work/debian11-inputs`. The retained local evidence
-is under `work/release-notice-audit/linux-x64/`:
+### Archive classes and member bytes
 
-- `binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz`: 948,219 bytes,
-  SHA-256 `0a99458d4aecbe95e014151d8547f3a5d18627926e4742592e175784c3d4d4b1`.
-- `pack-result.json`: 1,995 bytes, SHA-256
-  `417ab21a419fe18798d2913c305380166346dffc5f31bc56f1916e253c0d37df`.
-- Extracted `bin/seshat`: 2,028,296 bytes, SHA-256
-  `49a6ed93d8d13d0ed8166d0e93066c9d54275694ed5d85505953ebfda56ddc60`.
-- Extracted `BUILD.json`: 9,957 bytes, SHA-256
-  `5cc2a2b010d0abec92338a88415b1cb1f0cb894ce3f76448178bc8587b6eb74e`.
-- Extracted `THIRD_PARTY_NOTICES.txt`: 2,057,665 bytes, SHA-256
-  `49ebba598a25d26340cf836ea7dfcaa58ed7a279cefe32b9e63bf7aafb52c5d5`.
+The entry archive has four members. All five host-produced entries have the
+same member paths and member bytes:
 
-The archive contains exactly `BUILD.json`, `LICENSE`, `README.md`,
-`THIRD_PARTY_NOTICES.txt`, `bin/seshat`, and `package.json`. The extracted
-`BUILD.json` binds `sourceCommit` to the clean pack commit and records the
-notice hash, all nine pinned Rust asset hashes and byte counts, and the full
-Rust commit. The archive notice check compared its extracted bytes with the
-staged notice. It contains the root `COPYRIGHT` and `UNLICENSE`, the siphasher
-`COPYING` attribution naming the Rust Project Developers and Frank Denis plus
-complete MIT/Apache terms, the conservative multi-target Rust inventory, and
-the compiler-builtins, compiler-rt credits, and libm texts.
+| member | bytes | member SHA-256 |
+| --- | ---: | --- |
+| `package/LICENSE` | 1,074 | `d2895ef18f0ba19d7c3e0b8c08a087554bddfb2f3cacb22343b412f3b32cbd91` |
+| `package/README.md` | 372 | `fda3929b7c05584de44710114e796500d74c3bd826e30d94f98a2bf3ee0ccb81` |
+| `package/bin/seshat.mjs` | 4,753 | `ca5dc2340a31061246cb725574aaedb281c6b9ceee63373165302dd1fcfaf613` |
+| `package/package.json` | 627 | `08fce683d42c3bb2ca74bcc1b3340acc96feefa389b02bf8de01b86c3d3651cf` |
 
-This is local Linux x64 evidence for the integration code. It does not establish
-final applicability for Linux ARM64, macOS, or Windows, and it does not replace
-the final five-target native audit or Windows edition provenance review.
+The Unix entry tarballs are 2,923 bytes with SHA-256
+`679ab5a167d3a509261585048ae46f992592e4cdb06e4ab22bc0c4428edfd7ef`. The
+Windows tarball is 2,915 bytes with SHA-256
+`e8b05216c9f0eabdcc9a1c21e63c162d6ea6f22805aad96e041458e9ff4a8954`.
+The compressed archives therefore remain host-produced bytes even though the
+four extracted files are identical. The Unix launcher member has mode `0755`;
+the Windows tar member has mode `0644`. Installing the Windows entry on Linux
+with npm produced mode `0775`, and both the installed `.bin/seshat` launcher
+and `npm exec --offline -- seshat --version` returned
+`seshat 0.1.0-rc.1 (candidate)`. This is the retained entry mode proof. It
+does not establish every target consumer check.
 
-The extracted `BUILD.json` files are: Linux x64, 7,720 bytes, SHA-256
-`38440c9abb91510696411168d3a0de014b21f0dce270f13ecb8fed0fcdcd991f`; Linux
-ARM64, 7,193 bytes, `e7308a6b07cfb2c8d29cf84676589d202d8e0e10915c033a0c374907e213a6dc`;
-macOS x64, 7,152 bytes, `b921ae331a4fdb4b1b0cb4f965fc43b9669b3354172e9edf387a8320374d13e5`;
-macOS ARM64, 7,154 bytes,
-`554fe3c012e173bc280396d7b4676f6e4b5b30218926ab6942dcbfdb59741f0e`; and
-Windows x64, 8,054 bytes,
-`e807c04e5518b43c1bfc3de831a89ae7df4076dd84eeccedf23c080c22f515f7`.
+The native release archives all contain exactly these six paths under
+`package/`, with `bin/seshat.exe` on Windows:
 
-`packaging/pack.mjs` obtains `cargo metadata --locked --offline`, selects every
-package with a crates.io or Git `source`, and sorts them by name. Cargo's
-`license` field is declared package metadata, as described in the [Cargo
-manifest reference](https://doc.rust-lang.org/cargo/reference/manifest.html#the-license-and-license-file-fields)
-and [cargo metadata reference](https://doc.rust-lang.org/cargo/commands/cargo-metadata.html).
-It is useful for inventory, but it does not prove that the declared text is a
-complete attribution or that the package's code is in a particular target
-binary.
+```text
+package/BUILD.json
+package/LICENSE
+package/README.md
+package/THIRD_PARTY_NOTICES.txt
+package/bin/seshat[.exe]
+package/package.json
+```
 
-## Rust crate inventory in the current packages
+The release and ordinary archives are separate archive classes. Their binary,
+`BUILD.json`, `LICENSE`, and notice member bytes match for a target, but the
+release README is shorter and the `package.json` file order differs from the
+ordinary pack. The ordinary npm archive and its standalone archive are
+byte-identical within each retained Unix proof. The Windows ordinary archive
+was generated and hashed in metadata but its named file was not retained.
 
-The current lockfile has SHA-256
-`9bc31fc47fe014edb449dbb172401f1bf8cc423324ec972e305880d2d1a7d243` and
-resolves 66 packages, including the local root, and 65 source packages. The
-following is the exact source package inventory emitted into each current
-notice file. Windows has the same sections and bytes after CRLF normalization.
+| target | ordinary npm archive | standalone archive |
+| --- | --- | --- |
+| Linux x64 | 948,108 bytes, `da67ea8f1ba3e28c4824005292f2672272a4defa6562fb2022d9781e1e65315a` | same bytes and hash |
+| Linux ARM64 | 906,639 bytes, `5edb4f5b03eaee20b57f664bf969e6c5492c50f741995f76a94621a453e47cbc` | same bytes and hash |
+| macOS x64 | 902,031 bytes, `be4dc955d2e6870223288a13603a3a26a2658253cd1e8bf6c42f6821058119dc` | same bytes and hash |
+| macOS ARM64 | 881,879 bytes, `31106497fd34c600024a7fb21ba4e076908dad4ba53b56dfeff8a3fb38447516` | same bytes and hash |
+| Windows x64 | 924,388 bytes, `1f0f257b8c2c86435534459eb2f0eacbdf706ab31521a7fe7fffd19839a4654e` (metadata only) | same metadata hash and size |
+
+The ordinary and standalone hashes must not be substituted for the six
+release coordinates above. The audit makes no cross-host gzip or custom-tar
+reproducibility promise.
+
+## Native artifact records
+
+The following table records the exact release archive, binary, build record,
+and raw notice for each target. The `BUILD.json` and notice values are member
+records extracted or independently checked by the retained root artifact
+audits.
+
+| target and package | binary | `BUILD.json` | raw `THIRD_PARTY_NOTICES.txt` | release archive |
+| --- | --- | --- | --- | --- |
+| Linux x64, `@binary-balance/seshat-linux-x64` | 2,026,448 bytes, `c9150b012aeeee2ca543c0c1fdadc1416b43480b3037127d8a27f3f1214a99ba` | 9,957 bytes, `97330fbc052f13ca67ee53df3ddeac9894ff86713d7d3565cd32330459f48ff1` | 2,057,665 bytes, `49ebba598a25d26340cf836ea7dfcaa58ed7a279cefe32b9e63bf7aafb52c5d5` | 948,076 bytes, `187c062053aa81d6f4e08cadbe1afc7cb5888c2dc4255f472dc5fadb7b315734` |
+| Linux ARM64, `@binary-balance/seshat-linux-arm64` | 1,815,248 bytes, `4be65daf7601fe154e0afd13bfc16d157db29e913057ad8582f94333aa28a3bd` | 9,432 bytes, `aa3aaeb6bc60edb4e3577023f7a91e1ea2b8f5e1e30de9317de694db2b44436d` | 2,057,665 bytes, `49ebba598a25d26340cf836ea7dfcaa58ed7a279cefe32b9e63bf7aafb52c5d5` | 906,609 bytes, `df5fb8f7739a5cdbbec19ea2874459e47100db54026e6c065c103a4fd84e803e` |
+| macOS x64, `@binary-balance/seshat-darwin-x64` | 1,867,192 bytes, `dbabfd063cd2d4ef5fadcd32d70b6e08a99285771f3fba8c1e35401ec634365e` | 9,390 bytes, `728e69662041b765060ad70985517999772a7b6bd219a3f1d07fa93b7e2a6df5` | 2,057,665 bytes, `49ebba598a25d26340cf836ea7dfcaa58ed7a279cefe32b9e63bf7aafb52c5d5` | 902,004 bytes, `d0a2ff9665bd94a0b9401f792f71e413c662c029295fbbe23e459db478e52dac` |
+| macOS ARM64, `@binary-balance/seshat-darwin-arm64` | 1,823,376 bytes, `6a5ec32823e925ab8ca2538ef5de751deb62844611efbf6191be9bcb223e9761` | 9,394 bytes, `ea9ea71991d87cfcea9642a5e2359f0c5f6b53cc118faa1281f95e94c3814544` | 2,057,665 bytes, `49ebba598a25d26340cf836ea7dfcaa58ed7a279cefe32b9e63bf7aafb52c5d5` | 881,850 bytes, `7f1cb4a1ad7e06c900baf9499e5e0c1a12a882b8c9d386108f6651bb8f46aac8` |
+| Windows x64, `@binary-balance/seshat-win32-x64` | 2,066,432 bytes, `2ead8510b4b395385d0d2303a8dd4a17698bd1f9b5acc61acd7146125791ff8c` | 10,229 bytes, `56adf6f0673c1a77bd966f2e2bbefd629fcbc473bbc60ad33be0ea7f0179e972` | 2,057,973 bytes, `95b852e45022f73d8986918edcea6a1ab3af5d47946f8e530007daa801365376` | 924,356 bytes, `52e276dc0d662a5804b3ef338390b69d86158c59995e9a7909e0db19f88ba02e` |
+
+The target `BUILD.json` files all list the same 65 source packages, the Rust
+commit, the source commit, the pinned notice asset hashes, and the native
+inspection results. The exact per-target build fields and the source paths
+used by the workflows are in the companion JSON.
+
+## Functional acceptance state
+
+Archive integrity is a separate result from consumer behavior. The retained
+proof state is:
+
+| target | retained result | remaining target work |
+| --- | --- | --- |
+| Linux ARM64 | Full package, npm, public-example, standalone, repeat-pack, Jest, Vitest, and lifecycle checks passed in [run 34856550810](https://github.com/Binary-Balance/seshat/actions/runs/34856550810). | Re-run against the final integrated proof head. |
+| macOS x64 | The same full check set passed in [run 34856550939](https://github.com/Binary-Balance/seshat/actions/runs/34856550939). | Re-run against the final integrated proof head. |
+| macOS ARM64 | The same full check set passed in [run 34856550939](https://github.com/Binary-Balance/seshat/actions/runs/34856550939). | Re-run against the final integrated proof head. |
+| Linux x64 | The package, npm, public-example, standalone, repeat-pack, Jest, Expo, Vitest, and lifecycle portions passed. The Debian 11 consumer proof in retained run 34856550822 failed because its container did not contain `examples/verify.mjs`. The fix in local commit `8fe0541` passes the full Debian proof locally. | Run the hosted Debian proof after the final fix is integrated. |
+| Windows x64 | Retained run 34856550809 recorded the preflight and package install checks, then hit the old outer 600-second public-example timeout. Follow-up run [34860332470](https://github.com/Binary-Balance/seshat/actions/runs/34860332470) reached public examples, which passed after 507 seconds; its assertion then failed because the missing-path regex omitted `The system cannot find the path specified. (os error 3)`. | Apply the minimal assertion correction and rerun the Windows package consumer checks. |
+
+The latest `8fe0541` correction has Linux ARM64, Linux x64, both macOS
+targets, and the Windows runtime-only checks succeeding. The older Windows
+600-second timeout is historical evidence from the pre-correction run; the
+follow-up provides no confirmed native runtime defect. The separate Windows
+runtime-only check is [run 34856550801](https://github.com/Binary-Balance/seshat/actions/runs/34856550801);
+it is not package acceptance.
+
+## Source and dependency review
+
+The moved source inputs are unchanged between the retained proof and the
+current checkout after line-ending normalization:
+
+| input | checkout bytes and SHA-256 | normalized SHA-256 |
+| --- | --- | --- |
+| `crates/seshat/Cargo.toml` | 1,120 bytes, `ecd245a4a83405a8b4ee1620b1ec0a6009c290031b1eab11e167a92073c13b16` | 1,069 bytes, `ba22282c69d3773cd9d57e3e7a55351fd7617580febd5096e81599a87abc5dd7` |
+| `crates/seshat/Cargo.lock` | 16,431 bytes, `39d94df38462d97b4859ce8e0636a4bfa458d59dc2b2b78011ee64213438e8f0` | 15,808 bytes, `9bc31fc47fe014edb449dbb172401f1bf8cc423324ec972e305880d2d1a7d243` |
+
+The Windows `BUILD.json` records the checkout-form lock hash because that host
+checked out CRLF text. Unix and macOS records use the canonical LF lock hash.
+This is a representation difference, not a dependency-input change. The
+reusable locked-resolution snapshot is `cargo-resolution.json`, 270,500 bytes,
+SHA-256 `54c2bf6ee6db4901423a8c196d79d845e019842fc233b0f348e28b064d1166c2`,
+source snapshot commit
+`48e26ad57cfdea9782bb91556876e059f9515c2a`. It remains applicable while the
+manifest and lock hashes above remain unchanged. The raw target metadata is
+261,852 bytes with SHA-256
+`fa4c84bd90c80d9b3f2b24cc47a8bc1e721055fa9651f83638d21eaf607a9af6` for
+Unix/macOS and 261,356 bytes with SHA-256
+`97893e9a0dbed2a11dde3c0ed1b3dd0aa551208ce97b6e274df53d7039de770e` for
+Windows.
+
+The lock resolves 66 packages including the local root and 65 source packages.
+Target-filtered metadata resolves 64 packages including the root on each Unix
+target and 62 on Windows. The five proc-macro packages present on all targets
+are `oxc_ast_macros 0.148.0`, `phf_macros 0.14.0`, `rustversion 1.0.23`,
+`seq-macro 0.3.6`, and `serde_derive 1.0.229`. Unix-only resolution includes
+`errno`, `libc`, `signal-hook`, and `signal-hook-registry`; Windows-only
+resolution includes `windows-link` and `windows-sys`. `autocfg` is a build edge
+of `num-traits`.
+
+These counts describe the locked source and build inventory. They do not mean
+that every listed package is linked into every executable. The native import
+tables below are the exact linked operating-system runtime evidence. The
+packer labels the 65-entry `BUILD.json` list as
+`Cargo.lock source/build inventory; includes proc-macro, build-only, and
+target-specific packages and is not an exact linked-runtime subset`.
+
+The source package inventory emitted into each notice is:
 
 | declared license | packages and versions |
 | --- | --- |
@@ -104,264 +196,278 @@ notice file. Windows has the same sections and bytes after CRLF normalization.
 | `(MIT OR Apache-2.0) AND Unicode-3.0` | `unicode-id-start 1.4.0`, `unicode-ident 1.0.24` |
 | `Apache-2.0 WITH LLVM-exception OR BSL-1.0` | `dragonbox_ecma 0.1.12` |
 
-The target normal dependency graph has the Oxc parser/AST stack plus
-`serde`, `serde_json`, `glob`, and `percent-encoding` on all five targets.
-Unix targets additionally use `signal-hook`, `signal-hook-registry`, `errno`,
-and `libc`; Windows uses `windows-sys` and `windows-link` instead of that Unix
-signal path. The current packer still emits all 65 source packages for every
-target, including packages selected only for another target.
+The notice collector in [`packaging/pack.mjs`](../../packaging/pack.mjs)
+collects source packages from locked `cargo metadata`, appends matching root
+`LICENSE`, `LICENCE`, `COPYING`, `NOTICE`, and `COPYRIGHT` files, and sorts the
+result by package name. The retained policy also:
 
-The build graph also contains proc-macro or build support such as
-`oxc_ast_macros`, `phf_macros`, `serde_derive`, `seq-macro`, `rustversion`,
-`autocfg`, and their macro support (`proc-macro2`, `quote`, `syn`,
-`unicode-ident`, `phf_generator`, `fastrand`, and related packages). These are
-used to produce the binary and are not runtime libraries in the package. The
-current full inventory is a reasonable conservative attribution appendix.
-`BUILD.json` labels its `dependencies` list with
-`dependencyInventoryScope`, which identifies the locked source/build inventory
-and keeps it separate from an exact linked-runtime claim.
+- keeps the root `COPYRIGHT` and `UNLICENSE` files;
+- keeps `unicode-segmentation` and `unicode-width` `COPYRIGHT` files, as
+  required by the Unicode attribution they reference;
+- keeps the `siphasher` `COPYING` pointer naming the Rust Project Developers
+  and Frank Denis, alongside complete canonical MIT and Apache-2.0 text;
+- keeps all offered `memchr` license files, including `UNLICENSE`;
+- applies the exact pinned Oxc fallback only to Oxc 0.148.0 revision
+  `894c8f9cd89508391b01eb26a4b5ac2b846ab39b` and `oxc_index 5.0.0` revision
+  `8e09fe324eb6df02f56e4eacdfac958930300380`.
 
-### License files collected and gaps
+## Rust runtime notice
 
-For each source package, the packer appends root files whose names match
-`LICENSE`, `LICENCE`, `COPYING`, or `NOTICE`, case-insensitively, followed by
-the declared license string. That captures the full dual MIT/Apache files for
-most packages, the Unicode license files for `unicode-id-start` and
-`unicode-ident`, `LICENSE-Apache2-LLVM` and `LICENSE-Boost` for `dragonbox_ecma`,
-and the Oxc fallback described below.
+All five binaries use Rust `1.98.1 (48a229cea 2026-09-01)`, commit
+`48a229ceaefd4985c50990b14116b6d856af0985`. The pinned runtime assets are
+byte-identical across the five `BUILD.json` records:
 
-The integration decisions for these three items are explicit:
+| asset | bytes | SHA-256 |
+| --- | ---: | --- |
+| `COPYRIGHT-library.html` | 1,512,520 | `68129500b616d5838629e68f55ff3aed5e096dacf60ce9eb41bbe599a563afa6` |
+| `licenses/Apache-2.0.txt` | 10,280 | `074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff` |
+| `licenses/MIT.txt` | 1,078 | `b85dcd3e453d05982552c52b5fc9e0bdd6d23c6f8e844b984a88af32570b0cc0` |
+| `licenses/Unicode-3.0.txt` | 1,995 | `f5062c9a188d81dfe66b56db4182dcf9e4b17c0d9b0d311a8e20b3a1b075c443` |
+| `licenses/BSD-2-Clause.txt` | 1,267 | `f32fb3b417a194167cfad068223fc975ba96c5960513a10f66a3c28720aec1df` |
+| `licenses/LLVM-exception.txt` | 919 | `e34c58338bd89d43e709e226610d8f32b3e3c47f4ad9a99a8dc1d4ac7842488e` |
+| `compiler-builtins-LICENSE.txt` | 15,078 | `ab6eec6caf0fa5775e411c7a8bc6a45c4ef2956b0980b157ab74fc5cd62a928b` |
+| `compiler-builtins-CREDITS.TXT` | 1,049 | `a9901f47a089da41e4690682d00ce4cedaa2baf41fedbe79beee366d43ac2461` |
+| `libm-LICENSE.txt` | 14,088 | `3823dda7cf046602f4b4e77ec8e227863dc4736037cc85bb33d9f19febe16bb7` |
 
-1. `unicode-segmentation 1.13.3` and `unicode-width 0.2.2` each ship a root
-   `COPYRIGHT` file and their generated sources point to it. The package
-   matcher includes it. The [Unicode License
-   V3](https://www.unicode.org/license.txt) requires the copyright and permission
-   notice to accompany copies or associated documentation.
-2. `siphasher 1.0.3` ships only a `COPYING` pointer naming the Rust Project
-   Developers and Frank Denis and pointing to either Apache-2.0 or MIT. Keep
-   that pointer and append the complete canonical Apache-2.0 and MIT texts.
-   This preserves the upstream attribution rather than replacing it with a
-   Seshat copyright.
-3. `memchr 2.8.3` ships `COPYING`, `LICENSE-MIT`, and `UNLICENSE`; the matcher
-   retains all three offered files.
+`COPYRIGHT-library.html` is the complete upstream standard-library and
+third-party build inventory for this Rust version. It spans multiple targets
+and build dependencies; it is not a claim that every entry is linked into all
+five executables. The Rust [copyright record](https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/COPYRIGHT)
+points distributors to this generated file. The compiler-builtins expression
+is `MIT AND Apache-2.0 WITH LLVM-exception`, with compiler-rt attribution. The
+adjacent compiler-rt credits and libm text preserve the musl, CORE-MATH, and
+Jorge Aparicio credits. The fixed source texts are the Rust
+[compiler-builtins license](https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/library/compiler-builtins/LICENSE.txt)
+and [libm license](https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/library/compiler-builtins/libm/LICENSE.txt).
 
-The Oxc crates in the proof omit a root license file. The packer only accepts
-the exact pinned versions and `.cargo_vcs_info.json` revisions, then appends
-`packaging/OXC-LICENSE`. The recorded revisions are Oxc 0.148.0 at
-`894c8f9cd89508391b01eb26a4b5ac2b846ab39b` and `oxc_index 5.0.0` at
-`8e09fe324eb6df02f56e4eacdfac958930300380`. The fallback matches the pinned
-[Oxc MIT license](https://github.com/oxc-project/oxc/blob/894c8f9cd89508391b01eb26a4b5ac2b846ab39b/LICENSE)
-and the [pinned oxc_index license](https://github.com/oxc-project/oxc-index-vec/blob/8e09fe324eb6df02f56e4eacdfac958930300380/LICENSE).
-Keep the revision checks when the crate is moved.
+The pinned standard-library source selects `fortanix-sgx-abi` only for
+`x86_64-fortanix-unknown-sgx` and `r-efi`/`r-efi-alloc` only for UEFI. None of
+the five supported targets is SGX or UEFI. The pinned unwind source selects no
+extra unwinder for MSVC and uses `gcc_s` on the ordinary non-`crt-static`
+Linux GNU path. These source conditions explain why SGX, UEFI, and unrelated
+target alternatives are not blanket runtime entries for these packages.
 
-## Rust runtime and compiler provenance
-
-All five proof binaries report `rustc 1.98.1 (48a229cea 2026-09-01)`. The
-bundled toolchain uses LLVM 22.1.8. The pinned assets copy the matching
-sysroot's `COPYRIGHT-library.html` byte-for-byte and retain the complete
-Apache-2.0, MIT, Unicode-3.0, BSD-2-Clause, and LLVM-exception texts. The
-asset manifest records each byte count, SHA-256, source URL, and the Rust
-commit. The generated Rust file states that the standard library is primarily
-Apache-2.0 OR MIT and records the in-tree material used by the library. In the
-inspected toolchain that includes:
-
-- Rust Project standard-library code under Apache-2.0 OR MIT.
-- Rust standard-library Unicode tables under Unicode-3.0, attributed to
-  Unicode, Inc.
-- `library/backtrace` under Apache-2.0 OR MIT, with Alex Crichton and Rust
-  Project attribution.
-- the Crossbeam synchronization code under Apache-2.0 OR MIT, with Crossbeam
-  and Rust Project attribution.
-- the Fuchsia synchronization file under BSD-2-Clause plus Apache-2.0 OR MIT.
-
-The generated file also includes a long out-of-tree list for the standard
-library build, including code for targets that are not necessarily present in
-these five executables. It contains entries with licenses such as MPL-2.0 and
-LGPL-2.1-or-later. The committed asset keeps that complete upstream inventory,
-with a scope label that says it spans multiple targets and build dependencies;
-it does not claim that every listed entry is linked into every Seshat binary.
-The [Rust 1.98.1 copyright file](https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/COPYRIGHT)
-specifically points distributors to the generated standard-library copyright
-file. The pinned asset directory carries the matching full license texts and
-does not silently apply them to another Rust version.
-
-The pinned compiler-builtins license records `MIT AND Apache-2.0
-WITH LLVM-exception`, not an either/or expression for the crate. It includes
-the compiler-rt attribution. The adjacent fixed LLVM `CREDITS.TXT` and
-`libm-LICENSE.txt` preserve the referenced compiler-rt, musl, CORE-MATH, and
-Jorge Aparicio credits. Include these files in the runtime notice when
-compiler-builtins is present. The [fixed compiler-builtins source](https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/library/compiler-builtins/LICENSE.txt)
-and [fixed libm source](https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/library/compiler-builtins/libm/LICENSE.txt)
-are recorded in the manifest.
-
-The pinned `std/Cargo.toml` source fact selects `fortanix-sgx-abi` only for
-`x86_64-fortanix-unknown-sgx` and `r-efi`/`r-efi-alloc` only for
-`target_os = "uefi"`. None of the five supported targets is SGX or UEFI, so
-the Fortanix MPL-2.0 entry and the UEFI MIT OR Apache-2.0 OR LGPL-2.1-or-later
-alternatives are target-specific. They are not blanket licenses for the five
-Seshat packages. The pinned unwind source fact selects no extra unwinder for
-MSVC and links `gcc_s` for the ordinary non-`crt-static` Linux GNU path. Final
-native link evidence still decides whether another target runtime notice is
-needed.
-
-`rustc`, Cargo, LLVM, LLD, Apple clang, the Windows SDK, and the Linux linker
-are build-only tools. Their version strings in `BUILD.json`, including the
-observed LLVM/LLD version, do not prove that the tool binaries or compiler
-source are in the package. Keep their versions as reproducibility provenance;
-do not add compiler or LLVM notices to the consumer package solely because a
-compiler produced it. The conservative asset uses the exact host sysroot
-available for Rust 1.98.1. It does not claim that the host sysroot is a
-complete inspection of every target sysroot.
+`rustc`, Cargo, LLVM, LLD, Apple clang, the Windows SDK, and host linkers are
+build provenance. Their version strings do not show that the tools or their
+source are package payloads. The notice follows the pinned asset manifest and
+the actual linked or copied components instead.
 
 ## Platform runtime and redistribution boundary
 
-### Linux x64 and ARM64
+### Linux
 
-The x64 binary imports `libgcc_s.so.1`, `libpthread.so.0`, `libm.so.6`,
-`libdl.so.2`, `libc.so.6`, and `ld-linux-x86-64.so.2`; its observed GLIBC
-symbols reach `GLIBC_2.30`, below the packer's 2.31 ceiling. The ARM64 binary
-imports `libgcc_s.so.1`, `libm.so.6`, and `libc.so.6`; its observed symbols
-reach `GLIBC_2.34`, below the native Ubuntu 22.04/GLIBC 2.35 ceiling.
+Linux x64 imports `libgcc_s.so.1`, `libpthread.so.0`, `libm.so.6`,
+`libdl.so.2`, `libc.so.6`, and `ld-linux-x86-64.so.2`; the highest observed
+GLIBC symbol is `GLIBC_2.30`, below the packer's 2.31 ceiling. Linux ARM64
+imports `libgcc_s.so.1`, `libm.so.6`, and `libc.so.6`; the highest observed
+symbol is `GLIBC_2.34`, below the Ubuntu 22.04/GLIBC 2.35 ceiling.
 
-Neither package archive contains a glibc or libgcc shared object. For x64,
-the three pinned Debian `.deb` files (`libc6`, `libc6-dev`, and `libgcc-s1`)
-are build sysroot inputs recorded by hash in `BUILD.json`, not redistributed
-payload files. ARM64 uses the native Ubuntu build environment and records no
-glibc package files. The current package should document these shared runtime
-prerequisites and their observed symbol ceilings. The [GCC libgcc
-documentation](https://gcc.gnu.org/onlinedocs/gccint/Libgcc.html) identifies
-`libgcc_s.so.1` as the low-level runtime supplied by GCC; GCC's [runtime
-library terms](https://gcc.gnu.org/onlinedocs/libstdc++/manual/license.html)
-describe the GCC Runtime Library Exception for covered files. The [glibc
-copying guidance](https://sourceware.org/glibc/manual/2.43/html_node/Copying.html)
-describes the LGPL terms and notes the treatment of normal operating-system
-components.
+No glibc, libgcc, or other OS shared library is present in either archive. The
+x64 Debian `libc6`, `libc6-dev`, and `libgcc-s1` packages are hashed build
+sysroot inputs. They are not redistributed files. If a later package copies an
+`.so` or sysroot, that copied file needs its own applicable notice and terms.
+The [GCC libgcc documentation](https://gcc.gnu.org/onlinedocs/gccint/Libgcc.html)
+describes `libgcc_s.so.1`, and the [glibc copying guidance](https://sourceware.org/glibc/manual/2.43/html_node/Copying.html)
+describes the terms for glibc and normal operating-system components.
 
-If a future package starts copying those `.so` files or a complete sysroot,
-the files become redistribution inputs and the release must carry the
-applicable glibc LGPL/source materials and GCC runtime terms. The current
-archives do not provide evidence for that bundled case.
+### macOS
 
-### macOS x64 and ARM64
+Both macOS binaries import `/usr/lib/libSystem.B.dylib` and
+`/usr/lib/libiconv.2.dylib`. They use deployment target 15.0 and SDK 15.5.
+No dylib is present in either archive. These are OS-provided libraries under
+Apple's [system framework documentation](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/OSX_Technology_Overview/SystemFrameworks/SystemFrameworks.html).
+If the final package embeds a dylib, inspect and notice that file separately.
 
-Both Mach-O binaries depend on `/usr/lib/libSystem.B.dylib` and
-`/usr/lib/libiconv.2.dylib`, and both are built for a 15.0 deployment target
-with SDK 15.5. No dylib is present in either archive. Apple's [system
-framework documentation](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/OSX_Technology_Overview/SystemFrameworks/SystemFrameworks.html)
-describes the system dynamic libraries under `/usr/lib`, and the [framework
-linking documentation](https://developer.apple.com/library/archive/documentation/MacOSX/Conceptual/BPFrameworks/Tasks/IncludingFrameworks.html)
-explains that system framework code is in a shared library rather than copied
-into the executable. Treat these as OS-provided prerequisites for the current
-bytes. If the final package ever embeds a dylib, inspect and notice that file
-separately.
+### Windows x64 MSVC
 
-### Windows x64 MSVC static CRT
+The PE is `PE32+`, machine `0x8664`, with `crtStatic=true`. Its imports are
+`KERNEL32.dll`, `api-ms-win-core-synch-l1-2-0.dll`, `kernel32.dll`, and
+`ntdll.dll`. It has no `MSVCP*.dll` or `VCRUNTIME*.dll` import and the archive
+contains no runtime DLL, `.lib`, SDK, or installer. The build uses
+`-C target-feature=+crt-static` and `/Brepro`.
 
-The PE proof is `PE32+`, machine `0x8664`, and imports only `KERNEL32.dll`,
-`api-ms-win-core-synch-l1-2-0.dll`, `kernel32.dll`, and `ntdll.dll`. It has no
-`MSVCP*.dll` or `VCRUNTIME*.dll` import. The build records
-`-C target-feature=+crt-static` and `/Brepro`, MSVC 19.44.35228, linker
-14.44.35228.0, and Windows SDK/UCRT 10.0.26100.0.
+The exact retained preflight is Windows Server 2022 build 20348, Visual Studio
+2022 Enterprise product `17.14.39`, installation `17.14.37614.0`, MSVC
+toolset `14.44.35207`, redist directory `14.44.35112`, compiler and linker
+`19.44.35228`/`14.44.35228.0`, and Windows SDK/UCRT `10.0.26100.0`. The
+`cl.exe` probe returned status 0. The linker identity was captured with status
+1100, so it is provenance evidence rather than an independent successful
+linker test.
 
-Rust's [linkage reference](https://doc.rust-lang.org/reference/linkage.html)
-and [rustc codegen options](https://doc.rust-lang.org/rustc/codegen-options/)
-define the `crt-static` setting. Microsoft's [`/MT` runtime-library
-documentation](https://learn.microsoft.com/en-us/cpp/build/reference/md-mt-ld-use-run-time-library?view=msvc-170)
-states that the multithreaded static runtime uses `LIBCMT.lib`; the [CRT
-library feature table](https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features?view=msvc-170)
-also identifies the static UCRT, VCRUNTIME, and CRT libraries used by `/MT`.
-This explains the lack of VC runtime DLL imports, but it does not turn the
-MSVC static libraries into Cargo dependencies.
+Rust's [linkage reference](https://doc.rust-lang.org/reference/linkage.html),
+[static CRT codegen option](https://doc.rust-lang.org/rustc/codegen-options/),
+and Microsoft's [`/MT` runtime documentation](https://learn.microsoft.com/en-us/cpp/build/reference/md-mt-ld-use-run-time-library?view=msvc-170)
+explain the static CRT choice. Microsoft documents `/MT` as the multithreaded
+static runtime and identifies `LIBCMT.lib` as its linker input. Its [CRT
+feature table](https://learn.microsoft.com/en-us/cpp/c-runtime-library/crt-library-features?view=msvc-170)
+identifies `libucrt.lib` and `libvcruntime.lib` as statically linked into the
+program and `libcmt.lib` as the static CRT startup. Combined with the recorded
+`-C target-feature=+crt-static`, `crtStatic=true`, and PE imports, this means
+the executable contains linked CRT object code even though no `.lib` is a
+package member. The current release binary is a release build; the Microsoft
+table marks the corresponding debug static libraries as not redistributable.
 
-The archive does not contain a Visual C++ redistributable DLL. Windows system
-DLLs remain OS-provided. Microsoft's [redistribution guidance](https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files?view=msvc-170)
-and [DLL determination guidance](https://learn.microsoft.com/en-us/cpp/windows/determining-which-dlls-to-redistribute?view=msvc-170)
-require using the applicable REDIST list and terms when distributing runtime
-files. Retained run `34578770812` evidence identifies Visual Studio 2022
-Enterprise, MSVC tools `14.44.35207`, the redist directory version
-`14.44.35112`, and Windows SDK/UCRT `10.0.26100.0`. The evidence hashes are
-log `aa98ecb97757b3ee4137c57cf56075db185bd6ac4f1a187919cf9daf77f61f2c`, the
-retained Microsoft license document
-`9c0cd52b20db9d081854c75bd1b50c75514b8f8cb09c8cad15e89d90b97b5bf3`, and its
-extracted text
-`3f8ed5a873fcea9e41b0f7bba1b39c284a7a986405ca335c5f446cece0d86c4a`. The
-[Visual Studio 2022 license terms](https://visualstudio.microsoft.com/license-terms/vs2022-ga-proenterprise/)
-and [Enterprise/Professional license document](https://visualstudio.microsoft.com/wp-content/uploads/2021/11/Visual-Studio-2022-Enterprise-Professional-License-EN.docx)
-describe object-code distribution and point to the [VS 2022 REDIST list](https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution).
-This establishes known toolchain provenance and available terms. Revalidate
-the exact edition, SDK, REDIST applicability, and final native run for
-v0.1.0-rc.1. No raw `.lib`, DLL, SDK, or Visual Studio installer is a package
-payload, and this evidence is not blanket release clearance.
+The present output has no `MSVCP*.dll` or `VCRUNTIME*.dll` import and no VC
+runtime DLL, raw library, SDK, or installer in the archive. Microsoft's [DLL
+determination guidance](https://learn.microsoft.com/en-us/cpp/windows/determining-which-dlls-to-redistribute?view=msvc-170)
+therefore does not call for adding a VC runtime DLL to this payload. Its
+[redistribution guidance](https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files?view=msvc-170)
+still governs any future DLL, merge module, individual runtime binary, or
+redistributable package. It also says that only files in the applicable
+`Redist.txt` or online REDIST list may be redistributed, and that debug
+runtime files are excluded.
 
-### Node launcher packages
+The retained Enterprise/Professional terms make the current static-link
+obligation concrete. The full-use Section 5 grant requires a validly licensed
+copy of Visual Studio and permits unmodified object code listed in the
+applicable REDIST list to be distributed with an application. Its conditions
+include adding significant primary functionality, requiring distributors and
+external users to accept terms protecting the Microsoft code, and indemnifying
+Microsoft for distribution claims. It excludes preview, pre-release, and beta
+components and source distribution under an excluded license. The [VS 2022
+REDIST list](https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution)
+lists the unmodified VC runtime redist folder, merge modules, and individual
+runtime binaries for licensed users. It does not list the raw static input
+libraries as package files. The observed embedded CRT code therefore remains
+within this review: the final record must map the release static inputs to the
+current VS 2022 REDIST/distributable-code terms and state which of those
+conditions and notice delivery requirements apply to the embedded code.
 
-The current packer stages no third-party JavaScript dependency, runs npm with
-`--ignore-scripts`, and does not copy a Node binary. Node is consumer-supplied.
-For v0.1.0-rc.1, inspect each of the new launcher and native-payload package
-manifests after the crate move: `dependencies`, `optionalDependencies`,
-`bundledDependencies`, `files`, lifecycle scripts, and archive contents. Any
-new runtime dependency or copied executable changes the notice and runtime
-boundary described here.
+The final preflight searched for local Visual Studio license, Visual Studio
+REDIST, and Windows SDK license groups and found all three missing. This is a
+missing terms-input record, not evidence that the executable has a missing
+runtime DLL. The exact product, installation, toolset, redist directory, SDK,
+and UCRT are recorded above, and the applicable primary sources are the [VS
+2022 license terms](https://visualstudio.microsoft.com/license-terms/vs2022-ga-proenterprise/),
+[Microsoft Visual Studio licensing guidance](https://www.microsoft.com/licensing/guidance/Visual-Studio),
+and [Windows SDK downloads and terms](https://learn.microsoft.com/en-us/windows/apps/windows-sdk/downloads).
+The retained official Enterprise/Professional terms document has SHA-256
+`9c0cd52b20db9d081854c75bd1b50c75514b8f8cb09c8cad15e89d90b97b5bf3`; its
+extracted text has SHA-256
+`3f8ed5a873fcea9e41b0f7bba1b39c284a7a986405ca335c5f446cece0d86c4a`.
+The specific unresolved evidence is the static-library/link-map mapping and
+the resulting decision on required Microsoft terms or attribution for this
+embedded release CRT. No VC DLL or SDK notice should be added while those
+files remain absent from the package.
 
-## Final v0.1.0-rc.1 checklist
+### Node launcher boundary
 
-Repeat these checks for the final five native artifacts:
+The entry package supplies `bin/seshat.mjs` and selects the native package by
+the host platform. Its `optionalDependencies` name all five native packages at
+`0.1.0-rc.1`; the native manifests carry their `os`/`cpu` filters and Linux
+`glibc` filter. The packages have no third-party JavaScript dependencies,
+bundled dependencies, lifecycle scripts, or copied Node binary. Node 24.20.0
+is consumer-supplied. The final integrated package manifests still need the
+same file-list and install check described below.
 
-1. Run locked, offline metadata and target-specific `cargo tree` from the
-   moved `crates/seshat` manifest for all five triples. Record the new lockfile
-   hash and identify runtime, proc-macro, build-only, and target-only packages.
-2. Extract every final npm and standalone archive. Record archive and binary
-   SHA-256 values, the six or five expected payload paths for each new package,
-   and the hashes of `BUILD.json`, `LICENSE`, and `THIRD_PARTY_NOTICES.txt`.
-   Keep normalized line endings when comparing Windows notices.
-3. Regenerate the dependency notice from the final lockfile. Include root
-   `COPYRIGHT` for `unicode-segmentation` and `unicode-width`, preserve the
-   `siphasher` pointer alongside complete MIT/Apache text, and retain
-   `memchr`'s `UNLICENSE`. Recheck the pinned Oxc revisions before applying
-   the fallback.
-4. Add the pinned Rust runtime notice assets from
-   `packaging/runtime-notices/rust-1.98.1/`. Retain the complete
-   `COPYRIGHT-library.html` inventory and the matching Apache, MIT, Unicode,
-   BSD, compiler-builtins, compiler-rt credits, and libm texts. Label the
-   inventory as spanning multiple targets and standard-library build
-   dependencies. Keep the source and hash record beside the notice.
-5. Re-run platform inspection on the final executable: Linux `readelf` dynamic
-   imports and GLIBC versions, macOS `otool -L` and deployment load commands,
-   and Windows PE imports plus the static-CRT/MSVC/SDK record. If a shared
-   library, sysroot file, VC runtime file, or Node runtime is copied, add its
-   exact notice and redistribution terms before release review.
-6. Inspect final Node package manifests and npm file lists for hidden runtime
-   dependencies, bundled files, install hooks, or downloads. Confirm Node is
-   still consumer-supplied if that remains the design.
-7. Run `git diff --check`, verify every external citation, and preserve the
-   final evidence beside the artifact hashes without maintainer-local paths.
+## Reproducible audit and extraction commands
 
-## Outstanding evidence gaps
+These commands use the existing archives and tooling. They do not require a
+new audit framework. After downloading each named GitHub artifact, place its
+six release archives under `vendor/seshat` using the names below, then verify
+the coordinates:
 
-- The final five-target v0.1.0-rc.1 package bytes do not exist in the retained
-  evidence. A single clean Linux x64 integration archive is recorded above;
-  the other four native archives still need their final runs.
-- The crate move, new package manifests, launcher, and final lockfile can
-  change both the dependency set and the archive file list. The old
-  `Cargo.lock` hash must not be reused.
-- Only the host Linux x64 Rust sysroot was inspected locally. The committed
-  1.98.1 assets intentionally preserve the complete upstream standard-library
-  inventory across targets rather than claiming an exact linked-object subset.
-  Matching target sysroots for Linux ARM64, macOS x64/ARM64, and
-  Windows MSVC still need final native link review for any additional
-  target-specific material.
-- Retained Windows run `34578770812` identifies Visual Studio 2022 Enterprise,
-  MSVC tools `14.44.35207`, redist directory `14.44.35112`, and Windows
-  SDK/UCRT `10.0.26100.0`, with the official Enterprise/Professional terms
-  retained and hashed above. The final v0.1.0-rc.1 native run must revalidate
-  that edition and the applicable REDIST terms for the static libraries.
-- The Linux proof directories retain compressed archives and test metadata,
-  but not unpacked `BUILD.json` and notices. The macOS and Windows directories
-  retain `BUILD.json`; their notice files still need extraction from the
-  archives for a portable final evidence set.
-- The local Linux x64 archive check confirms root `COPYRIGHT` and `UNLICENSE`
-  inclusion and the `siphasher` full-text policy. Repeat those checks against
-  the other four final native archives.
-- Current `BUILD.json` records compiler/runtime provenance but does not itself
-  establish that compiler or LLVM source is in the package. Final notices must
-  follow linked and physically copied components, not version strings.
+```sh
+sha256sum vendor/seshat/*.tgz
+tar -tzf vendor/seshat/entry.tgz
+for archive in vendor/seshat/linux-x64.tgz \
+  vendor/seshat/linux-arm64.tgz vendor/seshat/darwin-x64.tgz \
+  vendor/seshat/darwin-arm64.tgz vendor/seshat/win32-x64.tgz; do
+  tar -tzf "$archive"
+  tar -xOzf "$archive" package/BUILD.json | sha256sum
+  tar -xOzf "$archive" package/THIRD_PARTY_NOTICES.txt | sha256sum
+done
+sha256sum crates/seshat/Cargo.toml crates/seshat/Cargo.lock
+```
+
+For dependency revalidation when either normalized source hash changes, use
+the locked offline commands that the packer already uses:
+
+```sh
+cargo metadata --locked --offline --format-version 1 \
+  --manifest-path crates/seshat/Cargo.toml \
+  --filter-platform x86_64-unknown-linux-gnu > evidence/linux-x64.metadata.json
+cargo metadata --locked --offline --format-version 1 \
+  --manifest-path crates/seshat/Cargo.toml \
+  --filter-platform aarch64-unknown-linux-gnu > evidence/linux-arm64.metadata.json
+cargo metadata --locked --offline --format-version 1 \
+  --manifest-path crates/seshat/Cargo.toml \
+  --filter-platform x86_64-apple-darwin > evidence/macos-x64.metadata.json
+cargo metadata --locked --offline --format-version 1 \
+  --manifest-path crates/seshat/Cargo.toml \
+  --filter-platform aarch64-apple-darwin > evidence/macos-arm64.metadata.json
+cargo metadata --locked --offline --format-version 1 \
+  --manifest-path crates/seshat/Cargo.toml \
+  --filter-platform x86_64-pc-windows-msvc > evidence/windows-x64.metadata.json
+```
+
+Use `readelf -d` and `readelf --version-info` for Linux, `otool -L` and the
+deployment load-command inspection for macOS, and the existing PE import and
+static-CRT probes on Windows. Use the existing `packaging/pack.mjs` and
+`packaging/repeat-pack.mjs` only when a final proof run needs regenerated
+outputs. The audit itself compares the resulting archives, extracted members,
+and recorded `BUILD.json` fields; it does not treat a source inventory as an
+exact link inventory.
+
+## Verified local six-archive install
+
+The previously stale one-entry local-tarball lock concern is resolved for the
+retained candidate archives. The verified recipe stages these six exact
+release archives as `entry.tgz`, `linux-x64.tgz`, `linux-arm64.tgz`,
+`darwin-x64.tgz`, `darwin-arm64.tgz`, and `win32-x64.tgz` under
+`vendor/seshat`. It saves the entry as a development dependency and all five
+natives as optional local dependencies. Because npm rejects combining the two
+save modes, the existing recipe uses two installs followed by a clean offline
+install:
+
+```sh
+npm install --save-dev --save-exact --ignore-scripts vendor/seshat/entry.tgz
+npm install --save-optional --save-exact --ignore-scripts \
+  vendor/seshat/linux-x64.tgz vendor/seshat/linux-arm64.tgz \
+  vendor/seshat/darwin-x64.tgz vendor/seshat/darwin-arm64.tgz \
+  vendor/seshat/win32-x64.tgz
+npm ci --ignore-scripts --offline
+./node_modules/.bin/seshat --version
+./node_modules/.bin/seshat check --config ./seshat.json --json --no-progress
+```
+
+The retained `all-real-local` proof reports `npm ci` status 0, installed
+version `seshat 0.1.0-rc.1 (candidate)`, and a complete check with four
+mutants, three killed, one survived, zero unresolved, and score 75 on Node
+24.20.0. The final documented-install check must run this same six-archive
+set on all five target hosts. That check also exercises the canonical Unix
+entry archive on Windows. It does not replace the hosted target proof runs.
+
+## Remaining acceptance scope
+
+The final review has these concrete checks:
+
+1. Integrate the remaining proof wiring at the final source head and rerun the
+   five native package proofs. The Linux x64 hosted Debian 11 proof must use
+   the `8fe0541` input fix. The Windows package proof must use the minimal
+   missing-path assertion correction and rerun its consumer checks.
+2. Run the documented six-archive offline install on each of the five target
+   hosts, recording the exact six coordinates from
+   [`release-notice-audit.json`](release-notice-audit.json).
+3. Recheck the manifest and lock hashes, target metadata, and 65-entry
+   inventory if source inputs change. Keep the source/build inventory separate
+   from exact native import evidence.
+4. Complete the Windows static-CRT review: retain the valid full-use license
+   basis, map the release link inputs selected by `+crt-static` to the
+   applicable VS 2022 REDIST/distributable-code terms, and record the required
+   Microsoft terms or attribution for the embedded code. Recheck the exact
+   edition, toolset, SDK/UCRT, and release output. Record any copied runtime
+   file and its exact terms if the final package changes the current payload
+   boundary.
+5. Recheck final package manifests, lifecycle behavior, archive members,
+   notice hashes, and Unix entry versus Windows host-produced entry mode. Keep
+   the Unix entry as the canonical prepared archive only after this scoped
+   equivalence review.
+6. Run `git diff --check` and verify the links and hashes in this note and the
+   companion JSON. Publication, merge, and release clearance remain outside
+   this audit.
+
+The old `0.0.0 (candidate)` archives and the earlier clean Linux integration
+pack are historical evidence only. They explain prior notice and package
+layout decisions; their bytes and hashes are not current `0.1.0-rc.1`
+coordinates.
