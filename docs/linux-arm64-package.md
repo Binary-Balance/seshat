@@ -1,7 +1,7 @@
 # Linux ARM64 package protocol
 
-This protocol is the next bounded slice of issue 2 after the ARM64 host
-preflight. It builds and exercises the private native ARM64 candidate on
+This protocol records the final ARM64 slice of issue 2. It builds and exercises
+the private native ARM64 candidate on
 GitHub's `ubuntu-22.04-arm` runner. The build runs on the ARM64 runner itself.
 It does not cross-compile, use QEMU or lower the existing Linux x64 baseline.
 
@@ -14,8 +14,8 @@ The candidate is deliberately narrow:
 
 Native proof builds use the source-controlled `[profile.release]` in
 `benchmarks/proofs/Cargo.toml`, which explicitly sets `lto = "off"` and
-`strip = "symbols"`. The hosted package record below predates this policy and
-remains a historical observation.
+`strip = "symbols"`. The final hosted package record below uses this policy.
+Earlier package observations remain historical.
 
 The existing x64 invocation still takes the three pinned Debian 11 archives:
 
@@ -93,7 +93,41 @@ SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/lifecycle.mjs
 node benchmarks/proofs/linux-arm64-summary.mjs work/arm64
 ```
 
-## Observed native proof
+## Final native proof
+
+The final proof is [workflow run 34578770757](https://github.com/Binary-Balance/seshat/actions/runs/34578770757),
+with [job 103197240097](https://github.com/Binary-Balance/seshat/actions/runs/34578770757/job/103197240097)
+and the retained [Linux ARM64 artifact](https://github.com/Binary-Balance/seshat/actions/runs/34578770757/artifacts/10190932097).
+It tested merge source
+`0edd0a3a546d2a94f8ddac59aa52123a22c821c8` from `refs/pull/31/merge`, with PR
+head `97a19aa27ac7c78e95ccf3dcfac68befbabf3460`. The tested source tree matches
+merged `main` `b1a35c594854cbb0f9958be90ec254902b56a9c9`.
+
+The native host was Ubuntu 22.04.5 with glibc 2.35, aarch64 target
+`aarch64-unknown-linux-gnu`, ELF machine `183`, and kernel
+`6.8.0-1064-azure`. Node was `v24.20.0`, npm `11.19.0`, and rustc/Cargo
+`1.98.1`, with GCC 11.4.0, Clang 14.0.0 and GNU ld 2.38. Required symbols
+reached `GLIBC_2.34`, within the declared glibc 2.35 userspace baseline.
+
+Both npm and standalone routes passed with Cargo and Rustc absent from the
+consumer environment. The installed archive passed 43 CLI scenarios and the
+standalone route passed 11 parallel controls. Jest/Expo and Vitest each ran
+four requested cases to completion with originals preserved. The native
+lifecycle record passed all 11 SIGINT/SIGTERM, timeout, overflow and leader-exit
+cases, including bounded deadlines, descendant cleanup and empty scratch
+directories. The summary had no failures.
+
+The npm and standalone archives are each 862,472 bytes with SHA-256
+`c9fa2f430479d2934738d6bc3df5e486091da3de9d1861f230728659ba0a2b5d`. The
+1,815,248-byte binary has SHA-256
+`1875ee97580d955079313e3ca4181cd96acb8b32db4488b540093adc963e6da0`; the
+7,193-byte `BUILD.json` has SHA-256
+`e7308a6b07cfb2c8d29cf84676589d202d8e0e10915c033a0c374907e213a6dc`. Two
+clean packs matched all four identities and the retained installed artifact.
+The complete path-free record is [outputs/platform-support.json](../outputs/platform-support.json).
+The raw artifact is retained by GitHub until 2026-12-10T08:21:24Z.
+
+## Earlier native proof
 
 The successful hosted proof is [workflow run 34554949984](https://github.com/Binary-Balance/seshat/actions/runs/34554949984)
 from [PR 19](https://github.com/Binary-Balance/seshat/pull/19). It tested the
@@ -177,8 +211,6 @@ The selected runner reports Linux 6.8, currently observed as
 milestone. The exact Azure patch is the tested host observation, not a claim
 that every 6.8 patch behaves identically. The proof does not boot an older
 kernel and does not turn Node's upstream kernel requirement into a Seshat
-minimum. Final support remains pending review of this hosted proof.
-
-This slice says nothing about Windows, macOS, Alpine or other glibc versions.
-Those platform gates remain separate work. It also does not publish the npm
-scope or claim a public release artifact.
+minimum. The consolidated [platform matrix](platform-support.md) records the
+final support boundary and the other four targets. This private candidate is
+not a public npm release; Windows ARM64 and Alpine remain outside the release.
