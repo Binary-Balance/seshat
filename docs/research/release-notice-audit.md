@@ -1,25 +1,22 @@
 # Release notice audit
 
-Status: preliminary release preparation for issue #6. This records what the
-current native package bytes contain and what notice evidence should be carried
-into the v0.1.0-rc.1 packages. It is not final release clearance or legal
-advice. The final package layout moves the crate and adds Node launcher
-packages, so every result below needs to be repeated against those bytes.
+Status: bounded runtime notice integration for issue #6. This records the
+single clean Linux x64 pack produced after the package layout and the remaining
+five-target audit gap. It is not final release clearance or legal advice.
 
 There was no existing `docs/research` convention in this checkout. This file
 is the single research note for the audit. The pinned Rust runtime notice
 assets live under
 [`packaging/runtime-notices/`](../../packaging/runtime-notices/); they are
-source material for the final packer integration, not proof of final archive
-contents.
+validated source material now appended to the native package notice. The final
+five-target audit still needs to be repeated against each native archive.
 
 ## Scope and evidence
 
-The review used [`packaging/pack.mjs`](../../packaging/pack.mjs) at `0edd0a3`
-(the source revision named by the retained Windows proof), the current
-[`benchmarks/proofs/Cargo.toml`](../../benchmarks/proofs/Cargo.toml) and
-[`Cargo.lock`](../../benchmarks/proofs/Cargo.lock), the Rust 1.98.1 toolchain
-provided for the proof, and the retained package evidence under `/tmp`:
+The preliminary review used [`packaging/pack.mjs`](../../packaging/pack.mjs) at
+`0edd0a3` and the earlier proof package evidence below. The bounded integration
+pack uses the moved [`crates/seshat/Cargo.toml`](../../crates/seshat/Cargo.toml),
+its [`Cargo.lock`](../../crates/seshat/Cargo.lock), and Rust 1.98.1.
 
 | target | binary evidence | package archive evidence | notice evidence |
 | --- | --- | --- | --- |
@@ -29,12 +26,45 @@ provided for the proof, and the retained package evidence under `/tmp`:
 | macOS ARM64, `aarch64-apple-darwin` | 1,823,648 bytes, SHA-256 `39baf5a607bc210ad340ccfa88267d23918cabac33ecba19c7c86c4d8110b0c7` | 838,416 bytes, SHA-256 `4de118e36f9b173c093f508da2437ba05756671e6b47786ce6798ef14e7a8e6d` | same 485,480-byte Unix notice |
 | Windows x64 MSVC, `x86_64-pc-windows-msvc` | 2,066,944 bytes, SHA-256 `ab2e49aacd41c34b0e256eaddbb61a4c728801e141bea3381b9e74ee3408a912` | 880,937 bytes, SHA-256 `5b7651eb45900ab291b2434175a195d77870a06d8fc84523a6306056cdf0e33d` | 485,788 bytes, SHA-256 `bd36a6400cfdcbd14fac87355f0263b0e928806ac4c91b4f83692e5a14f3174e` (CRLF) |
 
-The five archives contain the same six package paths, with the platform
+The historical five archives contain the same six package paths, with the platform
 binary name adjusted on Windows: `BUILD.json`, `LICENSE`, `README.md`,
 `THIRD_PARTY_NOTICES.txt`, `bin/seshat` or `bin/seshat.exe`, and
 `package.json`. The npm and standalone archives are byte-identical in each
 proof. The current proof packages identify themselves as version `0.0.0
 (candidate)`, which is why their hashes cannot serve as v0.1.0 release hashes.
+
+### Bounded Linux x64 integration pack
+
+One clean-source pack was run at commit `45e1406980f32ec3e09652df1ce40f8b4a9b02e9`
+with Rust `1.98.1 (48a229ceaefd4985c50990b14116b6d856af0985)`, Node
+`24.20.0`, npm `11.19.0`, and the pinned Debian 11 input directory. The command
+was `node packaging/pack.mjs work/debian11-inputs`. The retained local evidence
+is under `work/release-notice-audit/linux-x64/`:
+
+- `binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz`: 948,125 bytes,
+  SHA-256 `4ea2fdb4acac6b051e648ef28c5e3f5799a1c1d79ceda437a98810b43ab93381`.
+- `pack-result.json`: 1,995 bytes, SHA-256
+  `92f437bbfb0224233572988883a6a12cb814c6da5e765eb1ca55c09f9c47f8d7`.
+- Extracted `bin/seshat`: 2,028,296 bytes, SHA-256
+  `49a6ed93d8d13d0ed8166d0e93066c9d54275694ed5d85505953ebfda56ddc60`.
+- Extracted `BUILD.json`: 9,785 bytes, SHA-256
+  `cd834c82caab0d7d9614371a5a8c691ffb34fb0c90181ad95aa167319ef35501`.
+- Extracted `THIRD_PARTY_NOTICES.txt`: 2,057,665 bytes, SHA-256
+  `49ebba598a25d26340cf836ea7dfcaa58ed7a279cefe32b9e63bf7aafb52c5d5`.
+
+The archive contains exactly `BUILD.json`, `LICENSE`, `README.md`,
+`THIRD_PARTY_NOTICES.txt`, `bin/seshat`, and `package.json`. The extracted
+`BUILD.json` binds `sourceCommit` to the clean pack commit and records the
+notice hash, all nine pinned Rust asset hashes and byte counts, and the full
+Rust commit. The archive notice check compared its extracted bytes with the
+staged notice. It contains the root `COPYRIGHT` and `UNLICENSE`, the siphasher
+`COPYING` attribution naming the Rust Project Developers and Frank Denis plus
+complete MIT/Apache terms, the conservative multi-target Rust inventory, and
+the compiler-builtins, compiler-rt credits, and libm texts.
+
+This is local Linux x64 evidence for the integration code. It does not establish
+final applicability for Linux ARM64, macOS, or Windows, and it does not replace
+the final five-target native audit or Windows edition provenance review.
 
 The extracted `BUILD.json` files are: Linux x64, 7,720 bytes, SHA-256
 `38440c9abb91510696411168d3a0de014b21f0dce270f13ecb8fed0fcdcd991f`; Linux
@@ -57,7 +87,7 @@ binary.
 ## Rust crate inventory in the current packages
 
 The current lockfile has SHA-256
-`398dac4d72bc372aa1fb50dd893020998c3e3125f2cc2b9a3e7d3ef6f7523562` and
+`9bc31fc47fe014edb449dbb172401f1bf8cc423324ec972e305880d2d1a7d243` and
 resolves 66 packages, including the local root, and 65 source packages. The
 following is the exact source package inventory emitted into each current
 notice file. Windows has the same sections and bytes after CRLF normalization.
@@ -86,9 +116,10 @@ The build graph also contains proc-macro or build support such as
 `autocfg`, and their macro support (`proc-macro2`, `quote`, `syn`,
 `unicode-ident`, `phf_generator`, `fastrand`, and related packages). These are
 used to produce the binary and are not runtime libraries in the package. The
-current full inventory is a reasonable conservative attribution appendix, but
-the final `BUILD.json` should label the runtime graph separately from build-only
-inputs rather than presenting all metadata packages as bundled runtime code.
+current full inventory is a reasonable conservative attribution appendix.
+`BUILD.json` labels its `dependencies` list with
+`dependencyInventoryScope`, which identifies the locked source/build inventory
+and keeps it separate from an exact linked-runtime claim.
 
 ### License files collected and gaps
 
@@ -99,21 +130,20 @@ most packages, the Unicode license files for `unicode-id-start` and
 `unicode-ident`, `LICENSE-Apache2-LLVM` and `LICENSE-Boost` for `dragonbox_ecma`,
 and the Oxc fallback described below.
 
-The finalization decisions for these three items are explicit:
+The integration decisions for these three items are explicit:
 
 1. `unicode-segmentation 1.13.3` and `unicode-width 0.2.2` each ship a root
    `COPYRIGHT` file and their generated sources point to it. The package
-   writer has been asked to include it in the root-file matcher. The [Unicode
-   License V3](https://www.unicode.org/license.txt) requires the copyright and
-   permission notice to accompany copies or associated documentation.
+   matcher includes it. The [Unicode License
+   V3](https://www.unicode.org/license.txt) requires the copyright and permission
+   notice to accompany copies or associated documentation.
 2. `siphasher 1.0.3` ships only a `COPYING` pointer naming the Rust Project
    Developers and Frank Denis and pointing to either Apache-2.0 or MIT. Keep
    that pointer and append the complete canonical Apache-2.0 and MIT texts.
    This preserves the upstream attribution rather than replacing it with a
    Seshat copyright.
 3. `memchr 2.8.3` ships `COPYING`, `LICENSE-MIT`, and `UNLICENSE`; the matcher
-   omits `UNLICENSE`. The package writer has been asked to retain `UNLICENSE`
-   with the other offered licenses.
+   retains all three offered files.
 
 The Oxc crates in the proof omit a root license file. The packer only accepts
 the exact pinned versions and `.cargo_vcs_info.json` revisions, then appends
@@ -275,8 +305,7 @@ boundary described here.
 
 ## Final v0.1.0-rc.1 checklist
 
-Repeat these checks after the package-layout agent has produced the final
-artifacts:
+Repeat these checks for the final five native artifacts:
 
 1. Run locked, offline metadata and target-specific `cargo tree` from the
    moved `crates/seshat` manifest for all five triples. Record the new lockfile
@@ -309,9 +338,9 @@ artifacts:
 
 ## Outstanding evidence gaps
 
-- The v0.1.0-rc.1 package bytes do not exist in the retained evidence. The
-  current hashes and notices describe the earlier `seshat-proofs 0.0.0`
-  candidate only.
+- The final five-target v0.1.0-rc.1 package bytes do not exist in the retained
+  evidence. A single clean Linux x64 integration archive is recorded above;
+  the other four native archives still need their final runs.
 - The crate move, new package manifests, launcher, and final lockfile can
   change both the dependency set and the archive file list. The old
   `Cargo.lock` hash must not be reused.
@@ -330,11 +359,9 @@ artifacts:
   but not unpacked `BUILD.json` and notices. The macOS and Windows directories
   retain `BUILD.json`; their notice files still need extraction from the
   archives for a portable final evidence set.
-- The package writer still needs the final archive check for root `COPYRIGHT`
-  and `UNLICENSE` inclusion and for the `siphasher` full-text inclusion. The
-  agreed policy is to preserve the `siphasher` `COPYING` pointer naming the
-  Rust Project Developers and Frank Denis, append complete MIT/Apache text,
-  and retain `memchr`'s `UNLICENSE`.
+- The local Linux x64 archive check confirms root `COPYRIGHT` and `UNLICENSE`
+  inclusion and the `siphasher` full-text policy. Repeat those checks against
+  the other four final native archives.
 - Current `BUILD.json` records compiler/runtime provenance but does not itself
   establish that compiler or LLVM source is in the package. Final notices must
   follow linked and physically copied components, not version strings.
