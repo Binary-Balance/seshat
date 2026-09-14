@@ -10,12 +10,13 @@ import {
   readFileSync,
   readdirSync,
   readlinkSync,
+  realpathSync,
   rmSync,
   statSync,
   writeFileSync,
 } from 'node:fs';
 import {tmpdir} from 'node:os';
-import {basename, dirname, join, resolve} from 'node:path';
+import {basename, dirname, extname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {parseArgs} from 'node:util';
 
@@ -32,13 +33,24 @@ assert.ok(values.cli, 'usage: node examples/verify.mjs --cli /absolute/path/to/s
 
 const cli = resolve(values.cli);
 assert.ok(statSync(cli).isFile(), `Seshat executable is missing: ${cli}`);
+const cliExtension = extname(cli).toLowerCase();
+assert.ok(!['.bat', '.cmd'].includes(cliExtension),
+  'pass a native executable or Node launcher; the Windows npm .cmd shim is a separate release check');
+const cliIsNodeLauncher = ['.cjs', '.js', '.mjs'].includes(cliExtension);
+const cliKind = cliIsNodeLauncher ? 'node-launcher' : 'native-executable';
+const cliCommand = cliIsNodeLauncher ? [process.execPath, cli] : [cli];
 const cliHash = createHash('sha256').update(readFileSync(cli)).digest('hex');
 if (process.env.SESHAT_EXPECTED_BINARY_SHA256) {
+  assert.equal(cliKind, 'native-executable', 'SESHAT_EXPECTED_BINARY_SHA256 requires a native executable');
   assert.equal(cliHash, process.env.SESHAT_EXPECTED_BINARY_SHA256);
 }
 const npm = process.env.npm_execpath
   ? [process.execPath, process.env.npm_execpath]
-  : [process.platform === 'win32' ? 'npm.cmd' : 'npm'];
+  : process.platform === 'win32'
+    // npm.cmd is a command script and cannot be spawned without a shell.
+    ? [process.execPath, join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js')]
+    : ['npm'];
+if (process.platform === 'win32') assert.ok(existsSync(npm[1]), `npm CLI is missing: ${npm[1]}`);
 
 const examples = {
   node: ['src/rules.ts', 'src/ignored.ts'],
@@ -52,7 +64,7 @@ mkdirSync(scratch);
 const results = {
   schemaVersion: 1,
   node: process.version,
-  cli: {sha256: cliHash, bytes: statSync(cli).size},
+  cli: {kind: cliKind, sha256: cliHash, bytes: statSync(cli).size},
   examples: {},
 };
 
@@ -90,7 +102,12 @@ function sourceSnapshot(name, project) {
   return Object.fromEntries(examples[name].map(path => [path, readFileSync(join(project, path), 'utf8')]));
 }
 
-function assertUnchanged(name, project, original) {
+function workspaceLinkSnapshot(project) {
+  const link = join(project, 'node_modules/@seshat/example-rules');
+  return {raw: readlinkSync(link), resolved: realpathSync(link)};
+}
+
+function assertUnchanged(name, project, original, originalLink) {
   for (const [path, source] of Object.entries(original)) {
     assert.equal(readFileSync(join(project, path), 'utf8'), source, `${name}: source changed: ${path}`);
   }
@@ -99,12 +116,20 @@ function assertUnchanged(name, project, original) {
     const link = join(project, 'node_modules/@seshat/example-rules');
     assert.ok(existsSync(link), 'workspaces: npm link disappeared');
     assert.ok(lstatSync(link).isSymbolicLink(), 'workspaces: npm did not create a link');
-    assert.equal(readlinkSync(link), '../../packages/rules');
+    assert.equal(readlinkSync(link), originalLink.raw, 'workspaces: npm link target representation changed');
+    assert.equal(realpathSync(link), originalLink.resolved, 'workspaces: npm link destination changed');
+    assert.equal(realpathSync(link), realpathSync(join(project, 'packages/rules')),
+      'workspaces: npm link does not resolve to the workspace package');
   }
 }
 
+function normalizedPath(path) {
+  return path.replaceAll('\\', '/');
+}
+
 function runCheck(name, project, configName, expectedStatus = 0) {
-  const child = run(cli, [
+  const child = run(cliCommand[0], [
+    ...cliCommand.slice(1),
     'check',
     '--config',
     configName,
@@ -117,6 +142,98 @@ function runCheck(name, project, configName, expectedStatus = 0) {
   assert.equal(report.schemaVersion, 1, `${name}: unexpected report schema`);
   assert.equal(report.command, 'check', `${name}: unexpected report command`);
   return report;
+}
+
+const expected = {
+  node: {
+    scope: ['src/rules.ts'],
+    functions: {
+      'src/rules.ts': [
+        {name: 'classify', covered: 3, total: 3, crap: 2},
+        {name: 'arrow@139', covered: 1, total: 1, crap: 1},
+      ],
+    },
+    mutation: {planned: 4, killed: 3, survived: 1, unresolved: 0, score: 75},
+  },
+  'jest-expo': {
+    scope: ['src/status.tsx'],
+    functions: {
+      'src/status.tsx': [
+        {name: 'classify', covered: 3, total: 3, crap: 2},
+        {name: 'isPositive', covered: 1, total: 1, crap: 1},
+        {name: 'statusCard', covered: 1, total: 1, crap: 1},
+      ],
+    },
+    mutation: {planned: 4, killed: 3, survived: 1, unresolved: 0, score: 75},
+  },
+  vitest: {
+    scope: ['src/server.ts', 'src/tempo.ts', 'src/view.tsx'],
+    functions: {
+      'src/server.ts': [
+        {name: 'createApp', covered: 3, total: 3, crap: 1},
+        {name: 'arrow@358', covered: 1, total: 1, crap: 1},
+      ],
+      'src/tempo.ts': [
+        {name: 'tempoLabel', covered: 5, total: 5, crap: 3},
+      ],
+      'src/view.tsx': [
+        {name: 'Tempo', covered: 1, total: 1, crap: 1},
+      ],
+    },
+    mutation: {planned: 4, killed: 4, survived: 0, unresolved: 0, score: 100},
+  },
+  workspaces: {
+    scope: ['packages/rules/index.ts', 'src/compare.ts'],
+    functions: {
+      'packages/rules/index.ts': [
+        {name: 'arrow@22', covered: 1, total: 1, crap: 1},
+      ],
+      'src/compare.ts': [
+        {name: 'arrow@68', covered: 1, total: 1, crap: 1},
+        {name: 'workspaceAnswer', covered: 1, total: 1, crap: 1},
+      ],
+    },
+    mutation: {planned: 2, killed: 2, survived: 0, unresolved: 0, score: 100},
+  },
+};
+
+function assertExpected(name, report, workers) {
+  const fixture = expected[name];
+  const scope = (report.scope?.files ?? []).map(normalizedPath);
+  assert.deepEqual(scope, fixture.scope, `${name}: resolved source scope differs`);
+
+  const sources = report.result?.sources ?? [];
+  assert.deepEqual(sources.map(source => normalizedPath(source.path)), fixture.scope,
+    `${name}: source assessments differ from resolved scope`);
+  for (const [path, functions] of Object.entries(fixture.functions)) {
+    const source = sources.find(candidate => normalizedPath(candidate.path) === path);
+    assert.ok(source, `${name}: missing source assessment: ${path}`);
+    const actual = source.result?.functions ?? [];
+    assert.deepEqual(actual.map(functionResult => functionResult.name), functions.map(functionResult => functionResult.name),
+      `${name}: function assessments differ: ${path}`);
+    for (const [index, fixtureFunction] of functions.entries()) {
+      const functionResult = actual[index];
+      assert.equal(functionResult.coverage, 1, `${name}: function is not fully covered: ${path}/${fixtureFunction.name}`);
+      assert.equal(functionResult.covered, fixtureFunction.covered, `${name}: covered count changed: ${path}/${fixtureFunction.name}`);
+      assert.equal(functionResult.total, fixtureFunction.total, `${name}: total count changed: ${path}/${fixtureFunction.name}`);
+      assert.equal(functionResult.crap, fixtureFunction.crap, `${name}: CRAP changed: ${path}/${fixtureFunction.name}`);
+      assert.equal(functionResult.status, 'measured', `${name}: function is not measured: ${path}/${fixtureFunction.name}`);
+    }
+  }
+
+  const mutation = report.result?.mutation;
+  assert.ok(mutation, `${name}: mutation assessment is missing`);
+  for (const [field, value] of Object.entries(fixture.mutation)) {
+    assert.equal(mutation[field], value, `${name}: mutation ${field} differs`);
+  }
+  assert.equal(mutation.completed, mutation.planned, `${name}: mutation completion count differs`);
+  assert.equal(mutation.outcomes?.length, mutation.planned, `${name}: mutation outcome count differs`);
+  assert.equal(mutation.workersRequested, workers, `${name}: requested worker count differs`);
+  assert.equal(mutation.workersUsed, workers, `${name}: effective worker count differs`);
+  assert.equal(mutation.outcomes.filter(outcome => outcome.verdict === 'killed').length, mutation.killed,
+    `${name}: killed outcome count differs`);
+  assert.equal(mutation.outcomes.filter(outcome => outcome.verdict === 'survived').length, mutation.survived,
+    `${name}: survived outcome count differs`);
 }
 
 function stable(report) {
@@ -162,25 +279,32 @@ try {
     copyExample(name, project);
     install(project);
     const original = sourceSnapshot(name, project);
+    const originalLink = name === 'workspaces' ? workspaceLinkSnapshot(project) : null;
+    if (originalLink) {
+      assert.equal(originalLink.resolved, realpathSync(join(project, 'packages/rules')),
+        'workspaces: npm link does not resolve to the workspace package');
+    }
     const normal = runCheck(name, project, 'seshat.json');
     assert.equal(normal.complete, true, `${name}: normal check was incomplete`);
     assert.equal(normal.quality.state, 'not-configured');
-    assertUnchanged(name, project, original);
+    assertExpected(name, normal, 1);
+    assertUnchanged(name, project, original, originalLink);
 
     const parallelConfig = JSON.parse(readFileSync(join(project, 'seshat.json'), 'utf8'));
     parallelConfig.workers = 2;
     writeFileSync(join(project, 'seshat-workers2.json'), JSON.stringify(parallelConfig, null, 2) + '\n');
     const parallel = runCheck(name, project, 'seshat-workers2.json');
     assert.equal(parallel.complete, true, `${name}: workers=2 check was incomplete`);
+    assertExpected(name, parallel, 2);
     assert.deepEqual(stable(parallel), stable(normal), `${name}: workers=1/2 results differ`);
-    assertUnchanged(name, project, original);
+    assertUnchanged(name, project, original, originalLink);
 
     results.examples[name] = {
       sourceFiles: sourcePaths,
       normal: portable(normal),
       workers: {
-        one: normal.result.mutation?.workersUsed ?? 1,
-        two: parallel.result.mutation?.workersUsed ?? 1,
+        one: normal.result.mutation.workersUsed,
+        two: parallel.result.mutation.workersUsed,
         parity: true,
       },
     };
@@ -199,7 +323,7 @@ try {
     assert.equal(equalityReport.complete, true);
     assert.equal(equalityReport.quality.state, 'passed');
     assert.ok(equalityReport.quality.checks.every(check => check.state === 'passed'));
-    assertUnchanged(name, project, original);
+    assertUnchanged(name, project, original, originalLink);
 
     const failure = {...base, thresholds: {maxCrap: maxCrap - 0.001, minMutationScore: score}};
     writeFileSync(join(project, 'seshat-failure.json'), JSON.stringify(failure, null, 2) + '\n');
@@ -207,7 +331,7 @@ try {
     assert.equal(failureReport.complete, true);
     assert.equal(failureReport.quality.state, 'failed');
     assert.equal(failureReport.result.mutation.score, score);
-    assertUnchanged(name, project, original);
+    assertUnchanged(name, project, original, originalLink);
 
     const incomplete = structuredClone(base);
     incomplete.setups[0].test = [process.execPath, '-e', 'process.exit(1)'];
@@ -215,7 +339,7 @@ try {
     const incompleteReport = runCheck(name, project, 'seshat-incomplete.json', 2);
     assert.equal(incompleteReport.complete, false);
     assert.equal(incompleteReport.quality.state, 'incomplete');
-    assertUnchanged(name, project, original);
+    assertUnchanged(name, project, original, originalLink);
     results.thresholds = {
       equality: equalityReport.quality,
       failure: failureReport.quality,
@@ -238,4 +362,4 @@ try {
   rmSync(work, {recursive: true, force: true});
 }
 
-console.log(`Verified ${Object.keys(examples).length} consumer examples with ${cliHash}; workers 1/2 agree, sources survive, and Node threshold/incomplete exits pass.`);
+console.log(`Verified ${Object.keys(examples).length} consumer examples with ${cliKind} ${cliHash}; expected assessments, worker counts, link preservation, and Node threshold/incomplete exits pass.`);
