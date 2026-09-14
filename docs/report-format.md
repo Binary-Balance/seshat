@@ -98,8 +98,9 @@ coverage and CRAP and has no `result.mutation`. `mutate` requires the original
 typecheck and test baselines, skips coverage execution, sets each setup's
 coverage state to `not-requested`, and omits each source's measurement result.
 Thus `mutate` has mutation evidence without source CRAP rows. A missing
-typecheck in a `check` or `mutate` setup can fail before this structured result
-exists. A typecheck is optional for `crap`.
+typecheck in a `check` or `mutate` setup is rejected before this structured
+result exists. In `crap`, the typecheck command is optional; when it is omitted,
+the setup keeps `typecheck.state: "not-run"` and `timings.typecheckMs: null`.
 
 ### Source rows and function measurements
 
@@ -151,7 +152,7 @@ Each `result.setups` row has `name`, `typecheck`, `baseline`, `coverage` and
 | `timed-out` | The configured deadline stopped the command. |
 | `execution-error` | The command, receipt, coverage file, output pipe or other execution evidence was invalid or failed. |
 | `cancelled` | Cancellation stopped the command. |
-| `not-run` | The requested job was not reached. |
+| `not-run` | The requested job was not reached. `crap` also uses this state for an intentionally omitted optional typecheck; a complete run keeps `typecheck.state: "not-run"` and `timings.typecheckMs: null` in that setup. |
 | `not-requested` | The command does not run this job. In the public commands this is the coverage job under `mutate`. |
 
 An attempted job can include `exit`, `ms`, `timedOut`, `cancelled`,
@@ -164,20 +165,24 @@ protocol. The job state, setup name and timing fields above are the contract.
 ### Runtime diagnostics
 
 Structured assessment results include `diagnostics` with runtime identity and
-concurrency information when it can be observed:
+concurrency sections. Unavailable values use `null` or the states below:
 
-* `runnerVersions` contains one entry per setup. It records `setup`, `runner`,
-  the observed Node version under `runtime.node`, and optional declared and
-  locked versions. Each package row has `name`, `actual`, `declared`, `locked`,
-  `declaredComparison` and `lockedComparison`. Each comparison is `match`,
-  `mismatch`, `not-comparable` or `unavailable`. A version range is
-  `not-comparable`, not a mismatch.
-* `concurrency.seshat` contains `configuredWorkers`, `effectiveWorkers` and a
-  `state` of `known` or `not-requested`. `concurrency.runners` contains
-  `test` and `coverage` entries per setup. Their effective runner worker count
-  is a number when direct flags or resolved configuration establish it, and
-  otherwise `null` with state `unavailable`; entries also carry `setup`,
-  `runner`, `command` and an optional `source` string.
+* `runnerVersions` contains one entry per setup with `setup`, `runner`, a
+  `runtime` object and a `packages` array. `runtime` always has `node`,
+  `declared` and `declaredComparison`; the first two are strings or `null` and
+  the comparison is `match`, `mismatch`, `not-comparable` or `unavailable`.
+  Each `packages` row always has `name`, `actual`, `declared`, `locked`,
+  `declaredComparison` and `lockedComparison`; the three version values are
+  strings or `null`, and each comparison uses the same four states. A version
+  range is `not-comparable`, not a mismatch. Node setups have an empty
+  `packages` array.
+* `concurrency.seshat` always has numeric `configuredWorkers`,
+  `effectiveWorkers` as a number or `null`, and `state` as `known` or
+  `not-requested`. For mutation, `effectiveWorkers` reports the same scheduler
+  capacity as `mutation.workersUsed`. `concurrency.runners` contains `test` and
+  `coverage` entries per setup. Each entry always has `setup`, `runner`,
+  `command`, `effectiveWorkers` as a number or `null`, `state` as `known` or
+  `unavailable`, and `source` as a string or `null`.
 
 These numeric and identity measurements are useful diagnostics. Any receipt,
 command text or free-form diagnostic nested under them remains evidence.
@@ -198,7 +203,7 @@ command text or free-form diagnostic nested under them remains evidence.
 | `notRun` | Planned mutants with no returned attempt. It is not the count of `not-run` verdicts. |
 | `unresolved` | `planned - killed - survived`, including incomplete attempts and unstarted work. |
 | `jobsAttempted` | Mutant test jobs only. Top-level `result.jobsAttempted` also includes original and worker baseline jobs. |
-| `workersRequested`, `workersUsed` | Configured Seshat worker limit and workers that actually scheduled mutation work. |
+| `workersRequested`, `workersUsed` | `workersRequested` is the configured Seshat worker limit. `workersUsed` is `min(workersRequested, planned)` when preparation succeeds and no cancellation was observed before scheduling, otherwise `0`. It is scheduler capacity, not observed worker activity, and is not reduced after scheduling starts for worker-start failure, cancellation or early stopping. |
 | `workerBaselineJobs`, `workerBaselines` | Additional worker baseline jobs and their evidence. |
 | `workerPreparationMs`, `mutationWallMs`, `workerCleanupMs` | Mutation preparation, scheduling and additional-worker cleanup timings. |
 | `diagnostics` | Unresolved counts, throughput, cumulative worker time and up to five slow executions. |
