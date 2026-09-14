@@ -1,0 +1,25 @@
+{
+  "name": "seshat-example-vitest",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": "24.20.0"
+  },
+  "scripts": {
+    "test": "vitest run --config vitest.config.mjs",
+    "typecheck": "tsc --project tsconfig.json"
+  },
+  "devDependencies": {
+    "@sinclair/typebox": "0.34.52",
+    "@types/node": "26.4.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@vitest/coverage-istanbul": "5.0.0",
+    "fastify": "5.12.3",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "typescript": "6.0.3",
+    "vitest": "5.0.0"
+  }
+}
