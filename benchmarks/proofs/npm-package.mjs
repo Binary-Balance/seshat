@@ -39,7 +39,9 @@ const archiveJson = path => {
   return JSON.parse(result.stdout);
 };
 const archiveText = (path, name) => {
-  const result = spawnSync('tar', ['-xOf', path, `package/${name}`], {encoding: 'utf8'});
+  const result = spawnSync('tar', ['-xOf', path, `package/${name}`], {
+    encoding: 'utf8', maxBuffer: 8 * 1024 * 1024,
+  });
   assert.ifError(result.error);
   assert.equal(result.status, 0, result.stderr);
   return result.stdout;
