@@ -75,10 +75,10 @@ The verifier installs every example in disposable copies, runs the normal
 check, checks the expected scope, function coverage and mutation results,
 compares one and two Seshat workers, checks link preservation, and exercises
 threshold and incomplete-run exits for the Node example. It passes arguments as
-an argv array and does not evaluate caller supplied shell text. Its
-`--npm-package` proof uses a disposable loopback registry and a populated npm
-cache; that proof is local packaging evidence, not a published-registry
-installation route.
+an argv array and does not evaluate caller supplied shell text. The separate
+`benchmarks/proofs/npm-package.mjs` proof uses a disposable loopback registry
+and a populated npm cache; that proof is local packaging evidence, not a
+published-registry installation route.
 
 ## Select source and capture
 
