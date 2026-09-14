@@ -206,6 +206,15 @@ const commonNpmOptions = [
 const read = path => JSON.parse(readFileSync(path, 'utf8'));
 const json = (path, value) => writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
 const evidence = {};
+const proofOutput = process.env.SESHAT_PROOF_OUTPUT ? resolve(process.env.SESHAT_PROOF_OUTPUT) : null;
+const lastProgress = output => output.split(/\r?\n/)
+  .findLast(line => line.startsWith('seshat-public-examples:')) ?? null;
+const runDetails = (name, result) => [
+  `${name}: timedOut=${result.timedOut} status=${result.status} signal=${result.signal}`,
+  `lastProgress=${result.progress ?? '<none>'}`,
+  `stdout:\n${result.stdout}`,
+  `stderr:\n${result.stderr}`,
+].join('\n');
 async function run(name, command, args, cwd, status = 0, runEnv = env, timeoutMs = 120_000) {
   const started = performance.now();
   const child = spawn(command, args, {
@@ -216,29 +225,64 @@ async function run(name, command, args, cwd, status = 0, runEnv = env, timeoutMs
   });
   let stdout = '';
   let stderr = '';
+  const forwardStderr = name === 'public-examples';
   child.stdout.setEncoding('utf8');
   child.stderr.setEncoding('utf8');
   child.stdout.on('data', value => { stdout += value; });
-  child.stderr.on('data', value => { stderr += value; });
+  child.stderr.on('data', value => {
+    stderr += value;
+    if (forwardStderr) process.stderr.write(value);
+  });
   return await new Promise(resolveRun => {
     let settled = false;
+    let timedOut = false;
     const finish = result => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      const completed = {...result, stdout, stderr};
+      const completed = {...result, timedOut, stdout, stderr, progress: lastProgress(stderr)};
       evidence[name] = {
         status: completed.status,
+        signal: completed.signal,
+        timedOut: completed.timedOut,
+        progress: completed.progress,
         ms: performance.now() - started,
         stdout,
         stderr,
       };
+      if (completed.error || completed.timedOut || completed.status !== status) {
+        if (proofOutput) {
+          mkdirSync(dirname(proofOutput), {recursive: true});
+          json(proofOutput, {
+            schemaVersion: 1,
+            kind: 'seshat-release-npm-install',
+            version,
+            host: {platform: process.platform, architecture: process.arch},
+            checks: evidence,
+            failure: {
+              name,
+              timedOut: completed.timedOut,
+              status: completed.status,
+              signal: completed.signal,
+              progress: completed.progress,
+              stdout,
+              stderr,
+              error: completed.error?.message ?? null,
+            },
+          });
+        }
+      }
+      if (completed.error) completed.error.message = `${runDetails(name, completed)}\n${completed.error.message}`;
       assert.ifError(completed.error);
-      assert.equal(completed.status, status, `${name}: ${stdout}${stderr}`);
+      assert.equal(completed.timedOut, false, runDetails(name, completed));
+      assert.equal(completed.status, status, runDetails(name, completed));
       console.log(`${name}: exit ${completed.status}`);
       resolveRun(completed);
     };
-    const timer = setTimeout(() => child.kill('SIGTERM'), timeoutMs);
+    const timer = setTimeout(() => {
+      timedOut = true;
+      child.kill('SIGTERM');
+    }, timeoutMs);
     child.once('error', error => finish({error, status: null, signal: null}));
     child.once('close', (code, signal) => finish({error: null, status: code, signal}));
   });
@@ -555,7 +599,7 @@ const result = {
   cachePrerequisite: 'registry-install populated the disposable npm cache before offline ci',
   checks: evidence,
 };
-const resultPath = process.env.SESHAT_PROOF_OUTPUT ?? join(work, 'result.json');
+const resultPath = proofOutput ?? join(work, 'result.json');
 json(join(work, 'result.json'), result);
 if (process.env.SESHAT_PROOF_OUTPUT) json(resultPath, result);
 await new Promise(resolveServer => server.close(resolveServer));

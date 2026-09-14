@@ -151,19 +151,6 @@ jobs:
           Copy-Item (Join-Path work/windows/release $release.entry.archive.file) work/windows/seshat-entry.tgz
           $nativeArchive = ($release.native | Where-Object key -eq 'win32-x64').archive.file
           Copy-Item (Join-Path work/windows/release $nativeArchive) work/windows/seshat-win32-x64-release.tgz
-      - name: Verify release npm entry, shim and public examples
-        shell: pwsh
-        env:
-          SESHAT_PROOF_OUTPUT: work/windows/npm-package.json
-          SESHAT_EXAMPLES_OUTPUT: work/windows/public-consumer-examples.json
-        run: |
-          $package = Get-Content work/windows/package-result.json -Raw | ConvertFrom-Json
-          $env:SESHAT_ENTRY_TARBALL_SHA256 = (Get-FileHash work/windows/seshat-entry.tgz -Algorithm SHA256).Hash.ToLower()
-          $env:SESHAT_NATIVE_TARBALL_SHA256 = (Get-FileHash work/windows/seshat-win32-x64-release.tgz -Algorithm SHA256).Hash.ToLower()
-          $env:SESHAT_NATIVE_BINARY_SHA256 = $package.binary
-          $env:SESHAT_CONSOLE_HELPER_BINARY = $package.consoleHelper
-          node benchmarks/proofs/npm-package.mjs work/windows/seshat-entry.tgz work/windows/seshat-win32-x64-release.tgz 2>&1 | Tee-Object -FilePath work/windows/npm-package.log
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Install locked Jest/Expo fixture dependencies
         shell: pwsh
         run: |
@@ -287,6 +274,19 @@ jobs:
             --cli $install.installedBinary `
             --deps "${{ github.workspace }}\benchmarks\proofs" `
             --cases stack,assertion,survived,before-all 2>&1 | Tee-Object -FilePath work/windows/vitest-check.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify release npm entry, shim and public examples
+        shell: pwsh
+        env:
+          SESHAT_PROOF_OUTPUT: work/windows/npm-package.json
+          SESHAT_EXAMPLES_OUTPUT: work/windows/public-consumer-examples.json
+        run: |
+          $package = Get-Content work/windows/package-result.json -Raw | ConvertFrom-Json
+          $env:SESHAT_ENTRY_TARBALL_SHA256 = (Get-FileHash work/windows/seshat-entry.tgz -Algorithm SHA256).Hash.ToLower()
+          $env:SESHAT_NATIVE_TARBALL_SHA256 = (Get-FileHash work/windows/seshat-win32-x64-release.tgz -Algorithm SHA256).Hash.ToLower()
+          $env:SESHAT_NATIVE_BINARY_SHA256 = $package.binary
+          $env:SESHAT_CONSOLE_HELPER_BINARY = $package.consoleHelper
+          node benchmarks/proofs/npm-package.mjs work/windows/seshat-entry.tgz work/windows/seshat-win32-x64-release.tgz 2>&1 | Tee-Object -FilePath work/windows/npm-package.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Write portable summary
         if: always()
