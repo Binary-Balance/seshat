@@ -6,10 +6,12 @@ import {chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSyn
 import {arch, release, version as osVersion} from 'node:os';
 import {dirname, isAbsolute, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {assertArchiveNotice, loadRuntimeNoticeAssets, renderRuntimeNotice, validateRustToolchain} from './runtime-notice-check.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..');
 const cargoManifest = join(repo, 'crates/seshat/Cargo.toml');
+const runtimeNoticeDirectory = join(here, 'runtime-notices', 'rust-1.98.1');
 const version = readFileSync(cargoManifest, 'utf8').match(/^version\s*=\s*"([^"]+)"/m)?.[1];
 assert.ok(version, `version is missing from ${cargoManifest}`);
 const nativeArm64 = process.argv.length === 3 && process.argv[2] === '--native-arm64';
@@ -78,6 +80,16 @@ const run = (command, args) => execFileSync(commandName(command), args, {
   stdio:['ignore','pipe','inherit'],
 });
 const sha256 = data => createHash('sha256').update(data).digest('hex');
+const runtimeNotices = loadRuntimeNoticeAssets(runtimeNoticeDirectory);
+const rustcVersion = run('rustc', ['--version']).trim();
+const rustcVerbose = run('rustc', ['-vV']);
+validateRustToolchain(runtimeNotices.provenance, {versionOutput:rustcVersion, verboseOutput:rustcVerbose});
+const runtimeNotice = renderRuntimeNotice(runtimeNotices);
+const runtimeLicenseText = path => {
+  const asset = runtimeNotices.files.find(file => file.path === path);
+  assert.ok(asset, `runtime notice asset is missing: ${path}`);
+  return asset.data.toString('utf8');
+};
 const toolInfo = (command, identity) => {
   const result = spawnSync(commandName(command), [], {encoding:'utf8', maxBuffer:128 * 1024});
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
@@ -209,13 +221,20 @@ for (const dependency of dependencies) {
     assert.equal(vcs.git.sha1, index ? '8e09fe324eb6df02f56e4eacdfac958930300380' : '894c8f9cd89508391b01eb26a4b5ac2b846ab39b');
     notices.push(readFileSync(join(here,'OXC-LICENSE'),'utf8'));
   }
+  if (dependency.name === 'siphasher') {
+    assert.equal(dependency.version, '1.0.3', 'unexpected siphasher revision');
+    assert.ok(files.includes('COPYING'), 'siphasher COPYING attribution is missing');
+    notices.push(`LICENSE-MIT (siphasher declared MIT option)\n${runtimeLicenseText('licenses/MIT.txt')}`);
+    notices.push(`LICENSE-APACHE-2.0 (siphasher declared Apache-2.0 option)\n${runtimeLicenseText('licenses/Apache-2.0.txt')}`);
+  }
 }
-const noticeText = notices.join('\n\n');
+const noticeText = Buffer.concat([Buffer.from(notices.join('\n\n'), 'utf8'), Buffer.from('\n\n', 'utf8'), runtimeNotice]);
+const noticeString = noticeText.toString('utf8');
 if (dependencies.some(({name}) => name === 'unicode-segmentation' || name === 'unicode-width')) {
-  assert.match(noticeText, /\nCOPYRIGHT\n/, 'expected COPYRIGHT in dependency notices');
+  assert.match(noticeString, /\nCOPYRIGHT\n/, 'expected COPYRIGHT in dependency notices');
 }
 if (dependencies.some(({name}) => name === 'memchr')) {
-  assert.match(noticeText, /\nUNLICENSE\n/, 'expected UNLICENSE in dependency notices');
+  assert.match(noticeString, /\nUNLICENSE\n/, 'expected UNLICENSE in dependency notices');
 }
 const pe = nativeWindows ? peInfo(bytes) : null;
 const versions = nativeMacos || nativeWindows ? '' : run('readelf',['-W','--version-info',binary]);
@@ -257,7 +276,17 @@ const build = {
     os:{platform:process.platform, architecture:arch(), release:release(), version:osVersion(), runner:process.env.RUNNER_OS ?? null,
       image:process.env.ImageOS ?? null, imageVersion:process.env.ImageVersion ?? null},
   } : {}),
-  rust:run('rustc',['--version']).trim(),
+  rust:rustcVersion,
+  runtimeNotices:{
+    format:runtimeNotices.provenance.format,
+    formatVersion:runtimeNotices.provenance.formatVersion,
+    rustcVersion:runtimeNotices.provenance.toolchain.rustcVersion,
+    rustcBuild:runtimeNotices.provenance.toolchain.rustcBuild,
+    rustCommit:runtimeNotices.provenance.toolchain.rustCommit,
+    noticeSha256:sha256(noticeText), noticeBytes:noticeText.length,
+    assets:runtimeNotices.files.map(({path,bytes,sha256}) => ({path,bytes,sha256})),
+  },
+  dependencyInventoryScope:'Cargo.lock source/build inventory; includes proc-macro, build-only, and target-specific packages and is not an exact linked-runtime subset',
   binarySha256:sha256(bytes), binaryBytes:bytes.length,
   cargoLockSha256:sha256(readFileSync(join(repo,'crates/seshat/Cargo.lock'))),
   sourceCommit:sourceCommit(),
@@ -298,12 +327,14 @@ const [packed] = JSON.parse(run('npm',['pack',stage,'--json','--offline','--igno
   '--cache',join(work,'cache'),'--userconfig',join(work,'user.npmrc'),'--globalconfig',join(work,'global.npmrc')]));
 assert.deepEqual(packed.files.map(f => f.path).sort(), ['BUILD.json','LICENSE','README.md','THIRD_PARTY_NOTICES.txt',packagedBinary,'package.json'].sort());
 const tarball = join(work,packed.filename);
+assertArchiveNotice(tarball, noticeText);
 const tarballSha256 = sha256(readFileSync(tarball));
 const result = {packageName:targetConfig.packageName, version, target:targetConfig.target,
   tarball, tarballSha256, proofBinary:join(target,triple,`release/seshat-proofs${nativeWindows ? '.exe' : ''}`),
   ...(nativeWindows ? {consoleHelper:join(target,triple,'release/windows-console-helper.exe'), binaryName:targetConfig.binaryName} : {}),
   binary:build.binarySha256, binaryBytes:bytes.length, binaryPath:binary, packageStage:stage,
   packedBytes:packed.size, unpackedBytes:packed.unpackedSize, integrity:packed.integrity, files:packed.files,
+  notice:{sha256:sha256(noticeText), bytes:noticeText.length},
   // The standalone route deliberately reuses npm's deterministic payload. Its verifier strips package/ before running it.
   standalone:{path:tarball, sha256:tarballSha256, bytes:packed.size}};
 writeFileSync(join(work,'result.json'),JSON.stringify(result,null,2)+'\n');

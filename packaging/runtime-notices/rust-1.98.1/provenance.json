@@ -128,7 +128,7 @@
     },
     "uefi": {
       "condition": "target_os = uefi",
-      "dependencies": ["r-efi 5.2.0", "r-efi-alloc 2.0.0"],
+      "dependencies": ["r-efi 5.3.0", "r-efi 6.0.0", "r-efi-alloc 2.1.0"],
       "license": "MIT OR Apache-2.0 OR LGPL-2.1-or-later",
       "appliesToSupportedTargets": false
     },
