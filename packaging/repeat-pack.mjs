@@ -1,8 +1,9 @@
 // Maintainer-only repeat pack proof. Successful proof evidence requires every comparison to pass.
 import assert from 'node:assert/strict';
-import {execFileSync} from 'node:child_process';
+import {execFileSync, spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {mkdirSync, mkdtempSync, readFileSync, writeFileSync} from 'node:fs';
+import {existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
+import {arch, release, version as osVersion} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {retainRepeatFailure} from './repeat-pack-evidence.mjs';
@@ -10,16 +11,32 @@ import {retainRepeatFailure} from './repeat-pack-evidence.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..');
 assert.equal(process.argv.length, 3,
-  'usage: SESHAT_REPEAT_OUTPUT=path node packaging/repeat-pack.mjs <Debian archive directory> | --native-arm64 | --native-macos');
+  'usage: SESHAT_REPEAT_OUTPUT=path node packaging/repeat-pack.mjs <Debian archive directory> | --native-arm64 | --native-macos | --native-windows');
 const output = process.env.SESHAT_REPEAT_OUTPUT;
 assert.ok(output, 'SESHAT_REPEAT_OUTPUT is required');
 const outputPath = resolve(output);
 const failureDirectory = join(dirname(outputPath), 'repeat-pack-failure');
 const packArgs = [process.argv[2]];
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
-const run = (command, args) => execFileSync(command, args, {cwd:repo, encoding:'utf8'}).trim();
+const commandName = command => process.platform !== 'win32' ? command
+  : command === 'npm' ? 'npm.cmd'
+    : command === 'tar' ? 'tar.exe'
+      : command;
+const run = (command, args) => execFileSync(commandName(command), args, {
+  cwd:repo, encoding:'utf8', shell:process.platform === 'win32' && command === 'npm',
+}).trim();
+const probe = (command, args = [], identity = null) => {
+  const result = spawnSync(commandName(command), args, {cwd:repo, encoding:'utf8', maxBuffer:128 * 1024});
+  const text = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
+  const version = identity ? text.match(identity)?.[0] ?? null : text.split(/\r?\n/, 1)[0];
+  assert.ok(!result.error && text && version, `${command} is unavailable or is not the expected MSVC tool`);
+  return {command, version, status:result.status};
+};
+const msvcIdentity = /^Microsoft \(R\) C\/C\+\+ Optimizing Compiler Version .+ for x64\b/m;
+const linkerIdentity = /^Microsoft \(R\) Incremental Linker Version \S+/m;
 const sourceCommit = run('git', ['rev-parse', 'HEAD']);
 assert.equal(run('git', ['status', '--porcelain']), '', 'repeat proof requires a clean source tree');
+const nativeWindows = packArgs[0] === '--native-windows';
 
 const inputHashes = !packArgs[0].startsWith('--')
   ? ['libc6.deb', 'libc6-dev.deb', 'libgcc-s1.deb'].map(file => ({file, sha256:sha256(readFileSync(join(resolve(packArgs[0]), file)))}))
@@ -30,11 +47,24 @@ const toolchain = {
   rustc: run('rustc', ['--version']),
   cargo: run('cargo', ['--version']),
 };
-const uname = {
-  system: run('uname', ['-s']),
-  release: run('uname', ['-r']),
-  machine: run('uname', ['-m']),
-};
+if (nativeWindows) {
+  toolchain.msvc = probe('cl.exe', [], msvcIdentity);
+  toolchain.linker = probe('link.exe', [], linkerIdentity);
+  toolchain.sdk = {
+    directory:process.env.WindowsSdkDir?.replace(/[\\/]+$/, '') ??
+      join(process.env['ProgramFiles(x86)'] ?? process.env.ProgramFiles ?? 'C:\\Program Files (x86)', 'Windows Kits', '10'),
+    version:process.env.WindowsSDKVersion?.replace(/[\\/]+$/, '') ?? null,
+    ucrtVersion:process.env.UCRTVersion ?? null,
+  };
+  if (!toolchain.sdk.version && existsSync(join(toolchain.sdk.directory, 'Lib'))) {
+    toolchain.sdk.version = readdirSync(join(toolchain.sdk.directory, 'Lib')).filter(value => /^\d/.test(value)).sort().at(-1) ?? null;
+  }
+}
+const host = process.platform === 'win32'
+  ? {platform:process.platform, architecture:arch(), release:release(), version:osVersion(), runner:process.env.RUNNER_OS ?? null,
+    image:process.env.ImageOS ?? null, imageVersion:process.env.ImageVersion ?? null}
+  : {system:run('uname', ['-s']), release:run('uname', ['-r']), machine:run('uname', ['-m'])};
+const uname = process.platform === 'win32' ? null : host;
 const glibc = process.platform === 'linux' ? process.report.getReport().header.glibcVersionRuntime : null;
 
 mkdirSync(join(repo, 'work'), {recursive:true});
@@ -46,8 +76,8 @@ let comparisons = null;
 function inspect(result) {
   const npmBytes = readFileSync(result.tarball);
   const standaloneBytes = readFileSync(result.standalone.path);
-  const buildBytes = execFileSync('tar', ['-xOf', result.tarball, 'package/BUILD.json'], {maxBuffer:2 * 1024 * 1024});
-  const binaryBytes = execFileSync('tar', ['-xOf', result.tarball, 'package/bin/seshat'], {maxBuffer:32 * 1024 * 1024});
+  const buildBytes = execFileSync(commandName('tar'), ['-xOf', result.tarball, 'package/BUILD.json'], {maxBuffer:2 * 1024 * 1024});
+  const binaryBytes = execFileSync(commandName('tar'), ['-xOf', result.tarball, `package/bin/${result.binaryName ?? 'seshat'}`], {maxBuffer:32 * 1024 * 1024});
   const npm = {sha256:sha256(npmBytes), bytes:npmBytes.length};
   const standalone = {sha256:sha256(standaloneBytes), bytes:standaloneBytes.length};
   const build = {sha256:sha256(buildBytes), bytes:buildBytes.length};
@@ -90,7 +120,9 @@ try {
   const proof = {
     schemaVersion:1,
     sourceCommit,
-    host:{platform:process.platform, arch:process.arch, uname, glibc},
+    host:process.platform === 'win32'
+      ? {platform:process.platform, arch:process.arch, windows:host, glibc}
+      : {platform:process.platform, arch:process.arch, uname, glibc},
     toolchain,
     input:{mode:packArgs[0].startsWith('--') ? packArgs[0] : 'debian-x64', archives:inputHashes},
     runs:inspected,
@@ -105,7 +137,9 @@ try {
     repo,
     failureDirectory,
     sourceCommit,
-    host:{platform:process.platform, arch:process.arch, uname, glibc},
+    host:process.platform === 'win32'
+      ? {platform:process.platform, arch:process.arch, windows:host, glibc}
+      : {platform:process.platform, arch:process.arch, uname, glibc},
     toolchain,
     input:{mode:packArgs[0].startsWith('--') ? packArgs[0] : 'debian-x64', archives:inputHashes},
     results,

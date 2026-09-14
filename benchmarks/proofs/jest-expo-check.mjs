@@ -352,6 +352,7 @@ const results = {
   dependencies: {versions: environment.tools},
   noConsumingRust: rustProof.evidence,
   work: portable(work),
+  requestedCases,
   runs: {},
 };
 const resultPath = process.env.SESHAT_PROOF_OUTPUT;
@@ -514,5 +515,6 @@ if (shouldRun('retry-baseline')) {
 delete results.normalDefinition;
 results.checks = {requested: requestedCases.length, completed: Object.keys(results.runs).length};
 results.originalsPreserved = true;
+assert.deepEqual(results.requestedCases, requestedCases);
 save();
 console.log(`Jest/Expo installed-command evidence: ${results.checks.completed} checks; ${join(work, 'result.json')}`);
