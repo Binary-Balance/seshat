@@ -229,13 +229,10 @@ async function run(name, command, args, cwd, status = 0, runEnv = env, timeoutMs
   child.stdout.setEncoding('utf8');
   child.stderr.setEncoding('utf8');
   child.stdout.on('data', value => { stdout += value; });
-  child.stderr.on('data', value => {
-    stderr += value;
-    if (forwardStderr) process.stderr.write(value);
-  });
   return await new Promise(resolveRun => {
     let settled = false;
     let timedOut = false;
+    let progress = null;
     const finish = result => {
       if (settled) return;
       settled = true;
@@ -283,6 +280,13 @@ async function run(name, command, args, cwd, status = 0, runEnv = env, timeoutMs
       timedOut = true;
       child.kill('SIGTERM');
     }, timeoutMs);
+    child.stderr.on('data', value => {
+      const previousProgress = progress;
+      stderr += value;
+      progress = lastProgress(stderr);
+      if (forwardStderr && !settled && !timedOut && progress !== previousProgress) timer.refresh();
+      if (forwardStderr) process.stderr.write(value);
+    });
     child.once('error', error => finish({error, status: null, signal: null}));
     child.once('close', (code, signal) => finish({error: null, status: code, signal}));
   });
