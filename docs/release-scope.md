@@ -16,9 +16,16 @@ implementation; changes to these design choices require renewed discussion.
 - Support Node's built-in test runner, Jest/Expo and Vitest, developed and verified
   one at a time.
 - Ship native binaries for Linux and macOS on x64 and ARM64, and Windows on x64.
-  Windows ARM64 and Alpine Linux are deferred. Linux x64's verified userspace
-  baseline is Debian 11/glibc 2.31 with Node 24.20.0. Minimum kernel versions and
-  the other targets' OS/native-library baselines remain to be established.
+  Windows ARM64 and Alpine Linux are outside this release. The [native platform
+  support matrix](platform-support.md) records the tested source, host, runtime,
+  package identity and installed proofs for each target. All five final proofs
+  passed from source `0edd0a3a546d2a94f8ddac59aa52123a22c821c8`, whose tree
+  matches merged `main` `b1a35c594854cbb0f9958be90ec254902b56a9c9`. The declared
+  compatibility floors are
+  Debian 11/glibc 2.31 for Linux x64, Ubuntu 22.04/glibc 2.35 for Linux ARM64,
+  macOS deployment target 15.0 for both macOS targets, and native Windows Server
+  2022 build 20348 for Windows x64. Linux 6.8 is the oldest tested kernel series
+  in the hosted Linux proofs; this does not claim incompatibility below 6.8.
 - Accept full, source-mapped Istanbul JSON coverage, using existing runner
   reporters or conversion tools rather than a custom V8 coverage converter.
 - Provide terminal output and versioned machine-readable JSON reports.
@@ -175,7 +182,9 @@ The candidate implements optional `thresholds.maxCrap` per measured function and
 `thresholds.minMutationScore` for the complete mutation run. Equality passes,
 using unrounded values. Exit 1 means unmet thresholds with complete evidence;
 exit 2 means invalid input or incomplete execution, and handled SIGINT/SIGTERM
-exit 130/143. Incomplete execution takes precedence over threshold failure.
+exit 130/143 on Unix. The native Windows proof uses `CTRL_BREAK_EVENT` through
+its console helper; it does not claim POSIX signal semantics. Incomplete
+execution takes precedence over threshold failure.
 Commands do not request the other assessment to evaluate its threshold. A
 genuinely unscored assessment is not applicable, not an invented passing score.
 See the README for exact fields, JSON states and CI invocation.

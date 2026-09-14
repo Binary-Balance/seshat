@@ -18,22 +18,27 @@ project's purpose: measuring code and recording evidence about its tests.
 
 ## Status
 
-Seshat is experimental. The current candidate runs on Linux x64 with glibc and
-can be installed from a locally built npm package. It has not been published to
-npm. The package has been verified in Debian 11/glibc 2.31 with Node 24.20.0.
-Other platforms and a minimum supported kernel still need verification.
+Seshat is experimental and has not been published to npm. The first-release
+matrix covers native Linux x64 and ARM64, macOS x64 and ARM64, and Windows x64.
+The final native proofs for those targets use source `0edd0a3` and are recorded
+in the [native platform support matrix](docs/platform-support.md). Consuming
+projects do not need a Rust toolchain to run a locally built, platform-specific
+npm package.
 
 Node's test runner, Jest/Expo and Vitest have self-contained regression fixtures.
 The verified Jest/Expo route is pinned to Jest 29.7.0, jest-expo 57.0.5 and
 Expo 57.0.20; see the [Jest/Expo configuration example](docs/configuration.md#jestexpo-example)
 and [installed-command proof](benchmarks/proofs/README.md#jestexpo-combined-workflow).
 See the [release scope](docs/release-scope.md) and
+[native platform support matrix](docs/platform-support.md) for platform limits,
+installation routes and retained evidence, and
 [open issues](https://github.com/Binary-Balance/seshat/issues) for remaining work.
 
 ## Build and install
 
-Building requires Rust 1.98.1, Node 24, npm, GCC, binutils and `dpkg-deb`.
-Prepare the locked dependencies and Debian library archives using the
+Building the Linux x64 candidate requires Rust 1.98.1, Node 24, npm, GCC,
+binutils and `dpkg-deb`. Prepare the locked dependencies and Debian library
+archives using the
 [package build instructions](packaging/README.md#build-and-verify-from-the-source-checkout),
 then run from this checkout:
 
@@ -52,6 +57,20 @@ npm install --save-dev --save-exact --ignore-scripts /absolute/path/to/package.t
 The installed package runs the native executable directly and needs no Rust
 toolchain or npm runtime dependencies. Your project supplies its test runner,
 TypeScript checks and coverage tools. See [package details](packaging/README.md).
+
+The same package bytes are also usable without npm. Extract the standalone
+archive and run its binary directly:
+
+```sh
+mkdir -p /absolute/path/to/seshat-standalone
+tar -xzf /absolute/path/to/package.tgz \
+  --strip-components=1 -C /absolute/path/to/seshat-standalone
+/absolute/path/to/seshat-standalone/bin/seshat --help
+```
+
+The platform matrix links the native CI archive for each target. Those are
+private candidate artifacts with a limited retention period, not public npm
+release downloads.
 
 ## Usage
 
