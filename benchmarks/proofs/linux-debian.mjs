@@ -8,12 +8,16 @@ import {fileURLToPath} from 'node:url';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 assert.equal(process.platform,'linux'); assert.equal(process.arch,'x64');
-assert.equal(process.argv.length,7,'usage: node benchmarks/proofs/linux-debian.mjs <archive directory> <pack result.json> <standalone archive> <entry tarball> <native tarball>');
+assert.equal(process.argv.length,9,'usage: node benchmarks/proofs/linux-debian.mjs <archive directory> <pack result.json> <standalone archive> <entry tarball> <native tarball> <examples directory> <npm cache>');
 const archives = resolve(process.argv[2]);
 const packed = JSON.parse(readFileSync(resolve(process.argv[3]),'utf8'));
 const standaloneArchive = resolve(process.argv[4]);
 const entryArchive = resolve(process.argv[5]);
 const nativeArchive = resolve(process.argv[6]);
+const examples = resolve(process.argv[7]);
+const examplesCache = resolve(process.argv[8]);
+assert.ok(statSync(examples).isDirectory());
+assert.ok(statSync(examplesCache).isDirectory());
 for (const archive of [standaloneArchive, entryArchive, nativeArchive]) assert.ok(statSync(archive).isFile());
 const inputs = [
   {file:'rootfs.tar.gz',sha256:'94b0efe6d4f788b1b894c04a6c6885d53a41bcd0b85757fffacd2bc4de142847',
@@ -74,7 +78,7 @@ run('debian-packages','dpkg-query',['-W','libc6','libgcc-s1','libstdc++6']);
 const output=run('installed-package',process.execPath,
   ['/seshat/benchmarks/proofs/npm-package.mjs','/opt/entry.tgz','/opt/native.tgz']);
 const install=read(output.match(/Results: (.+)/)[1]);
-assert.equal(Object.keys(install.checks).length,13);
+assert.equal(Object.keys(install.checks).length,14);
 const installedBinary=join(install.installedNative,'bin','seshat');
 assert.doesNotMatch(run('installed-libraries','ldd',[installedBinary]),/not found/);
 const cliOutput=run('installed-cli',process.execPath,['/seshat/benchmarks/proofs/cli.mjs'],
@@ -118,9 +122,12 @@ run('debian-consumer','bwrap',['--unshare-all','--uid','0','--gid','0','--die-wi
   '--ro-bind',standaloneArchive,'/opt/standalone.tar.gz',
   '--tmpfs','/seshat','--ro-bind',join(repo,'benchmarks/proofs'),'/seshat/benchmarks/proofs',
   '--ro-bind',join(repo,'benchmarks/node_modules'),'/seshat/benchmarks/node_modules',
+  '--ro-bind',examples,'/seshat/examples',
+  '--ro-bind',examplesCache,'/seshat/examples-npm-cache',
   '--ro-bind',packed.proofBinary,'/seshat/crates/seshat/target/release/seshat-proofs',
   '--bind',consumer,'/seshat/work','--chdir','/seshat','--clearenv',
   '--setenv','PATH','/opt/node/bin:/usr/bin:/bin','--setenv','LANG','C.UTF-8',
+  '--setenv','SESHAT_EXAMPLES_NPM_CACHE','/seshat/examples-npm-cache',
   '/opt/node/bin/node','--input-type=module','-e',script]);
 const result = {inputs,tarballSha256,standaloneArchiveSha256:standaloneSha256,
   proofBinarySha256:hash(readFileSync(packed.proofBinary)),
