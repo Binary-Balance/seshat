@@ -164,6 +164,21 @@ test('partial retry skips only byte-identical published archives', async () => {
   assert.equal(result.packages.at(-1).action, 'published');
 });
 
+test('native publish failure stops before the entry package', async () => {
+  const value = fixture();
+  const plan = planWith(value);
+  const published = [];
+  await assert.rejects(executePublication(plan, {
+    dryRun: false,
+    inspect: async () => ({status: 'absent'}),
+    publishPackage: async archive => {
+      published.push(archive.target);
+      if (archive.target === 'linux-arm64') throw new Error('native publish failed');
+    },
+  }), /native publish failed/);
+  assert.deepEqual(published, ['linux-x64', 'linux-arm64']);
+});
+
 test('registry HTTP failures stop the publication check', async () => {
   const value = fixture();
   const plan = planWith(value);

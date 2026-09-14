@@ -90,19 +90,20 @@ npm whoami --registry=https://registry.npmjs.org/
 Confirm that this account can publish in the `binary-balance` organisation and
 that npm account or organisation publishing settings require
 [two-factor authentication](https://docs.npmjs.com/configuring-two-factor-authentication).
-Publish the staged archives in this order; npm prompts for the one-time
-password when the account settings require it.
+Publish the staged archives through the checked helper. It validates the full
+set before any write, keeps the native-first order, and rechecks each package
+immediately before publishing. Its npm child inherits the terminal, so npm
+prompts for the one-time password when the account settings require it.
 
 ```sh
-for archive in \
-  linux-x64.tgz linux-arm64.tgz darwin-x64.tgz darwin-arm64.tgz \
-  win32-x64.tgz entry.tgz; do
-  npm publish "work/npm-publishing/archives/${archive}" \
-    --access=public \
-    --tag=<next-or-latest> \
-    --registry=https://registry.npmjs.org/ \
-    --@binary-balance:registry=https://registry.npmjs.org/
-done
+node benchmarks/proofs/npm-publishing.mjs \
+  --manifest docs/research/release-notice-audit.json \
+  --archives work/npm-publishing/archives \
+  --staging-evidence work/npm-publishing/archive-staging.json \
+  --revision <reviewed-sha> \
+  --version <version> \
+  --publish \
+  --report work/npm-publishing/first-publication.json
 ```
 
 Use `next` for a prerelease and `latest` only for a stable version. Do not run
@@ -204,8 +205,11 @@ mkdir npm-consumer-check && cd npm-consumer-check
 npm init --yes
 npm install --ignore-scripts --save-exact \
   @binary-balance/seshat@<version> \
-  --registry=https://registry.npmjs.org/
-npm ci --ignore-scripts
+  --registry=https://registry.npmjs.org/ \
+  --@binary-balance:registry=https://registry.npmjs.org/
+npm ci --ignore-scripts \
+  --registry=https://registry.npmjs.org/ \
+  --@binary-balance:registry=https://registry.npmjs.org/
 npm exec --offline -- seshat --version
 ```
 
@@ -222,9 +226,14 @@ and the six exact staged archives as assets. For a new release, for example:
 gh release create "v<version>" \
   --target <reviewed-sha> \
   --title "Seshat <version>" \
-  --notes-file docs/releases/0.1.0-rc.1.md \
+  --notes-file "docs/releases/<version>.md" \
+  --prerelease \
   work/npm-publishing/archives/*.tgz
 ```
+
+The command above is for a prerelease such as the current `0.1.0-rc.1`;
+omit `--prerelease` for a stable version. Substitute the chosen version in
+the tag, title, and notes filename so the release uses that version's notes.
 
 If the tag or release already exists, inspect it first and upload only missing
 assets. Do not substitute historical `0.0.0` archives or ordinary/standalone
