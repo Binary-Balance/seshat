@@ -28,9 +28,10 @@ optional native packages:
 The entry package owns the npm `seshat` command. Its Node launcher selects the
 matching native package and forwards arguments, output and status. The native
 archives also work as standalone installations. The target boundaries are in
-the [historical platform support matrix](docs/platform-support.md); the final
-rc.1 artifact, hash and support summary are still pending release integration.
-There is no published npm package or public download for this candidate.
+the [historical platform support matrix](docs/platform-support.md). No npm
+package or GitHub release has been published for this candidate; the [release notice
+and runtime audit](docs/research/release-notice-audit.md) records the prepared
+public CI archive coordinates and current proof state.
 
 The verified consumer runtime is Node 24.20.0. Install the test runner,
 TypeScript and coverage packages required by the project before running Seshat.
