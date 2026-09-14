@@ -17,7 +17,7 @@ import {
   writeSync,
 } from 'node:fs';
 import {tmpdir} from 'node:os';
-import {basename, dirname, extname, join, resolve} from 'node:path';
+import {basename, dirname, extname, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {parseArgs} from 'node:util';
 
@@ -27,28 +27,90 @@ const {values} = parseArgs({
   allowPositionals: false,
   options: {
     cli: {type: 'string'},
+    archives: {type: 'string'},
     output: {type: 'string'},
   },
 });
-assert.ok(values.cli, 'usage: node examples/verify.mjs --cli /absolute/path/to/seshat [--output PATH]');
+const usage = 'usage: node examples/verify.mjs (--cli PATH | --archives DIR) [--output PATH]';
+assert.equal(Number(Boolean(values.cli)) + Number(Boolean(values.archives)), 1, usage);
 
-const cli = resolve(values.cli);
-assert.ok(statSync(cli).isFile(), `Seshat executable is missing: ${cli}`);
-const cliExtension = extname(cli).toLowerCase();
-const cliIsWindowsShim = ['.bat', '.cmd'].includes(cliExtension);
-if (cliIsWindowsShim) {
-  assert.equal(process.platform, 'win32', 'Windows command shims can only run on Windows');
+const archiveTargets = [
+  {key: 'entry', file: 'entry.tgz', packageName: '@binary-balance/seshat'},
+  {key: 'linux-x64', file: 'linux-x64.tgz', packageName: '@binary-balance/seshat-linux-x64', executable: 'seshat'},
+  {key: 'linux-arm64', file: 'linux-arm64.tgz', packageName: '@binary-balance/seshat-linux-arm64', executable: 'seshat'},
+  {key: 'darwin-x64', file: 'darwin-x64.tgz', packageName: '@binary-balance/seshat-darwin-x64', executable: 'seshat'},
+  {key: 'darwin-arm64', file: 'darwin-arm64.tgz', packageName: '@binary-balance/seshat-darwin-arm64', executable: 'seshat'},
+  {key: 'win32-x64', file: 'win32-x64.tgz', packageName: '@binary-balance/seshat-win32-x64', executable: 'seshat.exe'},
+];
+const optionalArchiveTargets = archiveTargets.slice(1);
+const archiveDirectory = values.archives ? resolve(values.archives) : null;
+const nativeTarget = optionalArchiveTargets.find(target =>
+  target.key === `${process.platform}-${process.arch}`);
+
+function fileIdentity(path) {
+  const bytes = readFileSync(path);
+  return {
+    sha256: createHash('sha256').update(bytes).digest('hex'),
+    bytes: bytes.length,
+  };
 }
-const cliIsNodeLauncher = ['.cjs', '.js', '.mjs'].includes(cliExtension);
-const cliKind = cliIsWindowsShim ? 'windows-npm-shim' : cliIsNodeLauncher ? 'node-launcher' : 'native-executable';
-const cliCommand = cliIsWindowsShim
-  ? [process.env.ComSpec ?? process.env.COMSPEC ?? 'cmd.exe', '/d', '/s', '/c', 'call', cli]
-  : cliIsNodeLauncher ? [process.execPath, cli] : [cli];
-const cliHash = createHash('sha256').update(readFileSync(cli)).digest('hex');
-if (process.env.SESHAT_EXPECTED_BINARY_SHA256) {
-  assert.equal(cliKind, 'native-executable', 'SESHAT_EXPECTED_BINARY_SHA256 requires a native executable');
-  assert.equal(cliHash, process.env.SESHAT_EXPECTED_BINARY_SHA256);
+
+function npmIntegrity(path) {
+  return `sha512-${createHash('sha512').update(readFileSync(path)).digest('base64')}`;
 }
+
+function commandFor(path) {
+  const extension = extname(path).toLowerCase();
+  if (['.bat', '.cmd'].includes(extension)) {
+    assert.equal(process.platform, 'win32', 'Windows command shims can only run on Windows');
+    return [process.env.ComSpec ?? process.env.COMSPEC ?? 'cmd.exe', '/d', '/s', '/c', 'call', path];
+  }
+  return ['.cjs', '.js', '.mjs'].includes(extension) ? [process.execPath, path] : [path];
+}
+
+function commandKind(path) {
+  const extension = extname(path).toLowerCase();
+  return ['.bat', '.cmd'].includes(extension)
+    ? 'windows-npm-shim'
+    : ['.cjs', '.js', '.mjs'].includes(extension) ? 'node-launcher' : 'native-executable';
+}
+
+const cli = values.cli ? resolve(values.cli) : null;
+const cliKind = cli ? commandKind(cli) : null;
+const cliIdentity = cli ? (() => {
+  assert.ok(existsSync(cli) && statSync(cli).isFile(), `Seshat executable is missing: ${cli}`);
+  return fileIdentity(cli);
+})() : null;
+const cliCommand = cli ? commandFor(cli) : null;
+if (cli) {
+  if (process.env.SESHAT_EXPECTED_BINARY_SHA256) {
+    assert.equal(cliKind, 'native-executable', 'SESHAT_EXPECTED_BINARY_SHA256 requires a native executable');
+    assert.equal(cliIdentity.sha256, process.env.SESHAT_EXPECTED_BINARY_SHA256);
+  }
+}
+
+const archiveInfo = archiveDirectory ? (() => {
+  assert.ok(existsSync(archiveDirectory), `archive directory is missing: ${archiveDirectory}`);
+  assert.ok(statSync(archiveDirectory).isDirectory(), `archive input is not a directory: ${archiveDirectory}`);
+  const expectedFiles = archiveTargets.map(target => target.file).sort();
+  const actualFiles = readdirSync(archiveDirectory).sort();
+  assert.deepEqual(actualFiles, expectedFiles,
+    `archive directory must contain exactly ${expectedFiles.join(', ')}`);
+  return archiveTargets.map(target => {
+    const path = join(archiveDirectory, target.file);
+    assert.ok(existsSync(path) && statSync(path).isFile(), `archive is not a regular file: ${path}`);
+    return {
+      key: target.key,
+      file: target.file,
+      ...fileIdentity(path),
+      integrity: npmIntegrity(path),
+    };
+  });
+})() : null;
+if (archiveDirectory) {
+  assert.ok(nativeTarget, `--archives does not support the host ${process.platform}/${process.arch}`);
+}
+const archiveByKey = archiveInfo && new Map(archiveInfo.map(archive => [archive.key, archive]));
 const npmExecPath = process.env.npm_execpath && !/\.(?:cmd|bat)$/i.test(process.env.npm_execpath)
   ? process.env.npm_execpath : null;
 const npm = npmExecPath
@@ -71,7 +133,7 @@ mkdirSync(scratch);
 const results = {
   schemaVersion: 1,
   node: process.version,
-  cli: {kind: cliKind, sha256: cliHash, bytes: statSync(cli).size},
+  ...(cli ? {cli: {kind: cliKind, sha256: cliIdentity.sha256, bytes: cliIdentity.bytes}} : {archives: archiveInfo}),
   examples: {},
 };
 
@@ -111,6 +173,116 @@ function install(name, project) {
   ], project, 0, 600000));
 }
 
+function projectPath(project, path) {
+  return normalizedPath(relative(project, path));
+}
+
+function verifyLocalInstallation(project) {
+  const packageJson = JSON.parse(readFileSync(join(project, 'package.json'), 'utf8'));
+  const lock = JSON.parse(readFileSync(join(project, 'package-lock.json'), 'utf8'));
+  const entrySpec = 'file:vendor/seshat/entry.tgz';
+  assert.equal(packageJson.devDependencies?.[archiveTargets[0].packageName], entrySpec,
+    'local install: entry archive is not the root dev dependency');
+  assert.equal(lock.packages?.['']?.devDependencies?.[archiveTargets[0].packageName], entrySpec,
+    'local install: entry archive is missing from the root lock record');
+
+  const optionalLock = [];
+  for (const target of optionalArchiveTargets) {
+    const spec = `file:vendor/seshat/${target.file}`;
+    const record = lock.packages?.[`node_modules/${target.packageName}`];
+    assert.equal(packageJson.optionalDependencies?.[target.packageName], spec,
+      `local install: ${target.key} is not a root optional dependency`);
+    assert.equal(lock.packages?.['']?.optionalDependencies?.[target.packageName], spec,
+      `local install: ${target.key} is missing from the root lock record`);
+    assert.ok(record, `local install: ${target.key} lock record is missing`);
+    assert.equal(record.resolved, spec, `local install: ${target.key} lock path is not project-relative`);
+    assert.equal(record.integrity, archiveByKey.get(target.key).integrity,
+      `local install: ${target.key} lock integrity differs from the archive`);
+    assert.equal(record.optional, true, `local install: ${target.key} lock record is not optional`);
+    optionalLock.push({package: target.packageName, resolved: record.resolved, integrity: record.integrity});
+  }
+
+  const installedPackages = optionalArchiveTargets.map(target => {
+    const packageRoot = join(project, 'node_modules', target.packageName);
+    const installed = existsSync(packageRoot);
+    assert.equal(installed, target === nativeTarget,
+      `local install: unexpected installed native package for ${target.key}`);
+    return {target, packageRoot, installed};
+  });
+  const nativePackage = installedPackages.find(({target}) => target === nativeTarget);
+  assert.ok(nativePackage?.installed, 'local install: matching native package is missing');
+  const nativeManifestPath = join(nativePackage.packageRoot, 'package.json');
+  const nativeManifest = JSON.parse(readFileSync(nativeManifestPath, 'utf8'));
+  assert.equal(nativeManifest.name, nativeTarget.packageName, 'local install: native package name changed');
+  const nativeExecutable = join(nativePackage.packageRoot, 'bin', nativeTarget.executable);
+  assert.ok(statSync(nativeExecutable).isFile(), 'local install: native executable is missing');
+
+  const entryManifestPath = join(project, 'node_modules', archiveTargets[0].packageName, 'package.json');
+  const entryManifest = JSON.parse(readFileSync(entryManifestPath, 'utf8'));
+  assert.equal(entryManifest.name, archiveTargets[0].packageName, 'local install: entry package name changed');
+  const entryLauncher = join(project, 'node_modules', archiveTargets[0].packageName, 'bin', 'seshat.mjs');
+  assert.ok(statSync(entryLauncher).isFile(), 'local install: entry launcher is missing');
+
+  const launcher = join(project, 'node_modules', '.bin', process.platform === 'win32' ? 'seshat.cmd' : 'seshat');
+  assert.ok(statSync(launcher).isFile(), 'local install: npm .bin launcher is missing');
+  const launcherLink = lstatSync(launcher).isSymbolicLink() ? readlinkSync(launcher) : null;
+  return {
+    host: {platform: process.platform, arch: process.arch},
+    optionalLock,
+    native: {
+      package: nativeTarget.packageName,
+      path: projectPath(project, nativeExecutable),
+      ...fileIdentity(nativeExecutable),
+    },
+    launcher: {
+      kind: process.platform === 'win32' ? 'windows-npm-shim' : 'posix-bin-link',
+      path: projectPath(project, launcher),
+      ...(launcherLink ? {link: normalizedPath(launcherLink)} : {}),
+      ...fileIdentity(launcher),
+    },
+    entry: {
+      package: archiveTargets[0].packageName,
+      path: projectPath(project, entryLauncher),
+      ...fileIdentity(entryLauncher),
+    },
+  };
+}
+
+function installLocal(name, project) {
+  return phase(`local-install:${name}`, () => {
+    const vendor = join(project, 'vendor', 'seshat');
+    mkdirSync(vendor, {recursive: true});
+    for (const target of archiveTargets) {
+      cpSync(join(archiveDirectory, target.file), join(vendor, target.file));
+    }
+    run(npm[0], [
+      ...npm.slice(1),
+      'install',
+      '--save-dev',
+      '--save-exact',
+      '--ignore-scripts',
+      'vendor/seshat/entry.tgz',
+    ], project, 0, 600000);
+    run(npm[0], [
+      ...npm.slice(1),
+      'install',
+      '--save-optional',
+      '--save-exact',
+      '--ignore-scripts',
+      ...optionalArchiveTargets.map(target => `vendor/seshat/${target.file}`),
+    ], project, 0, 600000);
+    run(npm[0], [
+      ...npm.slice(1),
+      'ci',
+      '--ignore-scripts',
+      '--offline',
+    ], project, 0, 600000);
+    const installed = verifyLocalInstallation(project);
+    const launcher = join(project, 'node_modules', '.bin', process.platform === 'win32' ? 'seshat.cmd' : 'seshat');
+    return {command: commandFor(launcher), installed};
+  });
+}
+
 function copyExample(name, project) {
   cpSync(join(here, name), project, {
     recursive: true,
@@ -147,10 +319,10 @@ function normalizedPath(path) {
   return path.replaceAll('\\', '/');
 }
 
-function runCheck(name, project, configName, expectedStatus = 0) {
+function runCheck(name, project, configName, expectedStatus = 0, command = cliCommand) {
   return phase(`check:${name}:${configName.replace(/\.json$/, '')}`, () => {
-    const child = run(cliCommand[0], [
-      ...cliCommand.slice(1),
+    const child = run(command[0], [
+      ...command.slice(1),
       'check',
       '--config',
       configName,
@@ -318,13 +490,20 @@ try {
     const project = join(work, name);
     copyExample(name, project);
     install(name, project);
+    const local = archiveDirectory ? installLocal(name, project) : null;
+    const cliCommandForProject = local?.command ?? cliCommand;
+    if (local) {
+      if (results.installed) assert.deepEqual(local.installed, results.installed,
+        `${name}: installed archive identity differs from the first project`);
+      else results.installed = local.installed;
+    }
     const original = sourceSnapshot(name, project);
     const originalLink = name === 'workspaces' ? workspaceLinkSnapshot(project) : null;
     if (originalLink) {
       assert.equal(originalLink.resolved, realpathSync(join(project, 'packages/rules')),
         'workspaces: npm link does not resolve to the workspace package');
     }
-    const normal = runCheck(name, project, 'seshat.json');
+    const normal = runCheck(name, project, 'seshat.json', 0, cliCommandForProject);
     assert.equal(normal.complete, true, `${name}: normal check was incomplete`);
     assert.equal(normal.quality.state, 'not-configured');
     assertExpected(name, normal, 1);
@@ -333,7 +512,7 @@ try {
     const parallelConfig = JSON.parse(readFileSync(join(project, 'seshat.json'), 'utf8'));
     parallelConfig.workers = 2;
     writeFileSync(join(project, 'seshat-workers2.json'), JSON.stringify(parallelConfig, null, 2) + '\n');
-    const parallel = runCheck(name, project, 'seshat-workers2.json');
+    const parallel = runCheck(name, project, 'seshat-workers2.json', 0, cliCommandForProject);
     assert.equal(parallel.complete, true, `${name}: workers=2 check was incomplete`);
     assertExpected(name, parallel, 2);
     assert.deepEqual(stable(parallel), stable(normal), `${name}: workers=1/2 results differ`);
@@ -359,7 +538,7 @@ try {
 
     const equality = {...base, thresholds: {maxCrap, minMutationScore: score}};
     writeFileSync(join(project, 'seshat-equality.json'), JSON.stringify(equality, null, 2) + '\n');
-    const equalityReport = runCheck(name, project, 'seshat-equality.json');
+    const equalityReport = runCheck(name, project, 'seshat-equality.json', 0, cliCommandForProject);
     assert.equal(equalityReport.complete, true);
     assert.equal(equalityReport.quality.state, 'passed');
     assert.ok(equalityReport.quality.checks.every(check => check.state === 'passed'));
@@ -367,7 +546,7 @@ try {
 
     const failure = {...base, thresholds: {maxCrap: maxCrap - 0.001, minMutationScore: score}};
     writeFileSync(join(project, 'seshat-failure.json'), JSON.stringify(failure, null, 2) + '\n');
-    const failureReport = runCheck(name, project, 'seshat-failure.json', 1);
+    const failureReport = runCheck(name, project, 'seshat-failure.json', 1, cliCommandForProject);
     assert.equal(failureReport.complete, true);
     assert.equal(failureReport.quality.state, 'failed');
     assert.equal(failureReport.result.mutation.score, score);
@@ -376,7 +555,7 @@ try {
     const incomplete = structuredClone(base);
     incomplete.setups[0].test = [process.execPath, '-e', 'process.exit(1)'];
     writeFileSync(join(project, 'seshat-incomplete.json'), JSON.stringify(incomplete, null, 2) + '\n');
-    const incompleteReport = runCheck(name, project, 'seshat-incomplete.json', 2);
+    const incompleteReport = runCheck(name, project, 'seshat-incomplete.json', 2, cliCommandForProject);
     assert.equal(incompleteReport.complete, false);
     assert.equal(incompleteReport.quality.state, 'incomplete');
     assertUnchanged(name, project, original, originalLink);
@@ -402,4 +581,8 @@ try {
   rmSync(work, {recursive: true, force: true});
 }
 
-console.log(`Verified ${Object.keys(examples).length} consumer examples with ${cliKind} ${cliHash}; expected assessments, worker counts, link preservation, and Node threshold/incomplete exits pass.`);
+if (cli) {
+  console.log(`Verified ${Object.keys(examples).length} consumer examples with ${cliKind} ${cliIdentity.sha256}; expected assessments, worker counts, link preservation, and Node threshold/incomplete exits pass.`);
+} else {
+  console.log(`Verified ${Object.keys(examples).length} consumer examples with local archives; expected assessments, worker counts, link preservation, and Node threshold/incomplete exits pass.`);
+}
