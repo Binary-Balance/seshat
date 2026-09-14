@@ -521,13 +521,27 @@ curl --max-time 120 -fSL https://nodejs.org/dist/v24.20.0/node-v24.20.0-linux-x6
 SESHAT_PACK_RESULT=work/debian11-inputs/package-result.json node packaging/pack.mjs work/debian11-inputs
 cp "$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/debian11-inputs/package-result.json")).standalone.path);')" \
   work/debian11-standalone.tar.gz
-node benchmarks/proofs/linux-debian.mjs work/debian11-inputs work/debian11-inputs/package-result.json work/debian11-standalone.tar.gz
+native_binary="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/debian11-inputs/package-result.json")).binaryPath);')"
+native_stage="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/debian11-inputs/package-result.json")).packageStage);')"
+node packaging/release.mjs \
+  --output work/debian11-release \
+  --binary "linux-x64=$native_binary" \
+  --build-info "linux-x64=$native_stage/BUILD.json" \
+  --notices "linux-x64=$native_stage/THIRD_PARTY_NOTICES.txt" \
+  --manifest work/debian11-release.json
+entry_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/debian11-release.json")).entry.archive.file);')"
+native_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/debian11-release.json")).native.find(target => target.key === "linux-x64").archive.file);')"
+cp "work/debian11-release/$entry_archive" work/seshat-entry.tgz
+cp "work/debian11-release/$native_archive" work/seshat-linux-x64-release.tgz
+node benchmarks/proofs/linux-debian.mjs \
+  work/debian11-inputs work/debian11-inputs/package-result.json \
+  work/debian11-standalone.tar.gz work/seshat-entry.tgz \
+  work/seshat-linux-x64-release.tgz
 ```
 
-The standalone filename is retained for the existing proof interface; its
-contents are the npm `.tgz` with the `package/` prefix. The proof strips that
-prefix during extraction and checks that its bytes and hash equal the npm
-payload.
+The standalone input is the same deterministic npm `.tgz` under a distinct
+filename. The proof strips its `package/` prefix during extraction and checks
+that its bytes and hash equal the npm payload.
 
 The filesystem is the pinned [official Debian image artifact](https://github.com/debuerreotype/docker-debian-artifacts/tree/bae6d64d90b4068b09ff9d8b564c2773ef5d8d83/bullseye).
 Node's archive hash comes from its [release checksums](https://nodejs.org/dist/v24.20.0/SHASUMS256.txt).
@@ -544,8 +558,8 @@ and mounted only for the existing CLI parity comparison.
 The checks verify Debian 11, glibc 2.31, Node 24.20.0, npm, linked libraries and
 the absence of `cargo` and `rustc`, then run:
 
-- All 16 package checks, including offline install and `npm ci`, workspace
-  installation, executable hashes, invocation and platform rejection.
+- All 13 npm package controls, including offline install and `npm ci`, package
+  metadata, launcher paths, failure handling, cancellation and versioning.
 - All 43 installed CLI scenarios plus legacy parity, including real typechecks,
   fresh coverage, mutation outcomes, thresholds, incomplete results, timeouts,
   SIGINT/SIGTERM, source preservation and cleanup.
