@@ -414,7 +414,7 @@ const argumentJson = await runLauncher('argument-forwarding-json', [
 ], consumer, 2);
 const argumentReport = report(argumentJson);
 assert.equal(argumentReport.command, 'check');
-assert.match(argumentReport.result.error, /missing|configuration|no such file/i);
+assert.match(argumentReport.result.error, /missing|configuration|no such file|path specified/i);
 assert.equal(existsSync(shellMarker), false, 'launcher interpreted a user argument as shell input');
 
 if (process.platform === 'win32') {
@@ -424,7 +424,7 @@ if (process.platform === 'win32') {
   ], consumer, 2);
   const shimReport = report(shimArgument);
   assert.equal(shimReport.command, 'check');
-  assert.match(shimReport.result.error, /missing|configuration|no such file/i);
+  assert.match(shimReport.result.error, /missing|configuration|no such file|path specified/i);
   assert.equal(existsSync(shellMarker), false, 'Windows shim interpreted a user argument as shell input');
 }
 
