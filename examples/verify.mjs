@@ -14,6 +14,7 @@ import {
   rmSync,
   statSync,
   writeFileSync,
+  writeSync,
 } from 'node:fs';
 import {tmpdir} from 'node:os';
 import {basename, dirname, extname, join, resolve} from 'node:path';
@@ -74,6 +75,18 @@ const results = {
   examples: {},
 };
 
+function phase(label, action) {
+  writeSync(2, `seshat-public-examples: ${label} started\n`);
+  try {
+    const result = action();
+    writeSync(2, `seshat-public-examples: ${label} completed\n`);
+    return result;
+  } catch (error) {
+    writeSync(2, `seshat-public-examples: ${label} failed\n`);
+    throw error;
+  }
+}
+
 function run(command, args, cwd, expectedStatus = 0, timeout = 600000) {
   const child = spawnSync(command, args, {
     cwd,
@@ -88,14 +101,14 @@ function run(command, args, cwd, expectedStatus = 0, timeout = 600000) {
   return child;
 }
 
-function install(project) {
-  run(npm[0], [
+function install(name, project) {
+  return phase(`install:${name}`, () => run(npm[0], [
     ...npm.slice(1),
     'ci',
     '--ignore-scripts',
     '--no-audit',
     '--no-fund',
-  ], project, 0, 600000);
+  ], project, 0, 600000));
 }
 
 function copyExample(name, project) {
@@ -135,20 +148,22 @@ function normalizedPath(path) {
 }
 
 function runCheck(name, project, configName, expectedStatus = 0) {
-  const child = run(cliCommand[0], [
-    ...cliCommand.slice(1),
-    'check',
-    '--config',
-    configName,
-    '--scratch',
-    scratch,
-    '--json',
-    '--no-progress',
-  ], project, expectedStatus);
-  const report = JSON.parse(child.stdout);
-  assert.equal(report.schemaVersion, 1, `${name}: unexpected report schema`);
-  assert.equal(report.command, 'check', `${name}: unexpected report command`);
-  return report;
+  return phase(`check:${name}:${configName.replace(/\.json$/, '')}`, () => {
+    const child = run(cliCommand[0], [
+      ...cliCommand.slice(1),
+      'check',
+      '--config',
+      configName,
+      '--scratch',
+      scratch,
+      '--json',
+      '--no-progress',
+    ], project, expectedStatus);
+    const report = JSON.parse(child.stdout);
+    assert.equal(report.schemaVersion, 1, `${name}: unexpected report schema`);
+    assert.equal(report.command, 'check', `${name}: unexpected report command`);
+    return report;
+  });
 }
 
 const expected = {
@@ -302,7 +317,7 @@ try {
   for (const [name, sourcePaths] of Object.entries(examples)) {
     const project = join(work, name);
     copyExample(name, project);
-    install(project);
+    install(name, project);
     const original = sourceSnapshot(name, project);
     const originalLink = name === 'workspaces' ? workspaceLinkSnapshot(project) : null;
     if (originalLink) {
