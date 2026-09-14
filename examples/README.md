@@ -2,61 +2,141 @@
 
 These directories are independent projects. Each has its own `package.json`
 and lockfile and runs Seshat through an executable supplied by the caller. The
-examples use Node 24.20.0. `source.include` and `source.exclude` choose the
-files to assess. The resolved list is recorded in `scope.files`; selected
-source files must also be included in `capture`.
+examples use Node 24.20.0 and carry the test, typecheck and coverage
+dependencies needed by their setup commands. `source.include` and
+`source.exclude` choose the files to assess. The resolved list is recorded in
+`scope.files`; selected source files must also be included in `capture`.
 
-## Run an example
+The complete configurations are [the Node single-package example](node),
+[the workspace example](workspaces), [the Vitest example](vitest), and
+[the Jest and Expo example](jest-expo). The shared rules are in the
+[configuration guide](../docs/configuration.md), and the stable report fields
+are in the [report format](../docs/report-format.md).
 
-Install the dependencies from the project directory, then run a native Seshat
-executable directly:
+## Install and run a local candidate
+
+The rc.1 candidate is unpublished. Install the entry archive and the matching
+platform archive from local paths. The entry package is
+`@binary-balance/seshat@0.1.0-rc.1`; its five optional native package names
+use the same version, and the selected host must have its matching archive.
+The npm frontend selects that native package. A standalone invocation runs a
+native executable directly. Both routes still need the example project's Node,
+test runner, TypeScript and coverage dependencies.
+
+From an example directory on Linux or macOS:
 
 ```sh
 npm ci
-SESHAT=/absolute/path/to/seshat
-"$SESHAT" check --config ./seshat.json --json --no-progress > seshat-report.json
+ENTRY_TGZ=/absolute/path/to/binary-balance-seshat-0.1.0-rc.1.tgz
+NATIVE_TGZ=/absolute/path/to/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz
+npm install --save-dev --save-exact --ignore-scripts "$ENTRY_TGZ" "$NATIVE_TGZ"
+
+./node_modules/.bin/seshat check --config ./seshat.json \
+  --json --no-progress > seshat-report.json
 ```
 
-The final `@binary-balance/seshat` package also has a Node launcher at
-`packages/seshat/bin/seshat.mjs`. When that launcher is available, invoke it
-through Node and pass its path to the focused verifier:
+Extract the native archive for a standalone run:
 
 ```sh
-LAUNCHER=/absolute/path/to/packages/seshat/bin/seshat.mjs
-node "$LAUNCHER" check --config ./seshat.json --json --no-progress > seshat-report.json
-node /absolute/path/to/repo/examples/verify.mjs --cli "$LAUNCHER"
+mkdir -p .seshat-native
+tar -xzf "$NATIVE_TGZ" -C .seshat-native
+SESHAT=./.seshat-native/package/bin/seshat
+"$SESHAT" check --config ./seshat.json --json --no-progress \
+  > seshat-report.json
 ```
 
-The launcher is not built in this preparatory tree. An installed package uses
-the same entry under `node_modules/@binary-balance/seshat/bin/seshat.mjs` to
-select its platform's native optional payload.
-The verifier records a Node launcher hash as `cli.kind: "node-launcher"`; it
-does not treat that hash as the identity of the native payload. A real native
-executable is recorded as `cli.kind: "native-executable"` and can be checked
-with `SESHAT_EXPECTED_BINARY_SHA256`. The Windows npm generated
-`node_modules\.bin\seshat.cmd` route needs a separate release integration
-proof.
-
-PowerShell equivalents are:
+The same candidate install on Windows uses the generated npm shim. Hosted
+Windows consumer verification of that shim remains pending:
 
 ```powershell
 npm ci
-$env:SESHAT = 'C:\path\to\seshat.exe'
-& $env:SESHAT check --config .\seshat.json --json --no-progress |
-  Tee-Object -FilePath .\seshat-report.json
-
-$env:SESHAT = 'C:\path\to\packages\seshat\bin\seshat.mjs'
-node $env:SESHAT check --config .\seshat.json --json --no-progress |
-  Tee-Object -FilePath .\seshat-report.json
-node .\examples\verify.mjs --cli $env:SESHAT --output .\work\public-consumer-examples.json
+$entryTgz = 'C:\path\to\binary-balance-seshat-0.1.0-rc.1.tgz'
+$nativeTgz = 'C:\path\to\binary-balance-seshat-win32-x64-0.1.0-rc.1.tgz'
+npm install --save-dev --save-exact --ignore-scripts $entryTgz $nativeTgz
+& .\node_modules\.bin\seshat.cmd check --config .\seshat.json `
+  --json --no-progress | Tee-Object -FilePath .\seshat-report.json
 ```
 
-`examples/verify.mjs` accepts a native executable or a Node launcher. It passes
-arguments as an argv array and does not evaluate caller supplied shell text.
+For a standalone Windows run, extract the native archive and invoke
+`package\bin\seshat.exe` directly. A registry install command is not available
+yet; these paths refer to unpublished local candidate archives. The release
+artifact, hash and platform support summary remain pending.
+
+Run the focused verifier from the repository root with either an installed
+launcher or a native executable:
+
+```sh
+LAUNCHER=/absolute/path/to/node_modules/@binary-balance/seshat/bin/seshat.mjs
+node examples/verify.mjs --cli "$LAUNCHER" \
+  --output /absolute/path/to/public-consumer-examples.json
+```
+
 The verifier installs every example in disposable copies, runs the normal
 check, checks the expected scope, function coverage and mutation results,
 compares one and two Seshat workers, checks link preservation, and exercises
-threshold and incomplete-run exits for the Node example.
+threshold and incomplete-run exits for the Node example. It passes arguments as
+an argv array and does not evaluate caller supplied shell text. Its
+`--npm-package` proof uses a disposable loopback registry and a populated npm
+cache; that proof is local packaging evidence, not a published-registry
+installation route.
+
+## Select source and capture
+
+For a single package, include the source tree and capture the project files
+needed by its setups:
+
+```json
+{
+  "source": {
+    "include": ["src/**/*.ts"],
+    "exclude": ["src/ignored.ts"]
+  },
+  "capture": [
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "collect-node.mjs",
+    "src",
+    "tests",
+    "node_modules"
+  ]
+}
+```
+
+For a workspace, capture the workspace manifests and each internal package
+that the tests can reach:
+
+```json
+{
+  "source": {
+    "include": ["src/**/*.ts", "packages/**/*.ts"]
+  },
+  "capture": [
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "collect-node.mjs",
+    "packages",
+    "tests",
+    "node_modules"
+  ]
+}
+```
+
+`capture` entries are literal project-relative paths; they do not accept
+globs. Include patterns use `/`, are case-sensitive on Unix and
+case-insensitive on Windows, and support `*` within a directory and `**` across
+directories. Seshat assesses regular UTF-8 `.ts`, `.tsx`, `.mts`, and `.cts`
+files. A selected source file must be captured. Internal workspace links must
+have captured targets; external, dangling and cyclic links are rejected, and
+captured links are rewritten in the worker copy. Inspect the resolved scope in
+the report before changing a pattern:
+
+```sh
+./node_modules/.bin/seshat check --config ./seshat.json \
+  --json --no-progress > seshat-report.json
+node -e "const r=require('./seshat-report.json'); console.log(r.scope.files)"
+```
 
 ## Workers and resources
 
@@ -84,9 +164,11 @@ the full worker and setup rules.
 ## Reports and exits
 
 Use the JSON report to inspect `complete` and `quality.state` separately.
-`scope.files` is the resolved source scope, `result.sources` contains function
-coverage and CRAP values, and `result.mutation` contains `planned`, `killed`,
-`survived`, `unresolved`, `score`, `workersRequested` and `workersUsed`.
+`scope.files` is the resolved source scope. `result.sources` contains function
+coverage and CRAP values for `check` and `crap`; `result.mutation` on `check`
+and `mutate` contains `planned`, `killed`, `survived`, `unresolved`, `score`,
+`workersRequested` and `workersUsed`. The stable field and nullability rules
+are in the [report format](../docs/report-format.md).
 
 ```sh
 node -e "const r=require('./seshat-report.json'); console.log({complete:r.complete, quality:r.quality.state, scope:r.scope.files, mutation:r.result.mutation});"
@@ -102,20 +184,26 @@ $report.scope.files
 $report.result.mutation | Select-Object planned,killed,survived,unresolved,score,workersRequested,workersUsed
 ```
 
+CRAP uses `complexity^2 * (1 - coverage)^3 + complexity`. For complexity 10,
+zero, half and full statement coverage produce `110`, `22.5` and `10`. Missing
+or unreliable coverage is `unknown`, not zero; an empty function is
+`not-applicable`, and class field or static block rows are `complexity-only`.
+For three mutants with two killed and one survived, the score is
+`2 / (2 + 1) * 100 = 66.666...`. Timeouts and execution errors are unresolved,
+and a complete run with no mutants has `score: null` because mutation is not
+applicable.
+
 Exit 0 means complete execution with no failed applicable threshold. Exit 1
 means complete execution with an unmet threshold. Exit 2 means invalid input,
 a failed baseline, incomplete execution or output failure. Unix signal
-cancellation uses 130 or 143. An incomplete run takes precedence over a
+cancellation uses 130 or 143. On Windows, handled console cancellation uses
+exit 2 and sets `report.signal` to 2. An incomplete run takes precedence over a
 threshold failure. Without thresholds, a complete run reports its measurements
 with `quality.state: "not-configured"`.
+
+Seshat cannot promise JSON when its executable or interpreter cannot start,
+stdout cannot be written, or the operating system forcibly kills the process.
 
 The Node example includes a small Istanbul collector. It supports the listed
 UTF-8 TypeScript ESM files on Node 24.20.0 and the built-in test runner. It is
 an example adapter, not a general V8 coverage converter.
-
-Run the focused verifier from the repository root with a native executable:
-
-```sh
-SESHAT=/absolute/path/to/seshat
-node examples/verify.mjs --cli "$SESHAT" --output /absolute/path/to/public-consumer-examples.json
-```
