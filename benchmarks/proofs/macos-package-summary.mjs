@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {existsSync, readFileSync, statSync, writeFileSync} from 'node:fs';
 import {join, resolve} from 'node:path';
 import {packageFiles, readArchiveBuild, repeatArtifacts, repeatPassed} from './repeat-proof.mjs';
+import {validatePublicExamples, validateReleaseArchives} from './release-consumer-summary.mjs';
 
 const selfCheck = process.argv[2] === '--self-check';
 assert.ok(selfCheck || process.argv.length === 3,
@@ -82,7 +83,7 @@ function validateRunner(label, value, cases, packed, artifacts, fail) {
   }
 }
 
-function validateReleaseNpm(value, packed, fail) {
+function validateReleaseNpm(value, packed, fail, artifacts, publicExamples, artifactDirectory, nativeName) {
   if (value?.kind !== 'seshat-release-npm-install') return false;
   if (value.schemaVersion !== 1 || value.version !== packed?.version) fail('release npm version missing');
   const expectedStatuses = {
@@ -91,7 +92,7 @@ function validateReleaseNpm(value, packed, fail) {
     'argument-forwarding-json': 2, 'unsupported-platform-json': 2,
     'missing-payload-json': 2, 'version-mismatch-json': 2,
     'signal-lifecycle': process.platform === 'win32' ? 2 : 143,
-    'offline-ci': 0, 'version-after-ci': 0,
+    'offline-ci': 0, 'version-after-ci': 0, 'public-examples': 0,
   };
   for (const [name, expected] of Object.entries(expectedStatuses)) {
     if (value.checks?.[name]?.status !== expected) fail(`release npm check failed: ${name}`);
@@ -105,10 +106,12 @@ function validateReleaseNpm(value, packed, fail) {
     fail('release npm native notices are incomplete');
   }
   if (!/^\w+-apple-darwin$/.test(value.build?.target ?? '')) fail('release npm build target is not macOS');
+  if (artifactDirectory) validateReleaseArchives(value, artifacts, nativeName, fail);
+  validatePublicExamples(publicExamples, 'node-launcher', fail);
   return true;
 }
 
-function validate({preflight, packed, build, npm, standalone, jestExpo, vitest, lifecycle, repeat}, parseErrors = {}, artifactDirectory = null, artifacts = {}) {
+function validate({preflight, packed, build, npm, standalone, jestExpo, vitest, lifecycle, repeat, publicExamples}, parseErrors = {}, artifactDirectory = null, artifacts = {}) {
   const failures = Object.entries(parseErrors).map(([name, message]) => `${name}: invalid JSON (${message})`);
   const fail = message => failures.push(message);
   const retainedPackageBuild = artifactDirectory && artifacts.tarball?.file
@@ -156,7 +159,8 @@ function validate({preflight, packed, build, npm, standalone, jestExpo, vitest, 
     if (artifactDirectory && !existsSync(join(artifactDirectory, 'BUILD.json'))) fail('artifact missing: BUILD.json');
   }
   if (!npm) fail('npm result missing');
-  else if (!validateReleaseNpm(npm, packed, fail)) {
+  else if (!validateReleaseNpm(npm, packed, fail, artifacts, publicExamples, artifactDirectory,
+    `@binary-balance/seshat-darwin-${preflight?.candidate?.cpu ?? 'unknown'}`)) {
     if (Object.keys(npm.checks ?? {}).length !== 14) fail('npm proof did not retain 14 macOS checks');
     if (npm.checks?.['installed-cli-regression']?.status !== 0) fail('npm installed CLI check failed');
     if (cliScenarios(npm) !== 43) fail('npm proof did not retain 43 CLI scenarios');
@@ -186,7 +190,7 @@ function validate({preflight, packed, build, npm, standalone, jestExpo, vitest, 
 
 const selfCheckRunner = (cases, binary = 'binary', tarball = 'tarball') => ({
   version: 1,
-  cli: {source: 'tarball', version: 'seshat 0.0.0 (candidate)', tarballSha256: tarball, binarySha256: binary},
+  cli: {source: 'tarball', version: 'seshat 0.1.0-rc.1 (candidate)', tarballSha256: tarball, binarySha256: binary},
   noConsumingRust: {
     probes: [{command: 'cargo', unavailable: true}, {command: 'rustc', unavailable: true}],
     environmentUnset: environmentNames,
@@ -205,17 +209,26 @@ const selfCheckRunner = (cases, binary = 'binary', tarball = 'tarball') => ({
 function selfCheckSummary() {
   const binaryHash = 'b'.repeat(64);
   const archiveHash = 'c'.repeat(64);
-  const checks = Object.fromEntries(Array.from({length: 13}, (_, index) => [`check-${index}`, {status: 0}]));
-  checks['installed-cli-regression'] = {status: 0, stdout: 'CLI passed: 43 scenarios plus legacy parity'};
+  const checks = Object.fromEntries([
+    ['registry-install', 0], ['native-version', 0], ['launcher-version', 0], ['npm-exec', 0], ['package-script', 0],
+    ['unknown-command-json', 2], ['argument-forwarding-json', 2], ['unsupported-platform-json', 2],
+    ['missing-payload-json', 2], ['version-mismatch-json', 2], ['signal-lifecycle', 143],
+    ['offline-ci', 0], ['version-after-ci', 0], ['public-examples', 0],
+  ].map(([name, status]) => [name, {status}]));
   const base = {
     preflight: {candidate: {cpu: 'arm64', target: 'aarch64-apple-darwin'}, validation: {passed: true}, provenance: {sourceCommit: 'a'.repeat(40)}, environment: {
       platform: 'darwin', architecture: {node: 'arm64', unameMachine: 'arm64'},
       node: {version: 'v24.20.0'}, npm: {version: '11.0.0'},
       toolchain: {rust: {rustc: {version: 'rustc 1.98.1'}, cargo: {version: 'cargo 1.98.1'}}},
     }},
-    packed: {tarballSha256: archiveHash, binary: binaryHash, binaryBytes: 1, standalone: {sha256: archiveHash, bytes: 2}},
+    packed: {version: '0.1.0-rc.1', tarballSha256: archiveHash, binary: binaryHash, binaryBytes: 1, standalone: {sha256: archiveHash, bytes: 2}},
     build: {target: 'aarch64-apple-darwin', rust: 'rustc 1.98.1', binarySha256: binaryHash, binaryBytes: 1},
-    npm: {build: {target: 'aarch64-apple-darwin', rust: 'rustc 1.98.1', binarySha256: binaryHash, binaryBytes: 1}, checks},
+    npm: {kind: 'seshat-release-npm-install', schemaVersion: 1, version: '0.1.0-rc.1',
+      build: {target: 'aarch64-apple-darwin', rust: 'rustc 1.98.1', binarySha256: binaryHash, binaryBytes: 1,
+        package: '@binary-balance/seshat-darwin-arm64', packageVersion: '0.1.0-rc.1'},
+      entryArchive: {name: '@binary-balance/seshat', version: '0.1.0-rc.1'},
+      nativeArchive: {name: '@binary-balance/seshat-darwin-arm64', version: '0.1.0-rc.1'},
+      nativeNotices: {hasCopyright: true, hasUnlicense: true}, checks},
     standalone: {
       archiveSha256: archiveHash, archiveBytes: 2, cliScenarios: 43,
       build: {target: 'aarch64-apple-darwin', rust: 'rustc 1.98.1', binarySha256: binaryHash, binaryBytes: 1},
@@ -227,7 +240,12 @@ function selfCheckSummary() {
     lifecycle: {...Object.fromEntries(lifecycleCases.map(name => [name, {
       ms: 1, exit: {code: name.startsWith('SIGINT') ? 130 : name.startsWith('SIGTERM') ? 143 : 2, signal: null},
       leaderAlive: false, descendantAlive: false, remainingScratch: [],
-    }])), completed: true},
+      }])), completed: true},
+    publicExamples: {schemaVersion: 1, cli: {kind: 'node-launcher', sha256: 'a'.repeat(64), bytes: 1}, validation: {passed: true},
+      examples: Object.fromEntries(['node', 'jest-expo', 'vitest', 'workspaces'].map(name => [name, {
+        sourceFiles: ['src/example.ts'], normal: {scope: {files: ['src/example.ts']}, result: {sources: [], mutation: {}}},
+        workers: {one: 1, two: 2, parity: true},
+      }])), thresholds: {equality: {state: 'passed'}, failure: {state: 'failed'}, incomplete: {state: 'incomplete'}}},
   };
   const repeat = {
     schemaVersion: 1, sourceCommit: 'a'.repeat(40),
@@ -297,6 +315,7 @@ if (selfCheck) {
   const preflight = read('preflight.json');
   const packed = read('package-result.json');
   const npm = read('npm-package.json');
+  const publicExamples = read('public-consumer-examples.json');
   const standalone = read('standalone.json');
   const jestExpo = read('jest-expo-check.json');
   const vitest = read('vitest-check.json');
@@ -308,9 +327,14 @@ if (selfCheck) {
     const path = join(directory, name);
     if (existsSync(path) && statSync(path).isFile()) artifacts[key] = {file: name, sha256: hashFile(path), bytes: statSync(path).size};
   }
+  const releaseCpu = preflight?.candidate?.cpu ?? 'unknown';
+  for (const [key, name] of [['entry', 'seshat-entry.tgz'], ['releaseNative', `seshat-darwin-${releaseCpu}-release.tgz`]]) {
+    const path = join(directory, name);
+    if (existsSync(path) && statSync(path).isFile()) artifacts[key] = {file: name, sha256: hashFile(path), bytes: statSync(path).size};
+  }
   const retainedBuild = artifacts.tarball?.file
     ? readArchiveBuild(join(directory, artifacts.tarball.file)) : null;
-  const failures = validate({preflight, packed, build, npm, standalone, jestExpo, vitest, lifecycle, repeat}, parseErrors, directory, artifacts);
+  const failures = validate({preflight, packed, build, npm, standalone, jestExpo, vitest, lifecycle, repeat, publicExamples}, parseErrors, directory, artifacts);
   const cpu = preflight?.candidate?.cpu ?? 'unknown';
   const buildPath = join(directory, 'BUILD.json');
   const buildArtifact = build && existsSync(buildPath) ? {
@@ -341,10 +365,13 @@ if (selfCheck) {
     artifacts: packed ? {
       build: buildArtifact,
       npmTarball: artifacts.tarball ?? null,
+      entryArchive: artifacts.entry ?? null,
+      releaseNativeArchive: artifacts.releaseNative ?? null,
       standalone: artifacts.standalone ?? null,
       binary: {sha256: packed.binary, bytes: packed.binaryBytes},
     } : null,
-    npm: npm ? {build: npm.build, tarballSha256: packed?.tarballSha256 ?? null, cliScenarios: cliScenarios(npm), checks: statuses(npm)} : null,
+    npm: npm ? {build: npm.build, tarballSha256: packed?.tarballSha256 ?? null, cliScenarios: cliScenarios(npm), checks: statuses(npm), entryArchive: npm.entryArchive, nativeArchive: npm.nativeArchive} : null,
+    publicExamples: publicExamples ? {cli: publicExamples.cli, examples: publicExamples.examples, thresholds: publicExamples.thresholds, validation: publicExamples.validation} : null,
     standalone: standalone ? {build: standalone.build, archiveSha256: standalone.archiveSha256, archiveBytes: standalone.archiveBytes, cliScenarios: standalone.cliScenarios, checks: statuses(standalone)} : null,
     runners: {
       jestExpo: jestExpo ? {environment: jestExpo.environment, cli: jestExpo.cli, dependencies: jestExpo.dependencies, noConsumingRust: jestExpo.noConsumingRust, checks: jestExpo.checks, originalsPreserved: jestExpo.originalsPreserved} : null,
@@ -360,7 +387,7 @@ if (selfCheck) {
       comparisons: repeat.comparisons,
       validation: repeat.validation,
     } : null,
-    validation: {package: Boolean(packed && portablePackage), npm: Boolean(npm), standalone: Boolean(standalone), jestExpo: Boolean(jestExpo), vitest: Boolean(vitest), lifecycle: Boolean(lifecycle), repeatPack: Boolean(repeat && repeatPassed(repeat, {
+    validation: {package: Boolean(packed && portablePackage), npm: Boolean(npm), publicExamples: Boolean(publicExamples), standalone: Boolean(standalone), jestExpo: Boolean(jestExpo), vitest: Boolean(vitest), lifecycle: Boolean(lifecycle), repeatPack: Boolean(repeat && repeatPassed(repeat, {
       sourceCommit: preflight?.provenance?.sourceCommit,
       expectedTarget: preflight?.candidate?.target,
       expectedPlatform: preflight?.environment?.platform, expectedArch: preflight?.environment?.architecture?.node,

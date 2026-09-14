@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {existsSync, readFileSync, statSync, writeFileSync} from 'node:fs';
 import {join, resolve} from 'node:path';
 import {readArchiveBuild, repeatPassed as sharedRepeatPassed, windowsPackageFiles as packageFiles} from './repeat-proof.mjs';
+import {validatePublicExamples, validateReleaseArchives} from './release-consumer-summary.mjs';
 
 const selfCheckMode = process.argv[2] === '--self-check';
 assert.ok(selfCheckMode || process.argv.length === 3,
@@ -18,7 +19,7 @@ const hashFile = path => hash(readFileSync(path));
 const isCommit = value => typeof value === 'string' && /^(?!0{40})[\da-f]{40}$/i.test(value);
 const sameJson = (left, right) => JSON.stringify(left) === JSON.stringify(right);
 
-function validatePreflight(value, fail) {
+function validatePreflight(value, fail, artifactDirectory = null) {
   const candidate = value?.candidate;
   const environment = value?.environment;
   const runner = environment?.runnerImage;
@@ -41,10 +42,70 @@ function validatePreflight(value, fail) {
     fail('preflight Rust/Cargo provenance is incomplete');
   }
   if (!environment.toolchain?.msvc?.available || !environment.toolchain.msvc.version ||
-      !environment.toolchain?.linker?.available || !environment.toolchain.linker.version || !sdk?.version) {
+      !environment.toolchain?.linker?.available || !environment.toolchain.linker.version || !sdk?.version ||
+      !environment.toolchain?.visualStudio?.edition || !environment.toolchain.visualStudio.productVersion ||
+      !environment.toolchain.visualStudio.toolset) {
     fail('preflight MSVC/linker/SDK provenance is incomplete');
   }
+  const runtimeNoticeInputs = environment.toolchain?.runtimeNoticeInputs;
+  if (runtimeNoticeInputs?.schemaVersion !== 1 || runtimeNoticeInputs.root !== 'runtime-notice-inputs' ||
+      !Array.isArray(runtimeNoticeInputs.files) || runtimeNoticeInputs.files.length !== 3) {
+    fail('preflight runtime notice input inventory is incomplete');
+  } else {
+    for (const file of runtimeNoticeInputs.files) {
+      if (!file.kind || !/^https:\/\//.test(file.sourceUrl ?? '') || !Array.isArray(file.pathLabels) ||
+          !['missing', 'retained'].includes(file.status)) {
+        fail(`preflight runtime notice input metadata is incomplete: ${file.kind ?? 'unknown'}`);
+        continue;
+      }
+      if (file.status === 'missing') continue;
+      if (!Number.isInteger(file.bytes) || file.bytes < 0 || !/^[\da-f]{64}$/i.test(file.sha256 ?? '') ||
+          !/^runtime-notice-inputs\/(?:[\w.-]+\/)*[\w.-]+\.(?:txt|rtf)$/i.test(file.retainedPath ?? '')) {
+        fail(`preflight runtime notice input retention is incomplete: ${file.kind}`);
+      } else if (artifactDirectory) {
+        const retainedPath = join(artifactDirectory, ...file.retainedPath.split('/'));
+        if (!existsSync(retainedPath)) {
+          fail(`preflight runtime notice input artifact is missing: ${file.kind}`);
+        } else if (statSync(retainedPath).size !== file.bytes || hashFile(retainedPath) !== file.sha256) {
+          fail(`preflight runtime notice input artifact changed: ${file.kind}`);
+        }
+      }
+    }
+  }
   if (!environment.shell?.systemRoot || !environment.shell?.comspec) fail('preflight Windows shell provenance is incomplete');
+}
+
+function validateReleaseNpm(value, packed, artifacts, publicExamples, artifactDirectory, fail) {
+  if (!value) {
+    fail('release npm result missing');
+    return;
+  }
+  if (value.kind !== 'seshat-release-npm-install' || value.schemaVersion !== 1 || value.version !== packed?.version) {
+    fail('release npm identity is incomplete');
+  }
+  const expectedStatuses = {
+    'registry-install': 0, 'native-version': 0, 'launcher-version': 0,
+    'npm-exec': 0, 'package-script': 0, 'windows-shim-version': 0,
+    'public-examples': 0, 'unknown-command-json': 2, 'argument-forwarding-json': 2,
+    'windows-shim-argument-forwarding': 2, 'unsupported-platform-json': 2,
+    'missing-payload-json': 2, 'version-mismatch-json': 2,
+    'signal-lifecycle': 2, 'offline-ci': 0, 'version-after-ci': 0,
+  };
+  for (const [name, expected] of Object.entries(expectedStatuses)) {
+    if (value.checks?.[name]?.status !== expected) fail(`release npm check failed: ${name}`);
+  }
+  if (value.checks?.['signal-lifecycle']?.route !== 'windows-console-helper/cmd-shim') {
+    fail('release npm cancellation did not use the Windows console helper and npm shim');
+  }
+  if (packed && value.build?.binarySha256 !== packed.binary) fail('release npm binary hash differs from package metadata');
+  if (value.build?.packageVersion !== value.version || value.build?.package !== '@binary-balance/seshat-win32-x64') {
+    fail('release npm BUILD package identity is invalid');
+  }
+  if (value.nativeNotices?.hasCopyright !== true || value.nativeNotices?.hasUnlicense !== true) {
+    fail('release npm native notices are incomplete');
+  }
+  if (artifactDirectory) validateReleaseArchives(value, artifacts, '@binary-balance/seshat-win32-x64', fail);
+  validatePublicExamples(publicExamples, 'windows-npm-shim', fail);
 }
 
 function checkStatuses(value, names, fail) {
@@ -59,7 +120,7 @@ function checkInstalledControl(value, label, cases, packed, fail) {
     fail(`${label} evidence did not retain its four requested cases`);
   }
   if (value.cli?.source !== 'executable' || value.cli?.binarySha256 !== packed?.binary ||
-      !/^seshat 0\.0\.0 \(candidate\)$/.test(value.cli?.version ?? '')) {
+      value.cli?.version !== `seshat ${packed?.version} (candidate)`) {
     fail(`${label} evidence did not run the installed package executable`);
   }
   if (value.originalsPreserved !== true) fail(`${label} evidence did not preserve its fixture inputs`);
@@ -70,13 +131,13 @@ function checkInstalledControl(value, label, cases, packed, fail) {
   }
 }
 
-function validate({preflight, packed, repeat, install, runtime, jestExpo, vitest, sharedCli, sharedParallel}, parseErrors = {}, artifactDirectory = null, artifacts = {}) {
+function validate({preflight, packed, repeat, install, runtime, releaseNpm, publicExamples, jestExpo, vitest, sharedCli, sharedParallel}, parseErrors = {}, artifactDirectory = null, artifacts = {}) {
   const failures = Object.entries(parseErrors).map(([name, message]) => `${name}: invalid JSON (${message})`);
   const fail = message => failures.push(message);
   if (!preflight) fail('preflight result missing');
   else {
     if (preflight.validation?.passed !== true) fail('preflight validation failed');
-    validatePreflight(preflight, fail);
+    validatePreflight(preflight, fail, artifactDirectory);
   }
 
   let buildHash = null;
@@ -192,6 +253,8 @@ function validate({preflight, packed, repeat, install, runtime, jestExpo, vitest
     }
   }
 
+  validateReleaseNpm(releaseNpm, packed, artifacts, publicExamples, artifactDirectory, fail);
+
   const integrationGaps = [];
   if (!sharedCli) integrationGaps.push('shared 43-scenario CLI fixture evidence was not retained');
   else if (Object.keys(sharedCli).length !== 43) fail('shared CLI fixture evidence did not retain 43 scenarios');
@@ -209,7 +272,7 @@ function selfCheck() {
   const binaryHash = 'b'.repeat(64);
   const buildHash = 'c'.repeat(64);
   const archiveHash = 'd'.repeat(64);
-  const packed = {binary:binaryHash, binaryBytes:1, binaryName:'seshat.exe', tarballSha256:archiveHash, standalone:{sha256:archiveHash, bytes:1}};
+  const packed = {version:'0.1.0-rc.1', binary:binaryHash, binaryBytes:1, binaryName:'seshat.exe', tarballSha256:archiveHash, standalone:{sha256:archiveHash, bytes:1}};
   const repeat = {schemaVersion:1, sourceCommit, host:{platform:'win32', arch:'x64', windows:{platform:'win32', architecture:'x64', release:'10.0.20348', version:'Windows Server 2022 Datacenter', runner:'Windows'}, glibc:null},
     toolchain:{node:'v24.20.0', npm:'11.0.0', rustc:'rustc 1.98.1', cargo:'cargo 1.98.1', msvc:{version:'cl'}, linker:{version:'link'}, sdk:{version:'sdk'}}, input:{mode:'--native-windows', archives:[]}, validation:{passed:true, reason:'self-check'}, runs:[
     {binary:{sha256:binaryHash, bytes:1}, build:{sha256:buildHash, bytes:1}, npmArchive:{sha256:archiveHash, bytes:1}, standaloneArchive:{sha256:archiveHash, bytes:1}, files:packageFiles},
@@ -225,15 +288,40 @@ function selfCheck() {
     checks:Object.fromEntries([['offline-install',0], ['installed-version',0], ['installed-help',0], ['offline-ci',0], ['cargo-probe',1], ['rustc-probe',1], ['standalone-list',0], ['standalone-extract',0],
       ['standalone-version',0], ['standalone-help',0]].map(([name,status]) => [name,{status}]))};
   const runtime = {validation:{passed:true}, binary:{path:'seshat.exe', sha256:binaryHash}, scenarios:Object.fromEntries(runtimeCases.map(name => [name, {}]))};
+  const releaseChecks = Object.fromEntries([
+    ['registry-install', 0], ['native-version', 0], ['launcher-version', 0], ['npm-exec', 0],
+    ['package-script', 0], ['windows-shim-version', 0], ['public-examples', 0],
+    ['unknown-command-json', 2], ['argument-forwarding-json', 2], ['windows-shim-argument-forwarding', 2],
+    ['unsupported-platform-json', 2], ['missing-payload-json', 2], ['version-mismatch-json', 2],
+    ['signal-lifecycle', 2], ['offline-ci', 0], ['version-after-ci', 0],
+  ].map(([name, status]) => [name, {status}]));
+  releaseChecks['signal-lifecycle'].route = 'windows-console-helper/cmd-shim';
+  const releaseNpm = {
+    kind:'seshat-release-npm-install', schemaVersion:1, version:packed.version,
+    entryArchive:{name:'@binary-balance/seshat', version:packed.version},
+    nativeArchive:{name:'@binary-balance/seshat-win32-x64', version:packed.version},
+    build:{package:'@binary-balance/seshat-win32-x64', packageVersion:packed.version, binarySha256:binaryHash},
+    nativeNotices:{hasCopyright:true, hasUnlicense:true}, checks:releaseChecks,
+  };
+  const publicExamples = {schemaVersion:1, cli:{kind:'windows-npm-shim', sha256:'a'.repeat(64), bytes:1}, validation:{passed:true},
+    examples:Object.fromEntries(['node', 'jest-expo', 'vitest', 'workspaces'].map(name => [name, {
+      sourceFiles:['src/example.ts'], normal:{scope:{files:['src/example.ts']}, result:{sources:[], mutation:{}}},
+      workers:{one:1, two:2, parity:true},
+    }])), thresholds:{equality:{state:'passed'}, failure:{state:'failed'}, incomplete:{state:'incomplete'}}};
   const base = {preflight:{validation:{passed:true}, provenance:{sourceCommit}, candidate:{runner:'windows-2022', os:'Windows Server 2022', kernelBuild:20348, node:'24.20.0', rust:'1.98.1', target:'x86_64-pc-windows-msvc', cpu:'x64', crtStatic:true}, environment:{
       platform:'win32', architecture:{node:'x64', os:'x64'}, os:{kernelBuild:20348, release:'10.0.20348', version:'Windows Server 2022 Datacenter'}, node:{version:'v24.20.0'}, npm:{available:true, version:'11.0.0'},
-      runnerImage:{label:'windows-2022', os:'Windows'}, toolchain:{rust:{rustc:{available:true, version:'rustc 1.98.1'}, cargo:{available:true, version:'cargo 1.98.1'}, host:'x86_64-pc-windows-msvc'}, msvc:{available:true, version:'cl'}, linker:{available:true, version:'link'}, sdk:{version:'sdk'}}, shell:{systemRoot:'C:', comspec:'C:'}},
-    }, packed:{...packed, files:packageFiles.map(path => ({path}))}, repeat, install, runtime};
+      runnerImage:{label:'windows-2022', os:'Windows'}, toolchain:{rust:{rustc:{available:true, version:'rustc 1.98.1'}, cargo:{available:true, version:'cargo 1.98.1'}, host:'x86_64-pc-windows-msvc'}, msvc:{available:true, version:'cl'}, linker:{available:true, version:'link'}, sdk:{version:'sdk'}, visualStudio:{available:true, edition:'Enterprise', productVersion:'17.14.20', toolset:'14.44.35207'},
+        runtimeNoticeInputs:{schemaVersion:1, root:'runtime-notice-inputs', files:[
+          {kind:'visual-studio-license', status:'missing', sourceUrl:'https://visualstudio.microsoft.com/license-terms/vs2022-ga-proenterprise/', pathLabels:['visual-studio/license.txt']},
+          {kind:'visual-studio-redist', status:'missing', sourceUrl:'https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution', pathLabels:['visual-studio/redist/REDIST.TXT']},
+          {kind:'windows-sdk-license', status:'missing', sourceUrl:'https://learn.microsoft.com/en-us/windows/apps/windows-sdk/downloads', pathLabels:['windows-sdk/licenses/License.rtf']},
+        ]}}, shell:{systemRoot:'C:', comspec:'C:'}},
+    }, packed:{...packed, files:packageFiles.map(path => ({path}))}, repeat, install, runtime, releaseNpm, publicExamples};
   assert.deepEqual(validate(base).failures, []);
   const runnerEvidence = cases => ({
     checks: {requested: cases.length, completed: cases.length},
     requestedCases: cases,
-    cli: {source:'executable', binarySha256:binaryHash, version:'seshat 0.0.0 (candidate)'},
+    cli: {source:'executable', binarySha256:binaryHash, version:'seshat 0.1.0-rc.1 (candidate)'},
     originalsPreserved: true,
     noConsumingRust: {probes:[{unavailable:true}], environmentUnset:['CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'NODE_OPTIONS', 'SESHAT_MUTANT_ID']},
   });
@@ -271,6 +359,8 @@ if (selfCheckMode) {
   const packed = read('package-result.json');
   const repeat = read('repeat-pack.json');
   const install = read('windows-package-install.json');
+  const releaseNpm = read('npm-package.json');
+  const publicExamples = read('public-consumer-examples.json');
   const runtime = read('windows-runtime-cli-evidence.json');
   const jestExpo = read('jest-expo-check.json');
   const vitest = read('vitest-check.json');
@@ -281,7 +371,11 @@ if (selfCheckMode) {
     const path = join(directory, name);
     if (existsSync(path) && statSync(path).isFile()) artifacts[key] = {file:name, sha256:hashFile(path), bytes:statSync(path).size};
   }
-  const {failures, integrationGaps, repeatPack} = validate({preflight, packed, repeat, install, runtime, jestExpo, vitest, sharedCli, sharedParallel}, parseErrors, directory, artifacts);
+  for (const [key, name] of [['entry', 'seshat-entry.tgz'], ['releaseNative', 'seshat-win32-x64-release.tgz']]) {
+    const path = join(directory, name);
+    if (existsSync(path) && statSync(path).isFile()) artifacts[key] = {file:name, sha256:hashFile(path), bytes:statSync(path).size};
+  }
+  const {failures, integrationGaps, repeatPack} = validate({preflight, packed, repeat, install, runtime, releaseNpm, publicExamples, jestExpo, vitest, sharedCli, sharedParallel}, parseErrors, directory, artifacts);
   const sourceCommit = preflight?.provenance?.sourceCommit ?? process.env.GITHUB_SHA ?? repeat?.sourceCommit ?? null;
   const portablePackage = packed && artifacts.tarball && artifacts.standalone ? {...packed,
     tarball:artifacts.tarball.file, proofBinary:null, tarballSha256:artifacts.tarball.sha256,
@@ -301,11 +395,15 @@ if (selfCheckMode) {
     peMachine:'0x8664',
     crtStatic:true,
     preflight:preflight ? {candidate:preflight.candidate, environment:preflight.environment, validation:preflight.validation, provenance:preflight.provenance} : null,
-    artifacts:packed ? {build:artifacts.build ?? null, npmTarball:artifacts.tarball ?? null, standalone:artifacts.standalone ?? null,
+    runtimeNoticeInputs:preflight?.environment?.toolchain?.runtimeNoticeInputs ?? null,
+    artifacts:packed ? {build:artifacts.build ?? null, npmTarball:artifacts.tarball ?? null, entryArchive:artifacts.entry ?? null, releaseNativeArchive:artifacts.releaseNative ?? null, standalone:artifacts.standalone ?? null,
       binary:{sha256:packed.binary ?? null, bytes:packed.binaryBytes ?? null}} : null,
     build:install?.build ?? packed?.build ?? null,
     npm:install ? {tarballSha256:install.tarball?.sha256 ?? null, standaloneArchiveSha256:install.standaloneArchive?.sha256 ?? null,
       binary:install.binary ?? null, checks:Object.fromEntries(Object.entries(install.checks ?? {}).map(([name, value]) => [name, value.status]))} : null,
+    releaseNpm:releaseNpm ? {entryArchive:releaseNpm.entryArchive, nativeArchive:releaseNpm.nativeArchive, build:releaseNpm.build,
+      checks:Object.fromEntries(Object.entries(releaseNpm.checks ?? {}).map(([name, value]) => [name, value.status])), route:releaseNpm.checks?.['signal-lifecycle']?.route ?? null} : null,
+    publicExamples:publicExamples ? {cli:publicExamples.cli, examples:publicExamples.examples, thresholds:publicExamples.thresholds, validation:publicExamples.validation} : null,
     standalone:install ? {archiveSha256:install.standaloneArchive?.sha256 ?? null, binary:install.binary ?? null,
       checks:Object.fromEntries(['standalone-list', 'standalone-extract', 'standalone-version', 'standalone-help'].map(name => [name, install.checks?.[name]?.status ?? null]))} : null,
     runtime:runtime ? {binary:runtime.binary ?? null, scenarios:Object.fromEntries(runtimeCases.map(name => [name, Boolean(runtime.scenarios?.[name])])), validation:runtime.validation ?? null} : null,
@@ -315,7 +413,7 @@ if (selfCheckMode) {
     repeatPack:repeat ? {sourceCommit:repeat.sourceCommit, host:repeat.host, toolchain:repeat.toolchain, input:repeat.input,
       runs:repeat.runs, comparisons:repeat.comparisons, validation:repeat.validation} : null,
     validation:{package:Boolean(packed && portablePackage), repeatPack,
-      npm:Boolean(install), standalone:Boolean(install), runtime:Boolean(runtime), passed:failures.length === 0, failures},
+      npm:Boolean(install), releaseNpm:Boolean(releaseNpm), publicExamples:Boolean(publicExamples), standalone:Boolean(install), runtime:Boolean(runtime), passed:failures.length === 0, failures},
     limits:'Native Windows Server 2022 x64 proof on the windows-2022 runner. It does not establish support for desktop Windows versions, older Windows builds, Windows ARM64, POSIX signal semantics, signing, notarization or public release distribution.',
   };
   writeFileSync(join(directory, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');

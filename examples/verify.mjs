@@ -34,18 +34,24 @@ assert.ok(values.cli, 'usage: node examples/verify.mjs --cli /absolute/path/to/s
 const cli = resolve(values.cli);
 assert.ok(statSync(cli).isFile(), `Seshat executable is missing: ${cli}`);
 const cliExtension = extname(cli).toLowerCase();
-assert.ok(!['.bat', '.cmd'].includes(cliExtension),
-  'pass a native executable or Node launcher; the Windows npm .cmd shim is a separate release check');
+const cliIsWindowsShim = ['.bat', '.cmd'].includes(cliExtension);
+if (cliIsWindowsShim) {
+  assert.equal(process.platform, 'win32', 'Windows command shims can only run on Windows');
+}
 const cliIsNodeLauncher = ['.cjs', '.js', '.mjs'].includes(cliExtension);
-const cliKind = cliIsNodeLauncher ? 'node-launcher' : 'native-executable';
-const cliCommand = cliIsNodeLauncher ? [process.execPath, cli] : [cli];
+const cliKind = cliIsWindowsShim ? 'windows-npm-shim' : cliIsNodeLauncher ? 'node-launcher' : 'native-executable';
+const cliCommand = cliIsWindowsShim
+  ? [process.env.ComSpec ?? process.env.COMSPEC ?? 'cmd.exe', '/d', '/s', '/c', 'call', cli]
+  : cliIsNodeLauncher ? [process.execPath, cli] : [cli];
 const cliHash = createHash('sha256').update(readFileSync(cli)).digest('hex');
 if (process.env.SESHAT_EXPECTED_BINARY_SHA256) {
   assert.equal(cliKind, 'native-executable', 'SESHAT_EXPECTED_BINARY_SHA256 requires a native executable');
   assert.equal(cliHash, process.env.SESHAT_EXPECTED_BINARY_SHA256);
 }
-const npm = process.env.npm_execpath
-  ? [process.execPath, process.env.npm_execpath]
+const npmExecPath = process.env.npm_execpath && !/\.(?:cmd|bat)$/i.test(process.env.npm_execpath)
+  ? process.env.npm_execpath : null;
+const npm = npmExecPath
+  ? [process.execPath, npmExecPath]
   : process.platform === 'win32'
     // npm.cmd is a command script and cannot be spawned without a shell.
     ? [process.execPath, join(dirname(process.execPath), 'node_modules', 'npm', 'bin', 'npm-cli.js')]
@@ -75,6 +81,7 @@ function run(command, args, cwd, expectedStatus = 0, timeout = 600000) {
     env: {...process.env, npm_config_update_notifier: 'false'},
     maxBuffer: 32 * 1024 * 1024,
     timeout,
+    shell: false,
   });
   assert.ifError(child.error);
   assert.equal(child.status, expectedStatus, `${command} ${args.join(' ')}\n${child.stdout}\n${child.stderr}`);

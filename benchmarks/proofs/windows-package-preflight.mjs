@@ -1,14 +1,22 @@
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
-import {existsSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync} from 'node:fs';
 import {arch, release, version as osVersion} from 'node:os';
-import {basename, join} from 'node:path';
+import {basename, dirname, join} from 'node:path';
 
 const expected = {
   node:'v24.20.0',
   rust:'1.98.1',
   rustHost:'x86_64-pc-windows-msvc',
   kernelBuild:20348,
+};
+
+const runtimeNoticeSources = {
+  visualStudioLicense:'https://visualstudio.microsoft.com/license-terms/vs2022-ga-proenterprise/',
+  visualStudioRedistribution:'https://learn.microsoft.com/en-us/visualstudio/releases/2022/redistribution',
+  visualStudioGuidance:'https://www.microsoft.com/licensing/guidance/Visual-Studio',
+  windowsSdkLicense:'https://learn.microsoft.com/en-us/windows/apps/windows-sdk/downloads',
 };
 
 function probe(command, args = [], options = {}) {
@@ -76,8 +84,138 @@ function sdkInfo() {
   };
 }
 
+function visualStudioInfo() {
+  const installRoot = process.env.VSINSTALLDIR?.replace(/[\\/]+$/, '') ?? null;
+  const vswhere = join(process.env['ProgramFiles(x86)'] ?? process.env.ProgramFiles ?? 'C:\\Program Files (x86)',
+    'Microsoft Visual Studio', 'Installer', 'vswhere.exe');
+  let instance = null;
+  if (existsSync(vswhere)) {
+    const result = spawnSync(vswhere, [
+      '-latest', '-products', '*', '-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64', '-format', 'json',
+    ], {encoding:'utf8', maxBuffer:256 * 1024});
+    if (!result.error && result.status === 0) {
+      try { instance = JSON.parse(result.stdout)?.[0] ?? null; } catch { instance = null; }
+    }
+  }
+  const displayName = instance?.displayName ?? '';
+  const catalog = instance?.catalog ?? {};
+  const edition = instance?.productId?.match(/Product\.([^./]+)$/i)?.[1] ??
+    displayName.match(/Visual Studio\s+(.+?)\s+20\d{2}/i)?.[1] ??
+    installRoot?.match(/\\(Enterprise|Professional|Community|BuildTools)\\?$/i)?.[1] ?? null;
+  const productVersion = catalog.productDisplayVersion ?? instance?.catalog_productDisplayVersion ?? instance?.installationVersion ??
+    process.env.VisualStudioVersion ?? null;
+  const toolset = process.env.VCToolsVersion ??
+    process.env.VCToolsInstallDir?.match(/[\\/]MSVC[\\/]([^\\/]+)[\\/]?$/i)?.[1] ?? null;
+  return {
+    available: Boolean(edition && productVersion && toolset),
+    edition,
+    productVersion,
+    installationVersion: instance?.installationVersion ?? null,
+    installationPath: instance?.installationPath ?? installRoot,
+    toolsetPath:process.env.VCToolsInstallDir?.replace(/[\\/]+$/, '') ?? null,
+    redistPath:process.env.VCToolsRedistDir?.replace(/[\\/]+$/, '') ?? null,
+    toolset,
+    productLine:catalog.productLine ?? instance?.catalog_productLine ?? null,
+    productLineVersion:catalog.productLineVersion ?? instance?.catalog_productLineVersion ?? null,
+    vswhere: existsSync(vswhere) ? vswhere : null,
+  };
+}
+
+function noticeCandidates(root, entries) {
+  return entries.map(([label, ...parts]) => ({label, path:root ? join(root, ...parts) : null}));
+}
+
+function noticeFile(kind, sourceUrl, candidates, outputRoot) {
+  const pathLabels = candidates.map(({label}) => label);
+  const found = candidates.find(candidate => {
+    if (!candidate.path || !existsSync(candidate.path) || !/\.(?:txt|rtf)$/i.test(candidate.path)) return false;
+    try { return statSync(candidate.path).isFile(); } catch { return false; }
+  });
+  if (!found) return {kind, status:'missing', sourceUrl, pathLabels};
+
+  const bytes = readFileSync(found.path);
+  const sha256 = createHash('sha256').update(bytes).digest('hex');
+  const result = {kind, status:outputRoot ? 'retained' : 'available', sourceUrl, pathLabels,
+    sourcePathLabel:found.label, bytes:bytes.length, sha256, retainedPath:null};
+  if (outputRoot) {
+    const retained = join(outputRoot, ...found.label.split('/'));
+    mkdirSync(dirname(retained), {recursive:true});
+    copyFileSync(found.path, retained);
+    const retainedBytes = readFileSync(retained);
+    assert.equal(retainedBytes.length, bytes.length, `${kind}: retained terms size changed`);
+    assert.equal(createHash('sha256').update(retainedBytes).digest('hex'), sha256,
+      `${kind}: retained terms hash changed`);
+    result.retainedPath = `runtime-notice-inputs/${found.label}`;
+  }
+  return result;
+}
+
+function runtimeNoticeInputs(visualStudio, sdk) {
+  const outputRoot = process.env.SESHAT_RUNTIME_NOTICE_OUTPUT ?? null;
+  const vsLicense = noticeCandidates(visualStudio.installationPath, [
+    ['visual-studio/license.txt', 'license.txt'],
+    ['visual-studio/License.txt', 'License.txt'],
+    ['visual-studio/license.rtf', 'license.rtf'],
+    ['visual-studio/Common7/IDE/license.txt', 'Common7', 'IDE', 'license.txt'],
+    ['visual-studio/Common7/IDE/License.txt', 'Common7', 'IDE', 'License.txt'],
+  ]);
+  const vsRedist = noticeCandidates(visualStudio.redistPath, [
+    ['visual-studio/redist/REDIST.TXT', 'REDIST.TXT'],
+    ['visual-studio/redist/redist.txt', 'redist.txt'],
+    ['visual-studio/redist/README.txt', 'README.txt'],
+    ['visual-studio/redist/x64/Microsoft.VC143.CRT/REDIST.TXT', 'x64', 'Microsoft.VC143.CRT', 'REDIST.TXT'],
+    ['visual-studio/redist/x64/Microsoft.VC143.CRT/README.txt', 'x64', 'Microsoft.VC143.CRT', 'README.txt'],
+  ]);
+  const sdkLicense = [
+    ...noticeCandidates(sdk.directory ? join(sdk.directory, 'Licenses') : null, [
+      ['windows-sdk/licenses/License.txt', 'License.txt'],
+      ['windows-sdk/licenses/license.txt', 'license.txt'],
+      ['windows-sdk/licenses/License.rtf', 'License.rtf'],
+    ]),
+    ...(sdk.version ? noticeCandidates(join(sdk.directory, 'Licenses', sdk.version), [
+      ['windows-sdk/licenses/version/License.txt', 'License.txt'],
+      ['windows-sdk/licenses/version/license.txt', 'license.txt'],
+      ['windows-sdk/licenses/version/License.rtf', 'License.rtf'],
+      ['windows-sdk/licenses/version/SDKLicense.txt', 'SDKLicense.txt'],
+    ]).map(candidate => ({...candidate, label:candidate.label.replace('/version/', `/${sdk.version}/`)})) : []),
+  ];
+  return {
+    schemaVersion:1,
+    root:outputRoot ? 'runtime-notice-inputs' : null,
+    sources:runtimeNoticeSources,
+    files:[
+      noticeFile('visual-studio-license', runtimeNoticeSources.visualStudioLicense, vsLicense, outputRoot),
+      noticeFile('visual-studio-redist', runtimeNoticeSources.visualStudioRedistribution, vsRedist, outputRoot),
+      noticeFile('windows-sdk-license', runtimeNoticeSources.windowsSdkLicense, sdkLicense, outputRoot),
+    ],
+  };
+}
+
+function validateRuntimeNoticeInputs(value) {
+  const failures = [];
+  if (value?.schemaVersion !== 1 || !Array.isArray(value.files) || value.files.length !== 3) {
+    return ['runtime notice input inventory is incomplete'];
+  }
+  for (const file of value.files) {
+    if (!file.kind || !file.sourceUrl || !Array.isArray(file.pathLabels) ||
+        !['missing', 'available', 'retained'].includes(file.status)) {
+      failures.push(`runtime notice input metadata is incomplete: ${file.kind ?? 'unknown'}`);
+      continue;
+    }
+    if (file.status === 'missing') continue;
+    if (!Number.isInteger(file.bytes) || file.bytes < 0 || !/^[\da-f]{64}$/i.test(file.sha256 ?? '')) {
+      failures.push(`runtime notice input hash is incomplete: ${file.kind}`);
+    }
+    if (file.status === 'retained' && !/^runtime-notice-inputs\/[\w./-]+$/.test(file.retainedPath ?? '')) {
+      failures.push(`runtime notice input retention path is incomplete: ${file.kind}`);
+    }
+  }
+  return failures;
+}
+
 function collect() {
   const sdk = sdkInfo();
+  const visualStudio = visualStudioInfo();
   return {
     schemaVersion:1,
     kind:'seshat-windows-package-preflight',
@@ -90,7 +228,8 @@ function collect() {
       architecture:{node:process.arch, os:arch(), processor:process.env.PROCESSOR_ARCHITECTURE ?? null},
       node:{version:process.version},
       npm:npmInfo(),
-      toolchain:{rust:rustInfo(), msvc:tool('cl.exe', msvcIdentity), linker:tool('link.exe', linkerIdentity), sdk},
+      toolchain:{rust:rustInfo(), msvc:tool('cl.exe', msvcIdentity), linker:tool('link.exe', linkerIdentity),
+        visualStudio, sdk, runtimeNoticeInputs:runtimeNoticeInputs(visualStudio, sdk)},
       shell:{comspec:process.env.ComSpec ?? process.env.COMSPEC ?? null,
         systemRoot:process.env.SystemRoot ?? process.env.SYSTEMROOT ?? null},
       runnerImage:{label:'windows-2022', os:process.env.RUNNER_OS ?? null, architecture:process.env.RUNNER_ARCH ?? null,
@@ -124,7 +263,12 @@ function validate(report) {
   if (rust.host !== expected.rustHost) failures.push(`Rust host: expected ${expected.rustHost}`);
   if (!environment.toolchain?.msvc?.available) failures.push('MSVC compiler is unavailable');
   if (!environment.toolchain?.linker?.available) failures.push('MSVC linker is unavailable');
+  const visualStudio = environment.toolchain?.visualStudio;
+  if (!visualStudio?.available || !visualStudio.edition || !visualStudio.productVersion || !visualStudio.toolset) {
+    failures.push('Visual Studio edition/productVersion/toolset provenance is unavailable');
+  }
   if (!environment.toolchain?.sdk?.version) failures.push('Windows SDK version is unavailable');
+  failures.push(...validateRuntimeNoticeInputs(environment.toolchain?.runtimeNoticeInputs));
   if (!environment.shell?.systemRoot || !environment.shell?.comspec || !existsSync(environment.shell.comspec)) {
     failures.push('SystemRoot and ComSpec are required');
   }
@@ -152,7 +296,14 @@ function selfCheck() {
     environment:{platform:'win32', os:{...windows, kernelBuild:kernelBuild(windows.release)}, architecture:{node:'x64', os:'x64'},
       node:{version:expected.node}, npm:{available:true},
       toolchain:{rust:{rustc:{available:true, version:`rustc ${expected.rust}`}, cargo:{available:true, version:`cargo ${expected.rust}`}, host:expected.rustHost},
-        msvc:{available:true}, linker:{available:true}, sdk:{version:'10.0.26100.0'}},
+        msvc:{available:true}, linker:{available:true},
+        visualStudio:{available:true, edition:'Enterprise', productVersion:'17.14.20', toolset:'14.44.35207'},
+        sdk:{version:'10.0.26100.0'},
+        runtimeNoticeInputs:{schemaVersion:1, root:'runtime-notice-inputs', sources:runtimeNoticeSources, files:[
+          {kind:'visual-studio-license', status:'missing', sourceUrl:runtimeNoticeSources.visualStudioLicense, pathLabels:['visual-studio/license.txt']},
+          {kind:'visual-studio-redist', status:'missing', sourceUrl:runtimeNoticeSources.visualStudioRedistribution, pathLabels:['visual-studio/redist/REDIST.TXT']},
+          {kind:'windows-sdk-license', status:'missing', sourceUrl:runtimeNoticeSources.windowsSdkLicense, pathLabels:['windows-sdk/licenses/License.rtf']},
+        ]}},
       shell:{systemRoot:'C:\\Windows', comspec:process.execPath},
       runnerImage:{label:'windows-2022', os:'Windows'},
     },
@@ -163,6 +314,7 @@ function selfCheck() {
     [value => { value.environment.os.kernelBuild = 19041; }, 'kernel build'],
     [value => { value.environment.toolchain.rust.host = 'x86_64-unknown-linux-gnu'; }, 'Rust host'],
     [value => { value.environment.toolchain.sdk.version = null; }, 'SDK'],
+    [value => { value.environment.toolchain.visualStudio.toolset = null; }, 'Visual Studio edition/productVersion/toolset'],
   ]) {
     const changed = structuredClone(report);
     change(changed);
