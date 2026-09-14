@@ -536,7 +536,7 @@ cp "work/debian11-release/$native_archive" work/seshat-linux-x64-release.tgz
 node benchmarks/proofs/linux-debian.mjs \
   work/debian11-inputs work/debian11-inputs/package-result.json \
   work/debian11-standalone.tar.gz work/seshat-entry.tgz \
-  work/seshat-linux-x64-release.tgz
+  work/seshat-linux-x64-release.tgz examples work/debian11-examples-npm-cache
 ```
 
 The standalone input is the same deterministic npm `.tgz` under a distinct
@@ -555,11 +555,16 @@ No host `/usr`, `/lib`, Node executable or Rust toolchain is mounted. The
 separate legacy proof executable is built against the same Debian libraries
 and mounted only for the existing CLI parity comparison.
 
-The checks verify Debian 11, glibc 2.31, Node 24.20.0, npm, linked libraries and
-the absence of `cargo` and `rustc`, then run:
+Before the proof, run locked `npm ci --ignore-scripts --no-audit --no-fund` for
+each of `node`, `jest-expo`, `vitest` and `workspaces` with
+`--cache work/debian11-examples-npm-cache`. The proof mounts the
+checked-in `examples` and this cache read-only, then sets npm offline inside the
+isolated namespace. The checks verify Debian 11, glibc 2.31, Node 24.20.0, npm,
+linked libraries and the absence of `cargo` and `rustc`, then run:
 
-- All 13 npm package controls, including offline install and `npm ci`, package
-  metadata, launcher paths, failure handling, cancellation and versioning.
+- All 14 npm package controls, including offline install and `npm ci`, package
+  metadata, launcher paths, failure handling, cancellation, versioning and the
+  four public consumer examples.
 - All 43 installed CLI scenarios plus legacy parity, including real typechecks,
   fresh coverage, mutation outcomes, thresholds, incomplete results, timeouts,
   SIGINT/SIGTERM, source preservation and cleanup.

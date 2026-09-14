@@ -114,8 +114,8 @@ jobs:
           TARBALL="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; const result=JSON.parse(readFileSync(process.argv[1])); console.log(result.tarball);' "work/macos/${{ matrix.cpu }}/package-result.json")"
           cp "$TARBALL" "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}.tgz"
           tar -xOf "$TARBALL" package/BUILD.json > "work/macos/${{ matrix.cpu }}/BUILD.json"
-          ENTRY_SHA256="$(sha256 -q "work/macos/${{ matrix.cpu }}/seshat-entry.tgz")"
-          NATIVE_SHA256="$(sha256 -q "work/macos/${{ matrix.cpu }}/seshat-darwin-${{ matrix.cpu }}-release.tgz")"
+          ENTRY_SHA256="$(shasum -a 256 "work/macos/${{ matrix.cpu }}/seshat-entry.tgz" | cut -d' ' -f1)"
+          NATIVE_SHA256="$(shasum -a 256 "work/macos/${{ matrix.cpu }}/seshat-darwin-${{ matrix.cpu }}-release.tgz" | cut -d' ' -f1)"
           BINARY_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).binary);' "work/macos/${{ matrix.cpu }}/package-result.json")"
           SESHAT_ENTRY_TARBALL_SHA256="$ENTRY_SHA256" \
           SESHAT_NATIVE_TARBALL_SHA256="$NATIVE_SHA256" \

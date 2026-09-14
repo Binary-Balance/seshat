@@ -349,9 +349,13 @@ if (process.platform === 'win32') {
 
 const publicExamplesPath = resolve(process.env.SESHAT_EXAMPLES_OUTPUT ?? join(work, 'public-consumer-examples.json'));
 const publicCli = process.platform === 'win32' ? commandShim : launcher;
+// Debian supplies a read-only host-warmed cache because its namespace has no network.
+const publicExamplesEnv = process.env.SESHAT_EXAMPLES_NPM_CACHE
+  ? {...env, npm_config_cache: process.env.SESHAT_EXAMPLES_NPM_CACHE, npm_config_offline: 'true'}
+  : env;
 const publicExamples = await run('public-examples', process.execPath, [
   join(repo, 'examples/verify.mjs'), '--cli', publicCli, '--output', publicExamplesPath,
-], consumer, 0, env, 600_000);
+], consumer, 0, publicExamplesEnv, 600_000);
 const publicExamplesReport = read(publicExamplesPath);
 validatePublicExamples(publicExamplesReport, process.platform === 'win32' ? 'windows-npm-shim' : 'node-launcher');
 
