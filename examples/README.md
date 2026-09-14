@@ -100,12 +100,14 @@ still need the example project's Node, test runner, TypeScript and coverage
 dependencies.
 
 Run the focused verifier from the repository root with either an installed
-launcher or a native executable:
+launcher, a native executable, or the six-archive directory:
 
 ```sh
 LAUNCHER=/absolute/path/to/node_modules/@binary-balance/seshat/bin/seshat.mjs
 node examples/verify.mjs --cli "$LAUNCHER" \
   --output /absolute/path/to/public-consumer-examples.json
+# or: node examples/verify.mjs --archives /absolute/path/to/six-archives \
+#   --output /absolute/path/to/public-consumer-examples.json
 ```
 
 The verifier installs every example in disposable copies, runs the normal
