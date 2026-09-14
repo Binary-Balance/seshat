@@ -87,6 +87,19 @@ export function assertArchiveNotice(archive, expected) {
   assert.deepEqual(actual, expected, 'archive notice differs from staged notice');
 }
 
+function assertAutocrlfCheckout(repo) {
+  const root = mkdtempSync(join(tmpdir(), 'seshat-runtime-notice-checkout-'));
+  const checkout = join(root, 'checkout');
+  try {
+    execFileSync('git', ['clone', '--no-local', '--no-checkout', '--quiet', repo, checkout], {stdio:'ignore'});
+    execFileSync('git', ['-C', checkout, 'config', 'core.autocrlf', 'true'], {stdio:'ignore'});
+    execFileSync('git', ['-C', checkout, 'checkout', '--force', 'HEAD'], {stdio:'ignore'});
+    loadRuntimeNoticeAssets(join(checkout, 'packaging/runtime-notices/rust-1.98.1'));
+  } finally {
+    rmSync(root, {recursive:true, force:true});
+  }
+}
+
 function selfCheck() {
   const directory = join(dirname(fileURLToPath(import.meta.url)), 'runtime-notices/rust-1.98.1');
   const assets = loadRuntimeNoticeAssets(directory);
@@ -101,6 +114,7 @@ function selfCheck() {
     versionOutput: 'rustc 1.98.0 (wrong)',
     verboseOutput: `release: ${expectedToolchain.rustcVersion}\ncommit-hash: ${expectedToolchain.rustCommit}\n`,
   }), /does not match pinned/);
+  assertAutocrlfCheckout(resolve(dirname(fileURLToPath(import.meta.url)), '..'));
 
   const root = mkdtempSync(join(tmpdir(), 'seshat-runtime-notice-check-'));
   try {

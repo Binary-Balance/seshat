@@ -1,3 +1,5 @@
 # These upstream files retain their original trailing spaces byte-for-byte.
+# Every pinned runtime asset must also retain its original bytes at checkout.
+rust-1.98.1/** -text
 rust-1.98.1/COPYRIGHT-library.html whitespace=-trailing-space
 rust-1.98.1/licenses/BSD-2-Clause.txt whitespace=-trailing-space
