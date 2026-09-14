@@ -71,11 +71,16 @@ function validateRunner(label, value, cases, packed, artifacts, fail) {
 function validateReleaseNpm(value, packed, fail) {
   if (value?.kind !== 'seshat-release-npm-install') return false;
   if (value.schemaVersion !== 1 || value.version !== packed?.version) fail('release npm version missing');
-  for (const name of ['registry-install', 'native-version', 'launcher-version',
-    'npm-exec', 'package-script', 'unknown-command-json', 'argument-forwarding-json',
-    'unsupported-platform-json', 'missing-payload-json', 'version-mismatch-json',
-    'signal-lifecycle', 'offline-ci', 'version-after-ci']) {
-    if (value.checks?.[name]?.status !== 0) fail(`release npm check failed: ${name}`);
+  const expectedStatuses = {
+    'registry-install': 0, 'native-version': 0, 'launcher-version': 0,
+    'npm-exec': 0, 'package-script': 0, 'unknown-command-json': 2,
+    'argument-forwarding-json': 2, 'unsupported-platform-json': 2,
+    'missing-payload-json': 2, 'version-mismatch-json': 2,
+    'signal-lifecycle': process.platform === 'win32' ? 2 : 143,
+    'offline-ci': 0, 'version-after-ci': 0,
+  };
+  for (const [name, expected] of Object.entries(expectedStatuses)) {
+    if (value.checks?.[name]?.status !== expected) fail(`release npm check failed: ${name}`);
   }
   if (packed && value.build?.binarySha256 !== packed.binary) fail('release npm binary hash differs from package metadata');
   if (value.build?.packageVersion !== value.version) fail('release npm BUILD version differs from package');
