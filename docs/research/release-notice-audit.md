@@ -35,20 +35,20 @@ proof. The current proof packages identify themselves as version `0.0.0
 
 ### Bounded Linux x64 integration pack
 
-One clean-source pack was run at commit `45e1406980f32ec3e09652df1ce40f8b4a9b02e9`
+One clean-source pack was run at commit `595f93472843d2e0d29cf252d84e52bcd29b1fed`
 with Rust `1.98.1 (48a229ceaefd4985c50990b14116b6d856af0985)`, Node
 `24.20.0`, npm `11.19.0`, and the pinned Debian 11 input directory. The command
 was `node packaging/pack.mjs work/debian11-inputs`. The retained local evidence
 is under `work/release-notice-audit/linux-x64/`:
 
-- `binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz`: 948,125 bytes,
-  SHA-256 `4ea2fdb4acac6b051e648ef28c5e3f5799a1c1d79ceda437a98810b43ab93381`.
+- `binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz`: 948,219 bytes,
+  SHA-256 `0a99458d4aecbe95e014151d8547f3a5d18627926e4742592e175784c3d4d4b1`.
 - `pack-result.json`: 1,995 bytes, SHA-256
-  `92f437bbfb0224233572988883a6a12cb814c6da5e765eb1ca55c09f9c47f8d7`.
+  `417ab21a419fe18798d2913c305380166346dffc5f31bc56f1916e253c0d37df`.
 - Extracted `bin/seshat`: 2,028,296 bytes, SHA-256
   `49a6ed93d8d13d0ed8166d0e93066c9d54275694ed5d85505953ebfda56ddc60`.
-- Extracted `BUILD.json`: 9,785 bytes, SHA-256
-  `cd834c82caab0d7d9614371a5a8c691ffb34fb0c90181ad95aa167319ef35501`.
+- Extracted `BUILD.json`: 9,957 bytes, SHA-256
+  `5cc2a2b010d0abec92338a88415b1cb1f0cb894ce3f76448178bc8587b6eb74e`.
 - Extracted `THIRD_PARTY_NOTICES.txt`: 2,057,665 bytes, SHA-256
   `49ebba598a25d26340cf836ea7dfcaa58ed7a279cefe32b9e63bf7aafb52c5d5`.
 
