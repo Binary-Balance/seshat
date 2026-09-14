@@ -94,10 +94,12 @@ target 15.0. The x64 target was `x86_64-apple-darwin`; ARM64 was
 `aarch64-apple-darwin`. The binaries are Mach-O and use `/usr/lib/libSystem.B.dylib`
 and `/usr/lib/libiconv.2.dylib`; neither job used Rosetta translation.
 
-Each npm and standalone route passed with Cargo and Rustc absent. Each passed
-43 CLI scenarios, 11 parallel controls, four Jest/Expo cases and four Vitest
-cases with originals preserved. The native lifecycle record passed all 11
-SIGINT/SIGTERM, timeout, overflow and leader-exit cases, including bounded
+Both npm and standalone routes passed with Cargo and Rustc absent. The npm route
+passed 43 CLI scenarios. The standalone route verified the matching binary
+identity and passed the same 43 CLI scenarios plus 11 parallel controls.
+Jest/Expo and Vitest separately installed the npm tarball; each ran four
+requested cases with originals preserved. The native lifecycle record passed all
+11 SIGINT/SIGTERM, timeout, overflow and leader-exit cases, including bounded
 deadlines, descendant cleanup and empty scratch directories. Two clean packs
 matched the installed archive, binary and `BUILD.json` identities.
 
