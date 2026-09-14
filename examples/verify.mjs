@@ -267,9 +267,27 @@ function stable(report) {
   };
 }
 
-function portable(value) {
-  return JSON.parse(JSON.stringify(value).replaceAll(work, '<work>'));
+function portable(value, root = work) {
+  const normalizedRoot = normalizedPath(root);
+  if (typeof value === 'string') {
+    return value.replaceAll(root, '<work>').replaceAll(normalizedRoot, '<work>');
+  }
+  if (Array.isArray(value)) return value.map(entry => portable(entry, root));
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, entry]) =>
+      [portable(key, root), portable(entry, root)]));
+  }
+  return value;
 }
+
+const windowsWork = 'C:\\Users\\Gaelian\\AppData\\Local\\Temp\\seshat-public-examples';
+assert.deepEqual(portable({
+  raw: `${windowsWork}\\node\\report.json`,
+  slash: `${normalizedPath(windowsWork)}/node/report.json`,
+}, windowsWork), {
+  raw: '<work>\\node\\report.json',
+  slash: '<work>/node/report.json',
+});
 
 let passed = false;
 let error;
