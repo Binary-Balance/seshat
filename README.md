@@ -31,7 +31,7 @@ archives also work as standalone installations. The target boundaries are in
 the [historical platform support matrix](docs/platform-support.md). No npm
 package or GitHub release has been published for this candidate; the [release notice
 and runtime audit](docs/research/release-notice-audit.md) records the prepared
-public CI archive coordinates and current proof state.
+public CI archive coordinates and verified proof state.
 
 The verified consumer runtime is Node 24.20.0. Install the test runner,
 TypeScript and coverage packages required by the project before running Seshat.
@@ -118,8 +118,10 @@ npm ci --ignore-scripts --offline
 ```
 
 The npm-generated `seshat.cmd` shim selects the matching Windows optional
-package. Hosted Windows consumer verification of this local recipe remains
-part of release integration.
+package. The [five-host local-install matrix](https://github.com/Binary-Balance/seshat/actions/runs/34869523860)
+passed this recipe on Linux x64 and ARM64, macOS x64 and ARM64, and Windows
+x64. It verified the host-selected native payload and the Windows `seshat.cmd`
+shim, recording the canonical binary and shim hashes.
 
 Standalone execution remains a host-archive-only route. It does not use npm or
 the cross-platform lockfile. On POSIX, extract the matching native archive into
