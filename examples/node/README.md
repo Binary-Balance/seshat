@@ -5,6 +5,9 @@ This project uses Node 24.20.0, TypeScript 6.0.3 and the built-in test runner.
 `src/ignored.ts`. `capture` includes the test inputs, the small coverage adapter
 and installed dependencies.
 
+See the [shared consumer guidance](../README.md) for native and Node launcher
+commands, PowerShell equivalents, workers, thresholds, reports and exit codes.
+
 Install the example dependencies in this directory:
 
 ```sh
