@@ -78,6 +78,7 @@ function inspect(result) {
   const standaloneBytes = readFileSync(result.standalone.path);
   const buildBytes = execFileSync(commandName('tar'), ['-xOf', result.tarball, 'package/BUILD.json'], {maxBuffer:2 * 1024 * 1024});
   const packageBytes = execFileSync(commandName('tar'), ['-xOf', result.tarball, 'package/package.json'], {maxBuffer:128 * 1024});
+  const packageReadme = execFileSync(commandName('tar'), ['-xOf', result.tarball, 'package/README.md'], {encoding:'utf8'});
   const binaryBytes = execFileSync(commandName('tar'), ['-xOf', result.tarball, `package/bin/${result.binaryName ?? 'seshat'}`], {maxBuffer:32 * 1024 * 1024});
   const npm = {sha256:sha256(npmBytes), bytes:npmBytes.length};
   const standalone = {sha256:sha256(standaloneBytes), bytes:standaloneBytes.length};
@@ -85,6 +86,7 @@ function inspect(result) {
   const packageManifest = JSON.parse(packageBytes);
   const buildManifest = JSON.parse(buildBytes);
   const binary = {sha256:sha256(binaryBytes), bytes:binaryBytes.length};
+  const targetKey = result.packageName.replace('@binary-balance/seshat-', '');
   assert.equal(result.tarballSha256, npm.sha256, 'npm archive hash differs from pack metadata');
   assert.deepEqual(result.standalone, {path:result.tarball, sha256:npm.sha256, bytes:npm.bytes});
   assert.equal(buildManifest.binarySha256, result.binary, 'BUILD.json binary hash differs from pack metadata');
@@ -93,6 +95,11 @@ function inspect(result) {
   assert.equal(buildManifest.packageVersion, result.version, 'BUILD.json version differs from pack metadata');
   assert.equal(packageManifest.name, result.packageName, 'native package name differs from pack metadata');
   assert.equal(packageManifest.version, result.version, 'native package version differs from pack metadata');
+  assert.equal(packageManifest.description, `Native Seshat payload for ${targetKey}`,
+    'native package description does not identify its target');
+  assert.equal(packageReadme,
+    `# Seshat native payload\n\nTarget: ${targetKey}.\nConsumers normally install \`@binary-balance/seshat\`, which selects this payload for matching hosts.\n`,
+    'native package README does not describe the consumer installation path');
   assert.deepEqual(packageManifest.repository,
     {type:'git',url:'git+https://github.com/Binary-Balance/seshat.git'},
     'native package repository metadata differs from pack metadata');

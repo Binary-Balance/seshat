@@ -320,7 +320,7 @@ const packageManifest = {
   files:[packagedBinary,'BUILD.json','LICENSE','README.md','THIRD_PARTY_NOTICES.txt'],
 };
 writeFileSync(join(stage,'package.json'),JSON.stringify(packageManifest,null,2)+'\n');
-writeFileSync(join(stage,'README.md'),`# Seshat native payload\n\nTarget: ${targetConfig.key}.\nThe \`@binary-balance/seshat\` package selects this payload for matching hosts.\n`);
+writeFileSync(join(stage,'README.md'),`# Seshat native payload\n\nTarget: ${targetConfig.key}.\nConsumers normally install \`@binary-balance/seshat\`, which selects this payload for matching hosts.\n`);
 copyFileSync(join(repo,'LICENSE'),join(stage,'LICENSE'));
 writeFileSync(join(stage,'BUILD.json'),JSON.stringify(build,null,2)+'\n');
 writeFileSync(join(stage,'THIRD_PARTY_NOTICES.txt'),noticeText);

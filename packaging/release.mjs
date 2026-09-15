@@ -87,7 +87,7 @@ const optionalDependencies = Object.fromEntries(
 writeJson(join(rootStage, 'package.json'), {
   name: '@binary-balance/seshat',
   version,
-  description: 'Native TypeScript code assurance',
+  description: 'A native CLI for TypeScript and TSX complexity analysis and mutation testing.',
   license: 'MIT',
   repository: {type: 'git', url: 'git+https://github.com/Binary-Balance/seshat.git'},
   type: 'module',
@@ -123,7 +123,7 @@ for (const target of targets) {
     files,
   });
   mkdirSync(join(stage, 'bin'), {recursive: true});
-  writeFileSync(join(stage, 'README.md'), `# Seshat native payload\n\nTarget: ${target.key}.\n`);
+  writeFileSync(join(stage, 'README.md'), `# Seshat native payload\n\nTarget: ${target.key}.\nConsumers normally install \`@binary-balance/seshat\`, which selects this payload for matching hosts.\n`);
   copy(join(repo, 'LICENSE'), join(stage, 'LICENSE'));
   if (notices) copy(notices, join(stage, 'THIRD_PARTY_NOTICES.txt'));
   if (binary) {
