@@ -1,0 +1,98 @@
+name: Release registry install
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/release-registry-install.yml
+      - benchmarks/proofs/registry-install.mjs
+      - benchmarks/proofs/registry-install.test.mjs
+      - examples/node/**
+      - README.md
+      - docs/research/release-notice-audit.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -eo pipefail {0}
+
+jobs:
+  registry-install:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            target: linux-x64
+            platform: linux
+            arch: x64
+          - runner: ubuntu-22.04-arm
+            target: linux-arm64
+            platform: linux
+            arch: arm64
+          - runner: macos-15-intel
+            target: darwin-x64
+            platform: darwin
+            arch: x64
+          - runner: macos-15
+            target: darwin-arm64
+            platform: darwin
+            arch: arm64
+          - runner: windows-2022
+            target: win32-x64
+            platform: win32
+            arch: x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 1
+
+      - name: Prepare evidence directory
+        run: mkdir -p "work/registry-install/${{ matrix.target }}"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.20.0
+
+      - name: Check host runtime
+        env:
+          SESHAT_PLATFORM: ${{ matrix.platform }}
+          SESHAT_ARCH: ${{ matrix.arch }}
+        run: |
+          node --input-type=module <<'NODE' 2>&1 | tee "work/registry-install/${{ matrix.target }}/host-runtime.log"
+          import assert from 'node:assert/strict';
+          import {execFileSync} from 'node:child_process';
+
+          assert.equal(process.version, 'v24.20.0');
+          const npm = process.platform === 'win32' ? ['npm.cmd', {shell: true}] : ['npm', {shell: false}];
+          assert.equal(execFileSync(npm[0], ['--version'], {encoding: 'utf8', ...npm[1]}).trim(), '11.19.0');
+          assert.equal(process.platform, process.env.SESHAT_PLATFORM);
+          assert.equal(process.arch, process.env.SESHAT_ARCH);
+          NODE
+
+      - name: Run focused negative checks
+        run: |
+          node --test --test-isolation=none benchmarks/proofs/registry-install.test.mjs \
+            2>&1 | tee "work/registry-install/${{ matrix.target }}/negative-checks.log"
+
+      - name: Install from public npm registry
+        run: |
+          node benchmarks/proofs/registry-install.mjs \
+            --target "${{ matrix.target }}" \
+            --output "work/registry-install/${{ matrix.target }}/registry-install.json" \
+            2>&1 | tee "work/registry-install/${{ matrix.target }}/registry-install.log"
+
+      - name: Upload registry install evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-registry-install-${{ matrix.target }}
+          path: work/registry-install/${{ matrix.target }}
+          if-no-files-found: error
+          retention-days: 30
