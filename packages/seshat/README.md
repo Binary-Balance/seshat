@@ -12,14 +12,18 @@ Install the entry package in the project you want to assess:
 npm install --save-dev @binary-balance/seshat
 ```
 
-The package needs Node.js 24.20.0 or newer. It selects one native payload for
-the current platform from these five targets:
+The package declares and verifies Node.js 24.20.0 exactly. It selects one
+native payload for the current platform from these five verified targets:
 
-- Linux x64 (glibc)
-- Linux ARM64 (glibc)
-- macOS x64
-- macOS ARM64
-- Windows x64
+- Linux x64 (glibc; Debian 11 userspace, glibc 2.31)
+- Linux ARM64 (glibc; Ubuntu 22.04, glibc 2.35)
+- macOS x64 (macOS 15.0 minimum)
+- macOS ARM64 (macOS 15.0 minimum)
+- Windows x64 (Windows Server 2022 verification)
+
+These are the known verification floors; see the [native platform support
+matrix](https://github.com/Binary-Balance/seshat/blob/main/docs/platform-support.md)
+for the detailed target evidence.
 
 ## Minimal mutation example
 

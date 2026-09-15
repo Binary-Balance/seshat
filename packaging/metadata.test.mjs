@@ -34,11 +34,17 @@ test('all release package metadata and README content survive packing', () => {
         const normalizedReadme = stagedReadme.replace(/\s+/g, ' ');
         for (const fragment of [
           'Seshat is a native CLI for TypeScript and TSX complexity analysis and mutation testing.',
-          'Node.js 24.20.0 or newer',
+          'The package declares and verifies Node.js 24.20.0 exactly',
           'npm install --save-dev @binary-balance/seshat',
           'seshat mutate --config ./seshat.json',
+          'Linux x64 (glibc; Debian 11 userspace, glibc 2.31)',
+          'Linux ARM64 (glibc; Ubuntu 22.04, glibc 2.35)',
+          'macOS x64 (macOS 15.0 minimum)',
+          'macOS ARM64 (macOS 15.0 minimum)',
+          'Windows x64 (Windows Server 2022 verification)',
           'full configuration guide',
           'JSON report format',
+          'native platform support matrix',
         ]) assert.ok(normalizedReadme.includes(fragment), `${directory}: README is missing ${fragment}`);
       } else {
         assert.equal(stagedReadme,
