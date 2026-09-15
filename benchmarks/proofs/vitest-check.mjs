@@ -160,7 +160,7 @@ if (installed) {
   const expectedVersion = tarballArg
     ? JSON.parse(readFileSync(join(dirname(cli), '..', 'package.json'), 'utf8')).version
     : sourceVersion;
-  assert.equal(version, `seshat ${expectedVersion} (candidate)`);
+  assert.equal(version, `seshat ${expectedVersion}`);
   cliEvidence = {...cliEvidence, version, binarySha256: sha256(cli)};
 }
 const results = {

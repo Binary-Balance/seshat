@@ -55,7 +55,7 @@ function validateRunner(label, value, cases, packed, artifacts, fail) {
   }
   if (value.cli?.source !== 'tarball') fail(`${label} did not record tarball installation`);
   const expectedVersion = packed?.version;
-  if (expectedVersion && value.cli?.version !== `seshat ${expectedVersion} (candidate)`) fail(`${label} candidate version missing`);
+  if (expectedVersion && value.cli?.version !== `seshat ${expectedVersion}`) fail(`${label} version missing`);
   if (packed && value.cli?.binarySha256 !== packed.binary) fail(`${label} binary hash differs from package metadata`);
   if (artifacts.tarball?.sha256 && value.cli?.tarballSha256 !== artifacts.tarball.sha256) {
     fail(`${label} tarball hash differs from retained archive`);
@@ -218,7 +218,7 @@ function validate({preflight, packed, npm, standalone, debian, jestExpo, vitest,
 
 const selfCheckRunner = (cases, binary = 'binary', tarball = 'tarball') => ({
   version: 1,
-  cli: {source: 'tarball', version: 'seshat 0.1.0-rc.1 (candidate)', tarballSha256: tarball, binarySha256: binary},
+  cli: {source: 'tarball', version: 'seshat 0.1.0', tarballSha256: tarball, binarySha256: binary},
   noConsumingRust: {
     probes: [{command: 'cargo', unavailable: true}, {command: 'rustc', unavailable: true}],
     environmentUnset: environmentNames,
@@ -261,10 +261,10 @@ function selfCheckSummary() {
       kernel: {release: '6.8.0-test'}, glibc: '2.35', node: {version: 'v24.20.0'}, npm: {version: '11.0.0'},
       toolchain: {rust: {rustc: {version: 'rustc 1.98.1'}, cargo: {version: 'cargo 1.98.1'}}},
     }},
-    packed: {version: '0.1.0-rc.1', binary: binaryHash, binaryBytes: 1, tarballSha256: archiveHash, standalone: {sha256: archiveHash, bytes: 2}},
-    npm: {kind: 'seshat-release-npm-install', schemaVersion: 1, version: '0.1.0-rc.1', build: {target: 'x86_64-unknown-linux-gnu', rust: 'rustc 1.98.1', binarySha256: binaryHash, binaryBytes: 1, package: '@binary-balance/seshat-linux-x64', packageVersion: '0.1.0-rc.1'}, checks,
-      entryArchive: {name: '@binary-balance/seshat', version: '0.1.0-rc.1'},
-      nativeArchive: {name: '@binary-balance/seshat-linux-x64', version: '0.1.0-rc.1'},
+    packed: {version: '0.1.0', binary: binaryHash, binaryBytes: 1, tarballSha256: archiveHash, standalone: {sha256: archiveHash, bytes: 2}},
+    npm: {kind: 'seshat-release-npm-install', schemaVersion: 1, version: '0.1.0', build: {target: 'x86_64-unknown-linux-gnu', rust: 'rustc 1.98.1', binarySha256: binaryHash, binaryBytes: 1, package: '@binary-balance/seshat-linux-x64', packageVersion: '0.1.0'}, checks,
+      entryArchive: {name: '@binary-balance/seshat', version: '0.1.0'},
+      nativeArchive: {name: '@binary-balance/seshat-linux-x64', version: '0.1.0'},
       nativeNotices: {hasCopyright: true, hasUnlicense: true}},
     standalone: {
       archiveSha256: archiveHash, archiveBytes: 2, cliScenarios: 43,

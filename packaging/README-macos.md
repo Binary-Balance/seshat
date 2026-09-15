@@ -10,7 +10,7 @@ matching native GitHub-hosted runners and do not run through Rosetta.
 Install the local tarball as a development dependency:
 
 ```sh
-npm install --save-dev --save-exact --ignore-scripts --offline /absolute/path/to/binary-balance-seshat-darwin-x64-0.1.0-rc.1.tgz
+npm install --save-dev --save-exact --ignore-scripts --offline /absolute/path/to/binary-balance-seshat-darwin-x64-0.1.0.tgz
 ./node_modules/@binary-balance/seshat-darwin-x64/bin/seshat --help
 ```
 
@@ -19,7 +19,7 @@ need no Rust toolchain. The package has no install hook, npm bin alias or npm
 runtime dependency. Use the direct installed command for clean JSON and direct
 signal handling. The user-facing entry package supplies the npm launcher.
 
-The candidate uses `MACOSX_DEPLOYMENT_TARGET=15.0` and declares macOS in npm
+The release uses `MACOSX_DEPLOYMENT_TARGET=15.0` and declares macOS in npm
 metadata. It does not claim support for older macOS versions, the other CPU
 architecture, Linux or Windows. No publisher code signing or notarization is
 performed. A local ad-hoc signature made with `codesign --sign -` is only a

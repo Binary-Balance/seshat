@@ -13,41 +13,45 @@ insufficiently tested code.
 - Produces readable terminal output and versioned JSON, with optional CI thresholds.
 - Supports explicit source selection, multiple test setups and parallel mutation workers.
 
-## Candidate status
+## Release status
 
-Version `0.1.0-rc.1` is the published release candidate. Its npm layout is an
-entry package, `@binary-balance/seshat@0.1.0-rc.1`, with these exact-version
+Version `0.1.0` has a measured native archive audit from PR50's synthetic
+merge source `e1b91b39a8aa0fcbfb3d4ca6089de8b416ee61c7`. Its npm layout is an
+entry package, `@binary-balance/seshat@0.1.0`, with these exact-version
 optional native packages:
 
-- `@binary-balance/seshat-linux-x64@0.1.0-rc.1`
-- `@binary-balance/seshat-linux-arm64@0.1.0-rc.1`
-- `@binary-balance/seshat-darwin-x64@0.1.0-rc.1`
-- `@binary-balance/seshat-darwin-arm64@0.1.0-rc.1`
-- `@binary-balance/seshat-win32-x64@0.1.0-rc.1`
+- `@binary-balance/seshat-linux-x64@0.1.0`
+- `@binary-balance/seshat-linux-arm64@0.1.0`
+- `@binary-balance/seshat-darwin-x64@0.1.0`
+- `@binary-balance/seshat-darwin-arm64@0.1.0`
+- `@binary-balance/seshat-win32-x64@0.1.0`
 
 The entry package owns the npm `seshat` command. Its Node launcher selects the
 matching native package and forwards arguments, output and status. The native
 archives also work as standalone installations. The target boundaries are in
-the [historical platform support matrix](docs/platform-support.md). The npm
-packages are public; the [release notice and runtime audit](docs/research/release-notice-audit.md)
-records their coordinates and verified proof state.
+the [platform support matrix](docs/platform-support.md). The six canonical
+archive coordinates, member hashes and native proof results are in the
+[fresh 0.1.0 audit](docs/research/release-notice-audit.md). The rc.1
+coordinates remain historical in the [archived release audit](docs/releases/0.1.0-rc.1-audit.md).
+The release process records the local six-archive consumer matrix, publisher
+dry run and public registry checks separately.
 
 The verified consumer runtime is Node 24.20.0. Install the test runner,
 TypeScript and coverage packages required by the project before running Seshat.
 Consuming projects do not need Rust. Rust is only needed to build a native
 archive, as described in the [packaging guide](packaging/README.md).
 
-## Install the published candidate
+## Install the 0.1.0 package from npm
 
-From a consuming project's root, install the entry package by its exact public
-registry version. Keep scripts disabled so installation only extracts the
-published package files:
+After 0.1.0 is published, install the entry package from the public registry by
+its exact version. Keep scripts disabled so installation only extracts package
+files:
 
 ```sh
 npm install --ignore-scripts --save-dev --save-exact \
   --registry=https://registry.npmjs.org/ \
   --@binary-balance:registry=https://registry.npmjs.org/ \
-  @binary-balance/seshat@0.1.0-rc.1
+  @binary-balance/seshat@0.1.0
 npm ci --ignore-scripts \
   --registry=https://registry.npmjs.org/ \
   --@binary-balance:registry=https://registry.npmjs.org/
@@ -55,17 +59,18 @@ npm ci --ignore-scripts \
 ```
 
 npm installs the one optional native package matching the host's OS and CPU.
-The entry package and native payload must report `0.1.0-rc.1`. The
-[registry-install verifier](benchmarks/proofs/registry-install.mjs) runs this
-route on each supported host and checks the installed binary against the audit.
+The entry package and native payload must report `0.1.0`. The
+[registry-install verifier](benchmarks/proofs/registry-install.mjs) is the
+post-publication check for this route and compares the installed binary with
+the [fresh release audit](docs/research/release-notice-audit.md).
 
-## Install an unpublished local candidate
+## Install a local 0.1.0 archive
 
-For an archived candidate or a consumer without registry access, run this
-recipe from the consuming project's root. For an npm workspace, use the
-workspace root that owns `package.json` and `package-lock.json`, not a child
-workspace. Keep all six candidate archives under `vendor/seshat`; npm records
-those project-relative `file:` paths in the lockfile.
+For release preparation or a consumer without registry access, run this recipe
+from the consuming project's root. For an npm workspace, use the workspace
+root that owns `package.json` and `package-lock.json`, not a child workspace.
+Keep all six 0.1.0 archives under `vendor/seshat`; npm records those
+project-relative `file:` paths in the lockfile.
 
 On POSIX, install the consuming project's dependencies, stage the six archives,
 then add the entry and native packages in two commands:
@@ -117,7 +122,7 @@ PowerShell uses the same recipe from the project or workspace root:
 
 ```powershell
 npm ci
-$artifactDir = 'C:\path\to\candidate-archives'
+$artifactDir = 'C:\path\to\0.1.0-archives'
 New-Item -ItemType Directory -Force vendor\seshat | Out-Null
 Copy-Item "$artifactDir\seshat-entry.tgz" vendor\seshat\entry.tgz
 Copy-Item "$artifactDir\seshat-linux-x64-release.tgz" vendor\seshat\linux-x64.tgz
@@ -139,10 +144,11 @@ npm ci --ignore-scripts --offline
 ```
 
 The npm-generated `seshat.cmd` shim selects the matching Windows optional
-package. The [five-host local-install matrix](https://github.com/Binary-Balance/seshat/actions/runs/34869523860)
-passed this recipe on Linux x64 and ARM64, macOS x64 and ARM64, and Windows
-x64. It verified the host-selected native payload and the Windows `seshat.cmd`
-shim, recording the canonical binary and shim hashes.
+package. The five fresh native package-proof runs passed on Linux x64 and
+ARM64, macOS x64 and ARM64, and Windows x64; their run, artifact and member
+hash evidence is in the [fresh release audit](docs/research/release-notice-audit.md).
+The release process records the local six-archive installation matrix with its
+own staging and verifier evidence.
 
 Standalone execution remains a host-archive-only route. It does not use npm or
 the cross-platform lockfile. On POSIX, extract the matching native archive into
@@ -179,7 +185,7 @@ replay, not the six-archive consumer recipe or the public registry route.
 
 ## Run an assessment
 
-After installing the consuming project's dependencies and candidate, run from
+After installing the consuming project's dependencies and 0.1.0 package, run from
 the project that contains `seshat.json`:
 
 ```sh

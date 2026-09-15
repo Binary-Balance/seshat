@@ -16,7 +16,7 @@ DLLs remain Windows OS components and are not copied into the package.
 Install the local tarball in a consuming project:
 
 ```powershell
-npm install --save-dev --save-exact --ignore-scripts --offline C:\path\to\binary-balance-seshat-win32-x64-0.1.0-rc.1.tgz
+npm install --save-dev --save-exact --ignore-scripts --offline C:\path\to\binary-balance-seshat-win32-x64-0.1.0.tgz
 & .\node_modules\@binary-balance\seshat-win32-x64\bin\seshat.exe --help
 ```
 

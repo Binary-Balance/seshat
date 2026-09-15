@@ -413,7 +413,7 @@ for (const packageName of unavailableNames) {
 }
 
 const nativeVersion = (await run('native-version', nativeExecutable, ['--version'], consumer)).stdout;
-assert.equal(nativeVersion, `seshat ${version} (candidate)\n`);
+assert.equal(nativeVersion, `seshat ${version}\n`);
 const launcherVersion = (await run('launcher-version', process.execPath, [launcher, '--version'], consumer)).stdout;
 assert.equal(launcherVersion, nativeVersion);
 await runNpm('npm-exec', ['exec', '--offline', ...commonNpmOptions, '--', 'seshat', '--help'], consumer);

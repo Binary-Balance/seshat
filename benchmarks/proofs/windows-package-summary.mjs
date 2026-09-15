@@ -95,7 +95,7 @@ function checkInstalledControl(value, label, cases, packed, fail) {
     fail(`${label} evidence did not retain its four requested cases`);
   }
   if (value.cli?.source !== 'executable' || value.cli?.binarySha256 !== packed?.binary ||
-      value.cli?.version !== `seshat ${packed?.version} (candidate)`) {
+      value.cli?.version !== `seshat ${packed?.version}`) {
     fail(`${label} evidence did not run the installed package executable`);
   }
   if (value.originalsPreserved !== true) fail(`${label} evidence did not preserve its fixture inputs`);
@@ -247,7 +247,7 @@ function selfCheck() {
   const binaryHash = 'b'.repeat(64);
   const buildHash = 'c'.repeat(64);
   const archiveHash = 'd'.repeat(64);
-  const packed = {version:'0.1.0-rc.1', binary:binaryHash, binaryBytes:1, binaryName:'seshat.exe', tarballSha256:archiveHash, standalone:{sha256:archiveHash, bytes:1}};
+  const packed = {version:'0.1.0', binary:binaryHash, binaryBytes:1, binaryName:'seshat.exe', tarballSha256:archiveHash, standalone:{sha256:archiveHash, bytes:1}};
   const repeat = {schemaVersion:1, sourceCommit, host:{platform:'win32', arch:'x64', windows:{platform:'win32', architecture:'x64', release:'10.0.20348', version:'Windows Server 2022 Datacenter', runner:'Windows'}, glibc:null},
     toolchain:{node:'v24.20.0', npm:'11.0.0', rustc:'rustc 1.98.1', cargo:'cargo 1.98.1', msvc:{version:'cl'}, linker:{version:'link'}, sdk:{version:'sdk'}}, input:{mode:'--native-windows', archives:[]}, validation:{passed:true, reason:'self-check'}, runs:[
     {binary:{sha256:binaryHash, bytes:1}, build:{sha256:buildHash, bytes:1}, npmArchive:{sha256:archiveHash, bytes:1}, standaloneArchive:{sha256:archiveHash, bytes:1}, files:packageFiles},
@@ -291,7 +291,7 @@ function selfCheck() {
   const runnerEvidence = cases => ({
     checks: {requested: cases.length, completed: cases.length},
     requestedCases: cases,
-    cli: {source:'executable', binarySha256:binaryHash, version:'seshat 0.1.0-rc.1 (candidate)'},
+    cli: {source:'executable', binarySha256:binaryHash, version:'seshat 0.1.0'},
     originalsPreserved: true,
     noConsumingRust: {probes:[{unavailable:true}], environmentUnset:['CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'NODE_OPTIONS', 'SESHAT_MUTANT_ID']},
   });
