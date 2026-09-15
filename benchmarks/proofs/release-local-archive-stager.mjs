@@ -15,9 +15,13 @@ import {
 import {tmpdir} from 'node:os';
 import {basename, dirname, join, resolve} from 'node:path';
 import {parseArgs} from 'node:util';
+import {pathToFileURL} from 'node:url';
 
-const repo = execFileSync('git', ['rev-parse', '--show-toplevel'], {encoding: 'utf8'}).trim();
-const {values} = parseArgs({
+const invoked = process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
+const repo = invoked
+  ? execFileSync('git', ['rev-parse', '--show-toplevel'], {encoding: 'utf8'}).trim()
+  : process.cwd();
+const {values} = invoked ? parseArgs({
   args: process.argv.slice(2),
   allowPositionals: false,
   options: {
@@ -26,7 +30,7 @@ const {values} = parseArgs({
     evidence: {type: 'string'},
     target: {type: 'string'},
   },
-});
+}) : {values: {}};
 
 const manifestPath = resolve(values.manifest ?? join(repo, 'docs/research/release-notice-audit.json'));
 const output = resolve(values.output ?? join(repo, 'work/release-local-archives'));
@@ -49,6 +53,9 @@ const hostTargets = new Map([
   ['darwin-arm64', ['darwin', 'arm64']],
   ['win32-x64', ['win32', 'x64']],
 ]);
+
+const sourcePaths = Object.freeze(['crates', 'packages', 'packaging']);
+const fullShaPattern = /^[\da-f]{40}$/i;
 
 const report = {
   schemaVersion: 1,
@@ -111,11 +118,32 @@ function validateHost() {
     `runner host does not match ${values.target}: ${process.platform}/${process.arch}`);
 }
 
+export function validateSourceTrees(sourceTrees, label = 'candidate source trees') {
+  assert.ok(sourceTrees && typeof sourceTrees === 'object' && !Array.isArray(sourceTrees),
+    `${label} must be an object`);
+  assert.deepEqual(Object.keys(sourceTrees).sort(), [...sourcePaths].sort(),
+    `${label} must contain exactly crates, packages, packaging`);
+  for (const path of sourcePaths) {
+    assert.match(sourceTrees[path] ?? '', fullShaPattern,
+      `${label}.${path} must be a full Git tree SHA`);
+  }
+  return sourceTrees;
+}
+
+export function assertSourceTreeEquivalence(sourceTrees, checkoutTrees) {
+  validateSourceTrees(sourceTrees);
+  validateSourceTrees(checkoutTrees, 'checkout source trees');
+  const changed = sourcePaths.filter(path => sourceTrees[path] !== checkoutTrees[path]);
+  assert.deepEqual(changed, [], `candidate source trees differ from checkout: ${changed.join(', ')}`);
+  return changed;
+}
+
 function validateManifest(manifest) {
   assert.equal(manifest.schemaVersion, 1, 'release audit schema must be version 1');
   assert.equal(manifest.kind, 'seshat-release-notice-audit', 'release audit kind is invalid');
   const candidate = manifest.candidate;
   assert.match(candidate?.sourceCommit ?? '', /^[\da-f]{40}$/i, 'candidate source commit is invalid');
+  if (candidate?.sourceTrees !== undefined) validateSourceTrees(candidate.sourceTrees);
   assert.match(candidate?.packageVersion ?? '', /^\S+$/, 'candidate package version is missing');
   assert.ok(Array.isArray(manifest.coordinates), 'release audit coordinates are missing');
   assert.equal(manifest.coordinates.length, targets.size, 'release audit must contain six coordinates');
@@ -164,15 +192,27 @@ function ensureCandidateCommit(sourceCommit) {
   git('cat-file', ['-e', `${sourceCommit}^{commit}`]);
 }
 
-function checkSourceEquivalence(sourceCommit) {
-  ensureCandidateCommit(sourceCommit);
+function checkSourceEquivalence(sourceCommit, sourceTrees) {
   const checkoutCommit = git('rev-parse', ['HEAD']);
+  if (sourceTrees !== undefined) {
+    const checkoutTrees = Object.fromEntries(sourcePaths.map(path => [path,
+      git('rev-parse', [`HEAD:${path}`])]));
+    assertSourceTreeEquivalence(sourceTrees, checkoutTrees);
+    return {
+      candidateCommit: sourceCommit,
+      checkoutCommit,
+      paths: sourcePaths,
+      changed: [],
+      sourceTrees,
+    };
+  }
+  ensureCandidateCommit(sourceCommit);
   const changed = git('diff', ['--name-only', sourceCommit, checkoutCommit, '--', 'crates', 'packages', 'packaging']);
   assert.equal(changed, '', `candidate source inputs differ from checkout:\n${changed}`);
   return {
     candidateCommit: sourceCommit,
     checkoutCommit,
-    paths: ['crates', 'packages', 'packaging'],
+    paths: sourcePaths,
     changed: [],
   };
 }
@@ -247,6 +287,7 @@ function main() {
   report.candidate = {
     packageVersion: candidate.packageVersion,
     sourceCommit: candidate.sourceCommit,
+    sourceTrees: candidate.sourceTrees ?? null,
     sourceRef: candidate.sourceRef ?? null,
   };
   report.coordinates = coordinates.map(coordinate => ({
@@ -262,7 +303,7 @@ function main() {
     archiveSha256: coordinate.archiveSha256,
     buildProvenance: coordinate.buildProvenance ?? null,
   }));
-  report.sourceEquivalence = checkSourceEquivalence(candidate.sourceCommit);
+  report.sourceEquivalence = checkSourceEquivalence(candidate.sourceCommit, candidate.sourceTrees);
   const downloads = downloadGroups(coordinates);
   try {
     stageArchives(coordinates, downloads.groups);
@@ -275,11 +316,13 @@ function main() {
   console.log(`Staged ${report.archives.length} candidate archives for ${hostTarget}.`);
 }
 
-try {
-  main();
-} catch (error) {
-  report.validation = {passed: false, error: portableError(error)};
-  writeEvidence();
-  console.error(report.validation.error);
-  process.exitCode = 1;
+if (invoked) {
+  try {
+    main();
+  } catch (error) {
+    report.validation = {passed: false, error: portableError(error)};
+    writeEvidence();
+    console.error(report.validation.error);
+    process.exitCode = 1;
+  }
 }

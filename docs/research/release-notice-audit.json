@@ -6,6 +6,11 @@
   "candidate": {
     "packageVersion": "0.1.0-rc.1",
     "sourceCommit": "b48ce50c206056b3eabb45c687b9edf1f035528f",
+    "sourceTrees": {
+      "crates": "69eabd0b41f8d9ae7f708f37e93f1e8e92b13829",
+      "packages": "9fde34a86e1795b9be2dcb619e7fb9a8e9701e9d",
+      "packaging": "7cdef2cec782f7aa717790ca5ef2999688a0ec4d"
+    },
     "sourceRef": "refs/pull/40/merge",
     "sourceCommitUrl": "https://github.com/Binary-Balance/seshat/commit/b48ce50c206056b3eabb45c687b9edf1f035528f",
     "directHead": "08561afd0070260b6f295604a8ac3fdcb2629681",
