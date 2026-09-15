@@ -15,9 +15,10 @@ insufficiently tested code.
 
 ## Release status
 
-Version `0.1.0` is in release preparation. Its npm layout is an entry package,
-`@binary-balance/seshat@0.1.0`, with these exact-version optional native
-packages:
+Version `0.1.0` has a measured native archive audit from PR50's synthetic
+merge source `e1b91b39a8aa0fcbfb3d4ca6089de8b416ee61c7`. Its npm layout is an
+entry package, `@binary-balance/seshat@0.1.0`, with these exact-version
+optional native packages:
 
 - `@binary-balance/seshat-linux-x64@0.1.0`
 - `@binary-balance/seshat-linux-arm64@0.1.0`
@@ -28,16 +29,19 @@ packages:
 The entry package owns the npm `seshat` command. Its Node launcher selects the
 matching native package and forwards arguments, output and status. The native
 archives also work as standalone installations. The target boundaries are in
-the [platform support matrix](docs/platform-support.md). The published rc.1
-coordinates remain in the [archived release audit](docs/releases/0.1.0-rc.1-audit.md)
-while fresh 0.1.0 coordinates are prepared.
+the [platform support matrix](docs/platform-support.md). The six canonical
+archive coordinates, member hashes and native proof results are in the
+[fresh 0.1.0 audit](docs/research/release-notice-audit.md). The rc.1
+coordinates remain historical in the [archived release audit](docs/releases/0.1.0-rc.1-audit.md).
+The release process records the local six-archive consumer matrix, publisher
+dry run and public registry checks separately.
 
 The verified consumer runtime is Node 24.20.0. Install the test runner,
 TypeScript and coverage packages required by the project before running Seshat.
 Consuming projects do not need Rust. Rust is only needed to build a native
 archive, as described in the [packaging guide](packaging/README.md).
 
-## Install the published 0.1.0 package
+## Install the 0.1.0 package from npm
 
 After 0.1.0 is published, install the entry package from the public registry by
 its exact version. Keep scripts disabled so installation only extracts package
@@ -56,9 +60,9 @@ npm ci --ignore-scripts \
 
 npm installs the one optional native package matching the host's OS and CPU.
 The entry package and native payload must report `0.1.0`. The
-[registry-install verifier](benchmarks/proofs/registry-install.mjs) runs this
-route on each supported host and checks the installed binary against the fresh
-release audit.
+[registry-install verifier](benchmarks/proofs/registry-install.mjs) is the
+post-publication check for this route and compares the installed binary with
+the [fresh release audit](docs/research/release-notice-audit.md).
 
 ## Install a local 0.1.0 archive
 
@@ -140,10 +144,11 @@ npm ci --ignore-scripts --offline
 ```
 
 The npm-generated `seshat.cmd` shim selects the matching Windows optional
-package. The [five-host local-install matrix](https://github.com/Binary-Balance/seshat/actions/runs/34869523860)
-passed this recipe on Linux x64 and ARM64, macOS x64 and ARM64, and Windows
-x64. It verified the host-selected native payload and the Windows `seshat.cmd`
-shim, recording the canonical binary and shim hashes.
+package. The five fresh native package-proof runs passed on Linux x64 and
+ARM64, macOS x64 and ARM64, and Windows x64; their run, artifact and member
+hash evidence is in the [fresh release audit](docs/research/release-notice-audit.md).
+The release process records the local six-archive installation matrix with its
+own staging and verifier evidence.
 
 Standalone execution remains a host-archive-only route. It does not use npm or
 the cross-platform lockfile. On POSIX, extract the matching native archive into

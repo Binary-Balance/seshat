@@ -15,12 +15,13 @@ are in the [report format](../docs/report-format.md).
 
 ## Install and run a local 0.1.0 archive
 
-While 0.1.0 is in release preparation, follow the same six-archive recipe as
-the [root README](../README.md#install-a-local-010-archive), from the example
-project's root. For `workspaces`, that is `examples/workspaces`, not
-`packages/rules`. The root `package.json` and `package-lock.json` must receive
-the 0.1.0 dependencies. Keep all six archives under the example root's
-`vendor/seshat` directory.
+Use the six audited 0.1.0 archives listed in the [fresh release
+audit](../docs/research/release-notice-audit.md) with the recipe in the [root
+README](../README.md#install-a-local-010-archive), from the example project's
+root. For `workspaces`, that is `examples/workspaces`, not `packages/rules`.
+The root `package.json` and `package-lock.json` must receive the 0.1.0
+dependencies. Keep all six archives under the example root's `vendor/seshat`
+directory.
 
 On POSIX, from an example project root:
 
@@ -94,11 +95,12 @@ SESHAT=./seshat-standalone/bin/seshat
 ```
 
 For a standalone Windows run, extract `vendor\seshat\win32-x64.tgz` with
-`tar.exe` and invoke `package\bin\seshat.exe` directly. The [five-host
-local-install matrix](https://github.com/Binary-Balance/seshat/actions/runs/34869523860)
-passed the documented npm recipe on every supported target, including the
-Windows shim and host-selected native payload. Both routes still need the
-example project's Node, test runner, TypeScript and coverage dependencies.
+`tar.exe` and invoke `package\bin\seshat.exe` directly. The five fresh native
+package-proof runs passed on every supported target; run and archive evidence
+is in the [fresh release audit](../docs/research/release-notice-audit.md). The
+release process records the local six-archive installation matrix separately.
+Both routes still need the example project's Node, test runner, TypeScript and
+coverage dependencies.
 
 Run the focused verifier from the repository root with either an installed
 launcher, a native executable, or the six-archive directory:

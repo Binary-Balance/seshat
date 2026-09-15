@@ -37,11 +37,11 @@ git merge-base --is-ancestor <reviewed-sha> origin/main
 Read the version from `candidate.packageVersion` in
 [`docs/research/release-notice-audit.json`](research/release-notice-audit.json).
 The workflow version input must match it and must be valid semver. This release
-uses `0.1.0` and the `latest` tag. During this preparation, the checked-in
-audit remains the preserved rc.1 record. Replace it with fresh 0.1.0
-coordinates before dispatching the workflow.
+uses `0.1.0` and the `latest` tag. The checked-in audit records fresh 0.1.0
+coordinates from PR50's synthetic merge source, including the native proof
+results and exact archive hashes. The archived rc.1 record remains historical.
 
-Fresh 0.1.0 native archives must be built and audited from the exact reviewed
+The fresh 0.1.0 native archives were built and audited from the exact reviewed
 source revision. The new package manifests contain the repository metadata
 required by npm trusted publishing. Do not reuse, edit or repack the archived
 rc.1 bytes. The publication checkout must remain equivalent to the audited
