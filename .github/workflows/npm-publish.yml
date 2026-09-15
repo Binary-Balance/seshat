@@ -1,0 +1,162 @@
+name: npm publication
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/npm-publish.yml
+      - benchmarks/proofs/npm-publishing.mjs
+      - benchmarks/proofs/npm-publishing.test.mjs
+      - benchmarks/proofs/release-local-archive-stager.mjs
+      - docs/npm-publishing.md
+      - docs/research/release-notice-audit.json
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: Full SHA of the reviewed main revision
+        required: true
+        type: string
+      version:
+        description: Exact candidate semver to publish
+        required: true
+        default: 0.1.0-rc.1
+        type: string
+      publish:
+        description: Publish after validation (leave off for a dry run)
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: npm-publication-${{ inputs.version || github.sha }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -eo pipefail {0}
+
+jobs:
+  validate:
+    name: Validate candidate and dry-run plan
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    env:
+      RELEASE_REVISION: ${{ inputs.revision || github.sha }}
+      RELEASE_VERSION: ${{ inputs.version || '0.1.0-rc.1' }}
+    steps:
+      - name: Check out requested revision
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.revision || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Require a reviewed main revision for manual runs
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          [[ "${GITHUB_REF}" == 'refs/heads/main' ]]
+          [[ "${RELEASE_REVISION}" =~ ^[0-9a-f]{40}$ ]]
+          git merge-base --is-ancestor "${RELEASE_REVISION}" origin/main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.20.0
+
+      - name: Check focused publication controls
+        run: node --test --test-isolation=none benchmarks/proofs/npm-publishing.test.mjs
+
+      - name: Download and stage canonical archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p work/npm-publishing
+          node benchmarks/proofs/release-local-archive-stager.mjs \
+            --manifest docs/research/release-notice-audit.json \
+            --output work/npm-publishing/archives \
+            --evidence work/npm-publishing/archive-staging.json
+
+      - name: Validate exact publish plan (dry-run)
+        run: |
+          mkdir -p work/npm-publishing
+          node benchmarks/proofs/npm-publishing.mjs \
+            --manifest docs/research/release-notice-audit.json \
+            --archives work/npm-publishing/archives \
+            --staging-evidence work/npm-publishing/archive-staging.json \
+            --revision "${RELEASE_REVISION}" \
+            --version "${RELEASE_VERSION}" \
+            --report work/npm-publishing/dry-run.json \
+            2>&1 | tee work/npm-publishing/dry-run.log
+
+      - name: Upload validated publication inputs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: npm-publication-inputs
+          path: work/npm-publishing
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    name: Publish verified archives
+    needs: validate
+    if: github.event_name == 'workflow_dispatch' && inputs.publish == true
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    env:
+      RELEASE_REVISION: ${{ inputs.revision }}
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - name: Check out requested revision
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.revision }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Require a reviewed main revision
+        run: |
+          [[ "${GITHUB_REF}" == 'refs/heads/main' ]]
+          [[ "${RELEASE_REVISION}" =~ ^[0-9a-f]{40}$ ]]
+          git merge-base --is-ancestor "${RELEASE_REVISION}" origin/main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.20.0
+
+      - name: Download validated publication inputs
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: npm-publication-inputs
+          path: work/npm-publishing
+
+      - name: Publish through npm trusted publishing
+        run: |
+          node benchmarks/proofs/npm-publishing.mjs \
+            --manifest docs/research/release-notice-audit.json \
+            --archives work/npm-publishing/archives \
+            --staging-evidence work/npm-publishing/archive-staging.json \
+            --revision "${RELEASE_REVISION}" \
+            --version "${RELEASE_VERSION}" \
+            --publish \
+            --report work/npm-publishing/publish.json \
+            2>&1 | tee work/npm-publishing/publish.log
+
+      - name: Upload publication evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: npm-publication-result
+          path: |
+            work/npm-publishing/publish.json
+            work/npm-publishing/publish.log
+          if-no-files-found: error
+          retention-days: 30
