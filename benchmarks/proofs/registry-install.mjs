@@ -16,9 +16,10 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 import {parseArgs} from 'node:util';
 import {tmpdir} from 'node:os';
 
-export const VERSION = '0.1.0-rc.1';
+export const VERSION = '0.1.0';
 export const REGISTRY = 'https://registry.npmjs.org/';
 export const ENTRY_PACKAGE = '@binary-balance/seshat';
+const SLSA_PROVENANCE_PREDICATE = 'https://slsa.dev/provenance/v1';
 
 export const TARGETS = new Map([
   ['linux-x64', {platform: 'linux', arch: 'x64', package: '@binary-balance/seshat-linux-x64', executable: 'seshat'}],
@@ -54,6 +55,21 @@ export function validateBinaryIdentity(identity, coordinate) {
   assert.equal(identity.bytes, expected.bytes, `${coordinate.target}: installed binary size differs from audit`);
   assert.equal(identity.sha256, expected.sha256, `${coordinate.target}: installed binary hash differs from audit`);
   return identity;
+}
+
+export function validateAttestations(result, expectedPackages) {
+  assert.deepEqual(result?.invalid ?? [], [], 'npm audit signatures found invalid signatures or attestations');
+  assert.deepEqual(result?.missing ?? [], [], 'npm audit signatures found missing registry signatures');
+  assert.ok(Array.isArray(result?.verified), 'npm audit signatures did not return verified attestations');
+  for (const expected of expectedPackages) {
+    const verified = result.verified.find(value =>
+      value?.name === expected.name && value?.version === expected.version);
+    assert.ok(verified, `verified attestation is missing for ${expected.name}@${expected.version}`);
+    assert.ok(verified.attestations, `attestation metadata is missing for ${expected.name}@${expected.version}`);
+    assert.ok(Array.isArray(verified.attestationBundles) && verified.attestationBundles.some(bundle =>
+      bundle?.predicateType === SLSA_PROVENANCE_PREDICATE),
+    `verified SLSA provenance bundle is missing for ${expected.name}@${expected.version}`);
+  }
 }
 
 const invoked = process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href;
@@ -227,7 +243,7 @@ if (invoked) {
   try {
     target = validateHost(targetName);
     const audit = readJson(join(repo, 'docs/research/release-notice-audit.json'));
-    assert.equal(audit.candidate?.packageVersion, VERSION, 'audit candidate version changed');
+    assert.equal(audit.candidate?.packageVersion, VERSION, 'audit package version changed');
     const coordinate = audit.coordinates?.find(value => value.target === targetName);
     assert.ok(coordinate, `audit coordinate is missing: ${targetName}`);
     assert.equal(coordinate.package, target.package);
@@ -251,10 +267,19 @@ if (invoked) {
       'install', ...npmOptions, '--save-dev', '--save-exact', `${ENTRY_PACKAGE}@${VERSION}`,
     ]);
 
+    const expectedAttestations = [
+      {name: ENTRY_PACKAGE, version: VERSION},
+      {name: target.package, version: VERSION},
+    ];
+    const signatures = JSON.parse(run('provenance', npmCommand, [
+      'audit', 'signatures', '--json', '--include-attestations', ...npmOptions,
+    ]).stdout);
+    validateAttestations(signatures, expectedAttestations);
+
     const launcherPath = join(consumer, 'node_modules', '.bin', process.platform === 'win32' ? 'seshat.cmd' : 'seshat');
     const [versionCommand, versionArgs] = shim(launcherPath);
     const versionBefore = run('shim-version-before-ci', versionCommand, [...versionArgs, '--version']).stdout;
-    assert.equal(versionBefore, `seshat ${VERSION} (candidate)\n`);
+    assert.equal(versionBefore, `seshat ${VERSION}\n`);
     report.installed = inspectInstallation(coordinate);
 
     const mutation = JSON.parse(run('mutation-fixture', versionCommand, [

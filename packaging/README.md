@@ -1,6 +1,6 @@
 # Seshat release packaging
 
-The release crate in `crates/seshat/Cargo.toml` owns version `0.1.0-rc.1`.
+The release crate in `crates/seshat/Cargo.toml` owns version `0.1.0`.
 `pack.mjs` builds one native payload for the current platform. `release.mjs`
 stages the user-facing `@binary-balance/seshat` package and the five exact
 optional native package names:
@@ -54,10 +54,10 @@ Pass one built binary per target to produce packed entry and native archives:
 
 ```sh
 node packaging/release.mjs \
-  --output work/release-0.1.0-rc.1 \
+  --output work/release-0.1.0 \
   --binary linux-x64=/absolute/path/to/seshat \
   --notices linux-x64=/absolute/path/to/THIRD_PARTY_NOTICES.txt \
-  --manifest work/release-0.1.0-rc.1/release.json
+  --manifest work/release-0.1.0/release.json
 ```
 
 Use `--layout-only` to inspect all six manifests without creating archives.
@@ -82,8 +82,8 @@ and that cache are prerequisites for the offline step.
 
 ```sh
 node benchmarks/proofs/npm-package.mjs \
-  work/release-0.1.0-rc.1/binary-balance-seshat-0.1.0-rc.1.tgz \
-  work/release-0.1.0-rc.1/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz
+  work/release-0.1.0/binary-balance-seshat-0.1.0.tgz \
+  work/release-0.1.0/binary-balance-seshat-linux-x64-0.1.0.tgz
 ```
 
 The existing standalone, lifecycle and runner proofs remain separate native

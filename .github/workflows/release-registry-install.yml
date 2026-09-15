@@ -1,14 +1,6 @@
 name: Release registry install
 
 on:
-  pull_request:
-    paths:
-      - .github/workflows/release-registry-install.yml
-      - benchmarks/proofs/registry-install.mjs
-      - benchmarks/proofs/registry-install.test.mjs
-      - examples/node/**
-      - README.md
-      - docs/research/release-notice-audit.json
   workflow_dispatch:
 
 permissions:

@@ -17,7 +17,7 @@ import {
 
 const revision = 'a'.repeat(40);
 const sourceCommit = 'b'.repeat(40);
-const version = '0.1.0-rc.1';
+const version = '0.1.0';
 const temporaryDirectories = [];
 
 function hash(data) {
@@ -78,11 +78,11 @@ test('plans the native-first order and version tag', () => {
   assert.deepEqual(plan.archives.map(archive => archive.target), [
     'linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'win32-x64', 'universal',
   ]);
-  assert.equal(expectedTag(version), 'next');
+  assert.equal(expectedTag(version), 'latest');
   assert.equal(expectedTag('0.1.0'), 'latest');
   assert.deepEqual(publishArgs(plan.archives[0], {tag: plan.tag, dryRun: true}).slice(1), [
     '--access=public',
-    '--tag=next',
+    '--tag=latest',
     `--registry=${REGISTRY}`,
     `--@binary-balance:registry=${REGISTRY}`,
     '--dry-run',
@@ -146,7 +146,7 @@ test('preflight detects a conflict before any npm write', async () => {
     publishPackage: async () => {
       published += 1;
     },
-  }), /conflicting existing version @binary-balance\/seshat-linux-arm64@0\.1\.0-rc\.1/);
+  }), /conflicting existing version @binary-balance\/seshat-linux-arm64@0\.1\.0/);
   assert.equal(published, 0);
 });
 

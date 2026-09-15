@@ -188,7 +188,7 @@ run('cargo', cargoBuildArgs);
 const metadata = JSON.parse(run('cargo',['metadata','--locked','--offline','--format-version','1','--manifest-path',cargoManifest]));
 assert.equal(metadata.packages.find(p => p.id === metadata.resolve.root).version, version);
 const binary = join(target,triple,`release/${nativeWindows ? targetConfig.binaryName : 'seshat'}`);
-assert.equal(run(binary, ['--version']).trim(), `seshat ${version} (candidate)`);
+assert.equal(run(binary, ['--version']).trim(), `seshat ${version}`);
 const bytes = readFileSync(binary);
 if (nativeMacos) {
   const fileType = run('file', ['-b', binary]);

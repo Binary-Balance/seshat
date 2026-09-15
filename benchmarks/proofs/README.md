@@ -1,7 +1,7 @@
 # Bounded Rust architecture proofs
 
 These experiments test coverage attribution and mutation execution. They include
-a CLI candidate, not a published release or a production executor.
+a release CLI, not a production executor.
 The earlier benchmark under `benchmarks/rust/` is unchanged.
 
 ## Run
@@ -40,11 +40,11 @@ and remove those copies on normal completion. The script checks source hashes
 and checks that no session directories remain. It never changes either consuming
 project or writes mutants into the source fixture.
 
-## CLI candidate
+## CLI
 
 The `seshat` and `seshat-proofs` binaries share the existing private Rust modules.
 No CLI framework or new dependency was added. The release crate is `seshat`
-version `0.1.0-rc.1`, and `cargo run` still defaults to the legacy proof entry
+version `0.1.0`, and `cargo run` still defaults to the legacy proof entry
 point. The Windows console helper is built only for proof checks.
 
 After the installation above, build both binaries and run the regression:
@@ -241,7 +241,7 @@ hashes in the retained JSON evidence. Set these paths to the resulting files:
 
 ```sh
 BASELINE_TARBALL=/absolute/path/to/baseline/native-seshat-package.tgz
-CANDIDATE_TARBALL=/absolute/path/to/candidate/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz
+CANDIDATE_TARBALL=/absolute/path/to/candidate/binary-balance-seshat-linux-x64-0.1.0.tgz
 JEST_DEPS=/absolute/path/to/jest-expo-fixture
 ```
 
@@ -383,8 +383,8 @@ Then run the real installed proof with the two resulting archives:
 
 ```sh
 node benchmarks/proofs/npm-package.mjs \
-  /absolute/path/to/binary-balance-seshat-0.1.0-rc.1.tgz \
-  /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz
+  /absolute/path/to/binary-balance-seshat-0.1.0.tgz \
+  /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0.tgz
 ```
 
 The entry archive owns npm's `seshat` bin and pins all five native payloads as
@@ -1050,7 +1050,7 @@ or obtaining a local Seshat package:
 
 ```sh
 node benchmarks/proofs/jest-expo-check.mjs \
-  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz
+  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0.tgz
 ```
 
 The driver installs the fixture's pinned lockfile into a fresh ignored proof
@@ -1063,7 +1063,7 @@ cp benchmarks/proofs/fixtures/jest-expo/package.json \
   benchmarks/proofs/fixtures/jest-expo/package-lock.json work/jest-expo-fixture/
 npm ci --prefix work/jest-expo-fixture --ignore-scripts --no-audit --no-fund
 node benchmarks/proofs/jest-expo-check.mjs \
-  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz \
+  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0.tgz \
   --deps work/jest-expo-fixture
 ```
 
@@ -1130,7 +1130,7 @@ the dependency directory is never resolved or downloaded during the proof:
 
 ```sh
 node benchmarks/proofs/vitest-check.mjs \
-  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz \
+  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0.tgz \
   --deps /absolute/path/to/vitest-dependencies
 ```
 

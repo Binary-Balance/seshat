@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   TARGETS,
   validateBinaryIdentity,
+  validateAttestations,
   validateHost,
   validateNativePackages,
 } from './registry-install.mjs';
@@ -32,5 +33,35 @@ test('rejects binary size or hash drift from the audit', () => {
   assert.throws(
     () => validateBinaryIdentity({bytes: 10, sha256: 'b'.repeat(64)}, coordinate),
     /installed binary hash differs from audit/,
+  );
+});
+
+test('rejects missing or mismatched package attestations', () => {
+  const expected = [
+    {name: '@binary-balance/seshat', version: '0.1.0'},
+    {name: '@binary-balance/seshat-linux-x64', version: '0.1.0'},
+  ];
+  const verified = expected.map(value => ({
+    ...value,
+    attestations: {url: 'https://registry.npmjs.org/-/npm/v1/attestations'},
+    attestationBundles: [{predicateType: 'https://slsa.dev/provenance/v1', bundle: {}}],
+  }));
+  assert.throws(
+    () => validateAttestations({invalid: [], missing: [], verified: verified.slice(1)}, expected),
+    /verified attestation is missing for @binary-balance\/seshat@0\.1\.0/,
+  );
+  assert.throws(
+    () => validateAttestations({invalid: [], missing: [], verified: [
+      {...verified[0], version: '0.1.0-rc.1'}, verified[1],
+    ]}, expected),
+    /verified attestation is missing for @binary-balance\/seshat@0\.1\.0/,
+  );
+  assert.throws(
+    () => validateAttestations({invalid: [], missing: [], verified: expected.map(value => ({
+      ...value,
+      attestations: {url: 'https://registry.npmjs.org/-/npm/v1/attestations'},
+      attestationBundles: [{predicateType: 'https://slsa.dev/dependencies/v1', bundle: {}}],
+    }))}, expected),
+    /verified SLSA provenance bundle is missing for @binary-balance\/seshat@0\.1\.0/,
   );
 });

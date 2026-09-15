@@ -13,13 +13,13 @@ The complete configurations are [the Node single-package example](node),
 [configuration guide](../docs/configuration.md), and the stable report fields
 are in the [report format](../docs/report-format.md).
 
-## Install and run a local candidate
+## Install and run a local 0.1.0 archive
 
-The rc.1 candidate is unpublished. Follow the same six-archive recipe as the
-[root README](../README.md#install-an-unpublished-local-candidate), from the
-example project's root. For `workspaces`, that is `examples/workspaces`, not
+While 0.1.0 is in release preparation, follow the same six-archive recipe as
+the [root README](../README.md#install-a-local-010-archive), from the example
+project's root. For `workspaces`, that is `examples/workspaces`, not
 `packages/rules`. The root `package.json` and `package-lock.json` must receive
-the candidate dependencies. Keep all six archives under the example root's
+the 0.1.0 dependencies. Keep all six archives under the example root's
 `vendor/seshat` directory.
 
 On POSIX, from an example project root:
@@ -59,7 +59,7 @@ PowerShell uses the same commands from the example or workspace root:
 
 ```powershell
 npm ci
-$artifactDir = 'C:\path\to\candidate-archives'
+$artifactDir = 'C:\path\to\0.1.0-archives'
 New-Item -ItemType Directory -Force vendor\seshat | Out-Null
 Copy-Item "$artifactDir\seshat-entry.tgz" vendor\seshat\entry.tgz
 Copy-Item "$artifactDir\seshat-linux-x64-release.tgz" vendor\seshat\linux-x64.tgz

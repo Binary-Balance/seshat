@@ -1,4 +1,4 @@
-// First CLI candidate. Packaging and detailed live progress are separate work.
+// Packaging and detailed live progress are separate from the CLI entry point.
 use crate::execution::{self, AssessmentMode, CapturedProject, Thresholds};
 use serde_json::{Value, json};
 use std::{
@@ -11,7 +11,7 @@ use std::{
     time::Instant,
 };
 
-const HELP: &str = "Seshat CLI candidate (not a published release)
+const HELP: &str = "Seshat CLI
 
 Usage: seshat <check|crap|mutate> [options]
   check           CRAP analysis and mutation testing
@@ -26,7 +26,7 @@ Options:
   --json          One versioned JSON report on stdout, including failures
   --no-progress   Suppress phase messages on stderr
   --help, -h      Show this help without reading configuration
-  --version, -V   Show the candidate version
+  --version, -V   Show the version
 
 Use the same explicit source, capture and setup configuration for all commands.
 Optional config thresholds: maxCrap and minMutationScore under thresholds.
@@ -535,7 +535,7 @@ pub fn main() -> ExitCode {
         Ok(Action::Help) => return write_output(HELP, 0),
         Ok(Action::Version) => {
             return write_output(
-                &format!("seshat {} (candidate)\n", env!("CARGO_PKG_VERSION")),
+                &format!("seshat {}\n", env!("CARGO_PKG_VERSION")),
                 0,
             );
         }

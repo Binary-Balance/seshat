@@ -5,7 +5,7 @@ newline to stdout. Progress stays on stderr. This document defines the public
 wire contract for `schemaVersion: 1`.
 
 `schemaVersion` identifies this document. `toolVersion` identifies the
-executable, such as `0.1.0-rc.1`. They are separate values. Valid standalone
+executable, such as `0.1.0`. They are separate values. Valid standalone
 help and version commands print text. They do not produce this JSON report.
 
 ## Top-level report

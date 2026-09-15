@@ -10,16 +10,16 @@ inputs and installed dependencies into an execution copy; it does not install or
 configure Node, TypeScript, a test runner or a coverage provider. Commands in a
 setup are argument arrays and do not run through a shell.
 
-For the unpublished rc.1 candidate, use the [six-archive local installation
-recipe](../README.md#install-an-unpublished-local-candidate) from the project
-root. For an npm workspace, that is the workspace root containing its root
-`package.json` and `package-lock.json`. Keep the entry and all five native
-archives under the project-relative `vendor/seshat` directory. The two npm
-install commands write the entry as a root dev dependency and the native
-payloads as root optional dependencies, then `npm ci --ignore-scripts --offline`
-replays the complete lockfile. The offline step needs the consuming project's
-registry metadata and package bytes in npm's cache. Standalone extraction still
-uses one matching native archive and does not use npm.
+For a local 0.1.0 archive, use the [six-archive local installation
+recipe](../README.md#install-a-local-010-archive) from the project root. For an
+npm workspace, that is the workspace root containing its root `package.json`
+and `package-lock.json`. Keep the entry and all five native archives under the
+project-relative `vendor/seshat` directory. The two npm install commands write
+the entry as a root dev dependency and the native payloads as root optional
+dependencies, then `npm ci --ignore-scripts --offline` replays the complete
+lockfile. The offline step needs the consuming project's registry metadata and
+package bytes in npm's cache. Standalone extraction still uses one matching
+native archive and does not use npm.
 
 The [Node example](../examples/node/seshat.json) and
 [npm workspace example](../examples/workspaces/seshat.json) are complete
@@ -138,7 +138,7 @@ native archive and `--cli` accepts an installed native executable:
 
 ```sh
 node benchmarks/proofs/jest-expo-check.mjs \
-  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0-rc.1.tgz
+  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0.tgz
 # or:
 node benchmarks/proofs/jest-expo-check.mjs \
   --cli /absolute/path/to/node_modules/@binary-balance/seshat-linux-x64/bin/seshat

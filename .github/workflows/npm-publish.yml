@@ -16,9 +16,9 @@ on:
         required: true
         type: string
       version:
-        description: Exact candidate semver to publish
+        description: Exact stable semver to publish
         required: true
-        default: 0.1.0-rc.1
+        default: 0.1.0
         type: string
       publish:
         description: Publish after validation (leave off for a dry run)
@@ -40,12 +40,12 @@ defaults:
 
 jobs:
   validate:
-    name: Validate candidate and dry-run plan
+    name: Validate release and dry-run plan
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     env:
       RELEASE_REVISION: ${{ inputs.revision || github.sha }}
-      RELEASE_VERSION: ${{ inputs.version || '0.1.0-rc.1' }}
+      RELEASE_VERSION: ${{ inputs.version || '0.1.0' }}
     steps:
       - name: Check out requested revision
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -59,6 +59,7 @@ jobs:
         run: |
           [[ "${GITHUB_REF}" == 'refs/heads/main' ]]
           [[ "${RELEASE_REVISION}" =~ ^[0-9a-f]{40}$ ]]
+          [[ "${RELEASE_REVISION}" == "${GITHUB_SHA}" ]]
           git merge-base --is-ancestor "${RELEASE_REVISION}" origin/main
 
       - name: Set up Node.js
@@ -125,6 +126,7 @@ jobs:
         run: |
           [[ "${GITHUB_REF}" == 'refs/heads/main' ]]
           [[ "${RELEASE_REVISION}" =~ ^[0-9a-f]{40}$ ]]
+          [[ "${RELEASE_REVISION}" == "${GITHUB_SHA}" ]]
           git merge-base --is-ancestor "${RELEASE_REVISION}" origin/main
 
       - name: Set up Node.js
