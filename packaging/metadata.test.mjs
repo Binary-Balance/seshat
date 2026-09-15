@@ -8,6 +8,7 @@ import {fileURLToPath} from 'node:url';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repository = {type: 'git', url: 'git+https://github.com/Binary-Balance/seshat.git'};
+const entryDescription = 'A native CLI for TypeScript and TSX complexity analysis and mutation testing.';
 const packageDirectories = ['seshat', 'linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'win32-x64'];
 const npmCommand = process.platform === 'win32' ? process.execPath : 'npm';
 const npmArgs = process.platform === 'win32'
@@ -15,7 +16,7 @@ const npmArgs = process.platform === 'win32'
   : [];
 const tarCommand = process.platform === 'win32' ? 'tar.exe' : 'tar';
 
-test('all release package manifests retain repository metadata when packed', () => {
+test('all release package metadata and README content survive packing', () => {
   const output = mkdtempSync(join(tmpdir(), 'seshat-package-metadata-'));
   try {
     execFileSync(process.execPath, [join(repo, 'packaging/release.mjs'),
@@ -24,6 +25,26 @@ test('all release package manifests retain repository metadata when packed', () 
       const stage = join(output, directory);
       const manifest = JSON.parse(readFileSync(join(stage, 'package.json'), 'utf8'));
       assert.deepEqual(manifest.repository, repository, `${directory}: staged metadata`);
+      const expectedDescription = directory === 'seshat'
+        ? entryDescription
+        : `Native Seshat payload for ${directory}`;
+      assert.equal(manifest.description, expectedDescription, `${directory}: staged description`);
+      const stagedReadme = readFileSync(join(stage, 'README.md'), 'utf8');
+      if (directory === 'seshat') {
+        const normalizedReadme = stagedReadme.replace(/\s+/g, ' ');
+        for (const fragment of [
+          'Seshat is a native CLI for TypeScript and TSX complexity analysis and mutation testing.',
+          'Node.js 24.20.0 or newer',
+          'npm install --save-dev @binary-balance/seshat',
+          'seshat mutate --config ./seshat.json',
+          'full configuration guide',
+          'JSON report format',
+        ]) assert.ok(normalizedReadme.includes(fragment), `${directory}: README is missing ${fragment}`);
+      } else {
+        assert.equal(stagedReadme,
+          `# Seshat native payload\n\nTarget: ${directory}.\nConsumers normally install \`@binary-balance/seshat\`, which selects this payload for matching hosts.\n`,
+          `${directory}: README content`);
+      }
       const [packed] = JSON.parse(execFileSync(npmCommand, [...npmArgs,
         'pack', stage, '--json', '--offline', '--ignore-scripts', '--no-audit', '--no-fund',
         '--update-notifier=false', '--pack-destination', output,
@@ -31,6 +52,10 @@ test('all release package manifests retain repository metadata when packed', () 
       const packedManifest = JSON.parse(execFileSync(tarCommand,
         ['-xOf', join(output, packed.filename), 'package/package.json'], {encoding: 'utf8'}));
       assert.deepEqual(packedManifest.repository, repository, `${directory}: packed metadata`);
+      assert.equal(packedManifest.description, expectedDescription, `${directory}: packed description`);
+      const packedReadme = execFileSync(tarCommand,
+        ['-xOf', join(output, packed.filename), 'package/README.md'], {encoding: 'utf8'});
+      assert.equal(packedReadme, stagedReadme, `${directory}: packed README content`);
     }
   } finally {
     rmSync(output, {recursive: true, force: true});
