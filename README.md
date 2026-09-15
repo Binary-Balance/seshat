@@ -15,7 +15,7 @@ insufficiently tested code.
 
 ## Candidate status
 
-Version `0.1.0-rc.1` is an unpublished release candidate. Its npm layout is an
+Version `0.1.0-rc.1` is the published release candidate. Its npm layout is an
 entry package, `@binary-balance/seshat@0.1.0-rc.1`, with these exact-version
 optional native packages:
 
@@ -28,23 +28,44 @@ optional native packages:
 The entry package owns the npm `seshat` command. Its Node launcher selects the
 matching native package and forwards arguments, output and status. The native
 archives also work as standalone installations. The target boundaries are in
-the [historical platform support matrix](docs/platform-support.md). No npm
-package or GitHub release has been published for this candidate; the [release notice
-and runtime audit](docs/research/release-notice-audit.md) records the prepared
-public CI archive coordinates and verified proof state.
+the [historical platform support matrix](docs/platform-support.md). The npm
+packages are public; the [release notice and runtime audit](docs/research/release-notice-audit.md)
+records their coordinates and verified proof state.
 
 The verified consumer runtime is Node 24.20.0. Install the test runner,
 TypeScript and coverage packages required by the project before running Seshat.
 Consuming projects do not need Rust. Rust is only needed to build a native
 archive, as described in the [packaging guide](packaging/README.md).
 
+## Install the published candidate
+
+From a consuming project's root, install the entry package by its exact public
+registry version. Keep scripts disabled so installation only extracts the
+published package files:
+
+```sh
+npm install --ignore-scripts --save-dev --save-exact \
+  --registry=https://registry.npmjs.org/ \
+  --@binary-balance:registry=https://registry.npmjs.org/ \
+  @binary-balance/seshat@0.1.0-rc.1
+npm ci --ignore-scripts \
+  --registry=https://registry.npmjs.org/ \
+  --@binary-balance:registry=https://registry.npmjs.org/
+./node_modules/.bin/seshat --version
+```
+
+npm installs the one optional native package matching the host's OS and CPU.
+The entry package and native payload must report `0.1.0-rc.1`. The
+[registry-install verifier](benchmarks/proofs/registry-install.mjs) runs this
+route on each supported host and checks the installed binary against the audit.
+
 ## Install an unpublished local candidate
 
-The candidate is not in npm yet. Run this recipe from the consuming project's
-root. For an npm workspace, use the workspace root that owns `package.json`
-and `package-lock.json`, not a child workspace. Keep all six candidate archives
-under `vendor/seshat`; npm records those project-relative `file:` paths in the
-lockfile.
+For an archived candidate or a consumer without registry access, run this
+recipe from the consuming project's root. For an npm workspace, use the
+workspace root that owns `package.json` and `package-lock.json`, not a child
+workspace. Keep all six candidate archives under `vendor/seshat`; npm records
+those project-relative `file:` paths in the lockfile.
 
 On POSIX, install the consuming project's dependencies, stage the six archives,
 then add the entry and native packages in two commands:
@@ -151,10 +172,10 @@ node benchmarks/proofs/npm-package.mjs \
   /absolute/path/to/seshat-linux-x64-release.tgz
 ```
 
-That separate proof uses a disposable loopback registry because the exact
-optional packages are unpublished. Its offline `npm ci` step reuses metadata
-and package bytes cached by the earlier registry install. It proves populated-
-cache replay, not the six-archive consumer recipe or a public registry release.
+That separate proof uses a disposable loopback registry to exercise package
+layout without publishing. Its offline `npm ci` step reuses metadata and
+package bytes cached by the earlier registry install. It proves populated-cache
+replay, not the six-archive consumer recipe or the public registry route.
 
 ## Run an assessment
 
