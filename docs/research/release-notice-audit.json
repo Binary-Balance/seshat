@@ -1863,11 +1863,6 @@
           "checkCount": 16,
           "passed": true
         },
-        "standalone": {
-          "report": "work/release-0.1.0/native-evidence/win32-x64/standalone.json",
-          "checks": [],
-          "passed": true
-        },
         "publicExamples": {
           "report": "work/release-0.1.0/native-evidence/win32-x64/public-consumer-examples.json",
           "examples": [
@@ -1902,11 +1897,6 @@
             "before-all"
           ],
           "completed": 4
-        },
-        "lifecycle": {
-          "report": "work/release-0.1.0/native-evidence/win32-x64/lifecycle.json",
-          "cases": 0,
-          "passed": true
         },
         "sharedFixtures": {
           "cliScenarios": 43,
