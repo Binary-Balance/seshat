@@ -55,10 +55,13 @@ const nativeArchiveManifest = archiveJson(nativeArchive);
 const nativeNotices = archiveText(nativeArchive, 'THIRD_PARTY_NOTICES.txt');
 assert.match(nativeNotices, /\nCOPYRIGHT\n/);
 assert.match(nativeNotices, /\nUNLICENSE\n/);
+const repository = {type: 'git', url: 'git+https://github.com/Binary-Balance/seshat.git'};
 const version = entryArchiveManifest.version;
 assert.equal(entryArchiveManifest.name, '@binary-balance/seshat');
+assert.deepEqual(entryArchiveManifest.repository, repository);
 assert.ok(nativeArchiveManifest.name);
 assert.equal(nativeArchiveManifest.version, version);
+assert.deepEqual(nativeArchiveManifest.repository, repository);
 assert.deepEqual(Object.keys(entryArchiveManifest.optionalDependencies).sort(), [
   '@binary-balance/seshat-darwin-arm64',
   '@binary-balance/seshat-darwin-x64',
@@ -354,6 +357,7 @@ if (process.platform === 'win32') {
 const installedManifest = read(join(rootInstalled, 'package.json'));
 assert.equal(installedManifest.name, entryArchiveManifest.name);
 assert.equal(installedManifest.version, version);
+assert.deepEqual(installedManifest.repository, repository);
 assert.deepEqual(installedManifest.optionalDependencies, entryArchiveManifest.optionalDependencies);
 assert.equal(installedManifest.dependencies, undefined);
 assert.equal(installedManifest.scripts, undefined);
@@ -361,6 +365,7 @@ assert.deepEqual(readdirSync(rootInstalled).sort(), ['LICENSE', 'README.md', 'bi
 const nativeManifest = read(join(nativeInstalled, 'package.json'));
 assert.equal(nativeManifest.name, targetForHost);
 assert.equal(nativeManifest.version, version);
+assert.deepEqual(nativeManifest.repository, repository);
 assert.equal(nativeManifest.bin, undefined);
 assert.deepEqual(nativeManifest.os, nativeArchiveManifest.os);
 assert.deepEqual(nativeManifest.cpu, nativeArchiveManifest.cpu);

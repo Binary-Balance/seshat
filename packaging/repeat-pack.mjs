@@ -93,6 +93,9 @@ function inspect(result) {
   assert.equal(buildManifest.packageVersion, result.version, 'BUILD.json version differs from pack metadata');
   assert.equal(packageManifest.name, result.packageName, 'native package name differs from pack metadata');
   assert.equal(packageManifest.version, result.version, 'native package version differs from pack metadata');
+  assert.deepEqual(packageManifest.repository,
+    {type:'git',url:'git+https://github.com/Binary-Balance/seshat.git'},
+    'native package repository metadata differs from pack metadata');
   assert.equal(packageManifest.bin, undefined, 'native payload must not own the seshat npm bin');
   assert.equal(packageManifest.dependencies, undefined, 'native payload must not add runtime dependencies');
   assert.equal(packageManifest.optionalDependencies, undefined, 'native payload must not add optional dependencies');
