@@ -786,7 +786,7 @@
           "count": 65,
           "sha256": "cf6bb036d02042dc3e4bf1909d2c9923b62a5d1f11db889107232a181d41e1d9",
           "source": "package/BUILD.json:dependencies",
-          "entriesRef": "dependencyReview.inventory"
+          "entriesRef": "coordinates[id=native-linux-x64].buildProvenance.buildRecord[path=package/BUILD.json]:dependencies"
         },
         "runtimeNotices": {
           "format": "seshat-runtime-notices",
@@ -1035,7 +1035,7 @@
           "count": 65,
           "sha256": "cf6bb036d02042dc3e4bf1909d2c9923b62a5d1f11db889107232a181d41e1d9",
           "source": "package/BUILD.json:dependencies",
-          "entriesRef": "dependencyReview.inventory"
+          "entriesRef": "coordinates[id=native-linux-arm64].buildProvenance.buildRecord[path=package/BUILD.json]:dependencies"
         },
         "runtimeNotices": {
           "format": "seshat-runtime-notices",
@@ -1270,7 +1270,7 @@
           "count": 65,
           "sha256": "cf6bb036d02042dc3e4bf1909d2c9923b62a5d1f11db889107232a181d41e1d9",
           "source": "package/BUILD.json:dependencies",
-          "entriesRef": "dependencyReview.inventory"
+          "entriesRef": "coordinates[id=native-darwin-x64].buildProvenance.buildRecord[path=package/BUILD.json]:dependencies"
         },
         "runtimeNotices": {
           "format": "seshat-runtime-notices",
@@ -1507,7 +1507,7 @@
           "count": 65,
           "sha256": "cf6bb036d02042dc3e4bf1909d2c9923b62a5d1f11db889107232a181d41e1d9",
           "source": "package/BUILD.json:dependencies",
-          "entriesRef": "dependencyReview.inventory"
+          "entriesRef": "coordinates[id=native-darwin-arm64].buildProvenance.buildRecord[path=package/BUILD.json]:dependencies"
         },
         "runtimeNotices": {
           "format": "seshat-runtime-notices",
@@ -1728,7 +1728,6 @@
         "cpu": "x64",
         "glibcPackages": [],
         "sdk": {
-          "directory": "C:\\Program Files (x86)\\Windows Kits\\10",
           "version": "10.0.26100.0",
           "ucrtVersion": "10.0.26100.0"
         },
@@ -1779,7 +1778,7 @@
           "count": 65,
           "sha256": "cf6bb036d02042dc3e4bf1909d2c9923b62a5d1f11db889107232a181d41e1d9",
           "source": "package/BUILD.json:dependencies",
-          "entriesRef": "dependencyReview.inventory"
+          "entriesRef": "coordinates[id=native-win32-x64].buildProvenance.buildRecord[path=package/BUILD.json]:dependencies"
         },
         "runtimeNotices": {
           "format": "seshat-runtime-notices",
@@ -1971,7 +1970,7 @@
       "baseline": "0.1.0-rc.1 source at main 6446c28",
       "cargoManifest": "Only the package version changed in crates/seshat/Cargo.toml; dependency declarations are unchanged.",
       "cargoLock": "Only the local seshat package version changed in crates/seshat/Cargo.lock; all locked dependency records are unchanged.",
-      "packaging": "packaging/pack.mjs adds stable repository metadata and generated README fields; fresh package members were audited from the new archives.",
+      "packaging": "The baseline at 6446c28 already contains repository metadata, descriptions and README changes from PRs 48/49; packaging/release.mjs generates the release manifests. PR 50 changes packaging/pack.mjs only by removing the candidate suffix from its version assertion; fresh package members were audited from the new archives.",
       "checkedWith": "git diff --word-diff 6446c28..e1b91b39a8aa0fcbfb3d4ca6089de8b416ee61c7 -- crates/seshat/Cargo.toml crates/seshat/Cargo.lock"
     },
     "sourcePackageCount": 65,
@@ -2274,7 +2273,7 @@
         }
       ],
       "binary": {
-        "path": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\seshat-windows-package-7W5xGO\\consumer \ud83c\udfb8\\node_modules\\@binary-balance\\seshat-win32-x64\\bin\\seshat.exe",
+        "path": "consumer/node_modules/@binary-balance/seshat-win32-x64/bin/seshat.exe",
         "sha256": "2accb4b57c02c24c34729174005987215136d3fb7f0eec6d49ba8d1a28269fa7",
         "bytes": 2066944
       }

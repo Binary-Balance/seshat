@@ -133,8 +133,11 @@ The exact source inputs are recorded in the JSON with their source commit,
 bytes and SHA-256. The comparison found only the package version change in
 `crates/seshat/Cargo.toml` and the local package version change in
 `crates/seshat/Cargo.lock`; dependency declarations and locked dependency
-records are unchanged. Packaging changes add stable repository metadata and
-generated README fields, which are reflected in the audited package members.
+records are unchanged. The baseline already contains the repository metadata,
+descriptions and README changes from PRs 48/49, and `packaging/release.mjs`
+generates the release manifests. PR 50 changes `packaging/pack.mjs` only by
+removing the candidate suffix from its version assertion; fresh package
+members were audited from the new archives.
 
 The lock contains 66 packages including the local root and 65 source/build
 packages. All five `BUILD.json` dependency arrays contain the same 65 entries
