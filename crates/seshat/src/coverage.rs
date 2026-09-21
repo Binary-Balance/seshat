@@ -1,4 +1,7 @@
-use crate::{analysis::Analysis, assessment};
+use crate::{
+    analysis::{Analysis, supports_line_positions},
+    assessment,
+};
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
 
@@ -48,6 +51,7 @@ pub fn attribute<'a>(
     let mut merged: Option<BTreeMap<(u32, u32), bool>> = None;
     let mut problems = Vec::new();
     let mut report_count = 0;
+    let supported_positions = supports_line_positions(source);
     for report in reports {
         report_count += 1;
         let Some(file) = report.get(path) else {
@@ -55,6 +59,12 @@ pub fn attribute<'a>(
             continue;
         };
         let decode = || -> Result<BTreeMap<(u32, u32), bool>, String> {
+            // Shifted lines can land on valid statements and silently inflate coverage.
+            if !supported_positions {
+                return Err(
+                    "unsupported source line separator: coverage requires LF or CRLF".into(),
+                );
+            }
             if file["path"].as_str() != Some(path) {
                 return Err("coverage path mismatch".into());
             }
@@ -188,4 +198,37 @@ fn parenthesized_arrow_return_has_an_executable_inner_start() {
         attribute(&analysis, path, source, &[invalid])["complete"],
         false
     );
+}
+
+#[test]
+fn line_separators_cannot_inflate_coverage() {
+    let path = "/fixture.ts";
+    // Actual Istanbul mappings/counters for the reproduction in issue #59.
+    let report = json!({path:{"path":path,"statementMap":{
+        "0":{"start":{"line":2,"column":0},"end":{"line":2,"column":9}},
+        "1":{"start":{"line":3,"column":0},"end":{"line":3,"column":9}},
+        "2":{"start":{"line":4,"column":16},"end":{"line":4,"column":17}}
+    },"s":{"0":1,"1":0,"2":1}}});
+    for separator in ["\n", "\r\n", "\r", "\u{2028}", "\u{2029}"] {
+        let source = format!(
+            "function f() {{{separator}return 1;\nreturn 2; }}\nconst outside = 3;\n// padding long enough to accept mapped columns\n"
+        );
+        let analysis = Analysis::inspect(path, &source).unwrap();
+        let result = attribute(&analysis, path, &source, [&report]);
+        let row = &result["functions"][0];
+        if separator == "\n" || separator == "\r\n" {
+            assert_eq!(result["complete"], true, "{result}");
+            assert_eq!(row["coverage"], 0.5);
+            assert_eq!(row["total"], 2);
+        } else {
+            assert_eq!(result["complete"], false, "{result}");
+            assert_eq!(row["status"], "unknown");
+            assert_eq!(row["coverage"], Value::Null);
+            assert_eq!(row["crap"], Value::Null);
+            assert_eq!(
+                result["problems"],
+                json!(["unsupported source line separator: coverage requires LF or CRLF"])
+            );
+        }
+    }
 }

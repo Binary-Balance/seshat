@@ -25,13 +25,15 @@ fn load_evidence_requires_direct_uncaught_error_construction() {
     assert_eq!(sites[0], [2, 17, 2, 36]);
     assert_eq!(sites[1], [3, 20, 3, 41]);
     assert_eq!(sites[2][0], 6);
-    let alternate = source.replace("\r\n", "\u{2028}");
-    assert!(
-        Analysis::inspect("fixture.ts", &alternate)
-            .unwrap()
-            .load_failure_sites(&alternate)
-            .is_empty()
-    );
+    for separator in ["\r", "\u{2028}", "\u{2029}"] {
+        let alternate = source.replace("\r\n", separator);
+        assert!(
+            Analysis::inspect("fixture.ts", &alternate)
+                .unwrap()
+                .load_failure_sites(&alternate)
+                .is_empty()
+        );
+    }
 }
 
 pub struct Comparison {
@@ -213,10 +215,14 @@ impl<'a> Visit<'a> for Analysis {
     }
 }
 
+pub fn supports_line_positions(source: &str) -> bool {
+    !source.contains(['\u{2028}', '\u{2029}']) && !source.replace("\r\n", "").contains('\r')
+}
+
 impl Analysis {
     pub fn load_failure_sites(&self, source: &str) -> Vec<[usize; 4]> {
         // The bounded observer verifies LF/CRLF positions; reject other JS line separators.
-        if source.contains(['\u{2028}', '\u{2029}']) || source.replace("\r\n", "").contains('\r') {
+        if !supports_line_positions(source) {
             return Vec::new();
         }
         let position = |byte: u32| {
