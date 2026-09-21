@@ -25,6 +25,10 @@ For work covered by the normal workflow, commit it, push its branch and open a
 GitHub pull request. Follow `docs/agents/delivery.md` for the fresh-agent review
 and fix loop. Continue until the PR is ready to merge; do not merge unless asked.
 
+Before publishing to npm, obtain approval of the prepared release under the
+[npm publication checkpoint](docs/agents/delivery.md#npm-publication-checkpoint).
+Release preparation alone does not authorise publication.
+
 ## Disk housekeeping
 
 Periodically check free disk space and repository build/cache usage, especially

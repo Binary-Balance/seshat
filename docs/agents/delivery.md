@@ -93,3 +93,24 @@ the head after any further push. Report the PR link and readiness to the user.
 Continue autonomously through actionable fixes. If progress needs unavailable
 credentials, infrastructure or a user decision, report the specific blocker and
 keep the PR unready. Do not stop merely because one review/fix round completed.
+
+## npm publication checkpoint
+
+Before an agent publishes to npm, complete release preparation, applicable
+checks and the dry run. Present the exact package names and versions, release
+revision, registry and dist tag, together with a brief summary of changes and
+validation results. Give the maintainer a chance to review the prepared release
+and request final changes.
+
+Wait for explicit approval of that prepared release before running `npm publish`
+or invoking a publisher or workflow with publishing enabled. A request to
+prepare a release does not authorise publication. One approval covers the named native
+payloads and entry package, including retries with unchanged inputs; do not ask
+separately for each package.
+
+If package contents, the release revision or publication targets change, repeat
+the affected preparation and checks, present the updated release, and obtain
+approval before publishing it. This is an agent checkpoint, not a GitHub
+protected environment or a change to repository permissions, npm access or
+trusted publisher configuration. Follow the [npm publication runbook](../npm-publishing.md)
+for the preparation and publishing steps.

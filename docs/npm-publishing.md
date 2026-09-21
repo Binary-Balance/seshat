@@ -74,6 +74,13 @@ The helper requires exactly these files: `linux-x64.tgz`, `linux-arm64.tgz`,
 reported command order is the five native packages followed by the entry
 package. Inspect the report and the audit hashes before any write.
 
+## Agent publication checkpoint
+
+For agent-led publication, follow the [npm publication checkpoint](agents/delivery.md#npm-publication-checkpoint)
+after preparation and the dry run. Present the prepared release and wait for
+explicit maintainer approval before enabling publishing. If the release changes,
+repeat the affected checks and obtain approval of the updated release.
+
 ## Trusted publishers already configured
 
 All six package names already have a GitHub Actions trusted publisher. The
@@ -114,8 +121,9 @@ workflow run's `GITHUB_SHA` and remain the workflow head:
 The validate job stages all six archives and checks their hashes, source
 equivalence, package order, semver tag, and publish flags. It has read-only
 GitHub permissions and no npm write credentials. Review its `dry-run.json`
-artifact. Then dispatch the same revision and version again with **Publish
-after validation** checked. Only that publish job receives the OIDC permission.
+artifact. For agent-led publication, obtain the approval described above before
+dispatching the same revision and version again with **Publish after validation**
+checked. Only that publish job receives the OIDC permission.
 
 Before the first npm write, the helper checks every package version on the
 public registry. It then checks again immediately before each package publish.
