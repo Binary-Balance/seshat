@@ -710,12 +710,19 @@ After the dependency installation and Rust build above, run:
 ```sh
 node benchmarks/proofs/coverage-routes.mjs
 node benchmarks/proofs/coverage-line-separators.mjs
+node benchmarks/proofs/coverage-statement-starts.mjs
 ```
 
 The line-separator regression uses real Istanbul instrumentation and runtime
 counters. It checks LF/CRLF and UTF-16 columns, and requires incomplete results
 for lone CR, U+2028 and U+2029. Set `SESHAT_PROOF_BINARY` to use another freshly
 built proof binary. Temporary files are removed after the check.
+
+The statement-start regression regenerates Istanbul mappings for labelled loops
+and debugger statements, with blocks, classes and export-default expressions as
+controls. It checks the provider's initial zero counters and rejects coordinates
+inside statement tokens. It also accepts `SESHAT_PROOF_BINARY` and removes its
+temporary files.
 
 This checks Node statement instrumentation, Jest/Babel and both Vitest providers.
 Node, Jest and Vitest/Istanbul must match the hand-checked counts. Vitest/V8 must

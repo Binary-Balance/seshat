@@ -157,6 +157,47 @@ pub fn attribute<'a>(
 }
 
 #[test]
+fn istanbul_label_and_debugger_mappings() {
+    let path = "/fixture.ts";
+    // Statement spans emitted by istanbul-lib-instrument 6.0.3. The provider
+    // proof regenerates these alongside nearby syntax controls.
+    for (source, spans) in [
+        (
+            "function f() { outer: for (let i = 0; i < 1; i++) { break outer; } }",
+            vec![(15, 66), (22, 66), (35, 36), (52, 64)],
+        ),
+        ("function f() { debugger; }", vec![(15, 24)]),
+    ] {
+        let analysis = Analysis::inspect(path, source).unwrap();
+        for hits in [0, 1] {
+            let mut file = json!({"path":path,"statementMap":{},"s":{}});
+            for (id, &(start, end)) in spans.iter().enumerate() {
+                file["statementMap"][id.to_string()] = json!({
+                    "start":{"line":1,"column":start},
+                    "end":{"line":1,"column":end}
+                });
+                file["s"][id.to_string()] = json!(hits);
+            }
+            let mut report = json!({path:file});
+            let result = attribute(&analysis, path, source, [&report]);
+            assert_eq!(result["complete"], true, "{result}");
+            assert_eq!(result["functions"][0]["total"], spans.len());
+            assert_eq!(result["functions"][0]["covered"], spans.len() * hits);
+            assert_eq!(result["functions"][0]["coverage"], hits as f64);
+
+            report[path]["statementMap"]["0"]["start"]["column"] = json!(16);
+            let invalid = attribute(&analysis, path, source, [&report]);
+            assert_eq!(invalid["complete"], false);
+            assert_eq!(
+                invalid["problems"],
+                json!(["coverage is not mapped to an executable statement start: 16"])
+            );
+            assert_eq!(invalid["functions"][0]["crap"], Value::Null);
+        }
+    }
+}
+
+#[test]
 fn unicode_positions() {
     assert_eq!(
         byte_position("a🎸b\nc", &json!({"line":1,"column":3}), false),
