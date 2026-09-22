@@ -78,7 +78,7 @@ run('debian-packages','dpkg-query',['-W','libc6','libgcc-s1','libstdc++6']);
 const output=run('installed-package',process.execPath,
   ['/seshat/benchmarks/proofs/npm-package.mjs','/opt/entry.tgz','/opt/native.tgz']);
 const install=read(output.match(/Results: (.+)/)[1]);
-assert.equal(Object.keys(install.checks).length,14);
+assert.equal(Object.keys(install.checks).length,23);
 const installedBinary=join(install.installedNative,'bin','seshat');
 assert.doesNotMatch(run('installed-libraries','ldd',[installedBinary]),/not found/);
 const cliOutput=run('installed-cli',process.execPath,['/seshat/benchmarks/proofs/cli.mjs'],
