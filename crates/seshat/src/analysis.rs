@@ -39,6 +39,59 @@ fn load_evidence_requires_direct_uncaught_error_construction() {
     }
 }
 
+#[test]
+fn load_evidence_respects_catch_blocks_and_function_boundaries() {
+    for (source, recognised) in [
+        ("try { throw new Error('caught'); } catch {}", false),
+        ("try {} catch { throw new Error('catch'); }", true),
+        (
+            "try {} catch {} finally { throw new Error('finally'); }",
+            true,
+        ),
+        ("try { throw new Error('no catch'); } finally {}", true),
+        (
+            "try { try {} catch { throw new Error('outer catch'); } } catch {}",
+            false,
+        ),
+        (
+            "try { try {} finally { throw new Error('outer catch'); } } catch {}",
+            false,
+        ),
+        (
+            "try { function later() { throw new Error('function'); } } catch {}",
+            true,
+        ),
+        (
+            "try { const later = () => { throw new Error('arrow'); }; } catch {}",
+            true,
+        ),
+        (
+            "try { const obj = { later() { throw new Error('method'); } }; } catch {}",
+            true,
+        ),
+        (
+            "try { class C { later() { throw new Error('method'); } } } catch {}",
+            true,
+        ),
+        (
+            "try { class C { static { throw new Error('caught static'); } } } catch {}",
+            false,
+        ),
+        (
+            "try { function later() { try { throw new Error('inner catch'); } catch {} } } catch {}",
+            false,
+        ),
+    ] {
+        let analysis = Analysis::inspect("fixture.ts", source).unwrap();
+        let sites = analysis.load_failure_sites(source);
+        assert_eq!(sites.len(), usize::from(recognised), "{source}: {sites:?}");
+        if recognised {
+            assert_eq!(sites[0][0], 1);
+            assert_eq!(sites[0][1], source.find("new Error").unwrap() + 1);
+        }
+    }
+}
+
 pub struct Comparison {
     pub span: Span,
     pub left: Span,
@@ -57,7 +110,7 @@ pub struct Analysis {
     parameter_values: Vec<Span>,
     pub statement_starts: std::collections::BTreeSet<u32>,
     throws: Vec<Span>,
-    tries: Vec<Span>,
+    caught_blocks: Vec<Span>,
 }
 
 // Plain bindings do not execute user code. Other parameter forms may evaluate
@@ -83,8 +136,10 @@ impl<'a> Visit<'a> for Analysis {
                 self.throws.push(statement.argument.span());
             }
         }
-        if let AstKind::TryStatement(statement) = node {
-            self.tries.push(statement.span);
+        if let AstKind::TryStatement(statement) = node
+            && statement.handler.is_some()
+        {
+            self.caught_blocks.push(statement.block.span);
         }
         let scope = match node {
             AstKind::Function(f) => f.body.as_ref().map(|b| Scope {
@@ -249,10 +304,19 @@ impl Analysis {
         self.throws
             .iter()
             .filter(|span| {
-                !self
-                    .tries
-                    .iter()
-                    .any(|block| block.start <= span.start && span.end <= block.end)
+                !self.caught_blocks.iter().any(|block| {
+                    block.start <= span.start
+                        && span.end <= block.end
+                        // A function declared inside this block may be called elsewhere.
+                        // Static blocks and fields do not create function boundaries.
+                        && !self.scopes.iter().any(|scope| {
+                            !scope.implicit
+                                && block.start <= scope.span.start
+                                && scope.span.start <= span.start
+                                && span.end <= scope.span.end
+                                && scope.span.end <= block.end
+                        })
+                })
             })
             .map(|span| {
                 let (line, column) = position(span.start);
