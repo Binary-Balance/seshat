@@ -401,8 +401,13 @@ The regression installs the entry and matching native archives into a disposable
 consumer with a fresh npm cache. Its PATH contains only Node, npm and a shell,
 and it checks that `cargo` and `rustc` cannot be found. It checks the entry bin
 link, archive contents, binary hash, launcher package-script/`npm exec`
-invocation, JSON bootstrap failures, signal forwarding, exit status and offline
-`npm ci`. The loopback registry supplies metadata for the four omitted optional
+invocation, JSON bootstrap/spawn failures, signal forwarding, exit status and
+offline `npm ci`. Unix cancellation covers SIGINT/SIGTERM sent to the launcher
+and its process group, including repeated signals. Windows covers real Ctrl+C
+through the installed Node launcher in an isolated console and Ctrl+Break
+through the npm command shim. Both require a cancellation report, stopped owned
+descendants, removed scratch files and an unrelated process that survives.
+Fatal Unix signals retain their platform exit codes. The loopback registry supplies metadata for the four omitted optional
 payloads so npm's normal platform selection can be observed without publishing.
 
 The standalone proof consumes the same npm `.tgz` bytes. It requires npm's

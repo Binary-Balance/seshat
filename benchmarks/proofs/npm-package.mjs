@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
 import {spawn, spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
+import {constants} from 'node:os';
+import {alive} from './liveness.mjs';
 import {
   existsSync,
   copyFileSync,
@@ -487,9 +489,58 @@ try {
   json(nativeManifestPath, originalNativeManifest);
 }
 
-// The native CLI owns cancellation. Unix uses the launcher signal path; Windows
-// drives the generated npm shim through the existing console helper so the
-// proof exercises the real console event route.
+// Observe forwarding at the child-process boundary, including the interval after
+// signal exit but before inherited stdio closes. The real launcher is imported.
+await run('launcher-forwarding-guards', process.execPath, ['--input-type=module', '-e', `
+  import assert from 'node:assert/strict';
+  import {EventEmitter} from 'node:events';
+  import childProcess from 'node:child_process';
+  import {syncBuiltinESMExports} from 'node:module';
+  const child = new EventEmitter();
+  child.exitCode = null;
+  child.signalCode = null;
+  const calls = [];
+  child.kill = signal => calls.push(signal);
+  childProcess.spawn = () => child;
+  syncBuiltinESMExports();
+  await import(${JSON.stringify(pathToFileURL(launcher).href)});
+  process.emit('SIGINT', 'SIGINT');
+  process.emit('SIGINT', 'SIGINT');
+  if (process.platform === 'win32') process.emit('SIGBREAK', 'SIGBREAK');
+  assert.deepEqual(calls, process.platform === 'win32' ? [] : ['SIGINT', 'SIGINT']);
+  calls.length = 0;
+  child.signalCode = 'SIGKILL';
+  process.emit('SIGTERM', 'SIGTERM');
+  assert.deepEqual(calls, []);
+  child.signalCode = null;
+  child.exitCode = 0;
+  process.emit('SIGTERM', 'SIGTERM');
+  assert.deepEqual(calls, []);
+  child.emit('close', 0, null);
+`], consumer);
+
+// Replace only the disposable installed payload, restoring it before native proofs.
+const executableBackup = `${nativeExecutable}.backup`;
+renameSync(nativeExecutable, executableBackup);
+try {
+  writeFileSync(nativeExecutable, process.platform === 'win32' ? 'invalid PE file' : '#!/seshat-missing-interpreter\n', {mode: 0o755});
+  const spawnError = await runLauncher('spawn-error-json', ['check', '--json'], consumer, 2);
+  assert.match(report(spawnError).result.error, /cannot start native payload/i);
+  if (process.platform !== 'win32') {
+    writeFileSync(nativeExecutable, '#!/bin/sh\nexit 23\n', {mode: 0o755});
+    await runLauncher('ordinary-exit-23', [], consumer, 23);
+    for (const signal of ['SIGKILL', 'SIGSEGV']) {
+      writeFileSync(nativeExecutable, `#!/bin/sh\nulimit -c 0\nkill -${signal.slice(3)} $$\n`, {mode: 0o755});
+      await runLauncher(`fatal-${signal.toLowerCase()}`, [], consumer, 128 + constants.signals[signal]);
+    }
+  }
+} finally {
+  rmSync(nativeExecutable, {force: true});
+  renameSync(executableBackup, nativeExecutable);
+}
+
+// Exercise the installed launcher and the native cancellation report, including
+// owned descendants and an unrelated process that must survive.
 const signalProject = join(work, 'signal project 🎸');
 const signalScratch = join(work, 'signal scratch');
 const signalReady = join(work, 'signal-ready.json');
@@ -502,8 +553,10 @@ writeFileSync(join(signalProject, 'package.json'), '{"type":"module"}\n');
 writeFileSync(join(signalProject, 'subject.ts'), 'export const value = (input: number) => input >= 0;\n');
 writeFileSync(join(signalProject, 'hang.mjs'), [
   "import {test} from 'node:test';",
+  "import {spawn} from 'node:child_process';",
   "import {writeFileSync} from 'node:fs';",
-  `test('launcher cancellation', async () => { if (process.env.SESHAT_CONSOLE_READY) writeFileSync(process.env.SESHAT_CONSOLE_READY, 'ready\\n'); writeFileSync(${JSON.stringify(signalReady)}, JSON.stringify({cwd: process.cwd(), pid: process.pid})); await new Promise(() => {}); });`,
+  "const descendant = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {stdio: 'ignore'});",
+  `test('launcher cancellation', async () => { writeFileSync(${JSON.stringify(signalReady)}, JSON.stringify({cwd: process.cwd(), pid: process.pid, descendant: descendant.pid})); if (process.env.SESHAT_CONSOLE_READY) writeFileSync(process.env.SESHAT_CONSOLE_READY, 'ready\\n'); await new Promise(() => {}); });`,
 ].join('\n'));
 const signalConfig = {
   source: {include: ['subject.ts']},
@@ -528,23 +581,7 @@ if (process.platform === 'win32') {
   assert.ok(consoleHelper && existsSync(consoleHelper),
     'SESHAT_CONSOLE_HELPER_BINARY must point to the built Windows console helper');
 }
-const signalProgram = process.platform === 'win32' ? consoleHelper : process.execPath;
-const signalProgramArgs = process.platform === 'win32'
-  ? [consoleReady, consoleStdout, consoleStderr, comspec, '/d', '/s', '/c', 'call', commandShim, ...signalArguments]
-  : [launcher, ...signalArguments];
-const signalChild = spawn(signalProgram, signalProgramArgs, {
-  cwd: signalProject,
-  env,
-  stdio: ['ignore', 'pipe', 'pipe'],
-});
-let signalStdout = '';
-let signalStderr = '';
-signalChild.stdout.on('data', bytes => { signalStdout += bytes; });
-signalChild.stderr.on('data', bytes => { signalStderr += bytes; });
-const signalClosed = new Promise((resolveExit, reject) => {
-  signalChild.once('error', reject);
-  signalChild.once('close', (code, signal) => resolveExit({code, signal}));
-});
+
 const waitFor = async (predicate, label) => {
   const deadline = performance.now() + 30_000;
   while (performance.now() < deadline) {
@@ -553,34 +590,101 @@ const waitFor = async (predicate, label) => {
   }
   throw new Error(`timed out waiting for ${label}`);
 };
-let signalExit;
+const routes = process.platform === 'win32' ? [
+  {name: 'signal-lifecycle', signal: 'SIGBREAK', shim: true},
+  {name: 'signal-ctrl-c', signal: 'SIGINT'},
+] : [
+  {name: 'signal-lifecycle', signal: 'SIGTERM'},
+  {name: 'signal-int-launcher', signal: 'SIGINT'},
+  {name: 'signal-term-group', signal: 'SIGTERM', group: true},
+  {name: 'signal-int-group', signal: 'SIGINT', group: true},
+];
+const sentinel = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {env, stdio: 'ignore'});
+const sentinelClosed = new Promise(resolveExit => sentinel.once('close', resolveExit));
 try {
-  await waitFor(() => existsSync(signalReady), 'launcher native test readiness');
-  const ready = read(signalReady);
-  assert.ok(ready.cwd.includes('capture-'));
-  if (process.platform !== 'win32') signalChild.kill('SIGTERM');
-  signalExit = await signalClosed;
-  assert.equal(signalExit.signal, null);
-  assert.equal(signalExit.code, process.platform === 'win32' ? 2 : 143);
-  assert.equal(signalStderr, '');
-  assert.equal(signalStdout.trim().split('\n').length, 1);
-  const signalReport = JSON.parse(signalStdout);
-  assert.equal(signalReport.schemaVersion, 1);
-  assert.equal(signalReport.command, 'crap');
-  assert.equal(signalReport.complete, false);
-  assert.equal(signalReport.cancelled, true);
-  assert.ok(Array.isArray(signalReport.result.setups));
-  await waitFor(() => readdirSync(signalScratch).length === 0, 'launcher scratch cleanup');
-  evidence['signal-lifecycle'] = {
-    status: signalExit.code,
-    ms: 0,
-    route: process.platform === 'win32' ? 'windows-console-helper/cmd-shim' : 'node-launcher/sigterm',
-    stdout: signalStdout,
-    stderr: signalStderr,
-  };
+  for (const route of routes) {
+    rmSync(signalReady, {force: true});
+    rmSync(consoleReady, {force: true});
+    const signalProgram = process.platform === 'win32' ? consoleHelper : process.execPath;
+    const signalProgramArgs = process.platform === 'win32'
+      ? [...(route.shim ? [] : ['--ctrl-c']), consoleReady, consoleStdout, consoleStderr,
+        ...(route.shim ? [comspec, '/d', '/s', '/c', 'call', commandShim] : [process.execPath, launcher]),
+        ...signalArguments]
+      : [launcher, ...signalArguments];
+    const signalChild = spawn(signalProgram, signalProgramArgs, {
+      cwd: signalProject,
+      env,
+      detached: process.platform !== 'win32',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let signalStdout = '';
+    let signalStderr = '';
+    signalChild.stdout.on('data', bytes => { signalStdout += bytes; });
+    signalChild.stderr.on('data', bytes => { signalStderr += bytes; });
+    const signalClosed = new Promise((resolveExit, reject) => {
+      signalChild.once('error', reject);
+      signalChild.once('close', (code, signal) => resolveExit({code, signal}));
+    });
+    let signalExit;
+    try {
+      await waitFor(() => existsSync(signalReady), `${route.name} native test readiness`);
+      const ready = read(signalReady);
+      assert.ok(ready.cwd.includes('capture-'));
+      if (process.platform !== 'win32') {
+        const target = route.group ? -signalChild.pid : signalChild.pid;
+        process.kill(target, route.signal);
+        // Repeated cancellation must not turn graceful cleanup into force termination.
+        await new Promise(resolveWait => setTimeout(resolveWait, 10));
+        if (signalChild.exitCode === null && signalChild.signalCode === null) {
+          try { process.kill(target, route.signal); } catch (error) {
+            if (error.code !== 'ESRCH') throw error;
+          }
+        }
+      }
+      await waitFor(() => signalChild.exitCode !== null || signalChild.signalCode !== null,
+        `${route.name} cancellation exit`);
+      signalExit = await signalClosed;
+      assert.equal(signalExit.signal, null);
+      const expectedSignal = process.platform === 'win32' ? 2 : constants.signals[route.signal];
+      assert.equal(signalExit.code, process.platform === 'win32' ? 2 : 128 + expectedSignal, signalStderr);
+      assert.equal(signalStderr, '');
+      assert.equal(signalStdout.trim().split('\n').length, 1);
+      const signalReport = JSON.parse(signalStdout);
+      assert.equal(signalReport.schemaVersion, 1);
+      assert.equal(signalReport.command, 'crap');
+      assert.equal(signalReport.complete, false);
+      assert.equal(signalReport.cancelled, true);
+      assert.equal(signalReport.signal, expectedSignal);
+      assert.ok(Array.isArray(signalReport.result.setups));
+      await waitFor(() => readdirSync(signalScratch).length === 0, `${route.name} scratch cleanup`);
+      await waitFor(() => !alive(ready.pid) && !alive(ready.descendant), `${route.name} child cleanup`);
+      assert.ok(alive(sentinel.pid), `${route.name} killed an unrelated process`);
+      evidence[route.name] = {
+        status: signalExit.code,
+        ms: 0,
+        route: route.shim ? 'windows-console-helper/cmd-shim'
+          : process.platform === 'win32' ? 'windows-console-helper/ctrl-c/node-launcher'
+            : `node-launcher/${route.signal.toLowerCase()}${route.group ? '-group' : ''}`,
+        stdout: signalStdout,
+        stderr: signalStderr,
+      };
+      console.log(`${route.name}: exit ${signalExit.code}`);
+    } finally {
+      if (!signalExit) {
+        if (process.platform === 'win32') {
+          spawnSync('taskkill.exe', ['/pid', String(signalChild.pid), '/t', '/f'], {stdio: 'ignore'});
+        } else {
+          try { process.kill(-signalChild.pid, 'SIGKILL'); } catch (error) {
+            if (error.code !== 'ESRCH') throw error;
+          }
+        }
+        await signalClosed;
+      }
+    }
+  }
 } finally {
-  if (!signalExit && signalChild.exitCode === null) signalChild.kill('SIGKILL');
-  if (!signalExit) signalExit = await signalClosed;
+  sentinel.kill();
+  await sentinelClosed;
 }
 
 // Keep the lockfile from the registry install, remove installed files, and make

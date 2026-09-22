@@ -2,6 +2,7 @@
 
 import {spawn} from 'node:child_process';
 import {createRequire} from 'node:module';
+import {constants} from 'node:os';
 import {existsSync, readFileSync, statSync} from 'node:fs';
 import {basename, dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -87,10 +88,6 @@ function payloadExecutable(target) {
   return executable;
 }
 
-function signalNumber(signal) {
-  return {SIGINT: 2, SIGTERM: 15}[signal] ?? 1;
-}
-
 const host = targetForHost();
 if (host.error) {
   fail(host.error);
@@ -111,17 +108,17 @@ if (host.error) {
     });
     let spawnFailed = false;
     const forward = signal => {
-      if (child.exitCode === null) child.kill(signal);
+      if (child.exitCode === null && child.signalCode === null) child.kill(signal);
     };
-    // A CTRL_BREAK_EVENT is broadcast to the console process group. Keep the
-    // launcher alive on Windows so the native child can handle that event and
-    // return its cancellation report through inherited stdio.
+    // Windows delivers Ctrl+C/Break to the shared console. Forwarding SIGINT
+    // with child.kill() force-terminates the native child before it can clean up.
     const preserveConsole = () => {};
-    process.on('SIGINT', forward);
+    const interrupt = process.platform === 'win32' ? preserveConsole : forward;
+    process.on('SIGINT', interrupt);
     process.on('SIGTERM', forward);
     if (process.platform === 'win32') process.on('SIGBREAK', preserveConsole);
     const cleanup = () => {
-      process.removeListener('SIGINT', forward);
+      process.removeListener('SIGINT', interrupt);
       process.removeListener('SIGTERM', forward);
       if (process.platform === 'win32') process.removeListener('SIGBREAK', preserveConsole);
     };
@@ -132,7 +129,7 @@ if (host.error) {
     });
     child.once('close', (code, signal) => {
       cleanup();
-      if (!spawnFailed) process.exitCode = signal ? 128 + signalNumber(signal) : code ?? 1;
+      if (!spawnFailed) process.exitCode = signal ? 128 + (constants.signals[signal] ?? 1) : code ?? 1;
     });
   }
 }

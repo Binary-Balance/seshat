@@ -11,12 +11,43 @@ mod windows {
         time::{Duration, Instant},
     };
     use windows_sys::Win32::{
-        Foundation::FALSE,
+        Foundation::{FALSE, TRUE},
         System::{
-            Console::{CTRL_BREAK_EVENT, GenerateConsoleCtrlEvent},
+            Console::{
+                AllocConsole, CTRL_BREAK_EVENT, CTRL_C_EVENT, FreeConsole,
+                GenerateConsoleCtrlEvent, GetStdHandle, STD_ERROR_HANDLE, STD_OUTPUT_HANDLE,
+                SetConsoleCtrlHandler, SetStdHandle,
+            },
             Threading::CREATE_NEW_PROCESS_GROUP,
         },
     };
+
+    unsafe extern "system" fn preserve_helper(control: u32) -> i32 {
+        if control == CTRL_C_EVENT { TRUE } else { FALSE }
+    }
+
+    fn isolate_console() -> Result<(), String> {
+        // Ctrl+C cannot target a process group. Give this proof its own console so
+        // broadcasting it cannot cancel the runner or unrelated processes.
+        // SAFETY: these calls change only this helper's console and standard handles.
+        unsafe {
+            let stdout = GetStdHandle(STD_OUTPUT_HANDLE);
+            let stderr = GetStdHandle(STD_ERROR_HANDLE);
+            FreeConsole();
+            if AllocConsole() == FALSE
+                || SetStdHandle(STD_OUTPUT_HANDLE, stdout) == FALSE
+                || SetStdHandle(STD_ERROR_HANDLE, stderr) == FALSE
+                || SetConsoleCtrlHandler(None, FALSE) == FALSE
+                || SetConsoleCtrlHandler(Some(preserve_helper), TRUE) == FALSE
+            {
+                return Err(format!(
+                    "isolate Ctrl+C console: {}",
+                    io::Error::last_os_error()
+                ));
+            }
+        }
+        Ok(())
+    }
 
     fn forward(path: &PathBuf, mut output: impl Write) -> Result<(), String> {
         let bytes = fs::read(path).map_err(|e| format!("read child output: {e}"))?;
@@ -27,16 +58,28 @@ mod windows {
 
     fn run() -> Result<i32, String> {
         let mut args = env::args_os().skip(1);
-        let ready = PathBuf::from(args.next().ok_or("ready marker is missing")?);
+        let first = args.next().ok_or("ready marker is missing")?;
+        let ctrl_c = first == "--ctrl-c";
+        let ready = PathBuf::from(if ctrl_c {
+            args.next().ok_or("ready marker is missing")?
+        } else {
+            first
+        });
         let stdout_path = PathBuf::from(args.next().ok_or("stdout path is missing")?);
         let stderr_path = PathBuf::from(args.next().ok_or("stderr path is missing")?);
         let program = args.next().ok_or("child program is missing")?;
         let child_args: Vec<_> = args.collect();
+        if ctrl_c {
+            isolate_console()?;
+        }
         let mut child = Command::new(program);
+        if !ctrl_c {
+            // A new process group suppresses Ctrl+C, so use it only for Ctrl+Break.
+            child.creation_flags(CREATE_NEW_PROCESS_GROUP);
+        }
         child
             .args(child_args)
             .env("SESHAT_CONSOLE_READY", &ready)
-            .creation_flags(CREATE_NEW_PROCESS_GROUP)
             .stdin(Stdio::null())
             .stdout(Stdio::from(
                 File::create(&stdout_path).map_err(|e| format!("create child stdout: {e}"))?,
@@ -62,18 +105,35 @@ mod windows {
             }
             thread::sleep(Duration::from_millis(10));
         }
-        // CTRL_BREAK_EVENT is delivered by the Windows console to the child's real process
-        // group. The target CLI registered its native handler before starting the fixture.
-        // SAFETY: the group ID is the PID of the child created with CREATE_NEW_PROCESS_GROUP.
-        if unsafe { GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, child.id()) } == FALSE {
+        // Readiness follows native handler registration. Ctrl+C uses the isolated
+        // console; Ctrl+Break targets the group created above.
+        let (event, group) = if ctrl_c {
+            (CTRL_C_EVENT, 0)
+        } else {
+            (CTRL_BREAK_EVENT, child.id())
+        };
+        // SAFETY: the target is this proof's console or its owned child group.
+        if unsafe { GenerateConsoleCtrlEvent(event, group) } == FALSE {
             let error = io::Error::last_os_error();
             let _ = child.kill();
             let _ = child.wait();
             return Err(format!("deliver console cancellation: {error}"));
         }
-        let status = child
-            .wait()
-            .map_err(|e| format!("wait console child: {e}"))?;
+        let deadline = Instant::now() + Duration::from_secs(30);
+        let status = loop {
+            if let Some(status) = child
+                .try_wait()
+                .map_err(|e| format!("wait console child: {e}"))?
+            {
+                break status;
+            }
+            if Instant::now() >= deadline {
+                let _ = child.kill();
+                let _ = child.wait();
+                return Err("console child did not finish cancellation".into());
+            }
+            thread::sleep(Duration::from_millis(10));
+        };
         forward(&stdout_path, io::stdout().lock())?;
         forward(&stderr_path, io::stderr().lock())?;
         Ok(status.code().unwrap_or(1))
