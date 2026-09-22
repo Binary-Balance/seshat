@@ -1,5 +1,8 @@
 # Configuration
 
+This guide follows the current `main` source. See the [release status](../README.md#release-status)
+for the distinction between published `0.1.0` and unreleased fixes.
+
 Place a declarative `seshat.json` in the project to assess. Its directory is the
 project root. `seshat check` reads `./seshat.json` by default; `--config PATH`
 selects another file. Unknown fields, duplicate fields and invalid paths fail
@@ -343,10 +346,10 @@ withholds location-based evidence for these sources.
 Reports from multiple setups are merged only when their source and statement
 mappings agree. A shared JSON format alone does not establish compatibility.
 Missing counters and ambiguous mappings make the run incomplete. Valid counters
-showing zero execution are measured 0% coverage. Empty functions have
-not-applicable coverage and CRAP. Class initialisers and static blocks retain
-complexity results but are outside CRAP scoring. Unknown and not-applicable rows
-do not become passing numbers.
+showing zero execution are measured 0% coverage. Functions verified to have no
+executable body or parameter work have not-applicable coverage and CRAP. Class
+initialisers and static blocks retain complexity results but are outside CRAP
+scoring. Unknown and not-applicable rows do not become passing numbers.
 
 ## Parallel execution
 

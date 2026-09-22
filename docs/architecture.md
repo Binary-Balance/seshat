@@ -30,21 +30,26 @@ runs retain their counts and withhold the final percentage.
 
 ## Execution
 
-`execution.rs` owns the lifetime of an isolated execution session and Linux process
-supervision. Its private `project` module validates declarative configuration,
-resolves source scope, copies inputs and rewrites internal workspace links.
+`execution.rs` owns the isolated execution session and uses its private `platform`
+module for Unix process groups and Windows Job objects. Its private `project`
+module validates declarative configuration, resolves source scope, copies inputs
+and rewrites internal workspace links.
 The `collection` module runs original checks, fresh coverage and mutation jobs;
 `job` bounds process output, deadlines and cleanup.
 
 Every mutant runs all configured test setups in fresh processes. Replacement is
-the CLI default. Experimental switching is available through the proof command.
+the CLI default. `check` and `mutate` expose experimental switching through
+`--experimental-switching`; the proof command also supports switching.
 Parallel workers have independent writable copies and receipts, with one worker
 by default. Separate processes do not isolate external ports or databases.
 
 Small Node, Vitest and Jest/Expo adapters collect runner evidence. They distinguish
 test failures from setup, cleanup and import failures within their tested limits.
-SIGINT and SIGTERM stop scheduling, clean up owned processes and withhold incomplete
-scores. SIGKILL cannot run cleanup.
+The public captured-project path handles Unix SIGINT/SIGTERM and Windows console
+cancellation by stopping scheduling, cleaning up owned processes and withholding
+incomplete scores. The legacy proof `execute` mode still lacks cancellation
+handling, tracked in [#56](https://github.com/Binary-Balance/seshat/issues/56).
+SIGKILL and Windows force termination cannot run graceful cleanup.
 
 ## CLI and reports
 

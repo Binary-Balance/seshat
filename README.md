@@ -15,7 +15,13 @@ insufficiently tested code.
 
 ## Release status
 
-Version `0.1.0` has a measured native archive audit from PR50's synthetic
+Version `0.1.0` is published on npm. Its [publication](https://github.com/Binary-Balance/seshat/actions/runs/34938352502)
+and [five-platform registry/provenance verification](https://github.com/Binary-Balance/seshat/actions/runs/34938916325)
+passed. Subsequent fixes on `main` are unreleased and are tracked in the
+[September audit follow-up](https://github.com/Binary-Balance/seshat/issues/87).
+They are not included in the published `0.1.0` archives.
+
+The published version has a measured native archive audit from PR50's synthetic
 merge source `e1b91b39a8aa0fcbfb3d4ca6089de8b416ee61c7`. Its npm layout is an
 entry package, `@binary-balance/seshat@0.1.0`, with these exact-version
 optional native packages:
@@ -43,9 +49,8 @@ archive, as described in the [packaging guide](packaging/README.md).
 
 ## Install the 0.1.0 package from npm
 
-After 0.1.0 is published, install the entry package from the public registry by
-its exact version. Keep scripts disabled so installation only extracts package
-files:
+Install the entry package from the public registry by its exact version. Keep
+scripts disabled so installation only extracts package files:
 
 ```sh
 npm install --ignore-scripts --save-dev --save-exact \
