@@ -133,6 +133,8 @@ impl<'a> Visit<'a> for Analysis {
             | AstKind::BreakStatement(_)
             | AstKind::ContinueStatement(_)
             | AstKind::ExpressionStatement(_)
+            | AstKind::LabeledStatement(_)
+            | AstKind::DebuggerStatement(_)
             | AstKind::VariableDeclaration(_) => {
                 self.statement_starts.insert(node.span().start);
             }
