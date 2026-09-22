@@ -1321,6 +1321,13 @@ copy and receipts. An unrelated process and the original source remain unchanged
 Three further controls exercise deadline expiry, output overflow and a leader
 that exits while its descendant still holds the output pipe open.
 
+On Unix, exit polling uses `waitid` with `WNOWAIT` to retain the leader's PID
+until process-group signalling finishes. If failed-stop settlement reaps the
+leader, later cleanup cannot signal that numeric PID or group again. A
+read-only check may establish that the group is gone; otherwise cleanup remains
+an error. Rust regressions cover normal exit, retries before and after reaping,
+unexpected loss of child ownership, and dropping an active child.
+
 Cancellation returns JSON with `complete: false`, `cancelled: true` and the signal
 number, then exits 130 for SIGINT or 143 for SIGTERM. The interrupted job is
 `cancelled`; unstarted setups and mutants remain `not-run`. Earlier measurements
