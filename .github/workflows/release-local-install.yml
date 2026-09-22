@@ -1,18 +1,7 @@
 name: Release local install
 
 on:
-  pull_request:
-    paths:
-      - .github/workflows/release-local-install.yml
-      - benchmarks/proofs/release-local-archive-stager.mjs
-      - examples/**
-      - README.md
-      - docs/configuration.md
-      - docs/platform-support.md
-      - docs/release-scope.md
-      - docs/releases/**
-      - docs/research/release-notice-audit.md
-      - docs/research/release-notice-audit.json
+  # Run after auditing a prepared release; ordinary PRs may change its source trees.
   workflow_dispatch:
 
 permissions:

@@ -47,6 +47,14 @@ required by npm trusted publishing. Do not reuse, edit or repack the archived
 rc.1 bytes. The publication checkout must remain equivalent to the audited
 source under `crates`, `packages` and `packaging`.
 
+Before publication, manually run the [Release local install workflow](../.github/workflows/release-local-install.yml)
+from the reviewed release branch or tag containing the candidate audit. Wait
+for all five targets to pass and retain the run link with the release evidence.
+The checkout's `crates`, `packages` and `packaging` source trees must match the
+audit. Rebuild and update the audit if they differ; do not bypass that check.
+This matrix validates the prepared archives and does not run on ordinary PRs.
+Native package workflows continue to build and test changed source on PRs.
+
 Retrieve the exact six archive files with the existing read-only stager. It
 downloads the audit coordinates from public GitHub Actions artifacts, verifies
 each size and SHA-256, checks source equivalence, and writes the staging
