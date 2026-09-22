@@ -155,7 +155,9 @@ mod unix {
             stop_error: String,
         ) -> Result<ExitStatus, String> {
             let deadline = Instant::now() + GROUP_SETTLEMENT_TIMEOUT;
-            while !self.leader_exited().map_err(|e| e.to_string())? {
+            // A prior settlement may have reaped the leader. Child caches that status;
+            // only the read-only group check remains, with signals still disabled.
+            while !self.released && !self.leader_exited().map_err(|e| e.to_string())? {
                 if Instant::now() >= deadline {
                     return Err(stop_error);
                 }
@@ -1096,6 +1098,11 @@ mod unix_tests {
         assert_eq!(child.test_stop_attempts(), 1);
         assert!(!child.supervisor.test_stop_after_reap());
         assert!(member.0.try_wait().unwrap().is_none());
+        member.0.kill().unwrap();
+        member.0.wait().unwrap();
+        child.force_cleanup().unwrap();
+        assert_eq!(child.test_stop_attempts(), 1);
+        assert!(!child.supervisor.test_stop_after_reap());
     }
 
     #[test]
@@ -1104,7 +1111,12 @@ mod unix_tests {
         command.args(["-c", "exit 0"]);
         let mut child = ManagedChild::spawn(&mut command).unwrap();
         // Simulate an unexpected reaper without needing PID churn or another process.
-        child.child.wait().unwrap();
+        let mut status = 0;
+        // SAFETY: this child belongs to the test; consume its status outside Child.
+        assert_eq!(
+            unsafe { libc::waitpid(child.child.id() as i32, &mut status, 0) },
+            child.child.id() as i32
+        );
         assert_eq!(
             child.try_wait().unwrap_err().raw_os_error(),
             Some(libc::ECHILD)
