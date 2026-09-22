@@ -21,10 +21,13 @@ mod unix {
     pub(super) struct Supervisor {
         pid: u32,
         stopped: bool,
+        released: bool,
         #[cfg(test)]
         fail_next_stop: bool,
         #[cfg(test)]
         stop_attempts: usize,
+        #[cfg(test)]
+        stop_after_reap: bool,
     }
 
     impl Supervisor {
@@ -32,10 +35,13 @@ mod unix {
             Self {
                 pid,
                 stopped: false,
+                released: false,
                 #[cfg(test)]
                 fail_next_stop: false,
                 #[cfg(test)]
                 stop_attempts: 0,
+                #[cfg(test)]
+                stop_after_reap: false,
             }
         }
 
@@ -43,9 +49,24 @@ mod unix {
             if self.stopped {
                 return Ok(());
             }
+            if self.released {
+                return Err("cannot signal process group after releasing its leader".into());
+            }
             #[cfg(test)]
             {
                 self.stop_attempts += 1;
+                // SAFETY: observe this child into writable storage without consuming its status.
+                let mut info = std::mem::MaybeUninit::<libc::siginfo_t>::zeroed();
+                let result = unsafe {
+                    libc::waitid(
+                        libc::P_PID,
+                        self.pid,
+                        info.as_mut_ptr(),
+                        libc::WEXITED | libc::WNOHANG | libc::WNOWAIT,
+                    )
+                };
+                self.stop_after_reap |=
+                    result == -1 && io::Error::last_os_error().raw_os_error() == Some(libc::ECHILD);
                 if self.fail_next_stop {
                     self.fail_next_stop = false;
                     return Err(
@@ -68,19 +89,79 @@ mod unix {
             Ok(())
         }
 
+        fn leader_exited(&mut self) -> io::Result<bool> {
+            loop {
+                let mut info = std::mem::MaybeUninit::<libc::siginfo_t>::zeroed();
+                // SAFETY: info is writable and initialized for WNOHANG's no-status case.
+                // WNOWAIT retains the child, preventing PID reuse until group cleanup.
+                let result = unsafe {
+                    libc::waitid(
+                        libc::P_PID,
+                        self.pid as libc::id_t,
+                        info.as_mut_ptr(),
+                        libc::WEXITED | libc::WNOHANG | libc::WNOWAIT,
+                    )
+                };
+                if result == 0 {
+                    // SAFETY: waitid succeeded; zero initialization covers no available status.
+                    return Ok(unsafe { info.assume_init().si_pid() } != 0);
+                }
+                let error = io::Error::last_os_error();
+                if error.raw_os_error() == Some(libc::ECHILD) {
+                    // Ownership is lost if another reaper or SIGCHLD disposition consumed it.
+                    self.released = true;
+                }
+                if error.kind() != io::ErrorKind::Interrupted {
+                    return Err(error);
+                }
+            }
+        }
+
+        // Return natural exits only after group cleanup, before std::process reaps the PID.
+        pub(super) fn try_wait(&mut self, child: &mut Child) -> io::Result<Option<ExitStatus>> {
+            if !self.stopped && !self.released {
+                if !self.leader_exited()? {
+                    return Ok(None);
+                }
+                if let Err(error) = self.stop() {
+                    return self
+                        .settle_after_stop_error(child, error)
+                        .map(Some)
+                        .map_err(io::Error::other);
+                }
+            }
+            child.try_wait()
+        }
+
+        pub(super) fn wait(&mut self, child: &mut Child) -> io::Result<ExitStatus> {
+            // Reaping can release the numeric group ID even if cleanup failed. Never signal
+            // that ID again; read-only settlement may still establish that cleanup finished.
+            self.released = true;
+            child.wait()
+        }
+
+        pub(super) fn kill_leader(&mut self, child: &mut Child) -> io::Result<()> {
+            if self.released {
+                return Err(io::Error::other(
+                    "cannot signal child after releasing its ownership",
+                ));
+            }
+            child.kill()
+        }
+
         fn settle_after_stop_error(
             &mut self,
             child: &mut Child,
             stop_error: String,
         ) -> Result<ExitStatus, String> {
             let deadline = Instant::now() + GROUP_SETTLEMENT_TIMEOUT;
-            let status = loop {
-                match child.try_wait().map_err(|e| e.to_string())? {
-                    Some(status) => break status,
-                    None if Instant::now() >= deadline => return Err(stop_error),
-                    None => thread::sleep(GROUP_SETTLEMENT_POLL),
+            while !self.leader_exited().map_err(|e| e.to_string())? {
+                if Instant::now() >= deadline {
+                    return Err(stop_error);
                 }
-            };
+                thread::sleep(GROUP_SETTLEMENT_POLL);
+            }
+            let status = self.wait(child).map_err(|e| e.to_string())?;
             loop {
                 if owned_group_is_gone(self.pid) {
                     self.stopped = true;
@@ -96,6 +177,11 @@ mod unix {
         #[cfg(test)]
         pub(super) fn test_fail_next_stop(&mut self) {
             self.fail_next_stop = true;
+        }
+
+        #[cfg(test)]
+        pub(super) fn test_stop_after_reap(&self) -> bool {
+            self.stop_after_reap
         }
 
         #[cfg(test)]
@@ -948,6 +1034,86 @@ mod unix_tests {
     }
 
     #[test]
+    fn natural_exit_never_signals_a_released_process_group() {
+        let mut command = Command::new("sh");
+        command.args(["-c", "exit 7"]);
+        let mut child = ManagedChild::spawn(&mut command).unwrap();
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        loop {
+            if let Some(status) = child.try_wait().unwrap() {
+                assert_eq!(status.code(), Some(7));
+                break;
+            }
+            assert!(std::time::Instant::now() < deadline);
+            std::thread::sleep(std::time::Duration::from_millis(2));
+        }
+        child.force_cleanup().unwrap();
+        child.force_cleanup().unwrap();
+        assert!(
+            !child.supervisor.test_stop_after_reap(),
+            "group signal attempted after the leader's PID was released"
+        );
+    }
+
+    #[test]
+    fn stop_failure_can_retry_while_the_leader_is_retained() {
+        let mut command = Command::new("sh");
+        command.args(["-c", "exec sleep 60"]);
+        let mut child = ManagedChild::spawn(&mut command).unwrap();
+        child.test_fail_next_stop();
+        assert!(child.kill_tree().is_err());
+        child.force_cleanup().unwrap();
+        assert_eq!(child.test_stop_attempts(), 2);
+        assert!(!child.supervisor.test_stop_after_reap());
+    }
+
+    #[test]
+    fn failed_settlement_never_retries_signals_after_reaping() {
+        use std::os::unix::process::CommandExt;
+        // This member is our direct child, so its guard can safely kill/reap it even
+        // if an assertion fails after the tested supervisor has released ownership.
+        struct Member(Child);
+        impl Drop for Member {
+            fn drop(&mut self) {
+                let _ = self.0.kill();
+                let _ = self.0.wait();
+            }
+        }
+        let mut command = Command::new("sh");
+        command.args(["-c", "exec sleep 60"]);
+        let mut child = ManagedChild::spawn(&mut command).unwrap();
+        let mut member_command = Command::new("sh");
+        member_command
+            .args(["-c", "exec sleep 60"])
+            .process_group(child.child.id().try_into().unwrap());
+        let mut member = Member(member_command.spawn().unwrap());
+        child.kill_leader().unwrap();
+        child.test_fail_next_stop();
+        // The leader exits, but this live group member prevents read-only settlement.
+        assert!(child.kill_tree().is_err());
+        assert!(child.force_cleanup().is_err());
+        assert!(child.force_cleanup().is_err());
+        assert_eq!(child.test_stop_attempts(), 1);
+        assert!(!child.supervisor.test_stop_after_reap());
+        assert!(member.0.try_wait().unwrap().is_none());
+    }
+
+    #[test]
+    fn lost_child_ownership_prevents_cleanup_signals() {
+        let mut command = Command::new("sh");
+        command.args(["-c", "exit 0"]);
+        let mut child = ManagedChild::spawn(&mut command).unwrap();
+        // Simulate an unexpected reaper without needing PID churn or another process.
+        child.child.wait().unwrap();
+        assert_eq!(
+            child.try_wait().unwrap_err().raw_os_error(),
+            Some(libc::ECHILD)
+        );
+        assert!(child.force_cleanup().is_err());
+        assert_eq!(child.test_stop_attempts(), 0);
+    }
+
+    #[test]
     fn dropping_managed_child_reaps_the_leader() {
         let pid = {
             let mut command = Command::new("sh");
@@ -986,15 +1152,36 @@ impl ManagedChild {
     }
 
     pub(super) fn try_wait(&mut self) -> io::Result<Option<ExitStatus>> {
-        self.child.try_wait()
+        #[cfg(unix)]
+        {
+            self.supervisor.try_wait(&mut self.child)
+        }
+        #[cfg(windows)]
+        {
+            self.child.try_wait()
+        }
     }
 
     pub(super) fn wait(&mut self) -> io::Result<ExitStatus> {
-        self.child.wait()
+        #[cfg(unix)]
+        {
+            self.supervisor.wait(&mut self.child)
+        }
+        #[cfg(windows)]
+        {
+            self.child.wait()
+        }
     }
 
     pub(super) fn kill_leader(&mut self) -> io::Result<()> {
-        self.child.kill()
+        #[cfg(unix)]
+        {
+            self.supervisor.kill_leader(&mut self.child)
+        }
+        #[cfg(windows)]
+        {
+            self.child.kill()
+        }
     }
 
     pub(super) fn stop_tree(&mut self) -> Result<(), String> {
