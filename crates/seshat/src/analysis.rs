@@ -1,6 +1,9 @@
 // Bounded experiment, not a production analyser.
 use oxc_allocator::Allocator;
-use oxc_ast::{AstKind, ast::ArrowFunctionBody};
+use oxc_ast::{
+    AstKind,
+    ast::{ArrowFunctionBody, FormalParameters},
+};
 use oxc_ast_visit::Visit;
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
@@ -57,6 +60,18 @@ pub struct Analysis {
     tries: Vec<Span>,
 }
 
+// Plain bindings do not execute user code. Other parameter forms may evaluate
+// expressions, invoke getters/iterators or emit constructor property assignments.
+fn plain_parameters(params: &FormalParameters<'_>) -> bool {
+    params.rest.is_none()
+        && params.items.iter().all(|p| {
+            p.pattern.is_binding_identifier()
+                && p.initializer.is_none()
+                && p.decorators.is_empty()
+                && !p.has_modifier()
+        })
+}
+
 impl<'a> Visit<'a> for Analysis {
     fn enter_node(&mut self, node: AstKind<'a>) {
         if let AstKind::ThrowStatement(statement) = node {
@@ -85,8 +100,7 @@ impl<'a> Visit<'a> for Analysis {
                 // Only claim emptiness where parameter evaluation cannot hide work.
                 empty: b.statements.is_empty()
                     && b.directives.is_empty()
-                    && f.params.items.is_empty()
-                    && f.params.rest.is_none(),
+                    && plain_parameters(&f.params),
             }),
             AstKind::ArrowFunctionExpression(f) => Some(Scope {
                 name: format!("arrow@{}", f.span.start),
@@ -95,8 +109,7 @@ impl<'a> Visit<'a> for Analysis {
                 complexity: 1,
                 implicit: false,
                 empty: matches!(&f.body, ArrowFunctionBody::FunctionBody(b) if b.statements.is_empty() && b.directives.is_empty())
-                    && f.params.items.is_empty()
-                    && f.params.rest.is_none(),
+                    && plain_parameters(&f.params),
             }),
             AstKind::PropertyDefinition(p) => p.value.as_ref().map(|v| Scope {
                 name: format!("field@{}", p.span.start),
