@@ -703,7 +703,13 @@ After the dependency installation and Rust build above, run:
 
 ```sh
 node benchmarks/proofs/coverage-routes.mjs
+node benchmarks/proofs/coverage-line-separators.mjs
 ```
+
+The line-separator regression uses real Istanbul instrumentation and runtime
+counters. It checks LF/CRLF and UTF-16 columns, and requires incomplete results
+for lone CR, U+2028 and U+2029. Set `SESHAT_PROOF_BINARY` to use another freshly
+built proof binary. Temporary files are removed after the check.
 
 This checks Node statement instrumentation, Jest/Babel and both Vitest providers.
 Node, Jest and Vitest/Istanbul must match the hand-checked counts. Vitest/V8 must

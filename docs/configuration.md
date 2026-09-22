@@ -335,6 +335,11 @@ Coverage tools remain project dependencies. c8's line counters do not provide
 the required statement measurement. Vitest's V8 provider has a known ambiguous
 same-line function mapping that Seshat rejects.
 
+Source line positions support LF and CRLF endings and UTF-16 columns. Sources
+containing lone CR, U+2028 or U+2029 separators produce incomplete coverage with
+a diagnostic and no coverage or CRAP scores. The load-failure observer likewise
+withholds location-based evidence for these sources.
+
 Reports from multiple setups are merged only when their source and statement
 mappings agree. A shared JSON format alone does not establish compatibility.
 Missing counters and ambiguous mappings make the run incomplete. Valid counters
