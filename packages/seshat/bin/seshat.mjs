@@ -108,7 +108,7 @@ if (host.error) {
     });
     let spawnFailed = false;
     const forward = signal => {
-      if (child.exitCode === null && child.signalCode === null) child.kill(signal);
+      if (!spawnFailed && child.exitCode === null && child.signalCode === null) child.kill(signal);
     };
     // Windows delivers Ctrl+C/Break to the shared console. Forwarding SIGINT
     // with child.kill() force-terminates the native child before it can clean up.
@@ -117,18 +117,13 @@ if (host.error) {
     process.on('SIGINT', interrupt);
     process.on('SIGTERM', forward);
     if (process.platform === 'win32') process.on('SIGBREAK', preserveConsole);
-    const cleanup = () => {
-      process.removeListener('SIGINT', interrupt);
-      process.removeListener('SIGTERM', forward);
-      if (process.platform === 'win32') process.removeListener('SIGBREAK', preserveConsole);
-    };
+    // Keep handlers until launcher exit: a second console/group signal can arrive
+    // after child close and must not replace the child's already chosen exit code.
     child.once('error', error => {
       spawnFailed = true;
-      cleanup();
       fail(`cannot start native payload: ${error.message}`);
     });
     child.once('close', (code, signal) => {
-      cleanup();
       if (!spawnFailed) process.exitCode = signal ? 128 + (constants.signals[signal] ?? 1) : code ?? 1;
     });
   }

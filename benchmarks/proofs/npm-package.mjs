@@ -489,6 +489,15 @@ try {
   json(nativeManifestPath, originalNativeManifest);
 }
 
+const waitFor = async (predicate, label) => {
+  const deadline = performance.now() + 30_000;
+  while (performance.now() < deadline) {
+    if (predicate()) return;
+    await new Promise(resolveWait => setTimeout(resolveWait, 20));
+  }
+  throw new Error(`timed out waiting for ${label}`);
+};
+
 // Observe forwarding at the child-process boundary, including the interval after
 // signal exit but before inherited stdio closes. The real launcher is imported.
 await run('launcher-forwarding-guards', process.execPath, ['--input-type=module', '-e', `
@@ -517,6 +526,11 @@ await run('launcher-forwarding-guards', process.execPath, ['--input-type=module'
   process.emit('SIGTERM', 'SIGTERM');
   assert.deepEqual(calls, []);
   child.emit('close', 0, null);
+  if (process.platform !== 'win32') {
+    // A real late signal must preserve the settled child status.
+    process.kill(process.pid, 'SIGTERM');
+    await new Promise(resolveWait => setTimeout(resolveWait, 20));
+  }
 `], consumer);
 
 // Replace only the disposable installed payload, restoring it before native proofs.
@@ -533,6 +547,7 @@ try {
       writeFileSync(nativeExecutable, `#!/bin/sh\nulimit -c 0\nkill -${signal.slice(3)} $$\n`, {mode: 0o755});
       await runLauncher(`fatal-${signal.toLowerCase()}`, [], consumer, 128 + constants.signals[signal]);
     }
+
   }
 } finally {
   rmSync(nativeExecutable, {force: true});
@@ -544,6 +559,7 @@ try {
 const signalProject = join(work, 'signal project 🎸');
 const signalScratch = join(work, 'signal scratch');
 const signalReady = join(work, 'signal-ready.json');
+const signalStop = join(work, 'signal-stop');
 const consoleReady = join(work, 'console-ready');
 const consoleStdout = join(work, 'console.stdout');
 const consoleStderr = join(work, 'console.stderr');
@@ -551,11 +567,14 @@ mkdirSync(signalProject);
 mkdirSync(signalScratch);
 writeFileSync(join(signalProject, 'package.json'), '{"type":"module"}\n');
 writeFileSync(join(signalProject, 'subject.ts'), 'export const value = (input: number) => input >= 0;\n');
+// Failure cleanup is independent of native supervision and never signals saved PIDs.
+const fixtureCleanup = `setInterval(() => { if (existsSync(${JSON.stringify(signalStop)})) process.exit(0); }, 20); setTimeout(() => process.exit(0), 120_000);`;
 writeFileSync(join(signalProject, 'hang.mjs'), [
   "import {test} from 'node:test';",
   "import {spawn} from 'node:child_process';",
-  "import {writeFileSync} from 'node:fs';",
-  "const descendant = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {stdio: 'ignore'});",
+  "import {existsSync, writeFileSync} from 'node:fs';",
+  fixtureCleanup,
+  `const descendant = spawn(process.execPath, ['-e', ${JSON.stringify("const {existsSync} = require('node:fs');" + fixtureCleanup)}], {stdio: 'ignore'});`,
   `test('launcher cancellation', async () => { writeFileSync(${JSON.stringify(signalReady)}, JSON.stringify({cwd: process.cwd(), pid: process.pid, descendant: descendant.pid})); if (process.env.SESHAT_CONSOLE_READY) writeFileSync(process.env.SESHAT_CONSOLE_READY, 'ready\\n'); await new Promise(() => {}); });`,
 ].join('\n'));
 const signalConfig = {
@@ -582,14 +601,6 @@ if (process.platform === 'win32') {
     'SESHAT_CONSOLE_HELPER_BINARY must point to the built Windows console helper');
 }
 
-const waitFor = async (predicate, label) => {
-  const deadline = performance.now() + 30_000;
-  while (performance.now() < deadline) {
-    if (predicate()) return;
-    await new Promise(resolveWait => setTimeout(resolveWait, 20));
-  }
-  throw new Error(`timed out waiting for ${label}`);
-};
 const routes = process.platform === 'win32' ? [
   {name: 'signal-lifecycle', signal: 'SIGBREAK', shim: true},
   {name: 'signal-ctrl-c', signal: 'SIGINT'},
@@ -604,6 +615,7 @@ const sentinelClosed = new Promise(resolveExit => sentinel.once('close', resolve
 try {
   for (const route of routes) {
     rmSync(signalReady, {force: true});
+    rmSync(signalStop, {force: true});
     rmSync(consoleReady, {force: true});
     const signalProgram = process.platform === 'win32' ? consoleHelper : process.execPath;
     const signalProgramArgs = process.platform === 'win32'
@@ -633,13 +645,7 @@ try {
       if (process.platform !== 'win32') {
         const target = route.group ? -signalChild.pid : signalChild.pid;
         process.kill(target, route.signal);
-        // Repeated cancellation must not turn graceful cleanup into force termination.
-        await new Promise(resolveWait => setTimeout(resolveWait, 10));
-        if (signalChild.exitCode === null && signalChild.signalCode === null) {
-          try { process.kill(target, route.signal); } catch (error) {
-            if (error.code !== 'ESRCH') throw error;
-          }
-        }
+
       }
       await waitFor(() => signalChild.exitCode !== null || signalChild.signalCode !== null,
         `${route.name} cancellation exit`);
@@ -670,15 +676,25 @@ try {
       };
       console.log(`${route.name}: exit ${signalExit.code}`);
     } finally {
-      if (!signalExit) {
-        if (process.platform === 'win32') {
-          spawnSync('taskkill.exe', ['/pid', String(signalChild.pid), '/t', '/f'], {stdio: 'ignore'});
-        } else {
-          try { process.kill(-signalChild.pid, 'SIGKILL'); } catch (error) {
-            if (error.code !== 'ESRCH') throw error;
-          }
+      // Assert native cleanup above before allowing the fixtures to stop themselves.
+      writeFileSync(signalStop, 'stop\n');
+      try {
+        if (existsSync(signalReady)) {
+          const ready = read(signalReady);
+          await waitFor(() => !alive(ready.pid) && !alive(ready.descendant),
+            `${route.name} fixture fallback cleanup`);
         }
-        await signalClosed;
+      } finally {
+        if (!signalExit) {
+          if (process.platform === 'win32') {
+            spawnSync('taskkill.exe', ['/pid', String(signalChild.pid), '/t', '/f'], {stdio: 'ignore'});
+          } else {
+            try { process.kill(-signalChild.pid, 'SIGKILL'); } catch (error) {
+              if (error.code !== 'ESRCH') throw error;
+            }
+          }
+          await signalClosed;
+        }
       }
     }
   }

@@ -403,7 +403,8 @@ and it checks that `cargo` and `rustc` cannot be found. It checks the entry bin
 link, archive contents, binary hash, launcher package-script/`npm exec`
 invocation, JSON bootstrap/spawn failures, signal forwarding, exit status and
 offline `npm ci`. Unix cancellation covers SIGINT/SIGTERM sent to the launcher
-and its process group, including repeated signals. Windows covers real Ctrl+C
+and its process group. Forwarding guards cover repeated signals and signals
+after child exit. Windows covers real Ctrl+C
 through the installed Node launcher in an isolated console and Ctrl+Break
 through the npm command shim. Both require a cancellation report, stopped owned
 descendants, removed scratch files and an unrelated process that survives.
