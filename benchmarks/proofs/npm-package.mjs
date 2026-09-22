@@ -427,18 +427,6 @@ if (process.platform === 'win32') {
   assert.equal(shimVersion.stdout, nativeVersion);
 }
 
-const publicExamplesPath = resolve(process.env.SESHAT_EXAMPLES_OUTPUT ?? join(work, 'public-consumer-examples.json'));
-const publicCli = process.platform === 'win32' ? commandShim : launcher;
-// Debian supplies a read-only host-warmed cache because its namespace has no network.
-const publicExamplesEnv = process.env.SESHAT_EXAMPLES_NPM_CACHE
-  ? {...env, npm_config_cache: process.env.SESHAT_EXAMPLES_NPM_CACHE, npm_config_offline: 'true'}
-  : env;
-const publicExamples = await run('public-examples', process.execPath, [
-  join(repo, 'examples/verify.mjs'), '--cli', publicCli, '--output', publicExamplesPath,
-], consumer, 0, publicExamplesEnv, 600_000);
-const publicExamplesReport = read(publicExamplesPath);
-validatePublicExamples(publicExamplesReport, process.platform === 'win32' ? 'windows-npm-shim' : 'node-launcher');
-
 const invalidJson = await runLauncher('unknown-command-json', ['bogus', '--json'], consumer, 2);
 const invalidReport = report(invalidJson);
 assert.equal(invalidReport.command, null);
@@ -497,6 +485,16 @@ const waitFor = async (predicate, label) => {
   }
   throw new Error(`timed out waiting for ${label}`);
 };
+
+const synchronousSpawnError = await run('synchronous-spawn-error-json', process.execPath, ['--input-type=module', '-e', `
+  import childProcess from 'node:child_process';
+  import {syncBuiltinESMExports} from 'node:module';
+  childProcess.spawn = () => { throw new Error('injected synchronous spawn failure'); };
+  syncBuiltinESMExports();
+  process.argv = [process.argv[0], 'seshat', 'check', '--json'];
+  await import(${JSON.stringify(pathToFileURL(launcher).href)});
+`], consumer, 2);
+assert.match(report(synchronousSpawnError).result.error, /cannot start native payload: injected synchronous spawn failure/);
 
 // Observe forwarding at the child-process boundary, including the interval after
 // signal exit but before inherited stdio closes. The real launcher is imported.
@@ -702,6 +700,18 @@ try {
   sentinel.kill();
   await sentinelClosed;
 }
+
+const publicExamplesPath = resolve(process.env.SESHAT_EXAMPLES_OUTPUT ?? join(work, 'public-consumer-examples.json'));
+const publicCli = process.platform === 'win32' ? commandShim : launcher;
+// Debian supplies a read-only host-warmed cache because its namespace has no network.
+const publicExamplesEnv = process.env.SESHAT_EXAMPLES_NPM_CACHE
+  ? {...env, npm_config_cache: process.env.SESHAT_EXAMPLES_NPM_CACHE, npm_config_offline: 'true'}
+  : env;
+const publicExamples = await run('public-examples', process.execPath, [
+  join(repo, 'examples/verify.mjs'), '--cli', publicCli, '--output', publicExamplesPath,
+], consumer, 0, publicExamplesEnv, 600_000);
+const publicExamplesReport = read(publicExamplesPath);
+validatePublicExamples(publicExamplesReport, process.platform === 'win32' ? 'windows-npm-shim' : 'node-launcher');
 
 // Keep the lockfile from the registry install, remove installed files, and make
 // npm ci prove that its cache is sufficient while the registry is unavailable.
