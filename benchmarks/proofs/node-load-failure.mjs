@@ -8,6 +8,7 @@ import {runProcess} from './process.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
+const binary = resolve(process.env.SESHAT_PROOF_BINARY ?? join(repo, 'crates/seshat/target/release/seshat-proofs'));
 const work = mkdtempSync(join(repo, 'work/assurance-proofs/node-load-space 🎸-'));
 const project = join(work, 'input');
 mkdirSync(project);
@@ -25,7 +26,7 @@ async function execute(name, app, tests, expected, other) {
   if (other) { writeFileSync(join(project, 'other.mjs'), other); input.test.push('@ROOT@/other.mjs'); }
   const path = join(work, 'config.json');
   writeFileSync(path, JSON.stringify(input));
-  const run = await runProcess(join(repo, 'crates/seshat/target/release/seshat-proofs'), ['execute',path,'replace'], repo);
+  const run = await runProcess(binary, ['execute',path,'replace'], repo);
   assert.equal(run.timedOut, false);
   assert.equal(run.overflow, false);
   const result = JSON.parse(run.stdout);
@@ -41,11 +42,27 @@ async function execute(name, app, tests, expected, other) {
 }
 const guard = await execute('module-guard', source, test, 'killed');
 assert.equal(guard.outcomes[0].evidence.report.moduleFailures.length, 1);
+for (const [name, body] of [
+  ['catch-guard', "try { if (!ready) throw 0; } catch { throw new Error('catch guard'); }"],
+  ['finally-guard', "try {} catch {} finally { if (!ready) throw new Error('finally guard'); }"],
+  ['try-finally-guard', "try { if (!ready) throw new Error('no catch'); } finally {}"],
+  ['nested-try-finally', "try { try { if (!ready) throw new Error('nested no catch'); } finally {} } finally {}"],
+]) {
+  const result = await execute(name, plain + body, test, 'killed');
+  assert.equal(result.outcomes[0].evidence.report.moduleFailures.length, 1);
+}
 const nested = "import {test} from 'node:test';import assert from 'node:assert/strict';import {spawnSync} from 'node:child_process';import {ready} from './subject.ts';test('nested child cwd',()=>{if(!ready)throw Error('not ready');const child=spawnSync(process.execPath,['-e','if(!process.env.SESHAT_LOAD_CONTEXT)process.exit(1)'],{cwd:'..',env:process.env,encoding:'utf8'});assert.equal(child.status,0,child.stderr);});";
 await execute('nested-child-cwd', source, nested, 'killed');
 await execute('unicode-crlf', 'const label="🎸";\r\n'+source.replace('\n','\r\n'), test, 'killed');
 const called = "import {test} from 'node:test';import {load} from './subject.ts';load();test('pass',()=>{});";
 await execute('called-guard', plain+"export function load(){if(!ready)throw new Error('called guard');}", called, 'killed');
+for (const [name, declaration] of [
+  ['function-in-try', "function load() { if (!ready) throw new Error('later call'); } outside = load;"],
+  ['arrow-in-try', "outside = () => { if (!ready) throw new Error('later arrow'); };"],
+]) {
+  const result = await execute(name, plain + `let outside; try { ${declaration} } catch {} export {outside as load};`, called, 'killed');
+  assert.equal(result.outcomes[0].evidence.report.moduleFailures.length, 1);
+}
 await execute('custom-error', plain+"class AppError extends Error {} export function load(){if(!ready)throw new AppError('custom guard');}", called, 'killed');
 const setup = "import {test} from 'node:test';import {ready} from './subject.ts';if(!ready)throw new Error('setup failure');test('pass',()=>{});";
 await execute('setup-throw', plain, setup, 'execution-error');
@@ -53,6 +70,15 @@ await execute('process-exit', plain, setup.replace("throw new Error('setup failu
 await execute('missing-module', plain, setup.replace("throw new Error('setup failure')", "await import('./missing.mjs')"), 'execution-error');
 await execute('reused-error', plain+"export const failure=new Error('created in application, thrown by setup');", setup.replace('{ready}', '{ready,failure}').replace("new Error('setup failure')", 'failure'), 'execution-error');
 await execute('caught-error', plain+"export let failure;try{throw new Error('caught in application')}catch(error){failure=error;}", setup.replace('{ready}', '{ready,failure}').replace("new Error('setup failure')", 'failure'), 'execution-error');
+for (const [name, guarded] of [
+  ['outer-catches-catch', "try { throw 0; } catch { throw new Error('outer catch'); }"],
+  ['outer-catches-finally', "try {} finally { throw new Error('outer catch'); }"],
+  ['outer-catches-static', "class C { static { throw new Error('caught static'); } }"],
+  ['function-has-catch', "function load() { try { throw new Error('inner catch'); } catch(error) { failure = error; } } load();"],
+]) {
+  await execute(name, plain + `export let failure; try { ${guarded} } catch(error) { failure = error; }`,
+    setup.replace('{ready}', '{ready,failure}').replace("new Error('setup failure')", 'failure'), 'execution-error');
+}
 await execute('background-error', plain, setup.replace("throw new Error('setup failure')", "setImmediate(()=>{throw new Error('background')})"), 'execution-error');
 await execute('custom-stack', 'Error.prepareStackTrace=()=>"custom stack";'+source, test, 'execution-error');
 await execute('primitive-throw', source.replace("new Error('application guard')", "'application guard'"), test, 'execution-error');

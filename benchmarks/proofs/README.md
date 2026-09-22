@@ -1021,6 +1021,8 @@ Run the fast regression with:
 node benchmarks/proofs/node-load-failure.mjs
 ```
 
+Set `SESHAT_PROOF_BINARY` to use another freshly built proof binary.
+
 Node's process-isolated test report replaces a crashed test file's exception with
 a generic failure containing its exit code. That loses the distinction between
 an application guard throwing during import and a broken test environment.
@@ -1029,9 +1031,13 @@ The bounded Node 24.20.0 adapter now observes the child process's built-in
 `module.import` diagnostic and `uncaughtExceptionMonitor` event. It requires the
 same exception object from the failed test entry import and the fatal event.
 The error's first structured V8 call site must fall within a parser-identified
-`throw new ...` expression in the active mutated source file, outside a `try`
-statement. The thrown object must be an Error. This also handles custom Error
-classes and application functions called while the test file loads.
+`throw new ...` expression in the active mutated source file. A throw directly
+inside a block guarded by `catch` is excluded, including nested blocks, but this
+exclusion stops at function boundaries. A `catch` or `finally` body is not guarded
+by its own catch, and `try/finally` without a catch does not catch a throw. An outer
+guarded block can still exclude those throws. The thrown object must be an Error.
+This also handles custom Error classes and application functions called while the
+test file loads.
 
 The observer delegates to Node's original stack formatter and does not catch the
 application exception, suppress termination, reload modules or rewrite source.
@@ -1041,17 +1047,21 @@ matches each fresh record to the current job, source location and exact crashed
 test file before counting a failure. Mixed files with any unresolved crash still
 make the mutant an execution error. `moduleFailures` retains the matched records.
 
-Thirteen controls cover guards, called guards/custom errors, Unicode/CRLF and
-paths with spaces, alongside setup throws, direct exits, missing imports, reused
-or caught errors, background failures, custom stacks, primitive throws and mixed
+Controls cover guards in catch/finally bodies and functions declared inside try,
+nested catches, static blocks, called guards/custom errors, Unicode/CRLF and paths
+with spaces, alongside setup throws, direct exits, missing imports, reused or
+caught errors, background failures, custom stacks, primitive throws and mixed
 files. The original failure is locked down through the native executor, not just
 a fabricated reporter event.
 
 This is deliberately narrower than general exception attribution. Implicit
 runtime errors during import, errors from other files, preformatted/custom stacks,
-throws inside `try`, primitive throws, CommonJS startup and unverified Node versions
-remain unresolved. Bare-CR and Unicode line-separator source positions are not
-accepted by this observation path. The verified route uses Node's default process
+throws within guarded blocks in the same function, primitive throws, CommonJS
+startup and unverified Node versions remain unresolved. The syntactic filter does
+not trace calls or later reuse of errors across function boundaries. The runtime
+checks establish fatal import failure and error identity, not a complete history
+of where that error may have been caught. Bare-CR and Unicode line-separator
+source positions are not accepted by this observation path. The verified route uses Node's default process
 isolation; alternate runner isolation/loader configurations are not certified.
 Do not replace missing evidence with stack-text matching or a generic exit-1 kill.
 
