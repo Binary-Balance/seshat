@@ -111,6 +111,7 @@ pub struct Analysis {
     pub statement_starts: std::collections::BTreeSet<u32>,
     throws: Vec<Span>,
     caught_blocks: Vec<Span>,
+    switching_start: Option<u32>,
 }
 
 // Plain bindings do not execute user code. Other parameter forms may evaluate
@@ -328,16 +329,25 @@ impl Analysis {
 
     pub fn inspect(path: &str, source: &str) -> Result<Self, String> {
         let allocator = Allocator::default();
-        let parsed = Parser::new(
-            &allocator,
-            source,
-            SourceType::from_path(path).map_err(|e| e.to_string())?,
-        )
-        .parse();
+        let source_type = SourceType::from_path(path).map_err(|e| e.to_string())?;
+        let parsed = Parser::new(&allocator, source, source_type).parse();
         if parsed.panicked || !parsed.diagnostics.is_empty() {
             return Err(format!("parse error: {:?}", parsed.diagnostics));
         }
-        let mut result = Self::default();
+        let mut result = Self {
+            // The program body excludes hashbangs and directive prologues. Helpers must
+            // follow both, or preparation can break syntax and disable strict mode.
+            switching_start: (source_type.is_typescript()
+                && !source_type.is_typescript_definition())
+            .then(|| {
+                parsed
+                    .program
+                    .body
+                    .first()
+                    .map_or(source.len() as u32, |statement| statement.span().start)
+            }),
+            ..Self::default()
+        };
         result.visit_program(&parsed.program);
         let decisions = std::mem::take(&mut result.decisions);
         for span in decisions {
@@ -428,6 +438,9 @@ impl Analysis {
     }
 
     pub fn switched_with_offset(&self, source: &str, id_offset: usize) -> Result<String, String> {
+        let start = self
+            .switching_start
+            .ok_or("experimental switching requires a non-declaration TypeScript source")?;
         if source.contains("__seshat_") {
             return Err("proof helper name collision".into());
         }
@@ -461,16 +474,64 @@ impl Analysis {
         // This helper proof intentionally measures transpile-only execution. Strict type checking
         // and syntax that observes transformed function text are separate compatibility checks.
         let prefix = format!(
-            "const __seshat_active = Number((globalThis as any).process.env.SESHAT_MUTANT_ID ?? -1);\nconst __seshat_alternatives = {};\n",
+            "\nif (!(globalThis as any).process?.env) throw new Error('experimental switching requires globalThis.process.env');\nconst __seshat_active = Number((globalThis as any).process.env.SESHAT_MUTANT_ID ?? -1);\nconst __seshat_alternatives = {};\n",
             json!(alternatives)
         );
         let helper = "function __seshat_compare(site: number, a: any, b: any, op: string) {\n  const alternative = __seshat_alternatives[__seshat_active];\n  if (alternative && alternative[1] === site) op = alternative[2] as string;\n  switch(op) { case '<': return a < b; case '<=': return a <= b; case '>': return a > b; case '>=': return a >= b; case '==': return a == b; case '!=': return a != b; case '===': return a === b; case '!==': return a !== b; default: throw Error('unknown comparison'); }\n}\n";
-        Ok(prefix + helper + &render(self, source, 0, source.len() as u32, id_offset))
+        Ok(source[..start as usize].to_owned()
+            + &prefix
+            + helper
+            + &render(self, source, start, source.len() as u32, id_offset))
     }
 
     pub fn json(&self) -> Value {
         json!({"scopes": self.scopes.iter().map(|s| json!({"name":s.name,"start":s.span.start,"end":s.span.end,"complexity":s.complexity,"implicit":s.implicit,"empty":s.empty})).collect::<Vec<_>>(),
             "mutants": self.comparisons.iter().flat_map(|c| c.replacements.iter().enumerate().map(move |(i, op)| json!({"id":c.first_id+i,"offset":c.offset,"original":c.original,"replacement":op}))).collect::<Vec<_>>()})
+    }
+}
+
+#[test]
+fn switching_preserves_hashbangs_and_directives() {
+    for source in [
+        "",
+        "#!/usr/bin/env node",
+        "#!/usr/bin/env node\n1 < 2;",
+        "\u{feff}\"use strict\"; 1 < 2;",
+        "/* 🎸 */ 'use client'; \"use strict\"\n1 < 2;",
+        "'use strict' // trailing comment",
+        "#!/usr/bin/env node\r\n'use strict'\r\n1 < 2;",
+        "'use strict'\u{2028}1 < 2;",
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        let switched = analysis.switched(source).unwrap();
+        let allocator = Allocator::default();
+        let before = Parser::new(&allocator, source, SourceType::ts()).parse();
+        let after = Parser::new(&allocator, &switched, SourceType::ts()).parse();
+        assert!(
+            after.diagnostics.is_empty(),
+            "{source}: {:?}",
+            after.diagnostics
+        );
+        assert_eq!(
+            before.program.hashbang.as_ref().map(|h| h.value.as_str()),
+            after.program.hashbang.as_ref().map(|h| h.value.as_str()),
+            "{source}"
+        );
+        assert_eq!(
+            before
+                .program
+                .directives
+                .iter()
+                .map(|d| d.directive.as_str())
+                .collect::<Vec<_>>(),
+            after
+                .program
+                .directives
+                .iter()
+                .map(|d| d.directive.as_str())
+                .collect::<Vec<_>>(),
+            "{source}"
+        );
     }
 }
 

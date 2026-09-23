@@ -94,6 +94,16 @@ process. The mutation report includes `preparedBaselines`,
 extra work stays visible. The experiment does not typecheck transformed helpers;
 helper wrapping can affect TypeScript narrowing and runtime reflection.
 
+Preparation preserves leading hashbangs and directive prologues, including
+`"use strict"`. Both the CLI and proof `prepare` command restrict switching to
+non-declaration TypeScript sources. Helpers require `globalThis.process.env`;
+an environment without it fails explicitly. This does not add browser support.
+The syntax proof below compares original and inactive prepared scripts, checks
+active helpers in Node, Jest and Vitest, and typechecks numeric computed enum
+examples before transforming them. Those enum comparisons remain supported;
+boolean-valued members and comparisons in `const enum` initializers already
+fail the original TypeScript check.
+
 Default stdout is readable text. `--json` instead emits one JSON object, even for
 argument/config errors. Phase notices and mutation snapshots go to stderr;
 `--no-progress` suppresses them. Captured test output stays in JSON evidence, never interleaved
@@ -942,6 +952,7 @@ The combined proof uses the same configuration and isolation rules as `collect`:
 ```sh
 node benchmarks/proofs/check.mjs
 node benchmarks/proofs/switching.mjs
+node benchmarks/proofs/switching-syntax.mjs
 crates/seshat/target/release/seshat-proofs check /path/to/project/seshat.json /path/to/existing/scratch
 ```
 
