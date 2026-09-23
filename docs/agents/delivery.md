@@ -30,7 +30,7 @@ Delegate a bounded assignment when at least one of these benefits applies:
   progress. Conversation length alone is insufficient.
 
 Prefer direct work when explaining and supervising the assignment would
-approach the effort of completing it. Consider `gpt-5.6-luna` with
+approach the effort of completing it. Consider `gpt-6-luna` with
 `reasoning_effort: max` for well-specified, independently verifiable
 implementation. Retain required checks and the independent review below whether
 implementation is direct or delegated.
