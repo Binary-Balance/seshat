@@ -85,7 +85,7 @@ const cliOutput=run('installed-cli',process.execPath,['/seshat/benchmarks/proofs
   {...process.env,SESHAT_CLI_BINARY:installedBinary});
 const cliPath=cliOutput.match(/Results: (.+)/)[1];
 const cliChecks=read(cliPath);
-assert.equal(Object.keys(cliChecks).length,43);
+assert.equal(Object.keys(cliChecks).length,47);
 const parallel=run('installed-parallel',process.execPath,['/seshat/benchmarks/proofs/parallel.mjs'],
   {...process.env,SESHAT_PARALLEL_CLI:'1',SESHAT_CLI_BINARY:installedBinary});
 const parallelPath=parallel.match(/Parallel evidence: (.+)/)[1];
@@ -97,7 +97,7 @@ const standalonePath=standaloneOutput.match(/Results: (.+)/)[1];
 const standalone=read(standalonePath);
 assert.equal(standalone.archiveSha256,'${standaloneSha256}');
 assert.equal(standalone.build.binarySha256,install.build.binarySha256);
-assert.equal(standalone.cliScenarios,43);
+assert.equal(standalone.cliScenarios,47);
 assert.equal(Object.keys(standalone.parallelChecks).length,11);
 const result={os,kernel,kernelFloor:'6.8',architecture:process.arch,glibc:'2.31',node:process.version,npm,
   typescript:read('/seshat/benchmarks/node_modules/typescript/package.json').version,
