@@ -167,6 +167,12 @@ jobs:
           SESHAT_PROOF_BINARY="$PROOF_BINARY" \
             node benchmarks/proofs/lifecycle.mjs \
             2>&1 | tee "work/macos/${{ matrix.cpu }}/lifecycle.log"
+      - name: Verify proof execute cancellation
+        env:
+          SESHAT_PROOF_OUTPUT: work/macos/${{ matrix.cpu }}/execute-cancellation.json
+        run: |
+          PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/macos/${{ matrix.cpu }}/package-result.json")"
+          SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/execute-cancellation.mjs 2>&1 | tee "work/macos/${{ matrix.cpu }}/execute-cancellation.log"
       - name: Set up latest supported Node runtime
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:

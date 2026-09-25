@@ -45,10 +45,10 @@ by default. Separate processes do not isolate external ports or databases.
 
 Small Node, Vitest and Jest/Expo adapters collect runner evidence. They distinguish
 test failures from setup, cleanup and import failures within their tested limits.
-The public captured-project path handles Unix SIGINT/SIGTERM and Windows console
-cancellation by stopping scheduling, cleaning up owned processes and withholding
-incomplete scores. The legacy proof `execute` mode still lacks cancellation
-handling, tracked in [#56](https://github.com/Binary-Balance/seshat/issues/56).
+The public captured-project path and proof `execute` mode handle Unix
+SIGINT/SIGTERM and Windows console cancellation by stopping scheduling, cleaning
+up owned processes and withholding incomplete scores. Both use the same bounded
+process runner; command builders retain their own environment rules.
 SIGKILL and Windows force termination cannot run graceful cleanup.
 
 ## CLI and reports

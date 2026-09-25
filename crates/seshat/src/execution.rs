@@ -11,12 +11,11 @@ use std::{
     fs,
     io::Write,
     path::{Path, PathBuf},
-    process::{Command, Stdio},
+    process::Command,
     sync::{
         Arc, OnceLock,
         atomic::{AtomicUsize, Ordering},
     },
-    thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
@@ -211,6 +210,7 @@ impl CommandEvidence {
 
 impl Session {
     pub fn capture(config: Value) -> Result<Self, String> {
+        check_cancellation()?;
         let template = Path::new(config["template"].as_str().ok_or("missing template")?);
         let parent = Path::new(config["scratch"].as_str().ok_or("missing scratch")?);
         let source_file = match config.get("source") {
@@ -234,6 +234,7 @@ impl Session {
             source: String::new(),
         };
         for entry in fs::read_dir(template).map_err(|e| e.to_string())? {
+            check_cancellation()?;
             let entry = entry.map_err(|e| e.to_string())?;
             if !entry.file_type().map_err(|e| e.to_string())?.is_file() {
                 return Err("proof template must contain only regular files".into());
@@ -246,6 +247,12 @@ impl Session {
     }
 
     fn command(&self, key: &str, id: Option<usize>) -> Result<CommandEvidence, String> {
+        if cancellation_signal() != 0 {
+            return Ok(CommandEvidence {
+                state: TestState::Cancelled,
+                details: json!({"cancelled":true,"exit":null,"ms":0}),
+            });
+        }
         // Direct-loading runners have no separate build process.
         if key == "build" && self.config.get(key).is_none() {
             return Ok(CommandEvidence {
@@ -267,8 +274,6 @@ impl Session {
         if receipt.exists() {
             fs::remove_file(&receipt).map_err(|e| e.to_string())?;
         }
-        let stdout = fs::File::create(self.root.join("stdout.log")).map_err(|e| e.to_string())?;
-        let stderr = fs::File::create(self.root.join("stderr.log")).map_err(|e| e.to_string())?;
         let mut command = Command::new(program);
         command
             .args(args)
@@ -281,10 +286,7 @@ impl Session {
             .env(
                 "SESHAT_PROOF_SCENARIO",
                 self.config["scenario"].as_str().unwrap_or("normal"),
-            )
-            .stdout(Stdio::from(stdout))
-            .stderr(Stdio::from(stderr));
-        let start = Instant::now();
+            );
         if key == "test" && self.config["runner"] == "node" {
             let source = fs::read_to_string(&self.source_path).map_err(|e| e.to_string())?;
             let id = format!(
@@ -298,31 +300,24 @@ impl Session {
             let sources = [(self.source_path.as_path(), source.as_str())];
             observe_node_loads(&mut command, &sources, &receipt, &id)?;
         }
-        let mut child = platform::ManagedChild::spawn(&mut command)?;
         let timeout = Duration::from_millis(self.config["timeoutMs"].as_u64().unwrap_or(10000));
-        let mut timed_out = false;
-        let status = loop {
-            if let Some(status) = child.try_wait().map_err(|e| e.to_string())? {
-                break status;
-            }
-            if start.elapsed() >= timeout {
-                timed_out = true;
-                break child.kill_tree()?;
-            }
-            thread::sleep(Duration::from_millis(2));
-        };
-        // The leader can finish while descendants are still alive. The supervisor targets only
-        // this invocation's owned process tree.
-        child.stop_tree_with_settlement()?;
-        let report = if receipt.exists() {
+        // Keep the proof command's environment contract; job::run owns only process execution.
+        let mut evidence = job::run(&mut command, timeout)?;
+        let report = if evidence["cancelled"] != true && receipt.exists() {
             let raw = fs::read_to_string(&receipt).map_err(|e| e.to_string())?;
             serde_json::from_str::<Value>(&raw).ok()
         } else {
             None
         };
-        let mut evidence = json!({"exit":status.code(),"timedOut":timed_out,"ms":start.elapsed().as_secs_f64()*1000.0,"report":report});
-        let state = if key != "test" {
-            if status.success() && !timed_out {
+        evidence["report"] = json!(report);
+        let state = if evidence["cancelled"] == true {
+            TestState::Cancelled
+        } else if key != "test" {
+            if evidence["exit"] == 0
+                && evidence["timedOut"] != true
+                && evidence["overflow"] != true
+                && evidence["pipeError"].is_null()
+            {
                 TestState::Passed
             } else {
                 TestState::ExecutionError
@@ -330,17 +325,6 @@ impl Session {
         } else {
             classify(self.config["runner"].as_str().unwrap(), &evidence)
         };
-        if state == TestState::ExecutionError {
-            let mut log = fs::read_to_string(self.root.join("stderr.log")).unwrap_or_default();
-            log.push_str(&fs::read_to_string(self.root.join("stdout.log")).unwrap_or_default());
-            log.truncate(
-                log.char_indices()
-                    .nth(2000)
-                    .map(|(i, _)| i)
-                    .unwrap_or(log.len()),
-            );
-            evidence["diagnostic"] = json!(log);
-        }
         Ok(CommandEvidence {
             state,
             details: evidence,
@@ -404,6 +388,9 @@ impl Session {
             .unwrap_or(analysis.count())
             .min(analysis.count());
         for id in 0..count {
+            if cancellation_signal() != 0 {
+                break;
+            }
             if strategy == "replace" {
                 fs::write(&self.source_path, analysis.replace(&self.source, id)?)
                     .map_err(|e| e.to_string())?;
@@ -420,8 +407,8 @@ impl Session {
             evidence.push(test.into_json());
         }
         let assessed = assessment::mutation(&[baseline.state], count, &executions);
-        let outcomes: Vec<_> = assessed.outcomes.iter().zip(evidence).enumerate()
-            .map(|(id, (verdict, evidence))| json!({"id":id,"verdict":verdict.label(),"evidence":evidence}))
+        let outcomes: Vec<_> = assessed.outcomes.iter().enumerate()
+            .map(|(id, verdict)| json!({"id":id,"verdict":verdict.label(),"evidence":evidence.get(id)}))
             .collect();
         let mut result = json!({"complete":assessed.complete,"killed":assessed.killed,
             "survived":assessed.survived,"score":assessed.score,"outcomes":outcomes});
@@ -444,6 +431,9 @@ fn classify(runner: &str, evidence: &Value) -> TestState {
     // ponytail: legacy Jest/Vitest use single-test totals; captured jobs require observed receipts.
     if evidence["timedOut"] == true {
         return TestState::TimedOut;
+    }
+    if evidence["overflow"] == true || !evidence["pipeError"].is_null() {
+        return TestState::ExecutionError;
     }
     let report = &evidence["report"];
     let (passed, failed, errors) = if matches!(runner, "node" | "observed") {
@@ -488,6 +478,17 @@ impl Drop for Session {
 
 #[test]
 fn exit_code_is_not_a_verdict() {
+    for failure in [json!({"overflow":true}), json!({"pipeError":"read failed"})] {
+        let mut evidence =
+            json!({"exit":0,"report":{"complete":true,"passed":1,"failed":0,"errors":0}});
+        evidence
+            .as_object_mut()
+            .unwrap()
+            .extend(failure.as_object().unwrap().clone());
+        assert_eq!(classify("node", &evidence), TestState::ExecutionError);
+        evidence["cancelled"] = json!(true);
+        assert_eq!(classify("node", &evidence), TestState::Cancelled);
+    }
     assert_eq!(
         classify("node", &json!({"exit":1,"timedOut":true,"cancelled":true})),
         TestState::Cancelled
