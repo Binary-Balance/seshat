@@ -115,11 +115,14 @@ while True: time.sleep(1)
 
 
 def main():
+    if not __debug__:
+        sys.exit('this proof requires assertions; disable Python optimization')
     assert sys.platform == 'linux', 'this proof requires Linux child adoption and /proc'
     # Test-only adoption guarantees cleanup even before a detached PID is published.
     # Seshat itself neither adopts descendants nor uses a subreaper.
     libc = ctypes.CDLL(None, use_errno=True)
-    assert libc.prctl(36, 1, 0, 0, 0) == 0, os.strerror(ctypes.get_errno())
+    if libc.prctl(36, 1, 0, 0, 0) != 0:
+        raise OSError(ctypes.get_errno(), 'enable fixture child adoption')
     repo = Path(__file__).resolve().parents[2]
     binary = Path(os.environ.get('SESHAT_PROOF_BINARY', repo / 'crates/seshat/target/release/seshat-proofs')).resolve()
     results = dict(platform=sys.platform, machine=platform.machine(), kernel=platform.release(),
