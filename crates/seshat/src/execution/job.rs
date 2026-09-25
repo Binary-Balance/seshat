@@ -6,7 +6,7 @@ use std::os::fd::AsRawFd as PipeHandle;
 use std::os::windows::io::AsRawHandle as PipeHandle;
 use std::{
     io::{self, Read},
-    process::{Command, Stdio},
+    process::Command,
     thread,
     time::{Duration, Instant},
 };
@@ -117,10 +117,6 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
     if super::cancellation_signal() != 0 {
         return Ok(json!({"cancelled":true,"exit":null,"ms":0}));
     }
-    command
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
     let start = Instant::now();
     let mut child =
         super::platform::ManagedChild::spawn(command).map_err(|e| format!("start command: {e}"))?;
