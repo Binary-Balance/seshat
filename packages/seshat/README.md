@@ -12,8 +12,14 @@ Install the entry package in the project you want to assess:
 npm install --save-dev @binary-balance/seshat
 ```
 
-The package declares and verifies Node.js 24.20.0 exactly. It selects one
-native payload for the current platform from these five verified targets:
+Assessments support Node.js >=24.20.0 <25. The native CLI checks the
+Node and runner versions reported by each test command. The npm launcher does
+not validate the runtime of commands in your configuration before starting them.
+The import-failure observer is verified only on Node 24.20.0 and 24.21.0.
+On other supported versions, import crashes requiring that evidence remain
+unresolved; ordinary test assertions still count. See the
+[compatibility policy](https://github.com/Binary-Balance/seshat/blob/main/docs/runner-compatibility.md).
+The package selects one native payload for the current platform from these five verified targets:
 
 - Linux x64 (glibc; Debian 11 userspace, glibc 2.31)
 - Linux ARM64 (glibc; Ubuntu 22.04, glibc 2.35)

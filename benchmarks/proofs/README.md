@@ -426,7 +426,7 @@ The standalone proof consumes the same npm `.tgz` bytes. It requires npm's
 runs the binary without npm, preserving the same archive and `BUILD.json`
 checks.
 
-The selected native CLI and runner proofs separately rerun the broad 43-scenario
+The selected native CLI and runner proofs separately rerun the broad 47-scenario
 CLI fixture, parallel controls, lifecycle checks and Jest/Expo/Vitest cases
 through the installed native executable. They reuse fixture compilers and
 coverage collectors from the source checkout; the package does not install or
@@ -439,7 +439,7 @@ documented in the [Windows package protocol](../../docs/windows-package.md).
 Its current native install proof covers the packaged executable and the same
 archive extracted with `tar.exe`; the entry launcher and Windows npm ownership
 proof are staged separately for the release package set. The workflow also runs the
-shared 43 CLI scenarios, 11 parallel controls and four installed Jest/Expo and
+shared 47 CLI scenarios, 11 parallel controls and four installed Jest/Expo and
 Vitest cases against that executable. The summary records missing or partial
 integration evidence as a gap.
 
@@ -581,14 +581,14 @@ linked libraries and the absence of `cargo` and `rustc`, then run:
 - All 14 npm package controls, including offline install and `npm ci`, package
   metadata, launcher paths, failure handling, cancellation, versioning and the
   four public consumer examples.
-- All 43 installed CLI scenarios plus legacy parity, including real typechecks,
+- All 47 installed CLI scenarios plus legacy parity, including real typechecks,
   fresh coverage, mutation outcomes, thresholds, incomplete results, timeouts,
   SIGINT/SIGTERM, source preservation and cleanup.
 - All 11 parallel-worker scenarios through that same installed executable,
   including one, two and four workers, worker capping, repeated outcomes,
   baseline/receipt/source failures, deadlines and cancellation. The controls
   check worker isolation, score withholding and termination of descendants.
-- The generated standalone archive repeats the 43 CLI scenarios and all 11
+- The generated standalone archive repeats the 47 CLI scenarios and all 11
   parallel-worker controls inside the same Debian 11 userspace.
 
 The verified userspace baseline is **Linux x64 with glibc 2.31**, tested with
@@ -1046,7 +1046,7 @@ Node's process-isolated test report replaces a crashed test file's exception wit
 a generic failure containing its exit code. That loses the distinction between
 an application guard throwing during import and a broken test environment.
 
-The bounded Node 24.20.0 adapter now observes the child process's built-in
+The bounded Node 24.20.0/24.21.0 adapter observes the child process's built-in
 `module.import` diagnostic and `uncaughtExceptionMonitor` event. It requires the
 same exception object from the failed test entry import and the fatal event.
 The error's first structured V8 call site must fall within a parser-identified
@@ -1155,9 +1155,19 @@ contains the exact runner reports and configuration scope used for that route.
 
 | Route | Tested versions | Configuration exercised | Evidence |
 | --- | --- | --- | --- |
-| Node | Node 24.20.0 | Built-in test runner with the verified Istanbul statement collector | [`linux-debian11.json`](../../outputs/linux-debian11.json) (installed candidate); [`bounded-proofs.json`](../../outputs/bounded-proofs.json) (fixture) |
-| Jest/Expo | Node 24.20.0, Jest 29.7.0, jest-expo 57.0.5, Expo 57.0.20 | Jest Circus, `jest-expo` preset, Babel coverage, `--runInBand`, Seshat workers 1 and 2 | [`jest-expo-check.json`](../../outputs/jest-expo-check.json) |
-| Vitest | Node 24.20.0, Vitest 5.0.0, `@vitest/coverage-istanbul` 5.0.0 | Private `TestRunner` and reporter, Node environment, fork pool, Istanbul coverage and sequential runner tests | [`vitest-check.json`](../../outputs/vitest-check.json) (worker 1); [`vitest-installed-check.json`](../../outputs/vitest-installed-check.json) (installed CLI, worker 2) |
+| Node | Node 24.20.0 or 24.21.0 | Built-in test runner with the verified Istanbul statement collector | [`linux-debian11.json`](../../outputs/linux-debian11.json) (installed candidate); [`bounded-proofs.json`](../../outputs/bounded-proofs.json) (fixture) |
+| Jest/Expo | Node 24.20.0 or 24.21.0, Jest 29.7.0, jest-expo 57.0.5, Expo 57.0.20 | Jest Circus, `jest-expo` preset, Babel coverage, `--runInBand`, Seshat workers 1 and 2 | [`jest-expo-check.json`](../../outputs/jest-expo-check.json) |
+| Vitest | Node 24.20.0 or 24.21.0, Vitest 5.0.0, `@vitest/coverage-istanbul` 5.0.0 | Private `TestRunner` and reporter, Node environment, fork pool, Istanbul coverage and sequential runner tests | [`vitest-check.json`](../../outputs/vitest-check.json) (worker 1); [`vitest-installed-check.json`](../../outputs/vitest-installed-check.json) (installed CLI, worker 2) |
+
+The original linked reports retain their recorded 24.20.0 environment.
+The [compatibility matrix](../../docs/runner-compatibility.md) records the
+Node `>=24.20.0 <25` support range. Native package builds remain pinned to
+24.20.0; each package job then checks the same payload on the latest Node 24
+release with `runner-compatibility.mjs`, recording its resolved version. The
+observer remains restricted to 24.20.0/24.21.0. On other versions, the load-failure
+proof requires ambiguous import crashes to stay unresolved and ordinary test
+failures to remain kills. Synthetic version controls exercise that fallback even
+when CI's current Node version has a verified observer.
 
 ## Vitest combined workflow
 

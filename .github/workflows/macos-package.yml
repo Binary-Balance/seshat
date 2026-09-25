@@ -142,7 +142,9 @@ jobs:
         env:
           SESHAT_PROOF_OUTPUT: work/macos/${{ matrix.cpu }}/jest-expo-check.json
         run: |
+          npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
           node benchmarks/proofs/jest-expo-check.mjs \
+            --deps "$GITHUB_WORKSPACE/benchmarks/proofs/fixtures/jest-expo" \
             --tarball "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}.tgz" \
             --cases normal-1,assertion-kill,survivor,before-all \
             2>&1 | tee "work/macos/${{ matrix.cpu }}/jest-expo-check.log"
@@ -165,6 +167,13 @@ jobs:
           SESHAT_PROOF_BINARY="$PROOF_BINARY" \
             node benchmarks/proofs/lifecycle.mjs \
             2>&1 | tee "work/macos/${{ matrix.cpu }}/lifecycle.log"
+      - name: Set up latest supported Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.x
+          check-latest: true
+      - name: Verify latest Node 24 compatibility
+        run: node benchmarks/proofs/runner-compatibility.mjs "work/macos/${{ matrix.cpu }}/package-result.json"
       - name: Write portable summary
         if: always()
         run: node benchmarks/proofs/macos-package-summary.mjs "work/macos/${{ matrix.cpu }}"

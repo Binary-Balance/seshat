@@ -3,7 +3,7 @@
   "private": true,
   "license": "MIT",
   "engines": {
-    "node": "24.20.0"
+    "node": ">=24.20.0 <25"
   },
   "scripts": {
     "test": "jest --config jest.config.cjs",

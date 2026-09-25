@@ -200,6 +200,25 @@ assert.match(json('mutate-needs-typecheck', 'mutate', 2).result.error, /typechec
 const failedBaseline = structuredClone(config); failedBaseline.setups[0].test = [process.execPath, '-e', 'process.exit(1)'];
 configure(failedBaseline);
 assert.equal(json('baseline-failure', 'mutate', 2).result.mutation.score, null);
+for (const [name, fields, message] of [
+  ['unsupported-node', {node:'25.0.0'}, 'unsupported Node.js version "25.0.0"; supported: >=24.20.0 <25'],
+  ['malformed-version', {node:null}, 'runner receipt has missing or invalid Node.js version'],
+  ['replayed-receipt', {executionId:'old'}, 'runner receipt has wrong execution identity'],
+]) {
+  const invalidReceipt = structuredClone(config);
+  invalidReceipt.setups[0].test = [process.execPath, '-e', `require('fs').writeFileSync(process.env.SESHAT_RECEIPT,
+    JSON.stringify({version:1,executionId:process.env.SESHAT_EXECUTION_ID,node:process.versions.node,
+      complete:true,passed:1,failed:0,errors:0,...${JSON.stringify(fields)}}))`];
+  configure(invalidReceipt);
+  const invalid = json(name, 'mutate', 2);
+  assert.equal(invalid.result.setups[0].baseline.evidenceError, message);
+  assert.equal(invalid.result.mutation.score, null);
+  if (name === 'unsupported-node') {
+    const human = run('human-version-mismatch', ['mutate','--scratch',scratch,'--no-progress'], 2);
+    assert.match(human.stdout, /unsupported Node\.js version/);
+    assert.match(human.stdout, /supported: >=24\.20\.0 <25/);
+  }
+}
 const timeoutConfig = structuredClone(config);
 timeoutConfig.thresholds = {minMutationScore:0};
 timeoutConfig.setups[0].timeoutMs = 200;

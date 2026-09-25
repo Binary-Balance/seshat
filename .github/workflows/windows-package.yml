@@ -7,6 +7,9 @@ on:
       - crates/seshat/Cargo.toml
       - crates/seshat/Cargo.lock
       - crates/seshat/src/**
+      - benchmarks/proofs/runner-compatibility.mjs
+      - benchmarks/proofs/node-load-observer.mjs
+      - benchmarks/proofs/node-load-failure.mjs
       - packages/**
       - examples/**
       - benchmarks/proofs/npm-package.mjs
@@ -36,6 +39,9 @@ on:
       - crates/seshat/Cargo.toml
       - crates/seshat/Cargo.lock
       - crates/seshat/src/**
+      - benchmarks/proofs/runner-compatibility.mjs
+      - benchmarks/proofs/node-load-observer.mjs
+      - benchmarks/proofs/node-load-failure.mjs
       - packages/**
       - examples/**
       - benchmarks/proofs/npm-package.mjs
@@ -285,6 +291,16 @@ jobs:
           $env:SESHAT_NATIVE_BINARY_SHA256 = $package.binary
           $env:SESHAT_CONSOLE_HELPER_BINARY = $package.consoleHelper
           node benchmarks/proofs/npm-package.mjs work/windows/seshat-entry.tgz work/windows/seshat-win32-x64-release.tgz 2>&1 | Tee-Object -FilePath work/windows/npm-package.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Set up latest supported Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.x
+          check-latest: true
+      - name: Verify latest Node 24 compatibility
+        shell: pwsh
+        run: |
+          node benchmarks/proofs/runner-compatibility.mjs work/windows/package-result.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Write portable summary
         if: always()

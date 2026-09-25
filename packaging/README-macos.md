@@ -3,8 +3,7 @@
 This is one of the `@binary-balance/seshat-darwin-x64` or
 `@binary-balance/seshat-darwin-arm64` native payloads for macOS 15. The package records its target, Mach-O
 architecture, macOS minimum load command, deployment target, SDK, native
-libraries, binary hash and dependency versions in `BUILD.json`. Node 24.20.0
-is the verified test runtime. The x64 and ARM64 packages are built on their
+libraries, binary hash and dependency versions in `BUILD.json`. Node 24.20.0 is the package-build baseline; assessments support stable Node versions `>=24.20.0 <25`. The x64 and ARM64 packages are built on their
 matching native GitHub-hosted runners and do not run through Rosetta.
 
 Install the local tarball as a development dependency:

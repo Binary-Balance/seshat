@@ -1,9 +1,11 @@
-// Node 24.20.0 only. Observe fatal ESM entry imports without handling the exception.
+// Only this import-failure inference needs exact runtime verification.
+// Other supported Node versions leave ambiguous import crashes unresolved.
+// Observe fatal ESM entry imports without handling the exception.
 import {tracingChannel} from 'node:diagnostics_channel';
 import {readFileSync, writeFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
 
-if (process.env.NODE_TEST_CONTEXT === 'child-v8' && process.versions.node === '24.20.0'
+if (process.env.NODE_TEST_CONTEXT === 'child-v8' && ['24.20.0', '24.21.0'].includes(process.versions.node)
   && process.env.SESHAT_LOAD_CONTEXT && typeof process.argv[1] === 'string') {
   const context = JSON.parse(readFileSync(process.env.SESHAT_LOAD_CONTEXT, 'utf8'));
   const sources = Array.isArray(context.sources) ? context.sources : [context];

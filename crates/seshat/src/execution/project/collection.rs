@@ -227,6 +227,70 @@ fn validate_coverage_report(root: &Path, path: &Path) -> Result<Value, String> {
     Ok(Value::Object(normalized))
 }
 
+fn validate_runner_receipt(report: &Value, runner: &Runner, id: &str) -> Result<(), String> {
+    if report["version"] != 1 {
+        return Err("runner receipt has invalid format version: expected 1".into());
+    }
+    if report["executionId"] != id {
+        return Err("runner receipt has wrong execution identity".into());
+    }
+    let correct_runner = match runner {
+        Runner::Node => report.get("runner").is_none(),
+        Runner::Jest => report["runner"] == "jest",
+        Runner::Vitest => report["runner"] == "vitest",
+    };
+    if !correct_runner {
+        return Err(format!(
+            "runner receipt does not match configured {} runner",
+            runner.label()
+        ));
+    }
+    let version = |value: &Value, component: &str, supported: &[&str]| {
+        let actual = value
+            .as_str()
+            .ok_or_else(|| format!("runner receipt has missing or invalid {component} version"))?;
+        if !supported.contains(&actual) {
+            return Err(format!(
+                "unsupported {component} version {actual:?}; supported: {}",
+                supported.join(", ")
+            ));
+        }
+        Ok(())
+    };
+    let node = report["node"]
+        .as_str()
+        .ok_or("runner receipt has missing or invalid Node.js version")?;
+    let parts: Vec<_> = node.split('.').collect();
+    if parts.len() != 3
+        || !parts.iter().all(|part| {
+            part.parse::<u32>()
+                .is_ok_and(|number| number.to_string() == *part)
+        })
+    {
+        return Err("runner receipt has missing or invalid Node.js version".into());
+    }
+    // The tested floor is independent of the observer's narrower version set.
+    if parts[0] != "24" || parts[1].parse::<u32>().unwrap() < 20 {
+        return Err(format!(
+            "unsupported Node.js version {node:?}; supported: >=24.20.0 <25"
+        ));
+    }
+    match runner {
+        Runner::Node => Ok(()),
+        Runner::Jest => {
+            // cwd-resolved versions alone do not establish which runner executed.
+            version(&report["actual"]["jest"], "Jest", &["29.7.0"])?;
+            version(&report["actual"]["jest-expo"], "jest-expo", &["57.0.5"])?;
+            version(&report["jest"], "cwd Jest", &["29.7.0"])?;
+            version(&report["expo"], "cwd jest-expo", &["57.0.5"])
+        }
+        Runner::Vitest => {
+            version(&report["actual"]["vitest"], "Vitest", &["5.0.0"])?;
+            version(&report["vitest"], "reported Vitest", &["5.0.0"])
+        }
+    }
+}
+
 fn per_second(count: usize, wall_ms: f64) -> Value {
     if wall_ms.is_finite() && wall_ms > 0.0 {
         json!(count as f64 / (wall_ms / 1000.0))
@@ -761,23 +825,11 @@ impl CapturedProject {
                 TestState::ExecutionError
             }
         } else {
-            match read_report(evidence, &receipt) {
+            match read_report(evidence, &receipt).and_then(|report| {
+                validate_runner_receipt(&report, &setup.runner, id)?;
                 Ok(report)
-                    if report["version"] == 1
-                        && report["executionId"] == id
-                        && report["node"] == "24.20.0"
-                        && match setup.runner {
-                            Runner::Node => report.get("runner").is_none(),
-                            Runner::Jest => {
-                                report["runner"] == "jest"
-                                    && report["jest"] == "29.7.0"
-                                    && report["expo"] == "57.0.5"
-                            }
-                            Runner::Vitest => {
-                                report["runner"] == "vitest" && report["vitest"] == "5.0.0"
-                            }
-                        } =>
-                {
+            }) {
+                Ok(report) => {
                     result["report"] = report;
                     if result["cancelled"] == true {
                         TestState::Cancelled
@@ -793,11 +845,8 @@ impl CapturedProject {
                         )
                     }
                 }
-                other => {
-                    result["evidenceError"] = json!(match other {
-                    Err(error) => error,
-                    Ok(_) => "runner receipt has wrong execution identity, format or unsupported runner version".into(),
-                });
+                Err(error) => {
+                    result["evidenceError"] = json!(error);
                     if result["cancelled"] == true {
                         TestState::Cancelled
                     } else if result["timedOut"] == true {
@@ -1731,6 +1780,118 @@ mod tests {
                 .contains("duplicate normalized")
         );
         directory.close().unwrap();
+    }
+
+    #[test]
+    fn receipt_versions_preserve_identity_and_format_validation() {
+        let base = json!({"version":1,"executionId":"current","node":"24.20.0"});
+        for node in ["24.20.0", "24.20.1", "24.21.0", "24.22.0", "24.99.99"] {
+            let mut receipt = base.clone();
+            receipt["node"] = json!(node);
+            assert!(validate_runner_receipt(&receipt, &Runner::Node, "current").is_ok());
+            for (runner, fields) in [
+                (
+                    Runner::Jest,
+                    json!({"runner":"jest","jest":"29.7.0","expo":"57.0.5",
+                    "actual":{"jest":"29.7.0","jest-expo":"57.0.5"}}),
+                ),
+                (
+                    Runner::Vitest,
+                    json!({"runner":"vitest","vitest":"5.0.0","actual":{"vitest":"5.0.0"}}),
+                ),
+            ] {
+                let mut observed = receipt.clone();
+                observed
+                    .as_object_mut()
+                    .unwrap()
+                    .extend(fields.as_object().unwrap().clone());
+                assert!(validate_runner_receipt(&observed, &runner, "current").is_ok());
+                let package = if matches!(runner, Runner::Jest) {
+                    "jest"
+                } else {
+                    "vitest"
+                };
+                observed["actual"][package] = json!("99.0.0");
+                let error = validate_runner_receipt(&observed, &runner, "current").unwrap_err();
+                assert!(
+                    error.contains("99.0.0") && error.contains("supported:"),
+                    "{error}"
+                );
+                observed["actual"][package] = Value::Null;
+                assert!(
+                    validate_runner_receipt(&observed, &runner, "current")
+                        .unwrap_err()
+                        .contains("missing or invalid")
+                );
+            }
+        }
+        for node in ["23.99.0", "24.19.99", "25.0.0"] {
+            let mut receipt = base.clone();
+            receipt["node"] = json!(node);
+            assert_eq!(
+                validate_runner_receipt(&receipt, &Runner::Node, "current").unwrap_err(),
+                format!("unsupported Node.js version {node:?}; supported: >=24.20.0 <25")
+            );
+        }
+        for node in [
+            "",
+            "24.20",
+            "24.20.0.1",
+            "24.20.0-rc.1",
+            "24.20.0+build",
+            "024.20.0",
+            "24.+20.0",
+            "24.020.0",
+            "24.20.-1",
+            "24.20.4294967296",
+        ] {
+            let mut receipt = base.clone();
+            receipt["node"] = json!(node);
+            assert!(
+                validate_runner_receipt(&receipt, &Runner::Node, "current")
+                    .unwrap_err()
+                    .contains("missing or invalid")
+            );
+        }
+        for (field, value, expected) in [
+            (
+                "node",
+                json!("25.0.0"),
+                "unsupported Node.js version \"25.0.0\"; supported: >=24.20.0 <25",
+            ),
+            (
+                "node",
+                Value::Null,
+                "runner receipt has missing or invalid Node.js version",
+            ),
+            (
+                "node",
+                json!(24),
+                "runner receipt has missing or invalid Node.js version",
+            ),
+            (
+                "version",
+                json!(2),
+                "runner receipt has invalid format version: expected 1",
+            ),
+            (
+                "executionId",
+                json!("old"),
+                "runner receipt has wrong execution identity",
+            ),
+            (
+                "runner",
+                json!("jest"),
+                "runner receipt does not match configured node runner",
+            ),
+        ] {
+            let mut receipt = base.clone();
+            receipt[field] = value;
+            assert_eq!(
+                validate_runner_receipt(&receipt, &Runner::Node, "current"),
+                Err(expected.into())
+            );
+        }
     }
 
     #[test]

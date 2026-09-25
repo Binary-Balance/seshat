@@ -1,5 +1,9 @@
 # Configuration
 
+Current source accepts stable Node versions `>=24.20.0 <25`. The published 0.1.0 package
+still requires 24.20.0. See the [runner compatibility matrix](runner-compatibility.md)
+for the exact runner versions and retained checks.
+
 This guide follows the current `main` source. See the [release status](../README.md#release-status)
 for the distinction between published `0.1.0` and unreleased fixes.
 
@@ -34,7 +38,7 @@ has the matching install and report commands.
 The Node setup uses the built-in test runner with a small Istanbul adapter. The
 adapter is checked in with the [Node example](../examples/node/README.md) and
 the [workspace example](../examples/workspaces/README.md). It supports the
-listed UTF-8 TypeScript ESM files on Node 24.20.0. It is an example adapter,
+listed UTF-8 TypeScript ESM files on Node `>=24.20.0 <25`. It is an example adapter,
 not a general V8 or c8 coverage converter.
 
 For a single-package project, the important shape is:
@@ -93,7 +97,7 @@ Seshat rewrites those internal links in its execution copy.
 ## Jest/Expo example
 
 This example follows the [public Jest/Expo example](../examples/jest-expo/README.md).
-The verified route uses Node 24.20.0, Jest 29.7.0, jest-expo 57.0.5, Expo
+The verified route uses Node `>=24.20.0 <25`, Jest 29.7.0, jest-expo 57.0.5, Expo
 57.0.20, React Native 0.86.3, `@react-native/jest-preset` 0.86.3,
 `babel-preset-expo` 57.0.10, React 19.2.3 and TypeScript 6.0.3. The fixture
 uses Jest Circus with Babel coverage and a fresh Istanbul JSON report.
@@ -162,7 +166,7 @@ in the [report format](report-format.md).
 This example follows the [public Vitest example](../examples/vitest/README.md),
 which has TypeScript, React TSX, a Fastify route and three Vitest tests. Adjust
 the source paths and capture list for your project. The tested runner is Vitest
-5.0.0 with `@vitest/coverage-istanbul` 5.0.0 and Node 24.20.0.
+5.0.0 with `@vitest/coverage-istanbul` 5.0.0 and Node `>=24.20.0 <25`.
 
 Merge these settings into `vitest.config.mjs`:
 

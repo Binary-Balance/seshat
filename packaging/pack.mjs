@@ -314,7 +314,7 @@ const packageManifest = {
   description:`Native Seshat payload for ${targetConfig.key}`,
   license:'MIT',
   repository:{type:'git',url:'git+https://github.com/Binary-Balance/seshat.git'},
-  engines:{node:'24.20.0'},
+  engines:{node:'>=24.20.0 <25'},
   os:[targetConfig.os], cpu:[targetConfig.cpu],
   ...(targetConfig.os === 'linux' ? {libc:['glibc']} : {}),
   files:[packagedBinary,'BUILD.json','LICENSE','README.md','THIRD_PARTY_NOTICES.txt'],
