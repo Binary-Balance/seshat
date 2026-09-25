@@ -1167,11 +1167,11 @@ process.exit(259);
         for extension in ["cmd", "bat"] {
             let batch = directory.join(format!("runner.{extension}"));
             fs::write(&batch, "@\"%~dp0node.exe\" \"%~dp0argv.cjs\" %*\r\n").unwrap();
-            for program in [
-                batch.clone(),
-                PathBuf::from(format!("{}.", batch.display())),
+            for (program, require_success) in [
+                (batch.clone(), true),
+                (PathBuf::from(format!("{}.", batch.display())), false),
             ] {
-                let mut command = Command::new(program);
+                let mut command = Command::new(&program);
                 command.args([
                     "",
                     "space 🎸",
@@ -1183,7 +1183,17 @@ process.exit(259);
                     "trailing\\",
                 ]);
                 assert_matches_std(&mut command);
-                assert!(captured(&mut command).0.success());
+                // A trailing dot must retain std's interpretation, including rejection.
+                // Only an ordinary batch filename has an unconditional success contract.
+                if require_success {
+                    let (status, stdout, stderr) = captured(&mut command);
+                    assert!(
+                        status.success(),
+                        "{program:?}: {status}; stdout: {}; stderr: {}",
+                        String::from_utf8_lossy(&stdout),
+                        String::from_utf8_lossy(&stderr)
+                    );
+                }
             }
             for argument in ["line\nfeed", "carriage\rreturn"] {
                 let mut command = Command::new(&batch);
