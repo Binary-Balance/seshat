@@ -287,9 +287,11 @@ mod unix {
 mod windows {
     use super::*;
     #[cfg(test)]
-    use std::cell::RefCell;
-    #[cfg(test)]
-    use std::sync::Mutex;
+    use std::{
+        cell::RefCell,
+        os::windows::io::{FromRawHandle, OwnedHandle},
+        sync::Mutex,
+    };
     use std::{
         ffi::c_void,
         mem::size_of,
@@ -330,6 +332,7 @@ mod windows {
     #[derive(Clone, Copy, PartialEq, Eq)]
     pub(super) enum TestFailure {
         Discovery,
+        ExtraThread,
         Assignment,
         PostAssignment,
     }
@@ -339,6 +342,7 @@ mod windows {
     struct TestSpawnState {
         failure: Option<TestFailure>,
         wait_handle: HANDLE,
+        extra_thread: Option<OwnedHandle>,
     }
 
     #[cfg(test)]
@@ -385,6 +389,11 @@ mod windows {
             let mut state = state.borrow_mut();
             std::mem::replace(&mut state.wait_handle, null_mut())
         })
+    }
+
+    #[cfg(test)]
+    pub(super) fn test_take_extra_thread() -> OwnedHandle {
+        TEST_SPAWN_STATE.with(|state| state.borrow_mut().extra_thread.take().unwrap())
     }
 
     #[cfg(test)]
@@ -709,6 +718,36 @@ mod windows {
         if test_take_failure(TestFailure::Discovery) {
             return Err(guard.fail("injected child-thread discovery failure".into()));
         }
+        #[cfg(test)]
+        if test_take_failure(TestFailure::ExtraThread) {
+            use windows_sys::Win32::System::Threading::CreateRemoteThread;
+
+            // Reproduce an extra thread without running injected or project code. Windows
+            // defers validation of the start address until execution; this thread has no
+            // entry point and must remain suspended until process cleanup terminates it.
+            // SAFETY: the guard owns this child, and CREATE_SUSPENDED prevents execution.
+            let extra_thread = unsafe {
+                CreateRemoteThread(
+                    guard.child.as_ref().unwrap().as_raw_handle() as HANDLE,
+                    std::ptr::null(),
+                    0,
+                    None,
+                    std::ptr::null(),
+                    CREATE_SUSPENDED,
+                    null_mut(),
+                )
+            };
+            if extra_thread.is_null() {
+                return Err(guard.fail(format!(
+                    "create extra suspended child thread: {}",
+                    io::Error::last_os_error()
+                )));
+            }
+            // SAFETY: CreateRemoteThread returned an owned handle. Keep it for the test
+            // to verify termination; OwnedHandle also closes it if an assertion panics.
+            let extra_thread = unsafe { OwnedHandle::from_raw_handle(extra_thread) };
+            TEST_SPAWN_STATE.with(|state| state.borrow_mut().extra_thread = Some(extra_thread));
+        }
         let thread_id = match primary_thread_id(pid) {
             Ok(thread_id) => thread_id,
             Err(error) => return Err(guard.fail(error)),
@@ -880,12 +919,14 @@ mod windows {
 #[cfg(all(test, windows))]
 mod windows_tests {
     use super::windows::{
-        TestFailure, test_inject_failure, test_spawn_lock, test_take_spawn_wait_handle,
+        TestFailure, test_inject_failure, test_spawn_lock, test_take_extra_thread,
+        test_take_spawn_wait_handle,
     };
     use super::*;
     use std::{
         fs,
         io::Read,
+        os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle},
         path::PathBuf,
         thread,
         time::{Duration, SystemTime, UNIX_EPOCH},
@@ -1063,13 +1104,49 @@ process.exit(0);
         // The test hook retains this handle before injected cleanup closes the Child-owned handle.
         let process = test_take_spawn_wait_handle();
         assert!(!process.is_null());
-        // SAFETY: process is a live handle returned by OpenProcess.
+        // SAFETY: the hook transfers its owned OpenProcess handle to this test.
+        let process = unsafe { OwnedHandle::from_raw_handle(process) };
+        // SAFETY: process remains a live handle for the wait, including on assertion failure.
         assert_eq!(
-            unsafe { WaitForSingleObject(process, 3_000) },
+            unsafe { WaitForSingleObject(process.as_raw_handle(), 3_000) },
             WAIT_OBJECT_0
         );
-        // SAFETY: process is closed exactly once after the wait.
-        unsafe { CloseHandle(process) };
+    }
+
+    #[test]
+    fn extra_suspended_thread_reproduces_discovery_failure_without_running_child() {
+        let _lock = test_spawn_lock().lock().unwrap();
+        let directory = temporary_directory("extra-suspended-thread");
+        let marker = directory.join("project-ran.txt");
+        for _ in 0..4 {
+            test_inject_failure(TestFailure::ExtraThread);
+            let mut command = Command::new("node.exe");
+            command
+                .args([
+                    "-e",
+                    "require('node:fs').writeFileSync(process.env.SESHAT_PROJECT_MARKER, 'ran')",
+                ])
+                .env("SESHAT_PROJECT_MARKER", &marker);
+            let result = ManagedChild::spawn(&mut command);
+            // A signaled process handle proves that all its threads have terminated.
+            assert_last_spawn_exited();
+            let error = match result {
+                Ok(_) => panic!("expected multiple-thread discovery failure"),
+                Err(error) => error,
+            };
+            assert_eq!(error, "suspended child has multiple discoverable threads");
+            let extra_thread = test_take_extra_thread();
+            // SAFETY: the injected thread handle is retained until after this wait.
+            assert_eq!(
+                unsafe { WaitForSingleObject(extra_thread.as_raw_handle(), 0) },
+                WAIT_OBJECT_0
+            );
+            assert!(
+                !marker.try_exists().unwrap(),
+                "project code ran before cleanup"
+            );
+        }
+        fs::remove_dir_all(directory).unwrap();
     }
 
     #[test]
