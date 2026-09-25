@@ -1404,7 +1404,8 @@ Ctrl+C/Ctrl+Break events through the isolated console helper. It checks child an
 descendant cleanup, empty scratch, an unchanged source and a surviving unrelated
 process. Cancelling mutant 1 preserves mutant 0 and leaves later mutants `not-run`.
 Both execution paths use the same bounded, cancellable process runner, while
-their command builders retain separate environment rules. Proof commands now
+their command builders set up runner-specific environments. Both remove inherited
+`NODE_OPTIONS` and `NODE_PATH` before adding Seshat's own load observer. Proof commands
 share its 2 MiB per-stream output cap and 2,000-character diagnostic limit.
 
 Capture checks cancellation between filesystem entries; an in-progress file
@@ -1422,6 +1423,20 @@ abandoned copy and results stay in its unique, ignored
 of a shared scratch directory is attempted. The original checkout never needs
 restoration. Recorded stop times include a 100 ms observation pause and are
 correctness evidence, not performance benchmarks.
+
+## Proof input and output checks
+
+The `execute` manifest validates its runner, all command arrays, timeout, limit
+and scenario before starting commands. Unix session directories are created with
+owner-only permissions. Receipts must be regular JSON files no larger than
+32 MiB, using the same reader as captured-project reports. Invalid receipts stay
+unresolved and include an evidence error.
+
+Proof arguments must be UTF-8. Invalid arguments and clock errors return controlled
+errors; report write failures return exit code 2 without a panic. Successful
+`inspect`, `prepare` and `replace` responses still omit `complete` and exit zero.
+The Rust integration tests cover these boundaries, ambient Node settings, scratch
+cleanup and retained observer evidence on the native CI hosts.
 
 ## Deliberate limits
 

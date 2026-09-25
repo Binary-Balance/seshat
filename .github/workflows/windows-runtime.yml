@@ -7,6 +7,7 @@ on:
       - crates/seshat/Cargo.toml
       - crates/seshat/Cargo.lock
       - crates/seshat/src/**
+      - crates/seshat/tests/**
       - benchmarks/proofs/windows-runtime-preflight.mjs
       - benchmarks/proofs/windows-runtime-cli.mjs
       - benchmarks/proofs/cli.mjs
@@ -25,6 +26,7 @@ on:
       - crates/seshat/Cargo.toml
       - crates/seshat/Cargo.lock
       - crates/seshat/src/**
+      - crates/seshat/tests/**
       - benchmarks/proofs/windows-runtime-preflight.mjs
       - benchmarks/proofs/windows-runtime-cli.mjs
       - benchmarks/proofs/cli.mjs
