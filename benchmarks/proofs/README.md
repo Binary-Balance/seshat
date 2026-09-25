@@ -721,6 +721,7 @@ After the dependency installation and Rust build above, run:
 node benchmarks/proofs/coverage-routes.mjs
 node benchmarks/proofs/coverage-line-separators.mjs
 node benchmarks/proofs/coverage-statement-starts.mjs
+node benchmarks/proofs/coverage-compatibility.mjs
 ```
 
 The line-separator regression uses real Istanbul instrumentation and runtime
@@ -734,12 +735,19 @@ controls. It checks the provider's initial zero counters and rejects coordinates
 inside statement tokens. It also accepts `SESHAT_PROOF_BINARY` and removes its
 temporary files.
 
+The compatibility regression checks real trailing-comment mappings and retains
+an example of distinct generated statements mapping to the same source span.
+It preserves duplicate rejection and uncalled-arrow zero counters. See the
+[findings](../../docs/research/coverage-compatibility.md). It accepts
+`SESHAT_PROOF_BINARY` and removes its temporary files.
+
 This checks Node statement instrumentation, Jest/Babel and both Vitest providers.
 Node, Jest and Vitest/Istanbul must match the hand-checked counts. Vitest/V8 must
 remain incomplete because one mapped same-line arrow extends into the next
 `export` declaration. The importer accepts explicit null end columns as line-end
-bounds, not missing start coordinates, and permits only trailing semicolons,
-spaces or tabs outside a function's range. It never trims over other code.
+bounds, not missing start coordinates, and permits same-line trailing semicolons,
+spaces, tabs and comments outside a function's range. It never trims over other
+code or a line break.
 
 The script reuses the coverage fixture and adds a same-line Unicode statement
 and a completely unloaded file inside its disposable project. The Node route

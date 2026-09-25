@@ -216,7 +216,8 @@ fn validate_coverage_report(root: &Path, path: &Path) -> Result<Value, String> {
             );
         }
         regular_path(root, Path::new(name), false)?;
-        let identity = stable_path(Path::new(name));
+        // Resolve spelling aliases only after rejecting links and non-normal paths.
+        let identity = stable_path(&fs::canonicalize(name).map_err(|e| e.to_string())?);
         let mut file = file.clone();
         file["path"] = json!(identity);
         if normalized.insert(identity, file).is_some() {
@@ -1571,20 +1572,92 @@ mod tests {
         let source = root.join("src").join("subject 🎸.ts");
         fs::create_dir(source.parent().unwrap()).unwrap();
         fs::write(&source, "export const value = 1;\n").unwrap();
-        let raw = if cfg!(windows) {
-            source.to_string_lossy().replace('/', "\\")
-        } else {
-            source.to_string_lossy().into_owned()
-        };
+        let raw = source.to_string_lossy().into_owned();
+        let dotted = root
+            .join("src/./subject 🎸.ts")
+            .to_string_lossy()
+            .into_owned();
+        let mut aliases = vec![raw.clone(), dotted];
+        if cfg!(windows) {
+            aliases.push(raw.replace('\\', "/"));
+            aliases.push(raw.to_ascii_uppercase());
+            aliases.push(format!(r"\\?\{}", comparable_path(&source).display()));
+        }
+        let report_path = root.join("coverage.json");
+        let identity = stable_path(&fs::canonicalize(&source).unwrap());
+        for alias in aliases {
+            fs::write(
+                &report_path,
+                serde_json::to_vec(&json!({(alias.clone()): {"path": alias}})).unwrap(),
+            )
+            .unwrap();
+            let normalized = validate_coverage_report(root, &report_path).unwrap();
+            assert_eq!(normalized.get(&identity).unwrap()["path"], identity);
+        }
+        directory.close().unwrap();
+    }
+
+    #[test]
+    fn coverage_report_rejects_relative_escaping_and_linked_sources() {
+        let directory = OwnedDirectory::create(&std::env::temp_dir()).unwrap();
+        let root = &directory.0;
+        fs::create_dir(root.join("src")).unwrap();
+        let source = root.join("src/subject.ts");
+        fs::write(&source, "export const value = 1;\n").unwrap();
+        create_link(Path::new("src/subject.ts"), &root.join("linked.ts")).unwrap();
+        create_link(Path::new("src"), &root.join("linked-parent")).unwrap();
+        fs::hard_link(&source, root.join("hard.ts")).unwrap();
+        let report_path = root.join("coverage.json");
+        for path in [
+            PathBuf::from("src/subject.ts"),
+            root.join("../outside.ts"),
+            root.join("src/../src/subject.ts"),
+            root.join("linked.ts"),
+            root.join("linked-parent/subject.ts"),
+            root.join("hard.ts"),
+        ] {
+            let name = path.to_string_lossy();
+            fs::write(
+                &report_path,
+                serde_json::to_vec(&json!({
+                    (name.as_ref()): {"path": name}
+                }))
+                .unwrap(),
+            )
+            .unwrap();
+            assert!(
+                validate_coverage_report(root, &report_path).is_err(),
+                "{}",
+                path.display()
+            );
+        }
+        directory.close().unwrap();
+    }
+
+    #[test]
+    fn coverage_report_rejects_dotted_alias_collisions() {
+        let directory = OwnedDirectory::create(&std::env::temp_dir()).unwrap();
+        let root = &directory.0;
+        fs::create_dir(root.join("src")).unwrap();
+        let source = root.join("src/subject.ts");
+        fs::write(&source, "export const value = 1;\n").unwrap();
+        let raw = source.to_string_lossy();
+        let alias = root.join("src/./subject.ts");
+        let alias = alias.to_string_lossy();
         let report_path = root.join("coverage.json");
         fs::write(
             &report_path,
-            serde_json::to_vec(&json!({(raw.clone()): {"path": raw.clone()}})).unwrap(),
+            serde_json::to_vec(&json!({
+                (raw.as_ref()): {"path": raw}, (alias.as_ref()): {"path": alias}
+            }))
+            .unwrap(),
         )
         .unwrap();
-        let normalized = validate_coverage_report(root, &report_path).unwrap();
-        let identity = stable_path(Path::new(&raw));
-        assert_eq!(normalized.get(&identity).unwrap()["path"], identity);
+        assert!(
+            validate_coverage_report(root, &report_path)
+                .unwrap_err()
+                .contains("duplicate normalized")
+        );
         directory.close().unwrap();
     }
 
@@ -1627,7 +1700,7 @@ mod tests {
         )
         .unwrap();
         let normalized = validate_coverage_report(&root_verbatim, &report_path).unwrap();
-        let identity = stable_path(&source);
+        let identity = stable_path(&fs::canonicalize(&source).unwrap());
         assert_eq!(normalized.get(&identity).unwrap()["path"], identity);
         directory.close().unwrap();
     }

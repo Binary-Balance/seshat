@@ -24,7 +24,11 @@ fn byte_position(source: &str, position: &Value, open_end: bool) -> Result<u32, 
     if open_end && position.get("column") == Some(&Value::Null) {
         return Ok((start + text.len()) as u32);
     }
-    let column = position["column"].as_u64().ok_or("missing column")? as usize;
+    let column = position
+        .get("column")
+        .ok_or("missing column")?
+        .as_u64()
+        .ok_or("invalid column: expected a non-negative integer")? as usize;
     let mut units = 0;
     for (offset, ch) in text.char_indices() {
         if units == column {
@@ -39,6 +43,25 @@ fn byte_position(source: &str, position: &Value, open_end: bool) -> Result<u32, 
         Ok((start + text.len()) as u32)
     } else {
         Err("column outside source".into())
+    }
+}
+
+fn same_line_trivia(mut text: &str) -> bool {
+    if text.contains(['\r', '\n']) {
+        return false;
+    }
+    loop {
+        text = text.trim_start_matches([';', ' ', '\t']);
+        if text.is_empty() || text.starts_with("//") {
+            return true;
+        }
+        let Some(comment) = text.strip_prefix("/*") else {
+            return false;
+        };
+        let Some(end) = comment.find("*/") else {
+            return false;
+        };
+        text = &comment[end + 2..];
     }
 }
 
@@ -81,13 +104,11 @@ pub fn attribute<'a>(
                 let mut end = byte_position(source, &loc["end"], true)?;
                 if let Some(i) = analysis.statement_owner(start) {
                     let scope_end = analysis.scopes[i].span.end;
-                    // A remapped arrow/field can include its terminating semicolon,
-                    // which is outside the expression's AST range.
+                    // Vitest can map an arrow/field to an open line end, including
+                    // a semicolon or trailing comments outside its AST range.
                     // Never shorten a range over another expression, function, or line.
                     if end > scope_end
-                        && source[scope_end as usize..end as usize]
-                            .trim_matches([';', ' ', '\t'])
-                            .is_empty()
+                        && same_line_trivia(&source[scope_end as usize..end as usize])
                     {
                         end = scope_end;
                     }
@@ -277,6 +298,63 @@ fn istanbul_label_and_debugger_mappings() {
 }
 
 #[test]
+fn remapped_line_ends_allow_comments_but_not_code_or_newlines() {
+    let path = "/fixture.ts";
+    for (suffix, complete) in [
+        (";", true),
+        ("; // trailing 🎸", true),
+        ("; /* trailing */", true),
+        ("; /* one */ /* two */ // end", true),
+        ("; /* trailing */ other();", false),
+        ("; const next = () => 2;", false),
+        ("; /* spanning\ncomment */", false),
+    ] {
+        let source = format!("const arrow = () => 1{suffix}\n");
+        let analysis = Analysis::inspect(path, &source).unwrap();
+        let report = json!({path:{"path":path,"statementMap":{"0":{
+            "start":{"line":1,"column":20},"end":{"line":1,"column":null}
+        }},"s":{"0":1}}});
+        let result = attribute(&analysis, path, &source, [&report]);
+        assert_eq!(result["complete"], complete, "{source}: {result}");
+        assert_eq!(
+            result["functions"][0]["coverage"],
+            if complete { json!(1.0) } else { Value::Null }
+        );
+    }
+    assert!(!same_line_trivia("; // trailing\n"));
+    assert!(!same_line_trivia("; /* spanning\ncomment */"));
+}
+
+#[test]
+fn coincident_spans_and_incompatible_reports_stay_incomplete() {
+    let path = "/fixture.ts";
+    let source = "const arrow = () => 1; // trailing\n";
+    let analysis = Analysis::inspect(path, source).unwrap();
+    let report = json!({path:{"path":path,"statementMap":{"0":{
+        "start":{"line":1,"column":20},"end":{"line":1,"column":21}
+    }},"s":{"0":0}}});
+    for end in [json!(21), Value::Null] {
+        let mut duplicate = report.clone();
+        duplicate[path]["statementMap"]["1"] = json!({
+            "start":{"line":1,"column":20},"end":{"line":1,"column":end}
+        });
+        duplicate[path]["s"]["1"] = json!(1);
+        let result = attribute(&analysis, path, source, [&duplicate]);
+        assert_eq!(result["complete"], false);
+        assert_eq!(result["problems"], json!(["duplicate statement span"]));
+        assert_eq!(result["functions"][0]["coverage"], Value::Null);
+    }
+    let empty = json!({path:{"path":path,"statementMap":{},"s":{}}});
+    let result = attribute(&analysis, path, source, [&report, &empty]);
+    assert_eq!(result["complete"], false);
+    assert_eq!(
+        result["problems"],
+        json!(["incompatible statement mappings"])
+    );
+    assert_eq!(result["functions"][0]["coverage"], Value::Null);
+}
+
+#[test]
 fn unicode_positions() {
     assert_eq!(
         byte_position("a🎸b\nc", &json!({"line":1,"column":3}), false),
@@ -296,6 +374,43 @@ fn open_ends_are_not_missing_positions() {
     assert!(byte_position("a🎸b", &end, false).is_err());
     assert!(byte_position("a🎸b", &json!({"line":1}), true).is_err());
     assert!(byte_position("a🎸b", &json!({"line":2,"column":null}), true).is_err());
+}
+
+#[test]
+fn malformed_columns_are_not_missing_columns() {
+    let path = "/fixture.ts";
+    let source = "function f() { return 1; }";
+    let analysis = Analysis::inspect(path, source).unwrap();
+    for endpoint in ["start", "end"] {
+        for column in [
+            json!(-1),
+            json!(1.5),
+            json!("15"),
+            json!(true),
+            json!([]),
+            json!({}),
+        ] {
+            let mut report = json!({path:{"path":path,"statementMap":{"0":{
+                "start":{"line":1,"column":15},"end":{"line":1,"column":24}
+            }},"s":{"0":1}}});
+            report[path]["statementMap"]["0"][endpoint]["column"] = column;
+            let result = attribute(&analysis, path, source, [&report]);
+            assert_eq!(result["complete"], false);
+            assert_eq!(result["functions"][0]["crap"], Value::Null);
+            assert_eq!(
+                result["problems"],
+                json!(["invalid column: expected a non-negative integer"])
+            );
+        }
+    }
+    assert_eq!(
+        byte_position(source, &json!({"line":1}), false),
+        Err("missing column".into())
+    );
+    assert_eq!(
+        byte_position(source, &json!({"line":1,"column":null}), false),
+        Err("invalid column: expected a non-negative integer".into())
+    );
 }
 
 #[test]
