@@ -205,7 +205,12 @@ if (nativeMacos) {
   assert.equal(bytes.readUInt16LE(18), targetConfig.elfMachine, `expected ${targetConfig.cpu} ELF`);
 }
 
-const notices = [];
+const notices = [
+  'Windows launch argument and path handling is adapted from Rust 1.98.1, '
+  + 'library/std/src/sys/{args,process,path}/windows.rs. '
+  + 'Copyright The Rust Project Developers. Licensed MIT OR Apache-2.0. '
+  + 'The Rust copyright inventory and licence texts follow below.',
+];
 const dependencies = metadata.packages.filter(p => p.source).sort((a,b) => a.name.localeCompare(b.name));
 for (const dependency of dependencies) {
   const directory = dirname(dependency.manifest_path);

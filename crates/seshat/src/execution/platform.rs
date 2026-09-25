@@ -1,6 +1,14 @@
+#[cfg(unix)]
+use std::process::Child;
+#[cfg(windows)]
+#[path = "windows_spawn.rs"]
+mod windows_spawn;
+#[cfg(windows)]
+use windows_spawn::Child;
+
 use std::{
     io::{self, Write},
-    process::{Child, ChildStderr, ChildStdout, Command, ExitStatus},
+    process::{ChildStderr, ChildStdout, Command, ExitStatus},
     sync::{Arc, atomic::AtomicUsize},
     thread,
     time::{Duration, Instant},
@@ -306,22 +314,16 @@ mod windows {
     #[cfg(test)]
     use windows_sys::Win32::System::Threading::{OpenProcess, PROCESS_SYNCHRONIZE};
     use windows_sys::Win32::{
-        Foundation::{CloseHandle, ERROR_NO_MORE_FILES, FALSE, HANDLE, INVALID_HANDLE_VALUE, TRUE},
+        Foundation::{CloseHandle, FALSE, HANDLE, TRUE},
         System::{
             Console::{CTRL_BREAK_EVENT, CTRL_C_EVENT, SetConsoleCtrlHandler},
-            Diagnostics::ToolHelp::{
-                CreateToolhelp32Snapshot, TH32CS_SNAPTHREAD, THREADENTRY32, Thread32First,
-                Thread32Next,
-            },
             JobObjects::{
                 AssignProcessToJobObject, CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
                 JOBOBJECT_BASIC_ACCOUNTING_INFORMATION, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
                 JobObjectBasicAccountingInformation, JobObjectExtendedLimitInformation,
                 QueryInformationJobObject, SetInformationJobObject, TerminateJobObject,
             },
-            Threading::{
-                CREATE_SUSPENDED, OpenThread, ResumeThread, THREAD_SUSPEND_RESUME, TerminateProcess,
-            },
+            Threading::{ResumeThread, TerminateProcess},
         },
     };
 
@@ -331,7 +333,7 @@ mod windows {
     #[cfg(test)]
     #[derive(Clone, Copy, PartialEq, Eq)]
     pub(super) enum TestFailure {
-        Discovery,
+        PrimaryThread,
         ExtraThread,
         Assignment,
         PostAssignment,
@@ -341,7 +343,7 @@ mod windows {
     #[derive(Default)]
     struct TestSpawnState {
         failure: Option<TestFailure>,
-        wait_handle: HANDLE,
+        wait_handle: Option<OwnedHandle>,
         extra_thread: Option<OwnedHandle>,
     }
 
@@ -354,15 +356,24 @@ mod windows {
     static TEST_SPAWN_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
     #[cfg(test)]
-    fn test_record_spawn(pid: u32) {
+    fn test_record_spawn(pid: u32) -> Result<(), String> {
         TEST_SPAWN_STATE.with(|state| {
             let mut state = state.borrow_mut();
             if state.failure.is_some() {
-                // SAFETY: the child PID was returned by Command::spawn and the handle is retained
-                // until the injecting test waits for cleanup to finish.
-                state.wait_handle = unsafe { OpenProcess(PROCESS_SYNCHRONIZE, FALSE, pid) };
+                // SAFETY: the guard still owns this PID. Retain a separate wait handle
+                // so tests can verify cleanup after the Child-owned handle is closed.
+                let handle = unsafe { OpenProcess(PROCESS_SYNCHRONIZE, FALSE, pid) };
+                if handle.is_null() {
+                    return Err(format!(
+                        "retain test child handle: {}",
+                        io::Error::last_os_error()
+                    ));
+                }
+                // SAFETY: OpenProcess transferred this handle; TLS also closes it on panic.
+                state.wait_handle = Some(unsafe { OwnedHandle::from_raw_handle(handle) });
             }
-        });
+            Ok(())
+        })
     }
 
     #[cfg(test)]
@@ -384,11 +395,8 @@ mod windows {
     }
 
     #[cfg(test)]
-    pub(super) fn test_take_spawn_wait_handle() -> HANDLE {
-        TEST_SPAWN_STATE.with(|state| {
-            let mut state = state.borrow_mut();
-            std::mem::replace(&mut state.wait_handle, null_mut())
-        })
+    pub(super) fn test_take_spawn_wait_handle() -> OwnedHandle {
+        TEST_SPAWN_STATE.with(|state| state.borrow_mut().wait_handle.take().unwrap())
     }
 
     #[cfg(test)]
@@ -650,58 +658,9 @@ mod windows {
         }
     }
 
-    fn primary_thread_id(pid: u32) -> Result<u32, String> {
-        // SAFETY: thread snapshots are system-wide and require no target process handle.
-        let snapshot = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0) };
-        if snapshot == INVALID_HANDLE_VALUE {
-            return Err(format!(
-                "snapshot child threads: {}",
-                io::Error::last_os_error()
-            ));
-        }
-        let result = (|| {
-            let mut entry = THREADENTRY32 {
-                dwSize: size_of::<THREADENTRY32>() as u32,
-                ..Default::default()
-            };
-            // SAFETY: snapshot is valid and entry points to writable storage of the documented size.
-            if unsafe { Thread32First(snapshot, &mut entry) } == FALSE {
-                return Err(format!(
-                    "enumerate child threads: {}",
-                    io::Error::last_os_error()
-                ));
-            }
-            let mut matches = Vec::new();
-            loop {
-                if entry.th32OwnerProcessID == pid {
-                    matches.push(entry.th32ThreadID);
-                }
-                entry.dwSize = size_of::<THREADENTRY32>() as u32;
-                // SAFETY: snapshot and entry remain valid for the enumeration.
-                if unsafe { Thread32Next(snapshot, &mut entry) } == FALSE {
-                    let error = io::Error::last_os_error();
-                    if error.raw_os_error() != Some(ERROR_NO_MORE_FILES as i32) {
-                        return Err(format!("continue child thread enumeration: {error}"));
-                    }
-                    break;
-                }
-            }
-            match matches.as_slice() {
-                [thread_id] => Ok(*thread_id),
-                [] => Err("suspended child has no discoverable primary thread".into()),
-                _ => Err("suspended child has multiple discoverable threads".into()),
-            }
-        })();
-        // SAFETY: snapshot is no longer used after the enumeration closure.
-        unsafe { CloseHandle(snapshot) };
-        result
-    }
-
     pub(super) fn spawn(command: &mut Command) -> Result<(Child, Supervisor), String> {
         let job = Job::create()?;
-        use std::os::windows::process::CommandExt;
-        command.creation_flags(CREATE_SUSPENDED);
-        let child = match command.spawn() {
+        let (child, thread) = match windows_spawn::spawn_suspended(command) {
             Ok(child) => child,
             Err(error) => return Err(format!("spawn: {error}")),
         };
@@ -711,16 +670,17 @@ mod windows {
             assigned: false,
             cleanup_deadline: None,
         };
-        let pid = guard.child.as_ref().unwrap().id();
         #[cfg(test)]
-        test_record_spawn(pid);
+        if let Err(error) = test_record_spawn(guard.child.as_ref().unwrap().id()) {
+            return Err(guard.fail(error));
+        }
         #[cfg(test)]
-        if test_take_failure(TestFailure::Discovery) {
-            return Err(guard.fail("injected child-thread discovery failure".into()));
+        if test_take_failure(TestFailure::PrimaryThread) {
+            return Err(guard.fail("injected primary-thread acquisition failure".into()));
         }
         #[cfg(test)]
         if test_take_failure(TestFailure::ExtraThread) {
-            use windows_sys::Win32::System::Threading::CreateRemoteThread;
+            use windows_sys::Win32::System::Threading::{CREATE_SUSPENDED, CreateRemoteThread};
 
             // Reproduce an extra thread without running injected or project code. Windows
             // defers validation of the start address until execution; this thread has no
@@ -748,18 +708,6 @@ mod windows {
             let extra_thread = unsafe { OwnedHandle::from_raw_handle(extra_thread) };
             TEST_SPAWN_STATE.with(|state| state.borrow_mut().extra_thread = Some(extra_thread));
         }
-        let thread_id = match primary_thread_id(pid) {
-            Ok(thread_id) => thread_id,
-            Err(error) => return Err(guard.fail(error)),
-        };
-        // SAFETY: the thread ID came from a snapshot entry owned by this suspended child.
-        let thread = unsafe { OpenThread(THREAD_SUSPEND_RESUME, FALSE, thread_id) };
-        if thread.is_null() {
-            return Err(guard.fail(format!(
-                "open suspended child thread: {}",
-                io::Error::last_os_error()
-            )));
-        }
         #[cfg(test)]
         let assign = if test_take_failure(TestFailure::Assignment) {
             FALSE
@@ -784,22 +732,46 @@ mod windows {
         };
         if assign == FALSE {
             let error = io::Error::last_os_error();
-            // SAFETY: thread is an owned handle opened above.
-            unsafe { CloseHandle(thread) };
             return Err(guard.fail(format!("assign child to Windows job: {error}")));
         }
         guard.assigned = true;
         #[cfg(test)]
         if test_take_failure(TestFailure::PostAssignment) {
-            // SAFETY: thread is an owned handle opened above.
-            unsafe { CloseHandle(thread) };
             return Err(guard.fail("injected post-assignment failure".into()));
         }
+        #[cfg(test)]
+        if TEST_SPAWN_STATE.with(|state| state.borrow().extra_thread.is_some()) {
+            use windows_sys::Win32::System::JobObjects::IsProcessInJob;
+            let marker = command
+                .get_envs()
+                .find_map(|(key, value)| (key == "SESHAT_PROJECT_MARKER").then_some(value))
+                .flatten()
+                .unwrap();
+            assert!(
+                !std::path::Path::new(marker).try_exists().unwrap(),
+                "project ran before primary resume"
+            );
+            let mut assigned = FALSE;
+            // SAFETY: the guard owns both handles and assigned is writable.
+            assert_ne!(
+                unsafe {
+                    IsProcessInJob(
+                        guard.child.as_ref().unwrap().as_raw_handle(),
+                        guard.job.as_ref().unwrap().0,
+                        &mut assigned,
+                    )
+                },
+                FALSE
+            );
+            assert_eq!(
+                assigned, TRUE,
+                "primary resume must follow assignment to this job"
+            );
+        }
         // SAFETY: thread has THREAD_SUSPEND_RESUME and remains suspended until this call.
-        let previous = unsafe { ResumeThread(thread) };
+        let previous = unsafe { ResumeThread(thread.as_raw_handle()) };
         let resume_error = io::Error::last_os_error();
-        // SAFETY: thread is no longer needed after ResumeThread returns.
-        unsafe { CloseHandle(thread) };
+        drop(thread);
         if previous != 1 {
             return Err(guard.fail(if previous == u32::MAX {
                 format!("resume suspended child: {resume_error}")
@@ -883,35 +855,32 @@ mod windows {
         #[test]
         fn pre_resume_failure_terminates_suspended_child() {
             let _lock = test_spawn_lock().lock().unwrap();
-            use std::os::windows::process::CommandExt;
-
             let mut command = Command::new("node.exe");
-            command
-                .args(["-e", "setInterval(() => {}, 1000)"])
-                .creation_flags(CREATE_SUSPENDED);
-            let child = command.spawn().unwrap();
+            command.args(["-e", "setInterval(() => {}, 1000)"]);
+            let job = Job::create().unwrap();
+            let (child, _thread) = windows_spawn::spawn_suspended(&command).unwrap();
             let pid = child.id();
+            let guard = SpawnGuard {
+                child: Some(child),
+                job: Some(job),
+                assigned: false,
+                cleanup_deadline: None,
+            };
             // SAFETY: the handle is opened only to retain a waitable reference while the guard
             // closes the Child-owned process handle during fail-closed cleanup.
             let wait_handle = unsafe { OpenProcess(PROCESS_SYNCHRONIZE, FALSE, pid) };
             assert!(!wait_handle.is_null());
-            let guard = SpawnGuard {
-                child: Some(child),
-                job: Some(Job::create().unwrap()),
-                assigned: false,
-                cleanup_deadline: None,
-            };
+            // SAFETY: OpenProcess transferred this handle; close it even if an assertion fails.
+            let wait_handle = unsafe { OwnedHandle::from_raw_handle(wait_handle) };
             assert_eq!(
                 guard.fail("forced pre-resume failure".into()),
                 "forced pre-resume failure"
             );
             // SAFETY: wait_handle is a live process handle with synchronize access.
             assert_eq!(
-                unsafe { WaitForSingleObject(wait_handle, 3_000) },
+                unsafe { WaitForSingleObject(wait_handle.as_raw_handle(), 3_000) },
                 WAIT_OBJECT_0
             );
-            // SAFETY: wait_handle is closed exactly once.
-            unsafe { CloseHandle(wait_handle) };
         }
     }
 }
@@ -926,7 +895,7 @@ mod windows_tests {
     use std::{
         fs,
         io::Read,
-        os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle},
+        os::windows::io::AsRawHandle,
         path::PathBuf,
         thread,
         time::{Duration, SystemTime, UNIX_EPOCH},
@@ -990,15 +959,10 @@ setInterval(() => {}, 1000);
         command
             .args(["-e", script])
             .env("SESHAT_DESCENDANT_PID", &pid_file)
-            .current_dir(&directory)
-            .stdout(std::process::Stdio::piped())
-            .stderr(std::process::Stdio::piped());
+            .current_dir(&directory);
         let mut sentinel_process = {
             let mut command = Command::new("node.exe");
-            command
-                .args(["-e", "setInterval(() => {}, 1000)"])
-                .stdout(std::process::Stdio::null())
-                .stderr(std::process::Stdio::null());
+            command.args(["-e", "setInterval(() => {}, 1000)"]);
             ManagedChild::spawn(&mut command).unwrap()
         };
         let descendant = {
@@ -1041,9 +1005,7 @@ process.exit(0);
         command
             .args(["-e", script])
             .env("SESHAT_DESCENDANT_PID", &pid_file)
-            .current_dir(&directory)
-            .stdout(std::process::Stdio::piped())
-            .stderr(std::process::Stdio::piped());
+            .current_dir(&directory);
         let mut child = ManagedChild::spawn(&mut command).unwrap();
         let descendant = wait_for_pid(&pid_file);
         let mut leader_exited = false;
@@ -1078,8 +1040,7 @@ process.exit(0);
             ])
             .arg("space 🎸.txt")
             .env("SESHAT_ARG", "value 🎸")
-            .stdout(std::process::Stdio::piped())
-            .stderr(std::process::Stdio::piped());
+;
         let mut child = ManagedChild::spawn(&mut command).unwrap();
         let mut stdout = child.take_stdout().unwrap();
         let mut stderr = child.take_stderr().unwrap();
@@ -1093,6 +1054,161 @@ process.exit(0);
         assert_eq!(String::from_utf8(errors).unwrap(), "stderr 🎸");
     }
 
+    fn captured(command: &mut Command) -> (ExitStatus, Vec<u8>, Vec<u8>) {
+        let mut child = ManagedChild::spawn(command).unwrap();
+        let status = child.wait().unwrap();
+        child.stop_tree().unwrap();
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        child
+            .take_stdout()
+            .unwrap()
+            .read_to_end(&mut stdout)
+            .unwrap();
+        child
+            .take_stderr()
+            .unwrap()
+            .read_to_end(&mut stderr)
+            .unwrap();
+        (status, stdout, stderr)
+    }
+
+    fn assert_matches_std(command: &mut Command) {
+        let expected = command.output().unwrap();
+        let (status, stdout, stderr) = captured(command);
+        assert_eq!(status, expected.status);
+        assert_eq!(stdout, expected.stdout);
+        assert_eq!(stderr, expected.stderr);
+    }
+
+    #[test]
+    fn native_launch_preserves_arguments_environment_cwd_and_stdio() {
+        let _lock = test_spawn_lock().lock().unwrap();
+        let directory = temporary_directory("launch space 🎸");
+        let script = r#"
+const fs = require('node:fs');
+const inherited = Object.entries(process.env).find(([key]) => key.toUpperCase() === 'SYSTEMROOT');
+process.stdout.write(JSON.stringify({args: process.argv.slice(1), cwd: process.cwd(), inherited,
+  value: process.env.SESHAT_CASE, removed: process.env.COMSPEC ?? null, stdin: fs.readFileSync(0, 'utf8')}));
+process.stderr.write('stderr 🎸');
+process.exit(259);
+"#;
+        let arguments = [
+            "",
+            "space tab\t🎸",
+            "embedded\"quote",
+            "slashes\\\"quote",
+            "ends in \\",
+            "plain\\",
+        ];
+        let mut command = Command::new("node");
+        command
+            .args(["-e", script])
+            .args(arguments)
+            .current_dir(&directory)
+            .env("SESHAT_CASE", "first")
+            .env("seshat_case", "last 🎸")
+            .env_remove("cOmSpEc");
+        assert_matches_std(&mut command);
+        let (status, stdout, stderr) = captured(&mut command);
+        assert_eq!(
+            status.code(),
+            Some(259),
+            "exit 259 must not be mistaken for STILL_ACTIVE"
+        );
+        let output: serde_json::Value = serde_json::from_slice(&stdout).unwrap();
+        assert_eq!(output["args"], serde_json::json!(arguments));
+        assert_eq!(output["value"], "last 🎸");
+        assert_eq!(output["removed"], serde_json::Value::Null);
+        assert_eq!(output["stdin"], "");
+        assert!(output["inherited"].is_array());
+        assert_eq!(stderr, "stderr 🎸".as_bytes());
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn native_launch_preserves_executable_lookup_and_batch_arguments() {
+        let _lock = test_spawn_lock().lock().unwrap();
+        let directory = temporary_directory("lookup space 🎸");
+        let node = Command::new("node")
+            .args(["-p", "process.execPath"])
+            .output()
+            .unwrap();
+        assert!(node.status.success());
+        let node = PathBuf::from(String::from_utf8(node.stdout).unwrap().trim());
+        let copy = directory.join("node.exe");
+        fs::copy(&node, &copy).unwrap();
+        for program in [
+            std::ffi::OsString::from("node"),
+            copy.as_os_str().to_owned(),
+            copy.with_extension("").into_os_string(),
+        ] {
+            let mut command = Command::new(program);
+            command
+                .args(["-p", "process.execPath"])
+                .env("pAtH", &directory);
+            assert_matches_std(&mut command);
+            let (_, stdout, _) = captured(&mut command);
+            assert_eq!(
+                PathBuf::from(String::from_utf8(stdout).unwrap().trim()),
+                copy
+            );
+        }
+        let script = directory.join("argv.cjs");
+        fs::write(
+            &script,
+            "process.stdout.write(JSON.stringify(process.argv.slice(2)))",
+        )
+        .unwrap();
+        for extension in ["cmd", "bat"] {
+            let batch = directory.join(format!("runner.{extension}"));
+            fs::write(&batch, "@\"%~dp0node.exe\" \"%~dp0argv.cjs\" %*\r\n").unwrap();
+            for program in [
+                batch.clone(),
+                PathBuf::from(format!("{}.", batch.display())),
+            ] {
+                let mut command = Command::new(program);
+                command.args([
+                    "",
+                    "space 🎸",
+                    "%PATH%",
+                    "!PATH!",
+                    "a&b",
+                    "a|b",
+                    "a^b",
+                    "trailing\\",
+                ]);
+                assert_matches_std(&mut command);
+                assert!(captured(&mut command).0.success());
+            }
+            for argument in ["line\nfeed", "carriage\rreturn"] {
+                let mut command = Command::new(&batch);
+                command.arg(argument);
+                assert!(command.output().is_err());
+                assert!(ManagedChild::spawn(&mut command).is_err());
+            }
+        }
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn native_launch_rejects_nuls_before_process_creation() {
+        let _lock = test_spawn_lock().lock().unwrap();
+        let mut commands = [
+            Command::new("node\0.exe"),
+            Command::new("node"),
+            Command::new("node"),
+            Command::new("node"),
+        ];
+        commands[1].arg("bad\0argument");
+        commands[2].env("SESHAT_VALUE", "bad\0value");
+        commands[3].current_dir("bad\0directory");
+        for command in &mut commands {
+            assert!(command.output().is_err());
+            assert!(ManagedChild::spawn(command).is_err());
+        }
+    }
+
     #[test]
     fn invalid_executable_does_not_leave_a_suspended_process() {
         let _lock = test_spawn_lock().lock().unwrap();
@@ -1103,9 +1219,6 @@ process.exit(0);
     fn assert_last_spawn_exited() {
         // The test hook retains this handle before injected cleanup closes the Child-owned handle.
         let process = test_take_spawn_wait_handle();
-        assert!(!process.is_null());
-        // SAFETY: the hook transfers its owned OpenProcess handle to this test.
-        let process = unsafe { OwnedHandle::from_raw_handle(process) };
         // SAFETY: process remains a live handle for the wait, including on assertion failure.
         assert_eq!(
             unsafe { WaitForSingleObject(process.as_raw_handle(), 3_000) },
@@ -1114,7 +1227,7 @@ process.exit(0);
     }
 
     #[test]
-    fn extra_suspended_thread_reproduces_discovery_failure_without_running_child() {
+    fn extra_suspended_thread_does_not_prevent_owned_child_execution() {
         let _lock = test_spawn_lock().lock().unwrap();
         let directory = temporary_directory("extra-suspended-thread");
         let marker = directory.join("project-ran.txt");
@@ -1127,24 +1240,19 @@ process.exit(0);
                     "require('node:fs').writeFileSync(process.env.SESHAT_PROJECT_MARKER, 'ran')",
                 ])
                 .env("SESHAT_PROJECT_MARKER", &marker);
-            let result = ManagedChild::spawn(&mut command);
+            let mut child = ManagedChild::spawn(&mut command).unwrap();
+            assert!(child.wait().unwrap().success());
+            child.stop_tree().unwrap();
             // A signaled process handle proves that all its threads have terminated.
             assert_last_spawn_exited();
-            let error = match result {
-                Ok(_) => panic!("expected multiple-thread discovery failure"),
-                Err(error) => error,
-            };
-            assert_eq!(error, "suspended child has multiple discoverable threads");
             let extra_thread = test_take_extra_thread();
             // SAFETY: the injected thread handle is retained until after this wait.
             assert_eq!(
                 unsafe { WaitForSingleObject(extra_thread.as_raw_handle(), 0) },
                 WAIT_OBJECT_0
             );
-            assert!(
-                !marker.try_exists().unwrap(),
-                "project code ran before cleanup"
-            );
+            assert_eq!(fs::read_to_string(&marker).unwrap(), "ran");
+            fs::remove_file(&marker).unwrap();
         }
         fs::remove_dir_all(directory).unwrap();
     }
@@ -1153,7 +1261,7 @@ process.exit(0);
     fn injected_spawn_failures_reap_children_before_and_after_assignment() {
         let _lock = test_spawn_lock().lock().unwrap();
         for (failure, message) in [
-            (TestFailure::Discovery, "child-thread discovery"),
+            (TestFailure::PrimaryThread, "primary-thread acquisition"),
             (TestFailure::Assignment, "assign child"),
             (TestFailure::PostAssignment, "post-assignment"),
         ] {
@@ -1186,9 +1294,7 @@ setInterval(() => {}, 1000);
             command
                 .args(["-e", script])
                 .env("SESHAT_DESCENDANT_PID", &pid_file)
-                .current_dir(&directory)
-                .stdout(std::process::Stdio::piped())
-                .stderr(std::process::Stdio::piped());
+                .current_dir(&directory);
             let mut child = ManagedChild::spawn(&mut command).unwrap();
             let descendant = wait_for_pid(&pid_file);
             child.stop_tree().unwrap();
@@ -1338,7 +1444,14 @@ pub(super) struct ManagedChild {
 }
 
 impl ManagedChild {
+    // Runner launches always capture both outputs and receive EOF on stdin.
+    // Only ordinary arguments, cwd and inherited environment edits are inputs.
     pub(super) fn spawn(command: &mut Command) -> Result<Self, String> {
+        #[cfg(unix)]
+        command
+            .stdin(std::process::Stdio::null())
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped());
         let (child, supervisor) = native::spawn(command)?;
         Ok(Self {
             supervisor,

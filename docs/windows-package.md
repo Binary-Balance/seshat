@@ -94,3 +94,47 @@ node benchmarks/proofs/windows-package-summary.mjs --self-check
 
 The native build and install proof require the Windows Server 2022 runner and
 are dispatched by `.github/workflows/windows-package.yml`.
+
+## Primary thread ownership
+
+Windows runner launches use `CreateProcessW(CREATE_SUSPENDED)` and retain its
+returned primary-thread handle. The runner assigns the child to its private
+Job object before resuming that thread. The pinned Rust 1.98.1 toolchain does not
+expose this handle through stable `std::process` APIs, so the native launch code
+is limited to the runner's private command contract. It never selects a thread by enumeration,
+creation time or a guessed identifier. Partial launch failures terminate and
+reap the owned child within the existing cleanup deadline.
+
+This replaces the assumption that a suspended child has exactly one thread.
+A controlled reproduction at
+[`e2eeca1`](https://github.com/Binary-Balance/seshat/commit/e2eeca1)
+created one additional suspended thread in each of four owned children.
+[Native Windows run 36118656421](https://github.com/Binary-Balance/seshat/actions/runs/36118656421)
+confirmed that the old discovery failed with
+`suspended child has multiple discoverable threads`. Each child and added
+thread terminated, and none wrote its project marker. This confirms the
+multiple-thread failure, not its prevalence with any particular security product.
+
+The regression uses the same controlled injection. It checks the missing marker
+and membership in the intended Job before primary resume, then successful marker
+execution and termination of both process and injected thread. The injected
+thread has no entry point and is never resumed. Run it on native Windows with:
+
+```powershell
+cargo test --locked --manifest-path crates/seshat/Cargo.toml extra_suspended_thread_does_not_prevent_owned_child_execution
+```
+
+The private launcher accepts the runner's existing ordinary argument arrays,
+working directory, and edits to the inherited environment. Stdin is always
+`NUL`; stdout and stderr are separate captured pipes, retaining the job's output
+limits and drain deadline. An explicit handle list limits inheritance to those
+three streams. General `Command` settings such as `env_clear`, `raw_arg`, custom
+stdio and creation flags are outside this private interface.
+
+Executable lookup, case-insensitive environment edits, argument escaping and
+explicit `.cmd`/`.bat` handling follow the pinned Rust 1.98.1 implementation.
+Native differential tests compare the launcher with `std::process::Command`,
+including Unicode, quotes, trailing backslashes, child `PATH`, environment
+removal, stdin EOF, both output streams and exit code 259. Batch arguments keep
+Rust's shell escaping and rejection of CR/LF. The copied-source attribution and
+upstream licence terms accompany the package's existing Rust runtime notices.
