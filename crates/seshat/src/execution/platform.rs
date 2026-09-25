@@ -1,14 +1,18 @@
 #[cfg(unix)]
-use std::process::Child;
+use std::process::{Child, ChildStderr, ChildStdout};
 #[cfg(windows)]
 #[path = "windows_spawn.rs"]
 mod windows_spawn;
+#[cfg(windows)]
+use std::fs::File as ChildStdout;
+#[cfg(windows)]
+use std::fs::File as ChildStderr;
 #[cfg(windows)]
 use windows_spawn::Child;
 
 use std::{
     io::{self, Write},
-    process::{ChildStderr, ChildStdout, Command, ExitStatus},
+    process::{Command, ExitStatus},
     sync::{Arc, atomic::AtomicUsize},
     thread,
     time::{Duration, Instant},

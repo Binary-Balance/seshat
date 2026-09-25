@@ -12,6 +12,7 @@
 use std::{
     cmp::Ordering,
     ffi::{OsStr, OsString},
+    fs::File,
     io,
     mem::size_of,
     os::windows::{
@@ -20,7 +21,7 @@ use std::{
         process::ExitStatusExt,
     },
     path::{Path, PathBuf},
-    process::{ChildStderr, ChildStdout, Command, ExitStatus},
+    process::{Command, ExitStatus},
     ptr::{null, null_mut},
 };
 use windows_sys::Win32::{
@@ -68,8 +69,8 @@ pub(super) struct Child {
     process: OwnedHandle,
     #[cfg(test)]
     pid: u32,
-    pub(super) stdout: Option<ChildStdout>,
-    pub(super) stderr: Option<ChildStderr>,
+    pub(super) stdout: Option<File>,
+    pub(super) stderr: Option<File>,
 }
 
 impl AsRawHandle for Child {
@@ -565,15 +566,16 @@ pub(super) fn spawn_suspended(command: &Command) -> io::Result<(Child, OwnedHand
     })?;
     // No fallible operations may occur between creation and transfer to SpawnGuard.
     // SAFETY: CreateProcessW returned distinct, exclusively owned process/thread handles;
-    // the pipe readers were created synchronously, as ChildStdout/Stderr require.
+    // File reads these synchronous CreatePipe handles. ChildStdout/Stderr instead
+    // require asynchronous handles and would use ReadFileEx/SleepEx on these pipes.
     Ok(unsafe {
         (
             Child {
                 process: OwnedHandle::from_raw_handle(info.hProcess),
                 #[cfg(test)]
                 pid: info.dwProcessId,
-                stdout: Some(ChildStdout::from(stdout)),
-                stderr: Some(ChildStderr::from(stderr)),
+                stdout: Some(File::from(stdout)),
+                stderr: Some(File::from(stderr)),
             },
             OwnedHandle::from_raw_handle(info.hThread),
         )
