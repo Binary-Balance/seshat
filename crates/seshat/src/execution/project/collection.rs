@@ -8,7 +8,7 @@ use crate::{
     },
 };
 use std::{
-    io::{Read, Write},
+    io::Write,
     process::Command,
     sync::{
         Mutex,
@@ -28,8 +28,6 @@ use std::os::windows::io::AsRawHandle;
 use windows_sys::Win32::Storage::FileSystem::{
     BY_HANDLE_FILE_INFORMATION, GetFileInformationByHandle,
 };
-
-const REPORT_LIMIT: u64 = 32 * 1024 * 1024;
 
 struct Progress {
     enabled: bool,
@@ -184,16 +182,7 @@ fn regular_path(root: &Path, path: &Path, missing_ok: bool) -> Result<(), String
 
 fn read_report(root: &Path, path: &Path) -> Result<Value, String> {
     regular_path(root, path, false)?;
-    let mut bytes = Vec::new();
-    fs::File::open(path)
-        .map_err(|e| e.to_string())?
-        .take(REPORT_LIMIT + 1)
-        .read_to_end(&mut bytes)
-        .map_err(|e| e.to_string())?;
-    if bytes.len() as u64 > REPORT_LIMIT {
-        return Err("report exceeds the 32 MiB proof limit".into());
-    }
-    serde_json::from_slice(&bytes).map_err(|e| format!("invalid report JSON: {e}"))
+    crate::execution::read_json_report(path)
 }
 
 fn validate_coverage_report(root: &Path, path: &Path) -> Result<Value, String> {

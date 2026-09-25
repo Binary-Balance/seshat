@@ -9,7 +9,7 @@ pub use project::{AssessmentMode, CapturedProject, Thresholds};
 use serde_json::{Value, json};
 use std::{
     fs,
-    io::Write,
+    io::{Read, Write},
     path::{Path, PathBuf},
     process::Command,
     sync::{
@@ -18,6 +18,53 @@ use std::{
     },
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
+
+#[cfg(unix)]
+use std::os::unix::fs::DirBuilderExt;
+
+fn epoch_nanos(now: SystemTime) -> Result<u128, String> {
+    now.duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_nanos())
+        .map_err(|error| format!("system clock precedes Unix epoch: {error}"))
+}
+
+fn validate_command(args: &[String], label: &str) -> Result<(), String> {
+    if args.first().is_none_or(|arg| arg.trim().is_empty())
+        || args.iter().any(|arg| arg.contains('\0'))
+    {
+        return Err(format!(
+            "{label} must be a non-empty argument array without NUL characters"
+        ));
+    }
+    Ok(())
+}
+
+fn proof_command(config: &Value, key: &str) -> Result<Vec<String>, String> {
+    let args: Vec<String> = serde_json::from_value(config[key].clone())
+        .map_err(|_| format!("{key} must be an array of strings"))?;
+    validate_command(&args, key)?;
+    Ok(args)
+}
+
+fn read_json_report(path: &Path) -> Result<Value, String> {
+    const REPORT_LIMIT: u64 = 32 * 1024 * 1024;
+    if !fs::symlink_metadata(path)
+        .map_err(|e| e.to_string())?
+        .is_file()
+    {
+        return Err("report must be a regular file".into());
+    }
+    let mut bytes = Vec::new();
+    fs::File::open(path)
+        .map_err(|e| e.to_string())?
+        .take(REPORT_LIMIT + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|e| e.to_string())?;
+    if bytes.len() as u64 > REPORT_LIMIT {
+        return Err("report exceeds the 32 MiB proof limit".into());
+    }
+    serde_json::from_slice(&bytes).map_err(|e| format!("invalid report JSON: {e}"))
+}
 
 // ponytail: one CLI run per process; pass cancellation explicitly if this becomes a library.
 static CANCEL_SIGNAL: OnceLock<Arc<AtomicUsize>> = OnceLock::new();
@@ -211,6 +258,48 @@ impl CommandEvidence {
 impl Session {
     pub fn capture(config: Value) -> Result<Self, String> {
         check_cancellation()?;
+        if !matches!(
+            config["runner"].as_str(),
+            Some("node" | "observed" | "jest" | "vitest")
+        ) {
+            return Err("runner must be node, observed, jest or vitest".into());
+        }
+        for key in ["test", "build", "typecheck"] {
+            if key == "test" || config.get(key).is_some() {
+                proof_command(&config, key)?;
+            }
+        }
+        if let Some(timeout) = config.get("timeoutMs") {
+            if timeout.as_u64().is_none_or(|value| value == 0) {
+                return Err("timeoutMs must be a positive integer".into());
+            }
+        }
+        if let Some(limit) = config.get("limit") {
+            if limit
+                .as_u64()
+                .and_then(|value| usize::try_from(value).ok())
+                .is_none()
+            {
+                return Err("limit must be a non-negative integer that fits this platform".into());
+            }
+        }
+        if config.get("scenario").is_some_and(|value| {
+            value
+                .as_str()
+                .is_none_or(|scenario| scenario.contains('\0'))
+        }) {
+            return Err("scenario must be a string without NUL characters".into());
+        }
+        for key in ["template", "scratch"] {
+            if config[key]
+                .as_str()
+                .is_none_or(|path| path.is_empty() || path.contains('\0'))
+            {
+                return Err(format!(
+                    "{key} must be a non-empty path without NUL characters"
+                ));
+            }
+        }
         let template = Path::new(config["template"].as_str().ok_or("missing template")?);
         let parent = Path::new(config["scratch"].as_str().ok_or("missing scratch")?);
         let source_file = match config.get("source") {
@@ -221,12 +310,16 @@ impl Session {
                 _ => return Err("proof source must be subject.ts or subject.tsx".into()),
             },
         };
-        let stamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_nanos();
+        let stamp = epoch_nanos(SystemTime::now())?;
         let root = parent.join(format!("session-{}-{stamp}", std::process::id()));
-        fs::create_dir(&root).map_err(|e| e.to_string())?;
+        let builder = fs::DirBuilder::new();
+        #[cfg(unix)]
+        let builder = {
+            let mut builder = builder;
+            builder.mode(0o700);
+            builder
+        };
+        builder.create(&root).map_err(|e| e.to_string())?;
         let mut session = Self {
             source_path: root.join(source_file),
             root,
@@ -260,15 +353,11 @@ impl Session {
                 details: json!({"skipped":true,"ms":0}),
             });
         }
-        let args = self.config[key].as_array().ok_or("missing command")?;
-        let args: Vec<_> = args
+        let root = self.root.to_str().unwrap();
+        let args: Vec<_> = proof_command(&self.config, key)?
             .iter()
-            .map(|v| {
-                v.as_str()
-                    .ok_or("command arguments must be strings")
-                    .map(|s| s.replace("@ROOT@", self.root.to_str().unwrap()))
-            })
-            .collect::<Result<_, _>>()?;
+            .map(|arg| arg.replace("@ROOT@", root))
+            .collect();
         let (program, args) = args.split_first().ok_or("empty command")?;
         let receipt = self.root.join("receipt.json");
         if receipt.exists() {
@@ -278,6 +367,8 @@ impl Session {
         command
             .args(args)
             .current_dir(&self.root)
+            .env_remove("NODE_OPTIONS")
+            .env_remove("NODE_PATH")
             .env(
                 "SESHAT_MUTANT_ID",
                 id.map(|n| n.to_string()).unwrap_or_else(|| "-1".into()),
@@ -289,27 +380,19 @@ impl Session {
             );
         if key == "test" && self.config["runner"] == "node" {
             let source = fs::read_to_string(&self.source_path).map_err(|e| e.to_string())?;
-            let id = format!(
-                "{}-{}",
-                std::process::id(),
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_nanos()
-            );
+            let id = format!("{}-{}", std::process::id(), epoch_nanos(SystemTime::now())?);
             let sources = [(self.source_path.as_path(), source.as_str())];
             observe_node_loads(&mut command, &sources, &receipt, &id)?;
         }
         let timeout = Duration::from_millis(self.config["timeoutMs"].as_u64().unwrap_or(10000));
-        // Keep the proof command's environment contract; job::run owns only process execution.
         let mut evidence = job::run(&mut command, timeout)?;
-        let report = if evidence["cancelled"] != true && receipt.exists() {
-            let raw = fs::read_to_string(&receipt).map_err(|e| e.to_string())?;
-            serde_json::from_str::<Value>(&raw).ok()
-        } else {
-            None
-        };
-        evidence["report"] = json!(report);
+        evidence["report"] = Value::Null;
+        if evidence["cancelled"] != true && (key == "test" || receipt.exists()) {
+            match read_json_report(&receipt) {
+                Ok(report) => evidence["report"] = report,
+                Err(error) => evidence["evidenceError"] = json!(error),
+            }
+        }
         let state = if evidence["cancelled"] == true {
             TestState::Cancelled
         } else if key != "test" {
@@ -317,6 +400,7 @@ impl Session {
                 && evidence["timedOut"] != true
                 && evidence["overflow"] != true
                 && evidence["pipeError"].is_null()
+                && evidence["evidenceError"].is_null()
             {
                 TestState::Passed
             } else {
@@ -332,6 +416,9 @@ impl Session {
     }
 
     pub fn execute(self, strategy: &str) -> Result<Value, String> {
+        if !matches!(strategy, "switch" | "replace") {
+            return Err("unknown execution strategy".into());
+        }
         let analysis = Analysis::inspect(self.source_path.to_str().unwrap(), &self.source)?;
         let started = Instant::now();
         let typecheck = if self.config.get("typecheck").is_some() {
@@ -376,8 +463,6 @@ impl Session {
                 );
             }
             prepared_baseline = Some(baseline.into_json());
-        } else if strategy != "replace" {
-            return Err("unknown execution strategy".into());
         }
         let mut executions = Vec::new();
         let mut evidence = Vec::new();
@@ -471,7 +556,11 @@ fn classify(runner: &str, evidence: &Value) -> TestState {
 impl Drop for Session {
     fn drop(&mut self) {
         if let Err(e) = fs::remove_dir_all(&self.root) {
-            eprintln!("proof cleanup failed for {}: {e}", self.root.display());
+            let _ = writeln!(
+                std::io::stderr().lock(),
+                "proof cleanup failed for {}: {e}",
+                self.root.display()
+            );
         }
     }
 }
@@ -537,4 +626,14 @@ fn module_file_urls_encode_paths_and_are_absolute() {
     assert!(url.contains("input%20path%20%F0%9F%8E%B8"));
     assert!(url.contains("node%23reporter.mjs"));
     assert_eq!(module_path(&target).unwrap(), target.to_str().unwrap());
+}
+
+#[test]
+fn proof_clock_before_epoch_is_a_controlled_error() {
+    assert_eq!(epoch_nanos(UNIX_EPOCH).unwrap(), 0);
+    assert!(
+        epoch_nanos(UNIX_EPOCH - Duration::from_secs(1))
+            .unwrap_err()
+            .contains("clock")
+    );
 }

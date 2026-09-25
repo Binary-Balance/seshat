@@ -1,3 +1,3 @@
-fn main() {
-    seshat::proof_main();
+fn main() -> std::process::ExitCode {
+    seshat::proof_main()
 }

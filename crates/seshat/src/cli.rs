@@ -1,5 +1,6 @@
 // Packaging and detailed live progress are separate from the CLI entry point.
 use crate::execution::{self, AssessmentMode, CapturedProject, Thresholds};
+use crate::write_output;
 use serde_json::{Value, json};
 use std::{
     collections::BTreeSet,
@@ -514,16 +515,6 @@ fn readable(report: &Value) -> String {
     output
 }
 
-fn write_output(output: &str, status: u8) -> ExitCode {
-    match io::stdout().lock().write_all(output.as_bytes()) {
-        Ok(()) => status.into(),
-        Err(error) => {
-            let _ = writeln!(io::stderr().lock(), "seshat: write report: {error}");
-            2.into()
-        }
-    }
-}
-
 pub fn main() -> ExitCode {
     let started = Instant::now();
     let raw: Vec<_> = env::args_os().skip(1).collect();
@@ -539,10 +530,7 @@ pub fn main() -> ExitCode {
     let (value, status, as_json) = match action {
         Ok(Action::Help) => return write_output(HELP, 0),
         Ok(Action::Version) => {
-            return write_output(
-                &format!("seshat {}\n", env!("CARGO_PKG_VERSION")),
-                0,
-            );
+            return write_output(&format!("seshat {}\n", env!("CARGO_PKG_VERSION")), 0);
         }
         Err(error) => {
             let (value, status) = report(

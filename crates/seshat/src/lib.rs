@@ -6,7 +6,11 @@ mod coverage;
 mod execution;
 pub use cli::main as cli_main;
 use serde_json::{Value, json};
-use std::{env, fs};
+use std::{
+    env, fs,
+    io::{self, Write},
+    process::ExitCode,
+};
 
 fn run(args: &[String]) -> Result<Value, String> {
     let mode = args
@@ -30,6 +34,9 @@ fn run(args: &[String]) -> Result<Value, String> {
         };
     }
     if mode == "execute" {
+        if args.len() != 3 {
+            return Err("expected execute <manifest> <replace|switch>".into());
+        }
         execution::install_cancellation()?;
         let config = serde_json::from_str(
             &fs::read_to_string(args.get(1).ok_or("manifest missing")?)
@@ -111,10 +118,26 @@ fn finish(mut value: Value) -> (Value, u8) {
     (value, status)
 }
 
-pub fn proof_main() {
-    let value = run(&env::args().skip(1).collect::<Vec<_>>())
+pub fn proof_main() -> ExitCode {
+    let value = env::args_os()
+        .skip(1)
+        .map(|arg| {
+            arg.into_string()
+                .map_err(|_| "arguments must be UTF-8".to_string())
+        })
+        .collect::<Result<Vec<_>, _>>()
+        .and_then(|args| run(&args))
         .unwrap_or_else(|error| json!({"complete":false,"error":error}));
     let (value, status) = finish(value);
-    println!("{value}");
-    std::process::exit(status.into());
+    write_output(&format!("{value}\n"), status)
+}
+
+fn write_output(output: &str, status: u8) -> ExitCode {
+    match io::stdout().lock().write_all(output.as_bytes()) {
+        Ok(()) => status.into(),
+        Err(error) => {
+            let _ = writeln!(io::stderr().lock(), "seshat: write report: {error}");
+            2.into()
+        }
+    }
 }

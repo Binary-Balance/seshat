@@ -262,17 +262,6 @@ fn patterns(values: &[String]) -> Result<Vec<Pattern>, String> {
         .collect()
 }
 
-fn command(args: &[String], label: &str) -> Result<(), String> {
-    if args.first().is_none_or(|arg| arg.trim().is_empty())
-        || args.iter().any(|arg| arg.contains('\0'))
-    {
-        return Err(format!(
-            "{label} must be a non-empty argument array without NUL characters"
-        ));
-    }
-    Ok(())
-}
-
 impl Config {
     fn parse(bytes: &[u8]) -> Result<Self, String> {
         let config: Self =
@@ -334,11 +323,11 @@ impl Config {
             }
             relative(&setup.cwd, true)?;
             relative(&setup.coverage.report, false)?;
-            command(&setup.test, &format!("{}.test", setup.name))?;
+            super::validate_command(&setup.test, &format!("{}.test", setup.name))?;
             if let Some(args) = &setup.typecheck {
-                command(args, &format!("{}.typecheck", setup.name))?;
+                super::validate_command(args, &format!("{}.typecheck", setup.name))?;
             }
-            command(
+            super::validate_command(
                 &setup.coverage.command,
                 &format!("{}.coverage.command", setup.name),
             )?;
