@@ -1,13 +1,17 @@
 # Native platform support
 
-This is the final release matrix for issue 2. All five native package proofs
-passed on 2026-09-11 from tested merge source
+This is the historical platform acceptance matrix for issue 2. All five native
+package proofs passed on 2026-09-11 from tested merge source
 [`0edd0a3a546d2a94f8ddac59aa52123a22c821c8`](https://github.com/Binary-Balance/seshat/commit/0edd0a3a546d2a94f8ddac59aa52123a22c821c8).
 Its complete Git tree matches merged `main`
 [`b1a35c594854cbb0f9958be90ec254902b56a9c9`](https://github.com/Binary-Balance/seshat/commit/b1a35c594854cbb0f9958be90ec254902b56a9c9);
-the tested merge tree is therefore the implementation now on `main`. The
+the tested merge tree was therefore the implementation merged at that point. The
 pull-request head recorded by the workflows was
 `97a19aa27ac7c78e95ccf3dcfac68befbabf3460`.
+
+For published 0.1.0 package identities and subsequent unreleased changes, see
+the [current project status](../README.md#release-status). The identities below
+belong to the earlier issue 2 proof, not the published archives.
 
 Each row links the final GitHub run, job and artifact. GitHub retains these raw
 artifacts until 2026-12-10T08:21:24Z. The committed [normalized record](../outputs/platform-support.json)
@@ -67,7 +71,7 @@ The exact issue 2 acceptance mapping is:
 | No Rust in consuming projects | Both installed routes pass Cargo/Rustc absence probes; Rust appears only in the native build environment. |
 | Capture, workspace links, deadlines and cleanup | Installed CLI and lifecycle reports cover source copies, workspace/link handling, bounded jobs, cancellation, descendants and scratch cleanup. |
 | CLI and runner behavior | CLI 43, parallel 11, Jest/Expo 4/4 and Vitest 4/4 pass gates on every target; Windows has no summary gaps. |
-| Scope and publication boundaries | Windows ARM64 and Alpine Linux are outside this release. Signing, notarization and public npm publication remain issue 6 work. |
+| Scope and publication boundaries | Windows ARM64 and Alpine Linux are outside this release. At this checkpoint, signing, notarization and public npm publication were outside the proof. |
 
 The detailed per-target protocols are [Linux x64](linux-x64-package.md),
 [Linux ARM64](linux-arm64-package.md), [macOS](macos-package.md) and

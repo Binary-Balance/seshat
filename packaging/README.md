@@ -70,10 +70,10 @@ to the reviewed revision.
 
 ## Verify a local npm installation
 
-The real npm proof uses a disposable loopback registry because the exact
-optional packages are unpublished. It installs the entry package and the
-matching native package with normal npm platform selection, checks that the
-entry package owns `.bin/seshat`, exercises launcher argument, output, exit,
+The local npm proof uses a disposable loopback registry to test the supplied
+archives independently of public registry availability. It installs the entry
+package and matching native package with normal npm platform selection, checks
+that the entry package owns `.bin/seshat`, exercises launcher argument, output, exit,
 unsupported, missing and version-mismatch paths, forwards cancellation, and
 then runs `npm ci --offline` with the loopback registry unavailable.
 
@@ -86,11 +86,12 @@ node benchmarks/proofs/npm-package.mjs \
   work/release-0.1.0/binary-balance-seshat-linux-x64-0.1.0.tgz
 ```
 
-The existing standalone, lifecycle and runner proofs remain separate native
-evidence. The package checkpoint does not claim the full hosted cross-platform
-release acceptance or public redistribution audit; those follow-up slices
-must add native Windows console proof and the remaining public setup, notices
-and release evidence before publication.
+The standalone, lifecycle and runner proofs remain separate native evidence.
+The local package check alone does not establish release acceptance. Version
+0.1.0 completed the hosted installation, notice and publication checks recorded
+in the [release audit](../docs/research/release-notice-audit.md) and
+[project release status](../README.md#release-status). Future releases must retain
+their own required evidence; fixes on `main` since 0.1.0 remain unreleased.
 
 `repeat-pack.mjs` invokes the ordinary native packer twice from a clean source
 and compares the native binary, `BUILD.json`, npm archive and standalone bytes.
