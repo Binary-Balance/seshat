@@ -23,6 +23,9 @@ impl Fixture {
             NEXT.fetch_add(1, Ordering::Relaxed)
         ));
         fs::create_dir(&root).unwrap();
+        // Node resolves source paths through aliases such as macOS's /var -> /private/var.
+        #[cfg(unix)]
+        let root = root.canonicalize().unwrap();
         fs::create_dir(root.join("input")).unwrap();
         fs::create_dir(root.join("scratch")).unwrap();
         fs::write(
@@ -65,7 +68,8 @@ fn report(output: &Output, status: i32) -> Value {
     assert_eq!(
         output.status.code(),
         Some(status),
-        "{}",
+        "stdout: {}\nstderr: {}",
+        String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );
     assert!(!String::from_utf8_lossy(&output.stderr).contains("panicked"));
