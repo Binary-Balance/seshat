@@ -400,6 +400,8 @@ impl Session {
                 && evidence["timedOut"] != true
                 && evidence["overflow"] != true
                 && evidence["pipeError"].is_null()
+                && evidence["error"].is_null()
+                && evidence["cleanupError"].is_null()
                 && evidence["evidenceError"].is_null()
             {
                 TestState::Passed
@@ -517,7 +519,11 @@ fn classify(runner: &str, evidence: &Value) -> TestState {
     if evidence["timedOut"] == true {
         return TestState::TimedOut;
     }
-    if evidence["overflow"] == true || !evidence["pipeError"].is_null() {
+    if evidence["overflow"] == true
+        || !evidence["pipeError"].is_null()
+        || !evidence["error"].is_null()
+        || !evidence["cleanupError"].is_null()
+    {
         return TestState::ExecutionError;
     }
     let report = &evidence["report"];
@@ -567,7 +573,12 @@ impl Drop for Session {
 
 #[test]
 fn exit_code_is_not_a_verdict() {
-    for failure in [json!({"overflow":true}), json!({"pipeError":"read failed"})] {
+    for failure in [
+        json!({"overflow":true}),
+        json!({"pipeError":"read failed"}),
+        json!({"error":"wait failed"}),
+        json!({"cleanupError":"child may remain"}),
+    ] {
         let mut evidence =
             json!({"exit":0,"report":{"complete":true,"passed":1,"failed":0,"errors":0}});
         evidence

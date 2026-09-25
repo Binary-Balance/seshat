@@ -373,6 +373,21 @@ SIGTERM cancellation removes owned execution copies and stops owned child
 processes. Windows console cancellation is handled separately and reports
 `signal: 2`. A forced kill such as SIGKILL cannot perform cleanup.
 
+Process-exit polling during cleanup has one five-second budget per job, shared
+by retries and final cleanup. Further cancellation signals do not restart that
+budget. An expired budget reports that exit is unconfirmed and processes may
+remain; it does not count as successful cleanup. This bounds process waits,
+not filesystem cleanup or the total assessment time.
+
+Output reads retain up to 2 MiB per stream. Reports include up to 1,000 diagnostic
+characters from each stream, even if a writer never closes the pipe. After
+process cleanup, Seshat allows 500 ms for both pipes to close, then closes its
+read handles and records a pipe error. Unix descendants that deliberately leave
+the owned process group can remain alive; process supervision is not a sandbox.
+Job evidence retains execution, pipe and cleanup errors separately. A signal
+received after a job has completed still cancels the overall assessment without
+relabelling that completed job as cancelled.
+
 ## Quality thresholds
 
 Add optional thresholds at the top level of `seshat.json`:

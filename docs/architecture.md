@@ -48,7 +48,9 @@ test failures from setup, cleanup and import failures within their tested limits
 The public captured-project path and proof `execute` mode handle Unix
 SIGINT/SIGTERM and Windows console cancellation by stopping scheduling, cleaning
 up owned processes and withholding incomplete scores. Both use the same bounded
-process runner. Command builders remove inherited Node options and module paths
+process runner. It polls output pipes without reader threads, retains partial
+diagnostics, and shares one process-cleanup deadline across retries and drop.
+Command builders remove inherited Node options and module paths
 before setting up runner-specific evidence.
 SIGKILL and Windows force termination cannot run graceful cleanup.
 

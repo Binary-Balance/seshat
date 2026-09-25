@@ -941,8 +941,13 @@ scores 2 with full statement coverage, about 2.148 with 2/3 coverage; its untest
 complexity-1 function scores 2. See the root README for interpretation. Failed runs
 can retain earlier measurements, but stay incomplete and exit 2.
 
-Output is capped at 2 MiB per stream, with at most 2,000 diagnostic characters;
-each receipt/report is limited to 32 MiB. Timeout or overflow stops the owned Linux
+Output is capped at 2 MiB per stream, with at most 1,000 diagnostic characters
+from each stream, including partial output when a pipe stays open. Both pipes
+share a 500 ms drain deadline after process cleanup. Process-exit polling shares
+one five-second cleanup budget across retries and drop; expired waits report
+uncertainty rather than successful cleanup. Rust controls cover held-open pipes,
+deadline reuse, retained wait/cleanup errors and Windows query/termination errors.
+Each receipt/report is limited to 32 MiB. Timeout or overflow stops the owned Linux
 process group, not children that deliberately detach. Normal and checked failure
 paths remove the copy and receipts; cleanup errors make the run incomplete.
 SIGINT/SIGTERM cancellation is covered by the lifecycle proof below; SIGKILL

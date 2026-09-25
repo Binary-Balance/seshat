@@ -808,6 +808,8 @@ impl CapturedProject {
             } else if result["exit"] == 0
                 && result["overflow"] == false
                 && result["pipeError"].is_null()
+                && result["error"].is_null()
+                && result["cleanupError"].is_null()
             {
                 TestState::Passed
             } else {
@@ -822,7 +824,11 @@ impl CapturedProject {
                     result["report"] = report;
                     if result["cancelled"] == true {
                         TestState::Cancelled
-                    } else if result["overflow"] == true || !result["pipeError"].is_null() {
+                    } else if result["overflow"] == true
+                        || !result["pipeError"].is_null()
+                        || !result["error"].is_null()
+                        || !result["cleanupError"].is_null()
+                    {
                         TestState::ExecutionError
                     } else {
                         classify(
