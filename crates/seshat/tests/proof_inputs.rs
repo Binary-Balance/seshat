@@ -291,7 +291,9 @@ fn proof_commands_clear_ambient_node_options_and_use_private_scratch() {
     fixture.clean();
 }
 
-#[cfg(unix)]
+// Ignored SIGCHLD survives this exec path with auto-reaping on Linux. macOS
+// does not reproduce that failure; shared ownership controls still run on Unix.
+#[cfg(target_os = "linux")]
 #[test]
 fn wait_and_cleanup_errors_keep_partial_output() {
     use std::os::unix::process::CommandExt;
