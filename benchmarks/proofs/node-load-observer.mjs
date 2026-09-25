@@ -1,4 +1,6 @@
-// Verified Node 24.20.0 and 24.21.0. Observe fatal ESM entry imports without handling the exception.
+// Only this import-failure inference needs exact runtime verification.
+// Other supported Node versions leave ambiguous import crashes unresolved.
+// Observe fatal ESM entry imports without handling the exception.
 import {tracingChannel} from 'node:diagnostics_channel';
 import {readFileSync, writeFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';

@@ -66,7 +66,7 @@ const version = entryArchiveManifest.version;
 assert.equal(entryArchiveManifest.name, '@binary-balance/seshat');
 assert.equal(entryArchiveManifest.description, entryDescription);
 assert.ok(normalizedEntryReadme.includes('Seshat is a native CLI for TypeScript and TSX complexity analysis and mutation testing.'));
-assert.ok(normalizedEntryReadme.includes('Assessments support Node.js 24.20.0 and 24.21.0'));
+assert.ok(normalizedEntryReadme.includes('Assessments support Node.js >=24.20.0 <25'));
 assert.ok(normalizedEntryReadme.includes('npm install --save-dev @binary-balance/seshat'));
 assert.ok(normalizedEntryReadme.includes('seshat mutate --config ./seshat.json'));
 assert.ok(normalizedEntryReadme.includes('Linux x64 (glibc; Debian 11 userspace, glibc 2.31)'));

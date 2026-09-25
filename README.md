@@ -42,7 +42,7 @@ coordinates remain historical in the [archived release audit](docs/releases/0.1.
 The release process records the local six-archive consumer matrix, publisher
 dry run and public registry checks separately.
 
-Current source supports Node 24.20.0 and 24.21.0; published 0.1.0 supports
+Current source supports Node `>=24.20.0 <25`; published 0.1.0 supports
 24.20.0 only. Install the test runner,
 TypeScript and coverage packages required by the project before running Seshat.
 Consuming projects do not need Rust. Rust is only needed to build a native

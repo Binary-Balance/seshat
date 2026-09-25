@@ -197,11 +197,12 @@ jobs:
             work/x64/debian11-inputs work/x64/package-result.json work/x64/seshat-linux-x64-standalone.tar.gz \
             work/x64/seshat-entry.tgz work/x64/seshat-linux-x64-release.tgz examples work/x64/examples-npm-cache \
             2>&1 | tee work/x64/debian11.log
-      - name: Set up additional supported Node runtime
+      - name: Set up latest supported Node runtime
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: 24.21.0
-      - name: Verify Node 24.21.0 compatibility
+          node-version: 24.x
+          check-latest: true
+      - name: Verify latest Node 24 compatibility
         run: node benchmarks/proofs/runner-compatibility.mjs "work/x64/package-result.json"
       - name: Write portable summary
         if: always()
@@ -217,7 +218,7 @@ jobs:
           path: |
             work/x64/preflight.json
             work/x64/package-result.json
-            work/x64/node-24.21.0
+            work/x64/node-*
             work/x64/release.json
             work/x64/release.log
             work/x64/seshat-entry.tgz

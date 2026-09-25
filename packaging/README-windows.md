@@ -3,7 +3,7 @@
 This is the `@binary-balance/seshat-win32-x64` native payload for Windows x64
 on the GitHub `windows-2022` runner. The tested OS baseline is
 Windows Server 2022, kernel build 20348. It does not claim support for desktop
-Windows versions or other CPU architectures. Node 24.20.0 is the package-build baseline; assessments also support 24.21.0.
+Windows versions or other CPU architectures. Node 24.20.0 is the package-build baseline; assessments support stable Node versions `>=24.20.0 <25`.
 
 The executable targets `x86_64-pc-windows-msvc` and is packaged as
 `bin/seshat.exe`. `BUILD.json` records the PE machine, imported Windows DLLs,

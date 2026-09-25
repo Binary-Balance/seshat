@@ -29,5 +29,5 @@ SESHAT=/absolute/path/to/seshat
 ```
 
 The workspace uses the same bounded Node Istanbul adapter as the single-package
-example. It covers UTF-8 TypeScript ESM files with Node 24.20.0 or 24.21.0; it does not
+example. It covers UTF-8 TypeScript ESM files with Node `>=24.20.0 <25`; it does not
 convert V8 coverage or support arbitrary CommonJS loaders.

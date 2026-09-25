@@ -257,7 +257,24 @@ fn validate_runner_receipt(report: &Value, runner: &Runner, id: &str) -> Result<
         }
         Ok(())
     };
-    version(&report["node"], "Node.js", &["24.20.0", "24.21.0"])?;
+    let node = report["node"]
+        .as_str()
+        .ok_or("runner receipt has missing or invalid Node.js version")?;
+    let parts: Vec<_> = node.split('.').collect();
+    if parts.len() != 3
+        || !parts.iter().all(|part| {
+            part.parse::<u32>()
+                .is_ok_and(|number| number.to_string() == *part)
+        })
+    {
+        return Err("runner receipt has missing or invalid Node.js version".into());
+    }
+    // The tested floor is independent of the observer's narrower version set.
+    if parts[0] != "24" || parts[1].parse::<u32>().unwrap() < 20 {
+        return Err(format!(
+            "unsupported Node.js version {node:?}; supported: >=24.20.0 <25"
+        ));
+    }
     match runner {
         Runner::Node => Ok(()),
         Runner::Jest => {
@@ -1768,7 +1785,7 @@ mod tests {
     #[test]
     fn receipt_versions_preserve_identity_and_format_validation() {
         let base = json!({"version":1,"executionId":"current","node":"24.20.0"});
-        for node in ["24.20.0", "24.21.0"] {
+        for node in ["24.20.0", "24.20.1", "24.21.0", "24.22.0", "24.99.99"] {
             let mut receipt = base.clone();
             receipt["node"] = json!(node);
             assert!(validate_runner_receipt(&receipt, &Runner::Node, "current").is_ok());
@@ -1808,11 +1825,39 @@ mod tests {
                 );
             }
         }
+        for node in ["23.99.0", "24.19.99", "25.0.0"] {
+            let mut receipt = base.clone();
+            receipt["node"] = json!(node);
+            assert_eq!(
+                validate_runner_receipt(&receipt, &Runner::Node, "current").unwrap_err(),
+                format!("unsupported Node.js version {node:?}; supported: >=24.20.0 <25")
+            );
+        }
+        for node in [
+            "",
+            "24.20",
+            "24.20.0.1",
+            "24.20.0-rc.1",
+            "24.20.0+build",
+            "024.20.0",
+            "24.+20.0",
+            "24.020.0",
+            "24.20.-1",
+            "24.20.4294967296",
+        ] {
+            let mut receipt = base.clone();
+            receipt["node"] = json!(node);
+            assert!(
+                validate_runner_receipt(&receipt, &Runner::Node, "current")
+                    .unwrap_err()
+                    .contains("missing or invalid")
+            );
+        }
         for (field, value, expected) in [
             (
                 "node",
-                json!("24.22.0"),
-                "unsupported Node.js version \"24.22.0\"; supported: 24.20.0, 24.21.0",
+                json!("25.0.0"),
+                "unsupported Node.js version \"25.0.0\"; supported: >=24.20.0 <25",
             ),
             (
                 "node",

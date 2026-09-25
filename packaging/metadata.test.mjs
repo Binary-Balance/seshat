@@ -24,7 +24,7 @@ test('all release package metadata and README content survive packing', () => {
     for (const directory of packageDirectories) {
       const stage = join(output, directory);
       const manifest = JSON.parse(readFileSync(join(stage, 'package.json'), 'utf8'));
-      assert.equal(manifest.engines.node, '24.20.0 || 24.21.0');
+      assert.equal(manifest.engines.node, '>=24.20.0 <25');
       assert.deepEqual(manifest.repository, repository, `${directory}: staged metadata`);
       const expectedDescription = directory === 'seshat'
         ? entryDescription
@@ -35,7 +35,7 @@ test('all release package metadata and README content survive packing', () => {
         const normalizedReadme = stagedReadme.replace(/\s+/g, ' ');
         for (const fragment of [
           'Seshat is a native CLI for TypeScript and TSX complexity analysis and mutation testing.',
-          'Assessments support Node.js 24.20.0 and 24.21.0',
+          'Assessments support Node.js >=24.20.0 <25',
           'npm install --save-dev @binary-balance/seshat',
           'seshat mutate --config ./seshat.json',
           'Linux x64 (glibc; Debian 11 userspace, glibc 2.31)',

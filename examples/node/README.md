@@ -1,6 +1,6 @@
 # Node built-in test runner
 
-This project uses Node 24.20.0 or 24.21.0, TypeScript 6.0.3 and the built-in test runner.
+This project uses Node `>=24.20.0 <25`, TypeScript 6.0.3 and the built-in test runner.
 `source.include` selects `src/**/*.ts`; `source.exclude` removes
 `src/ignored.ts`. `capture` includes the test inputs, the small coverage adapter
 and installed dependencies.

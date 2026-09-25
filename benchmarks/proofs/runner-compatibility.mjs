@@ -9,7 +9,8 @@ import {fileURLToPath} from 'node:url';
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 assert.ok(process.argv.length === 3 || process.argv.length === 4,
   'usage: node runner-compatibility.mjs PACKAGE_RESULT [JEST_DEPENDENCIES]');
-assert.ok(['24.20.0', '24.21.0'].includes(process.versions.node));
+const [major, minor] = process.versions.node.split('.').map(Number);
+assert.ok(major === 24 && minor >= 20);
 const input = resolve(process.argv[2]);
 const payload = JSON.parse(readFileSync(input, 'utf8'));
 const output = join(dirname(input), `node-${process.versions.node}`);

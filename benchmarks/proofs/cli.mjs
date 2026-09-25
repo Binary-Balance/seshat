@@ -201,7 +201,7 @@ const failedBaseline = structuredClone(config); failedBaseline.setups[0].test = 
 configure(failedBaseline);
 assert.equal(json('baseline-failure', 'mutate', 2).result.mutation.score, null);
 for (const [name, fields, message] of [
-  ['unsupported-node', {node:'24.22.0'}, 'unsupported Node.js version "24.22.0"; supported: 24.20.0, 24.21.0'],
+  ['unsupported-node', {node:'25.0.0'}, 'unsupported Node.js version "25.0.0"; supported: >=24.20.0 <25'],
   ['malformed-version', {node:null}, 'runner receipt has missing or invalid Node.js version'],
   ['replayed-receipt', {executionId:'old'}, 'runner receipt has wrong execution identity'],
 ]) {
@@ -216,7 +216,7 @@ for (const [name, fields, message] of [
   if (name === 'unsupported-node') {
     const human = run('human-version-mismatch', ['mutate','--scratch',scratch,'--no-progress'], 2);
     assert.match(human.stdout, /unsupported Node\.js version/);
-    assert.match(human.stdout, /supported: 24\.20\.0, 24\.21\.0/);
+    assert.match(human.stdout, /supported: >=24\.20\.0 <25/);
   }
 }
 const timeoutConfig = structuredClone(config);
