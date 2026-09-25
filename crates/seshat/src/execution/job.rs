@@ -1,4 +1,4 @@
-// Bounded process jobs for the captured-project path. No shell interpretation.
+// Bounded process jobs for captured projects and proof sessions. No shell interpretation.
 use serde_json::{Value, json};
 use std::{
     io::Read,

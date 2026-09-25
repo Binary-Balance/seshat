@@ -9,6 +9,7 @@ on:
       - crates/seshat/src/**
       - benchmarks/proofs/runner-compatibility.mjs
       - benchmarks/proofs/node-load-observer.mjs
+      - benchmarks/proofs/execute-cancellation.mjs
       - benchmarks/proofs/node-load-failure.mjs
       - packages/**
       - examples/**
@@ -41,6 +42,7 @@ on:
       - crates/seshat/src/**
       - benchmarks/proofs/runner-compatibility.mjs
       - benchmarks/proofs/node-load-observer.mjs
+      - benchmarks/proofs/execute-cancellation.mjs
       - benchmarks/proofs/node-load-failure.mjs
       - packages/**
       - examples/**
@@ -223,6 +225,16 @@ jobs:
           $env:SESHAT_PROOF_BINARY = $proofBinary
           $env:SESHAT_CONSOLE_HELPER_BINARY = $package.consoleHelper
           node benchmarks/proofs/cli.mjs 2>&1 | Tee-Object -FilePath work/windows/shared-cli.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify proof execute cancellation
+        shell: pwsh
+        env:
+          SESHAT_PROOF_OUTPUT: work/windows/execute-cancellation.json
+        run: |
+          $package = Get-Content work/windows/package-result.json -Raw | ConvertFrom-Json
+          $env:SESHAT_PROOF_BINARY = Join-Path $env:GITHUB_WORKSPACE 'work\windows\seshat-proofs.exe'
+          $env:SESHAT_CONSOLE_HELPER_BINARY = $package.consoleHelper
+          node benchmarks/proofs/execute-cancellation.mjs 2>&1 | Tee-Object -FilePath work/windows/execute-cancellation.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify installed shared parallel fixtures
         if: always()

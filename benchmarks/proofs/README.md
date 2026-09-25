@@ -1395,13 +1395,24 @@ checks it and handles scheduling, cleanup and reporting outside the signal
 handler. This adds `signal-hook` and an explicit `libc` dependency for checked
 process-group signalling, not a separate supervisor or a cancellation framework.
 
-These guarantees cover the captured `capture`/`collect`/`check` path, not the
-earlier single-fixture `execute` experiment. Capture checks cancellation between
-filesystem entries; an in-progress file copy, source analysis or filesystem
-cleanup can delay its response. The process regression exercises running jobs,
-not worst-case copy latency. Children that deliberately leave their process group
-are outside this proof; it does not establish Windows/macOS supervision or sandbox
-hostile tests. Run it where ordinary Node child processes are permitted.
+The lifecycle fixture covers the captured `capture`/`collect`/`check` path.
+The separate `execute-cancellation.mjs` fixture covers proof `execute` on native
+Linux, macOS and Windows package CI. It cancels original typecheck, build and
+baseline jobs, switched build and baseline jobs, replacement mutant builds, and
+mutant tests under both strategies. Unix uses SIGINT/SIGTERM; Windows uses real
+Ctrl+C/Ctrl+Break events through the isolated console helper. It checks child and
+descendant cleanup, empty scratch, an unchanged source and a surviving unrelated
+process. Cancelling mutant 1 preserves mutant 0 and leaves later mutants `not-run`.
+Both execution paths use the same bounded, cancellable process runner, while
+their command builders retain separate environment rules. Proof commands now
+share its 2 MiB per-stream output cap and 2,000-character diagnostic limit.
+
+Capture checks cancellation between filesystem entries; an in-progress file
+copy, source analysis or filesystem cleanup can delay its response. The process
+regressions exercise running jobs, not worst-case copy latency. Children that
+deliberately leave their process group are outside the Unix proofs. These checks
+do not sandbox hostile tests. Run them where ordinary Node child processes are
+permitted.
 
 SIGKILL, host failure and power loss cannot execute a signal handler or cleanup.
 The explicit SIGKILL control confirms that the owned test processes and temporary
@@ -1422,8 +1433,8 @@ supervision, isolation of external resources or general JavaScript transformatio
 equivalence.
 
 The original `execute` proof and the captured-project CLI have different execution
-contracts. Only the latter supplies the configured multi-setup workflow, bounded
-parallel workers and cancellation checks described above. Keep results tied to
+contracts. Only the latter supplies the configured multi-setup workflow and bounded
+parallel workers. Both support cancellation. Keep results tied to
 the command, fixture and runner versions that produced them.
 
 The [release scope](../../docs/release-scope.md) and

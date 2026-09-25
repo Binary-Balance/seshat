@@ -197,6 +197,12 @@ jobs:
             work/x64/debian11-inputs work/x64/package-result.json work/x64/seshat-linux-x64-standalone.tar.gz \
             work/x64/seshat-entry.tgz work/x64/seshat-linux-x64-release.tgz examples work/x64/examples-npm-cache \
             2>&1 | tee work/x64/debian11.log
+      - name: Verify proof execute cancellation
+        env:
+          SESHAT_PROOF_OUTPUT: work/x64/execute-cancellation.json
+        run: |
+          PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/x64/package-result.json")"
+          SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/execute-cancellation.mjs 2>&1 | tee "work/x64/execute-cancellation.log"
       - name: Set up latest supported Node runtime
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -234,6 +240,8 @@ jobs:
             work/x64/jest-expo-check.log
             work/x64/vitest-check.json
             work/x64/vitest-check.log
+            work/x64/execute-cancellation.json
+            work/x64/execute-cancellation.log
             work/x64/lifecycle.json
             work/x64/lifecycle.log
             work/x64/debian11.json

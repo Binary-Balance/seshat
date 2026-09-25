@@ -30,6 +30,7 @@ fn run(args: &[String]) -> Result<Value, String> {
         };
     }
     if mode == "execute" {
+        execution::install_cancellation()?;
         let config = serde_json::from_str(
             &fs::read_to_string(args.get(1).ok_or("manifest missing")?)
                 .map_err(|e| e.to_string())?,
@@ -84,6 +85,9 @@ fn finish(mut value: Value) -> (Value, u8) {
         value["complete"] = json!(false);
         value["cancelled"] = json!(true);
         value["signal"] = json!(signal);
+        if let Some(score) = value.get_mut("score") {
+            *score = Value::Null;
+        }
         if let Some(mutation) = value.get_mut("mutation") {
             mutation["complete"] = json!(false);
             mutation["score"] = Value::Null;
