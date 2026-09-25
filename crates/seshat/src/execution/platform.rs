@@ -1,8 +1,28 @@
 use std::{
-    io,
+    io::{self, Write},
     process::{Child, ChildStderr, ChildStdout, Command, ExitStatus},
     sync::{Arc, atomic::AtomicUsize},
+    thread,
+    time::{Duration, Instant},
 };
+
+// Cleanup retries, fallback reaping and Drop share this budget.
+const CLEANUP_TIMEOUT: Duration = Duration::from_secs(5);
+
+fn wait_until(child: &mut Child, deadline: Instant) -> io::Result<ExitStatus> {
+    loop {
+        if let Some(status) = child.try_wait()? {
+            return Ok(status);
+        }
+        if Instant::now() >= deadline {
+            return Err(io::Error::new(
+                io::ErrorKind::TimedOut,
+                "cleanup deadline expired; child exit is unconfirmed and processes may remain",
+            ));
+        }
+        thread::sleep(Duration::from_millis(2));
+    }
+}
 
 #[cfg(unix)]
 mod unix {
@@ -125,7 +145,11 @@ mod unix {
                 }
                 if let Err(error) = self.stop() {
                     return self
-                        .settle_after_stop_error(child, error)
+                        .settle_after_stop_error(
+                            child,
+                            error,
+                            Instant::now() + GROUP_SETTLEMENT_TIMEOUT,
+                        )
                         .map(Some)
                         .map_err(io::Error::other);
                 }
@@ -133,11 +157,22 @@ mod unix {
             child.try_wait()
         }
 
-        pub(super) fn wait(&mut self, child: &mut Child) -> io::Result<ExitStatus> {
-            // Reaping can release the numeric group ID even if cleanup failed. Never signal
-            // that ID again; read-only settlement may still establish that cleanup finished.
-            self.released = true;
-            child.wait()
+        pub(super) fn wait(
+            &mut self,
+            child: &mut Child,
+            deadline: Instant,
+        ) -> io::Result<ExitStatus> {
+            let result = wait_until(child, deadline);
+            // A successful reap or ECHILD releases ownership. A timeout does not:
+            // retain the leader so fallback cleanup can still signal the owned group.
+            if result.is_ok()
+                || result
+                    .as_ref()
+                    .is_err_and(|error| error.raw_os_error() == Some(libc::ECHILD))
+            {
+                self.released = true;
+            }
+            result
         }
 
         pub(super) fn kill_leader(&mut self, child: &mut Child) -> io::Result<()> {
@@ -153,17 +188,24 @@ mod unix {
             &mut self,
             child: &mut Child,
             stop_error: String,
+            cleanup_deadline: Instant,
         ) -> Result<ExitStatus, String> {
-            let deadline = Instant::now() + GROUP_SETTLEMENT_TIMEOUT;
+            let deadline = cleanup_deadline.min(Instant::now() + GROUP_SETTLEMENT_TIMEOUT);
             // A prior settlement may have reaped the leader. Child caches that status;
             // only the read-only group check remains, with signals still disabled.
-            while !self.released && !self.leader_exited().map_err(|e| e.to_string())? {
+            while !self.released
+                && !self
+                    .leader_exited()
+                    .map_err(|e| format!("{stop_error}; observe leader: {e}"))?
+            {
                 if Instant::now() >= deadline {
                     return Err(stop_error);
                 }
                 thread::sleep(GROUP_SETTLEMENT_POLL);
             }
-            let status = self.wait(child).map_err(|e| e.to_string())?;
+            let status = self
+                .wait(child, deadline)
+                .map_err(|e| format!("{stop_error}; reap leader: {e}"))?;
             loop {
                 if owned_group_is_gone(self.pid) {
                     self.stopped = true;
@@ -227,7 +269,7 @@ mod unix {
         Ok((child, supervisor))
     }
 
-    pub(super) fn stop(supervisor: &mut Supervisor) -> Result<(), String> {
+    pub(super) fn stop(supervisor: &mut Supervisor, _deadline: Instant) -> Result<(), String> {
         supervisor.stop()
     }
 
@@ -235,8 +277,9 @@ mod unix {
         supervisor: &mut Supervisor,
         child: &mut Child,
         stop_error: String,
+        deadline: Instant,
     ) -> Result<ExitStatus, String> {
-        supervisor.settle_after_stop_error(child, stop_error)
+        supervisor.settle_after_stop_error(child, stop_error, deadline)
     }
 }
 
@@ -379,6 +422,12 @@ mod windows {
             .clone()
     }
 
+    #[cfg(test)]
+    thread_local! {
+        static TEST_JOB_QUERIES: RefCell<std::collections::VecDeque<Result<u32, i32>>> = RefCell::new(std::collections::VecDeque::new());
+        static TEST_JOB_TERMINATION: RefCell<Option<i32>> = const { RefCell::new(None) };
+    }
+
     struct Job(HANDLE);
 
     impl Job {
@@ -403,17 +452,27 @@ mod windows {
                 )
             };
             if set == FALSE {
+                let error = io::Error::last_os_error();
                 // SAFETY: handle was returned by CreateJobObjectW and is not shared.
                 unsafe { CloseHandle(handle) };
-                return Err(format!(
-                    "configure Windows job: {}",
-                    io::Error::last_os_error()
-                ));
+                return Err(format!("configure Windows job: {error}"));
             }
             Ok(Self(handle))
         }
 
         fn active_processes(&self) -> Result<u32, String> {
+            #[cfg(test)]
+            if let Some(result) = TEST_JOB_QUERIES.with(|queries| queries.borrow_mut().pop_front())
+            {
+                // Deliberately overwrite last-error even on successful queries.
+                unsafe { windows_sys::Win32::Foundation::SetLastError(6) };
+                return result.map_err(|code| {
+                    format!(
+                        "query Windows job process count: {}",
+                        io::Error::from_raw_os_error(code)
+                    )
+                });
+            }
             let mut accounting = JOBOBJECT_BASIC_ACCOUNTING_INFORMATION::default();
             let mut returned = 0;
             // SAFETY: accounting points to writable storage of the documented size and the job
@@ -437,34 +496,42 @@ mod windows {
             Ok(accounting.ActiveProcesses)
         }
 
-        fn wait_empty(&self) -> Result<(), String> {
-            let deadline = Instant::now() + Duration::from_secs(5);
+        fn wait_empty(&self, deadline: Instant) -> Result<(), String> {
             loop {
                 if self.active_processes()? == 0 {
                     return Ok(());
                 }
                 if Instant::now() >= deadline {
-                    return Err("wait for Windows job processes to exit timed out".into());
+                    return Err("cleanup deadline expired; Windows job exit is unconfirmed and processes may remain".into());
                 }
                 thread::sleep(Duration::from_millis(2));
             }
         }
 
-        fn stop(&self) -> Result<(), String> {
+        fn terminate(&self) -> io::Result<()> {
+            #[cfg(test)]
+            if let Some(code) = TEST_JOB_TERMINATION.with(|failure| failure.borrow_mut().take()) {
+                return Err(io::Error::from_raw_os_error(code));
+            }
+            // SAFETY: self.0 is a live, owned job handle.
+            if unsafe { TerminateJobObject(self.0, 1) } == FALSE {
+                return Err(io::Error::last_os_error());
+            }
+            Ok(())
+        }
+
+        fn stop(&self, deadline: Instant) -> Result<(), String> {
             if self.active_processes()? == 0 {
                 return Ok(());
             }
-            // SAFETY: self.0 is a live job handle while Job is held.
-            if unsafe { TerminateJobObject(self.0, 1) } == FALSE {
-                if self.active_processes()? == 0 {
-                    return Ok(());
-                }
-                return Err(format!(
-                    "terminate Windows job: {}",
-                    io::Error::last_os_error()
-                ));
+            if let Err(termination) = self.terminate() {
+                return match self.active_processes() {
+                    Ok(0) => Ok(()),
+                    Ok(_) => Err(format!("terminate Windows job: {termination}")),
+                    Err(query) => Err(format!("terminate Windows job: {termination}; {query}")),
+                };
             }
-            self.wait_empty()
+            self.wait_empty(deadline)
         }
     }
 
@@ -482,19 +549,13 @@ mod windows {
     }
 
     impl Supervisor {
-        fn stop(&mut self) -> Result<(), String> {
+        fn stop(&mut self, deadline: Instant) -> Result<(), String> {
             if self.stopped {
                 return Ok(());
             }
-            self.job.stop()?;
+            self.job.stop(deadline)?;
             self.stopped = true;
             Ok(())
-        }
-    }
-
-    impl Drop for Supervisor {
-        fn drop(&mut self) {
-            let _ = self.stop();
         }
     }
 
@@ -502,6 +563,7 @@ mod windows {
         child: Option<Child>,
         job: Option<Job>,
         assigned: bool,
+        cleanup_deadline: Option<Instant>,
     }
 
     impl SpawnGuard {
@@ -509,9 +571,12 @@ mod windows {
             let Some(mut child) = self.child.take() else {
                 return Ok(());
             };
+            let deadline = *self
+                .cleanup_deadline
+                .get_or_insert_with(|| Instant::now() + CLEANUP_TIMEOUT);
             let stop = if self.assigned {
                 match self.job.as_ref() {
-                    Some(job) => match job.stop() {
+                    Some(job) => match job.stop(deadline) {
                         Ok(()) => Ok(()),
                         Err(error) => {
                             // Keep the leader cleanup attempt even if accounting failed. The job
@@ -545,8 +610,7 @@ mod windows {
                     Ok(())
                 }
             };
-            let wait = child
-                .wait()
+            let wait = wait_until(&mut child, deadline)
                 .map(|_| ())
                 .map_err(|e| format!("reap suspended child: {e}"));
             if wait.is_ok() {
@@ -572,7 +636,7 @@ mod windows {
     impl Drop for SpawnGuard {
         fn drop(&mut self) {
             if let Err(error) = self.cleanup() {
-                eprintln!("spawn cleanup failed: {error}");
+                let _ = writeln!(io::stderr().lock(), "spawn cleanup failed: {error}");
             }
         }
     }
@@ -636,6 +700,7 @@ mod windows {
             child: Some(child),
             job: Some(job),
             assigned: false,
+            cleanup_deadline: None,
         };
         let pid = guard.child.as_ref().unwrap().id();
         #[cfg(test)]
@@ -679,12 +744,10 @@ mod windows {
             }
         };
         if assign == FALSE {
+            let error = io::Error::last_os_error();
             // SAFETY: thread is an owned handle opened above.
             unsafe { CloseHandle(thread) };
-            return Err(guard.fail(format!(
-                "assign child to Windows job: {}",
-                io::Error::last_os_error()
-            )));
+            return Err(guard.fail(format!("assign child to Windows job: {error}")));
         }
         guard.assigned = true;
         #[cfg(test)]
@@ -695,11 +758,12 @@ mod windows {
         }
         // SAFETY: thread has THREAD_SUSPEND_RESUME and remains suspended until this call.
         let previous = unsafe { ResumeThread(thread) };
+        let resume_error = io::Error::last_os_error();
         // SAFETY: thread is no longer needed after ResumeThread returns.
         unsafe { CloseHandle(thread) };
         if previous != 1 {
             return Err(guard.fail(if previous == u32::MAX {
-                format!("resume suspended child: {}", io::Error::last_os_error())
+                format!("resume suspended child: {resume_error}")
             } else {
                 format!("resume suspended child returned unexpected count {previous}")
             }));
@@ -712,8 +776,8 @@ mod windows {
         Ok((child, supervisor))
     }
 
-    pub(super) fn stop(supervisor: &mut Supervisor) -> Result<(), String> {
-        supervisor.stop()
+    pub(super) fn stop(supervisor: &mut Supervisor, deadline: Instant) -> Result<(), String> {
+        supervisor.stop(deadline)
     }
 
     #[cfg(test)]
@@ -722,6 +786,51 @@ mod windows {
         use windows_sys::Win32::System::Threading::{
             OpenProcess, PROCESS_SYNCHRONIZE, WaitForSingleObject,
         };
+
+        #[test]
+        fn job_stop_preserves_termination_and_query_errors() {
+            for (queries, termination, expected) in [
+                (vec![Err(6)], None, vec!["query Windows job", "os error 6"]),
+                (
+                    vec![Ok(1), Ok(1)],
+                    Some(5),
+                    vec!["terminate Windows job", "os error 5"],
+                ),
+                (
+                    vec![Ok(1), Err(6)],
+                    Some(5),
+                    vec![
+                        "terminate Windows job",
+                        "os error 5",
+                        "query Windows job",
+                        "os error 6",
+                    ],
+                ),
+                (vec![Ok(1), Ok(0)], Some(5), vec![]),
+            ] {
+                TEST_JOB_QUERIES.with(|state| *state.borrow_mut() = queries.into());
+                TEST_JOB_TERMINATION.with(|state| *state.borrow_mut() = termination);
+                let job = Job::create().unwrap();
+                let result = job.stop(Instant::now() + CLEANUP_TIMEOUT);
+                if expected.is_empty() {
+                    assert!(result.is_ok(), "{result:?}");
+                } else {
+                    let error = result.unwrap_err();
+                    for text in expected {
+                        assert!(error.contains(text), "{error}");
+                    }
+                }
+            }
+        }
+
+        #[test]
+        fn job_exit_wait_obeys_the_existing_deadline() {
+            TEST_JOB_QUERIES.with(|state| *state.borrow_mut() = vec![Ok(1); 10].into());
+            let job = Job::create().unwrap();
+            let error = job.wait_empty(Instant::now()).unwrap_err();
+            assert!(error.contains("processes may remain"), "{error}");
+            TEST_JOB_QUERIES.with(|state| state.borrow_mut().clear());
+        }
 
         #[test]
         fn console_control_event_sets_cancellation_flag() {
@@ -751,6 +860,7 @@ mod windows {
                 child: Some(child),
                 job: Some(Job::create().unwrap()),
                 assigned: false,
+                cleanup_deadline: None,
             };
             assert_eq!(
                 guard.fail("forced pre-resume failure".into()),
@@ -1147,12 +1257,17 @@ mod unix_tests {
 pub(super) struct ManagedChild {
     supervisor: native::Supervisor,
     child: Child,
+    cleanup_deadline: Option<Instant>,
 }
 
 impl ManagedChild {
     pub(super) fn spawn(command: &mut Command) -> Result<Self, String> {
         let (child, supervisor) = native::spawn(command)?;
-        Ok(Self { supervisor, child })
+        Ok(Self {
+            supervisor,
+            child,
+            cleanup_deadline: None,
+        })
     }
 
     pub(super) fn take_stdout(&mut self) -> Option<ChildStdout> {
@@ -1174,14 +1289,21 @@ impl ManagedChild {
         }
     }
 
+    fn cleanup_deadline(&mut self) -> Instant {
+        *self
+            .cleanup_deadline
+            .get_or_insert_with(|| Instant::now() + CLEANUP_TIMEOUT)
+    }
+
     pub(super) fn wait(&mut self) -> io::Result<ExitStatus> {
+        let deadline = self.cleanup_deadline();
         #[cfg(unix)]
         {
-            self.supervisor.wait(&mut self.child)
+            self.supervisor.wait(&mut self.child, deadline)
         }
         #[cfg(windows)]
         {
-            self.child.wait()
+            wait_until(&mut self.child, deadline)
         }
     }
 
@@ -1197,13 +1319,15 @@ impl ManagedChild {
     }
 
     pub(super) fn stop_tree(&mut self) -> Result<(), String> {
-        native::stop(&mut self.supervisor)
+        let deadline = self.cleanup_deadline();
+        native::stop(&mut self.supervisor, deadline)
     }
 
     fn settle_after_stop_error(&mut self, error: String) -> Result<ExitStatus, String> {
         #[cfg(unix)]
         {
-            native::settle(&mut self.supervisor, &mut self.child, error)
+            let deadline = self.cleanup_deadline();
+            native::settle(&mut self.supervisor, &mut self.child, error, deadline)
         }
         #[cfg(windows)]
         {
@@ -1238,9 +1362,13 @@ impl ManagedChild {
                 }
                 #[cfg(windows)]
                 {
-                    match self.try_wait().map_err(|e| e.to_string())? {
+                    match self
+                        .try_wait()
+                        .map_err(|e| format!("{error}; observe leader: {e}"))?
+                    {
                         Some(status) => {
-                            self.stop_tree()?;
+                            self.stop_tree()
+                                .map_err(|retry| format!("{error}; retry cleanup: {retry}"))?;
                             Ok(status)
                         }
                         None => Err(error),
@@ -1272,11 +1400,41 @@ impl ManagedChild {
 impl Drop for ManagedChild {
     fn drop(&mut self) {
         if let Err(error) = self.force_cleanup() {
-            eprintln!("managed child cleanup failed: {error}");
+            let _ = writeln!(io::stderr().lock(), "managed child cleanup failed: {error}");
         }
     }
 }
 
 pub(super) fn install_cancellation(flag: Arc<AtomicUsize>) -> Result<(), String> {
     native::install_cancellation(flag)
+}
+
+#[cfg(test)]
+mod cleanup_tests {
+    use super::*;
+
+    #[test]
+    fn reap_deadline_preserves_uncertainty_and_is_not_restarted() {
+        let mut command = Command::new("node");
+        command.args(["-e", "setInterval(()=>{},1000)"]);
+        let mut child = ManagedChild::spawn(&mut command).unwrap();
+        let deadline = Instant::now() + Duration::from_millis(20);
+        child.cleanup_deadline = Some(deadline);
+        let error = child.wait().unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::TimedOut);
+        assert!(error.to_string().contains("processes may remain"));
+        assert!(child.child.try_wait().unwrap().is_none());
+        let start = Instant::now();
+        assert_eq!(child.wait().unwrap_err().kind(), io::ErrorKind::TimedOut);
+        assert!(start.elapsed() < Duration::from_millis(100));
+        assert_eq!(child.cleanup_deadline, Some(deadline));
+        // Release the real owned fixture even though its deliberately short budget expired.
+        child.stop_tree().ok();
+        child.child.kill().ok();
+        wait_until(&mut child.child, Instant::now() + CLEANUP_TIMEOUT).unwrap();
+        child.force_cleanup().unwrap();
+        let start = Instant::now();
+        drop(child);
+        assert!(start.elapsed() < Duration::from_millis(100));
+    }
 }

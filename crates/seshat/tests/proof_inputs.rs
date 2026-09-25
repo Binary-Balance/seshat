@@ -290,3 +290,35 @@ fn proof_commands_clear_ambient_node_options_and_use_private_scratch() {
     );
     fixture.clean();
 }
+
+// Ignored SIGCHLD survives this exec path with auto-reaping on Linux. macOS
+// does not reproduce that failure; shared ownership controls still run on Unix.
+#[cfg(target_os = "linux")]
+#[test]
+fn wait_and_cleanup_errors_keep_partial_output() {
+    use std::os::unix::process::CommandExt;
+    let mut fixture = Fixture::new();
+    fixture.config["test"] = node(
+        "process.stdout.write('stdout before exit'); process.stderr.write('stderr before exit'); require('fs').writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({complete:true,passed:1,failed:0,errors:0,timeouts:0}));",
+    );
+    let mut command = fixture.execute("replace");
+    // This disposable proof process auto-reaps its children, injecting ECHILD at
+    // the real wait boundary without changing the test process's signal handling.
+    unsafe {
+        command.pre_exec(|| {
+            if libc::signal(libc::SIGCHLD, libc::SIG_IGN) == libc::SIG_ERR {
+                return Err(io::Error::last_os_error());
+            }
+            Ok(())
+        });
+    }
+    let value = report(&command.output().unwrap(), 2);
+    let evidence = &value["evidence"];
+    assert_eq!(evidence["state"], "execution-error", "{value}");
+    assert!(evidence["error"].is_string(), "{value}");
+    assert!(evidence["cleanupError"].is_string(), "{value}");
+    let diagnostic = evidence["diagnostic"].as_str().unwrap();
+    assert!(diagnostic.contains("stdout before exit"), "{value}");
+    assert!(diagnostic.contains("stderr before exit"), "{value}");
+    fixture.clean();
+}
