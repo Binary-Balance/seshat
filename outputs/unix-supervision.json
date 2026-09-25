@@ -1,0 +1,99 @@
+{
+  "platform": "linux",
+  "machine": "x86_64",
+  "kernel": "6.12.107+deb13-cloud-amd64",
+  "python": "3.13.5",
+  "binarySha256": "7d8d74c43cfe6b9ef616cf7f33bf369e838972d255630815fa79c224c098272b",
+  "cases": {
+    "failure-before-pid-publication": {
+      "fixtureChildrenReaped": 2,
+      "remainingChildren": []
+    },
+    "detached-held": {
+      "exit": 2,
+      "state": "execution-error",
+      "elapsedMs": 557,
+      "pipeError": "stdout: output pipe did not close after stopping the process tree; stderr: output pipe did not close after stopping the process tree",
+      "diagnostic": "partial stdout retained\npartial stderr retained\n",
+      "scratchEmpty": true,
+      "detachedAlive": true,
+      "differentGroup": true,
+      "differentSession": true,
+      "fixtureChildrenReaped": 1,
+      "remainingChildren": []
+    },
+    "daemon-held": {
+      "exit": 2,
+      "state": "execution-error",
+      "elapsedMs": 536,
+      "pipeError": "stdout: output pipe did not close after stopping the process tree; stderr: output pipe did not close after stopping the process tree",
+      "diagnostic": "partial stdout retained\npartial stderr retained\n",
+      "scratchEmpty": true,
+      "detachedAlive": true,
+      "differentGroup": true,
+      "differentSession": true,
+      "fixtureChildrenReaped": 2,
+      "remainingChildren": []
+    },
+    "daemon-closed": {
+      "exit": 0,
+      "state": "passed",
+      "elapsedMs": 34,
+      "pipeError": null,
+      "diagnostic": "partial stdout retained\npartial stderr retained\n",
+      "scratchEmpty": true,
+      "detachedAlive": true,
+      "differentGroup": true,
+      "differentSession": true,
+      "fixtureChildrenReaped": 2,
+      "remainingChildren": []
+    },
+    "detached-timeout": {
+      "exit": 2,
+      "state": "timed-out",
+      "elapsedMs": 1506,
+      "pipeError": "stdout: output pipe did not close after stopping the process tree; stderr: output pipe did not close after stopping the process tree",
+      "diagnostic": "partial stdout retained\npartial stderr retained\n",
+      "scratchEmpty": true,
+      "detachedAlive": true,
+      "differentGroup": true,
+      "differentSession": true,
+      "fixtureChildrenReaped": 1,
+      "remainingChildren": []
+    },
+    "term-cooperative": {
+      "exit": 2,
+      "state": "timed-out",
+      "elapsedMs": 1031,
+      "pipeError": null,
+      "diagnostic": "",
+      "scratchEmpty": true,
+      "missingReceiptVerdict": "timed-out",
+      "fixtureChildrenReaped": 0,
+      "remainingChildren": []
+    },
+    "term-ignore": {
+      "exit": 2,
+      "state": "timed-out",
+      "elapsedMs": 1031,
+      "pipeError": null,
+      "diagnostic": "",
+      "scratchEmpty": true,
+      "missingReceiptVerdict": "timed-out",
+      "fixtureChildrenReaped": 0,
+      "remainingChildren": []
+    },
+    "grace-term-cooperative": {
+      "receiptWritten": true,
+      "forced": false,
+      "elapsedMs": 7
+    },
+    "grace-term-ignore": {
+      "receiptWritten": false,
+      "forced": true,
+      "elapsedMs": 101
+    }
+  },
+  "completed": true,
+  "remainingChildren": []
+}

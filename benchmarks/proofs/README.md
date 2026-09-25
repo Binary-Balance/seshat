@@ -1416,8 +1416,9 @@ share its 2 MiB per-stream output cap and 2,000-character diagnostic limit.
 Capture checks cancellation between filesystem entries; an in-progress file
 copy, source analysis or filesystem cleanup can delay its response. The process
 regressions exercise running jobs, not worst-case copy latency. Children that
-deliberately leave their process group are outside the Unix proofs. These checks
-do not sandbox hostile tests. Run them where ordinary Node child processes are
+deliberately leave their process group are outside those lifecycle controls;
+the Linux-only boundary proof below covers that case. These checks do not
+sandbox hostile tests. Run them where ordinary Node child processes are
 permitted.
 
 SIGKILL, host failure and power loss cannot execute a signal handler or cleanup.
@@ -1428,6 +1429,56 @@ abandoned copy and results stay in its unique, ignored
 of a shared scratch directory is attempted. The original checkout never needs
 restoration. Recorded stop times include a 100 ms observation pause and are
 correctness evidence, not performance benchmarks.
+
+### Unix supervision boundary
+
+Run the Linux-only detached-descendant check with Python 3 and the matching
+native proof binary. It is also part of the Linux x64 and ARM64 package workflows:
+
+```sh
+SESHAT_PROOF_BINARY="$PWD/crates/seshat/target/release/seshat-proofs" \
+SESHAT_PROOF_OUTPUT=work/unix-supervision.json \
+python3 benchmarks/proofs/unix-supervision.py
+```
+
+The driver uses a disposable Linux subreaper to adopt escaped fixture children.
+This is test-only: without adoption, a double-forked child belongs to PID 1 and
+cannot be reaped by the driver, which can leave zombies on container hosts.
+Cleanup enumerates only the driver's immediate, unreaped children through
+`/proc`, signals them while it still owns their PIDs, and reaps them within a
+five-second budget. It never signals stale PIDs read from readiness files.
+An injected failure before PID publication checks that this cleanup also works
+without a recorded descendant PID. Every case requires zero remaining children;
+the proof must run as its own process, not inside another Python test runner.
+Seshat itself does not use subreapers, cgroups or a sandbox.
+
+The retained [Linux x64 evidence](../../outputs/unix-supervision.json) covers:
+
+| Control | Required result |
+| --- | --- |
+| New session, inherited pipes, leader exits | Descendant survives; bounded pipe error; partial stdout/stderr retained |
+| Double fork, inherited pipes, leader exits | Same result; driver reaps the intermediate child and daemon |
+| Double fork, closed pipes | Job passes while daemon survives; successful cleanup cannot prove absence of detached children |
+| New session, leader times out | Timeout stays `timed-out`, with a pipe error; driver removes the escaped child |
+| Cooperative and ignored TERM, mutant timeout | Current SIGKILL path leaves no receipt; both verdicts remain `timed-out` |
+| Isolated 100 ms TERM-then-KILL experiment | Cooperative fixture writes a receipt; ignored TERM requires the forced kill |
+| Driver failure before PID publication | Both unrecorded descendants are reaped; no fixture children remain |
+
+The isolated grace experiment measures the signal mechanism, not a modified
+Seshat runtime or a supported runner's cleanup contract. A receipt can help a
+cooperative process explain its exit, but does not make an expired job deadline
+a successful test or a killed mutant. A grace stage would add up to its budget
+to uncooperative timeouts and still miss detached descendants. The existing
+same-group controls pass, so this issue makes no runtime termination change.
+Reconsider graceful shutdown when a supported workload demonstrates useful
+cleanup that fits the existing deadline and preserves timeout verdicts.
+
+These detached measurements are Linux-only. The existing native macOS lifecycle
+proof establishes same-group cleanup. Node documents that Unix
+[`detached: true`](https://nodejs.org/api/child_process.html#optionsdetached)
+creates a new process group and session, but this check does not claim a new
+macOS measurement. Windows Job-object behavior and its native descendant
+controls are described in the [configuration guide](../../docs/configuration.md#parallel-execution).
 
 ## Proof input and output checks
 

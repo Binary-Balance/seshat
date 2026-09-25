@@ -382,8 +382,35 @@ not filesystem cleanup or the total assessment time.
 Output reads retain up to 2 MiB per stream. Reports include up to 1,000 diagnostic
 characters from each stream, even if a writer never closes the pipe. After
 process cleanup, Seshat allows 500 ms for both pipes to close, then closes its
-read handles and records a pipe error. Unix descendants that deliberately leave
-the owned process group can remain alive; process supervision is not a sandbox.
+read handles and records a pipe error. A timeout remains `timed-out` even when
+its runner receipt is missing; a missing receipt cannot turn it into a kill.
+
+On Unix, Seshat sends SIGKILL to the owned process group, including ordinary
+descendants that stay in it. A child can escape by starting another group or
+session, for example Node's `detached: true` or a daemon that calls `setsid`
+between forks.
+The Linux [supervision proof](../benchmarks/proofs/README.md#unix-supervision-boundary)
+confirms that escaped descendants survive. Held-open output pipes produce the
+bounded error above. A daemon that closes its pipes can survive a successful
+job without a cleanup error. Successful cleanup therefore does not prove that
+no detached background process remains. Tests must stop any services they
+start; keep children in the owned group when relying on Seshat to stop them.
+
+Windows uses a Job object with kill-on-close and no breakaway permission.
+Ordinary child processes inherit job membership; detaching from a console does
+not itself escape the Job. The native Windows controls verify descendant
+termination and pipe closure, including after leader exit. This is a different
+boundary from a Unix process group, not a cross-platform sandbox. See Microsoft's
+[Job objects](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects)
+and [process creation flags](https://learn.microsoft.com/en-us/windows/win32/procthread/process-creation-flags).
+
+Seshat does not send a preliminary SIGTERM to jobs. A short grace period can
+let a cooperative fixture write cleanup evidence, but cannot reach descendants
+outside the group and adds delay for uncooperative jobs. The checked workloads
+do not establish a need for that change. Cleanup keeps the leader's PID owned
+until signalling finishes. After ownership is released, no signal is sent to
+that numeric PID or group again; EPERM remains uncertainty, not proof of exit.
+
 Job evidence retains execution, pipe and cleanup errors separately. A signal
 received after a job has completed still cancels the overall assessment without
 relabelling that completed job as cancelled.
