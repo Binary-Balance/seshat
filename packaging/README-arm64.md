@@ -3,7 +3,7 @@
 This is the `@binary-balance/seshat-linux-arm64` native payload for Linux ARM64
 on Ubuntu 22.04 with glibc 2.35. The package records its target, binary hash,
 native library requirements and dependency versions in `BUILD.json`. Node
-24.20.0 is the verified test runtime.
+24.20.0 is the package-build baseline; assessments also support 24.21.0.
 
 Install the local tarball as a development dependency:
 

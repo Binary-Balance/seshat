@@ -285,6 +285,11 @@ fn readable(report: &Value) -> String {
             text(&setup["baseline"]["state"]),
             text(&setup["coverage"]["state"])
         );
+        for phase in ["baseline", "coverage"] {
+            if let Some(error) = setup[phase]["evidenceError"].as_str() {
+                let _ = writeln!(output, "  {phase}: {error:?}");
+            }
+        }
         for key in ["typecheckMs", "baselineMs", "coverageMs"] {
             if let Some(ms) = setup["timings"][key].as_f64() {
                 let _ = writeln!(output, "  {key}: {ms:.1} ms");

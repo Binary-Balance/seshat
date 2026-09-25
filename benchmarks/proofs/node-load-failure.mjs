@@ -32,6 +32,7 @@ async function execute(name, app, tests, expected, other) {
   const result = JSON.parse(run.stdout);
   results[name] = result;
   writeFileSync(join(work, 'result.json'), JSON.stringify(results,null,2));
+  if (process.env.SESHAT_PROOF_OUTPUT) writeFileSync(process.env.SESHAT_PROOF_OUTPUT, JSON.stringify(results,null,2));
   assert.equal(result.baseline.state, 'passed', JSON.stringify(result));
   assert.equal(readFileSync(join(project, 'subject.ts'),'utf8'), app);
   assert.ok(!readdirSync(work).some(name=>name.startsWith('session-')));

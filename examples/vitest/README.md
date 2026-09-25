@@ -4,7 +4,7 @@ See the [shared consumer guidance](../README.md) for native and Node launcher
 commands, PowerShell equivalents, workers, thresholds, reports and exit codes.
 
 This project uses Vitest 5.0.0 with `@vitest/coverage-istanbul` 5.0.0 and
-TypeScript 6.0.3 on Node 24.20.0. The source scope includes the TypeScript and
+TypeScript 6.0.3 on Node 24.20.0 or 24.21.0. The source scope includes the TypeScript and
 TSX files under `src`, excluding `src/ignored.ts`. The capture list includes
 the source, tests, runner configuration, lockfile and installed dependencies.
 

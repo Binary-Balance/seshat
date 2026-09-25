@@ -122,7 +122,9 @@ jobs:
         env:
           SESHAT_PROOF_OUTPUT: work/arm64/jest-expo-check.json
         run: |
+          npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
           node benchmarks/proofs/jest-expo-check.mjs \
+            --deps "$GITHUB_WORKSPACE/benchmarks/proofs/fixtures/jest-expo" \
             --tarball work/arm64/seshat-linux-arm64.tgz \
             --cases normal-1,assertion-kill,survivor,before-all \
             2>&1 | tee work/arm64/jest-expo-check.log
@@ -142,6 +144,12 @@ jobs:
         run: |
           PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/arm64/package-result.json")).proofBinary);')"
           SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/lifecycle.mjs 2>&1 | tee work/arm64/lifecycle.log
+      - name: Set up additional supported Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.21.0
+      - name: Verify Node 24.21.0 compatibility
+        run: node benchmarks/proofs/runner-compatibility.mjs "work/arm64/package-result.json"
       - name: Write portable summary
         if: always()
         run: node benchmarks/proofs/linux-arm64-summary.mjs work/arm64
