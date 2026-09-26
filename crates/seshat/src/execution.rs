@@ -348,10 +348,12 @@ impl Session {
                 details: json!({"skipped":true,"ms":0}),
             });
         }
-        let root = self.root.to_str().unwrap();
+        // Commands append paths such as @ROOT@/check.cjs; Node rejects that
+        // mixed separator form after a Windows verbatim prefix.
+        let root = module_path(&self.root)?;
         let args: Vec<_> = proof_command(&self.config, key)?
             .iter()
-            .map(|arg| arg.replace("@ROOT@", root))
+            .map(|arg| arg.replace("@ROOT@", &root))
             .collect();
         let (program, args) = args.split_first().ok_or("empty command")?;
         let receipt = self.root.join("receipt.json");

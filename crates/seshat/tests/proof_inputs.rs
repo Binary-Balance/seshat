@@ -77,6 +77,24 @@ fn report(output: &Output, status: i32) -> Value {
 }
 
 #[test]
+fn command_root_loads_captured_scripts() {
+    for strategy in ["replace", "switch"] {
+        let mut fixture = Fixture::new();
+        fs::write(
+            fixture.root.join("input/check.cjs"),
+            "require('fs').writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({complete:true,passed:1,failed:0,errors:0,timeouts:0}));",
+        )
+        .unwrap();
+        for phase in ["typecheck", "build", "test"] {
+            fixture.config[phase] = json!(["node", "@ROOT@/check.cjs"]);
+        }
+        let value = report(&fixture.execute(strategy).output().unwrap(), 0);
+        assert_eq!(value["complete"], true, "{value}");
+        fixture.clean();
+    }
+}
+
+#[test]
 fn invalid_configuration_never_starts_an_earlier_command() {
     let mut fixture = Fixture::new();
     let marker = fixture.root.join("started");
