@@ -12,7 +12,10 @@ process supervision policy.
 Run the [benchmark driver](../../benchmarks/audit-performance/README.md). The
 [raw evidence](../../outputs/audit-performance.json) records the measured source
 revision and source hashes, environment, build costs, executable hashes, all
-microbenchmark samples and every Node workspace run. Tests call the existing
+microbenchmark samples and every Node workspace run. The asset-byte metadata
+was corrected from 11,468,800 to 13,107,200 after summing the retained files.
+Timing samples, executable hashes and original measurement-input hashes remain
+unchanged; the raw evidence records the correction. Tests call the existing
 private functions through test-only modules added to a disposable crate copy.
 The shipped source has no benchmark branches or clocks.
 
@@ -70,7 +73,7 @@ destruction, whereas the CLI preparation phases below have narrower boundaries.
 ### Real Node workspace
 
 The fixture has two source files, two mutants and 100 captured assets totalling
-11,468,800 bytes. All 32 runs passed the same scope, mapping, outcome, source
+13,107,200 bytes. All 32 runs passed the same scope, mapping, outcome, source
 integrity and scratch cleanup checks. One Node test case checks three comparison boundary values
 and the workspace import; both mutants are killed.
 

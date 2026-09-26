@@ -45,7 +45,7 @@ those three rebuilds. LTO conditions have separate targets. Build order is off,
 then thin; this is not a thermal or cache-controlled compiler benchmark.
 
 The real runner reuses the maintained Node workspace fixture and collector. It
-adds 100 captured assets totalling 11,468,800 bytes, without adding source or
+adds 100 captured assets totalling 13,107,200 bytes, without adding source or
 mutants. Off/thin LTO, workers 1/2 and replacement/switching produce eight
 conditions, each with a warmup and three measured fresh CLI invocations. Order
 alternates between forward and reverse conditions. Every run must preserve the

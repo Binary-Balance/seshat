@@ -580,7 +580,7 @@
   "runner": {
     "fixture": {
       "assetFiles": 100,
-      "assetBytes": 11468800,
+      "assetBytes": 13107200,
       "sourceFiles": 2,
       "mutants": 2
     },
@@ -4124,5 +4124,13 @@
       }
     ]
   },
-  "probeBinarySha256": "ddcefdf587a0f1ed6d40277a2c82dcb7d4d10c5dfd041290627b33c375976fb2"
+  "probeBinarySha256": "ddcefdf587a0f1ed6d40277a2c82dcb7d4d10c5dfd041290627b33c375976fb2",
+  "metadataCorrections": [
+    {
+      "field": "runner.fixture.assetBytes",
+      "recorded": 11468800,
+      "corrected": 13107200,
+      "reason": "100 retained assets each contain 16384 repetitions of the eight-byte fixture\\n payload. Timing samples and original measurement-input hashes are unchanged."
+    }
+  ]
 }

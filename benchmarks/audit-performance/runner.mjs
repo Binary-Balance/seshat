@@ -13,7 +13,8 @@ mkdirSync(project, {recursive: true}); mkdirSync(scratch);
 writeNodeWorkspace(project);
 // An ordinary captured asset tree exercises worker copying without changing source scope.
 mkdirSync(join(project, 'assets'));
-for (let i = 0; i < 100; i++) writeFileSync(join(project, `assets/${i}.txt`), 'fixture\n'.repeat(16384));
+const asset = 'fixture\n'.repeat(16384);
+for (let i = 0; i < 100; i++) writeFileSync(join(project, `assets/${i}.txt`), asset);
 const originals = ['src/compare.ts', 'packages/rules/index.ts'].map(path => [path, readFileSync(join(project, path))]);
 const runs = [];
 let semanticReference;
@@ -54,6 +55,6 @@ for (let sample = 0; sample <= 3; sample++) {
     });
   }
 }
-let evidence = JSON.stringify({fixture:{assetFiles:100, assetBytes:100*7*16384, sourceFiles:2, mutants:2}, semantic:semanticReference, semanticSha256:createHash('sha256').update(JSON.stringify(semanticReference)).digest('hex'), runs}, null, 2);
+let evidence = JSON.stringify({fixture:{assetFiles:100, assetBytes:100*Buffer.byteLength(asset), sourceFiles:2, mutants:2}, semantic:semanticReference, semanticSha256:createHash('sha256').update(JSON.stringify(semanticReference)).digest('hex'), runs}, null, 2);
 for (const [path, label] of [[work,'<work>'], [dependencies,'<dependencies>'], [process.execPath,'<node>']]) evidence = evidence.replaceAll(path, label);
 writeFileSync(output, evidence + '\n');
