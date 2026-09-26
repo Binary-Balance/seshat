@@ -29,8 +29,6 @@ pub(super) struct RegularFile {
 
 impl RegularFile {
     pub(super) fn open(path: &Path, writable: bool) -> Result<Self, String> {
-        #[cfg(test)]
-        super::project::trace_file_io(path, "open requested");
         Self::open_io(path, writable).map_err(|e| format!("open {}: {e}", path.display()))
     }
 

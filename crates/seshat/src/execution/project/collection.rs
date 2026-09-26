@@ -1603,7 +1603,7 @@ mod tests {
         let target = outside.clone();
         FILE_IO_HOOK.with(|slot| {
             *slot.borrow_mut() = Some((
-                path,
+                fs::canonicalize(&path).unwrap(),
                 false,
                 Box::new(move || {
                     fs::remove_file(&swapped_path).unwrap();
