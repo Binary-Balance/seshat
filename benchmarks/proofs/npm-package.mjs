@@ -464,6 +464,25 @@ renameSync(nativeInstalled, nativeBackup);
 try {
   const missing = await runLauncher('missing-payload-json', ['check', '--json'], consumer, 2);
   assert.match(report(missing).result.error, /missing|omitted/i);
+  // A bare --json always requests JSON, even after invalid native arguments.
+  // A disambiguated path named --json must not enable JSON in either entry point.
+  for (const [index, args] of [
+    ['check', '--', '--json'], ['check', '--config', '--json'],
+    ['check', '--config=./seshat.json', '--json'], ['check', '--config', './--json'],
+    ['check', '--json=true'],
+  ].entries()) {
+    const native = await run(`native-json-grammar-${index}`, nativeExecutable.replace(nativeInstalled, nativeBackup), args, consumer, 2);
+    const missing = await runLauncher(`missing-payload-grammar-${index}`, args, consumer, 2);
+    if (args.includes('--json')) {
+      assert.equal(JSON.parse(native.stdout).complete, false);
+      assert.match(report(missing).result.error, /missing|omitted/i);
+    } else {
+      if (args.includes('./--json')) assert.match(native.stdout, /Seshat check: incomplete/);
+      else assert.equal(native.stdout, '');
+      assert.equal(missing.stdout, '');
+      assert.match(missing.stderr, /missing|omitted/i);
+    }
+  }
 } finally {
   renameSync(nativeBackup, nativeInstalled);
 }

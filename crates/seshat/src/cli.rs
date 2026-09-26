@@ -15,6 +15,8 @@ use std::{
 const HELP: &str = "Seshat CLI
 
 Usage: seshat <check|crap|mutate> [options]
+       seshat <check|crap|mutate> <--help|-h>
+       seshat <--help|-h|--version|-V>
   check           CRAP analysis and mutation testing
   crap            CRAP analysis with fresh coverage, no mutants
   mutate          Mutation testing with original typechecks/baselines, no coverage
@@ -26,8 +28,11 @@ Options:
                   Use helper-based switching for check/mutate (experimental)
   --json          One versioned JSON report on stdout, including failures
   --no-progress   Suppress phase messages on stderr
-  --help, -h      Show this help without reading configuration
-  --version, -V   Show the version
+
+Help and version accept only the forms above, without other options.
+Help does not read configuration; version prints the executable version.
+Path options take a separate, non-empty argument. For names beginning with --,
+use ./--name or an absolute path. --flag=value and the -- separator are unsupported.
 
 Use the same explicit source, capture and setup configuration for all commands.
 Optional config thresholds: maxCrap and minMutationScore under thresholds.
@@ -273,7 +278,7 @@ fn readable(report: &Value) -> String {
                 function["complexity"]
             );
         }
-        if let Some(error) = source.get("error") {
+        if let Some(error) = source.get("error").filter(|v| !v.is_null()) {
             let _ = writeln!(output, "  Error: {error}");
         }
     }
@@ -457,9 +462,9 @@ fn readable(report: &Value) -> String {
             let _ = writeln!(output, "Mutation error: {error}");
         }
     }
-    for key in ["error", "cleanupError"] {
-        if let Some(error) = result.get(key) {
-            let _ = writeln!(output, "Error: {error}");
+    for (key, label) in [("error", "Error"), ("cleanupError", "Cleanup error")] {
+        if let Some(error) = result.get(key).filter(|v| !v.is_null()) {
+            let _ = writeln!(output, "{label}: {error}");
         }
     }
     let _ = writeln!(
@@ -515,6 +520,17 @@ fn readable(report: &Value) -> String {
     output
 }
 
+fn write_information(output: &str) -> ExitCode {
+    match io::stdout().lock().write_all(output.as_bytes()) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) if error.kind() == io::ErrorKind::BrokenPipe => ExitCode::SUCCESS,
+        Err(error) => {
+            let _ = writeln!(io::stderr().lock(), "seshat: write information: {error}");
+            2.into()
+        }
+    }
+}
+
 pub fn main() -> ExitCode {
     let started = Instant::now();
     let raw: Vec<_> = env::args_os().skip(1).collect();
@@ -528,11 +544,15 @@ pub fn main() -> ExitCode {
         .collect::<Result<Vec<_>, _>>()
         .and_then(|args| parse(&args));
     let (value, status, as_json) = match action {
-        Ok(Action::Help) => return write_output(HELP, 0),
+        Ok(Action::Help) => return write_information(HELP),
         Ok(Action::Version) => {
-            return write_output(&format!("seshat {}\n", env!("CARGO_PKG_VERSION")), 0);
+            return write_information(&format!("seshat {}\n", env!("CARGO_PKG_VERSION")));
         }
         Err(error) => {
+            if !json_requested {
+                let _ = writeln!(io::stderr().lock(), "seshat: {error}");
+                return 2.into();
+            }
             let (value, status) = report(
                 None,
                 Value::Null,
@@ -703,6 +723,11 @@ mod tests {
             vec!["bogus"],
             vec!["check", "--config"],
             vec!["check", "--config", "--json"],
+            vec!["check", "--config", ""],
+            vec!["check", "--config=./seshat.json"],
+            vec!["check", "--scratch=./scratch"],
+            vec!["check", "--", "--json"],
+            vec!["check", "--version"],
             vec!["check", "--json", "--json"],
             vec!["check", "extra"],
             vec!["check", "--wat"],
@@ -727,6 +752,53 @@ mod tests {
         assert!(options.experimental_switching);
         assert!(parse(&["crap".into(), "--experimental-switching".into()]).is_err());
     }
+    #[test]
+    fn path_arguments_accept_unambiguous_leading_dashes() {
+        for path in [PathBuf::from("./--json"), env::temp_dir().join("--json")] {
+            let Action::Run(options) = parse(&[
+                "check".into(),
+                "--config".into(),
+                path.to_str().unwrap().into(),
+                "--scratch".into(),
+                path.to_str().unwrap().into(),
+            ])
+            .unwrap() else {
+                panic!()
+            };
+            assert_eq!(options.config, path);
+            assert_eq!(options.scratch, path);
+            assert!(!options.json);
+        }
+    }
+
+    #[test]
+    fn readable_errors_omit_nulls_and_distinguish_cleanup() {
+        for error in [Value::Null, json!("failed\u{001b}[2J\nnext")] {
+            let (report, _) = report(
+                Some("check"),
+                Value::Null,
+                json!({
+                    "complete":false, "error":error, "cleanupError":error,
+                    "sources":[{"path":"source.ts", "error":error}],
+                    "mutation":{"error":error}
+                }),
+                1.0,
+                None,
+                None,
+            );
+            let rendered = readable(&report);
+            assert!(!rendered.contains("error: null"));
+            assert!(!rendered.contains("Error: null"));
+            assert!(!rendered.contains('\u{001b}'));
+            if !error.is_null() {
+                assert!(rendered.contains(&format!("Error: {error}")));
+                assert!(rendered.contains(&format!("Cleanup error: {error}")));
+            } else {
+                assert!(!rendered.contains("Cleanup error:"));
+            }
+        }
+    }
+
     #[test]
     fn unknown_is_not_zero_and_terminal_controls_are_escaped() {
         let (report, code) = report(
