@@ -2,8 +2,8 @@
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {chmodSync, copyFileSync, lstatSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync} from 'node:fs';
-import {dirname, join, relative, resolve} from 'node:path';
+import {chmodSync, copyFileSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync} from 'node:fs';
+import {basename, dirname, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {runNpm} from './npm.mjs';
 import {loadRuntimeNoticeAssets, renderRuntimeNotice} from './runtime-notice-check.mjs';
@@ -80,7 +80,16 @@ const existingOutput = lstatSync(output, {throwIfNoEntry:false});
 assert.ok(!existingOutput || existingOutput.isDirectory() && readdirSync(output).length === 0,
   `output must be a new or empty directory: ${output}`);
 assert.ok(!lstatSync(resultPath, {throwIfNoEntry:false}), `release manifest already exists: ${resultPath}`);
-const relativeResult = relative(output, resultPath).replaceAll('\\', '/');
+// Resolve existing ancestors so an external directory alias cannot hide a collision.
+function canonicalDestination(path) {
+  const missing = [];
+  while (!lstatSync(path, {throwIfNoEntry:false})) {
+    missing.unshift(basename(path));
+    path = dirname(path);
+  }
+  return resolve(realpathSync(path), ...missing);
+}
+const relativeResult = relative(canonicalDestination(output), canonicalDestination(resultPath)).replaceAll('\\', '/');
 const reservedResult = process.platform === 'win32' ? relativeResult.toLowerCase() : relativeResult;
 const stageNames = ['seshat', ...targets.map(target => target.key)];
 const archiveNames = ['binary-balance-seshat', ...targets.map(target => `binary-balance-seshat-${target.key}`)]
@@ -229,5 +238,6 @@ const release = {
   native: staged,
 };
 mkdirSync(dirname(resultPath), {recursive: true});
-writeJson(resultPath, release);
+// A file created after validation must never be truncated by the manifest write.
+writeFileSync(resultPath, JSON.stringify(release, null, 2) + '\n', {flag:'wx'});
 console.log(JSON.stringify(release, null, 2));

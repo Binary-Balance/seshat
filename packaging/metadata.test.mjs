@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {execFileSync, spawnSync} from 'node:child_process';
-import {existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync} from 'node:fs';
+import {existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync} from 'node:fs';
 import {dirname, join, resolve} from 'node:path';
 import {tmpdir} from 'node:os';
 import test from 'node:test';
@@ -231,4 +231,18 @@ test('native pack and release archives have equivalent manifests and file conten
   for (const path of files.filter(path => path !== 'package.json')) {
     assert.deepEqual(archiveFile(nativeArchive, path), archiveFile(releaseArchive, path), path);
   }
+});
+
+test('manifest aliases cannot overwrite a packed archive', () => {
+  const root = mkdtempSync(join(tmpdir(), 'seshat manifest-alias-'));
+  try {
+    const output = join(root, 'output');
+    const alias = join(root, 'alias');
+    mkdirSync(output);
+    symlinkSync(output, alias, process.platform === 'win32' ? 'junction' : 'dir');
+    const child = release(output, ['--manifest', join(alias, `binary-balance-seshat-${version}.tgz`)]);
+    assert.notEqual(child.status, 0, 'an aliased manifest must not overwrite an archive');
+    assert.match(child.stderr, /must not overwrite a staged package or archive/);
+    assert.deepEqual(readdirSync(output), [], 'reject the collision before staging');
+  } finally { rmSync(root, {recursive:true, force:true}); }
 });
