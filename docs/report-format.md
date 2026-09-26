@@ -256,7 +256,9 @@ Per-check states are `not-requested`, `incomplete`, `failed`, `passed` and
 `not-applicable`. `actual` is non-null only for `passed` and `failed`; it is
 `null` for every other state, even when partial assessment evidence contains a
 number. If a requested metric has no applicable score, it is
-`not-applicable`, not an invented pass.
+`not-applicable`, not an invented pass. A requested `maxCrap` check with a
+measured function whose CRAP value is missing or non-numeric makes the report
+incomplete, preserves the source rows and returns exit status `2`.
 
 The aggregate `quality.state` is one of:
 
