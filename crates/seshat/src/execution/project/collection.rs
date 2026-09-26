@@ -116,6 +116,8 @@ fn independent_file(path: &Path) -> Result<bool, String> {
 }
 
 fn regular_path(root: &Path, path: &Path, missing_ok: bool) -> Result<(), String> {
+    validate_path(root)?;
+    validate_path(path)?;
     let root_type = fs::symlink_metadata(root)
         .map_err(|e| e.to_string())?
         .file_type();
@@ -171,6 +173,8 @@ fn validate_coverage_report(root: &Path, path: &Path) -> Result<Value, String> {
                 "coverage contains a path outside the captured project or a mismatched file identity".into(),
             );
         };
+        validate_path(Path::new(name))?;
+        validate_path(Path::new(entry_path))?;
         if !within(root, Path::new(name)) || !same_path_identity(name, entry_path) {
             return Err(
                 "coverage contains a path outside the captured project or a mismatched file identity".into(),
@@ -178,7 +182,9 @@ fn validate_coverage_report(root: &Path, path: &Path) -> Result<Value, String> {
         }
         regular_path(root, Path::new(name), false)?;
         // Resolve spelling aliases only after rejecting links and non-normal paths.
-        let identity = stable_path(&fs::canonicalize(name).map_err(|e| e.to_string())?);
+        let canonical = fs::canonicalize(name).map_err(|e| e.to_string())?;
+        validate_path(&canonical)?;
+        let identity = stable_path(&canonical);
         let mut file = file.clone();
         file["path"] = json!(identity);
         if normalized.insert(identity, file).is_some() {
@@ -1642,6 +1648,46 @@ mod tests {
             fs::read_to_string(root.join("original.json")).unwrap(),
             "{}"
         );
+        directory.close().unwrap();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn report_paths_reject_non_utf8_before_reading() {
+        use std::os::unix::ffi::OsStringExt;
+        let directory = OwnedDirectory::create(&std::env::temp_dir()).unwrap();
+        let path = directory
+            .0
+            .join(std::ffi::OsString::from_vec(b"report-\xff.json".to_vec()));
+        // Reject before lookup, including on filesystems that cannot create this name.
+        assert!(
+            validate_coverage_report(&directory.0, &path)
+                .unwrap_err()
+                .contains("not valid UTF-8")
+        );
+        directory.close().unwrap();
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn coverage_rejects_verbatim_only_file_identity() {
+        let directory = OwnedDirectory::create(&std::env::temp_dir()).unwrap();
+        let root = fs::canonicalize(&directory.0).unwrap();
+        let source = root.join("NUL.ts");
+        fs::write(&source, "export const value = 1;").unwrap();
+        let raw = source.to_str().unwrap();
+        let report = root.join("coverage.json");
+        fs::write(
+            &report,
+            serde_json::to_vec(&json!({(raw): {"path": raw}})).unwrap(),
+        )
+        .unwrap();
+        assert!(
+            validate_coverage_report(&root, &report)
+                .unwrap_err()
+                .contains("ordinary Windows path")
+        );
+        fs::remove_file(source).unwrap();
         directory.close().unwrap();
     }
 

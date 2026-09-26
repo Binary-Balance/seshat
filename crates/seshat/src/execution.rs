@@ -60,15 +60,16 @@ fn read_json_report(path: &Path) -> Result<Value, String> {
 // ponytail: one CLI run per process; pass cancellation explicitly if this becomes a library.
 static CANCEL_SIGNAL: OnceLock<Arc<AtomicUsize>> = OnceLock::new();
 
-fn stable_path(path: &Path) -> String {
-    let value = path.to_string_lossy();
+fn stable_path(path: &Path) -> Result<String, String> {
+    project::validate_path(path)?;
+    let value = path.to_str().unwrap();
     #[cfg(windows)]
     {
-        return value.replace('\\', "/");
+        return Ok(value.replace('\\', "/"));
     }
     #[cfg(not(windows))]
     {
-        value.into_owned()
+        Ok(value.to_owned())
     }
 }
 
@@ -194,15 +195,16 @@ fn observe_node_loads(
     let source_contexts = sources
         .iter()
         .map(|(source_path, source)| {
-            let analysis = Analysis::inspect(&stable_path(source_path), source)?;
+            let source_path = stable_path(source_path)?;
+            let analysis = Analysis::inspect(&source_path, source)?;
             Ok::<_, String>(json!({
-                "source":stable_path(source_path),
+                "source":source_path,
                 "sites":analysis.load_failure_sites(source),
             }))
         })
         .collect::<Result<Vec<_>, _>>()?;
     let context = if let [source_context] = source_contexts.as_slice() {
-        json!({"version":1,"executionId":id,"source":stable_path(sources[0].0),"sites":source_context["sites"]})
+        json!({"version":1,"executionId":id,"source":source_context["source"],"sites":source_context["sites"]})
     } else {
         json!({"version":1,"executionId":id,"sources":source_contexts})
     };

@@ -40,16 +40,56 @@ use std::os::unix::fs::{DirBuilderExt, symlink};
 #[cfg(windows)]
 use std::os::windows::fs::{symlink_dir, symlink_file};
 
+// Capture and report boundaries validate before paths become JSON identities.
+pub(super) fn validate_path(path: &Path) -> Result<(), String> {
+    path.to_str()
+        .ok_or_else(|| format!("path is not valid UTF-8: {path:?}"))?;
+    #[cfg(windows)]
+    for component in path.components() {
+        if let std::path::Component::Normal(name) = component {
+            let name = name.to_str().unwrap();
+            let base = name
+                .split('.')
+                .next()
+                .unwrap()
+                .trim_end_matches(' ')
+                .to_ascii_uppercase();
+            let device = matches!(
+                base.as_str(),
+                "CON" | "PRN" | "AUX" | "NUL" | "CONIN$" | "CONOUT$"
+            ) || ["COM", "LPT"].iter().any(|prefix| {
+                base.strip_prefix(prefix).is_some_and(|suffix| {
+                    matches!(
+                        suffix,
+                        "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "¹" | "²" | "³"
+                    )
+                })
+            });
+            // Verbatim paths can create names that ordinary Node/Win32 paths reinterpret.
+            if device
+                || name.ends_with(['.', ' '])
+                || name.contains(['<', '>', ':', '"', '|', '?', '*'])
+                || name.chars().any(|c| c <= '\u{1f}')
+            {
+                return Err(format!(
+                    "path is not representable as an ordinary Windows path: {path:?}"
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
 fn stable_path(path: &Path) -> String {
     let path = comparable_path(path);
-    let value = path.to_string_lossy();
+    let value = path.to_str().expect("validated UTF-8 path");
     #[cfg(windows)]
     {
         return value.replace('\\', "/");
     }
     #[cfg(not(windows))]
     {
-        value.into_owned()
+        value.to_owned()
     }
 }
 
@@ -58,7 +98,9 @@ fn comparable_path(path: &Path) -> PathBuf {
     // normally emit the same file with its ordinary drive prefix.
     #[cfg(windows)]
     {
-        let value = path.to_string_lossy();
+        let Some(value) = path.to_str() else {
+            return path.to_path_buf();
+        };
         if let Some(rest) = value.strip_prefix(r"\\?\UNC\") {
             return PathBuf::from(format!(r"\\{rest}"));
         }
@@ -84,9 +126,10 @@ fn path_key(path: &Path) -> String {
 fn same_component(left: &std::path::Component<'_>, right: &std::path::Component<'_>) -> bool {
     #[cfg(windows)]
     {
-        left.as_os_str()
-            .to_string_lossy()
-            .eq_ignore_ascii_case(&right.as_os_str().to_string_lossy())
+        match (left.as_os_str().to_str(), right.as_os_str().to_str()) {
+            (Some(left), Some(right)) => left.eq_ignore_ascii_case(right),
+            _ => left == right,
+        }
     }
     #[cfg(not(windows))]
     {
@@ -144,7 +187,13 @@ fn create_link(target: impl AsRef<Path>, link: impl AsRef<Path>) -> std::io::Res
     {
         // Windows link APIs require native separators even when the project stores relative
         // paths with `/` separators.
-        let native_target = PathBuf::from(target.to_string_lossy().replace('/', "\\"));
+        let target = target.to_str().ok_or_else(|| {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "link target is not valid UTF-8",
+            )
+        })?;
+        let native_target = PathBuf::from(target.replace('/', "\\"));
         let target_for_kind = if native_target.is_absolute() {
             native_target.clone()
         } else {
@@ -304,6 +353,7 @@ impl Config {
         patterns(&config.source.exclude)?;
         for (i, entry) in config.capture.iter().enumerate() {
             relative(entry, false)?;
+            validate_path(Path::new(entry))?;
             if entry.contains(['*', '?', '[', ']', '{', '}']) {
                 return Err(format!(
                     "capture entries are literal files or directories: {entry}"
@@ -332,6 +382,8 @@ impl Config {
             }
             relative(&setup.cwd, true)?;
             relative(&setup.coverage.report, false)?;
+            validate_path(Path::new(&setup.cwd))?;
+            validate_path(Path::new(&setup.coverage.report))?;
             super::validate_command(&setup.test, &format!("{}.test", setup.name))?;
             if let Some(args) = &setup.typecheck {
                 super::validate_command(args, &format!("{}.typecheck", setup.name))?;
@@ -357,6 +409,7 @@ struct OwnedDirectory(PathBuf);
 
 impl OwnedDirectory {
     fn create(parent: &Path) -> Result<Self, String> {
+        validate_path(parent)?;
         let stamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .map_err(|e| e.to_string())?
@@ -366,6 +419,11 @@ impl OwnedDirectory {
         #[cfg(unix)]
         let parent = fs::canonicalize(parent).map_err(|e| e.to_string())?;
         let path = parent.join(format!("capture-{}-{stamp}", std::process::id()));
+        Self::create_path(path)
+    }
+
+    fn create_path(path: PathBuf) -> Result<Self, String> {
+        validate_path(&path)?;
         // create, never create_dir_all: a collision must not adopt someone else's directory.
         let builder = fs::DirBuilder::new();
         #[cfg(unix)]
@@ -414,13 +472,16 @@ fn walk(
     entries: &mut BTreeMap<PathBuf, Entry>,
 ) -> Result<(), String> {
     super::check_cancellation()?;
-    if relative
-        .components()
-        .any(|part| part.as_os_str() == ".git" || scope_only && part.as_os_str() == "node_modules")
-    {
+    if relative.components().any(|part| {
+        part.as_os_str()
+            .to_str()
+            .is_some_and(|name| name.eq_ignore_ascii_case(".git"))
+            || scope_only && part.as_os_str() == "node_modules"
+    }) {
         return Ok(());
     }
     let path = root.join(relative);
+    validate_path(&path)?;
     let metadata =
         fs::symlink_metadata(&path).map_err(|e| format!("read {}: {e}", path.display()))?;
     let kind = metadata.file_type();
@@ -557,6 +618,7 @@ fn source_paths(root: &Path, config: &Config) -> Result<Vec<PathBuf>, String> {
 }
 
 fn load_config(path: &Path) -> Result<(PathBuf, Config), String> {
+    validate_path(path)?;
     let path = std::path::absolute(path).map_err(|e| e.to_string())?;
     let parent = fs::canonicalize(
         path.parent()
@@ -564,6 +626,7 @@ fn load_config(path: &Path) -> Result<(PathBuf, Config), String> {
     )
     .map_err(|e| e.to_string())?;
     let path = parent.join(path.file_name().ok_or("configuration has no filename")?);
+    validate_path(&path)?;
     let config = Config::parse(&RegularFile::open(&path, false)?.read(u64::MAX)?)?;
     Ok((path, config))
 }
@@ -623,7 +686,9 @@ impl CapturedProject {
         let root = config_path
             .parent()
             .ok_or("configuration has no project directory")?;
+        validate_path(scratch)?;
         let scratch = fs::canonicalize(scratch).map_err(|e| format!("scratch directory: {e}"))?;
+        validate_path(&scratch)?;
         if !scratch.is_dir() || within(root, &scratch) {
             return Err("scratch must be an existing directory outside the project".into());
         }
@@ -673,6 +738,7 @@ impl CapturedProject {
             super::check_cancellation()?;
             let resolved = fs::canonicalize(root.join(relative))
                 .map_err(|e| format!("resolve link {}: {e}", relative.display()))?;
+            validate_path(&resolved)?;
             let local = relative_path(root, &resolved)
                 .ok_or_else(|| format!("link escapes project: {}", relative.display()))?;
             let target = directory.0.join(local);
@@ -692,6 +758,7 @@ impl CapturedProject {
                     setup.name
                 )
             })?;
+            validate_path(&resolved)?;
             if !within(&directory.0, &resolved) || !resolved.is_dir() {
                 return Err(format!(
                     "invalid captured working directory for setup {}",
@@ -1081,6 +1148,252 @@ mod tests {
         assert!(Config::parse(&serde_json::to_vec(&repeated).unwrap()).is_err());
         repeated["setups"][1]["name"] = json!("another");
         assert!(Config::parse(&serde_json::to_vec(&repeated).unwrap()).is_err());
+        fixture.assert_clean();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn non_utf8_names_fail_before_capture_or_reporting() {
+        use std::os::unix::ffi::OsStringExt;
+        let mut fixture = Fixture::new();
+        for byte in [0xfe, 0xff] {
+            let mut name = b"value-".to_vec();
+            name.push(byte);
+            name.extend(b".ts");
+            let path = fixture
+                .project
+                .join("src")
+                .join(std::ffi::OsString::from_vec(name));
+            if let Err(error) = fs::write(&path, "export const value = 1;") {
+                // Some filesystems reject invalid bytes before a capture can encounter them.
+                assert_eq!(error.raw_os_error(), Some(libc::EILSEQ));
+                assert!(
+                    load_config(&path)
+                        .err()
+                        .unwrap()
+                        .contains("not valid UTF-8")
+                );
+                assert!(
+                    OwnedDirectory::create(&path)
+                        .err()
+                        .unwrap()
+                        .contains("not valid UTF-8")
+                );
+                assert!(
+                    super::super::stable_path(&path)
+                        .unwrap_err()
+                        .contains("not valid UTF-8")
+                );
+                fixture.assert_clean();
+                return;
+            }
+        }
+        assert!(fixture.capture().err().unwrap().contains("not valid UTF-8"));
+        fixture.assert_clean();
+        fs::remove_dir_all(fixture.project.join("src")).unwrap();
+        fixture.config["source"]["include"] = json!(["packages/**/*.ts"]);
+        fixture.config["capture"] = json!(["packages"]);
+        let invalid = std::ffi::OsString::from_vec(b"directory-\xff".to_vec());
+        let scratch = fixture._directory.0.join(&invalid);
+        fs::rename(&fixture.scratch, &scratch).unwrap();
+        fixture.scratch = scratch;
+        assert!(fixture.capture().err().unwrap().contains("not valid UTF-8"));
+        fixture.assert_clean();
+        let project = fixture._directory.0.join("project-parent").join(invalid);
+        fs::create_dir(project.parent().unwrap()).unwrap();
+        fs::rename(&fixture.project, &project).unwrap();
+        fixture.project = project;
+        assert!(fixture.capture().err().unwrap().contains("not valid UTF-8"));
+        let source = fixture.project.join("packages/rules/index.ts");
+        assert!(
+            super::super::stable_path(&source)
+                .unwrap_err()
+                .contains("not valid UTF-8")
+        );
+        fixture.assert_clean();
+    }
+
+    #[test]
+    fn git_case_variants_are_excluded_on_the_actual_filesystem() {
+        let fixture = Fixture::new();
+        let root = &fixture.project;
+        // Probe this directory: macOS and Windows can both use case-sensitive storage.
+        let aliases_git = root.join(".GIT/config").exists();
+        if !aliases_git {
+            fs::create_dir(root.join(".GIT")).unwrap();
+            fs::write(root.join(".GIT/private.ts"), "must not copy").unwrap();
+        }
+        fs::create_dir_all(root.join("src/.GiT")).unwrap();
+        fs::write(root.join("src/.GiT/private.ts"), "must not copy").unwrap();
+        for scope_only in [true, false] {
+            let mut entries = BTreeMap::new();
+            walk(root, Path::new(""), scope_only, &mut entries).unwrap();
+            assert!(!entries.keys().any(|path| path.components().any(|part| {
+                part.as_os_str()
+                    .to_str()
+                    .unwrap()
+                    .eq_ignore_ascii_case(".git")
+            })));
+            walk(root, Path::new(".GIT"), scope_only, &mut entries).unwrap();
+            assert!(!entries.contains_key(Path::new(".GIT")));
+        }
+        let captured = fixture.capture().unwrap();
+        assert!(!captured.directory.0.join("src/.GiT").exists());
+        drop(captured);
+        fixture.assert_clean();
+    }
+
+    #[test]
+    fn unicode_names_remain_distinct_and_copies_are_private() {
+        let fixture = Fixture::new();
+        for name in ["value-🎸.ts", "value-�.ts"] {
+            fs::write(
+                fixture.project.join("src").join(name),
+                "export const value = 1;",
+            )
+            .unwrap();
+        }
+        let captured = fixture.capture().unwrap();
+        let files = captured.scope()["files"].as_array().unwrap().clone();
+        for name in ["src/value-🎸.ts", "src/value-�.ts"] {
+            assert!(files.contains(&json!(name)));
+        }
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            assert_eq!(
+                fs::metadata(&captured.directory.0)
+                    .unwrap()
+                    .permissions()
+                    .mode()
+                    & 0o777,
+                0o700
+            );
+        }
+        // A collision must not adopt, truncate or clean up the existing directory.
+        let marker = captured.directory.0.join("marker");
+        fs::write(&marker, "owned").unwrap();
+        assert!(OwnedDirectory::create_path(captured.directory.0.clone()).is_err());
+        assert_eq!(fs::read_to_string(marker).unwrap(), "owned");
+        drop(captured);
+        fixture.assert_clean();
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_literal_paths_reject_device_and_verbatim_only_names() {
+        use std::os::windows::ffi::OsStringExt;
+        let fixture = Fixture::new();
+        let invalid = PathBuf::from(std::ffi::OsString::from_wide(&[0xd800]));
+        assert!(
+            validate_path(&invalid)
+                .unwrap_err()
+                .contains("not valid UTF-8")
+        );
+        for name in [
+            "NUL.ts",
+            "con",
+            "aux.json",
+            "PRN",
+            "COM1.log",
+            "lpt9",
+            "COM¹",
+            "LPT².txt",
+            "CONIN$",
+            "CONOUT$",
+            "trailing.",
+            "trailing ",
+            "file:stream",
+        ] {
+            for pointer in ["/capture", "/setups/0/cwd", "/setups/0/coverage/report"] {
+                let mut config = fixture.config.clone();
+                *config.pointer_mut(pointer).unwrap() = if pointer == "/capture" {
+                    json!([name])
+                } else {
+                    json!(name)
+                };
+                assert!(
+                    Config::parse(&serde_json::to_vec(&config).unwrap()).is_err(),
+                    "accepted {pointer}: {name}"
+                );
+            }
+        }
+        for name in ["COM10.ts", "NULL.ts", "普通 🎸.ts"] {
+            assert!(validate_path(Path::new(name)).is_ok());
+        }
+        // Rust's verbatim path can create a real NUL.ts; Node's ordinary spelling is unsafe.
+        let source = fs::canonicalize(fixture.project.join("src"))
+            .unwrap()
+            .join("NUL.ts");
+        fs::write(&source, "export const value = 1;").unwrap();
+        assert!(fs::metadata(&source).unwrap().is_file());
+        assert!(
+            fixture
+                .capture()
+                .err()
+                .unwrap()
+                .contains("ordinary Windows path")
+        );
+        fs::remove_file(source).unwrap();
+        fixture.assert_clean();
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_capture_inherits_acl_and_respects_denied_creation() {
+        let fixture = Fixture::new();
+        let captured = fixture.capture().unwrap();
+        let powershell = |path: &Path, script: &str| {
+            let result = std::process::Command::new("powershell.exe")
+                .args(["-NoProfile", "-NonInteractive", "-Command", script])
+                .env("SESHAT_ACL_TEST_PATH", comparable_path(path))
+                // CI runs under PowerShell 7; Windows PowerShell needs its own modules.
+                .env_remove("PSModulePath")
+                .output()
+                .unwrap();
+            assert!(
+                result.status.success(),
+                "{}",
+                String::from_utf8_lossy(&result.stderr)
+            );
+        };
+        powershell(
+            &captured.directory.0,
+            r#"
+            $ErrorActionPreference = 'Stop'
+            $acl = Get-Acl -LiteralPath $env:SESHAT_ACL_TEST_PATH
+            if ($acl.Access.Count -eq 0 -or @($acl.Access | Where-Object { -not $_.IsInherited }).Count -ne 0) { throw 'capture ACL did not inherit from scratch' }
+        "#,
+        );
+        drop(captured);
+        powershell(
+            &fixture.scratch,
+            r#"
+            $ErrorActionPreference = 'Stop'
+            $acl = Get-Acl -LiteralPath $env:SESHAT_ACL_TEST_PATH
+            $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
+            $rule = [System.Security.AccessControl.FileSystemAccessRule]::new($sid, 'CreateDirectories', 'Deny')
+            $acl.AddAccessRule($rule)
+            Set-Acl -LiteralPath $env:SESHAT_ACL_TEST_PATH -AclObject $acl
+        "#,
+        );
+        let denied = OwnedDirectory::create(&fixture.scratch);
+        powershell(
+            &fixture.scratch,
+            r#"
+            $ErrorActionPreference = 'Stop'
+            $acl = Get-Acl -LiteralPath $env:SESHAT_ACL_TEST_PATH
+            $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
+            $rule = [System.Security.AccessControl.FileSystemAccessRule]::new($sid, 'CreateDirectories', 'Deny')
+            $acl.RemoveAccessRuleSpecific($rule)
+            Set-Acl -LiteralPath $env:SESHAT_ACL_TEST_PATH -AclObject $acl
+        "#,
+        );
+        assert!(denied.err().unwrap().contains("create capture"));
+        OwnedDirectory::create(&fixture.scratch)
+            .unwrap()
+            .close()
+            .unwrap();
         fixture.assert_clean();
     }
 
