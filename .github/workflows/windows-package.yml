@@ -97,6 +97,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           rustup default 1.98.1-x86_64-pc-windows-msvc
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Check npm packing with literal Windows paths
+        shell: pwsh
+        run: |
+          node --test packaging/npm.test.mjs packaging/metadata.test.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node packaging/repeat-pack-failure-check.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Check proof failure reporting
         shell: pwsh
         run: |

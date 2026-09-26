@@ -6,6 +6,7 @@ import {tmpdir} from 'node:os';
 import {dirname, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
+const tar = process.platform === 'win32' ? 'tar.exe' : 'tar';
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 
 function readProvenance(directory) {
@@ -79,7 +80,6 @@ export function renderRuntimeNotice({provenance, files}) {
 }
 
 export function assertArchiveNotice(archive, expected) {
-  const tar = process.platform === 'win32' ? 'tar.exe' : 'tar';
   const actual = execFileSync(tar, ['-xOf', archive, 'package/THIRD_PARTY_NOTICES.txt'], {
     maxBuffer: expected.length + 1024,
     stdio: ['ignore', 'pipe', 'inherit'],
@@ -137,7 +137,7 @@ function selfCheck() {
     mkdirSync(archiveRoot);
     writeFileSync(join(archiveRoot, 'THIRD_PARTY_NOTICES.txt'), notice);
     const archive = join(root, 'package.tgz');
-    execFileSync('tar', ['-czf', archive, '-C', root, 'package'], {stdio: ['ignore', 'pipe', 'inherit']});
+    execFileSync(tar, ['-czf', archive, '-C', root, 'package'], {stdio: ['ignore', 'pipe', 'inherit']});
     assertArchiveNotice(archive, notice);
     assert.ok(valid.files.length === 1, 'synthetic positive asset check failed');
   } finally {

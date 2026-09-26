@@ -5,19 +5,16 @@ import {dirname, join, resolve} from 'node:path';
 import {tmpdir} from 'node:os';
 import test from 'node:test';
 import {fileURLToPath} from 'node:url';
+import {runNpm} from './npm.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repository = {type: 'git', url: 'git+https://github.com/Binary-Balance/seshat.git'};
 const entryDescription = 'A native CLI for TypeScript and TSX complexity analysis and mutation testing.';
 const packageDirectories = ['seshat', 'linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'win32-x64'];
-const npmCommand = process.platform === 'win32' ? process.execPath : 'npm';
-const npmArgs = process.platform === 'win32'
-  ? [process.env.npm_execpath || join(dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js')]
-  : [];
 const tarCommand = process.platform === 'win32' ? 'tar.exe' : 'tar';
 
 test('all release package metadata and README content survive packing', () => {
-  const output = mkdtempSync(join(tmpdir(), 'seshat-package-metadata-'));
+  const output = mkdtempSync(join(tmpdir(), 'seshat metadata & %SESHAT_NPM_PATH%=test-'));
   try {
     execFileSync(process.execPath, [join(repo, 'packaging/release.mjs'),
       '--output', output, '--layout-only'], {cwd: repo, stdio: 'ignore'});
@@ -52,10 +49,7 @@ test('all release package metadata and README content survive packing', () => {
           `# Seshat native payload\n\nTarget: ${directory}.\nConsumers normally install \`@binary-balance/seshat\`, which selects this payload for matching hosts.\n`,
           `${directory}: README content`);
       }
-      const [packed] = JSON.parse(execFileSync(npmCommand, [...npmArgs,
-        'pack', stage, '--json', '--offline', '--ignore-scripts', '--no-audit', '--no-fund',
-        '--update-notifier=false', '--pack-destination', output,
-      ], {cwd: repo, encoding: 'utf8'}));
+      const [packed] = JSON.parse(runNpm(['pack', stage, '--json', '--pack-destination', output], output));
       const packedManifest = JSON.parse(execFileSync(tarCommand,
         ['-xOf', join(output, packed.filename), 'package/package.json'], {encoding: 'utf8'}));
       assert.deepEqual(packedManifest.repository, repository, `${directory}: packed metadata`);
