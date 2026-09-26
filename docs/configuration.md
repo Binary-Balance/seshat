@@ -317,7 +317,8 @@ project-relative `cwd`. Commands are argument arrays, not shell expressions.
 `test` and `coverage.command` must contain the program followed by its argument
 array. `coverage.report` is a project-relative path, and each setup must use a
 different report path. `typecheck` is an optional argument array for `crap` but
-is required in every setup for `check` and `mutate`.
+is required in every setup for `check` and `mutate`. These mode requirements
+are checked before Seshat walks or copies the configured inputs.
 
 `check` and `mutate` require a `typecheck` in every setup and passing original
 test baselines. `crap` runs a configured typecheck when present, followed by its
@@ -339,7 +340,10 @@ Switching does not typecheck transformed helpers. Helper wrapping can lose
 TypeScript narrowing and can change reflection or source-text observations; verify
 the result against replacement for the project before relying on it.
 
-`{seshatReporter}` is replaced with the private reporter for that runner. Node
+`{seshatReporter}` is replaced with the private reporter for that runner.
+`{seshatReporter}` and `{seshatEnvironment}` are supported only in command
+arguments; the first array element names the program and rejects either
+placeholder. Commands remain argument arrays and are never passed to a shell. Node
 commands use `--test-reporter={seshatReporter}`. The bounded Node coverage
 collectors in [examples/node/collect-node.mjs](../examples/node/collect-node.mjs)
 and [examples/workspaces/collect-node.mjs](../examples/workspaces/collect-node.mjs)

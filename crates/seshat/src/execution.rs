@@ -38,6 +38,14 @@ fn validate_command(args: &[String], label: &str) -> Result<(), String> {
             "{label} must be a non-empty argument array without NUL characters"
         ));
     }
+    if ["{seshatReporter}", "{seshatEnvironment}"]
+        .iter()
+        .any(|placeholder| args[0].contains(placeholder))
+    {
+        return Err(format!(
+            "{label} placeholders belong in arguments, not the program"
+        ));
+    }
     Ok(())
 }
 

@@ -179,7 +179,9 @@ concurrency sections. Unavailable values use `null` or the states below:
 * `concurrency.seshat` always has numeric `configuredWorkers`,
   `effectiveWorkers` as a number or `null`, and `state` as `known` or
   `not-requested`. For mutation, `effectiveWorkers` reports the same scheduler
-  capacity as `mutation.workersUsed`. `concurrency.runners` contains `test` and
+  capacity as `mutation.workersUsed`. If an assessment aborts before mutation
+  workers start, the state is `known` with zero effective workers; `crap` uses
+  `not-requested` with `null`. `concurrency.runners` contains `test` and
   `coverage` entries per setup. Each entry always has `setup`, `runner`,
   `command`, `effectiveWorkers` as a number or `null`, `state` as `known` or
   `unavailable`, and `source` as a string or `null`.

@@ -26,6 +26,11 @@ fn run(args: &[String]) -> Result<Value, String> {
         let project = execution::CapturedProject::capture(
             std::path::Path::new(&args[1]),
             std::path::Path::new(&args[2]),
+            match mode.as_str() {
+                "check" => Some(execution::AssessmentMode::Check),
+                "collect" => Some(execution::AssessmentMode::Crap),
+                _ => None,
+            },
         )?;
         return if mode == "capture" {
             project.inspect()
