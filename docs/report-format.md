@@ -8,6 +8,22 @@ wire contract for `schemaVersion: 1`.
 executable, such as `0.1.0`. They are separate values. Valid standalone
 help and version commands print text. They do not produce this JSON report.
 
+## Arguments and readable output
+
+`--config PATH` and `--scratch PATH` take a separate, non-empty path argument.
+Values beginning with `--` are rejected. Use `./--name` or an absolute path for
+such names, and quote paths containing spaces in your shell. `--flag=value`
+and the `--` option separator are unsupported. A literal `--json` argument
+requests JSON even when another argument is invalid; `./--json` is a path.
+The npm launcher uses the same rule for failures before the native CLI starts.
+
+Without `--json`, argument errors print one diagnostic line to stderr and exit
+`2`, with no assessment report on stdout. Readable assessment reports omit null
+errors and label cleanup failures `Cleanup error:` separately from `Error:`.
+
+Help and version exit `0` when stdout's reader closes the pipe. Other writes
+that fail still exit `2`, including any assessment or argument-error JSON report.
+
 ## Top-level report
 
 Every JSON report has these fields. A valid run can still have `complete: false`.
@@ -278,7 +294,7 @@ evidence or the completeness flag.
 
 The effective exit status has this precedence:
 
-1. A stdout write failure returns `2`. No report can be relied on because the
+1. A report stdout write failure returns `2`. No report can be relied on because the
    output may be incomplete.
 2. A handled Unix `SIGINT` returns `130`; a handled Unix `SIGTERM` returns
    `143`. The report has `complete: false`, `cancelled: true`, the signal
@@ -301,8 +317,9 @@ be written. A valid `--json` command can still report a child-command start
 failure when Seshat itself remains alive.
 
 `seshat --help`, `seshat -h`, `seshat --version`, `seshat -V` and
-`seshat <command> --help` are text commands. Adding flags to those forms is
-parsed according to the ordinary argument rules. An invalid combination that
+`seshat <command> --help` or `seshat <command> -h` are text commands. Version
+options are standalone only; `seshat check --version` is invalid. Adding flags
+to those forms is parsed according to the ordinary argument rules. An invalid combination that
 includes `--json` emits the argument-error JSON envelope with `command: null`.
 
 ## Compatibility and evidence

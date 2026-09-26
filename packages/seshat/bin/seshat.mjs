@@ -12,6 +12,8 @@ const packageRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 const packageManifest = JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8'));
 const version = packageManifest.version;
 const args = process.argv.slice(2);
+// Match native argument errors: no -- separator or --flag=value syntax exists,
+// and path values cannot start with --. A literal --json always requests JSON.
 const jsonRequested = args.includes('--json');
 const commands = new Set(['check', 'crap', 'mutate']);
 const started = performance.now();
