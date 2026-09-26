@@ -244,7 +244,17 @@ supported; use separate patterns and the `exclude` array.
 Each include must match a file. Selected files must be regular UTF-8 TypeScript
 or TSX files, including `.mts` and `.cts`. Exclude declaration files and tests
 explicitly. An exclusion cannot leave the source scope empty. Source discovery
-skips `.git`, `node_modules` and directory symlinks.
+skips `.git`, `node_modules` and directory symlinks. Source discovery and capture
+exclude every ASCII case variant of `.git`, including `.GIT`, even when the
+filesystem treats those as distinct directories.
+
+Filesystem paths used by capture and coverage reports must be valid Unicode.
+Non-UTF-8 Unix names and unpaired Windows surrogates fail explicitly; Seshat does
+not replace invalid characters in source identities. This includes the project
+and scratch directory paths. On Windows, literal paths must also work without a
+verbatim prefix. Reserved device names such as `NUL.ts`, trailing spaces or dots,
+and alternate data streams are rejected, even if a verbatim path can create them.
+See Microsoft's [Windows naming rules](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file).
 
 `capture` lists literal files and directories needed to run tests. It is not a
 list of globs. Include the selected source, tests, configuration, generated inputs
@@ -255,6 +265,13 @@ For npm workspaces, capture the relevant package directories and both root and
 workspace-local dependencies. Workspace links must point to captured inputs;
 external, dangling and cyclic links are rejected. Internal links are rewritten
 into the execution copy, and hard-linked inputs become independent copies.
+
+Captures use exclusive directory creation, so a name collision fails without
+adopting or deleting the existing directory. Unix capture directories use mode
+`0700`. Windows captures inherit the scratch parent's ACL; Seshat does not make
+that ACL private. Choose a scratch directory accessible only to the intended
+users. Denied directory creation fails the capture. See Microsoft's
+[file access rules](https://learn.microsoft.com/en-us/windows/win32/fileio/file-security-and-access-rights).
 
 Use trusted projects and keep their inputs unchanged while Seshat captures them.
 Capture and configuration reads, source verification and mutation writes use
