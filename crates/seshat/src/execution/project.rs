@@ -1,5 +1,29 @@
 // Trusted, quiescent local projects only. This is source isolation, not a sandbox.
 mod collection;
+
+#[cfg(test)]
+thread_local! {
+    static FILE_IO_HOOK: std::cell::RefCell<Option<(PathBuf, bool, Box<dyn FnOnce()>)>> = const { std::cell::RefCell::new(None) };
+}
+
+#[cfg(test)]
+pub(super) fn file_io_hook(path: &Path, opened: bool) {
+    let callback = FILE_IO_HOOK.with(|slot| {
+        let mut slot = slot.borrow_mut();
+        if slot
+            .as_ref()
+            .is_some_and(|(expected, after_open, _)| expected == path && *after_open == opened)
+        {
+            slot.take().map(|(_, _, callback)| callback)
+        } else {
+            None
+        }
+    });
+    if let Some(callback) = callback {
+        callback();
+    }
+}
+use super::files::{RegularFile, is_link};
 use crate::analysis::Analysis;
 use glob::{MatchOptions, Pattern};
 use serde::Deserialize;
@@ -108,20 +132,6 @@ fn within(root: &Path, path: &Path) -> bool {
 
 fn same_path_identity(left: &str, right: &str) -> bool {
     path_key(Path::new(left)) == path_key(Path::new(right))
-}
-
-fn is_link(metadata: &fs::Metadata) -> bool {
-    #[cfg(windows)]
-    {
-        use std::os::windows::fs::MetadataExt;
-        const FILE_ATTRIBUTE_REPARSE_POINT: u32 = 0x0400;
-        return metadata.file_type().is_symlink()
-            || metadata.file_attributes() & FILE_ATTRIBUTE_REPARSE_POINT != 0;
-    }
-    #[cfg(not(windows))]
-    {
-        metadata.file_type().is_symlink()
-    }
 }
 
 fn create_link(target: impl AsRef<Path>, link: impl AsRef<Path>) -> std::io::Result<()> {
@@ -364,7 +374,9 @@ impl OwnedDirectory {
         builder
             .create(&path)
             .map_err(|e| format!("create capture: {e}"))?;
-        Ok(Self(path))
+        let mut directory = Self(path);
+        directory.0 = fs::canonicalize(&directory.0).map_err(|e| e.to_string())?;
+        Ok(directory)
     }
 
     fn close(mut self) -> Result<(), String> {
@@ -543,6 +555,18 @@ fn source_paths(root: &Path, config: &Config) -> Result<Vec<PathBuf>, String> {
     Ok(selected)
 }
 
+fn load_config(path: &Path) -> Result<(PathBuf, Config), String> {
+    let path = std::path::absolute(path).map_err(|e| e.to_string())?;
+    let parent = fs::canonicalize(
+        path.parent()
+            .ok_or("configuration has no project directory")?,
+    )
+    .map_err(|e| e.to_string())?;
+    let path = parent.join(path.file_name().ok_or("configuration has no filename")?);
+    let config = Config::parse(&RegularFile::open(&path, false)?.read(u64::MAX)?)?;
+    Ok((path, config))
+}
+
 pub struct CapturedProject {
     directory: OwnedDirectory,
     config: Config,
@@ -594,17 +618,10 @@ impl CapturedProject {
     }
 
     pub fn capture(config_path: &Path, scratch: &Path) -> Result<Self, String> {
-        if !fs::symlink_metadata(config_path)
-            .map_err(|e| e.to_string())?
-            .is_file()
-        {
-            return Err("configuration must be a regular file".into());
-        }
-        let config_path = fs::canonicalize(config_path).map_err(|e| e.to_string())?;
+        let (config_path, config) = load_config(config_path)?;
         let root = config_path
             .parent()
             .ok_or("configuration has no project directory")?;
-        let config = Config::parse(&fs::read(&config_path).map_err(|e| e.to_string())?)?;
         let scratch = fs::canonicalize(scratch).map_err(|e| format!("scratch directory: {e}"))?;
         if !scratch.is_dir() || within(root, &scratch) {
             return Err("scratch must be an existing directory outside the project".into());
@@ -645,8 +662,7 @@ impl CapturedProject {
             match kind {
                 Entry::Directory => fs::create_dir_all(&target).map_err(|e| e.to_string())?,
                 Entry::File => {
-                    bytes += fs::copy(root.join(relative), &target)
-                        .map_err(|e| format!("copy {}: {e}", relative.display()))?;
+                    bytes += RegularFile::open(&root.join(relative), false)?.copy_to(&target)?;
                     files += 1;
                 }
                 Entry::Link => links.push(relative),
@@ -685,8 +701,10 @@ impl CapturedProject {
         let sources = selected
             .into_iter()
             .map(|path| {
-                let source = fs::read_to_string(directory.0.join(&path))
-                    .map_err(|e| format!("source {}: {e}", path.display()))?;
+                let source = String::from_utf8(
+                    RegularFile::open(&directory.0.join(&path), false)?.read(u64::MAX)?,
+                )
+                .map_err(|e| format!("source {}: {e}", path.display()))?;
                 Ok((path, source))
             })
             .collect::<Result<_, String>>()?;
@@ -740,15 +758,15 @@ impl CapturedProject {
 mod tests {
     use super::*;
 
-    struct Fixture {
-        _directory: OwnedDirectory,
+    pub(super) struct Fixture {
+        pub(super) _directory: OwnedDirectory,
         project: PathBuf,
         scratch: PathBuf,
         config: Value,
     }
 
     impl Fixture {
-        fn new() -> Self {
+        pub(super) fn new() -> Self {
             let directory = OwnedDirectory::create(&std::env::temp_dir()).unwrap();
             let project = directory.0.join("project");
             let scratch = directory.0.join("scratch");
@@ -818,15 +836,112 @@ mod tests {
             }
         }
 
-        fn capture(&self) -> Result<CapturedProject, String> {
+        pub(super) fn capture(&self) -> Result<CapturedProject, String> {
             let path = self.project.join("seshat.json");
             fs::write(&path, serde_json::to_vec(&self.config).unwrap()).unwrap();
             CapturedProject::capture(&path, &self.scratch)
         }
 
-        fn assert_clean(&self) {
+        pub(super) fn assert_clean(&self) {
             assert_eq!(fs::read_dir(&self.scratch).unwrap().count(), 0);
             assert!(!self.project.join("COMMAND-RAN").exists());
+        }
+    }
+
+    pub(super) fn swap_during_io(path: &Path, outside: &Path, parent: bool, opened: bool) {
+        let replaced = if parent { path.parent().unwrap() } else { path }.to_path_buf();
+        let outside = outside.to_path_buf();
+        FILE_IO_HOOK.with(|slot| {
+            *slot.borrow_mut() = Some((
+                path.to_path_buf(),
+                opened,
+                Box::new(move || {
+                    if let Err(error) = fs::rename(&replaced, replaced.with_extension("saved")) {
+                        // Windows pins open files and their ancestors against replacement.
+                        #[cfg(windows)]
+                        if matches!(error.raw_os_error(), Some(5 | 32)) {
+                            return;
+                        }
+                        panic!("swap failed: {error}");
+                    }
+                    create_link(outside, replaced).unwrap();
+                }),
+            ));
+        });
+    }
+
+    #[test]
+    fn capture_read_rejects_concurrent_path_swaps() {
+        for (parent, opened) in [(true, false), (false, false), (true, true), (false, true)] {
+            let mut fixture = Fixture::new();
+            fixture.config["source"]["include"] = json!(["src/calc.ts"]);
+            fixture.config["capture"] = json!(["src/calc.ts"]);
+            let outside = fixture._directory.0.join("outside");
+            fs::create_dir(&outside).unwrap();
+            fs::write(outside.join("calc.ts"), "export const escaped = true;\n").unwrap();
+            let source = fixture.project.join("src/calc.ts");
+            swap_during_io(
+                &source,
+                &if parent {
+                    outside.clone()
+                } else {
+                    outside.join("calc.ts")
+                },
+                parent,
+                opened,
+            );
+            let captured = fixture.capture();
+            if let Ok(captured) = captured {
+                assert!(
+                    !captured
+                        .sources
+                        .iter()
+                        .any(|(_, text)| text.contains("escaped")),
+                    "capture read outside source"
+                );
+                drop(captured);
+            }
+            assert!(
+                FILE_IO_HOOK.with(|slot| slot.borrow().is_none()),
+                "swap hook did not run"
+            );
+            fixture.assert_clean();
+        }
+    }
+
+    #[test]
+    fn config_read_rejects_concurrent_path_swaps() {
+        for (parent, opened) in [(true, false), (false, false), (true, true), (false, true)] {
+            let fixture = Fixture::new();
+            let config_path = fixture.project.join("seshat.json");
+            fs::write(&config_path, serde_json::to_vec(&fixture.config).unwrap()).unwrap();
+            let outside = fixture._directory.0.join("outside");
+            fs::create_dir(&outside).unwrap();
+            let mut outside_config = fixture.config.clone();
+            outside_config["workers"] = json!(77);
+            fs::write(
+                outside.join("seshat.json"),
+                serde_json::to_vec(&outside_config).unwrap(),
+            )
+            .unwrap();
+            swap_during_io(
+                &config_path,
+                &if parent {
+                    outside.clone()
+                } else {
+                    outside.join("seshat.json")
+                },
+                parent,
+                opened,
+            );
+            if let Ok((_, config)) = load_config(&config_path) {
+                assert_eq!(config.workers, 1, "read outside configuration");
+            }
+            assert!(
+                FILE_IO_HOOK.with(|slot| slot.borrow().is_none()),
+                "swap hook did not run"
+            );
+            fixture.assert_clean();
         }
     }
 

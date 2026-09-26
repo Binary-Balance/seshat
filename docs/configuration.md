@@ -256,6 +256,21 @@ workspace-local dependencies. Workspace links must point to captured inputs;
 external, dangling and cyclic links are rejected. Internal links are rewritten
 into the execution copy, and hard-linked inputs become independent copies.
 
+Use trusted projects and keep their inputs unchanged while Seshat captures them.
+Capture and configuration reads, source verification and mutation writes use
+checked file handles. Unix opens each path component without following links;
+Windows holds directory handles against rename or replacement. Mutation writes
+check the opened file's link count before truncating it. A replacement can fail
+an operation or leave it using the original opened file.
+
+These checks do not create an atomic snapshot or a sandbox. Concurrent byte
+edits, directory moves and new hard links after validation remain unsupported.
+On Windows, concurrent changes to a directory's reparse metadata in place are
+also unsupported. Seshat does not guard against that case. Test commands must
+remain trusted and must not change selected source or its directory structure.
+See the [controlled swap regressions](../benchmarks/proofs/README.md#capture-and-restoration-path-swaps)
+for the checked cases and limits.
+
 After a run, inspect the resolved scope before interpreting a score:
 
 ```sh

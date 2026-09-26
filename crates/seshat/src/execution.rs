@@ -1,15 +1,17 @@
 // Platform process supervision for controlled, disposable proof fixtures.
+mod files;
 mod job;
 mod platform;
 mod project;
 use crate::{analysis::Analysis, assessment};
 use assessment::TestState;
+use files::RegularFile;
 use percent_encoding::{AsciiSet, CONTROLS, percent_encode};
 pub use project::{AssessmentMode, CapturedProject, Thresholds};
 use serde_json::{Value, json};
 use std::{
     fs,
-    io::{Read, Write},
+    io::Write,
     path::{Path, PathBuf},
     process::Command,
     sync::{
@@ -48,18 +50,7 @@ fn proof_command(config: &Value, key: &str) -> Result<Vec<String>, String> {
 
 fn read_json_report(path: &Path) -> Result<Value, String> {
     const REPORT_LIMIT: u64 = 32 * 1024 * 1024;
-    if !fs::symlink_metadata(path)
-        .map_err(|e| e.to_string())?
-        .is_file()
-    {
-        return Err("report must be a regular file".into());
-    }
-    let mut bytes = Vec::new();
-    fs::File::open(path)
-        .map_err(|e| e.to_string())?
-        .take(REPORT_LIMIT + 1)
-        .read_to_end(&mut bytes)
-        .map_err(|e| e.to_string())?;
+    let bytes = RegularFile::open(path, false)?.read(REPORT_LIMIT + 1)?;
     if bytes.len() as u64 > REPORT_LIMIT {
         return Err("report exceeds the 32 MiB proof limit".into());
     }
@@ -300,8 +291,10 @@ impl Session {
                 ));
             }
         }
-        let template = Path::new(config["template"].as_str().ok_or("missing template")?);
-        let parent = Path::new(config["scratch"].as_str().ok_or("missing scratch")?);
+        let template = fs::canonicalize(config["template"].as_str().ok_or("missing template")?)
+            .map_err(|e| e.to_string())?;
+        let parent = fs::canonicalize(config["scratch"].as_str().ok_or("missing scratch")?)
+            .map_err(|e| e.to_string())?;
         let source_file = match config.get("source") {
             None => "subject.tsx",
             Some(value) => match value.as_str() {
@@ -332,10 +325,12 @@ impl Session {
             if !entry.file_type().map_err(|e| e.to_string())?.is_file() {
                 return Err("proof template must contain only regular files".into());
             }
-            fs::copy(entry.path(), session.root.join(entry.file_name()))
-                .map_err(|e| e.to_string())?;
+            RegularFile::open(&entry.path(), false)?
+                .copy_to(&session.root.join(entry.file_name()))?;
         }
-        session.source = fs::read_to_string(&session.source_path).map_err(|e| e.to_string())?;
+        session.source =
+            String::from_utf8(RegularFile::open(&session.source_path, false)?.read(u64::MAX)?)
+                .map_err(|e| e.to_string())?;
         Ok(session)
     }
 
@@ -379,7 +374,9 @@ impl Session {
                 self.config["scenario"].as_str().unwrap_or("normal"),
             );
         if key == "test" && self.config["runner"] == "node" {
-            let source = fs::read_to_string(&self.source_path).map_err(|e| e.to_string())?;
+            let source =
+                String::from_utf8(RegularFile::open(&self.source_path, false)?.read(u64::MAX)?)
+                    .map_err(|e| e.to_string())?;
             let id = format!("{}-{}", std::process::id(), epoch_nanos(SystemTime::now())?);
             let sources = [(self.source_path.as_path(), source.as_str())];
             observe_node_loads(&mut command, &sources, &receipt, &id)?;
@@ -449,8 +446,8 @@ impl Session {
         let mut builds = usize::from(build.details["skipped"] != true);
         let mut prepared_baseline = None;
         if strategy == "switch" {
-            fs::write(&self.source_path, analysis.switched(&self.source)?)
-                .map_err(|e| e.to_string())?;
+            RegularFile::open(&self.source_path, true)?
+                .write(analysis.switched(&self.source)?.as_bytes())?;
             let prepared = self.command("build", None)?;
             builds += usize::from(prepared.details["skipped"] != true);
             if prepared.state != TestState::Passed {
@@ -479,8 +476,8 @@ impl Session {
                 break;
             }
             if strategy == "replace" {
-                fs::write(&self.source_path, analysis.replace(&self.source, id)?)
-                    .map_err(|e| e.to_string())?;
+                RegularFile::open(&self.source_path, true)?
+                    .write(analysis.replace(&self.source, id)?.as_bytes())?;
                 let build = self.command("build", Some(id))?;
                 builds += usize::from(build.details["skipped"] != true);
                 if build.state != TestState::Passed {
