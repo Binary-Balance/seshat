@@ -1659,7 +1659,7 @@ mod tests {
         let path = directory
             .0
             .join(std::ffi::OsString::from_vec(b"report-\xff.json".to_vec()));
-        fs::write(&path, "{}").unwrap();
+        // Reject before lookup, including on filesystems that cannot create this name.
         assert!(
             validate_coverage_report(&directory.0, &path)
                 .unwrap_err()

@@ -1160,14 +1160,33 @@ mod tests {
             let mut name = b"value-".to_vec();
             name.push(byte);
             name.extend(b".ts");
-            fs::write(
-                fixture
-                    .project
-                    .join("src")
-                    .join(std::ffi::OsString::from_vec(name)),
-                "export const value = 1;",
-            )
-            .unwrap();
+            let path = fixture
+                .project
+                .join("src")
+                .join(std::ffi::OsString::from_vec(name));
+            if let Err(error) = fs::write(&path, "export const value = 1;") {
+                // Some filesystems reject invalid bytes before a capture can encounter them.
+                assert_eq!(error.raw_os_error(), Some(libc::EILSEQ));
+                assert!(
+                    load_config(&path)
+                        .err()
+                        .unwrap()
+                        .contains("not valid UTF-8")
+                );
+                assert!(
+                    OwnedDirectory::create(&path)
+                        .err()
+                        .unwrap()
+                        .contains("not valid UTF-8")
+                );
+                assert!(
+                    super::super::stable_path(&path)
+                        .unwrap_err()
+                        .contains("not valid UTF-8")
+                );
+                fixture.assert_clean();
+                return;
+            }
         }
         assert!(fixture.capture().err().unwrap().contains("not valid UTF-8"));
         fixture.assert_clean();
@@ -1328,6 +1347,8 @@ mod tests {
             let result = std::process::Command::new("powershell.exe")
                 .args(["-NoProfile", "-NonInteractive", "-Command", script])
                 .env("SESHAT_ACL_TEST_PATH", comparable_path(path))
+                // CI runs under PowerShell 7; Windows PowerShell needs its own modules.
+                .env_remove("PSModulePath")
                 .output()
                 .unwrap();
             assert!(
