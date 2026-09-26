@@ -1362,6 +1362,28 @@ proof pattern with its runner-specific environment and coverage configuration.
 
 ## Cancellation and process cleanup
 
+The proof-only Windows console helper removes stale readiness before launch and
+owns the command tree in a kill-on-close Job Object. A gated intermediate child
+preserves standard command argument handling and cannot launch the command until
+job assignment succeeds. Readiness and post-signal waits each allow 30 seconds;
+cleanup has a separate five-second limit and reports unverified termination.
+Both retained output streams are forwarded even after supervision fails.
+
+The Windows runtime workflow runs its focused native checks before the shared
+fixtures, retaining `work/windows/console-helper.log` in the shared fixture
+artifact. To run them on Windows after building the helper:
+
+```powershell
+$env:SESHAT_CONSOLE_HELPER_BINARY = (Resolve-Path crates/seshat/target/release/windows-console-helper.exe).Path
+cargo test --locked --manifest-path crates/seshat/Cargo.toml --bin windows-console-helper -- --ignored --skip windows::tests::fixture --nocapture --test-threads=1
+```
+
+These checks cover both console events, stale/missing/invalid readiness, early
+exit, the full cancellation deadline, gate EOF and injected poll, signal, kill
+and job termination/query failures. Wait-only process handles verify descendant exit
+and unrelated-process survival. Ordinary Rust tests also check readiness errors
+and independent stdout/stderr forwarding.
+
 After building the native proof and installing its existing Node dependencies:
 
 ```sh
