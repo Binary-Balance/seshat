@@ -64,6 +64,9 @@ jobs:
           cargo test --locked --offline --manifest-path crates/seshat/Cargo.toml 2>&1 | tee work/arm64/rust-tests.log
       - name: Prove repeat ARM64 package reproducibility
         env:
+          # Invalid ambient flags must never reach Cargo's release compilation.
+          RUSTFLAGS: --seshat-unexpected-ambient-rustflags
+          CARGO_ENCODED_RUSTFLAGS: --seshat-unexpected-ambient-encoded-rustflags
           SESHAT_REPEAT_OUTPUT: work/arm64/repeat-pack.json
         run: |
           node packaging/repeat-pack.mjs --native-arm64 2>&1 | tee work/arm64/repeat-pack.log

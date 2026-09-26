@@ -95,6 +95,10 @@ their own required evidence; fixes on `main` since 0.1.0 remain unreleased.
 
 `repeat-pack.mjs` invokes the ordinary native packer twice from a clean source
 and compares the native binary, `BUILD.json`, npm archive and standalone bytes.
+The packer clears caller `RUSTFLAGS` and `CARGO_ENCODED_RUSTFLAGS` before setting
+its target-specific flags. Native CI supplies deliberately invalid values for
+both during the repeat proof, so compilation also checks that neither leaks
+into the release build.
 It writes evidence only after every comparison passes. A failed comparison
 retains one archive per completed run in `repeat-pack-failure/` and records the
 failure before discarding large temporary target trees. Run

@@ -130,6 +130,9 @@ jobs:
       - name: Prove repeat Windows package reproducibility
         shell: pwsh
         env:
+          # Invalid ambient flags must never reach Cargo's release compilation.
+          RUSTFLAGS: --seshat-unexpected-ambient-rustflags
+          CARGO_ENCODED_RUSTFLAGS: --seshat-unexpected-ambient-encoded-rustflags
           SESHAT_REPEAT_OUTPUT: work/windows/repeat-pack.json
         run: |
           node packaging/repeat-pack.mjs --native-windows 2>&1 | Tee-Object -FilePath work/windows/repeat-pack.log
