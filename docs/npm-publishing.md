@@ -135,19 +135,36 @@ checked. Only that publish job receives the OIDC permission.
 
 Before the first npm write, the helper checks every package version on the
 public registry. It then checks again immediately before each package publish.
-The native packages always precede the entry package.
+After publishing or skipping the five native packages, it waits up to five
+minutes for their exact versions, matching tarball bytes and SLSA provenance
+bundles to become publicly available. It retries pending records every ten
+seconds, including missing versions, tarball HTTP 404s and missing provenance.
+The deadline also aborts stalled requests and response bodies. Only then can
+it publish the entry package. This gate checks availability; the consumer
+checks below still verify signatures and provenance cryptographically.
 
 If a run stops after publishing some packages, rerun the same reviewed
 revision and version with publishing enabled. An existing version is skipped
 only after its registry tarball is downloaded and its bytes and SHA-256 match
 the staged archive. A different hash, a different size, a missing tarball URL,
-or any registry error fails the run. The helper never replaces an existing
-version, uses `--force`, or silently treats an unverifiable partial publish as
-safe to continue.
+or any other registry error fails the run. During the availability wait,
+a byte mismatch fails immediately. A timeout leaves the entry package
+unpublished and lists each pending native version and the missing record in
+the publication error report. Native packages already published remain
+available and can be skipped on the next run with the same approved inputs.
+The helper never replaces an existing version, uses `--force`, or silently
+treats an unverifiable partial publish as safe to continue.
 
 ## Post-publication validation
 
-Check each public version and dist tag against the fixed registry:
+npm accepting a publication does not mean consumers can fetch it yet. Before
+dispatching [Release registry install](../.github/workflows/release-registry-install.yml),
+wait for the entry package's exact version, tarball and provenance records to
+be publicly available too. Run the following checks for all six packages;
+if a record or download is still missing, wait and retry the read-only checks.
+Do not republish or dispatch registry verification until they pass.
+
+Check each public version against the fixed registry:
 
 ```sh
 for package in \
@@ -157,7 +174,7 @@ for package in \
   @binary-balance/seshat-darwin-arm64 \
   @binary-balance/seshat-win32-x64 \
   @binary-balance/seshat; do
-  npm view "${package}@<version>" version dist.tarball dist.integrity \
+  npm view "${package}@<version>" version dist.tarball dist.integrity dist.attestations \
     --registry=https://registry.npmjs.org/ \
     --@binary-balance:registry=https://registry.npmjs.org/
 done
@@ -172,6 +189,13 @@ curl --fail --location "$TARBALL_URL" -o downloaded.tgz
 sha256sum downloaded.tgz || shasum -a 256 downloaded.tgz
 wc -c downloaded.tgz
 ```
+
+Fetch each reported `dist.attestations.url` with `curl --fail`. Require its
+`attestations` array to contain a `https://slsa.dev/provenance/v1` record with
+a populated `bundle.dsseEnvelope` payload and signatures, including for the
+entry package. Once version, archive-byte and provenance availability checks
+pass, dispatch **Release registry install** from the reviewed release ref.
+Retain its five-host results with the release evidence.
 
 On disposable consumers for each supported host, install the entry package at
 the exact version and run the installed command:
