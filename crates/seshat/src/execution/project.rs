@@ -362,6 +362,10 @@ impl OwnedDirectory {
             .duration_since(UNIX_EPOCH)
             .map_err(|e| e.to_string())?
             .as_nanos();
+        // Unix temporary parents can contain symlinks, which guarded IO rejects.
+        // Keep Windows spelling: verbatim prefixes change PathBuf join semantics.
+        #[cfg(unix)]
+        let parent = fs::canonicalize(parent).map_err(|e| e.to_string())?;
         let path = parent.join(format!("capture-{}-{stamp}", std::process::id()));
         // create, never create_dir_all: a collision must not adopt someone else's directory.
         let builder = fs::DirBuilder::new();
@@ -374,9 +378,7 @@ impl OwnedDirectory {
         builder
             .create(&path)
             .map_err(|e| format!("create capture: {e}"))?;
-        let mut directory = Self(path);
-        directory.0 = fs::canonicalize(&directory.0).map_err(|e| e.to_string())?;
-        Ok(directory)
+        Ok(Self(path))
     }
 
     fn close(mut self) -> Result<(), String> {
