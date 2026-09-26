@@ -58,6 +58,7 @@ jobs:
           node benchmarks/proofs/linux-x64-preflight.mjs --self-check
           node benchmarks/proofs/linux-x64-summary.mjs --self-check
           node packaging/repeat-pack-failure-check.mjs
+          node --test packaging/npm.test.mjs packaging/metadata.test.mjs
       - name: Fetch locked dependencies
         run: |
           set -euo pipefail

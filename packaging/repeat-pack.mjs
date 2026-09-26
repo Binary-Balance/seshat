@@ -6,27 +6,26 @@ import {existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFile
 import {arch, release, version as osVersion} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {runNpm} from './npm.mjs';
 import {retainRepeatFailure} from './repeat-pack-evidence.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..');
 assert.equal(process.argv.length, 3,
   'usage: SESHAT_REPEAT_OUTPUT=path node packaging/repeat-pack.mjs <Debian archive directory> | --native-arm64 | --native-macos | --native-windows');
+assert.ok(!process.argv[2].startsWith('-') ||
+  ['--native-arm64', '--native-macos', '--native-windows'].includes(process.argv[2]),
+  `unknown pack mode: ${process.argv[2]}`);
 const output = process.env.SESHAT_REPEAT_OUTPUT;
 assert.ok(output, 'SESHAT_REPEAT_OUTPUT is required');
 const outputPath = resolve(output);
 const failureDirectory = join(dirname(outputPath), 'repeat-pack-failure');
 const packArgs = [process.argv[2]];
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
-const commandName = command => process.platform !== 'win32' ? command
-  : command === 'npm' ? 'npm.cmd'
-    : command === 'tar' ? 'tar.exe'
-      : command;
-const run = (command, args) => execFileSync(commandName(command), args, {
-  cwd:repo, encoding:'utf8', shell:process.platform === 'win32' && command === 'npm',
-}).trim();
+const tarCommand = process.platform === 'win32' ? 'tar.exe' : 'tar';
+const run = (command, args) => execFileSync(command, args, {cwd:repo, encoding:'utf8'}).trim();
 const probe = (command, args = [], identity = null) => {
-  const result = spawnSync(commandName(command), args, {cwd:repo, encoding:'utf8', maxBuffer:128 * 1024});
+  const result = spawnSync(command, args, {cwd:repo, encoding:'utf8', maxBuffer:128 * 1024});
   const text = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
   const version = identity ? text.match(identity)?.[0] ?? null : text.split(/\r?\n/, 1)[0];
   assert.ok(!result.error && text && version, `${command} is unavailable or is not the expected MSVC tool`);
@@ -41,9 +40,11 @@ const nativeWindows = packArgs[0] === '--native-windows';
 const inputHashes = !packArgs[0].startsWith('--')
   ? ['libc6.deb', 'libc6-dev.deb', 'libgcc-s1.deb'].map(file => ({file, sha256:sha256(readFileSync(join(resolve(packArgs[0]), file)))}))
   : [];
+mkdirSync(join(repo, 'work'), {recursive:true});
+const work = mkdtempSync(join(repo, 'work/repeat-pack-'));
 const toolchain = {
   node: process.version,
-  npm: run('npm', ['--version']),
+  npm: runNpm(['--version'], work).trim(),
   rustc: run('rustc', ['--version']),
   cargo: run('cargo', ['--version']),
 };
@@ -67,8 +68,6 @@ const host = process.platform === 'win32'
 const uname = process.platform === 'win32' ? null : host;
 const glibc = process.platform === 'linux' ? process.report.getReport().header.glibcVersionRuntime : null;
 
-mkdirSync(join(repo, 'work'), {recursive:true});
-const work = mkdtempSync(join(repo, 'work/repeat-pack-'));
 const results = [];
 let inspected = [];
 let comparisons = null;
@@ -76,10 +75,10 @@ let comparisons = null;
 function inspect(result) {
   const npmBytes = readFileSync(result.tarball);
   const standaloneBytes = readFileSync(result.standalone.path);
-  const buildBytes = execFileSync(commandName('tar'), ['-xOf', result.tarball, 'package/BUILD.json'], {maxBuffer:2 * 1024 * 1024});
-  const packageBytes = execFileSync(commandName('tar'), ['-xOf', result.tarball, 'package/package.json'], {maxBuffer:128 * 1024});
-  const packageReadme = execFileSync(commandName('tar'), ['-xOf', result.tarball, 'package/README.md'], {encoding:'utf8'});
-  const binaryBytes = execFileSync(commandName('tar'), ['-xOf', result.tarball, `package/bin/${result.binaryName ?? 'seshat'}`], {maxBuffer:32 * 1024 * 1024});
+  const buildBytes = execFileSync(tarCommand, ['-xOf', result.tarball, 'package/BUILD.json'], {maxBuffer:2 * 1024 * 1024});
+  const packageBytes = execFileSync(tarCommand, ['-xOf', result.tarball, 'package/package.json'], {maxBuffer:128 * 1024});
+  const packageReadme = execFileSync(tarCommand, ['-xOf', result.tarball, 'package/README.md'], {encoding:'utf8'});
+  const binaryBytes = execFileSync(tarCommand, ['-xOf', result.tarball, `package/bin/${result.binaryName ?? 'seshat'}`], {maxBuffer:32 * 1024 * 1024});
   const npm = {sha256:sha256(npmBytes), bytes:npmBytes.length};
   const standalone = {sha256:sha256(standaloneBytes), bytes:standaloneBytes.length};
   const build = {sha256:sha256(buildBytes), bytes:buildBytes.length};

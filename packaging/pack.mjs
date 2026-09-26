@@ -6,6 +6,7 @@ import {chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSyn
 import {arch, release, version as osVersion} from 'node:os';
 import {dirname, isAbsolute, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {runNpm} from './npm.mjs';
 import {assertArchiveNotice, loadRuntimeNoticeAssets, renderRuntimeNotice, validateRustToolchain} from './runtime-notice-check.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -19,7 +20,8 @@ const nativeMacos = process.argv.length === 3 && process.argv[2] === '--native-m
 const nativeWindows = process.argv.length === 3 && process.argv[2] === '--native-windows';
 assert.ok(nativeArm64 || nativeMacos || nativeWindows || process.argv.length === 3,
   'usage: node packaging/pack.mjs <Debian archive directory> | --native-arm64 | --native-macos | --native-windows');
-assert.ok(nativeArm64 + nativeMacos + nativeWindows <= 1, 'native package modes are mutually exclusive');
+assert.ok(nativeArm64 || nativeMacos || nativeWindows || !process.argv[2].startsWith('-'),
+  `unknown pack mode: ${process.argv[2]}`);
 if (nativeArm64) {
   assert.equal(process.platform, 'linux', 'native ARM64 mode requires Linux');
   assert.equal(process.arch, 'arm64', 'native ARM64 mode must run on an ARM64 host');
@@ -72,10 +74,8 @@ const buildIdRustflags = ['-C','link-arg=-Wl,--build-id=none'];
 // Caller flags must not override the release target's deliberate settings.
 delete env.RUSTFLAGS;
 delete env.CARGO_ENCODED_RUSTFLAGS;
-const commandName = command => process.platform === 'win32' && command === 'npm' ? 'npm.cmd' : command;
-const run = (command, args) => execFileSync(commandName(command), args, {
+const run = (command, args) => execFileSync(command, args, {
   cwd:repo, env, encoding:'utf8', maxBuffer:16*1024*1024,
-  shell:process.platform === 'win32' && command === 'npm',
   stdio:['ignore','pipe','inherit'],
 });
 const sha256 = data => createHash('sha256').update(data).digest('hex');
@@ -90,7 +90,7 @@ const runtimeLicenseText = path => {
   return asset.data.toString('utf8');
 };
 const toolInfo = (command, identity) => {
-  const result = spawnSync(commandName(command), [], {encoding:'utf8', maxBuffer:128 * 1024});
+  const result = spawnSync(command, [], {encoding:'utf8', maxBuffer:128 * 1024});
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
   const version = output.match(identity)?.[0] ?? null;
   assert.ok(!result.error && output && version, `${command} is unavailable or is not the expected MSVC tool`);
@@ -326,8 +326,7 @@ writeFileSync(join(stage,'README.md'),`# Seshat native payload\n\nTarget: ${targ
 copyFileSync(join(repo,'LICENSE'),join(stage,'LICENSE'));
 writeFileSync(join(stage,'BUILD.json'),JSON.stringify(build,null,2)+'\n');
 writeFileSync(join(stage,'THIRD_PARTY_NOTICES.txt'),noticeText);
-const [packed] = JSON.parse(run('npm',['pack',stage,'--json','--offline','--ignore-scripts','--update-notifier=false','--pack-destination',work,
-  '--cache',join(work,'cache'),'--userconfig',join(work,'user.npmrc'),'--globalconfig',join(work,'global.npmrc')]));
+const [packed] = JSON.parse(runNpm(['pack',stage,'--json','--pack-destination',work], work));
 assert.deepEqual(packed.files.map(f => f.path).sort(), ['BUILD.json','LICENSE','README.md','THIRD_PARTY_NOTICES.txt',packagedBinary,'package.json'].sort());
 const tarball = join(work,packed.filename);
 assertArchiveNotice(tarball, noticeText);

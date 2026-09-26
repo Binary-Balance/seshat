@@ -5,6 +5,7 @@ import {createHash} from 'node:crypto';
 import {chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync} from 'node:fs';
 import {dirname, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {runNpm} from './npm.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..');
@@ -38,7 +39,9 @@ for (let index = 0; index < args.length; index += 1) {
   } else if (arg === '--binary' || arg === '--build-info' || arg === '--notices') {
     const value = args[++index];
     assert.ok(value?.includes('='), `${arg} requires target=path`);
-    const [key, path] = value.split('=', 2);
+    const separator = value.indexOf('=');
+    const key = value.slice(0, separator);
+    const path = value.slice(separator + 1);
     assert.ok(targetByKey.has(key), `unknown native target ${key}`);
     assert.ok(path, `${arg} requires a path for ${key}`);
     (arg === '--binary' ? binaries : arg === '--build-info' ? buildInfos : noticeFiles).set(key, resolve(path));
@@ -59,16 +62,8 @@ const copy = (source, destination) => {
 };
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const portable = path => relative(repo, path).replaceAll('\\', '/') || '.';
-// npm is a .cmd shim on Windows; invoke its JavaScript entrypoint through Node.
-const npmCommand = process.platform === 'win32' ? process.execPath : 'npm';
-const npmArgs = process.platform === 'win32'
-  ? [process.env.npm_execpath || join(dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js')]
-  : [];
 const npm = (stage, destination) => {
-  const result = JSON.parse(execFileSync(npmCommand, [...npmArgs,
-    'pack', stage, '--json', '--offline', '--ignore-scripts', '--no-audit', '--no-fund',
-    '--update-notifier=false', '--pack-destination', destination,
-  ], {cwd: repo, encoding: 'utf8'}));
+  const result = JSON.parse(runNpm(['pack', stage, '--json', '--pack-destination', destination], destination));
   assert.equal(result.length, 1);
   return result[0];
 };

@@ -5,6 +5,7 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {retainRepeatFailure} from './repeat-pack-evidence.mjs';
 
+const tarCommand = process.platform === 'win32' ? 'tar.exe' : 'tar';
 const root = mkdtempSync(join(tmpdir(), 'seshat-repeat-pack-check-'));
 try {
   const repo = join(root, 'repo');
@@ -16,7 +17,7 @@ try {
     writeFileSync(join(stage, 'bin', 'seshat'), Buffer.from([index, 0x42]));
     writeFileSync(join(stage, 'BUILD.json'), JSON.stringify({binarySha256:`${index}`.repeat(64), binaryBytes:2}) + '\n');
     const tarball = join(packWork, `run-${index}.tgz`);
-    execFileSync('tar', ['-czf', tarball, '-C', join(packWork, `stage-${index}`), 'package']);
+    execFileSync(tarCommand, ['-czf', tarball, '-C', join(packWork, `stage-${index}`), 'package']);
     return {tarball, standalone:{path:tarball}, binary:`${index}`.repeat(64), binaryBytes:2};
   });
   const inspected = results.map((result, index) => ({
@@ -50,7 +51,7 @@ try {
   for (const index of results.keys()) {
     const retained = join(failureDirectory, `run-${index}.tgz`);
     assert.deepEqual(readFileSync(retained), sourceArchives[index]);
-    const listing = execFileSync('tar', ['-tzf', retained], {encoding:'utf8'});
+    const listing = execFileSync(tarCommand, ['-tzf', retained], {encoding:'utf8'});
     assert.match(listing, /package\/bin\/seshat/);
     assert.match(listing, /package\/BUILD\.json/);
   }

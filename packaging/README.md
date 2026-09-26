@@ -22,6 +22,16 @@ No package is published by these scripts. The staged release manifest records
 the package names, versions, platform metadata and archive identities for a
 later publication or hosted proof step.
 
+npm packing runs offline, with lifecycle scripts disabled and a private cache,
+prefix and empty user/global npm configuration for each call. Ambient npm
+configuration is ignored; the registry remains `https://registry.npmjs.org`.
+On Windows, npm runs through Node without a shell. `npm_execpath` is accepted
+only for `npm-cli.js` within an npm package; otherwise the scripts use
+`node_modules/npm/bin/npm-cli.js` next to `node.exe`. Install Node with its
+bundled npm if neither location exists. On other platforms, npm is found on
+`PATH` and runs without a shell. Paths containing spaces, `&`, `%` and `=` stay
+literal; quote them when invoking a script from your shell.
+
 ## Build a native payload
 
 With locked Cargo and proof dependencies already available, the Linux x64
