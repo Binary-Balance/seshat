@@ -1,0 +1,4128 @@
+{
+  "revision": "d1a0162cac23097b0f48e1d3bdebcea8e7d44a9d",
+  "environment": {
+    "platform": "Linux-6.12.107+deb13-cloud-amd64-x86_64-with-glibc2.41",
+    "machine": "x86_64",
+    "cpus": 2,
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: x86_64-unknown-linux-gnu\nrelease: 1.98.1\nLLVM version: 22.1.8",
+    "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+    "node": "v24.21.0",
+    "filesystem": "tmpfs",
+    "cpu": "AMD EPYC 7763 64-Core Processor",
+    "npmPackages": {
+      "typescript": "6.0.3",
+      "istanbul-lib-instrument": "6.0.3",
+      "istanbul-lib-coverage": "3.2.2",
+      "istanbul-lib-source-maps": "5.0.6"
+    }
+  },
+  "protocol": {
+    "samples": 7,
+    "microWarmups": 1,
+    "buildSamples": 3,
+    "buildBoundary": "cargo clean -p seshat before each timed release application rebuild; dependency cache retained",
+    "runtimeBoundary": "fresh processes; warm filesystem cache; sequential top-level execution",
+    "sourceChanges": "test-only probe modules appended in disposable crate; release production code unchanged"
+  },
+  "inputs": {
+    "benchmarks/audit-performance/probes.rs": "e3f726b37680a2e0a4007f9512676850a2981df6010191d175c45cd90c008e3a",
+    "benchmarks/audit-performance/runner.mjs": "07bf8d91d59d79e066f01c4c2b696e8dc27859825c4dcac25e9ef4605e341bbc",
+    "crates/seshat/Cargo.lock": "c331c5a33a3179fddf6db5b94203bbf99eaa66c183fde7ee349539e7451f1665"
+  },
+  "sourceHashes": {
+    "src/analysis.rs": "e16acac06f679788a82cd722ef26c928d8b42869d48a39a54183aa98221e1207",
+    "src/assessment.rs": "e3a67aab6acae137822a4e8a42540f55d916e67808b8c1fab1f363ba07053376",
+    "src/bin/seshat-proofs.rs": "cde4914c26692da1624c24594d4c753a6151fd357698456758c7425fbd09c5be",
+    "src/bin/seshat.rs": "0ce404e80771a94a3ee5b76587600a87e322ddca4ce1407fb3110855b10051ab",
+    "src/bin/windows-console-helper.rs": "d5019c1cda5ae1da0a698cf4ff60650f6773f0372e89c566a46e7bb7562bb99e",
+    "src/bin/windows_console_helper/tests.rs": "c8a16709d9e819a085eefcd52115e3eb4bccc5469f38f623cec654a5e9b42b3b",
+    "src/cli.rs": "824e35c9ee57c98cb2b3a86ad706e897a2d7d0aee8a82e3a064e9a9bb8abff0e",
+    "src/coverage.rs": "7d197353744dbaea6456dcab63813b83b256e940b28f2f6633a45d43c9a4603a",
+    "src/execution/files.rs": "538788c1129da02e443f7231a743ca5271a8ba8f413a6cdd9e2387410421aedb",
+    "src/execution/job.rs": "63ecba7d0d9c64fa1d2d6c08d04ec06d01ae9d1f12164d8754d465120bc8b748",
+    "src/execution/platform.rs": "6d360a34c56271e8e25a804280b052e4bf2c08f7bb92fe5cb06db84f37b9d0d3",
+    "src/execution/project/collection.rs": "4718cbd1f0d7b99adb72f5d23b375bfb72bc3a949dd3f9014ae4378d44060c6e",
+    "src/execution/project.rs": "5c172a732c06b283954b868403a26ad9283336455284e95e781d07d7bfc11e55",
+    "src/execution/windows_spawn.rs": "e7c0970ac1fad73d4b5164ea77f359bb6fd0a76a4b4b3c30ac699bcb6efb3e5d",
+    "src/execution.rs": "4f479bd370da93b52f675f9a7e28a266fa122bfe554bf2bb2593dd2abb42d049",
+    "src/lib.rs": "162151c410575b7797f5ee3efe77cb39aeab0ca14ea3a4ff18307fdd28c3dffb"
+  },
+  "builds": [
+    {
+      "lto": "off",
+      "coldMs": 46365.44871999649,
+      "applicationRebuildMs": [
+        8717.475030047353,
+        8925.016266002785,
+        8795.257726043928
+      ],
+      "bytes": 2015944,
+      "sha256": "2b81e9724b7d965f16730eb18e0e81acd22a947d0d38eab2f2ea125d4b6e96fc"
+    },
+    {
+      "lto": "thin",
+      "coldMs": 59416.96437395876,
+      "applicationRebuildMs": [
+        20844.271951005794,
+        20160.566084028687,
+        20633.642059983686
+      ],
+      "bytes": 1937384,
+      "sha256": "4c104743787b6cd4aa551a5b5659c01f95a484acc2b45940115302ad680f6202"
+    }
+  ],
+  "probes": [
+    {
+      "iterations": 5,
+      "ms": [
+        0.1195434,
+        0.1239578,
+        0.11588659999999999,
+        0.11425560000000001,
+        0.1135062,
+        0.1134922,
+        0.113438
+      ],
+      "name": "analysis",
+      "size": 100
+    },
+    {
+      "iterations": 5,
+      "ms": [
+        0.063661,
+        0.063627,
+        0.0676624,
+        0.063623,
+        0.06859420000000001,
+        0.063715,
+        0.06371299999999999
+      ],
+      "name": "scope_lookup_all",
+      "size": 100
+    },
+    {
+      "iterations": 3,
+      "ms": [
+        0.10236833333333334,
+        0.101072,
+        0.10258833333333334,
+        0.101042,
+        0.10250500000000001,
+        0.10106566666666666,
+        0.10058133333333334
+      ],
+      "name": "switch_flat",
+      "size": 100
+    },
+    {
+      "iterations": 3,
+      "ms": [
+        0.27787266666666666,
+        0.23223066666666667,
+        0.22472000000000003,
+        0.22469999999999998,
+        0.24787666666666666,
+        0.22441599999999998,
+        0.22413866666666668
+      ],
+      "name": "load_error_coordinates",
+      "size": 100
+    },
+    {
+      "iterations": 5,
+      "ms": [
+        1.3559464,
+        1.2364308,
+        1.2281612000000002,
+        1.34409,
+        1.2285321999999999,
+        1.2264018,
+        1.3385536
+      ],
+      "name": "analysis",
+      "size": 1000
+    },
+    {
+      "iterations": 5,
+      "ms": [
+        6.3635708,
+        6.424993599999999,
+        6.337917,
+        6.309303600000001,
+        6.3265718,
+        6.3576818,
+        6.9598552
+      ],
+      "name": "scope_lookup_all",
+      "size": 1000
+    },
+    {
+      "iterations": 3,
+      "ms": [
+        2.2832073333333334,
+        2.2565706666666667,
+        2.305198,
+        2.27772,
+        2.255094666666667,
+        2.3130063333333335,
+        2.2604276666666667
+      ],
+      "name": "switch_flat",
+      "size": 1000
+    },
+    {
+      "iterations": 3,
+      "ms": [
+        22.448791,
+        21.31120833333333,
+        21.455094,
+        21.4332,
+        22.040414666666663,
+        25.602491666666666,
+        27.544085999999997
+      ],
+      "name": "load_error_coordinates",
+      "size": 1000
+    },
+    {
+      "iterations": 5,
+      "ms": [
+        3.9554304,
+        3.8223314000000004,
+        3.8146672,
+        3.7601112,
+        3.7425884,
+        3.7361446000000003,
+        3.7435282
+      ],
+      "name": "analysis",
+      "size": 3000
+    },
+    {
+      "iterations": 5,
+      "ms": [
+        58.1307324,
+        57.7160918,
+        57.946261400000004,
+        57.39456859999999,
+        57.16765459999999,
+        57.40042960000001,
+        57.490199200000006
+      ],
+      "name": "scope_lookup_all",
+      "size": 3000
+    },
+    {
+      "iterations": 3,
+      "ms": [
+        15.378444,
+        15.381784000000001,
+        15.549183000000001,
+        15.345222000000001,
+        15.270592333333333,
+        15.343268,
+        15.330524666666667
+      ],
+      "name": "switch_flat",
+      "size": 3000
+    },
+    {
+      "iterations": 3,
+      "ms": [
+        238.390146,
+        241.50031566666667,
+        292.79527766666666,
+        205.19092366666666,
+        193.19695066666668,
+        194.235602,
+        192.85106799999997
+      ],
+      "name": "load_error_coordinates",
+      "size": 3000
+    },
+    {
+      "iterations": 10,
+      "ms": [
+        0.015284599999999999,
+        0.014362899999999998,
+        0.013067400000000002,
+        0.013225699999999998,
+        0.013139599999999998,
+        0.013048399999999998,
+        0.012918200000000001
+      ],
+      "name": "switch_nested",
+      "size": 16
+    },
+    {
+      "iterations": 10,
+      "ms": [
+        0.0690631,
+        0.0660965,
+        0.0637973,
+        0.06294960000000001,
+        0.0658852,
+        0.1078365,
+        0.1087312
+      ],
+      "name": "switch_nested",
+      "size": 64
+    },
+    {
+      "iterations": 10,
+      "ms": [
+        0.2419432,
+        0.2202086,
+        0.21704559999999998,
+        0.22477199999999997,
+        0.2258942,
+        0.2277466,
+        0.2238995
+      ],
+      "name": "switch_nested",
+      "size": 128
+    },
+    {
+      "iterations": 3,
+      "ms": [
+        0.6477769999999999,
+        0.8269453333333333,
+        0.8768853333333332,
+        1.00771,
+        0.9091626666666667,
+        0.9135606666666667,
+        0.9236726666666667
+      ],
+      "name": "attribution",
+      "size": 100
+    },
+    {
+      "iterations": 3,
+      "ms": [
+        0.4631456666666667,
+        0.46235066666666663,
+        0.45415199999999994,
+        0.45494033333333334,
+        0.46326266666666666,
+        0.4537076666666667,
+        0.45512366666666665
+      ],
+      "name": "coordinate_decode_all",
+      "size": 100
+    },
+    {
+      "iterations": 3,
+      "ms": [
+        30.89590133333333,
+        30.80497766666667,
+        31.058204333333336,
+        30.530050999999997,
+        31.556732666666665,
+        30.62724233333333,
+        30.634589333333334
+      ],
+      "name": "attribution",
+      "size": 1000
+    },
+    {
+      "iterations": 3,
+      "ms": [
+        21.569574333333332,
+        21.791609666666663,
+        21.768763333333336,
+        21.763055999999995,
+        22.058040666666667,
+        21.829386666666668,
+        21.71406466666667
+      ],
+      "name": "coordinate_decode_all",
+      "size": 1000
+    },
+    {
+      "iterations": 3,
+      "ms": [
+        253.14216533333334,
+        254.66880833333335,
+        253.39158833333332,
+        252.082238,
+        253.54399966666665,
+        251.88424533333333,
+        252.53603033333334
+      ],
+      "name": "attribution",
+      "size": 3000
+    },
+    {
+      "iterations": 3,
+      "ms": [
+        189.17561933333334,
+        190.523779,
+        187.40113333333332,
+        188.91938066666668,
+        187.19002533333332,
+        204.750524,
+        190.15265233333332
+      ],
+      "name": "coordinate_decode_all",
+      "size": 3000
+    },
+    {
+      "iterations": 5,
+      "ms": [
+        30.265441,
+        30.404660999999997,
+        29.120984,
+        29.3193372,
+        28.7784856,
+        30.2996488,
+        38.6034718
+      ],
+      "name": "supervised_node_job",
+      "size": 0
+    },
+    {
+      "iterations": 5,
+      "ms": [
+        27.895429200000002,
+        27.3368082,
+        26.646194400000002,
+        28.837593,
+        27.7281344,
+        28.0749176,
+        27.639625000000002
+      ],
+      "name": "direct_node_job",
+      "size": 0
+    },
+    {
+      "iterations": 5,
+      "ms": [
+        38.5325372,
+        36.9647966,
+        38.1892878,
+        39.2582546,
+        38.865209199999995,
+        40.0689156,
+        39.726364
+      ],
+      "name": "supervised_node_job",
+      "size": 10
+    },
+    {
+      "iterations": 5,
+      "ms": [
+        38.250719600000004,
+        36.655882000000005,
+        36.5521552,
+        37.095576,
+        37.170160200000005,
+        37.4476538,
+        37.8731358
+      ],
+      "name": "direct_node_job",
+      "size": 10
+    },
+    {
+      "iterations": 5,
+      "ms": [
+        79.64122979999999,
+        78.40026359999999,
+        79.5951316,
+        79.36900940000001,
+        79.1874162,
+        79.2310442,
+        78.6811418
+      ],
+      "name": "supervised_node_job",
+      "size": 50
+    },
+    {
+      "iterations": 5,
+      "ms": [
+        77.5698728,
+        78.36255700000001,
+        77.9790718,
+        78.53000940000001,
+        78.2106142,
+        77.7755816,
+        78.0352626
+      ],
+      "name": "direct_node_job",
+      "size": 50
+    },
+    {
+      "iterations": 1,
+      "ms": [
+        1.183191,
+        1.224669,
+        1.354892,
+        1.212737,
+        1.17159,
+        1.6919719999999998,
+        1.190855
+      ],
+      "name": "capture_and_cleanup",
+      "size": 10
+    },
+    {
+      "iterations": 1,
+      "ms": [
+        1.290982,
+        1.170067,
+        1.14016,
+        1.2228549999999998,
+        1.140822,
+        1.146633,
+        1.16145
+      ],
+      "name": "worker_copy_and_cleanup",
+      "size": 10
+    },
+    {
+      "iterations": 10,
+      "ms": [
+        0.6565871000000001,
+        0.660269,
+        0.6630732,
+        0.6508884,
+        0.6584366,
+        0.6402596,
+        0.6509445
+      ],
+      "name": "verify_all_source_bytes",
+      "size": 10
+    },
+    {
+      "iterations": 1,
+      "ms": [
+        14.339889999999999,
+        13.77342,
+        14.172787,
+        13.700893,
+        13.509147,
+        14.229373,
+        14.571862999999999
+      ],
+      "name": "capture_and_cleanup",
+      "size": 100
+    },
+    {
+      "iterations": 1,
+      "ms": [
+        13.906179,
+        13.744738,
+        14.46358,
+        13.659977999999999,
+        13.747321,
+        13.551195,
+        13.565432000000001
+      ],
+      "name": "worker_copy_and_cleanup",
+      "size": 100
+    },
+    {
+      "iterations": 10,
+      "ms": [
+        6.6834895,
+        6.7999271,
+        6.839907800000001,
+        6.7658034,
+        6.684013499999999,
+        6.781071800000001,
+        6.838174599999999
+      ],
+      "name": "verify_all_source_bytes",
+      "size": 100
+    },
+    {
+      "iterations": 1,
+      "ms": [
+        77.74478599999999,
+        76.52888200000001,
+        76.227599,
+        77.320909,
+        77.502654,
+        80.68226200000001,
+        78.042631
+      ],
+      "name": "capture_and_cleanup",
+      "size": 500
+    },
+    {
+      "iterations": 1,
+      "ms": [
+        72.901493,
+        72.96789700000001,
+        70.97186699999999,
+        71.13924200000001,
+        69.70319599999999,
+        68.34546800000001,
+        69.073309
+      ],
+      "name": "worker_copy_and_cleanup",
+      "size": 500
+    },
+    {
+      "iterations": 10,
+      "ms": [
+        33.5665722,
+        33.8015014,
+        33.691415600000006,
+        33.655787,
+        34.101386500000004,
+        33.9277283,
+        33.9868538
+      ],
+      "name": "verify_all_source_bytes",
+      "size": 500
+    }
+  ],
+  "runner": {
+    "fixture": {
+      "assetFiles": 100,
+      "assetBytes": 11468800,
+      "sourceFiles": 2,
+      "mutants": 2
+    },
+    "semantic": {
+      "scope": {
+        "exclude": [],
+        "files": [
+          "packages/rules/index.ts",
+          "src/compare.ts"
+        ],
+        "include": [
+          "src/**/*.ts",
+          "packages/**/*.ts"
+        ],
+        "setups": [
+          {
+            "cwd": ".",
+            "name": "node-workspace",
+            "runner": "node"
+          }
+        ]
+      },
+      "sources": [
+        {
+          "path": "packages/rules/index.ts",
+          "result": {
+            "complete": true,
+            "functions": [
+              {
+                "complexity": 1,
+                "coverage": 1,
+                "covered": 1,
+                "crap": 1,
+                "name": "arrow@22",
+                "start": 22,
+                "status": "measured",
+                "total": 1
+              }
+            ],
+            "problems": []
+          }
+        },
+        {
+          "path": "src/compare.ts",
+          "result": {
+            "complete": true,
+            "functions": [
+              {
+                "complexity": 1,
+                "coverage": 1,
+                "covered": 1,
+                "crap": 1,
+                "name": "arrow@21",
+                "start": 21,
+                "status": "measured",
+                "total": 1
+              }
+            ],
+            "problems": []
+          }
+        }
+      ],
+      "outcomes": [
+        {
+          "id": 0,
+          "localId": 0,
+          "offset": 42,
+          "path": "src/compare.ts",
+          "original": ">=",
+          "replacement": ">",
+          "verdict": "killed"
+        },
+        {
+          "id": 1,
+          "localId": 1,
+          "offset": 42,
+          "path": "src/compare.ts",
+          "original": ">=",
+          "replacement": "<",
+          "verdict": "killed"
+        }
+      ]
+    },
+    "semanticSha256": "89ede777b303f02eb5afd72f2e80409da48f9164da21b7e4249ab3736b62c992",
+    "runs": [
+      {
+        "lto": "off",
+        "workers": 1,
+        "strategy": "replace",
+        "phase": "warmup",
+        "sample": 0,
+        "wallMs": 1957.050547,
+        "timings": {
+          "captureMs": 19.80279,
+          "executionMs": 1929.965712,
+          "wallMs": 1952.656728
+        },
+        "phases": {
+          "analysisMs": 0.091742,
+          "attributionMs": 0.019185999999999998,
+          "baselineMs": 158.877898,
+          "cleanupMs": 2.802385,
+          "coverageMs": 737.125217,
+          "preparationMs": 0.164,
+          "typecheckMs": 602.439741
+        },
+        "mutation": {
+          "executionMs": 431.103711,
+          "mutationWallMs": 431.061392,
+          "workerCleanupMs": 7.000000000000001e-05,
+          "workerPreparationMs": 0.00029
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 601.675375,
+            "baselineMs": 158.212537,
+            "coverageMs": 736.3187300000001
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 239.034597,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 237.82703899999998,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559007-1790419679353843922-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 192.01346999999998,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 190.873389,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559007-1790419679353843922-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "off",
+        "workers": 1,
+        "strategy": "switch",
+        "phase": "warmup",
+        "sample": 0,
+        "wallMs": 1969.6470889999998,
+        "timings": {
+          "captureMs": 13.115885,
+          "executionMs": 1950.5479910000001,
+          "wallMs": 1966.8471749999999
+        },
+        "phases": {
+          "analysisMs": 0.089989,
+          "attributionMs": 0.018414,
+          "baselineMs": 158.106895,
+          "cleanupMs": 3.1216049999999997,
+          "coverageMs": 683.3521479999999,
+          "preparationMs": 0.12551500000000002,
+          "typecheckMs": 615.133886
+        },
+        "mutation": {
+          "executionMs": 493.553732,
+          "mutationWallMs": 328.916069,
+          "preparedBaselineMs": 164.202541,
+          "switchPreparationMs": 164.59716799999998,
+          "workerCleanupMs": 0.00019999999999999998,
+          "workerPreparationMs": 164.590767
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 614.749777,
+            "baselineMs": 157.54774999999998,
+            "coverageMs": 682.458197
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 163.830331,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 162.87728900000002,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559095-1790419681305645614-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 165.07234400000002,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 164.094406,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559095-1790419681305645614-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "off",
+        "workers": 2,
+        "strategy": "replace",
+        "phase": "warmup",
+        "sample": 0,
+        "wallMs": 1941.428254,
+        "timings": {
+          "captureMs": 12.176429,
+          "executionMs": 1921.8014669999998,
+          "wallMs": 1937.333808
+        },
+        "phases": {
+          "analysisMs": 0.065763,
+          "attributionMs": 0.019447,
+          "baselineMs": 163.451362,
+          "cleanupMs": 3.287454,
+          "coverageMs": 706.775073,
+          "preparationMs": 0.08546,
+          "typecheckMs": 621.739449
+        },
+        "mutation": {
+          "executionMs": 429.15359600000005,
+          "mutationWallMs": 251.12549899999996,
+          "workerCleanupMs": 2.6709009999999997,
+          "workerPreparationMs": 175.312793
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 621.323733,
+            "baselineMs": 162.839658,
+            "coverageMs": 705.7178160000001
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 247.12077399999998,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 245.789556,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559175-1790419683275159032-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 250.937878,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 249.91174999999998,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559175-1790419684780453278-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "off",
+        "workers": 2,
+        "strategy": "switch",
+        "phase": "warmup",
+        "sample": 0,
+        "wallMs": 2060.4880190000003,
+        "timings": {
+          "captureMs": 12.858091,
+          "executionMs": 2041.751509,
+          "wallMs": 2057.62109
+        },
+        "phases": {
+          "analysisMs": 0.060864,
+          "attributionMs": 0.025978,
+          "baselineMs": 159.36161099999998,
+          "cleanupMs": 2.933575,
+          "coverageMs": 679.6763649999999,
+          "preparationMs": 0.092884,
+          "typecheckMs": 608.259016
+        },
+        "mutation": {
+          "executionMs": 594.1195700000001,
+          "mutationWallMs": 254.780968,
+          "preparedBaselineMs": 162.632386,
+          "switchPreparationMs": 336.64981700000004,
+          "workerCleanupMs": 2.6496720000000002,
+          "workerPreparationMs": 336.64277500000003
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 607.864489,
+            "baselineMs": 158.789802,
+            "coverageMs": 678.725809
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 254.708402,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 253.56707899999998,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559260-1790419685217811418-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 254.07936899999999,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 252.987338,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559260-1790419686679126919-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "thin",
+        "workers": 1,
+        "strategy": "replace",
+        "phase": "warmup",
+        "sample": 0,
+        "wallMs": 1777.673847,
+        "timings": {
+          "captureMs": 12.545005,
+          "executionMs": 1759.666513,
+          "wallMs": 1775.0250159999998
+        },
+        "phases": {
+          "analysisMs": 0.06447,
+          "attributionMs": 0.020378,
+          "baselineMs": 158.613616,
+          "cleanupMs": 2.757043,
+          "coverageMs": 680.8550610000001,
+          "preparationMs": 0.088155,
+          "typecheckMs": 594.007739
+        },
+        "mutation": {
+          "executionMs": 325.88701100000003,
+          "mutationWallMs": 325.84879900000004,
+          "workerCleanupMs": 0.00018099999999999998,
+          "workerPreparationMs": 0.000241
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 593.6307840000001,
+            "baselineMs": 158.065862,
+            "coverageMs": 679.91274
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 162.232907,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 161.2657,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559354-1790419687278151319-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 163.605051,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 162.683068,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559354-1790419687278151319-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "thin",
+        "workers": 1,
+        "strategy": "switch",
+        "phase": "warmup",
+        "sample": 0,
+        "wallMs": 1949.8906630000001,
+        "timings": {
+          "captureMs": 13.0247,
+          "executionMs": 1931.256526,
+          "wallMs": 1947.257557
+        },
+        "phases": {
+          "analysisMs": 0.062858,
+          "attributionMs": 0.018124,
+          "baselineMs": 159.827309,
+          "cleanupMs": 2.92265,
+          "coverageMs": 673.923271,
+          "preparationMs": 0.090039,
+          "typecheckMs": 612.630057
+        },
+        "mutation": {
+          "executionMs": 484.576509,
+          "mutationWallMs": 327.297451,
+          "preparedBaselineMs": 156.768926,
+          "switchPreparationMs": 157.248782,
+          "workerCleanupMs": 8.999999999999999e-05,
+          "workerPreparationMs": 157.240637
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 612.2526320000001,
+            "baselineMs": 158.908593,
+            "coverageMs": 672.999645
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 162.017353,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 160.963313,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559421-1790419689060220508-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 165.270731,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 164.20508,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559421-1790419689060220508-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "thin",
+        "workers": 2,
+        "strategy": "replace",
+        "phase": "warmup",
+        "sample": 0,
+        "wallMs": 2161.4799949999997,
+        "timings": {
+          "captureMs": 14.142857999999999,
+          "executionMs": 2141.901356,
+          "wallMs": 2158.7443789999998
+        },
+        "phases": {
+          "analysisMs": 0.062466999999999995,
+          "attributionMs": 0.015769000000000002,
+          "baselineMs": 298.22515799999996,
+          "cleanupMs": 2.648999,
+          "coverageMs": 750.1905869999999,
+          "preparationMs": 0.086171,
+          "typecheckMs": 642.3410349999999
+        },
+        "mutation": {
+          "executionMs": 450.833144,
+          "mutationWallMs": 248.844156,
+          "workerCleanupMs": 2.706216,
+          "workerPreparationMs": 199.248588
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 641.9364800000001,
+            "baselineMs": 297.533164,
+            "coverageMs": 749.297057
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 248.346897,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 245.877252,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559501-1790419691011827069-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 247.979227,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 246.87240999999997,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559501-1790419692716633972-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "thin",
+        "workers": 2,
+        "strategy": "switch",
+        "phase": "warmup",
+        "sample": 0,
+        "wallMs": 2076.772495000001,
+        "timings": {
+          "captureMs": 12.729545,
+          "executionMs": 2058.6572570000003,
+          "wallMs": 2074.142171
+        },
+        "phases": {
+          "analysisMs": 0.058419,
+          "attributionMs": 0.015659,
+          "baselineMs": 172.953924,
+          "cleanupMs": 2.703391,
+          "coverageMs": 668.481908,
+          "preparationMs": 0.09083,
+          "typecheckMs": 625.229614
+        },
+        "mutation": {
+          "executionMs": 591.6769840000001,
+          "mutationWallMs": 249.932549,
+          "preparedBaselineMs": 162.438407,
+          "switchPreparationMs": 339.03088399999996,
+          "workerCleanupMs": 2.682331,
+          "workerPreparationMs": 339.023159
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 624.816301,
+            "baselineMs": 172.405008,
+            "coverageMs": 667.704356
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 246.22002400000002,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 245.116903,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559620-1790419693172215598-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 249.75342,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 248.69928,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559620-1790419694653045269-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "thin",
+        "workers": 2,
+        "strategy": "switch",
+        "phase": "measured",
+        "sample": 1,
+        "wallMs": 2061.6755879999982,
+        "timings": {
+          "captureMs": 12.852343000000001,
+          "executionMs": 2043.468651,
+          "wallMs": 2059.054983
+        },
+        "phases": {
+          "analysisMs": 0.073407,
+          "attributionMs": 0.019246,
+          "baselineMs": 158.19086,
+          "cleanupMs": 2.65469,
+          "coverageMs": 674.40188,
+          "preparationMs": 0.112781,
+          "typecheckMs": 595.304211
+        },
+        "mutation": {
+          "executionMs": 615.211978,
+          "mutationWallMs": 255.614164,
+          "preparedBaselineMs": 163.301051,
+          "switchPreparationMs": 354.270801,
+          "workerCleanupMs": 5.292178,
+          "workerPreparationMs": 354.262115
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 594.790842,
+            "baselineMs": 157.57004999999998,
+            "coverageMs": 673.083228
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 248.707859,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 247.335665,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559716-1790419695249505979-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 255.444479,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 254.3859,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559716-1790419696691075429-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "thin",
+        "workers": 2,
+        "strategy": "replace",
+        "phase": "measured",
+        "sample": 1,
+        "wallMs": 2066.754144999999,
+        "timings": {
+          "captureMs": 12.764911,
+          "executionMs": 2047.9747810000001,
+          "wallMs": 2064.174931
+        },
+        "phases": {
+          "analysisMs": 0.059642,
+          "attributionMs": 0.01604,
+          "baselineMs": 240.835509,
+          "cleanupMs": 3.378865,
+          "coverageMs": 711.885131,
+          "preparationMs": 0.09115000000000001,
+          "typecheckMs": 639.113645
+        },
+        "mutation": {
+          "executionMs": 455.828063,
+          "mutationWallMs": 275.113867,
+          "workerCleanupMs": 2.952515,
+          "workerPreparationMs": 177.725573
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 638.625192,
+            "baselineMs": 238.322211,
+            "coverageMs": 711.02875
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 255.441741,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 254.279939,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559810-1790419697311476390-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 274.27873400000004,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 273.196191,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559810-1790419698917150135-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "thin",
+        "workers": 1,
+        "strategy": "switch",
+        "phase": "measured",
+        "sample": 1,
+        "wallMs": 2026.1453360000014,
+        "timings": {
+          "captureMs": 12.417809,
+          "executionMs": 2007.560511,
+          "wallMs": 2022.8011860000001
+        },
+        "phases": {
+          "analysisMs": 0.060994,
+          "attributionMs": 0.015438,
+          "baselineMs": 163.21649699999998,
+          "cleanupMs": 2.765158,
+          "coverageMs": 734.333043,
+          "preparationMs": 0.086972,
+          "typecheckMs": 611.2405560000001
+        },
+        "mutation": {
+          "executionMs": 498.47213800000003,
+          "mutationWallMs": 332.197566,
+          "preparedBaselineMs": 165.861861,
+          "switchPreparationMs": 166.24603900000002,
+          "workerCleanupMs": 0.00016,
+          "workerPreparationMs": 166.238055
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 610.8648639999999,
+            "baselineMs": 162.64028,
+            "coverageMs": 733.554638
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 167.601893,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 166.306231,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559954-1790419699378212705-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 164.584361,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 163.53336700000003,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-559954-1790419699378212705-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "thin",
+        "workers": 1,
+        "strategy": "replace",
+        "phase": "measured",
+        "sample": 1,
+        "wallMs": 1799.1933669999999,
+        "timings": {
+          "captureMs": 12.942608,
+          "executionMs": 1781.083312,
+          "wallMs": 1796.76042
+        },
+        "phases": {
+          "analysisMs": 0.055554,
+          "attributionMs": 0.01568,
+          "baselineMs": 165.121508,
+          "cleanupMs": 2.682783,
+          "coverageMs": 675.531338,
+          "preparationMs": 0.092112,
+          "typecheckMs": 610.8724100000001
+        },
+        "mutation": {
+          "executionMs": 329.265859,
+          "mutationWallMs": 329.230904,
+          "workerCleanupMs": 4e-05,
+          "workerPreparationMs": 0.00025
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 610.491769,
+            "baselineMs": 164.57074899999998,
+            "coverageMs": 674.686129
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 161.898434,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 160.98678,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560048-1790419701405122578-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 167.32239099999998,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 166.398955,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560048-1790419701405122578-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "off",
+        "workers": 2,
+        "strategy": "switch",
+        "phase": "measured",
+        "sample": 1,
+        "wallMs": 2229.6306299999997,
+        "timings": {
+          "captureMs": 13.448566,
+          "executionMs": 2208.4012660000003,
+          "wallMs": 2226.6723850000003
+        },
+        "phases": {
+          "analysisMs": 0.06538200000000001,
+          "attributionMs": 0.018655,
+          "baselineMs": 161.289007,
+          "cleanupMs": 4.7241480000000005,
+          "coverageMs": 741.680299,
+          "preparationMs": 0.094606,
+          "typecheckMs": 691.065005
+        },
+        "mutation": {
+          "executionMs": 613.988296,
+          "mutationWallMs": 260.521146,
+          "preparedBaselineMs": 165.658231,
+          "switchPreparationMs": 349.765102,
+          "workerCleanupMs": 3.6579569999999997,
+          "workerPreparationMs": 349.758539
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 690.4852430000001,
+            "baselineMs": 160.707471,
+            "coverageMs": 740.8823369999999
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 253.760288,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 252.49836,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560115-1790419703205461839-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 260.321235,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 259.142542,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560115-1790419704813708715-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "off",
+        "workers": 2,
+        "strategy": "replace",
+        "phase": "measured",
+        "sample": 1,
+        "wallMs": 1934.0833039999998,
+        "timings": {
+          "captureMs": 16.447368,
+          "executionMs": 1910.547843,
+          "wallMs": 1930.5216679999999
+        },
+        "phases": {
+          "analysisMs": 0.070572,
+          "attributionMs": 0.018755,
+          "baselineMs": 160.743718,
+          "cleanupMs": 3.433364,
+          "coverageMs": 690.5991799999999,
+          "preparationMs": 0.11457500000000001,
+          "typecheckMs": 630.140673
+        },
+        "mutation": {
+          "executionMs": 428.702003,
+          "mutationWallMs": 250.74354399999999,
+          "workerCleanupMs": 4.061921,
+          "workerPreparationMs": 173.85172400000002
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 629.709948,
+            "baselineMs": 160.185866,
+            "coverageMs": 689.220531
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 250.66682099999997,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 249.481025,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560231-1790419705439745956-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 241.869236,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 240.558026,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560231-1790419706934850104-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "off",
+        "workers": 1,
+        "strategy": "switch",
+        "phase": "measured",
+        "sample": 1,
+        "wallMs": 2189.407238,
+        "timings": {
+          "captureMs": 12.721536,
+          "executionMs": 2171.242775,
+          "wallMs": 2186.889267
+        },
+        "phases": {
+          "analysisMs": 0.063539,
+          "attributionMs": 0.018956,
+          "baselineMs": 184.285767,
+          "cleanupMs": 2.860806,
+          "coverageMs": 688.4798490000001,
+          "preparationMs": 0.089438,
+          "typecheckMs": 792.2064170000001
+        },
+        "mutation": {
+          "executionMs": 505.947818,
+          "mutationWallMs": 332.94340700000004,
+          "preparedBaselineMs": 172.55472,
+          "switchPreparationMs": 172.944027,
+          "workerCleanupMs": 9.999999999999999e-05,
+          "workerPreparationMs": 172.937275
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 791.221196,
+            "baselineMs": 183.62941999999998,
+            "coverageMs": 687.6701370000001
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 167.877664,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 166.70720699999998,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560314-1790419707369543655-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 165.05202799999998,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 164.1166,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560314-1790419707369543655-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "off",
+        "workers": 1,
+        "strategy": "replace",
+        "phase": "measured",
+        "sample": 1,
+        "wallMs": 1762.6371800000015,
+        "timings": {
+          "captureMs": 12.880613,
+          "executionMs": 1742.865643,
+          "wallMs": 1759.5105709999998
+        },
+        "phases": {
+          "analysisMs": 0.060884,
+          "attributionMs": 0.018885,
+          "baselineMs": 157.919112,
+          "cleanupMs": 3.690207,
+          "coverageMs": 672.393303,
+          "preparationMs": 0.091141,
+          "typecheckMs": 584.086425
+        },
+        "mutation": {
+          "executionMs": 328.15481,
+          "mutationWallMs": 328.112301,
+          "workerCleanupMs": 9.999999999999999e-05,
+          "workerPreparationMs": 0.0003
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 583.6991419999999,
+            "baselineMs": 157.328228,
+            "coverageMs": 671.5937779999999
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 166.04761200000002,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 165.05774100000002,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560458-1790419709560159747-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 162.052377,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 161.109524,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560458-1790419709560159747-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "off",
+        "workers": 1,
+        "strategy": "replace",
+        "phase": "measured",
+        "sample": 2,
+        "wallMs": 1808.7199980000005,
+        "timings": {
+          "captureMs": 12.93769,
+          "executionMs": 1790.487112,
+          "wallMs": 1806.144805
+        },
+        "phases": {
+          "analysisMs": 0.06951,
+          "attributionMs": 0.018645,
+          "baselineMs": 176.11700199999999,
+          "cleanupMs": 2.656485,
+          "coverageMs": 683.274869,
+          "preparationMs": 0.09237300000000001,
+          "typecheckMs": 607.76728
+        },
+        "mutation": {
+          "executionMs": 323.003984,
+          "mutationWallMs": 322.961074,
+          "workerCleanupMs": 8e-05,
+          "workerPreparationMs": 0.00031
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 607.386019,
+            "baselineMs": 175.557907,
+            "coverageMs": 682.4812260000001
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 163.76224,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 161.714673,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560525-1790419711322628697-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 159.185549,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 158.214684,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560525-1790419711322628697-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "off",
+        "workers": 1,
+        "strategy": "switch",
+        "phase": "measured",
+        "sample": 2,
+        "wallMs": 2005.503877999996,
+        "timings": {
+          "captureMs": 15.441256000000001,
+          "executionMs": 1983.569842,
+          "wallMs": 2001.9694289999998
+        },
+        "phases": {
+          "analysisMs": 0.08491900000000001,
+          "attributionMs": 0.024675,
+          "baselineMs": 168.04065300000002,
+          "cleanupMs": 2.8834910000000002,
+          "coverageMs": 695.683484,
+          "preparationMs": 0.123652,
+          "typecheckMs": 613.708901
+        },
+        "mutation": {
+          "executionMs": 505.75038299999994,
+          "mutationWallMs": 331.143174,
+          "preparedBaselineMs": 173.49938600000002,
+          "switchPreparationMs": 174.568255,
+          "workerCleanupMs": 8e-05,
+          "workerPreparationMs": 174.56015
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 613.24848,
+            "baselineMs": 167.458776,
+            "coverageMs": 694.555736
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 162.630089,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 161.49676,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560608-1790419713134435031-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 168.499549,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 167.53708,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560608-1790419713134435031-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "off",
+        "workers": 2,
+        "strategy": "replace",
+        "phase": "measured",
+        "sample": 2,
+        "wallMs": 1962.9524999999994,
+        "timings": {
+          "captureMs": 13.652096,
+          "executionMs": 1941.7658490000001,
+          "wallMs": 1959.514761
+        },
+        "phases": {
+          "analysisMs": 0.063408,
+          "attributionMs": 0.018595,
+          "baselineMs": 159.127288,
+          "cleanupMs": 3.995887,
+          "coverageMs": 715.271319,
+          "preparationMs": 0.087894,
+          "typecheckMs": 637.837774
+        },
+        "mutation": {
+          "executionMs": 429.154827,
+          "mutationWallMs": 251.62762999999998,
+          "workerCleanupMs": 2.6543930000000002,
+          "workerPreparationMs": 173.75138800000002
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 637.4513320000001,
+            "baselineMs": 158.570618,
+            "coverageMs": 714.481432
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 251.559613,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 250.449027,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560690-1790419715140102535-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 244.109462,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 242.76864600000002,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560690-1790419716666908014-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "off",
+        "workers": 2,
+        "strategy": "switch",
+        "phase": "measured",
+        "sample": 2,
+        "wallMs": 2075.383618,
+        "timings": {
+          "captureMs": 12.561554000000001,
+          "executionMs": 2056.832336,
+          "wallMs": 2072.7188650000003
+        },
+        "phases": {
+          "analysisMs": 0.141367,
+          "attributionMs": 0.018354000000000002,
+          "baselineMs": 160.439689,
+          "cleanupMs": 3.254505,
+          "coverageMs": 677.516777,
+          "preparationMs": 0.098855,
+          "typecheckMs": 612.144353
+        },
+        "mutation": {
+          "executionMs": 606.3073810000001,
+          "mutationWallMs": 260.812747,
+          "preparedBaselineMs": 163.735453,
+          "switchPreparationMs": 341.95730000000003,
+          "workerCleanupMs": 3.497919,
+          "workerPreparationMs": 341.95038900000003
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 611.744005,
+            "baselineMs": 159.874533,
+            "coverageMs": 676.714717
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 251.143854,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 249.786566,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560773-1790419717101653132-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 260.627606,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 259.57131100000004,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560773-1790419718566027074-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "thin",
+        "workers": 1,
+        "strategy": "replace",
+        "phase": "measured",
+        "sample": 2,
+        "wallMs": 2029.8476480000027,
+        "timings": {
+          "captureMs": 12.526849,
+          "executionMs": 2011.810435,
+          "wallMs": 2027.2639049999998
+        },
+        "phases": {
+          "analysisMs": 0.065472,
+          "attributionMs": 0.0162,
+          "baselineMs": 170.249052,
+          "cleanupMs": 2.864385,
+          "coverageMs": 693.321572,
+          "preparationMs": 0.09106,
+          "typecheckMs": 824.107616
+        },
+        "mutation": {
+          "executionMs": 323.828517,
+          "mutationWallMs": 323.793151,
+          "workerCleanupMs": 7.000000000000001e-05,
+          "workerPreparationMs": 0.00026
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 823.673304,
+            "baselineMs": 169.51453999999998,
+            "coverageMs": 692.392694
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 164.799944,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 163.890634,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560867-1790419719177324647-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 158.98401,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 158.01352599999998,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560867-1790419719177324647-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "thin",
+        "workers": 1,
+        "strategy": "switch",
+        "phase": "measured",
+        "sample": 2,
+        "wallMs": 2281.9252360000028,
+        "timings": {
+          "captureMs": 12.61838,
+          "executionMs": 2263.378604,
+          "wallMs": 2279.392579
+        },
+        "phases": {
+          "analysisMs": 0.08643200000000001,
+          "attributionMs": 0.01592,
+          "baselineMs": 164.694892,
+          "cleanupMs": 3.342677,
+          "coverageMs": 819.381161,
+          "preparationMs": 0.095569,
+          "typecheckMs": 759.074958
+        },
+        "mutation": {
+          "executionMs": 519.900923,
+          "mutationWallMs": 351.682713,
+          "preparedBaselineMs": 167.806169,
+          "switchPreparationMs": 168.190027,
+          "workerCleanupMs": 0.00037099999999999996,
+          "workerPreparationMs": 168.182583
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 758.695989,
+            "baselineMs": 164.150124,
+            "coverageMs": 818.557051
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 173.635124,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 172.537513,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560991-1790419721208588782-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 178.032861,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 177.12183000000002,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-560991-1790419721208588782-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "thin",
+        "workers": 2,
+        "strategy": "replace",
+        "phase": "measured",
+        "sample": 2,
+        "wallMs": 1994.8322719999996,
+        "timings": {
+          "captureMs": 12.661541999999999,
+          "executionMs": 1976.395119,
+          "wallMs": 1991.95754
+        },
+        "phases": {
+          "analysisMs": 0.06333799999999999,
+          "attributionMs": 0.016892,
+          "baselineMs": 160.326482,
+          "cleanupMs": 2.8478090000000003,
+          "coverageMs": 740.826271,
+          "preparationMs": 0.0858,
+          "typecheckMs": 654.5409
+        },
+        "mutation": {
+          "executionMs": 420.391266,
+          "mutationWallMs": 244.582481,
+          "workerCleanupMs": 2.9321479999999998,
+          "workerPreparationMs": 172.839918
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 654.162954,
+            "baselineMs": 159.78051200000002,
+            "coverageMs": 737.979942
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 244.51030500000002,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 243.397796,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-561096-1790419723491188507-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 238.32132000000001,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 236.993639,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-561096-1790419725060177415-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "thin",
+        "workers": 2,
+        "strategy": "switch",
+        "phase": "measured",
+        "sample": 2,
+        "wallMs": 2090.444687999996,
+        "timings": {
+          "captureMs": 12.533021999999999,
+          "executionMs": 2071.803833,
+          "wallMs": 2087.561992
+        },
+        "phases": {
+          "analysisMs": 0.058219,
+          "attributionMs": 0.015789,
+          "baselineMs": 159.83446600000002,
+          "cleanupMs": 3.1574799999999996,
+          "coverageMs": 670.938735,
+          "preparationMs": 0.086372,
+          "typecheckMs": 636.135706
+        },
+        "mutation": {
+          "executionMs": 604.58078,
+          "mutationWallMs": 263.56104200000004,
+          "preparedBaselineMs": 161.259341,
+          "switchPreparationMs": 337.925847,
+          "workerCleanupMs": 3.06103,
+          "workerPreparationMs": 337.918262
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 635.681016,
+            "baselineMs": 159.277325,
+            "coverageMs": 670.077776
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 263.497504,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 262.42089200000004,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-561210-1790419725485963562-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 251.21107700000002,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 250.035029,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-561210-1790419726966220711-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "thin",
+        "workers": 2,
+        "strategy": "switch",
+        "phase": "measured",
+        "sample": 3,
+        "wallMs": 2069.457138000005,
+        "timings": {
+          "captureMs": 12.647084,
+          "executionMs": 2050.847265,
+          "wallMs": 2066.298127
+        },
+        "phases": {
+          "analysisMs": 0.062146,
+          "attributionMs": 0.015699,
+          "baselineMs": 159.417226,
+          "cleanupMs": 2.7398499999999997,
+          "coverageMs": 682.835516,
+          "preparationMs": 0.089547,
+          "typecheckMs": 614.676495
+        },
+        "mutation": {
+          "executionMs": 593.6083490000001,
+          "mutationWallMs": 252.079522,
+          "preparedBaselineMs": 163.713261,
+          "switchPreparationMs": 338.72633,
+          "workerCleanupMs": 2.7716089999999998,
+          "workerPreparationMs": 338.717193
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 614.296105,
+            "baselineMs": 158.870183,
+            "coverageMs": 682.054888
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 252.000504,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 250.732935,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-561304-1790419727577391388-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 249.770933,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 248.572223,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-561304-1790419729048328611-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "thin",
+        "workers": 2,
+        "strategy": "replace",
+        "phase": "measured",
+        "sample": 3,
+        "wallMs": 1903.691752000006,
+        "timings": {
+          "captureMs": 12.597911,
+          "executionMs": 1883.910678,
+          "wallMs": 1900.5341819999999
+        },
+        "phases": {
+          "analysisMs": 0.063709,
+          "attributionMs": 0.017172,
+          "baselineMs": 159.75219900000002,
+          "cleanupMs": 3.9652999999999996,
+          "coverageMs": 679.891767,
+          "preparationMs": 0.09011899999999999,
+          "typecheckMs": 625.263181
+        },
+        "mutation": {
+          "executionMs": 418.683092,
+          "mutationWallMs": 243.78685,
+          "workerCleanupMs": 2.865796,
+          "workerPreparationMs": 171.99277600000002
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 624.8869980000001,
+            "baselineMs": 159.209355,
+            "coverageMs": 678.985824
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 243.714075,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 242.661056,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-561398-1790419729646619981-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 243.107613,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 241.958766,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-561398-1790419731126927187-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "thin",
+        "workers": 1,
+        "strategy": "switch",
+        "phase": "measured",
+        "sample": 3,
+        "wallMs": 2553.0509489999968,
+        "timings": {
+          "captureMs": 12.952626,
+          "executionMs": 2528.051564,
+          "wallMs": 2546.00235
+        },
+        "phases": {
+          "analysisMs": 0.063168,
+          "attributionMs": 0.018605,
+          "baselineMs": 164.119982,
+          "cleanupMs": 4.934400999999999,
+          "coverageMs": 856.2480059999999,
+          "preparationMs": 0.09094,
+          "typecheckMs": 637.752873
+        },
+        "mutation": {
+          "executionMs": 869.593696,
+          "mutationWallMs": 692.403489,
+          "preparedBaselineMs": 176.745666,
+          "switchPreparationMs": 177.153348,
+          "workerCleanupMs": 0.00018099999999999998,
+          "workerPreparationMs": 177.144632
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 637.376889,
+            "baselineMs": 163.575694,
+            "coverageMs": 855.3094719999999
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 451.20114900000004,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 450.093839,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-561479-1790419731551223236-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 241.18983699999998,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 240.11136199999999,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-561479-1790419731551223236-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "thin",
+        "workers": 1,
+        "strategy": "replace",
+        "phase": "measured",
+        "sample": 3,
+        "wallMs": 1940.6795330000023,
+        "timings": {
+          "captureMs": 19.494999,
+          "executionMs": 1909.3850830000001,
+          "wallMs": 1931.8420970000002
+        },
+        "phases": {
+          "analysisMs": 0.08529,
+          "attributionMs": 0.016661,
+          "baselineMs": 158.06205,
+          "cleanupMs": 2.892104,
+          "coverageMs": 678.485833,
+          "preparationMs": 0.130154,
+          "typecheckMs": 742.0041200000001
+        },
+        "mutation": {
+          "executionMs": 330.462677,
+          "mutationWallMs": 330.428463,
+          "workerCleanupMs": 5.9999999999999995e-05,
+          "workerPreparationMs": 0.000261
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 741.544211,
+            "baselineMs": 157.51515799999999,
+            "coverageMs": 677.7122469999999
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 166.772598,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 165.859773,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-561637-1790419734117271995-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 163.645495,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 162.730265,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-561637-1790419734117271995-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "off",
+        "workers": 2,
+        "strategy": "switch",
+        "phase": "measured",
+        "sample": 3,
+        "wallMs": 2233.6076319999993,
+        "timings": {
+          "captureMs": 13.159041,
+          "executionMs": 2214.458187,
+          "wallMs": 2230.755037
+        },
+        "phases": {
+          "analysisMs": 0.072135,
+          "attributionMs": 0.019577,
+          "baselineMs": 188.418119,
+          "cleanupMs": 2.9733530000000004,
+          "coverageMs": 777.8915360000001,
+          "preparationMs": 0.087544,
+          "typecheckMs": 609.865628
+        },
+        "mutation": {
+          "executionMs": 637.9466769999999,
+          "mutationWallMs": 291.42867700000005,
+          "preparedBaselineMs": 163.151504,
+          "switchPreparationMs": 343.828644,
+          "workerCleanupMs": 2.646395,
+          "workerPreparationMs": 343.816501
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 609.480378,
+            "baselineMs": 187.728139,
+            "coverageMs": 776.9344179999999
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 291.362123,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 290.228944,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-561718-1790419736045898293-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 252.78019200000003,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 251.54569500000002,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-561718-1790419737635570156-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "off",
+        "workers": 2,
+        "strategy": "replace",
+        "phase": "measured",
+        "sample": 3,
+        "wallMs": 2124.871272999997,
+        "timings": {
+          "captureMs": 12.56067,
+          "executionMs": 2106.5002179999997,
+          "wallMs": 2121.82318
+        },
+        "phases": {
+          "analysisMs": 0.061995999999999996,
+          "attributionMs": 0.026309,
+          "baselineMs": 160.320901,
+          "cleanupMs": 2.6878420000000003,
+          "coverageMs": 908.219497,
+          "preparationMs": 0.09098999999999999,
+          "typecheckMs": 601.9494669999999
+        },
+        "mutation": {
+          "executionMs": 435.66846300000003,
+          "mutationWallMs": 240.456797,
+          "workerCleanupMs": 2.940405,
+          "workerPreparationMs": 192.221519
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 601.487424,
+            "baselineMs": 159.693519,
+            "coverageMs": 907.223426
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 240.387818,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 238.342213,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-561875-1790419738279269868-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 240.155374,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 238.98435600000002,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-561875-1790419739968742825-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "off",
+        "workers": 1,
+        "strategy": "switch",
+        "phase": "measured",
+        "sample": 3,
+        "wallMs": 2049.714458000002,
+        "timings": {
+          "captureMs": 12.519524,
+          "executionMs": 2031.809823,
+          "wallMs": 2047.094683
+        },
+        "phases": {
+          "analysisMs": 0.064371,
+          "attributionMs": 0.018615,
+          "baselineMs": 246.451416,
+          "cleanupMs": 2.6930520000000002,
+          "coverageMs": 669.686039,
+          "preparationMs": 0.09067900000000001,
+          "typecheckMs": 612.6343549999999
+        },
+        "mutation": {
+          "executionMs": 502.721592,
+          "mutationWallMs": 339.176648,
+          "preparedBaselineMs": 163.121111,
+          "switchPreparationMs": 163.507754,
+          "workerCleanupMs": 0.00018099999999999998,
+          "workerPreparationMs": 163.501122
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 612.1609,
+            "baselineMs": 245.711022,
+            "coverageMs": 668.702903
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 160.30697999999998,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 159.076261,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-562037-1790419740404198648-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 178.856394,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 177.80963699999998,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-562037-1790419740404198648-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      },
+      {
+        "lto": "off",
+        "workers": 1,
+        "strategy": "replace",
+        "phase": "measured",
+        "sample": 3,
+        "wallMs": 1863.871828000003,
+        "timings": {
+          "captureMs": 13.478858,
+          "executionMs": 1844.210573,
+          "wallMs": 1860.999536
+        },
+        "phases": {
+          "analysisMs": 0.06736600000000001,
+          "attributionMs": 0.024436000000000003,
+          "baselineMs": 168.121166,
+          "cleanupMs": 3.235656,
+          "coverageMs": 726.26123,
+          "preparationMs": 0.093725,
+          "typecheckMs": 617.366702
+        },
+        "mutation": {
+          "executionMs": 332.08586099999997,
+          "mutationWallMs": 332.033233,
+          "workerCleanupMs": 0.000141,
+          "workerPreparationMs": 0.00033099999999999997
+        },
+        "originalRunnerJobs": [
+          {
+            "typecheckMs": 616.845598,
+            "baselineMs": 167.499135,
+            "coverageMs": 725.2333600000001
+          }
+        ],
+        "mutationOutcomes": [
+          {
+            "executionMs": 166.51426899999998,
+            "id": 0,
+            "localId": 0,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": ">",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 165.449098,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-562134-1790419742455375141-mutant-0-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 165.505349,
+            "id": 1,
+            "localId": 1,
+            "offset": 42,
+            "original": ">=",
+            "path": "src/compare.ts",
+            "replacement": "<",
+            "setups": [
+              {
+                "cancelled": false,
+                "cleanupError": null,
+                "diagnostic": "",
+                "error": null,
+                "exit": 1,
+                "ms": 164.49945899999997,
+                "name": "node-workspace",
+                "overflow": false,
+                "pipeError": null,
+                "report": {
+                  "complete": true,
+                  "errors": 0,
+                  "executionId": "capture-562134-1790419742455375141-mutant-1-0",
+                  "failed": 1,
+                  "moduleFailures": [],
+                  "node": "24.21.0",
+                  "passed": 0,
+                  "version": 1
+                },
+                "state": "failed",
+                "timedOut": false
+              }
+            ],
+            "verdict": "killed"
+          }
+        ]
+      }
+    ]
+  },
+  "probeBinarySha256": "ddcefdf587a0f1ed6d40277a2c82dcb7d4d10c5dfd041290627b33c375976fb2"
+}
