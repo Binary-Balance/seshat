@@ -10,10 +10,10 @@ thread_local! {
 pub(super) fn file_io_hook(path: &Path, opened: bool) {
     let callback = FILE_IO_HOOK.with(|slot| {
         let mut slot = slot.borrow_mut();
-        if slot
-            .as_ref()
-            .is_some_and(|(expected, after_open, _)| expected == path && *after_open == opened)
-        {
+        // Capture opens canonical Windows paths; fixtures may register ordinary paths.
+        if slot.as_ref().is_some_and(|(expected, after_open, _)| {
+            path_key(expected) == path_key(path) && *after_open == opened
+        }) {
             slot.take().map(|(_, _, callback)| callback)
         } else {
             None
