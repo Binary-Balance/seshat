@@ -18,17 +18,6 @@ use std::{
     time::{Duration, Instant},
 };
 
-#[cfg(unix)]
-use std::os::unix::fs::MetadataExt;
-
-#[cfg(windows)]
-use std::os::windows::io::AsRawHandle;
-
-#[cfg(windows)]
-use windows_sys::Win32::Storage::FileSystem::{
-    BY_HANDLE_FILE_INFORMATION, GetFileInformationByHandle,
-};
-
 struct Progress {
     enabled: bool,
     started: Instant,
@@ -119,28 +108,11 @@ enum JobKind<'a> {
     Typecheck,
 }
 
-// Never follow an output link when removing stale evidence or reading new data.
+// Reject existing output links before removing stale evidence or reading data.
 fn independent_file(path: &Path) -> Result<bool, String> {
-    #[cfg(unix)]
-    {
-        return fs::metadata(path)
-            .map(|metadata| metadata.nlink() == 1)
-            .map_err(|e| e.to_string());
-    }
-    #[cfg(windows)]
-    {
-        let file = fs::File::open(path).map_err(|e| e.to_string())?;
-        let mut information = BY_HANDLE_FILE_INFORMATION::default();
-        // SAFETY: the file handle is live for this call and the structure is writable.
-        if unsafe { GetFileInformationByHandle(file.as_raw_handle(), &mut information) } == 0 {
-            return Err(format!(
-                "read file identity {}: {}",
-                path.display(),
-                std::io::Error::last_os_error()
-            ));
-        }
-        return Ok(information.nNumberOfLinks == 1);
-    }
+    RegularFile::open(path, false)?
+        .independent()
+        .map_err(|e| e.to_string())
 }
 
 fn regular_path(root: &Path, path: &Path, missing_ok: bool) -> Result<(), String> {
@@ -369,7 +341,7 @@ fn version_comparison(actual: Option<&str>, expected: Option<&str>) -> &'static 
 
 fn json_file(root: &Path, path: &Path) -> Option<Value> {
     regular_path(root, path, false).ok()?;
-    serde_json::from_slice(&fs::read(path).ok()?).ok()
+    serde_json::from_slice(&RegularFile::open(path, false).ok()?.read(u64::MAX).ok()?).ok()
 }
 
 fn nearest_json(root: &Path, cwd: &str, name: &str) -> Option<(PathBuf, Value)> {
@@ -691,7 +663,7 @@ impl CapturedProject {
             let expected = self.expected_source(index, original);
             let path = self.directory.0.join(relative);
             regular_path(&self.directory.0, &path, false)?;
-            if fs::read(&path).map_err(|e| e.to_string())? != expected.as_bytes() {
+            if RegularFile::open(&path, false)?.read(u64::MAX)? != expected.as_bytes() {
                 return Err(format!(
                     "captured source changed during execution: {}",
                     relative.display()
@@ -869,9 +841,8 @@ impl CapturedProject {
     fn replace_source(&mut self, index: usize, replacement: Option<String>) -> Result<(), String> {
         let (relative, original) = &self.sources[index];
         let path = self.directory.0.join(relative);
-        // Recheck before both mutation and restoration; a test may have replaced a path.
-        regular_path(&self.directory.0, &path, false)?;
-        fs::write(&path, replacement.as_deref().unwrap_or(original)).map_err(|e| e.to_string())?;
+        RegularFile::open(&path, true)?
+            .write(replacement.as_deref().unwrap_or(original).as_bytes())?;
         self.active_edit = replacement.map(|source| (index, source));
         Ok(())
     }
@@ -881,11 +852,8 @@ impl CapturedProject {
             return Err("prepared source count differs from captured source scope".into());
         }
         self.unchanged()?;
-        for (relative, _) in &self.sources {
-            regular_path(&self.directory.0, &self.directory.0.join(relative), false)?;
-        }
         for ((relative, _), source) in self.sources.iter().zip(prepared) {
-            fs::write(self.directory.0.join(relative), source).map_err(|e| e.to_string())?;
+            RegularFile::open(&self.directory.0.join(relative), true)?.write(source.as_bytes())?;
         }
         self.active_edit = None;
         self.active_mutant = None;
@@ -1581,6 +1549,74 @@ impl CapturedProject {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn mutation_restoration_rejects_concurrent_path_swaps() {
+        for (parent, opened) in [(true, false), (false, false), (true, true), (false, true)] {
+            let fixture = super::super::tests::Fixture::new();
+            let mut captured = fixture.capture().unwrap();
+            let index = captured
+                .sources
+                .iter()
+                .position(|(path, _)| path == Path::new("src/calc.ts"))
+                .unwrap();
+            captured
+                .replace_source(index, Some("mutated".into()))
+                .unwrap();
+            let outside = fixture._directory.0.join("outside");
+            fs::create_dir(&outside).unwrap();
+            fs::write(outside.join("calc.ts"), "outside original").unwrap();
+            let path = captured.directory.0.join("src/calc.ts");
+            super::super::tests::swap_during_io(
+                &path,
+                &if parent {
+                    outside.clone()
+                } else {
+                    outside.join("calc.ts")
+                },
+                parent,
+                opened,
+            );
+            let _ = captured.replace_source(index, None);
+            assert_eq!(
+                fs::read_to_string(outside.join("calc.ts")).unwrap(),
+                "outside original",
+                "restoration overwrote outside file"
+            );
+            assert!(
+                FILE_IO_HOOK.with(|slot| slot.borrow().is_none()),
+                "swap hook did not run"
+            );
+            drop(captured);
+            fixture.assert_clean();
+        }
+    }
+
+    #[test]
+    fn restoration_checks_link_count_on_the_opened_file() {
+        let fixture = super::super::tests::Fixture::new();
+        let mut captured = fixture.capture().unwrap();
+        let path = captured.directory.0.join(&captured.sources[0].0);
+        let outside = fixture._directory.0.join("outside.ts");
+        fs::write(&outside, "outside original").unwrap();
+        let swapped_path = path.clone();
+        let target = outside.clone();
+        FILE_IO_HOOK.with(|slot| {
+            *slot.borrow_mut() = Some((
+                fs::canonicalize(&path).unwrap(),
+                false,
+                Box::new(move || {
+                    fs::remove_file(&swapped_path).unwrap();
+                    fs::hard_link(target, swapped_path).unwrap();
+                }),
+            ));
+        });
+        assert!(captured.replace_source(0, None).is_err());
+        assert_eq!(fs::read_to_string(outside).unwrap(), "outside original");
+        assert!(FILE_IO_HOOK.with(|slot| slot.borrow().is_none()));
+        drop(captured);
+        fixture.assert_clean();
+    }
 
     #[test]
     fn report_paths_reject_links_before_removal_or_reading() {

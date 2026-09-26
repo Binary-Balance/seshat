@@ -866,7 +866,7 @@ Unknown fields, duplicate JSON fields, wrong value types, parent traversal and
 absolute paths in path settings are rejected. Paths use `/` separators. No
 inheritance or executable config is accepted.
 
-This Linux implementation uses trusted, quiescent input files. It is not an atomic
+This implementation uses trusted, quiescent input files. It is not an atomic
 filesystem snapshot or protection against hostile concurrent edits. It does not
 sandbox test access to external files, networks or databases. Copies retain
 existing reports and caches as ordinary captured files; `collect` removes its
@@ -877,6 +877,50 @@ other workspace layouts require their own integration checks.
 Serde was already in the dependency tree and is now a direct dependency for typed
 configuration. `glob` adds one package for pattern matching, without a custom
 matcher or another Rust crate in this project.
+
+### Capture and restoration path swaps
+
+The deterministic Rust regressions for [issue #70](https://github.com/Binary-Balance/seshat/issues/70)
+swap a regular file or its parent directory for a link to an outside fixture.
+Thread-local hooks place the swap immediately before opening the leaf file and
+after validating its opened handle. The hooks are compiled only for tests.
+
+```sh
+cargo test --locked --manifest-path crates/seshat/Cargo.toml concurrent_path_swaps --lib
+cargo test --locked --manifest-path crates/seshat/Cargo.toml restoration_checks_link_count --lib
+```
+
+Before the fix, the pre-open controls reproduced all three failures for both
+leaf-file and parent-directory swaps:
+
+| Operation | Observed failure |
+| --- | --- |
+| Capture source | Copied the outside source marker into the execution copy |
+| Read configuration | Parsed the outside configuration's `workers: 77` instead of `1` |
+| Restore mutation | Replaced the outside sentinel with the original selected source |
+
+The regressions assert those values directly. They also verify cleanup and that
+all swap hooks ran. A separate late hard-link replacement must be rejected before
+truncation, leaving the outside sentinel unchanged. Existing controls cover
+workspace-link rewriting and independent worker copies.
+
+Unix traverses directories with `openat` and rejects links at every component.
+Windows opens directories without delete sharing, rejects existing reparse
+points and retains the directory handles through file IO. The Windows control
+accepts a sharing/access error when a pinned path cannot be renamed. Reads,
+copies and writes use the checked file handle; writes check its link count before
+truncation. Report reads retain their 32 MiB limit.
+
+This protects the tested rename/replacement cases, not every concurrent edit.
+Inputs must still be trusted and quiescent. In-place byte edits, moving opened
+directories and adding hard links after validation are unsupported. Windows
+sharing rules do not restrict all attribute access. Concurrent in-place reparse
+metadata changes are therefore outside this protection. These controls do not
+claim to reproduce an exploit for that case. See Microsoft's
+[CreateFileW sharing rules](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew).
+Source isolation does not restrict what test commands can access, and the
+[Unix supervision limits](../../docs/configuration.md#parallel-execution) remain
+unchanged.
 
 ## Captured-project collection
 

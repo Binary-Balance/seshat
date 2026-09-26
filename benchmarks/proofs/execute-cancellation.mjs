@@ -103,7 +103,7 @@ for (const signal of signals) for (const [strategy, phase, target, ordinal] of c
   });
   try {
     await until(() => existsSync(marker + '.ready') || exit, 'blocked job readiness', 30_000);
-    assert.ok(existsSync(marker + '.ready'), 'proof exited before readiness: ' + stderr);
+    assert.ok(existsSync(marker + '.ready'), 'proof exited before readiness: ' + stderr + stdout);
     const calls = read(marker + '.calls');
     if (!windows) child.kill(signal);
     await until(() => exit, 'cancelled proof exit', windows ? 40_000 : 10_000);
