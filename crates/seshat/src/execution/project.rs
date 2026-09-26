@@ -321,6 +321,14 @@ fn patterns(values: &[String]) -> Result<Vec<Pattern>, String> {
 }
 
 impl Config {
+    fn validate_mode(&self, mode: AssessmentMode) -> Result<(), String> {
+        if mode != AssessmentMode::Crap && self.setups.iter().any(|setup| setup.typecheck.is_none())
+        {
+            return Err("check/mutate require an explicit typecheck command in every setup".into());
+        }
+        Ok(())
+    }
+
     fn parse(bytes: &[u8]) -> Result<Self, String> {
         let config: Self =
             serde_json::from_slice(bytes).map_err(|e| format!("seshat.json: {e}"))?;
@@ -683,8 +691,15 @@ impl CapturedProject {
         Ok(copy)
     }
 
-    pub fn capture(config_path: &Path, scratch: &Path) -> Result<Self, String> {
+    pub fn capture(
+        config_path: &Path,
+        scratch: &Path,
+        mode: Option<AssessmentMode>,
+    ) -> Result<Self, String> {
         let (config_path, config) = load_config(config_path)?;
+        if let Some(mode) = mode {
+            config.validate_mode(mode)?;
+        }
         let root = config_path
             .parent()
             .ok_or("configuration has no project directory")?;
@@ -909,7 +924,7 @@ mod tests {
         pub(super) fn capture(&self) -> Result<CapturedProject, String> {
             let path = self.project.join("seshat.json");
             fs::write(&path, serde_json::to_vec(&self.config).unwrap()).unwrap();
-            CapturedProject::capture(&path, &self.scratch)
+            CapturedProject::capture(&path, &self.scratch, None)
         }
 
         pub(super) fn assert_clean(&self) {
@@ -1086,6 +1101,55 @@ mod tests {
             let raw = format!("{{\"thresholds\":{thresholds},{}", &raw[1..]);
             assert!(Config::parse(raw.as_bytes()).is_err());
         }
+    }
+
+    #[test]
+    fn assessment_prerequisites_are_checked_before_capture_access() {
+        let mut fixture = Fixture::new();
+        let path = fixture.project.join("seshat.json");
+        // Missing input proves mode validation happens before capture filesystem access.
+        fixture.config["capture"] = json!(["missing"]);
+        fs::write(&path, serde_json::to_vec(&fixture.config).unwrap()).unwrap();
+        for mode in [AssessmentMode::Check, AssessmentMode::Mutate] {
+            let error = CapturedProject::capture(&path, &fixture.scratch, Some(mode))
+                .err()
+                .unwrap();
+            assert!(error.contains("require an explicit typecheck"), "{error}");
+        }
+        let error = CapturedProject::capture(&path, &fixture.scratch, Some(AssessmentMode::Crap))
+            .err()
+            .unwrap();
+        assert!(error.contains("missing"), "{error}");
+        fixture.config["capture"] = json!(["src", "packages"]);
+        fs::write(&path, serde_json::to_vec(&fixture.config).unwrap()).unwrap();
+        drop(
+            CapturedProject::capture(&path, &fixture.scratch, Some(AssessmentMode::Crap)).unwrap(),
+        );
+        fixture.assert_clean();
+    }
+
+    #[test]
+    fn reporter_placeholders_are_arguments_only() {
+        let fixture = Fixture::new();
+        for pointer in [
+            "/setups/0/test",
+            "/setups/0/typecheck",
+            "/setups/0/coverage/command",
+        ] {
+            for placeholder in ["{seshatReporter}", "{seshatEnvironment}"] {
+                let mut config = fixture.config.clone();
+                config["setups"][0]["typecheck"] = json!(["node", "-e", ""]);
+                *config.pointer_mut(pointer).unwrap() = json!([format!("prefix/{placeholder}")]);
+                let error = Config::parse(&serde_json::to_vec(&config).unwrap())
+                    .err()
+                    .unwrap();
+                assert!(error.contains("not the program"), "{error}");
+                *config.pointer_mut(pointer).unwrap() =
+                    json!(["node", format!("--reporter={placeholder}")]);
+                assert!(Config::parse(&serde_json::to_vec(&config).unwrap()).is_ok());
+            }
+        }
+        fixture.assert_clean();
     }
 
     #[test]

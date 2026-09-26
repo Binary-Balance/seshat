@@ -551,7 +551,8 @@ pub fn main() -> ExitCode {
                 execution::install_cancellation()?;
                 progress(options.progress, "capturing configured inputs");
                 let capture_started = Instant::now();
-                let captured = CapturedProject::capture(&options.config, &options.scratch);
+                let captured =
+                    CapturedProject::capture(&options.config, &options.scratch, Some(options.mode));
                 capture_ms = Some(capture_started.elapsed().as_secs_f64() * 1000.0);
                 let project = captured?;
                 thresholds = Some(project.thresholds());

@@ -725,7 +725,7 @@ impl CapturedProject {
         let environment = module_path(&evidence.join("jest-expo-environment.cjs"))?;
         let vitest_runner = module_path(&evidence.join("vitest-runner.mjs"))?;
         let receipt = evidence.join(format!("{id}.json"));
-        let args: Vec<_> = args
+        let arguments: Vec<_> = args[1..]
             .iter()
             .map(|arg| {
                 arg.replace("{seshatReporter}", &reporter)
@@ -734,7 +734,7 @@ impl CapturedProject {
             .collect();
         let mut command = Command::new(&args[0]);
         command
-            .args(&args[1..])
+            .args(&arguments)
             .current_dir(&cwd)
             .env("PWD", &cwd)
             .env_remove("NODE_OPTIONS")
@@ -1335,15 +1335,7 @@ impl CapturedProject {
     ) -> Result<Value, String> {
         let mutate = mode != AssessmentMode::Crap;
         let with_coverage = mode != AssessmentMode::Mutate;
-        if mutate
-            && self
-                .config
-                .setups
-                .iter()
-                .any(|setup| setup.typecheck.is_none())
-        {
-            return Err("check/mutate require an explicit typecheck command in every setup".into());
-        }
+        self.config.validate_mode(mode)?;
         let started = Instant::now();
         let progress = Progress {
             enabled: show_progress,
@@ -1572,6 +1564,62 @@ impl CapturedProject {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reporter_arguments_expand_without_changing_the_program() {
+        let fixture = super::super::tests::Fixture::new();
+        let captured = fixture.capture().unwrap();
+        let evidence = captured.prepare_evidence().unwrap();
+        let args = vec![
+            "node".into(),
+            "-e".into(),
+            r#"
+            const fs = require('fs');
+            if (!fs.existsSync(new URL(process.argv[1])) ||
+                !fs.existsSync(process.argv[2].slice('--env='.length))) process.exit(1);
+        "#
+            .into(),
+            "{seshatReporter}".into(),
+            "--env={seshatEnvironment}".into(),
+        ];
+        let result = captured
+            .run_job(
+                &captured.config.setups[0],
+                &args,
+                &evidence.0,
+                "argument-expansion",
+                JobKind::Typecheck,
+            )
+            .unwrap();
+        assert_eq!(result.state, TestState::Passed, "{}", result.details);
+        drop(evidence);
+        drop(captured);
+        fixture.assert_clean();
+    }
+
+    #[test]
+    fn requested_workers_remain_distinct_when_assessment_aborts() {
+        for mode in [AssessmentMode::Mutate, AssessmentMode::Crap] {
+            let fixture = super::super::tests::Fixture::new();
+            let mut captured = fixture.capture().unwrap();
+            captured.config.workers = 4;
+            captured.config.setups[0].typecheck =
+                Some(vec!["node".into(), "-e".into(), "process.exit(1)".into()]);
+            let result = captured.assess(mode, false).unwrap();
+            assert_eq!(result["complete"], false);
+            let concurrency = &result["diagnostics"]["concurrency"]["seshat"];
+            assert_eq!(concurrency["configuredWorkers"], 4);
+            if mode == AssessmentMode::Mutate {
+                assert_eq!(concurrency["state"], "known");
+                assert_eq!(concurrency["effectiveWorkers"], 0);
+                assert_eq!(result["mutation"]["jobsAttempted"], 0);
+            } else {
+                assert_eq!(concurrency["state"], "not-requested");
+                assert!(concurrency["effectiveWorkers"].is_null());
+            }
+            fixture.assert_clean();
+        }
+    }
 
     #[test]
     fn cleanup_failure_stops_pending_setups_and_prepared_baselines() {
