@@ -126,8 +126,12 @@ workflow run's `GITHUB_SHA` and remain the workflow head:
 1. the fresh audit version `0.1.0`; and
 2. leave **Publish after validation** unchecked.
 
-The validate job stages all six archives and checks their hashes, source
-equivalence, package order, semver tag, and publish flags. It has read-only
+On pull requests, the validate job runs the publisher and archive-stager tests.
+Archive staging and release dry-run validation run only on manual dispatch,
+after the candidate audit has been prepared for the reviewed source.
+
+On manual runs, the validate job stages all six archives and checks their
+hashes, source equivalence, package order, semver tag, and publish flags. It has read-only
 GitHub permissions and no npm write credentials. Review its `dry-run.json`
 artifact. For agent-led publication, obtain the approval described above before
 dispatching the same revision and version again with **Publish after validation**

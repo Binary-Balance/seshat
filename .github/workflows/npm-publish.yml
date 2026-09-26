@@ -7,6 +7,7 @@ on:
       - benchmarks/proofs/npm-publishing.mjs
       - benchmarks/proofs/npm-publishing.test.mjs
       - benchmarks/proofs/release-local-archive-stager.mjs
+      - benchmarks/proofs/release-local-archive-stager.test.mjs
       - docs/npm-publishing.md
       - docs/research/release-notice-audit.json
   workflow_dispatch:
@@ -68,9 +69,14 @@ jobs:
           node-version: 24.20.0
 
       - name: Check focused publication controls
-        run: node --test --test-isolation=none benchmarks/proofs/npm-publishing.test.mjs
+        run: |
+          node --test --test-isolation=none \
+            benchmarks/proofs/npm-publishing.test.mjs \
+            benchmarks/proofs/release-local-archive-stager.test.mjs
 
+      # Historical release archives only apply to a prepared manual release.
       - name: Download and stage canonical archives
+        if: github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -81,6 +87,7 @@ jobs:
             --evidence work/npm-publishing/archive-staging.json
 
       - name: Validate exact publish plan (dry-run)
+        if: github.event_name == 'workflow_dispatch'
         run: |
           mkdir -p work/npm-publishing
           node benchmarks/proofs/npm-publishing.mjs \
@@ -93,7 +100,7 @@ jobs:
             2>&1 | tee work/npm-publishing/dry-run.log
 
       - name: Upload validated publication inputs
-        if: always()
+        if: always() && github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: npm-publication-inputs
