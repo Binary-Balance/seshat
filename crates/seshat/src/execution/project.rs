@@ -4,10 +4,19 @@ mod collection;
 #[cfg(test)]
 thread_local! {
     static FILE_IO_HOOK: std::cell::RefCell<Option<(PathBuf, bool, Box<dyn FnOnce()>)>> = const { std::cell::RefCell::new(None) };
+    static FILE_IO_TRACE: std::cell::RefCell<Vec<(PathBuf, &'static str)>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+
+#[cfg(test)]
+pub(super) fn trace_file_io(path: &Path, phase: &'static str) {
+    if FILE_IO_HOOK.with(|slot| slot.borrow().is_some()) {
+        FILE_IO_TRACE.with(|trace| trace.borrow_mut().push((path.into(), phase)));
+    }
 }
 
 #[cfg(test)]
 pub(super) fn file_io_hook(path: &Path, opened: bool) {
+    trace_file_io(path, if opened { "post-open" } else { "pre-open" });
     let callback = FILE_IO_HOOK.with(|slot| {
         let mut slot = slot.borrow_mut();
         // Capture opens canonical Windows paths; fixtures may register ordinary paths.
@@ -850,7 +859,24 @@ mod tests {
         }
     }
 
+    fn hook_diagnostics(operation_error: Option<&str>) -> String {
+        let registered = FILE_IO_HOOK.with(|slot| {
+            slot.borrow().as_ref().map(|(path, opened, _)| {
+                (
+                    path.clone(),
+                    path_key(path),
+                    if *opened { "post-open" } else { "pre-open" },
+                )
+            })
+        });
+        let observed = FILE_IO_TRACE.with(|trace| trace.borrow().clone());
+        format!(
+            "[DEBUG-issue70-hooks] registered={registered:?}; observed={observed:?}; operation_error={operation_error:?}"
+        )
+    }
+
     pub(super) fn swap_during_io(path: &Path, outside: &Path, parent: bool, opened: bool) {
+        FILE_IO_TRACE.with(|trace| trace.borrow_mut().clear());
         let replaced = if parent { path.parent().unwrap() } else { path }.to_path_buf();
         let outside = outside.to_path_buf();
         FILE_IO_HOOK.with(|slot| {
@@ -893,6 +919,7 @@ mod tests {
                 opened,
             );
             let captured = fixture.capture();
+            let operation_error = captured.as_ref().err().cloned();
             if let Ok(captured) = captured {
                 assert!(
                     !captured
@@ -905,7 +932,8 @@ mod tests {
             }
             assert!(
                 FILE_IO_HOOK.with(|slot| slot.borrow().is_none()),
-                "swap hook did not run"
+                "swap hook did not run: {}",
+                hook_diagnostics(operation_error.as_deref())
             );
             fixture.assert_clean();
         }
@@ -936,12 +964,15 @@ mod tests {
                 parent,
                 opened,
             );
-            if let Ok((_, config)) = load_config(&config_path) {
+            let loaded = load_config(&config_path);
+            let operation_error = loaded.as_ref().err().cloned();
+            if let Ok((_, config)) = loaded {
                 assert_eq!(config.workers, 1, "read outside configuration");
             }
             assert!(
                 FILE_IO_HOOK.with(|slot| slot.borrow().is_none()),
-                "swap hook did not run"
+                "swap hook did not run: {}",
+                hook_diagnostics(operation_error.as_deref())
             );
             fixture.assert_clean();
         }
