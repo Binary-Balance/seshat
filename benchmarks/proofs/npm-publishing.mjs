@@ -10,6 +10,7 @@ import {
 } from 'node:fs';
 import {dirname, join, resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
+import {setTimeout as sleep} from 'node:timers/promises';
 import {parseArgs} from 'node:util';
 
 export const REGISTRY = 'https://registry.npmjs.org/';
@@ -173,12 +174,15 @@ function metadataUrl(packageName) {
   return `${REGISTRY}${encodeURIComponent(packageName)}`;
 }
 
-export async function inspectRegistry(archive, fetchImpl = globalThis.fetch) {
+export async function inspectRegistry(archive, fetchImpl = globalThis.fetch, {
+  requireProvenance = false,
+  signal = AbortSignal.timeout(30_000),
+} = {}) {
   assert.equal(typeof fetchImpl, 'function', 'fetch is required for registry checks');
   let response;
   try {
     response = await fetchImpl(metadataUrl(archive.package), {
-      headers: {accept: 'application/vnd.npm.install-v1+json'},
+      headers: {accept: 'application/vnd.npm.install-v1+json'}, signal, redirect: 'error',
     });
   } catch (error) {
     throw new Error(`registry request failed for ${archive.package}@${archive.version}: ${error.message}`);
@@ -214,10 +218,11 @@ export async function inspectRegistry(archive, fetchImpl = globalThis.fetch) {
 
   let tarballResponse;
   try {
-    tarballResponse = await fetchImpl(tarballUrl, {headers: {accept: 'application/octet-stream'}});
+    tarballResponse = await fetchImpl(tarballUrl, {headers: {accept: 'application/octet-stream'}, signal, redirect: 'error'});
   } catch (error) {
     throw new Error(`registry archive download failed for ${archive.package}@${archive.version}: ${error.message}`);
   }
+  if (requireProvenance && tarballResponse.status === 404) return {status: 'pending', reason: 'archive unavailable'};
   if (!responseOk(tarballResponse)) {
     throw new Error(`registry archive download failed for ${archive.package}@${archive.version}: HTTP ${tarballResponse.status}`);
   }
@@ -227,7 +232,31 @@ export async function inspectRegistry(archive, fetchImpl = globalThis.fetch) {
   } catch (error) {
     throw new Error(`registry archive bytes could not be read for ${archive.package}@${archive.version}: ${error.message}`);
   }
-  return {status: 'present', bytes: data.length, sha256: sha256(data), data};
+  const existing = {status: 'present', bytes: data.length, sha256: sha256(data), data};
+  if (!requireProvenance) return existing;
+  // A mismatched archive is never a propagation delay, even without provenance.
+  registryDecision(archive, existing);
+  const attestations = versionInfo.dist?.attestations;
+  const predicate = 'https://slsa.dev/provenance/v1';
+  if (!attestations?.url || !attestations.provenance) {
+    return {...existing, provenance: false};
+  }
+  assert.equal(attestations.provenance.predicateType, predicate,
+    `${archive.package}@${archive.version}: unexpected provenance predicate`);
+  const url = new URL(attestations.url);
+  assert.equal(url.origin, new URL(REGISTRY).origin,
+    'registry attestation URL is outside the fixed npmjs registry');
+  const attestationResponse = await fetchImpl(url, {headers: {accept: 'application/json'}, signal, redirect: 'error'});
+  if (attestationResponse.status === 404) return {...existing, provenance: false};
+  assert.ok(responseOk(attestationResponse),
+    `registry attestations failed for ${archive.package}@${archive.version}: HTTP ${attestationResponse.status}`);
+  const records = await attestationResponse.json();
+  assert.ok(Array.isArray(records?.attestations), 'registry attestation records are invalid');
+  // Availability only; npm audit signatures verifies the bundles after publication.
+  const provenance = records.attestations.some(record => record.predicateType === predicate &&
+    typeof record.bundle?.dsseEnvelope?.payload === 'string' && record.bundle.dsseEnvelope.payload.length > 0 &&
+    Array.isArray(record.bundle.dsseEnvelope.signatures) && record.bundle.dsseEnvelope.signatures.length > 0);
+  return {...existing, provenance};
 }
 
 export function registryDecision(archive, existing) {
@@ -245,6 +274,33 @@ async function inspectAll(plan, inspect) {
     states.push({archive, action: registryDecision(archive, existing)});
   }
   return states;
+}
+
+async function waitForNativeAvailability(plan, inspect, timeoutMs, intervalMs) {
+  const signal = AbortSignal.timeout(timeoutMs);
+  const pending = new Map(plan.archives.filter(archive => archive.role === 'native-release')
+    .map(archive => [archive, 'not checked']));
+  try {
+    while (pending.size) {
+      signal.throwIfAborted();
+      for (const archive of pending.keys()) {
+        const existing = await inspect(archive, {requireProvenance: true, signal});
+        signal.throwIfAborted();
+        if (existing.status === 'absent' || existing.status === 'pending') {
+          pending.set(archive, existing.reason ?? 'version unavailable');
+        } else if (registryDecision(archive, existing) === 'skip' && existing.provenance === true) {
+          pending.delete(archive);
+        } else {
+          pending.set(archive, 'provenance unavailable');
+        }
+      }
+      if (pending.size) await sleep(intervalMs, undefined, {signal});
+    }
+  } catch (error) {
+    if (!signal.aborted) throw error;
+    throw new Error(`Timed out waiting for native npm availability; entry package was not published. Pending: ${
+      [...pending].map(([archive, reason]) => `${archive.package}@${archive.version} (${reason})`).join(', ')}`);
+  }
 }
 
 function npmCommand() {
@@ -272,7 +328,9 @@ function publishWithNpm(archive, plan) {
 
 export async function executePublication(plan, {
   dryRun = true,
-  inspect = archive => inspectRegistry(archive),
+  inspect = (archive, options) => inspectRegistry(archive, globalThis.fetch, options),
+  availabilityTimeoutMs = 300_000,
+  availabilityIntervalMs = 10_000,
   publishPackage = (archive, currentPlan) => publishWithNpm(archive, currentPlan),
 } = {}) {
   if (dryRun) {
@@ -293,6 +351,9 @@ export async function executePublication(plan, {
   const packages = [];
   for (const state of preflight) {
     try {
+      if (state.archive.role === 'entry') {
+        await waitForNativeAvailability(plan, inspect, availabilityTimeoutMs, availabilityIntervalMs);
+      }
       // Recheck immediately before each write so a retry never overwrites a race.
       const action = registryDecision(state.archive, await inspect(state.archive));
       if (action === 'skip') {
