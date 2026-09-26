@@ -122,11 +122,23 @@ fn progress(enabled: bool, message: &str) {
 fn report(
     command: Option<&str>,
     scope: Value,
-    result: Value,
+    mut result: Value,
     wall_ms: f64,
     capture_ms: Option<f64>,
     thresholds: Option<Thresholds>,
 ) -> (Value, u8) {
+    // A partial maximum must never hide a malformed measured row.
+    if matches!(command, Some("check" | "crap"))
+        && thresholds.is_some_and(|limits| limits.max_crap.is_some())
+        && result["complete"] == true
+        && array(&result["sources"])
+            .iter()
+            .flat_map(|source| array(&source["result"]["functions"]))
+            .any(|function| function["status"] == "measured" && function["crap"].as_f64().is_none())
+    {
+        result["complete"] = json!(false);
+        result["error"] = json!("measured function has a missing or invalid CRAP value");
+    }
     let (result, mut status) = crate::finish(result);
     let quality = thresholds.map(|limits| quality(command, &result, limits));
     if status == 0 && quality.as_ref().is_some_and(|q| q["state"] == "failed") {
@@ -656,6 +668,64 @@ mod tests {
             quality(Some("check"), &result, Thresholds::default())["state"],
             "not-configured"
         );
+    }
+
+    #[test]
+    fn malformed_measured_rows_cannot_pass_a_threshold() {
+        let limits = Thresholds {
+            max_crap: Some(10.0),
+            min_mutation_score: Some(50.0),
+        };
+        for malformed in [
+            json!({"status":"measured"}),
+            json!({"status":"measured","crap":null}),
+            json!({"status":"measured","crap":"1"}),
+            json!({"status":"measured","crap":true}),
+        ] {
+            let result = json!({"complete":true,"sources":[{"result":{"functions":[
+                {"status":"measured","crap":1}, malformed
+            ]}}],"mutation":{"score":100.0}});
+            for command in ["check", "crap"] {
+                let (value, status) = report(
+                    Some(command),
+                    Value::Null,
+                    result.clone(),
+                    1.0,
+                    None,
+                    Some(limits),
+                );
+                assert_eq!(status, 2);
+                assert_eq!(value["complete"], false);
+                assert_eq!(value["quality"]["state"], "incomplete");
+                assert_eq!(value["quality"]["checks"][0]["state"], "incomplete");
+                assert!(value["quality"]["checks"][0]["actual"].is_null());
+                assert!(value["result"]["error"].as_str().unwrap().contains("CRAP"));
+                assert_eq!(value["result"]["sources"], result["sources"]);
+            }
+            let (value, status) = report(
+                Some("mutate"),
+                Value::Null,
+                result.clone(),
+                1.0,
+                None,
+                Some(limits),
+            );
+            assert_eq!(status, 0);
+            assert_eq!(value["quality"]["checks"][0]["state"], "not-requested");
+            let mut incomplete = result;
+            incomplete["complete"] = json!(false);
+            incomplete["error"] = json!("earlier failure");
+            let (value, status) = report(
+                Some("check"),
+                Value::Null,
+                incomplete,
+                1.0,
+                None,
+                Some(limits),
+            );
+            assert_eq!(status, 2);
+            assert_eq!(value["result"]["error"], "earlier failure");
+        }
     }
 
     #[test]
