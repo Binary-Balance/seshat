@@ -66,17 +66,35 @@ Pass one built binary per target to produce packed entry and native archives:
 node packaging/release.mjs \
   --output work/release-0.1.0 \
   --binary linux-x64=/absolute/path/to/seshat \
+  --build-info linux-x64=/absolute/path/to/BUILD.json \
   --notices linux-x64=/absolute/path/to/THIRD_PARTY_NOTICES.txt \
   --manifest work/release-0.1.0/release.json
 ```
 
+Each supplied binary requires its packer's `BUILD.json` and
+`THIRD_PARTY_NOTICES.txt`. Staging checks package identity, target, source
+revision, Cargo lock hash, pinned Rust and notice provenance, dependency
+inventory, and binary/notice hashes and sizes before writing output. It copies
+those validated inputs unchanged; it never fills in missing build evidence.
+Use a clean checkout of the build's source revision for final release evidence.
+Platform build and installation proofs remain required before publication.
+
+The output must be new or empty, and a separate manifest path must not already
+exist. Staging refuses reuse without deleting anything, including when the next
+run supplies fewer targets. Choose a new output directory for a rerun.
+
 Use `--layout-only` to inspect all six manifests without creating archives.
-The staged native `BUILD.json` is augmented with package identity and binary
-hash fields. Supply `--build-info target=/path/to/BUILD.json` when a target's
-native packer already produced full build metadata; pass its staged
-`THIRD_PARTY_NOTICES.txt` with `--notices`. A final release evidence
-run must use a clean committed source so `sourceCommit` binds every artifact
-to the reviewed revision.
+It can copy optional binary, build-info and notice inputs for inspection, but
+it does not validate their build provenance or invent missing fields. Its
+report says `mode: "layout-only"`, and all archive records are null. Packed
+output says `mode: "packed"`; targets without a supplied binary retain null
+archive records.
+
+Native CI compares the original packer's archive with the staged native archive
+using `node packaging/metadata.test.mjs <pack archive> <release archive>`.
+The comparison covers manifest fields, packed file lists and payload bytes.
+Canonical release archives and their recorded hashes remain the publication
+inputs; staging is not a substitute for testing those exact archives.
 
 ## Verify a local npm installation
 
@@ -109,9 +127,23 @@ The packer clears caller `RUSTFLAGS` and `CARGO_ENCODED_RUSTFLAGS` before settin
 its target-specific flags. Native CI supplies deliberately invalid values for
 both during the repeat proof, so compilation also checks that neither leaks
 into the release build.
-It writes evidence only after every comparison passes. A failed comparison
-retains one archive per completed run in `repeat-pack-failure/` and records the
-failure before discarding large temporary target trees. Run
+The success proof is written only after every comparison passes. Each invocation
+retains its own `repeat-pack-attempts/attempt-*/` directory beside the output,
+including exact owned work paths recorded before child launch, pack logs and
+result manifests. Failed comparisons retain completed archives and a failure
+report there. Repeated failures never overwrite earlier attempts.
+
+After retaining archives, staged CLI, helper executables, hashes and result
+manifests, each successful pack removes only its owned `target/` and `sysroot/`.
+Consumers use the retained paths in the result manifest. Failed or interrupted
+packs keep their work because a build descendant may still be active. Inspect
+`owned-work.json` and logs, confirm those processes have stopped, and reclaim
+only the recorded directories when their evidence is no longer needed. A hard
+interruption may leave only the ownership record and partial log. Standalone
+packs also retain `ownership.json` and `<SESHAT_PACK_RESULT>.work.json`.
+
+The runtime-notice autocrlf check clones committed `HEAD`; it does not validate
+uncommitted notice edits. Git and archive failures retain stderr diagnostics. Run
 `node packaging/repeat-pack-failure-check.mjs` for the cheap retention check.
 
 Seshat is MIT-licensed. Native package notices preserve licence text available

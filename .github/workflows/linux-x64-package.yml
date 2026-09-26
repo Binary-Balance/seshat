@@ -114,6 +114,7 @@ jobs:
             --manifest work/x64/release.json 2>&1 | tee work/x64/release.log
           entry_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).entry.archive.file);' work/x64/release.json)"
           native_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).native.find(target => target.key === "linux-x64").archive.file);' work/x64/release.json)"
+          node packaging/metadata.test.mjs "$native_tarball" "work/x64/release/$native_archive"
           cp "work/x64/release/$entry_archive" work/x64/seshat-entry.tgz
           cp "work/x64/release/$native_archive" work/x64/seshat-linux-x64-release.tgz
       - name: Retain npm payload for both installation routes
@@ -235,6 +236,7 @@ jobs:
           path: |
             work/x64/preflight.json
             work/x64/package-result.json
+            work/x64/package-result.json.work.json
             work/x64/node-*
             work/x64/release.json
             work/x64/release.log
@@ -262,7 +264,7 @@ jobs:
             work/x64/rust-tests.log
             work/x64/repeat-pack.json
             work/x64/repeat-pack.log
-            work/x64/repeat-pack-failure/**
+            work/x64/repeat-pack-attempts/**
             work/x64/pack.log
             work/x64/summary.json
           if-no-files-found: error

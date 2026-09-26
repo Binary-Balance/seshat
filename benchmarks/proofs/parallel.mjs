@@ -78,7 +78,8 @@ function launch(args, directory, signal) {
 async function check(name,workers,mode='normal',signal){
   const directory=join(work,name);mkdirSync(directory);
   const scratch=join(directory,'scratch'),journal=join(directory,'events');mkdirSync(scratch);mkdirSync(journal);
-  const setups=['high','low'].map((test,index)=>({name:test,runner:'node',cwd:'.',timeoutMs:mode==='timeout'?3000:30000,
+  // Setup and coverage must finish before the mutant-timeout check can run.
+  const setups=['high','low'].map((test,index)=>({name:test,runner:'node',cwd:'.',timeoutMs:30000,
     typecheck:[process.execPath,join(repo,'benchmarks/node_modules/typescript/bin/tsc'),'--ignoreConfig','--strict','--noEmit','--skipLibCheck','subject.ts'],
     test:[process.execPath,'runner.cjs',test,mode,journal],
     coverage:{command:[process.execPath,join(here,'collect-node.mjs'),test+'.mjs'],report:'coverage-'+index+'/final.json'}}));
