@@ -179,7 +179,7 @@ fn observe_node_loads(
     sources: &[(&Path, &str)],
     receipt: &Path,
     id: &str,
-) -> Result<(), String> {
+) -> Result<[PathBuf; 2], String> {
     if sources.is_empty() {
         return Err("load evidence requires at least one source".into());
     }
@@ -229,12 +229,46 @@ fn observe_node_loads(
             "NODE_OPTIONS",
             format!("--import={}", module_file_url(&observer)?),
         )
-        .env("SESHAT_LOAD_CONTEXT", context_path)
+        .env("SESHAT_LOAD_CONTEXT", &context_path)
         .env("SESHAT_EXECUTION_ID", id);
-    Ok(())
+    Ok([observer, context_path])
 }
 
 impl CommandEvidence {
+    fn clear_job_artifacts(&mut self, receipt: &Path, observer: Option<&[PathBuf; 2]>) {
+        // Unconfirmed process cleanup means a reporter may still need these files.
+        if !self.details["cleanupError"].is_null() {
+            return;
+        }
+        let remove = || -> Result<(), String> {
+            let name = receipt.file_name().unwrap().to_str().unwrap();
+            let load_prefix = format!("{name}.load-");
+            let event_prefix = format!("{name}.events-");
+            for entry in fs::read_dir(receipt.parent().unwrap()).map_err(|e| e.to_string())? {
+                let entry = entry.map_err(|e| e.to_string())?;
+                let path = entry.path();
+                let sidecar = entry.file_name().to_str().is_some_and(|name| {
+                    name.starts_with(&load_prefix) || name.starts_with(&event_prefix)
+                });
+                if path == receipt || observer.is_some_and(|paths| paths.contains(&path)) || sidecar
+                {
+                    match fs::remove_file(&path) {
+                        Ok(()) => {}
+                        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                        Err(error) => return Err(format!("{}: {error}", path.display())),
+                    }
+                }
+            }
+            Ok(())
+        };
+        if let Err(error) = remove() {
+            self.details["cleanupError"] = json!(format!("job artifacts: {error}"));
+            if matches!(self.state, TestState::Passed | TestState::Failed) {
+                self.state = TestState::ExecutionError;
+            }
+        }
+    }
+
     fn error(error: String) -> Self {
         Self {
             state: TestState::ExecutionError,
@@ -377,14 +411,16 @@ impl Session {
                 "SESHAT_PROOF_SCENARIO",
                 self.config["scenario"].as_str().unwrap_or("normal"),
             );
-        if key == "test" && self.config["runner"] == "node" {
+        let observer = if key == "test" && self.config["runner"] == "node" {
             let source =
                 String::from_utf8(RegularFile::open(&self.source_path, false)?.read(u64::MAX)?)
                     .map_err(|e| e.to_string())?;
             let id = format!("{}-{}", std::process::id(), epoch_nanos(SystemTime::now())?);
             let sources = [(self.source_path.as_path(), source.as_str())];
-            observe_node_loads(&mut command, &sources, &receipt, &id)?;
-        }
+            Some(observe_node_loads(&mut command, &sources, &receipt, &id)?)
+        } else {
+            None
+        };
         let timeout = Duration::from_millis(self.config["timeoutMs"].as_u64().unwrap_or(10000));
         let mut evidence = job::run(&mut command, timeout)?;
         evidence["report"] = Value::Null;
@@ -412,10 +448,12 @@ impl Session {
         } else {
             classify(self.config["runner"].as_str().unwrap(), &evidence)
         };
-        Ok(CommandEvidence {
+        let mut outcome = CommandEvidence {
             state,
             details: evidence,
-        })
+        };
+        outcome.clear_job_artifacts(&receipt, observer.as_ref());
+        Ok(outcome)
     }
 
     pub fn execute(self, strategy: &str) -> Result<Value, String> {
@@ -486,13 +524,21 @@ impl Session {
                 builds += usize::from(build.details["skipped"] != true);
                 if build.state != TestState::Passed {
                     executions.push(vec![build.state]);
+                    let cleanup_failed = !build.details["cleanupError"].is_null();
                     evidence.push(build.into_json());
+                    if cleanup_failed {
+                        break;
+                    }
                     continue;
                 }
             }
             let test = self.command("test", Some(id))?;
             executions.push(vec![test.state]);
+            let cleanup_failed = !test.details["cleanupError"].is_null();
             evidence.push(test.into_json());
+            if cleanup_failed {
+                break;
+            }
         }
         let assessed = assessment::mutation(&[baseline.state], count, &executions);
         let outcomes: Vec<_> = assessed.outcomes.iter().enumerate()

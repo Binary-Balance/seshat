@@ -753,29 +753,32 @@ impl CapturedProject {
         if let JobKind::Coverage(path) = kind {
             command.env("SESHAT_COVERAGE_REPORT", path);
         }
-        if matches!(setup.runner, Runner::Node) && !matches!(kind, JobKind::Typecheck) {
-            // Keep the observer present in baseline, coverage and mutant processes.
-            let indices: Vec<_> = if self.prepared_sources.is_some() {
-                (0..self.sources.len()).collect()
+        let observer =
+            if matches!(setup.runner, Runner::Node) && !matches!(kind, JobKind::Typecheck) {
+                // Keep the observer present in baseline, coverage and mutant processes.
+                let indices: Vec<_> = if self.prepared_sources.is_some() {
+                    (0..self.sources.len()).collect()
+                } else {
+                    vec![self.active_edit.as_ref().map_or(0, |(index, _)| *index)]
+                };
+                let paths: Vec<_> = indices
+                    .iter()
+                    .map(|index| self.directory.0.join(&self.sources[*index].0))
+                    .collect();
+                let sources: Vec<_> = paths
+                    .iter()
+                    .zip(indices)
+                    .map(|(path, index)| {
+                        (
+                            path.as_path(),
+                            self.expected_source(index, &self.sources[index].1),
+                        )
+                    })
+                    .collect();
+                Some(observe_node_loads(&mut command, &sources, &receipt, id)?)
             } else {
-                vec![self.active_edit.as_ref().map_or(0, |(index, _)| *index)]
+                None
             };
-            let paths: Vec<_> = indices
-                .iter()
-                .map(|index| self.directory.0.join(&self.sources[*index].0))
-                .collect();
-            let sources: Vec<_> = paths
-                .iter()
-                .zip(indices)
-                .map(|(path, index)| {
-                    (
-                        path.as_path(),
-                        self.expected_source(index, &self.sources[index].1),
-                    )
-                })
-                .collect();
-            observe_node_loads(&mut command, &sources, &receipt, id)?;
-        }
         let mut result = job::run(&mut command, Duration::from_millis(setup.timeout_ms))?;
         let mut state = if matches!(kind, JobKind::Typecheck) {
             // A compiler's exit code is validation evidence, never a mutant kill.
@@ -834,14 +837,20 @@ impl CapturedProject {
             state = TestState::ExecutionError;
             result["sourceError"] = json!(error);
         }
-        // Keep successful runs compact and avoid printing ordinary test logs by default.
-        if state == TestState::Passed {
-            result.as_object_mut().unwrap().remove("diagnostic");
-        }
-        Ok(CommandEvidence {
+        let mut outcome = CommandEvidence {
             state,
             details: result,
-        })
+        };
+        outcome.clear_job_artifacts(&receipt, observer.as_ref());
+        // Keep successful runs compact and avoid printing ordinary test logs by default.
+        if outcome.state == TestState::Passed {
+            outcome
+                .details
+                .as_object_mut()
+                .unwrap()
+                .remove("diagnostic");
+        }
+        Ok(outcome)
     }
 
     fn replace_source(&mut self, index: usize, replacement: Option<String>) -> Result<(), String> {
@@ -913,6 +922,7 @@ impl CapturedProject {
         evidence: &Path,
         mut row: Value,
         switching: bool,
+        stopped: &AtomicBool,
     ) -> MutantExecution {
         let started = Instant::now();
         let prepared = if switching {
@@ -944,7 +954,7 @@ impl CapturedProject {
         }
         let mut states = Vec::new();
         for (index, setup) in self.config.setups.iter().enumerate() {
-            if cancellation_signal() != 0 {
+            if stopped.load(Ordering::Relaxed) || cancellation_signal() != 0 {
                 break;
             }
             let id = format!(
@@ -956,9 +966,15 @@ impl CapturedProject {
                 .run_job(setup, &setup.test, evidence, &id, JobKind::Test)
                 .unwrap_or_else(CommandEvidence::error);
             states.push(observed.state);
+            let cleanup_failed = !observed.details["cleanupError"].is_null();
             let mut setup_row = observed.into_json();
             setup_row["name"] = json!(setup.name);
             row["setups"][index] = setup_row;
+            if cleanup_failed {
+                // Preserve pending setup rows and prevent other workers starting more jobs.
+                stopped.store(true, Ordering::Relaxed);
+                break;
+            }
         }
         // Restore after every outcome, but never follow a rewritten source link.
         let restoration_error = if switching {
@@ -1115,7 +1131,7 @@ impl CapturedProject {
                 }
             }
         }
-        if switching && ready && !plan.is_empty() {
+        if switching && worker_ready && !plan.is_empty() {
             if let Some(sources) = &prepared_sources {
                 if let Err(error) = self.install_prepared_sources(sources) {
                     run_error = Some(error);
@@ -1177,6 +1193,7 @@ impl CapturedProject {
                         receipts,
                         outcomes[id].clone(),
                         switching,
+                        &stopped,
                     );
                     if progress.enabled {
                         live.lock().unwrap_or_else(|e| e.into_inner()).update(
@@ -1557,6 +1574,63 @@ mod tests {
     use super::*;
 
     #[test]
+    fn cleanup_failure_stops_pending_setups_and_prepared_baselines() {
+        for (switching, worker_baseline) in [(false, false), (true, false), (true, true)] {
+            let fixture = super::super::tests::Fixture::new();
+            let mut captured = fixture.capture().unwrap();
+            captured.config.workers = if worker_baseline { 2 } else { 1 };
+            let mut first = captured.config.setups[0].clone();
+            first.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
+            let receipt = r#"
+                const fs = require('fs'), path = process.env.SESHAT_RECEIPT;
+                const id = process.env.SESHAT_EXECUTION_ID;
+                fs.writeFileSync(path, JSON.stringify({version:1, executionId:id,
+                    node:process.versions.node, complete:true, passed:1, failed:0, errors:0}));
+            "#;
+            let mut second = first.clone();
+            second.name = "second".into();
+            second.coverage.report = "second-coverage.json".into();
+            second.test = vec!["node".into(), "-e".into(), receipt.into()];
+            let fault = if worker_baseline {
+                "-worker-1-baseline-"
+            } else {
+                "-mutant-"
+            };
+            first.test = vec![
+                "node".into(),
+                "-e".into(),
+                format!(
+                    "{receipt} if (id.includes({fault:?})) fs.mkdirSync(path + '.events-failure');"
+                ),
+            ];
+            captured.config.setups = vec![first, second];
+            let result = captured
+                .assess_with_strategy(AssessmentMode::Mutate, false, switching)
+                .unwrap();
+            assert_eq!(result["complete"], false, "{result}");
+            let mutation = &result["mutation"];
+            assert!(mutation["score"].is_null());
+            assert_eq!(
+                mutation["outcomes"].as_array().unwrap().len() as u64,
+                mutation["planned"].as_u64().unwrap()
+            );
+            if worker_baseline {
+                assert_eq!(mutation["workerBaselineJobs"], 1);
+                assert_eq!(mutation["preparedBaselineJobs"], 0);
+                assert_eq!(mutation["jobsAttempted"], 0);
+                assert!(mutation["workerBaselines"][0]["cleanupError"].is_string());
+                assert_eq!(mutation["outcomes"][0]["verdict"], "not-run");
+            } else {
+                assert_eq!(mutation["jobsAttempted"], 1);
+                assert!(mutation["outcomes"][0]["setups"][0]["cleanupError"].is_string());
+                assert_eq!(mutation["outcomes"][0]["setups"][1]["state"], "not-run");
+                assert_eq!(mutation["outcomes"][1]["verdict"], "not-run");
+            }
+            fixture.assert_clean();
+        }
+    }
+
+    #[test]
     fn mutation_restoration_rejects_concurrent_path_swaps() {
         for (parent, opened) in [(true, false), (false, false), (true, true), (false, true)] {
             let fixture = super::super::tests::Fixture::new();
@@ -1649,6 +1723,70 @@ mod tests {
             "{}"
         );
         directory.close().unwrap();
+    }
+
+    #[test]
+    fn completed_jobs_release_artifacts_and_workers_follow_the_plan() {
+        let fixture = super::super::tests::Fixture::new();
+        let mut captured = fixture.capture().unwrap();
+        captured
+            .sources
+            .retain(|(path, _)| path == Path::new("src/calc.ts"));
+        captured.config.workers = usize::MAX;
+        captured.config.setups[0].typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
+        captured.config.setups[0].test = vec!["node".into(), "-e".into(), r#"
+            const fs = require('fs'), path = require('path');
+            const receipt = process.env.SESHAT_RECEIPT;
+            const names = fs.readdirSync(path.dirname(receipt));
+            if (names.filter(n => n.startsWith('node-load-')).length !== 2 || names.some(n => n.includes('.json.load-') || n.includes('.json.events-'))) throw Error('old job artifacts retained');
+            fs.writeFileSync(receipt + '.load-1.json', '{}');
+            fs.writeFileSync(receipt + '.events-fixture', '{}');
+            fs.writeFileSync(receipt, JSON.stringify({version:1, executionId:process.env.SESHAT_EXECUTION_ID, node:process.versions.node, complete:true, passed:1, failed:0, errors:0}));
+        "#.into()];
+        let evidence = captured.prepare_evidence().unwrap();
+        for id in ["first", "second"] {
+            let result = captured
+                .run_job(
+                    &captured.config.setups[0],
+                    &captured.config.setups[0].test,
+                    &evidence.0,
+                    id,
+                    JobKind::Test,
+                )
+                .unwrap();
+            assert_eq!(result.state, TestState::Passed, "{}", result.details);
+            assert_eq!(result.details["report"]["executionId"], id);
+            assert_eq!(fs::read_dir(&evidence.0).unwrap().count(), 6);
+        }
+        evidence.close().unwrap();
+        let config = captured.config.clone();
+        let report = captured.assess(AssessmentMode::Mutate, false).unwrap();
+        assert_eq!(report["complete"], true, "{report}");
+        assert_eq!(report["mutation"]["planned"], 2);
+        assert_eq!(report["mutation"]["workersUsed"], 2);
+        assert_eq!(report["mutation"]["completed"], 2);
+        fixture.assert_clean();
+
+        // A generated invalid link fails worker preparation without disk exhaustion.
+        let mut captured = fixture.capture().unwrap();
+        captured
+            .sources
+            .retain(|(path, _)| path == Path::new("src/calc.ts"));
+        captured.config = config;
+        create_link("missing", captured.directory.0.join("generated-link")).unwrap();
+        let report = captured.assess(AssessmentMode::Mutate, false).unwrap();
+        assert_eq!(report["complete"], false);
+        assert_eq!(report["mutation"]["planned"], 2);
+        assert_eq!(report["mutation"]["workersUsed"], 0);
+        assert_eq!(report["mutation"]["notRun"], 2);
+        assert!(report["mutation"]["score"].is_null());
+        assert!(
+            report["mutation"]["error"]
+                .as_str()
+                .unwrap()
+                .contains("resolve link")
+        );
+        fixture.assert_clean();
     }
 
     #[cfg(unix)]
