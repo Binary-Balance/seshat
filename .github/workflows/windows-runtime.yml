@@ -98,6 +98,14 @@ jobs:
         run: |
           cargo build --release --locked --manifest-path crates/seshat/Cargo.toml --bins
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Check console helper ownership and failures
+        shell: pwsh
+        env:
+          SESHAT_CONSOLE_HELPER_BINARY: ${{ github.workspace }}\crates\seshat\target\release\windows-console-helper.exe
+        run: |
+          New-Item -ItemType Directory -Force work/windows | Out-Null
+          cargo test --locked --manifest-path crates/seshat/Cargo.toml --bin windows-console-helper -- --ignored --skip windows::tests::fixture --nocapture --test-threads=1 2>&1 | Tee-Object -FilePath work/windows/console-helper.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Run Rust tests
         shell: pwsh
         run: |

@@ -17,7 +17,6 @@ path = "src/bin/seshat-proofs.rs"
 [[bin]]
 name = "windows-console-helper"
 path = "src/bin/windows-console-helper.rs"
-test = false
 bench = false
 
 [dependencies]
