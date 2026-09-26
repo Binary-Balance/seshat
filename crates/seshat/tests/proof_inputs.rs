@@ -340,3 +340,88 @@ fn wait_and_cleanup_errors_keep_partial_output() {
     assert!(diagnostic.contains("stderr before exit"), "{value}");
     fixture.clean();
 }
+
+#[test]
+fn consumed_legacy_evidence_is_released_between_jobs() {
+    for strategy in ["replace", "switch"] {
+        let mut fixture = Fixture::new();
+        fixture.config["runner"] = json!("node");
+        fixture.config["limit"] = json!(3);
+        fs::write(
+            fixture.root.join("input/subject.ts"),
+            "export const f = (n: number) => n > 0; export const g = (n: number) => n < 1;",
+        )
+        .unwrap();
+        fixture.config["test"] = node(
+            r#"
+            const fs = require('fs'), path = require('path');
+            const receipt = process.env.SESHAT_RECEIPT;
+            const names = fs.readdirSync(path.dirname(receipt));
+            if (names.filter(n => n.startsWith('node-load-')).length !== 2 || names.some(n => n.startsWith('receipt.json.'))) throw Error('old job artifacts retained');
+            fs.writeFileSync(receipt + '.load-1.json', '{}');
+            fs.writeFileSync(receipt + '.events-fixture', '{}');
+            fs.writeFileSync(receipt, JSON.stringify({complete:true, passed:1, failed:0, errors:0, timeouts:0}));
+        "#,
+        );
+        let result = report(&fixture.execute(strategy).output().unwrap(), 0);
+        assert_eq!(result["complete"], true);
+        assert_eq!(
+            result["outcomes"]
+                .as_array()
+                .unwrap_or_else(|| panic!("{result}"))
+                .len(),
+            3
+        );
+        assert_eq!(result["outcomes"][2]["evidence"]["report"]["passed"], 1);
+        fixture.clean();
+    }
+}
+
+#[test]
+fn legacy_artifact_cleanup_failure_stops_new_jobs_and_retains_scope() {
+    for phase in ["build", "test"] {
+        let mut fixture = Fixture::new();
+        fixture.config["limit"] = json!(3);
+        fs::write(
+            fixture.root.join("input/subject.ts"),
+            "export const f = (n: number) => n > 0; export const g = (n: number) => n < 1;",
+        )
+        .unwrap();
+        fixture.config[phase] = node(
+            r#"
+            const fs = require('fs'), receipt = process.env.SESHAT_RECEIPT;
+            process.stdout.write('diagnostic before cleanup failure');
+            fs.writeFileSync(receipt, JSON.stringify({complete:true, passed:1, failed:0, errors:0, timeouts:0}));
+            if (Number(process.env.SESHAT_MUTANT_ID) >= 0) fs.mkdirSync(receipt + '.events-failure');
+        "#,
+        );
+        let result = report(&fixture.execute("replace").output().unwrap(), 2);
+        assert_eq!(result["complete"], false);
+        assert!(result["score"].is_null());
+        assert_eq!(
+            result["outcomes"]
+                .as_array()
+                .unwrap_or_else(|| panic!("{result}"))
+                .len(),
+            3
+        );
+        assert_eq!(result["outcomes"][0]["verdict"], "execution-error");
+        assert_eq!(result["outcomes"][1]["verdict"], "not-run");
+        assert_eq!(result["outcomes"][2]["verdict"], "not-run");
+        let evidence = &result["outcomes"][0]["evidence"];
+        assert!(
+            evidence["cleanupError"]
+                .as_str()
+                .unwrap()
+                .contains("job artifacts")
+        );
+        assert!(
+            evidence["diagnostic"]
+                .as_str()
+                .unwrap()
+                .contains("diagnostic before cleanup failure")
+        );
+        assert_eq!(evidence["report"]["passed"], 1);
+        fixture.clean();
+    }
+}

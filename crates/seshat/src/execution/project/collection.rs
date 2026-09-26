@@ -753,29 +753,32 @@ impl CapturedProject {
         if let JobKind::Coverage(path) = kind {
             command.env("SESHAT_COVERAGE_REPORT", path);
         }
-        if matches!(setup.runner, Runner::Node) && !matches!(kind, JobKind::Typecheck) {
-            // Keep the observer present in baseline, coverage and mutant processes.
-            let indices: Vec<_> = if self.prepared_sources.is_some() {
-                (0..self.sources.len()).collect()
+        let observer =
+            if matches!(setup.runner, Runner::Node) && !matches!(kind, JobKind::Typecheck) {
+                // Keep the observer present in baseline, coverage and mutant processes.
+                let indices: Vec<_> = if self.prepared_sources.is_some() {
+                    (0..self.sources.len()).collect()
+                } else {
+                    vec![self.active_edit.as_ref().map_or(0, |(index, _)| *index)]
+                };
+                let paths: Vec<_> = indices
+                    .iter()
+                    .map(|index| self.directory.0.join(&self.sources[*index].0))
+                    .collect();
+                let sources: Vec<_> = paths
+                    .iter()
+                    .zip(indices)
+                    .map(|(path, index)| {
+                        (
+                            path.as_path(),
+                            self.expected_source(index, &self.sources[index].1),
+                        )
+                    })
+                    .collect();
+                Some(observe_node_loads(&mut command, &sources, &receipt, id)?)
             } else {
-                vec![self.active_edit.as_ref().map_or(0, |(index, _)| *index)]
+                None
             };
-            let paths: Vec<_> = indices
-                .iter()
-                .map(|index| self.directory.0.join(&self.sources[*index].0))
-                .collect();
-            let sources: Vec<_> = paths
-                .iter()
-                .zip(indices)
-                .map(|(path, index)| {
-                    (
-                        path.as_path(),
-                        self.expected_source(index, &self.sources[index].1),
-                    )
-                })
-                .collect();
-            observe_node_loads(&mut command, &sources, &receipt, id)?;
-        }
         let mut result = job::run(&mut command, Duration::from_millis(setup.timeout_ms))?;
         let mut state = if matches!(kind, JobKind::Typecheck) {
             // A compiler's exit code is validation evidence, never a mutant kill.
@@ -834,14 +837,20 @@ impl CapturedProject {
             state = TestState::ExecutionError;
             result["sourceError"] = json!(error);
         }
-        // Keep successful runs compact and avoid printing ordinary test logs by default.
-        if state == TestState::Passed {
-            result.as_object_mut().unwrap().remove("diagnostic");
-        }
-        Ok(CommandEvidence {
+        let mut outcome = CommandEvidence {
             state,
             details: result,
-        })
+        };
+        outcome.clear_job_artifacts(&receipt, observer.as_ref());
+        // Keep successful runs compact and avoid printing ordinary test logs by default.
+        if outcome.state == TestState::Passed {
+            outcome
+                .details
+                .as_object_mut()
+                .unwrap()
+                .remove("diagnostic");
+        }
+        Ok(outcome)
     }
 
     fn replace_source(&mut self, index: usize, replacement: Option<String>) -> Result<(), String> {
@@ -1649,6 +1658,70 @@ mod tests {
             "{}"
         );
         directory.close().unwrap();
+    }
+
+    #[test]
+    fn completed_jobs_release_artifacts_and_workers_follow_the_plan() {
+        let fixture = super::super::tests::Fixture::new();
+        let mut captured = fixture.capture().unwrap();
+        captured
+            .sources
+            .retain(|(path, _)| path == Path::new("src/calc.ts"));
+        captured.config.workers = usize::MAX;
+        captured.config.setups[0].typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
+        captured.config.setups[0].test = vec!["node".into(), "-e".into(), r#"
+            const fs = require('fs'), path = require('path');
+            const receipt = process.env.SESHAT_RECEIPT;
+            const names = fs.readdirSync(path.dirname(receipt));
+            if (names.filter(n => n.startsWith('node-load-')).length !== 2 || names.some(n => n.includes('.json.load-') || n.includes('.json.events-'))) throw Error('old job artifacts retained');
+            fs.writeFileSync(receipt + '.load-1.json', '{}');
+            fs.writeFileSync(receipt + '.events-fixture', '{}');
+            fs.writeFileSync(receipt, JSON.stringify({version:1, executionId:process.env.SESHAT_EXECUTION_ID, node:process.versions.node, complete:true, passed:1, failed:0, errors:0}));
+        "#.into()];
+        let evidence = captured.prepare_evidence().unwrap();
+        for id in ["first", "second"] {
+            let result = captured
+                .run_job(
+                    &captured.config.setups[0],
+                    &captured.config.setups[0].test,
+                    &evidence.0,
+                    id,
+                    JobKind::Test,
+                )
+                .unwrap();
+            assert_eq!(result.state, TestState::Passed, "{}", result.details);
+            assert_eq!(result.details["report"]["executionId"], id);
+            assert_eq!(fs::read_dir(&evidence.0).unwrap().count(), 6);
+        }
+        evidence.close().unwrap();
+        let config = captured.config.clone();
+        let report = captured.assess(AssessmentMode::Mutate, false).unwrap();
+        assert_eq!(report["complete"], true, "{report}");
+        assert_eq!(report["mutation"]["planned"], 2);
+        assert_eq!(report["mutation"]["workersUsed"], 2);
+        assert_eq!(report["mutation"]["completed"], 2);
+        fixture.assert_clean();
+
+        // A generated invalid link fails worker preparation without disk exhaustion.
+        let mut captured = fixture.capture().unwrap();
+        captured
+            .sources
+            .retain(|(path, _)| path == Path::new("src/calc.ts"));
+        captured.config = config;
+        create_link("missing", captured.directory.0.join("generated-link")).unwrap();
+        let report = captured.assess(AssessmentMode::Mutate, false).unwrap();
+        assert_eq!(report["complete"], false);
+        assert_eq!(report["mutation"]["planned"], 2);
+        assert_eq!(report["mutation"]["workersUsed"], 0);
+        assert_eq!(report["mutation"]["notRun"], 2);
+        assert!(report["mutation"]["score"].is_null());
+        assert!(
+            report["mutation"]["error"]
+                .as_str()
+                .unwrap()
+                .contains("resolve link")
+        );
+        fixture.assert_clean();
     }
 
     #[cfg(unix)]

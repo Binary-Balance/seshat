@@ -471,41 +471,43 @@ fn walk(
     scope_only: bool,
     entries: &mut BTreeMap<PathBuf, Entry>,
 ) -> Result<(), String> {
-    super::check_cancellation()?;
-    if relative.components().any(|part| {
-        part.as_os_str()
-            .to_str()
-            .is_some_and(|name| name.eq_ignore_ascii_case(".git"))
-            || scope_only && part.as_os_str() == "node_modules"
-    }) {
-        return Ok(());
-    }
-    let path = root.join(relative);
-    validate_path(&path)?;
-    let metadata =
-        fs::symlink_metadata(&path).map_err(|e| format!("read {}: {e}", path.display()))?;
-    let kind = metadata.file_type();
-    let entry = if is_link(&metadata) {
-        Entry::Link
-    } else if kind.is_dir() {
-        Entry::Directory
-    } else if kind.is_file() {
-        Entry::File
-    } else {
-        return Err(format!("unsupported filesystem entry: {}", path.display()));
-    };
-    if !relative.as_os_str().is_empty() {
-        entries.insert(relative.into(), entry);
-    }
-    if matches!(entry, Entry::Directory) {
-        let mut children = fs::read_dir(&path)
-            .map_err(|e| e.to_string())?
-            .map(|entry| entry.map(|e| e.file_name()))
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| e.to_string())?;
-        children.sort();
-        for child in children {
-            walk(root, &relative.join(child), scope_only, entries)?;
+    // Keep traversal stack usage independent of input directory depth.
+    let mut pending = vec![relative.to_path_buf()];
+    while let Some(relative) = pending.pop() {
+        super::check_cancellation()?;
+        if relative.components().any(|part| {
+            part.as_os_str()
+                .to_str()
+                .is_some_and(|name| name.eq_ignore_ascii_case(".git"))
+                || scope_only && part.as_os_str() == "node_modules"
+        }) {
+            continue;
+        }
+        let path = root.join(&relative);
+        validate_path(&path)?;
+        let metadata =
+            fs::symlink_metadata(&path).map_err(|e| format!("read {}: {e}", path.display()))?;
+        let kind = metadata.file_type();
+        let entry = if is_link(&metadata) {
+            Entry::Link
+        } else if kind.is_dir() {
+            Entry::Directory
+        } else if kind.is_file() {
+            Entry::File
+        } else {
+            return Err(format!("unsupported filesystem entry: {}", path.display()));
+        };
+        if !relative.as_os_str().is_empty() {
+            entries.insert(relative.clone(), entry);
+        }
+        if matches!(entry, Entry::Directory) {
+            let mut children = fs::read_dir(&path)
+                .map_err(|e| e.to_string())?
+                .map(|entry| entry.map(|e| e.file_name()))
+                .collect::<Result<Vec<_>, _>>()
+                .map_err(|e| e.to_string())?;
+            children.sort();
+            pending.extend(children.into_iter().rev().map(|child| relative.join(child)));
         }
     }
     Ok(())
@@ -1395,6 +1397,110 @@ mod tests {
             .close()
             .unwrap();
         fixture.assert_clean();
+    }
+
+    #[test]
+    fn deep_capture_preserves_every_directory_and_source() {
+        let fixture = Fixture::new();
+        let mut relative = PathBuf::from("src");
+        for _ in 0..128 {
+            relative.push("d");
+            fs::create_dir(fixture.project.join(&relative)).unwrap();
+        }
+        relative.push("deep.ts");
+        fs::write(fixture.project.join(&relative), "export const value = 1;").unwrap();
+        let captured = fixture.capture().unwrap();
+        assert!(captured.sources.iter().any(|(path, _)| path == &relative));
+        assert!(captured.directory.0.join(relative).is_file());
+        drop(captured);
+        fixture.assert_clean();
+    }
+
+    #[test]
+    fn job_artifact_cleanup_preserves_other_jobs_and_failure_evidence() {
+        use super::super::CommandEvidence;
+        use crate::assessment::TestState;
+        let directory = OwnedDirectory::create(&std::env::temp_dir()).unwrap();
+        let receipt = directory.0.join("job.json");
+        let observer = [
+            directory.0.join("node-load-job.mjs"),
+            directory.0.join("node-load-job.json"),
+        ];
+        let sidecars = [
+            directory.0.join("job.json.load-1.json"),
+            directory.0.join("job.json.events-hash"),
+        ];
+        let keep = [
+            "other.json",
+            "other.json.load-1.json",
+            "node-load-other.mjs",
+            "sources.json",
+            "node-reporter.mjs",
+        ];
+        for path in [
+            &receipt,
+            &observer[0],
+            &observer[1],
+            &sidecars[0],
+            &sidecars[1],
+        ] {
+            fs::write(path, "evidence").unwrap();
+        }
+        for name in keep {
+            fs::write(directory.0.join(name), "keep").unwrap();
+        }
+        let details = json!({"report":{"complete":true},"diagnostic":"retained output"});
+        let mut outcome = CommandEvidence {
+            state: TestState::Passed,
+            details: details.clone(),
+        };
+        outcome.details["cleanupError"] = json!("process exit unconfirmed");
+        outcome.clear_job_artifacts(&receipt, Some(&observer));
+        assert!(receipt.exists() && observer[0].exists() && sidecars[0].exists());
+        assert_eq!(outcome.details["cleanupError"], "process exit unconfirmed");
+        outcome.details = details.clone();
+        outcome.clear_job_artifacts(&receipt, Some(&observer));
+        outcome.clear_job_artifacts(&receipt, Some(&observer));
+        assert!(
+            !receipt.exists()
+                && observer.iter().all(|p| !p.exists())
+                && sidecars.iter().all(|p| !p.exists())
+        );
+        for name in keep {
+            assert!(directory.0.join(name).exists());
+        }
+        assert_eq!(outcome.details, details);
+        // An unexpected directory makes unlink fail without deleting its contents.
+        fs::create_dir(&receipt).unwrap();
+        for state in [
+            TestState::Passed,
+            TestState::Failed,
+            TestState::TimedOut,
+            TestState::Cancelled,
+        ] {
+            let mut outcome = CommandEvidence {
+                state,
+                details: details.clone(),
+            };
+            outcome.clear_job_artifacts(&receipt, None);
+            assert!(
+                outcome.details["cleanupError"]
+                    .as_str()
+                    .unwrap()
+                    .contains("job artifacts")
+            );
+            assert_eq!(outcome.details["report"], details["report"]);
+            assert_eq!(outcome.details["diagnostic"], details["diagnostic"]);
+            assert_eq!(
+                outcome.state,
+                if matches!(state, TestState::Passed | TestState::Failed) {
+                    TestState::ExecutionError
+                } else {
+                    state
+                }
+            );
+        }
+        directory.close().unwrap();
     }
 
     #[test]
