@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {existsSync, lstatSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
+import {closeSync, existsSync, lstatSync, mkdtempSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {dirname, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -80,20 +80,29 @@ export function renderRuntimeNotice({provenance, files}) {
 }
 
 export function assertArchiveNotice(archive, expected) {
-  const actual = execFileSync(tar, ['-xOf', archive, 'package/THIRD_PARTY_NOTICES.txt'], {
-    maxBuffer: expected.length + 1024,
-    stdio: ['ignore', 'pipe', 'inherit'],
-  });
-  assert.deepEqual(actual, expected, 'archive notice differs from staged notice');
+  const root = mkdtempSync(join(tmpdir(), 'seshat-archive-notice-'));
+  const path = join(root, 'notice');
+  const output = openSync(path, 'w');
+  try {
+    execFileSync(tar, ['-xOf', archive, 'package/THIRD_PARTY_NOTICES.txt'], {
+      stdio: ['ignore', output, 'inherit'],
+    });
+    const actual = readFileSync(path);
+    assert.ok(actual.equals(expected),
+      `archive notice differs from staged notice: expected ${expected.length} bytes, got ${actual.length}`);
+  } finally {
+    closeSync(output);
+    rmSync(root, {recursive:true, force:true});
+  }
 }
 
 function assertAutocrlfCheckout(repo) {
   const root = mkdtempSync(join(tmpdir(), 'seshat-runtime-notice-checkout-'));
   const checkout = join(root, 'checkout');
   try {
-    execFileSync('git', ['clone', '--no-local', '--no-checkout', '--quiet', repo, checkout], {stdio:'ignore'});
-    execFileSync('git', ['-C', checkout, 'config', 'core.autocrlf', 'true'], {stdio:'ignore'});
-    execFileSync('git', ['-C', checkout, 'checkout', '--force', 'HEAD'], {stdio:'ignore'});
+    execFileSync('git', ['clone', '--no-local', '--no-checkout', '--quiet', repo, checkout], {stdio:['ignore', 'ignore', 'inherit']});
+    execFileSync('git', ['-C', checkout, 'config', 'core.autocrlf', 'true'], {stdio:['ignore', 'ignore', 'inherit']});
+    execFileSync('git', ['-C', checkout, 'checkout', '--force', 'HEAD'], {stdio:['ignore', 'ignore', 'inherit']});
     loadRuntimeNoticeAssets(join(checkout, 'packaging/runtime-notices/rust-1.98.1'));
   } finally {
     rmSync(root, {recursive:true, force:true});
@@ -139,6 +148,9 @@ function selfCheck() {
     const archive = join(root, 'package.tgz');
     execFileSync(tar, ['-czf', archive, '-C', root, 'package'], {stdio: ['ignore', 'pipe', 'inherit']});
     assertArchiveNotice(archive, notice);
+    writeFileSync(join(archiveRoot, 'THIRD_PARTY_NOTICES.txt'), Buffer.alloc(notice.length + 2 * 1024 * 1024));
+    execFileSync(tar, ['-czf', archive, '-C', root, 'package']);
+    assert.throws(() => assertArchiveNotice(archive, notice), /archive notice differs.*got/);
     assert.ok(valid.files.length === 1, 'synthetic positive asset check failed');
   } finally {
     rmSync(root, {recursive:true, force:true});

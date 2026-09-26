@@ -127,9 +127,23 @@ The packer clears caller `RUSTFLAGS` and `CARGO_ENCODED_RUSTFLAGS` before settin
 its target-specific flags. Native CI supplies deliberately invalid values for
 both during the repeat proof, so compilation also checks that neither leaks
 into the release build.
-It writes evidence only after every comparison passes. A failed comparison
-retains one archive per completed run in `repeat-pack-failure/` and records the
-failure before discarding large temporary target trees. Run
+The success proof is written only after every comparison passes. Each invocation
+retains its own `repeat-pack-attempts/attempt-*/` directory beside the output,
+including exact owned work paths recorded before child launch, pack logs and
+result manifests. Failed comparisons retain completed archives and a failure
+report there. Repeated failures never overwrite earlier attempts.
+
+After retaining archives, staged CLI, helper executables, hashes and result
+manifests, each successful pack removes only its owned `target/` and `sysroot/`.
+Consumers use the retained paths in the result manifest. Failed or interrupted
+packs keep their work because a build descendant may still be active. Inspect
+`owned-work.json` and logs, confirm those processes have stopped, and reclaim
+only the recorded directories when their evidence is no longer needed. A hard
+interruption may leave only the ownership record and partial log. Standalone
+packs also retain `ownership.json` and `<SESHAT_PACK_RESULT>.work.json`.
+
+The runtime-notice autocrlf check clones committed `HEAD`; it does not validate
+uncommitted notice edits. Git and archive failures retain stderr diagnostics. Run
 `node packaging/repeat-pack-failure-check.mjs` for the cheap retention check.
 
 Seshat is MIT-licensed. Native package notices preserve licence text available
