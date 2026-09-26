@@ -83,6 +83,9 @@ jobs:
             2>&1 | tee "work/macos/${{ matrix.cpu }}/rust-tests.log"
       - name: Prove repeat macOS package reproducibility
         env:
+          # Invalid ambient flags must never reach Cargo's release compilation.
+          RUSTFLAGS: --seshat-unexpected-ambient-rustflags
+          CARGO_ENCODED_RUSTFLAGS: --seshat-unexpected-ambient-encoded-rustflags
           SESHAT_REPEAT_OUTPUT: work/macos/${{ matrix.cpu }}/repeat-pack.json
         run: node packaging/repeat-pack.mjs --native-macos 2>&1 | tee "work/macos/${{ matrix.cpu }}/repeat-pack.log"
       - name: Build native macOS package

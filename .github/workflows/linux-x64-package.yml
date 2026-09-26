@@ -84,6 +84,9 @@ jobs:
             -o work/x64/debian11-inputs/libgcc-s1.deb
       - name: Prove repeat x64 package reproducibility
         env:
+          # Invalid ambient flags must never reach Cargo's release compilation.
+          RUSTFLAGS: --seshat-unexpected-ambient-rustflags
+          CARGO_ENCODED_RUSTFLAGS: --seshat-unexpected-ambient-encoded-rustflags
           SESHAT_REPEAT_OUTPUT: work/x64/repeat-pack.json
         run: |
           set -euo pipefail
