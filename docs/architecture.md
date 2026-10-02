@@ -13,6 +13,24 @@ coordinates and mutation edits, including the experimental switching transform.
 Nested functions have independent complexity counts. Class initialisers and
 static blocks receive complexity results but are outside CRAP scoring.
 
+Each scope starts at complexity `1`. Each of these constructs adds `1` to its
+innermost containing scope:
+
+- `if`, `for`, `for…in`, `for…of`, `while`, `do…while` and `catch`;
+- each non-default `switch` case and each conditional expression (`?:`);
+- each logical expression (`&&`, `||`, `??`) and logical assignment
+  (`&&=`, `||=`, `??=`);
+- each default in a parameter or destructuring binding;
+- each optional member access or optional call (`?.`).
+
+Chained expressions can therefore add more than one decision. For example,
+`a?.b?.()` adds two, while an ordinary member access adds none. Decisions outside
+these scopes, such as a module-level `if`, do not create a module complexity
+score or increase a function's score. Module-level comparisons can still
+generate mutants; complexity measurement does not limit mutation scope.
+Destructuring assignment defaults, such as `({x = 1} = value)`, do not add a
+decision.
+
 ## Coverage
 
 `coverage.rs` attributes full Istanbul JSON to original-source function scopes.
@@ -27,6 +45,9 @@ Missing or unreliable evidence remains unknown. It never becomes zero coverage.
 verdicts. Passing baselines are required. Timeouts and infrastructure failures
 remain unresolved rather than counting as killed mutants. Incomplete mutation
 runs retain their counts and withhold the final percentage.
+A complete run with zero planned mutants has no applicable percentage. Both
+cases use `score: null`; `complete` distinguishes them in the
+[mutation report](report-format.md#mutation-assessment).
 
 ## Execution
 

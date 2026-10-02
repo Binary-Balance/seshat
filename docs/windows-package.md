@@ -41,6 +41,33 @@ or partial integration evidence remains an explicit summary gap. This slice
 does not claim desktop Windows, Windows ARM64, POSIX signal semantics, signing,
 notarization or public release distribution.
 
+## Compiler environment action
+
+The package workflow trusts
+[`ilammy/msvc-dev-cmd` at `0b201ec74fa43914dc39ae48a89fd1d8cb592756`](https://github.com/ilammy/msvc-dev-cmd/tree/0b201ec74fa43914dc39ae48a89fd1d8cb592756)
+(upstream `v1.13.0`) to execute on the build runner and set its compiler
+environment. Its entry point and `lib.js` locate the runner's installed Visual
+Studio tools, invoke `vcvarsall.bat` and export the resulting environment changes.
+We reuse that setup rather than maintain another Visual Studio discovery script.
+The action's shipped dependencies are also part of this trust decision.
+
+The full commit pin makes updates explicit; it does not prove the action safe.
+The job uses a read-only repository token and checkout does not persist Git
+credentials. This action runs in the Windows build job, not the npm publisher.
+The packer separately checks the resulting compiler/SDK metadata, executable
+imports and reproducibility described above. Those checks do not sandbox the
+action or remove the need to trust its code.
+
+For each pin update:
+
+- Compare the full upstream diff, including `action.yml`, entry-point code,
+  `lib.js`, the lockfile and shipped dependencies.
+- Confirm the full commit and its upstream release/tag; record the reason for
+  the update and reviewed revision in the PR.
+- Run the native Windows package and runtime proofs before merging. These check
+  the resulting artifact and [process ownership](#primary-thread-ownership),
+  rather than substituting for review of the action.
+
 ## Final native proof
 
 The final proof is [workflow run 34578770812](https://github.com/Binary-Balance/seshat/actions/runs/34578770812),

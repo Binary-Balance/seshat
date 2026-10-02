@@ -15,7 +15,7 @@ before execution. Configuration is JSON, with no inheritance or executable code.
 Install the project's dependencies before running Seshat. It copies the selected
 inputs and installed dependencies into an execution copy; it does not install or
 configure Node, TypeScript, a test runner or a coverage provider. Commands in a
-setup are argument arrays and do not run through a shell.
+setup are argument arrays; Seshat does not interpret shell expressions.
 
 For a local 0.1.0 archive, use the [six-archive local installation
 recipe](../README.md#install-a-local-010-archive) from the project root. For an
@@ -313,6 +313,17 @@ and [examples/workspaces/seshat.json](../examples/workspaces/seshat.json).
 Each setup has a unique `name`, a `runner` of `node`, `jest` or `vitest`, and a
 project-relative `cwd`. Commands are argument arrays, not shell expressions.
 `timeoutMs` defaults to 30,000 and applies to each job separately.
+On Windows, `.cmd` and `.bat` programs use `cmd.exe` with argument escaping.
+
+Commands run trusted project code with the invoking process's environment.
+Seshat removes inherited `NODE_OPTIONS` and `NODE_PATH`, resets its own
+runner-evidence variables and sets the captured working directory. Other
+variables, including credentials and service configuration, remain inherited.
+Source copies and process cleanup do not restrict access to those credentials,
+the host filesystem or external services. Use an environment appropriate for
+the project's commands. See the [capture boundaries](#source-and-capture),
+[process cleanup limits](../benchmarks/proofs/README.md#cancellation-and-process-cleanup)
+and [Windows process ownership](windows-package.md#primary-thread-ownership).
 
 `test` and `coverage.command` must contain the program followed by its argument
 array. `coverage.report` is a project-relative path, and each setup must use a
@@ -343,7 +354,7 @@ the result against replacement for the project before relying on it.
 `{seshatReporter}` is replaced with the private reporter for that runner.
 `{seshatReporter}` and `{seshatEnvironment}` are supported only in command
 arguments; the first array element names the program and rejects either
-placeholder. Commands remain argument arrays and are never passed to a shell. Node
+placeholder. Commands remain argument arrays. Node
 commands use `--test-reporter={seshatReporter}`. The bounded Node coverage
 collectors in [examples/node/collect-node.mjs](../examples/node/collect-node.mjs)
 and [examples/workspaces/collect-node.mjs](../examples/workspaces/collect-node.mjs)
