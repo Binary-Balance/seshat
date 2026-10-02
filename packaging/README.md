@@ -36,6 +36,10 @@ literal; quote them when invoking a script from your shell.
 
 ## Build a native payload
 
+Use the tested compiler and locked dependencies described in the
+[Rust support guide](../docs/rust-support.md). Release compiler or dependency
+updates require fresh notices and build evidence.
+
 With locked Cargo and proof dependencies already available, the Linux x64
 packer needs the three pinned Debian 11 archives. They are build inputs and
 are not installed on the host or bundled into the package.

@@ -10,7 +10,9 @@ Requirements: Linux x64 or Windows x64, Node 24, npm and Rust 1.98.1. Linux
 requires a `kill` executable that supports process-group IDs; Windows runtime
 proofs require the checked native symlink and junction capabilities on the
 Windows Server 2022 runner. The recorded run used Node 24.20.0. Dependencies
-are pinned in the two npm lockfiles and this directory's Cargo lockfile.
+are pinned in the two npm lockfiles and `crates/seshat/Cargo.lock`. See the
+[Rust support and advisory guide](../../docs/rust-support.md) for the tested
+compiler requirement, dependency updates and focused compiler lints.
 
 From the repository root:
 
