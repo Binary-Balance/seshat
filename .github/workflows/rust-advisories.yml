@@ -1,0 +1,59 @@
+name: Rust dependency advisories
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/rust-advisories.yml
+      - crates/seshat/Cargo.toml
+      - crates/seshat/Cargo.lock
+      - docs/rust-support.md
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/rust-advisories.yml
+      - crates/seshat/Cargo.toml
+      - crates/seshat/Cargo.lock
+      - docs/rust-support.md
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
+
+jobs:
+  advisories:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Install cargo-audit 0.22.2
+        run: |
+          archive="$RUNNER_TEMP/cargo-audit.tgz"
+          curl --max-time 60 --fail --location --silent --show-error \
+            https://github.com/rustsec/rustsec/releases/download/cargo-audit/v0.22.2/cargo-audit-x86_64-unknown-linux-musl-v0.22.2.tgz \
+            --output "$archive"
+          printf '%s  %s\n' 7fb9497f8594b389e5fce5ef9b92db08432996895b2e0c5a0167a69ed445c428 "$archive" | sha256sum --check
+          tar -xzf "$archive" -C "$RUNNER_TEMP"
+          "$RUNNER_TEMP/cargo-audit-x86_64-unknown-linux-musl-v0.22.2/cargo-audit" --version
+      - name: Scan the locked release crate
+        run: |
+          mkdir -p work
+          "$RUNNER_TEMP/cargo-audit-x86_64-unknown-linux-musl-v0.22.2/cargo-audit" audit \
+            --file crates/seshat/Cargo.lock --db "$RUNNER_TEMP/advisory-db" \
+            --no-yanked --deny warnings --json | tee work/rust-advisories.json
+      - name: Retain advisory report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: rust-advisories
+          path: work/rust-advisories.json
+          if-no-files-found: error
+          retention-days: 90

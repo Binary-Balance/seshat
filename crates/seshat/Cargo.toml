@@ -2,6 +2,7 @@
 name = "seshat"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.98.1"
 publish = false
 default-run = "seshat-proofs"
 license = "MIT"
@@ -46,6 +47,10 @@ windows-sys = { version = "=0.61.2", features = [
     "Win32_System_SystemInformation",
     "Win32_System_Threading",
 ] }
+
+[lints.rust]
+unused_must_use = "deny"
+unsafe_op_in_unsafe_fn = "deny"
 
 [profile.release]
 lto = "off"
