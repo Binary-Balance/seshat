@@ -436,7 +436,7 @@ The standalone proof consumes the same npm `.tgz` bytes. It requires npm's
 runs the binary without npm, preserving the same archive and `BUILD.json`
 checks.
 
-The selected native CLI and runner proofs separately rerun the broad 47-scenario
+The selected native CLI and runner proofs separately rerun the broad 49-scenario
 CLI fixture, parallel controls, lifecycle checks and Jest/Expo/Vitest cases
 through the installed native executable. They reuse fixture compilers and
 coverage collectors from the source checkout; the package does not install or
@@ -449,7 +449,7 @@ documented in the [Windows package protocol](../../docs/windows-package.md).
 Its current native install proof covers the packaged executable and the same
 archive extracted with `tar.exe`; the entry launcher and Windows npm ownership
 proof are staged separately for the release package set. The workflow also runs the
-shared 47 CLI scenarios, 11 parallel controls and four installed Jest/Expo and
+shared 49 CLI scenarios, 11 parallel controls and four installed Jest/Expo and
 Vitest cases against that executable. The summary records missing or partial
 integration evidence as a gap.
 
@@ -591,14 +591,14 @@ linked libraries and the absence of `cargo` and `rustc`, then run:
 - All 14 npm package controls, including offline install and `npm ci`, package
   metadata, launcher paths, failure handling, cancellation, versioning and the
   four public consumer examples.
-- All 47 installed CLI scenarios plus legacy parity, including real typechecks,
+- All 49 installed CLI scenarios plus legacy parity, including real typechecks,
   fresh coverage, mutation outcomes, thresholds, incomplete results, timeouts,
   SIGINT/SIGTERM, source preservation and cleanup.
 - All 11 parallel-worker scenarios through that same installed executable,
   including one, two and four workers, worker capping, repeated outcomes,
   baseline/receipt/source failures, deadlines and cancellation. The controls
   check worker isolation, score withholding and termination of descendants.
-- The generated standalone archive repeats the 47 CLI scenarios and all 11
+- The generated standalone archive repeats the 49 CLI scenarios and all 11
   parallel-worker controls inside the same Debian 11 userspace.
 
 The verified userspace baseline is **Linux x64 with glibc 2.31**, tested with
