@@ -46,8 +46,16 @@ project or writes mutants into the source fixture.
 
 The `seshat` and `seshat-proofs` binaries share the existing private Rust modules.
 No CLI framework or new dependency was added. The release crate is `seshat`
-version `0.1.0`, and `cargo run` still defaults to the legacy proof entry
-point. The Windows console helper is built only for proof checks.
+version `0.1.0`. Running `cargo run` for `crates/seshat/Cargo.toml` defaults to
+the legacy `seshat-proofs` entry point. Select the user CLI explicitly from the
+repository root:
+
+```sh
+cargo run --locked --manifest-path crates/seshat/Cargo.toml --bin seshat -- --help
+```
+
+Arguments after `--` go to Seshat. The Windows console helper is built only for
+proof checks.
 
 After the installation above, build both binaries and run the regression:
 
