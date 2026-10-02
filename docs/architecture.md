@@ -20,7 +20,7 @@ innermost containing scope:
 - each non-default `switch` case and each conditional expression (`?:`);
 - each logical expression (`&&`, `||`, `??`) and logical assignment
   (`&&=`, `||=`, `??=`);
-- each parameter default or destructuring default;
+- each default in a parameter or destructuring binding;
 - each optional member access or optional call (`?.`).
 
 Chained expressions can therefore add more than one decision. For example,
@@ -28,6 +28,8 @@ Chained expressions can therefore add more than one decision. For example,
 these scopes, such as a module-level `if`, do not create a module complexity
 score or increase a function's score. Module-level comparisons can still
 generate mutants; complexity measurement does not limit mutation scope.
+Destructuring assignment defaults, such as `({x = 1} = value)`, do not add a
+decision.
 
 ## Coverage
 
