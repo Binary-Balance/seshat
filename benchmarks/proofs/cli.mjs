@@ -232,6 +232,33 @@ assert.ok(timeoutReport.result.phaseTimings.typecheckMs >= 200);
 assert.equal(timeoutReport.result.phaseTimings.baselineMs, null);
 assert.equal(timeoutReport.result.phaseTimings.coverageMs, null);
 
+const mutantTimeout = structuredClone(config);
+mutantTimeout.thresholds = {minMutationScore:0};
+mutantTimeout.setups[0].timeoutMs = 3000;
+// Keep compiler startup out of the mutant-timeout control.
+mutantTimeout.setups[0].typecheck = [process.execPath, '--check', 'test.mjs'];
+mutantTimeout.setups[0].test = [process.execPath, '-e', `
+  if(process.env.SESHAT_EXECUTION_ID.includes('-mutant-0-'))setInterval(()=>{},1000);
+  else{
+    const child=require('node:child_process').spawnSync(process.execPath,
+      ['--test','--test-reporter='+process.env.SESHAT_NODE_REPORTER,'test.mjs'],{stdio:'inherit'});
+    process.exit(child.status??2);
+  }
+`];
+configure(mutantTimeout);
+const stopped = json('mutant-timeout-with-threshold', 'mutate', 2);
+assert.equal(stopped.result.mutation.complete, false);
+assert.equal(stopped.result.mutation.score, null);
+assert.equal(stopped.result.mutation.notRun, 1);
+assert.deepEqual(stopped.result.mutation.outcomes.map(row=>row.verdict), ['timed-out','not-run']);
+assert.equal(stopped.quality.state, 'incomplete');
+assert.equal(stopped.quality.checks[0].actual, null);
+const stoppedHuman = run('mutant-timeout-human', ['mutate','--config',configPath,'--scratch',scratch], 2);
+assert.match(stoppedHuman.stdout, /stopped with 1 timed-out mutant\./);
+assert.match(stoppedHuman.stdout, /Timeouts remain unresolved, so the overall mutation score is withheld\./);
+assert.match(stoppedHuman.stdout, /1 mutant was not run\./);
+assert.match(stoppedHuman.stdout, /score withheld \(incomplete\)/);
+
 writeFileSync(configPath, 'broken JSON');
 for (const args of [['--help'], ['check','--help'], ['--version']]) {
   run(args.join('-'), args);

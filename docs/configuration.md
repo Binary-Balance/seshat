@@ -340,6 +340,14 @@ Every mutant runs all configured setups. No automatic test selection, persistent
 test-process reuse or cross-run verdict caching is performed. Each baseline and
 mutant starts a fresh test process.
 
+A mutant timeout stops further scheduling. Results from work already in progress
+on other workers remain available. A timeout does not prove that tests detected
+the mutation, so it remains unresolved and the overall mutation score is
+withheld. Running the remaining mutants cannot produce a complete score. The
+terminal report gives the timed-out and unrun mutant counts; JSON retains the
+attempts, `complete: false` and `score: null`. An ordinary timeout exits `2`, and
+an incomplete mutation-score threshold cannot pass.
+
 `check` and `mutate` use source replacement by default. Pass
 `--experimental-switching` to use the bounded helper-based switching experiment.
 The option is rejected by `crap`. Seshat completes the original typechecks and

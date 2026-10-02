@@ -428,6 +428,30 @@ fn readable(report: &Value) -> String {
                 breakdown["unassessed"]
             );
         }
+        // Another failure can take verdict precedence over a timed-out setup.
+        let timed_out = array(&mutation["outcomes"])
+            .iter()
+            .filter(|outcome| {
+                array(&outcome["setups"])
+                    .iter()
+                    .any(|setup| setup["state"] == "timed-out" || setup["timedOut"] == true)
+            })
+            .count();
+        if timed_out > 0 {
+            let noun = if timed_out == 1 { "mutant" } else { "mutants" };
+            let _ = writeln!(
+                output,
+                "Mutation scheduling stopped with {timed_out} timed-out {noun}. Timeouts remain unresolved, so the overall mutation score is withheld. Results from work already in progress are retained."
+            );
+            match mutation["notRun"].as_u64() {
+                Some(0) => output.push_str("No mutants were left unrun.\n"),
+                Some(1) => output.push_str("1 mutant was not run.\n"),
+                Some(count) => {
+                    let _ = writeln!(output, "{count} mutants were not run.");
+                }
+                None => {}
+            }
+        }
         if let Some(throughput) = mutation["diagnostics"]["throughput"].as_object() {
             let _ = writeln!(
                 output,
@@ -912,5 +936,74 @@ mod tests {
         assert!(rendered.contains("score not applicable"));
         assert!(rendered.contains("Capture: 0.5 ms"));
         assert!(!rendered.contains("CRAP unknown"));
+    }
+
+    #[test]
+    fn mutation_timeouts_explain_withheld_scores_and_unrun_work() {
+        for (states, not_run, expected_timeout, expected_unrun) in [
+            (
+                vec![vec!["failed", "timed-out"]],
+                1,
+                "stopped with 1 timed-out mutant.",
+                "1 mutant was not run.",
+            ),
+            (
+                vec![vec!["timed-out"], vec!["timed-out"]],
+                42,
+                "stopped with 2 timed-out mutants.",
+                "42 mutants were not run.",
+            ),
+            (
+                vec![vec!["timed-out"], vec!["passed"]],
+                0,
+                "stopped with 1 timed-out mutant.",
+                "No mutants were left unrun.",
+            ),
+            (
+                vec![vec!["timed-out", "execution-error"], vec!["cancelled"]],
+                1,
+                "stopped with 1 timed-out mutant.",
+                "1 mutant was not run.",
+            ),
+            (vec![vec!["execution-error"]], 1, "", ""),
+        ] {
+            let outcomes: Vec<_> = states.iter().map(|setups| {
+                json!({"setups":setups.iter().map(|state| json!({"state":state})).collect::<Vec<_>>()})
+            }).collect();
+            let (report, status) = report(
+                Some("mutate"),
+                Value::Null,
+                json!({"complete":false,"mutation":{"complete":false,"score":null,
+                    "notRun":not_run,"outcomes":outcomes}}),
+                1.0,
+                None,
+                Some(Thresholds {
+                    max_crap: None,
+                    min_mutation_score: Some(0.0),
+                }),
+            );
+            assert_eq!(status, 2);
+            assert_eq!(report["quality"]["state"], "incomplete");
+            assert!(report["quality"]["checks"][0]["actual"].is_null());
+            let rendered = readable(&report);
+            assert!(rendered.contains("score withheld (incomplete)"));
+            if expected_timeout.is_empty() {
+                assert!(!rendered.contains("Mutation scheduling stopped with"));
+            } else {
+                assert!(rendered.contains(expected_timeout));
+                assert!(rendered.contains(
+                    "Timeouts remain unresolved, so the overall mutation score is withheld."
+                ));
+                assert!(rendered.contains("Results from work already in progress are retained."));
+                assert!(rendered.contains(expected_unrun));
+            }
+        }
+        let mixed = readable(&json!({"timings":{"wallMs":1.0},"result":{
+            "mutation":{"score":null,"notRun":0,"outcomes":[{
+                "verdict":"execution-error","setups":[{"state":"execution-error","timedOut":true}]
+            }]}
+        }}));
+        assert!(mixed.contains("stopped with 1 timed-out mutant."));
+        assert!(mixed.contains("No mutants were left unrun."));
     }
 }
