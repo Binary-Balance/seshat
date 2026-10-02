@@ -1,6 +1,15 @@
+import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {mkdtempSync, readFileSync, statSync, writeFileSync} from 'node:fs';
 import {basename, dirname, join, resolve} from 'node:path';
+
+export function assertArchiveExecutable(archive, path) {
+  const tar = process.platform === 'win32' ? 'tar.exe' : 'tar';
+  const entries = execFileSync(tar, ['-tvf', archive, `package/${path}`], {encoding:'utf8'})
+    .trim().split(/\r?\n/);
+  assert.equal(entries.length, 1, `expected one archive entry for ${path}`);
+  assert.match(entries[0], /^-rwxr-xr-x[ \t]/, `${path} must have mode 0755 in ${archive}`);
+}
 
 function windowsNpmCli() {
   for (const candidate of [process.env.npm_execpath,

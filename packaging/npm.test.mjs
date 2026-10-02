@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import {dirname, join, relative, resolve} from 'node:path';
 import test from 'node:test';
 import {fileURLToPath} from 'node:url';
-import {runNpm} from './npm.mjs';
+import {assertArchiveExecutable, runNpm} from './npm.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const tarCommand = process.platform === 'win32' ? 'tar.exe' : 'tar';
@@ -45,6 +45,7 @@ test('npm packing preserves literal paths and ignores ambient npm settings', () 
     const [packed] = JSON.parse(runNpm(['pack', stage, '--json', '--pack-destination', output], root));
     assert.equal(execFileSync(tarCommand, ['-xOf', join(output, packed.filename), 'package/payload.txt'],
       {encoding:'utf8'}), 'literal fixture bytes\n');
+    assert.throws(() => assertArchiveExecutable(join(output, packed.filename), 'payload.txt'), /must have mode 0755/);
     assert.equal(existsSync(ambient.npm_config_cache), false);
 
     if (process.platform === 'win32') {

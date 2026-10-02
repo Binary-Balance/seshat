@@ -7,12 +7,46 @@ import test from 'node:test';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {loadRuntimeNoticeAssets, renderRuntimeNotice} from './runtime-notice-check.mjs';
+import {packageVersion, windowsSdkInfo} from './metadata.mjs';
+import {assertArchiveExecutable} from './npm.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repository = {type: 'git', url: 'git+https://github.com/Binary-Balance/seshat.git'};
 const entryDescription = 'A native CLI for TypeScript and TSX complexity analysis and mutation testing.';
 const packageDirectories = ['seshat', 'linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'win32-x64'];
 const tarCommand = process.platform === 'win32' ? 'tar.exe' : 'tar';
+
+test('package version belongs to [package], regardless of dependency ordering', () => {
+  const dependency = '[dependencies.fixture]\nversion = "9.9.9"\n';
+  const own = `[package] # release crate\nname = "seshat"\n  version = '0.1.0' # own version\n`;
+  for (const manifest of [dependency + own, own + dependency]) {
+    assert.equal(packageVersion(manifest), '0.1.0');
+    assert.equal(packageVersion(manifest.replaceAll('\n', '\r\n')), '0.1.0');
+  }
+  for (const manifest of [dependency, '[package]\nname = "seshat"\n' + dependency,
+    '[package]\nversion.workspace = true\n' + dependency]) {
+    assert.throws(() => packageVersion(manifest), /missing \[package\]|declare a literal version/);
+  }
+});
+
+test('both Windows SDK probes use numeric directory ordering and preserve the selected SDK', () => {
+  const root = mkdtempSync(join(tmpdir(), 'seshat-sdk-'));
+  try {
+    const library = join(root, 'Lib'); mkdirSync(library);
+    for (const name of ['10.0.9', '10.0.19041', '10.0.19041.10', '10.0.19041.9', '10.0.junk', '10.0.99999-preview']) {
+      mkdirSync(join(library, name));
+    }
+    writeFileSync(join(library, '99.0.0'), 'not a directory');
+    assert.deepEqual(windowsSdkInfo({WindowsSdkDir:root + '/'}),
+      {directory:root, version:'10.0.19041.10', ucrtVersion:null});
+    assert.deepEqual(windowsSdkInfo({WindowsSdkDir:root, WindowsSDKVersion:'10.0.9\\', UCRTVersion:'10.0.9'}),
+      {directory:root, version:'10.0.9', ucrtVersion:'10.0.9'});
+    assert.equal(windowsSdkInfo({WindowsSdkDir:join(root, 'missing')}).version, null);
+    const empty = join(root, 'empty'); mkdirSync(join(empty, 'Lib'), {recursive:true});
+    mkdirSync(join(empty, 'Lib/10.bad'));
+    assert.equal(windowsSdkInfo({WindowsSdkDir:empty}).version, null);
+  } finally { rmSync(root, {recursive:true, force:true}); }
+});
 
 test('layout-only inspection describes metadata without creating archives', () => {
   const output = mkdtempSync(join(tmpdir(), 'seshat metadata & %SESHAT_NPM_PATH%=test-'));
@@ -62,7 +96,7 @@ test('layout-only inspection describes metadata without creating archives', () =
   }
 });
 
-const version = readFileSync(join(repo, 'crates/seshat/Cargo.toml'), 'utf8').match(/^version\s*=\s*"([^"]+)"/m)[1];
+const version = packageVersion(readFileSync(join(repo, 'crates/seshat/Cargo.toml'), 'utf8'));
 const sourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], {cwd:repo, encoding:'utf8'}).trim();
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const triples = {
@@ -76,7 +110,9 @@ const archiveFile = (archive, path) => execFileSync(tarCommand, ['-xOf', archive
 const archiveFiles = archive => execFileSync(tarCommand, ['-tf', archive], {encoding:'utf8'}).trim().split(/\r?\n/)
   .filter(path => !path.endsWith('/')).map(path => path.replace(/^package\//, '')).sort();
 
-function nativeFixture(root, key = 'linux-x64') {
+const supportedKeys = Object.keys(triples).filter(key => process.platform !== 'win32' || key === 'win32-x64');
+
+function nativeFixture(root, key = supportedKeys[0]) {
   const binary = join(root, `${key} binary &= %SESHAT_RELEASE_PATH%`);
   const notices = join(root, `${key} notices &= %SESHAT_RELEASE_PATH%.txt`);
   const info = join(root, `${key} BUILD &= %SESHAT_RELEASE_PATH%.json`);
@@ -111,9 +147,10 @@ function succeeds(child) {
 test('packed entry and native archives contain all required files and preserve input bytes', () => {
   const root = mkdtempSync(join(tmpdir(), 'seshat packed &= %SESHAT_RELEASE_PATH%-'));
   try {
-    const fixtures = Object.fromEntries(Object.keys(triples).map(key => [key, nativeFixture(root, key)]));
+    const fixtures = Object.fromEntries(supportedKeys.map(key => [key, nativeFixture(root, key)]));
     const lockfile = readFileSync(join(repo, 'crates/seshat/Cargo.lock'), 'utf8').replaceAll('\r\n', '\n');
     for (const [key, contents] of [['linux-x64', lockfile], ['win32-x64', lockfile.replaceAll('\n', '\r\n')]]) {
+      if (!fixtures[key]) continue;
       fixtures[key].build.cargoLockSha256 = sha256(contents);
       writeFileSync(fixtures[key].info, JSON.stringify(fixtures[key].build, null, 2) + '\n');
     }
@@ -129,13 +166,20 @@ test('packed entry and native archives contain all required files and preserve i
       files:['bin/seshat.mjs', 'README.md', 'LICENSE'],
       optionalDependencies:Object.fromEntries(Object.keys(triples).map(key => [`@binary-balance/seshat-${key}`, version])),
     });
+    assertArchiveExecutable(entry, 'bin/seshat.mjs');
     assert.deepEqual(archiveFile(entry, 'bin/seshat.mjs'), readFileSync(join(repo, 'packages/seshat/bin/seshat.mjs')));
     for (const target of report.native) {
+      if (!target.archive) {
+        assert.equal(process.platform, 'win32');
+        assert.notEqual(target.key, 'win32-x64');
+        continue;
+      }
       const fixture = fixtures[target.key];
       const archive = join(output, target.archive.file);
       const binary = `bin/${target.key === 'win32-x64' ? 'seshat.exe' : 'seshat'}`;
       const files = ['BUILD.json', 'LICENSE', 'README.md', 'THIRD_PARTY_NOTICES.txt', binary, 'package.json'].sort();
       assert.deepEqual(archiveFiles(archive), files);
+      if (target.os[0] !== 'win32') assertArchiveExecutable(archive, binary);
       const manifest = JSON.parse(archiveFile(archive, 'package.json'));
       const [os, cpu] = target.key.split('-');
       assert.deepEqual({...manifest, files:[...manifest.files].sort()}, {
@@ -186,7 +230,7 @@ test('packed releases reject missing or mismatched provenance before creating ou
     const layout = succeeds(release(output, [...fixture.args, '--layout-only']));
     assert.equal(layout.mode, 'layout-only');
     assert.equal(layout.native[0].archive, null);
-    assert.equal(readFileSync(join(output, 'linux-x64/BUILD.json'), 'utf8'), '{}');
+    assert.equal(readFileSync(join(output, supportedKeys[0], 'BUILD.json'), 'utf8'), '{}');
     const bareLayout = join(root, 'binary-only-layout');
     succeeds(release(bareLayout, ['--layout-only', '--binary', `linux-x64=${fixture.binary}`]));
     assert.equal(existsSync(join(bareLayout, 'linux-x64/BUILD.json')), false);
@@ -199,8 +243,8 @@ test('reruns and partial target sets cannot reuse stale output or overwrite exte
     const fixture = nativeFixture(root);
     const output = join(root, 'release');
     const report = succeeds(release(output, fixture.args));
-    assert.ok(report.native.slice(1).every(target => target.archive === null));
-    const archive = join(output, report.native[0].archive.file);
+    assert.ok(report.native.filter(target => target.key !== supportedKeys[0]).every(target => target.archive === null));
+    const archive = join(output, report.native.find(target => target.key === supportedKeys[0]).archive.file);
     const original = readFileSync(archive);
     for (const args of [[], ['--layout-only'], fixture.args]) {
       const child = release(output, args);
@@ -226,6 +270,10 @@ test('native pack and release archives have equivalent manifests and file conten
   const native = JSON.parse(archiveFile(nativeArchive, 'package.json'));
   const staged = JSON.parse(archiveFile(releaseArchive, 'package.json'));
   assert.deepEqual({...native, files:[...native.files].sort()}, {...staged, files:[...staged.files].sort()});
+  if (native.os[0] !== 'win32') {
+    assertArchiveExecutable(nativeArchive, 'bin/seshat');
+    assertArchiveExecutable(releaseArchive, 'bin/seshat');
+  }
   const files = archiveFiles(nativeArchive);
   assert.deepEqual(files, archiveFiles(releaseArchive));
   for (const path of files.filter(path => path !== 'package.json')) {
@@ -244,5 +292,22 @@ test('manifest aliases cannot overwrite a packed archive', () => {
     assert.notEqual(child.status, 0, 'an aliased manifest must not overwrite an archive');
     assert.match(child.stderr, /must not overwrite a staged package or archive/);
     assert.deepEqual(readdirSync(output), [], 'reject the collision before staging');
+  } finally { rmSync(root, {recursive:true, force:true}); }
+});
+
+test('Windows rejects packed Unix payloads before writes while allowing layout inspection', {skip:process.platform !== 'win32'}, () => {
+  const root = mkdtempSync(join(tmpdir(), 'seshat-unsupported-staging-'));
+  try {
+    for (const key of Object.keys(triples).filter(key => key !== 'win32-x64')) {
+      const fixture = nativeFixture(root, key);
+      const output = join(root, key);
+      const child = release(output, fixture.args);
+      assert.notEqual(child.status, 0);
+      assert.match(child.stderr, /packing Unix native payloads on Windows is unsupported/);
+      assert.equal(existsSync(output), false);
+      const report = succeeds(release(output, [...fixture.args, '--layout-only']));
+      assert.equal(report.mode, 'layout-only');
+      assert.ok(report.native.every(target => target.archive === null));
+    }
   } finally { rmSync(root, {recursive:true, force:true}); }
 });

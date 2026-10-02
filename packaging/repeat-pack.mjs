@@ -2,11 +2,12 @@
 import assert from 'node:assert/strict';
 import {execFileSync, spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
+import {closeSync, mkdirSync, mkdtempSync, openSync, readFileSync, writeFileSync} from 'node:fs';
 import {arch, release, version as osVersion} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {runNpm} from './npm.mjs';
+import {windowsSdkInfo} from './metadata.mjs';
 import {createPackWork, retainRepeatFailure} from './repeat-pack-evidence.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -57,15 +58,7 @@ const toolchain = {
 if (nativeWindows) {
   toolchain.msvc = probe('cl.exe', [], msvcIdentity);
   toolchain.linker = probe('link.exe', [], linkerIdentity);
-  toolchain.sdk = {
-    directory:process.env.WindowsSdkDir?.replace(/[\\/]+$/, '') ??
-      join(process.env['ProgramFiles(x86)'] ?? process.env.ProgramFiles ?? 'C:\\Program Files (x86)', 'Windows Kits', '10'),
-    version:process.env.WindowsSDKVersion?.replace(/[\\/]+$/, '') ?? null,
-    ucrtVersion:process.env.UCRTVersion ?? null,
-  };
-  if (!toolchain.sdk.version && existsSync(join(toolchain.sdk.directory, 'Lib'))) {
-    toolchain.sdk.version = readdirSync(join(toolchain.sdk.directory, 'Lib')).filter(value => /^\d/.test(value)).sort().at(-1) ?? null;
-  }
+  toolchain.sdk = windowsSdkInfo();
 }
 const host = process.platform === 'win32'
   ? {platform:process.platform, architecture:arch(), release:release(), version:osVersion(), runner:process.env.RUNNER_OS ?? null,
