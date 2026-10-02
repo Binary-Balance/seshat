@@ -22,12 +22,17 @@ on:
       - docs/macos-package.md
   workflow_dispatch:
 
+# Supersede older PR checks; keep each push and manual evidence run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
 defaults:
   run:
-    shell: bash --noprofile --norc -eo pipefail {0}
+    shell: bash --noprofile --norc -euo pipefail {0}
 
 jobs:
   package:
@@ -45,9 +50,14 @@ jobs:
     timeout-minutes: 60
     env:
       MACOSX_DEPLOYMENT_TARGET: '15.0'
+      SESHAT_CPU: ${{ matrix.cpu }}
+      SESHAT_TARGET: ${{ matrix.target }}
+      SESHAT_RUNNER: ${{ matrix.runner }}
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -57,140 +67,192 @@ jobs:
           rustup toolchain install 1.98.1 --profile minimal --no-self-update
           rustup default 1.98.1
           rustc -vV
-          test "$(rustc -vV | sed -n 's/^host: //p')" = "${{ matrix.target }}"
+          test "$(rustc -vV | sed -n 's/^host: //p')" = "${SESHAT_TARGET}"
       - name: Capture native preflight
         run: |
-          mkdir -p "work/macos/${{ matrix.cpu }}"
+          mkdir -p "work/macos/${SESHAT_CPU}"
           node benchmarks/proofs/macos-preflight.mjs \
-            --cpu "${{ matrix.cpu }}" \
-            --target "${{ matrix.target }}" \
-            --runner "${{ matrix.runner }}" \
-            --output "work/macos/${{ matrix.cpu }}/preflight.json"
+            --cpu "${SESHAT_CPU}" \
+            --target "${SESHAT_TARGET}" \
+            --runner "${SESHAT_RUNNER}" \
+            --output "work/macos/${SESHAT_CPU}/preflight.json"
           node benchmarks/proofs/macos-preflight.mjs --self-check
       - name: Check summary failure reporting
         run: |
           node benchmarks/proofs/macos-package-summary.mjs --self-check
           node packaging/repeat-pack-failure-check.mjs
       - name: Fetch locked dependencies
+        id: dependencies
         run: |
-          npm ci --prefix benchmarks
-          npm ci --prefix benchmarks/proofs
+          npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund
+          npm ci --prefix benchmarks/proofs --ignore-scripts --no-audit --no-fund
           CARGO_TARGET_DIR="$RUNNER_TEMP/seshat-cargo" cargo fetch --locked --manifest-path crates/seshat/Cargo.toml
       - name: Run native Rust tests
         run: |
           CARGO_TARGET_DIR="$RUNNER_TEMP/seshat-cargo" \
             cargo test --locked --offline --manifest-path crates/seshat/Cargo.toml \
-            2>&1 | tee "work/macos/${{ matrix.cpu }}/rust-tests.log"
+            2>&1 | tee "work/macos/${SESHAT_CPU}/rust-tests.log"
       - name: Prove repeat macOS package reproducibility
         env:
           # Invalid ambient flags must never reach Cargo's release compilation.
           RUSTFLAGS: --seshat-unexpected-ambient-rustflags
           CARGO_ENCODED_RUSTFLAGS: --seshat-unexpected-ambient-encoded-rustflags
           SESHAT_REPEAT_OUTPUT: work/macos/${{ matrix.cpu }}/repeat-pack.json
-        run: node packaging/repeat-pack.mjs --native-macos 2>&1 | tee "work/macos/${{ matrix.cpu }}/repeat-pack.log"
+        run: node packaging/repeat-pack.mjs --native-macos 2>&1 | tee "work/macos/${SESHAT_CPU}/repeat-pack.log"
       - name: Build native macOS package
+        id: build
         env:
           SESHAT_PACK_RESULT: work/macos/${{ matrix.cpu }}/package-result.json
-        run: node packaging/pack.mjs --native-macos 2>&1 | tee "work/macos/${{ matrix.cpu }}/pack.log"
+        run: node packaging/pack.mjs --native-macos 2>&1 | tee "work/macos/${SESHAT_CPU}/pack.log"
       - name: Stage release entry and native packages
+        id: stage
         run: |
-          mkdir -p "work/macos/${{ matrix.cpu }}/release"
-          native_tarball="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).tarball);' "work/macos/${{ matrix.cpu }}/package-result.json")"
-          native_binary="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).binaryPath);' "work/macos/${{ matrix.cpu }}/package-result.json")"
-          tar -xOf "$native_tarball" package/BUILD.json > "work/macos/${{ matrix.cpu }}/BUILD.json"
-          tar -xOf "$native_tarball" package/THIRD_PARTY_NOTICES.txt > "work/macos/${{ matrix.cpu }}/THIRD_PARTY_NOTICES.txt"
+          mkdir -p "work/macos/${SESHAT_CPU}/release"
+          native_tarball="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).tarball);' "work/macos/${SESHAT_CPU}/package-result.json")"
+          native_binary="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).binaryPath);' "work/macos/${SESHAT_CPU}/package-result.json")"
+          tar -xOf "$native_tarball" package/BUILD.json > "work/macos/${SESHAT_CPU}/BUILD.json"
+          tar -xOf "$native_tarball" package/THIRD_PARTY_NOTICES.txt > "work/macos/${SESHAT_CPU}/THIRD_PARTY_NOTICES.txt"
           node packaging/release.mjs \
-            --output "work/macos/${{ matrix.cpu }}/release" \
-            --binary "darwin-${{ matrix.cpu }}=$native_binary" \
-            --build-info "darwin-${{ matrix.cpu }}=work/macos/${{ matrix.cpu }}/BUILD.json" \
-            --notices "darwin-${{ matrix.cpu }}=work/macos/${{ matrix.cpu }}/THIRD_PARTY_NOTICES.txt" \
-            --manifest "work/macos/${{ matrix.cpu }}/release.json" 2>&1 | tee "work/macos/${{ matrix.cpu }}/release.log"
-          entry_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).entry.archive.file);' "work/macos/${{ matrix.cpu }}/release.json")"
-          native_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).native.find(target => target.key === `darwin-${process.argv[2]}`).archive.file);' "work/macos/${{ matrix.cpu }}/release.json" "${{ matrix.cpu }}")"
-          node packaging/metadata.test.mjs "$native_tarball" "work/macos/${{ matrix.cpu }}/release/$native_archive"
-          cp "work/macos/${{ matrix.cpu }}/release/$entry_archive" "work/macos/${{ matrix.cpu }}/seshat-entry.tgz"
-          cp "work/macos/${{ matrix.cpu }}/release/$native_archive" "work/macos/${{ matrix.cpu }}/seshat-darwin-${{ matrix.cpu }}-release.tgz"
+            --output "work/macos/${SESHAT_CPU}/release" \
+            --binary "darwin-${SESHAT_CPU}=$native_binary" \
+            --build-info "darwin-${SESHAT_CPU}=work/macos/${SESHAT_CPU}/BUILD.json" \
+            --notices "darwin-${SESHAT_CPU}=work/macos/${SESHAT_CPU}/THIRD_PARTY_NOTICES.txt" \
+            --manifest "work/macos/${SESHAT_CPU}/release.json" 2>&1 | tee "work/macos/${SESHAT_CPU}/release.log"
+          entry_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).entry.archive.file);' "work/macos/${SESHAT_CPU}/release.json")"
+          native_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).native.find(target => target.key === `darwin-${process.argv[2]}`).archive.file);' "work/macos/${SESHAT_CPU}/release.json" "${SESHAT_CPU}")"
+          node packaging/metadata.test.mjs "$native_tarball" "work/macos/${SESHAT_CPU}/release/$native_archive"
+          cp "work/macos/${SESHAT_CPU}/release/$entry_archive" "work/macos/${SESHAT_CPU}/seshat-entry.tgz"
+          cp "work/macos/${SESHAT_CPU}/release/$native_archive" "work/macos/${SESHAT_CPU}/seshat-darwin-${SESHAT_CPU}-release.tgz"
+      - name: Retain npm payload
+        id: payload
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: |
+          TARBALL="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; const result=JSON.parse(readFileSync(process.argv[1])); console.log(result.tarball);' "work/macos/${SESHAT_CPU}/package-result.json")"
+          cp "$TARBALL" "work/macos/${SESHAT_CPU}/seshat-macos-${SESHAT_CPU}.tgz"
+          tar -xOf "$TARBALL" package/BUILD.json > "work/macos/${SESHAT_CPU}/BUILD.json"
       - name: Verify npm installation
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.stage.outcome == 'success' && steps.payload.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/macos/${{ matrix.cpu }}/npm-package.json
           SESHAT_EXAMPLES_OUTPUT: work/macos/${{ matrix.cpu }}/public-consumer-examples.json
         run: |
-          TARBALL="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; const result=JSON.parse(readFileSync(process.argv[1])); console.log(result.tarball);' "work/macos/${{ matrix.cpu }}/package-result.json")"
-          cp "$TARBALL" "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}.tgz"
-          tar -xOf "$TARBALL" package/BUILD.json > "work/macos/${{ matrix.cpu }}/BUILD.json"
-          ENTRY_SHA256="$(shasum -a 256 "work/macos/${{ matrix.cpu }}/seshat-entry.tgz" | cut -d' ' -f1)"
-          NATIVE_SHA256="$(shasum -a 256 "work/macos/${{ matrix.cpu }}/seshat-darwin-${{ matrix.cpu }}-release.tgz" | cut -d' ' -f1)"
-          BINARY_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).binary);' "work/macos/${{ matrix.cpu }}/package-result.json")"
+          ENTRY_SHA256="$(shasum -a 256 "work/macos/${SESHAT_CPU}/seshat-entry.tgz" | cut -d' ' -f1)"
+          NATIVE_SHA256="$(shasum -a 256 "work/macos/${SESHAT_CPU}/seshat-darwin-${SESHAT_CPU}-release.tgz" | cut -d' ' -f1)"
+          BINARY_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).binary);' "work/macos/${SESHAT_CPU}/package-result.json")"
           SESHAT_ENTRY_TARBALL_SHA256="$ENTRY_SHA256" \
           SESHAT_NATIVE_TARBALL_SHA256="$NATIVE_SHA256" \
           SESHAT_NATIVE_BINARY_SHA256="$BINARY_SHA256" \
-            node benchmarks/proofs/npm-package.mjs "work/macos/${{ matrix.cpu }}/seshat-entry.tgz" "work/macos/${{ matrix.cpu }}/seshat-darwin-${{ matrix.cpu }}-release.tgz" \
-            2>&1 | tee "work/macos/${{ matrix.cpu }}/npm-package.log"
+            node benchmarks/proofs/npm-package.mjs "work/macos/${SESHAT_CPU}/seshat-entry.tgz" "work/macos/${SESHAT_CPU}/seshat-darwin-${SESHAT_CPU}-release.tgz" \
+            2>&1 | tee "work/macos/${SESHAT_CPU}/npm-package.log"
       - name: Verify standalone installation
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/macos/${{ matrix.cpu }}/standalone.json
         run: |
-          STANDALONE="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).standalone.path);' "work/macos/${{ matrix.cpu }}/package-result.json")"
-          cp "$STANDALONE" "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}-standalone.tar.gz"
-          cmp "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}.tgz" "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}-standalone.tar.gz"
-          PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/macos/${{ matrix.cpu }}/package-result.json")"
-          STANDALONE_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).standalone.sha256);' "work/macos/${{ matrix.cpu }}/package-result.json")"
-          BINARY_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).binary);' "work/macos/${{ matrix.cpu }}/package-result.json")"
+          STANDALONE="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).standalone.path);' "work/macos/${SESHAT_CPU}/package-result.json")"
+          cp "$STANDALONE" "work/macos/${SESHAT_CPU}/seshat-macos-${SESHAT_CPU}-standalone.tar.gz"
+          cmp "work/macos/${SESHAT_CPU}/seshat-macos-${SESHAT_CPU}.tgz" "work/macos/${SESHAT_CPU}/seshat-macos-${SESHAT_CPU}-standalone.tar.gz"
+          PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/macos/${SESHAT_CPU}/package-result.json")"
+          STANDALONE_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).standalone.sha256);' "work/macos/${SESHAT_CPU}/package-result.json")"
+          BINARY_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).binary);' "work/macos/${SESHAT_CPU}/package-result.json")"
           SESHAT_PROOF_BINARY="$PROOF_BINARY" \
           SESHAT_STANDALONE_SHA256="$STANDALONE_SHA256" \
           SESHAT_BINARY_SHA256="$BINARY_SHA256" \
-            node benchmarks/proofs/standalone.mjs "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}-standalone.tar.gz" "$PROOF_BINARY" \
-            2>&1 | tee "work/macos/${{ matrix.cpu }}/standalone.log"
+            node benchmarks/proofs/standalone.mjs "work/macos/${SESHAT_CPU}/seshat-macos-${SESHAT_CPU}-standalone.tar.gz" "$PROOF_BINARY" \
+            2>&1 | tee "work/macos/${SESHAT_CPU}/standalone.log"
+      # Repeat packing requires a clean checkout; install this fixture afterwards.
+      - name: Install locked Jest/Expo fixture dependencies
+        id: jest_dependencies
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
+        run: |
+          npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
       - name: Verify installed Jest/Expo runner
-        if: always()
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/macos/${{ matrix.cpu }}/jest-expo-check.json
         run: |
-          npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
           node benchmarks/proofs/jest-expo-check.mjs \
             --deps "$GITHUB_WORKSPACE/benchmarks/proofs/fixtures/jest-expo" \
-            --tarball "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}.tgz" \
+            --tarball "work/macos/${SESHAT_CPU}/seshat-macos-${SESHAT_CPU}.tgz" \
             --cases normal-1,assertion-kill,survivor,before-all \
-            2>&1 | tee "work/macos/${{ matrix.cpu }}/jest-expo-check.log"
+            2>&1 | tee "work/macos/${SESHAT_CPU}/jest-expo-check.log"
       - name: Verify installed Vitest runner
-        if: always()
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/macos/${{ matrix.cpu }}/vitest-check.json
         run: |
           node benchmarks/proofs/vitest-check.mjs \
-            --tarball "work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}.tgz" \
+            --tarball "work/macos/${SESHAT_CPU}/seshat-macos-${SESHAT_CPU}.tgz" \
             --deps "$GITHUB_WORKSPACE/benchmarks/proofs" \
             --cases stack,assertion,survived,before-all \
-            2>&1 | tee "work/macos/${{ matrix.cpu }}/vitest-check.log"
+            2>&1 | tee "work/macos/${SESHAT_CPU}/vitest-check.log"
       - name: Verify native lifecycle
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/macos/${{ matrix.cpu }}/lifecycle.json
         run: |
           mkdir -p work/assurance-proofs
-          PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/macos/${{ matrix.cpu }}/package-result.json")"
+          PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/macos/${SESHAT_CPU}/package-result.json")"
           SESHAT_PROOF_BINARY="$PROOF_BINARY" \
             node benchmarks/proofs/lifecycle.mjs \
-            2>&1 | tee "work/macos/${{ matrix.cpu }}/lifecycle.log"
+            2>&1 | tee "work/macos/${SESHAT_CPU}/lifecycle.log"
       - name: Verify proof execute cancellation
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/macos/${{ matrix.cpu }}/execute-cancellation.json
         run: |
-          PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/macos/${{ matrix.cpu }}/package-result.json")"
-          SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/execute-cancellation.mjs 2>&1 | tee "work/macos/${{ matrix.cpu }}/execute-cancellation.log"
+          PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/macos/${SESHAT_CPU}/package-result.json")"
+          SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/execute-cancellation.mjs 2>&1 | tee "work/macos/${SESHAT_CPU}/execute-cancellation.log"
       - name: Set up latest supported Node runtime
+        id: latest_node
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24.x
           check-latest: true
       - name: Verify latest Node 24 compatibility
-        run: node benchmarks/proofs/runner-compatibility.mjs "work/macos/${{ matrix.cpu }}/package-result.json"
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.latest_node.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
+        run: node benchmarks/proofs/runner-compatibility.mjs "work/macos/${SESHAT_CPU}/package-result.json"
       - name: Write portable summary
         if: always()
-        run: node benchmarks/proofs/macos-package-summary.mjs "work/macos/${{ matrix.cpu }}"
+        run: |
+          mkdir -p "work/macos/${SESHAT_CPU}"
+          node benchmarks/proofs/macos-package-summary.mjs "work/macos/${SESHAT_CPU}"
       - name: Upload package proof evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: macos-${{ matrix.cpu }}-package-proof
-          path: work/macos/${{ matrix.cpu }}
+          path: |
+            work/macos/${{ matrix.cpu }}/preflight.json
+            work/macos/${{ matrix.cpu }}/package-result.json
+            work/macos/${{ matrix.cpu }}/package-result.json.work.json
+            work/macos/${{ matrix.cpu }}/BUILD.json
+            work/macos/${{ matrix.cpu }}/THIRD_PARTY_NOTICES.txt
+            work/macos/${{ matrix.cpu }}/release.json
+            work/macos/${{ matrix.cpu }}/release.log
+            work/macos/${{ matrix.cpu }}/seshat-entry.tgz
+            work/macos/${{ matrix.cpu }}/npm-package.json
+            work/macos/${{ matrix.cpu }}/npm-package.log
+            work/macos/${{ matrix.cpu }}/public-consumer-examples.json
+            work/macos/${{ matrix.cpu }}/jest-expo-check.json
+            work/macos/${{ matrix.cpu }}/jest-expo-check.log
+            work/macos/${{ matrix.cpu }}/vitest-check.json
+            work/macos/${{ matrix.cpu }}/vitest-check.log
+            work/macos/${{ matrix.cpu }}/execute-cancellation.json
+            work/macos/${{ matrix.cpu }}/execute-cancellation.log
+            work/macos/${{ matrix.cpu }}/rust-tests.log
+            work/macos/${{ matrix.cpu }}/repeat-pack.json
+            work/macos/${{ matrix.cpu }}/repeat-pack.log
+            work/macos/${{ matrix.cpu }}/repeat-pack-attempts/**
+            work/macos/${{ matrix.cpu }}/pack.log
+            work/macos/${{ matrix.cpu }}/node-*/**
+            work/macos/${{ matrix.cpu }}/summary.json
+            work/macos/${{ matrix.cpu }}/seshat-darwin-${{ matrix.cpu }}-release.tgz
+            work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}.tgz
+            work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}-standalone.tar.gz
+            work/macos/${{ matrix.cpu }}/standalone.json
+            work/macos/${{ matrix.cpu }}/standalone.log
+            work/macos/${{ matrix.cpu }}/lifecycle.json
+            work/macos/${{ matrix.cpu }}/lifecycle.log
           if-no-files-found: error

@@ -32,12 +32,13 @@ permissions:
   actions: read
 
 concurrency:
-  group: npm-publication-${{ inputs.version || github.sha }}
-  cancel-in-progress: false
+  # All versions publish the same package names and may change dist tags.
+  group: npm-publication-${{ inputs.publish == true && 'registry' || github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 defaults:
   run:
-    shell: bash --noprofile --norc -eo pipefail {0}
+    shell: bash --noprofile --norc -euo pipefail {0}
 
 jobs:
   validate:
@@ -104,7 +105,11 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: npm-publication-inputs
-          path: work/npm-publishing
+          path: |
+            work/npm-publishing/archives/*.tgz
+            work/npm-publishing/archive-staging.json
+            work/npm-publishing/dry-run.json
+            work/npm-publishing/dry-run.log
           if-no-files-found: error
           retention-days: 30
 

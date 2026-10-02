@@ -21,14 +21,20 @@ assert.equal(process.arch, 'x64', 'Windows package proof is x64 only');
 assert.equal(process.env.RUNNER_OS, 'Windows', 'Windows package proof requires the Windows runner');
 assert.equal(Number(release().match(/\b10\.0\.(\d+)\b/)?.[1]), 20348,
   'Windows package proof requires Windows Server 2022 build 20348');
-assert.equal(process.argv.length, 3, 'usage: node benchmarks/proofs/windows-package-install.mjs <npm tarball>');
+assert.equal(process.argv.length, 4, 'usage: node benchmarks/proofs/windows-package-install.mjs <npm tarball> <standalone archive>');
 
 const tarball = resolve(process.argv[2]);
+const standaloneArchive = resolve(process.argv[3]);
 assert.ok(existsSync(tarball) && statSync(tarball).isFile(), `missing package archive: ${tarball}`);
 const hash = value => createHash('sha256').update(value).digest('hex');
 const tarballBytes = readFileSync(tarball);
 const tarballSha256 = hash(tarballBytes);
 if (process.env.SESHAT_TARBALL_SHA256) assert.equal(tarballSha256, process.env.SESHAT_TARBALL_SHA256);
+const standaloneBytes = readFileSync(standaloneArchive);
+const standaloneSha256 = hash(standaloneBytes);
+if (process.env.SESHAT_STANDALONE_SHA256) assert.equal(standaloneSha256, process.env.SESHAT_STANDALONE_SHA256);
+// Both installation routes intentionally share the deterministic npm payload.
+assert.equal(standaloneSha256, tarballSha256);
 
 const systemRoot = process.env.SystemRoot ?? process.env.SYSTEMROOT;
 const comspec = process.env.ComSpec ?? process.env.COMSPEC;
@@ -129,10 +135,10 @@ assert.equal(noRustEnv.ComSpec, comspec);
 assert.ok(noRustEnv.PATH.split(delimiter).includes(nodeDirectory));
 assert.ok(noRustEnv.PATH.split(delimiter).includes(join(systemRoot, 'System32')));
 
-run('standalone-list', 'tar.exe', ['-tzf', tarball], standalone);
+run('standalone-list', 'tar.exe', ['-tzf', standaloneArchive], standalone);
 // Stock Windows tar converts this Unicode path when it arrives through -C. Node preserves
 // the same path as the child cwd, so extract there and keep the spaces+Unicode consumer.
-run('standalone-extract', 'tar.exe', ['-xzf', tarball, '--strip-components=1'], standalone);
+run('standalone-extract', 'tar.exe', ['-xzf', standaloneArchive, '--strip-components=1'], standalone);
 const standaloneBinary = join(standalone, 'bin', 'seshat.exe');
 assert.ok(existsSync(standaloneBinary), 'standalone extraction did not produce bin/seshat.exe');
 assert.equal(hash(readFileSync(join(standalone, 'BUILD.json'))), hash(readFileSync(join(installed, 'BUILD.json'))));
@@ -148,7 +154,7 @@ const result = {
     image:process.env.ImageOS ?? null, imageVersion:process.env.ImageVersion ?? null},
   npmCommand:basename(npmCommand),
   tarball:{path:tarball, sha256:tarballSha256, bytes:tarballBytes.length},
-  standaloneArchive:{path:tarball, sha256:tarballSha256, bytes:tarballBytes.length},
+  standaloneArchive:{path:standaloneArchive, sha256:standaloneSha256, bytes:standaloneBytes.length},
   installedBinary:executable,
   standaloneBinary,
   binary:{sha256:binarySha256, bytes:binaryBytes.length},

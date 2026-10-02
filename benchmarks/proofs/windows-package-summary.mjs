@@ -288,6 +288,9 @@ function selfCheck() {
       runnerImage:{label:'windows-2022', os:'Windows'}, toolchain:{rust:{rustc:{available:true, version:'rustc 1.98.1'}, cargo:{available:true, version:'cargo 1.98.1'}, host:'x86_64-pc-windows-msvc'}, msvc:{available:true, version:'cl'}, linker:{available:true, version:'link'}, sdk:{version:'sdk'}, visualStudio:{available:true, edition:'Enterprise', productVersion:'17.14.20', toolset:'14.44.35207'}}, shell:{systemRoot:'C:', comspec:'C:'}},
     }, packed:{...packed, files:packageFiles.map(path => ({path}))}, repeat, install, runtime, releaseNpm, publicExamples};
   assert.deepEqual(validate(base).failures, []);
+  const changedStandalone = structuredClone(base);
+  changedStandalone.install.standaloneArchive.sha256 = '0'.repeat(64);
+  assert.match(validate(changedStandalone).failures.join('\n'), /installed standalone archive hash differs/);
   const runnerEvidence = cases => ({
     checks: {requested: cases.length, completed: cases.length},
     requestedCases: cases,
