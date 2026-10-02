@@ -5,14 +5,14 @@ import {createHash} from 'node:crypto';
 import {chmodSync, copyFileSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync} from 'node:fs';
 import {basename, dirname, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {runNpm} from './npm.mjs';
+import {packNpm} from './npm.mjs';
+import {packageVersion} from './metadata.mjs';
 import {loadRuntimeNoticeAssets, renderRuntimeNotice} from './runtime-notice-check.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..');
 const cargoManifest = join(repo, 'crates/seshat/Cargo.toml');
-const version = readFileSync(cargoManifest, 'utf8').match(/^version\s*=\s*"([^"]+)"/m)?.[1];
-assert.ok(version, `version is missing from ${cargoManifest}`);
+const version = packageVersion(readFileSync(cargoManifest, 'utf8'));
 
 const targets = [
   {key: 'linux-x64', triple: 'x86_64-unknown-linux-gnu', name: '@binary-balance/seshat-linux-x64', os: ['linux'], cpu: ['x64'], libc: ['glibc'], executable: 'seshat'},
@@ -53,6 +53,12 @@ for (let index = 0; index < args.length; index += 1) {
   }
 }
 
+// Windows chmod cannot establish Unix native executable modes for npm packing.
+if (pack && process.platform === 'win32') {
+  assert.ok([...binaries.keys()].every(key => targetByKey.get(key).os[0] === 'win32'),
+    'packing Unix native payloads on Windows is unsupported; stage them on Linux or macOS');
+}
+
 const writeJson = (path, value) => {
   mkdirSync(dirname(path), {recursive: true});
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
@@ -63,12 +69,11 @@ const copy = (source, destination) => {
 };
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const portable = path => relative(repo, path).replaceAll('\\', '/') || '.';
-const npm = (stage, destination, files) => {
-  const result = JSON.parse(runNpm(['pack', stage, '--json', '--pack-destination', destination], destination));
-  assert.equal(result.length, 1);
-  assert.deepEqual(result[0].files.map(file => file.path).sort(), [...files, 'package.json'].sort(),
+const npm = (stage, destination, files, executable) => {
+  const result = packNpm(stage, destination, executable);
+  assert.deepEqual(result.files.map(file => file.path).sort(), [...files, 'package.json'].sort(),
     `packed file list differs from the declared release payload: ${stage}`);
-  return result[0];
+  return result;
 };
 const sourceRevision = execFileSync('git', ['rev-parse', 'HEAD'], {
   cwd: repo,
@@ -209,7 +214,7 @@ for (const target of targets) {
     writeFileSync(executablePath, payload.binary);
     if (target.os[0] !== 'win32') chmodSync(executablePath, 0o755);
   }
-  const archive = binary && pack ? npm(stage, output, files) : null;
+  const archive = binary && pack ? npm(stage, output, files, target.os[0] === 'win32' ? null : `bin/${target.executable}`) : null;
   staged.push({
     key: target.key,
     name: target.name,
@@ -223,7 +228,7 @@ for (const target of targets) {
   });
 }
 
-const rootArchive = pack ? npm(rootStage, output, ['bin/seshat.mjs', 'README.md', 'LICENSE']) : null;
+const rootArchive = pack ? npm(rootStage, output, ['bin/seshat.mjs', 'README.md', 'LICENSE'], 'bin/seshat.mjs') : null;
 const release = {
   schemaVersion: 1,
   version,

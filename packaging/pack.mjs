@@ -2,11 +2,12 @@
 import assert from 'node:assert/strict';
 import {execFileSync, spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, readlinkSync, statSync, symlinkSync, unlinkSync, writeFileSync} from 'node:fs';
+import {chmodSync, copyFileSync, mkdirSync, readFileSync, readdirSync, readlinkSync, statSync, symlinkSync, unlinkSync, writeFileSync} from 'node:fs';
 import {arch, release, version as osVersion} from 'node:os';
 import {dirname, isAbsolute, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {runNpm} from './npm.mjs';
+import {packNpm} from './npm.mjs';
+import {packageVersion, windowsSdkInfo} from './metadata.mjs';
 import {createPackWork, finishPack, ownedPackWork} from './repeat-pack-evidence.mjs';
 import {assertArchiveNotice, loadRuntimeNoticeAssets, renderRuntimeNotice, validateRustToolchain} from './runtime-notice-check.mjs';
 
@@ -14,8 +15,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..');
 const cargoManifest = join(repo, 'crates/seshat/Cargo.toml');
 const runtimeNoticeDirectory = join(here, 'runtime-notices', 'rust-1.98.1');
-const version = readFileSync(cargoManifest, 'utf8').match(/^version\s*=\s*"([^"]+)"/m)?.[1];
-assert.ok(version, `version is missing from ${cargoManifest}`);
+const version = packageVersion(readFileSync(cargoManifest, 'utf8'));
 const nativeArm64 = process.argv.length === 3 && process.argv[2] === '--native-arm64';
 const nativeMacos = process.argv.length === 3 && process.argv[2] === '--native-macos';
 const nativeWindows = process.argv.length === 3 && process.argv[2] === '--native-windows';
@@ -105,13 +105,6 @@ const toolInfo = (command, identity) => {
 };
 const msvcIdentity = /^Microsoft \(R\) C\/C\+\+ Optimizing Compiler Version .+ for x64\b/m;
 const linkerIdentity = /^Microsoft \(R\) Incremental Linker Version \S+/m;
-const sdkInfo = () => {
-  const directory = process.env.WindowsSdkDir?.replace(/[\\/]+$/, '') ??
-    join(process.env['ProgramFiles(x86)'] ?? process.env.ProgramFiles ?? 'C:\\Program Files (x86)', 'Windows Kits', '10');
-  const version = process.env.WindowsSDKVersion?.replace(/[\\/]+$/, '') ??
-    (existsSync(join(directory, 'Lib')) ? readdirSync(join(directory, 'Lib')).filter(value => /^\d/.test(value)).sort().at(-1) ?? null : null);
-  return {directory, version, ucrtVersion:process.env.UCRTVersion ?? null};
-};
 function peInfo(bytes) {
   assert.equal(bytes.subarray(0, 2).toString('ascii'), 'MZ', 'expected PE DOS header');
   const peOffset = bytes.readUInt32LE(0x3c);
@@ -281,7 +274,7 @@ const build = {
     msvc:toolInfo('cl.exe', msvcIdentity),
     linker:toolInfo('link.exe', linkerIdentity),
     cargo:run('cargo',['--version']).trim(),
-    sdk:sdkInfo(),
+    sdk:windowsSdkInfo(),
     os:{platform:process.platform, architecture:arch(), release:release(), version:osVersion(), runner:process.env.RUNNER_OS ?? null,
       image:process.env.ImageOS ?? null, imageVersion:process.env.ImageVersion ?? null},
   } : {}),
@@ -333,7 +326,7 @@ writeFileSync(join(stage,'README.md'),`# Seshat native payload\n\nTarget: ${targ
 copyFileSync(join(repo,'LICENSE'),join(stage,'LICENSE'));
 writeFileSync(join(stage,'BUILD.json'),JSON.stringify(build,null,2)+'\n');
 writeFileSync(join(stage,'THIRD_PARTY_NOTICES.txt'),noticeText);
-const [packed] = JSON.parse(runNpm(['pack',stage,'--json','--pack-destination',work], work));
+const packed = packNpm(stage, work, nativeWindows ? null : packagedBinary);
 assert.deepEqual(packed.files.map(f => f.path).sort(), ['BUILD.json','LICENSE','README.md','THIRD_PARTY_NOTICES.txt',packagedBinary,'package.json'].sort());
 const tarball = join(work,packed.filename);
 assertArchiveNotice(tarball, noticeText);

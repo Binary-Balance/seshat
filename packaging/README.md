@@ -1,6 +1,8 @@
 # Seshat release packaging
 
 The release crate in `crates/seshat/Cargo.toml` owns version `0.1.0`.
+Packaging reads its literal `[package].version`; workspace inheritance is not
+supported. Dependency versions cannot supply a missing package version.
 `pack.mjs` builds one native payload for the current platform. `release.mjs`
 stages the user-facing `@binary-balance/seshat` package and the five exact
 optional native package names:
@@ -79,6 +81,20 @@ those validated inputs unchanged; it never fills in missing build evidence.
 Use a clean checkout of the build's source revision for final release evidence.
 Platform build and installation proofs remain required before publication.
 
+Linux and macOS can stage all five native targets from their validated build
+inputs. Windows can pack the entry package and Windows native payload only;
+packed Unix native inputs are rejected before output is created. `--layout-only`
+can inspect every target on any of these hosts. Both packers check actual
+tarball headers for mode `0755` on Unix native binaries and the entry launcher,
+including the launcher packed on Windows. If npm emits the entry launcher as
+`0644`, staging changes only that tar header to `0755` and updates its checksum,
+then records metadata from the final archive bytes. Other incorrect executable
+modes are rejected. Native payload bytes and build provenance are unchanged.
+
+Both Windows build probes retain the SDK version selected by the environment.
+When that version is absent, they choose the numerically newest dotted version
+directory under the SDK's `Lib`, ignoring unrelated names and files.
+
 The output must be new or empty, and a separate manifest path must not already
 exist. Staging refuses reuse without deleting anything, including when the next
 run supplies fewer targets. Choose a new output directory for a rerun.
@@ -92,7 +108,9 @@ archive records.
 
 Native CI compares the original packer's archive with the staged native archive
 using `node packaging/metadata.test.mjs <pack archive> <release archive>`.
-The comparison covers manifest fields, packed file lists and payload bytes.
+The comparison covers manifest fields, packed file lists, payload bytes and
+Unix executable modes. The synthetic metadata fixtures are not native build
+evidence.
 Canonical release archives and their recorded hashes remain the publication
 inputs; staging is not a substitute for testing those exact archives.
 
