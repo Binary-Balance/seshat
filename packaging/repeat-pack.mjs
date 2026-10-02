@@ -2,12 +2,12 @@
 import assert from 'node:assert/strict';
 import {execFileSync, spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
+import {closeSync, existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
 import {arch, release, version as osVersion} from 'node:os';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {runNpm} from './npm.mjs';
-import {retainRepeatFailure} from './repeat-pack-evidence.mjs';
+import {createPackWork, retainRepeatFailure} from './repeat-pack-evidence.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..');
@@ -19,7 +19,6 @@ assert.ok(!process.argv[2].startsWith('-') ||
 const output = process.env.SESHAT_REPEAT_OUTPUT;
 assert.ok(output, 'SESHAT_REPEAT_OUTPUT is required');
 const outputPath = resolve(output);
-const failureDirectory = join(dirname(outputPath), 'repeat-pack-failure');
 const packArgs = [process.argv[2]];
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const tarCommand = process.platform === 'win32' ? 'tar.exe' : 'tar';
@@ -28,20 +27,27 @@ const probe = (command, args = [], identity = null) => {
   const result = spawnSync(command, args, {cwd:repo, encoding:'utf8', maxBuffer:128 * 1024});
   const text = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
   const version = identity ? text.match(identity)?.[0] ?? null : text.split(/\r?\n/, 1)[0];
-  assert.ok(!result.error && text && version, `${command} is unavailable or is not the expected MSVC tool`);
+  assert.ok(!result.error && text && version, `${command} is unavailable or is not the expected MSVC tool: ${result.error?.message ?? text}`);
   return {command, version, status:result.status};
 };
 const msvcIdentity = /^Microsoft \(R\) C\/C\+\+ Optimizing Compiler Version .+ for x64\b/m;
 const linkerIdentity = /^Microsoft \(R\) Incremental Linker Version \S+/m;
 const sourceCommit = run('git', ['rev-parse', 'HEAD']);
 assert.equal(run('git', ['status', '--porcelain']), '', 'repeat proof requires a clean source tree');
+const attempts = join(dirname(outputPath), 'repeat-pack-attempts');
+mkdirSync(attempts, {recursive:true});
+const failureDirectory = mkdtempSync(join(attempts, 'attempt-'));
+const ownedWork = [];
+const recordOwnership = () => writeFileSync(join(failureDirectory, 'owned-work.json'),
+  JSON.stringify({pid:process.pid, attempt:failureDirectory, ownedWork}, null, 2) + '\n');
+recordOwnership();
 const nativeWindows = packArgs[0] === '--native-windows';
 
 const inputHashes = !packArgs[0].startsWith('--')
   ? ['libc6.deb', 'libc6-dev.deb', 'libgcc-s1.deb'].map(file => ({file, sha256:sha256(readFileSync(join(resolve(packArgs[0]), file)))}))
   : [];
 mkdirSync(join(repo, 'work'), {recursive:true});
-const work = mkdtempSync(join(repo, 'work/repeat-pack-'));
+const work = failureDirectory;
 const toolchain = {
   node: process.version,
   npm: runNpm(['--version'], work).trim(),
@@ -117,11 +123,23 @@ function inspect(result) {
 try {
   for (const index of [0, 1]) {
     const resultPath = join(work, `result-${index}.json`);
-    execFileSync(process.execPath, [join(here, 'pack.mjs'), ...packArgs], {
-      cwd:repo,
-      env:{...process.env, SESHAT_PACK_RESULT:resultPath},
-      stdio:'inherit',
-    });
+    const ownership = createPackWork(join(repo, 'work'));
+    ownedWork.push(ownership);
+    recordOwnership();
+    const logPath = join(work, `pack-${index}.log`);
+    const log = openSync(logPath, 'w');
+    try {
+      execFileSync(process.execPath, [join(here, 'pack.mjs'), ...packArgs], {
+        cwd:repo,
+        env:{...process.env, SESHAT_PACK_RESULT:resultPath, SESHAT_PACK_OWNERSHIP:JSON.stringify(ownership)},
+        stdio:['ignore', log, log],
+      });
+    } catch (error) {
+      console.error(readFileSync(logPath, 'utf8').slice(-8192));
+      throw error;
+    } finally {
+      closeSync(log);
+    }
     results.push(JSON.parse(readFileSync(resultPath, 'utf8')));
   }
 
@@ -152,12 +170,13 @@ try {
     validation:{passed:true, reason:'two clean packer invocations produced identical native binary and archive bytes'},
   };
   mkdirSync(dirname(outputPath), {recursive:true});
+  writeFileSync(join(work, 'repeat-pack.json'), JSON.stringify(proof, null, 2) + '\n');
   writeFileSync(outputPath, JSON.stringify(proof, null, 2) + '\n');
   console.log(`Repeat pack proof passed: ${outputPath}`);
 } catch (error) {
   retainRepeatFailure({
-    repo,
     failureDirectory,
+    ownedWork,
     sourceCommit,
     host:process.platform === 'win32'
       ? {platform:process.platform, arch:process.arch, windows:host, glibc}

@@ -2,11 +2,12 @@
 import assert from 'node:assert/strict';
 import {execFileSync, spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
-import {chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, statSync, symlinkSync, unlinkSync, writeFileSync} from 'node:fs';
+import {chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, readlinkSync, statSync, symlinkSync, unlinkSync, writeFileSync} from 'node:fs';
 import {arch, release, version as osVersion} from 'node:os';
 import {dirname, isAbsolute, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {runNpm} from './npm.mjs';
+import {createPackWork, finishPack, ownedPackWork} from './repeat-pack-evidence.mjs';
 import {assertArchiveNotice, loadRuntimeNoticeAssets, renderRuntimeNotice, validateRustToolchain} from './runtime-notice-check.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -65,7 +66,13 @@ const targetConfig = nativeArm64
       ? {key:'win32-x64', packageName:'@binary-balance/seshat-win32-x64', target:'x86_64-pc-windows-msvc', cpu:'x64', os:'win32', peMachine:0x8664, binaryName:'seshat.exe'}
       : {key:'linux-x64', packageName:'@binary-balance/seshat-linux-x64', target:'x86_64-unknown-linux-gnu', cpu:'x64', os:'linux', elfMachine:62, glibcCeiling:'2.31'};
 mkdirSync(join(repo,'work'),{recursive:true});
-const work = mkdtempSync(join(repo,'work/npm-pack-'));
+const ownership = process.env.SESHAT_PACK_OWNERSHIP
+  ? JSON.parse(process.env.SESHAT_PACK_OWNERSHIP) : createPackWork(join(repo, 'work'));
+const work = ownedPackWork(ownership);
+if (process.env.SESHAT_PACK_RESULT) {
+  writeFileSync(`${resolve(process.env.SESHAT_PACK_RESULT)}.work.json`, JSON.stringify(ownership, null, 2) + '\n');
+}
+console.error(`Pack work: ${work}`);
 const target = join(work,'target');
 // Keep Cargo build scheduling serial; the repeat proof still checks actual bytes.
 const env = {...process.env, CARGO_BUILD_JOBS:'1', CARGO_TARGET_DIR:target, ...(nativeMacos ? {MACOSX_DEPLOYMENT_TARGET:'15.0'} : {})};
@@ -93,7 +100,7 @@ const toolInfo = (command, identity) => {
   const result = spawnSync(command, [], {encoding:'utf8', maxBuffer:128 * 1024});
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
   const version = output.match(identity)?.[0] ?? null;
-  assert.ok(!result.error && output && version, `${command} is unavailable or is not the expected MSVC tool`);
+  assert.ok(!result.error && output && version, `${command} is unavailable or is not the expected MSVC tool: ${result.error?.message ?? output}`);
   return {command, version, status:result.status};
 };
 const msvcIdentity = /^Microsoft \(R\) C\/C\+\+ Optimizing Compiler Version .+ for x64\b/m;
@@ -339,6 +346,5 @@ const result = {packageName:targetConfig.packageName, version, target:targetConf
   notice:{sha256:sha256(noticeText), bytes:noticeText.length},
   // The standalone route deliberately reuses npm's deterministic payload. Its verifier strips package/ before running it.
   standalone:{path:tarball, sha256:tarballSha256, bytes:packed.size}};
-writeFileSync(join(work,'result.json'),JSON.stringify(result,null,2)+'\n');
-if (process.env.SESHAT_PACK_RESULT) writeFileSync(resolve(process.env.SESHAT_PACK_RESULT),JSON.stringify(result,null,2)+'\n');
+finishPack(ownership, result, process.env.SESHAT_PACK_RESULT);
 console.log(JSON.stringify(result,null,2));

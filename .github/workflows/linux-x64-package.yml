@@ -236,6 +236,7 @@ jobs:
           path: |
             work/x64/preflight.json
             work/x64/package-result.json
+            work/x64/package-result.json.work.json
             work/x64/node-*
             work/x64/release.json
             work/x64/release.log
@@ -263,7 +264,7 @@ jobs:
             work/x64/rust-tests.log
             work/x64/repeat-pack.json
             work/x64/repeat-pack.log
-            work/x64/repeat-pack-failure/**
+            work/x64/repeat-pack-attempts/**
             work/x64/pack.log
             work/x64/summary.json
           if-no-files-found: error
