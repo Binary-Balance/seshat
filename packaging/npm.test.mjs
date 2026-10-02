@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
 import {execFileSync, spawnSync} from 'node:child_process';
-import {existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
+import {existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {dirname, join, relative, resolve} from 'node:path';
 import test from 'node:test';
 import {fileURLToPath} from 'node:url';
-import {assertArchiveExecutable, runNpm} from './npm.mjs';
+import {assertArchiveExecutable, normalizeLauncherMode, packNpm, runNpm} from './npm.mjs';
+import {createHash} from 'node:crypto';
+import {gunzipSync} from 'node:zlib';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const tarCommand = process.platform === 'win32' ? 'tar.exe' : 'tar';
@@ -74,4 +76,37 @@ test('mistyped pack modes fail before tools or build setup', () => {
       assert.match(child.stderr, /unknown pack mode:/);
     }
   }
+});
+
+test('a 0644 entry launcher is normalized without changing payloads or reporting stale archive metadata', () => {
+  const root = mkdtempSync(join(tmpdir(), 'seshat-launcher-mode-'));
+  try {
+    const stage = join(root, 'stage'); mkdirSync(join(stage, 'bin'), {recursive:true});
+    const launcher = 'bin/seshat.mjs';
+    // Omit bin so npm produces 0644 on Linux too, reproducing Windows' missed-bin result.
+    writeFileSync(join(stage, 'package.json'), JSON.stringify({name:'seshat-mode-fixture', version:'1.0.0', files:[launcher]}));
+    writeFileSync(join(stage, launcher), '#!/usr/bin/env node\nprocess.exit(0);\n');
+    const [original] = JSON.parse(runNpm(['pack', stage, '--json', '--pack-destination', root], root));
+    const archive = join(root, original.filename);
+    assert.throws(() => assertArchiveExecutable(archive, launcher), /must have mode 0755/);
+    const before = gunzipSync(readFileSync(archive));
+    const packed = packNpm(stage, root, launcher);
+    assertArchiveExecutable(archive, launcher);
+    const bytes = readFileSync(archive);
+    const after = gunzipSync(bytes);
+    const headerOffset = before.indexOf(Buffer.from('package/bin/seshat.mjs'));
+    assert.ok(headerOffset >= 0 && headerOffset % 512 === 0);
+    // The two header fields are the entire uncompressed change.
+    for (const [start, end] of [[100, 108], [148, 156]]) {
+      before.copy(after, headerOffset + start, headerOffset + start, headerOffset + end);
+    }
+    assert.deepEqual(after, before);
+    assert.equal(packed.size, bytes.length);
+    assert.equal(packed.shasum, createHash('sha1').update(bytes).digest('hex'));
+    assert.equal(packed.integrity, `sha512-${createHash('sha512').update(bytes).digest('base64')}`);
+    assert.equal(packed.files.find(file => file.path === launcher).mode, 0o755);
+    assert.equal(packed.unpackedSize, original.unpackedSize);
+    assert.equal(normalizeLauncherMode(archive), false);
+    assert.deepEqual(readFileSync(archive), bytes, 'already executable archives retain their exact bytes');
+  } finally { rmSync(root, {recursive:true, force:true}); }
 });

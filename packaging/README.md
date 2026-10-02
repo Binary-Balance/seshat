@@ -86,8 +86,10 @@ inputs. Windows can pack the entry package and Windows native payload only;
 packed Unix native inputs are rejected before output is created. `--layout-only`
 can inspect every target on any of these hosts. Both packers check actual
 tarball headers for mode `0755` on Unix native binaries and the entry launcher,
-including the launcher packed on Windows. They reject incorrect modes without
-rewriting archives or their provenance.
+including the launcher packed on Windows. If npm emits the entry launcher as
+`0644`, staging changes only that tar header to `0755` and updates its checksum,
+then records metadata from the final archive bytes. Other incorrect executable
+modes are rejected. Native payload bytes and build provenance are unchanged.
 
 Both Windows build probes retain the SDK version selected by the environment.
 When that version is absent, they choose the numerically newest dotted version

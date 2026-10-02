@@ -6,7 +6,7 @@ import {chmodSync, copyFileSync, mkdirSync, readFileSync, readdirSync, readlinkS
 import {arch, release, version as osVersion} from 'node:os';
 import {dirname, isAbsolute, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {assertArchiveExecutable, runNpm} from './npm.mjs';
+import {packNpm} from './npm.mjs';
 import {packageVersion, windowsSdkInfo} from './metadata.mjs';
 import {createPackWork, finishPack, ownedPackWork} from './repeat-pack-evidence.mjs';
 import {assertArchiveNotice, loadRuntimeNoticeAssets, renderRuntimeNotice, validateRustToolchain} from './runtime-notice-check.mjs';
@@ -326,11 +326,10 @@ writeFileSync(join(stage,'README.md'),`# Seshat native payload\n\nTarget: ${targ
 copyFileSync(join(repo,'LICENSE'),join(stage,'LICENSE'));
 writeFileSync(join(stage,'BUILD.json'),JSON.stringify(build,null,2)+'\n');
 writeFileSync(join(stage,'THIRD_PARTY_NOTICES.txt'),noticeText);
-const [packed] = JSON.parse(runNpm(['pack',stage,'--json','--pack-destination',work], work));
+const packed = packNpm(stage, work, nativeWindows ? null : packagedBinary);
 assert.deepEqual(packed.files.map(f => f.path).sort(), ['BUILD.json','LICENSE','README.md','THIRD_PARTY_NOTICES.txt',packagedBinary,'package.json'].sort());
 const tarball = join(work,packed.filename);
 assertArchiveNotice(tarball, noticeText);
-if (!nativeWindows) assertArchiveExecutable(tarball, packagedBinary);
 const tarballSha256 = sha256(readFileSync(tarball));
 const result = {packageName:targetConfig.packageName, version, target:targetConfig.target,
   tarball, tarballSha256, proofBinary:join(target,triple,`release/seshat-proofs${nativeWindows ? '.exe' : ''}`),

@@ -5,7 +5,7 @@ import {createHash} from 'node:crypto';
 import {chmodSync, copyFileSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, statSync, writeFileSync} from 'node:fs';
 import {basename, dirname, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {assertArchiveExecutable, runNpm} from './npm.mjs';
+import {packNpm} from './npm.mjs';
 import {packageVersion} from './metadata.mjs';
 import {loadRuntimeNoticeAssets, renderRuntimeNotice} from './runtime-notice-check.mjs';
 
@@ -70,12 +70,10 @@ const copy = (source, destination) => {
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 const portable = path => relative(repo, path).replaceAll('\\', '/') || '.';
 const npm = (stage, destination, files, executable) => {
-  const result = JSON.parse(runNpm(['pack', stage, '--json', '--pack-destination', destination], destination));
-  assert.equal(result.length, 1);
-  assert.deepEqual(result[0].files.map(file => file.path).sort(), [...files, 'package.json'].sort(),
+  const result = packNpm(stage, destination, executable);
+  assert.deepEqual(result.files.map(file => file.path).sort(), [...files, 'package.json'].sort(),
     `packed file list differs from the declared release payload: ${stage}`);
-  if (executable) assertArchiveExecutable(join(destination, result[0].filename), executable);
-  return result[0];
+  return result;
 };
 const sourceRevision = execFileSync('git', ['rev-parse', 'HEAD'], {
   cwd: repo,
