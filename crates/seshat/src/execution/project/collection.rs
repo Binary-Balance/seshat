@@ -1008,21 +1008,18 @@ impl CapturedProject {
         let mut outcomes = Vec::new();
         for (source_index, fact) in facts.iter().enumerate() {
             if let Ok(analysis) = fact {
-                for definition in analysis.json()["mutants"].as_array().unwrap() {
-                    let local_id = definition["id"].as_u64().unwrap() as usize;
-                    let mut row = definition.clone();
-                    row["id"] = json!(plan.len());
-                    row["localId"] = json!(local_id);
-                    row["path"] = json!(stable_path(&self.sources[source_index].0));
-                    row["setups"] = json!(
-                        self.config
-                            .setups
-                            .iter()
-                            .map(|setup| json!({"name":setup.name,"state":"not-run"}))
-                            .collect::<Vec<_>>()
-                    );
-                    outcomes.push(row);
-                    plan.push((source_index, local_id));
+                for comparison in &analysis.comparisons {
+                    for (alternative, replacement) in comparison.replacements.iter().enumerate() {
+                        let local_id = comparison.first_id + alternative;
+                        let row = json!({"id":plan.len(),"localId":local_id,
+                            "offset":comparison.offset,"original":comparison.original,
+                            "replacement":replacement,"path":stable_path(&self.sources[source_index].0),
+                            "setups":self.config.setups.iter()
+                                .map(|setup| json!({"name":setup.name,"state":"not-run"}))
+                                .collect::<Vec<_>>()});
+                        outcomes.push(row);
+                        plan.push((source_index, local_id));
+                    }
                 }
             }
         }
@@ -1593,6 +1590,61 @@ mod tests {
             .unwrap();
         assert_eq!(result.state, TestState::Passed, "{}", result.details);
         drop(evidence);
+        drop(captured);
+        fixture.assert_clean();
+    }
+
+    #[test]
+    fn mutation_plan_preserves_analysis_ids_and_report_metadata() {
+        let fixture = super::super::tests::Fixture::new();
+        let mut captured = fixture.capture().unwrap();
+        captured.sources = vec![
+            (
+                "src/first.ts".into(),
+                "export const first = (a: number, b: number) => (a < b) + (a === b);".into(),
+            ),
+            ("src/broken.ts".into(), "export const broken = ;".into()),
+            (
+                "src/second.ts".into(),
+                "export function second(a: number) { return a > 0; }".into(),
+            ),
+        ];
+        let facts: Vec<_> = captured
+            .sources
+            .iter()
+            .map(|(path, source)| Analysis::inspect(&stable_path(path), source))
+            .collect();
+        assert!(facts[1].is_err());
+        let progress = Progress {
+            enabled: false,
+            started: Instant::now(),
+        };
+        let result = captured.mutate(
+            &facts,
+            &[TestState::Passed],
+            Path::new("unused"),
+            false,
+            &progress,
+            false,
+        );
+        assert_eq!(result["planned"], 5);
+        assert_eq!(result["jobsAttempted"], 0);
+        let outcomes = result["outcomes"].as_array().unwrap();
+        for (id, (source_index, local_id)) in [(0, 0), (0, 1), (0, 2), (2, 0), (2, 1)]
+            .into_iter()
+            .enumerate()
+        {
+            let row = &outcomes[id];
+            let definition = &facts[source_index].as_ref().unwrap().json()["mutants"][local_id];
+            assert_eq!(row["id"], id);
+            assert_eq!(row["localId"], local_id);
+            assert_eq!(row["path"], stable_path(&captured.sources[source_index].0));
+            for key in ["offset", "original", "replacement"] {
+                assert_eq!(row[key], definition[key], "mutant {id}: {key}");
+            }
+            assert_eq!(row["setups"], json!([{"name":"unit","state":"not-run"}]));
+            assert_eq!(row["verdict"], "not-run");
+        }
         drop(captured);
         fixture.assert_clean();
     }
