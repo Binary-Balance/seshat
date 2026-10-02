@@ -104,6 +104,29 @@ function assertAutocrlfCheckout(repo) {
     execFileSync('git', ['-C', checkout, 'config', 'core.autocrlf', 'true'], {stdio:['ignore', 'ignore', 'inherit']});
     execFileSync('git', ['-C', checkout, 'checkout', '--force', 'HEAD'], {stdio:['ignore', 'ignore', 'inherit']});
     loadRuntimeNoticeAssets(join(checkout, 'packaging/runtime-notices/rust-1.98.1'));
+    for (const path of [
+      '.gitattributes', '.github/workflows/windows-package.yml', 'crates/seshat/Cargo.lock',
+      'packaging/pack.mjs', 'packaging/runtime-notice-check.mjs', 'packaging/OXC-LICENSE',
+      'packaging/runtime-notices/rust-1.98.1/provenance.json', 'LICENSE',
+      'packages/seshat/README.md', 'packages/seshat/bin/seshat.mjs',
+    ]) {
+      const committed = execFileSync('git', ['-C', repo, 'show', `HEAD:${path}`]);
+      assert.ok(readFileSync(join(checkout, path)).equals(committed),
+        `autocrlf checkout changed committed bytes: ${path}`);
+    }
+
+    // Text-like bytes ensure this checks the archive policy, not binary detection.
+    const opaque = Buffer.from('archive byte-preservation control\r\n');
+    for (const path of ['archive-fixture.tgz', 'archive-fixture.tar.gz']) {
+      writeFileSync(join(checkout, path), opaque);
+      execFileSync('git', ['-C', checkout, 'add', '--', path]);
+      assert.ok(execFileSync('git', ['-C', checkout, 'show', `:${path}`]).equals(opaque),
+        `archive bytes changed on add: ${path}`);
+      writeFileSync(join(checkout, path), 'changed');
+      execFileSync('git', ['-C', checkout, 'checkout-index', '--force', '--', path]);
+      assert.ok(readFileSync(join(checkout, path)).equals(opaque),
+        `archive bytes changed on checkout: ${path}`);
+    }
   } finally {
     rmSync(root, {recursive:true, force:true});
   }

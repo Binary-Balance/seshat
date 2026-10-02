@@ -1,3 +1,7 @@
-/LICENSE text eol=lf
-/packages/seshat/README.md text eol=lf
-/packages/seshat/bin/seshat.mjs text eol=lf
+# Packaging inputs must have the same bytes with core.autocrlf enabled.
+* text=auto eol=lf
+
+# Archives and this upstream licence retain their original bytes.
+*.tgz binary
+*.tar.gz binary
+/packaging/OXC-LICENSE -text
