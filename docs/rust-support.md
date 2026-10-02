@@ -55,9 +55,9 @@ evidence; existing release manifests do not cover changed inputs.
 
 ## Advisory scan
 
-[Rust dependency advisories](../.github/workflows/rust-advisories.yml) scans
-`crates/seshat/Cargo.lock` on relevant pull requests and pushes to `main`, every
-Monday at 03:17 UTC, and by manual dispatch. It uses the official
+[Rust dependency advisories](../.github/workflows/rust-advisories.yml) checks
+`crates/seshat/Cargo.lock` against RustSec on relevant pull requests and pushes
+to `main`, every Monday at 03:17 UTC, and by manual dispatch. It uses the official
 [cargo-audit 0.22.2 release](https://github.com/rustsec/rustsec/releases/tag/cargo-audit%2Fv0.22.2)
 x86_64 Linux musl binary archive, verified against SHA-256
 `7fb9497f8594b389e5fce5ef9b92db08432996895b2e0c5a0167a69ed445c428`.
@@ -70,24 +70,25 @@ packaged lockfile, then run from the repository root:
 cargo install cargo-audit --version '=0.22.2' --locked
 mkdir -p work
 set -o pipefail
-cargo audit --file crates/seshat/Cargo.lock --deny warnings --json \
+cargo audit --file crates/seshat/Cargo.lock --no-yanked --deny warnings --json \
   | tee work/rust-advisories.json
 ```
 
 The workflow fetches the current RustSec database into a fresh directory.
 Known vulnerabilities fail the check; `--deny warnings` also fails on reported
-informational advisories and yanked crates. Network, database and tool failures
-are failures, not clean results. The retained JSON identifies the database
-commit and findings. Tool selection is fixed; findings can change as RustSec
-and registry data change. Review results against that run's database revision.
+informational advisories. RustSec database fetch and tool failures fail the check.
+`--no-yanked` excludes registry yank checks because cargo-audit 0.22.2 does not
+reliably fail on registry lookup errors. The retained JSON identifies the
+database commit and findings. Tool selection is fixed; findings can change as
+RustSec data change. Review results against that run's database revision.
 The [upstream tool documentation](https://github.com/rustsec/rustsec/blob/cargo-audit/v0.22.2/cargo-audit/README.md)
 describes its scope and advisory handling.
 
 The scan includes the whole release lockfile, with build, proc-macro and
 target-specific crates. It does not scan the separate historical
 `benchmarks/rust` experiment, npm packages, the Rust standard library or system
-libraries. A clean report means no findings in the queried advisory and registry
-data, not proof that the code is free of vulnerabilities.
+libraries. A clean report means no findings in the queried RustSec data, not
+proof that the code is free of vulnerabilities.
 
 For a finding, read the advisory and trace the locked dependency to its callers
 and enabled features. Prefer a tested dependency update. If an exception is
