@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {execFileSync, spawnSync} from 'node:child_process';
-import {existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
+import {existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {dirname, join, relative, resolve} from 'node:path';
 import test from 'node:test';
@@ -10,7 +10,7 @@ import {runNpm} from './npm.mjs';
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const tarCommand = process.platform === 'win32' ? 'tar.exe' : 'tar';
 
-test('npm and release packing preserve literal paths and ignore ambient npm settings', () => {
+test('npm packing preserves literal paths and ignores ambient npm settings', () => {
   const root = mkdtempSync(join(tmpdir(), 'seshat npm & %SESHAT_NPM_PATH%=test-'));
   const stage = join(root, 'package & %SESHAT_NPM_PATH%=literal');
   const output = join(root, 'output & %SESHAT_NPM_PATH%=literal');
@@ -46,29 +46,6 @@ test('npm and release packing preserve literal paths and ignore ambient npm sett
     assert.equal(execFileSync(tarCommand, ['-xOf', join(output, packed.filename), 'package/payload.txt'],
       {encoding:'utf8'}), 'literal fixture bytes\n');
     assert.equal(existsSync(ambient.npm_config_cache), false);
-
-    const binary = join(root, 'binary &= %SESHAT_NPM_PATH%');
-    const notices = join(root, 'notices &= %SESHAT_NPM_PATH%.txt');
-    const buildInfo = join(root, 'build &= %SESHAT_NPM_PATH%.json');
-    writeFileSync(binary, 'synthetic native payload');
-    writeFileSync(notices, 'synthetic notice fixture\n');
-    writeFileSync(buildInfo, JSON.stringify({sourceCommit:'a'.repeat(40), fixture:true}));
-    const releaseOutput = join(root, 'release &= %SESHAT_NPM_PATH%');
-    execFileSync(process.execPath, [join(repo, 'packaging/release.mjs'),
-      '--output', releaseOutput, '--binary', `linux-x64=${binary}`,
-      '--notices', `linux-x64=${notices}`, '--build-info', `linux-x64=${buildInfo}`,
-    ], {cwd:root, stdio:['ignore', 'pipe', 'inherit']});
-    const release = JSON.parse(readFileSync(join(releaseOutput, 'release.json'), 'utf8'));
-    const native = release.native.find(target => target.key === 'linux-x64');
-    const archive = join(releaseOutput, native.archive.file);
-    assert.equal(execFileSync(tarCommand, ['-xOf', archive, 'package/bin/seshat'], {encoding:'utf8'}),
-      readFileSync(binary, 'utf8'));
-    assert.equal(execFileSync(tarCommand, ['-xOf', archive, 'package/THIRD_PARTY_NOTICES.txt'], {encoding:'utf8'}),
-      readFileSync(notices, 'utf8'));
-    const build = JSON.parse(execFileSync(tarCommand, ['-xOf', archive, 'package/BUILD.json'], {encoding:'utf8'}));
-    assert.equal(build.fixture, true);
-    assert.equal(build.sourceCommit, 'a'.repeat(40));
-    assert.ok(existsSync(join(releaseOutput, release.entry.archive.file)));
 
     if (process.platform === 'win32') {
       // A synthetic npm identity checks dispatch through npm_execpath; real npm ran above.

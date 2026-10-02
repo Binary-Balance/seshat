@@ -90,6 +90,7 @@ jobs:
             --manifest work/arm64/release.json 2>&1 | tee work/arm64/release.log
           entry_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).entry.archive.file);' work/arm64/release.json)"
           native_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).native.find(target => target.key === "linux-arm64").archive.file);' work/arm64/release.json)"
+          node packaging/metadata.test.mjs "$native_tarball" "work/arm64/release/$native_archive"
           cp "work/arm64/release/$entry_archive" work/arm64/seshat-entry.tgz
           cp "work/arm64/release/$native_archive" work/arm64/seshat-linux-arm64-release.tgz
       - name: Retain npm payload for both installation routes

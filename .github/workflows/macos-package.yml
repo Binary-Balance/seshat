@@ -107,6 +107,7 @@ jobs:
             --manifest "work/macos/${{ matrix.cpu }}/release.json" 2>&1 | tee "work/macos/${{ matrix.cpu }}/release.log"
           entry_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).entry.archive.file);' "work/macos/${{ matrix.cpu }}/release.json")"
           native_archive="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).native.find(target => target.key === `darwin-${process.argv[2]}`).archive.file);' "work/macos/${{ matrix.cpu }}/release.json" "${{ matrix.cpu }}")"
+          node packaging/metadata.test.mjs "$native_tarball" "work/macos/${{ matrix.cpu }}/release/$native_archive"
           cp "work/macos/${{ matrix.cpu }}/release/$entry_archive" "work/macos/${{ matrix.cpu }}/seshat-entry.tgz"
           cp "work/macos/${{ matrix.cpu }}/release/$native_archive" "work/macos/${{ matrix.cpu }}/seshat-darwin-${{ matrix.cpu }}-release.tgz"
       - name: Verify npm installation

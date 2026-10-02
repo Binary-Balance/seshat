@@ -168,6 +168,8 @@ jobs:
           $release = Get-Content work/windows/release.json -Raw | ConvertFrom-Json
           Copy-Item (Join-Path work/windows/release $release.entry.archive.file) work/windows/seshat-entry.tgz
           $nativeArchive = ($release.native | Where-Object key -eq 'win32-x64').archive.file
+          node packaging/metadata.test.mjs $result.tarball (Join-Path work/windows/release $nativeArchive)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Copy-Item (Join-Path work/windows/release $nativeArchive) work/windows/seshat-win32-x64-release.tgz
       - name: Install locked Jest/Expo fixture dependencies
         shell: pwsh
