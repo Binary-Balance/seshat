@@ -22,12 +22,17 @@ on:
       - docs/linux-arm64-package.md
   workflow_dispatch:
 
+# Supersede older PR checks; keep each push and manual evidence run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
 defaults:
   run:
-    shell: bash --noprofile --norc -eo pipefail {0}
+    shell: bash --noprofile --norc -euo pipefail {0}
 
 jobs:
   package:
@@ -36,6 +41,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -55,9 +62,10 @@ jobs:
           node benchmarks/proofs/linux-arm64-summary.mjs --self-check
           node packaging/repeat-pack-failure-check.mjs
       - name: Fetch locked dependencies
+        id: dependencies
         run: |
-          npm ci --prefix benchmarks
-          npm ci --prefix benchmarks/proofs
+          npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund
+          npm ci --prefix benchmarks/proofs --ignore-scripts --no-audit --no-fund
           cargo fetch --locked --manifest-path crates/seshat/Cargo.toml
       - name: Run native Rust tests
         run: |
@@ -71,11 +79,13 @@ jobs:
         run: |
           node packaging/repeat-pack.mjs --native-arm64 2>&1 | tee work/arm64/repeat-pack.log
       - name: Build native ARM64 package
+        id: build
         env:
           SESHAT_PACK_RESULT: work/arm64/package-result.json
         run: |
           node packaging/pack.mjs --native-arm64 2>&1 | tee work/arm64/pack.log
       - name: Stage release entry and native packages
+        id: stage
         run: |
           mkdir -p work/arm64/release
           native_tarball="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/arm64/package-result.json")).tarball);')"
@@ -94,6 +104,8 @@ jobs:
           cp "work/arm64/release/$entry_archive" work/arm64/seshat-entry.tgz
           cp "work/arm64/release/$native_archive" work/arm64/seshat-linux-arm64-release.tgz
       - name: Retain npm payload for both installation routes
+        id: payload
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: |
           tarball="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/arm64/package-result.json")).tarball);')"
           standalone="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/arm64/package-result.json")).standalone.path);')"
@@ -105,6 +117,7 @@ jobs:
           test "$(sha256sum work/arm64/seshat-linux-arm64-standalone.tar.gz | cut -d' ' -f1)" = \
             "$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/arm64/package-result.json")).standalone.sha256);')"
       - name: Verify npm installation
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.stage.outcome == 'success' && steps.payload.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/arm64/npm-package.json
           SESHAT_EXAMPLES_OUTPUT: work/arm64/public-consumer-examples.json
@@ -114,6 +127,7 @@ jobs:
           BINARY_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/arm64/package-result.json")).binary);')"
           SESHAT_ENTRY_TARBALL_SHA256="$ENTRY_SHA256" SESHAT_NATIVE_TARBALL_SHA256="$NATIVE_SHA256" SESHAT_NATIVE_BINARY_SHA256="$BINARY_SHA256" node benchmarks/proofs/npm-package.mjs work/arm64/seshat-entry.tgz work/arm64/seshat-linux-arm64-release.tgz 2>&1 | tee work/arm64/npm-package.log
       - name: Verify standalone installation
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/arm64/standalone.json
         run: |
@@ -122,17 +136,24 @@ jobs:
           STANDALONE_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/arm64/package-result.json")).standalone.sha256);')"
           BINARY_SHA256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/arm64/package-result.json")).binary);')"
           SESHAT_PROOF_BINARY="$PROOF_BINARY" SESHAT_STANDALONE_SHA256="$STANDALONE_SHA256" SESHAT_BINARY_SHA256="$BINARY_SHA256" node benchmarks/proofs/standalone.mjs work/arm64/seshat-linux-arm64-standalone.tar.gz "$PROOF_BINARY" 2>&1 | tee work/arm64/standalone.log
+      # Repeat packing requires a clean checkout; install this fixture afterwards.
+      - name: Install locked Jest/Expo fixture dependencies
+        id: jest_dependencies
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
+        run: |
+          npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
       - name: Verify installed Jest/Expo runner
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/arm64/jest-expo-check.json
         run: |
-          npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
           node benchmarks/proofs/jest-expo-check.mjs \
             --deps "$GITHUB_WORKSPACE/benchmarks/proofs/fixtures/jest-expo" \
             --tarball work/arm64/seshat-linux-arm64.tgz \
             --cases normal-1,assertion-kill,survivor,before-all \
             2>&1 | tee work/arm64/jest-expo-check.log
       - name: Verify installed Vitest runner
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/arm64/vitest-check.json
         run: |
@@ -142,6 +163,7 @@ jobs:
             --cases stack,assertion,survived,before-all \
             2>&1 | tee work/arm64/vitest-check.log
       - name: Verify native lifecycle
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         env:
           SESHAT_DEBUG_CLEANUP: '1'
           SESHAT_PROOF_OUTPUT: work/arm64/lifecycle.json
@@ -149,6 +171,7 @@ jobs:
           PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/arm64/package-result.json")).proofBinary);')"
           SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/lifecycle.mjs 2>&1 | tee work/arm64/lifecycle.log
       - name: Verify Unix supervision limits
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/arm64/unix-supervision.json
         run: |
@@ -156,26 +179,64 @@ jobs:
           PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/arm64/package-result.json")"
           SESHAT_PROOF_BINARY="$PROOF_BINARY" python3 benchmarks/proofs/unix-supervision.py 2>&1 | tee "work/arm64/unix-supervision.log"
       - name: Verify proof execute cancellation
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/arm64/execute-cancellation.json
         run: |
           PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/arm64/package-result.json")"
           SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/execute-cancellation.mjs 2>&1 | tee "work/arm64/execute-cancellation.log"
       - name: Set up latest supported Node runtime
+        id: latest_node
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24.x
           check-latest: true
       - name: Verify latest Node 24 compatibility
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.latest_node.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
         run: node benchmarks/proofs/runner-compatibility.mjs "work/arm64/package-result.json"
       - name: Write portable summary
         if: always()
-        run: node benchmarks/proofs/linux-arm64-summary.mjs work/arm64
+        run: |
+          mkdir -p work/arm64
+          node benchmarks/proofs/linux-arm64-summary.mjs work/arm64
       - name: Upload package proof evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: linux-arm64-package-proof
           path: |
-            work/arm64
+            work/arm64/preflight.json
+            work/arm64/package-result.json
+            work/arm64/package-result.json.work.json
+            work/arm64/BUILD.json
+            work/arm64/THIRD_PARTY_NOTICES.txt
+            work/arm64/release.json
+            work/arm64/release.log
+            work/arm64/seshat-entry.tgz
+            work/arm64/npm-package.json
+            work/arm64/npm-package.log
+            work/arm64/public-consumer-examples.json
+            work/arm64/jest-expo-check.json
+            work/arm64/jest-expo-check.log
+            work/arm64/vitest-check.json
+            work/arm64/vitest-check.log
+            work/arm64/execute-cancellation.json
+            work/arm64/execute-cancellation.log
+            work/arm64/rust-tests.log
+            work/arm64/repeat-pack.json
+            work/arm64/repeat-pack.log
+            work/arm64/repeat-pack-attempts/**
+            work/arm64/pack.log
+            work/arm64/node-*/**
+            work/arm64/summary.json
+            work/arm64/seshat-linux-arm64-release.tgz
+            work/arm64/seshat-linux-arm64.tgz
+            work/arm64/seshat-linux-arm64-standalone.tar.gz
+            work/arm64/standalone.json
+            work/arm64/standalone.log
+            work/arm64/lifecycle.json
+            work/arm64/lifecycle.log
+            work/arm64/unix-supervision.json
+            work/arm64/unix-supervision.log
           if-no-files-found: error

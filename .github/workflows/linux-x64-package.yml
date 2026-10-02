@@ -22,12 +22,17 @@ on:
       - docs/linux-x64-package.md
   workflow_dispatch:
 
+# Supersede older PR checks; keep each push and manual evidence run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
 defaults:
   run:
-    shell: bash --noprofile --norc -eo pipefail {0}
+    shell: bash --noprofile --norc -euo pipefail {0}
 
 jobs:
   package:
@@ -36,6 +41,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -60,16 +67,18 @@ jobs:
           node packaging/repeat-pack-failure-check.mjs
           node --test packaging/npm.test.mjs packaging/metadata.test.mjs
       - name: Fetch locked dependencies
+        id: dependencies
         run: |
           set -euo pipefail
-          npm ci --prefix benchmarks
-          npm ci --prefix benchmarks/proofs
+          npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund
+          npm ci --prefix benchmarks/proofs --ignore-scripts --no-audit --no-fund
           cargo fetch --locked --manifest-path crates/seshat/Cargo.toml
       - name: Run native Rust tests
         run: |
           set -euo pipefail
           cargo test --locked --offline --manifest-path crates/seshat/Cargo.toml 2>&1 | tee work/x64/rust-tests.log
       - name: Fetch pinned Debian 11 proof inputs
+        id: debian_inputs
         run: |
           set -euo pipefail
           mkdir -p work/x64/debian11-inputs
@@ -93,12 +102,14 @@ jobs:
           set -euo pipefail
           node packaging/repeat-pack.mjs work/x64/debian11-inputs 2>&1 | tee work/x64/repeat-pack.log
       - name: Build x64 package against Debian 11 libraries
+        id: build
         env:
           SESHAT_PACK_RESULT: work/x64/package-result.json
         run: |
           set -euo pipefail
           node packaging/pack.mjs work/x64/debian11-inputs 2>&1 | tee work/x64/pack.log
       - name: Stage release entry and native packages
+        id: stage
         run: |
           set -euo pipefail
           mkdir -p work/x64/release
@@ -118,6 +129,8 @@ jobs:
           cp "work/x64/release/$entry_archive" work/x64/seshat-entry.tgz
           cp "work/x64/release/$native_archive" work/x64/seshat-linux-x64-release.tgz
       - name: Retain npm payload for both installation routes
+        id: payload
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: |
           set -euo pipefail
           tarball="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/x64/package-result.json")).tarball);')"
@@ -130,6 +143,7 @@ jobs:
           test "$(sha256sum work/x64/seshat-linux-x64-standalone.tar.gz | cut -d' ' -f1)" = \
             "$(node --input-type=module -e 'import {readFileSync} from "node:fs"; const result=JSON.parse(readFileSync("work/x64/package-result.json")); console.log(result.standalone.sha256);')"
       - name: Verify native npm installation
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.stage.outcome == 'success' && steps.payload.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/x64/npm-package.json
           SESHAT_EXAMPLES_OUTPUT: work/x64/public-consumer-examples.json
@@ -141,6 +155,7 @@ jobs:
           SESHAT_ENTRY_TARBALL_SHA256="$entry_sha256" SESHAT_NATIVE_TARBALL_SHA256="$native_sha256" SESHAT_NATIVE_BINARY_SHA256="$binary_sha256" \
             node benchmarks/proofs/npm-package.mjs work/x64/seshat-entry.tgz work/x64/seshat-linux-x64-release.tgz 2>&1 | tee work/x64/npm-package.log
       - name: Verify native standalone installation
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/x64/standalone.json
         run: |
@@ -150,18 +165,25 @@ jobs:
           binary_sha256="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/x64/package-result.json")).binary);')"
           SESHAT_PROOF_BINARY="$proof_binary" SESHAT_STANDALONE_SHA256="$standalone_sha256" SESHAT_BINARY_SHA256="$binary_sha256" \
             node benchmarks/proofs/standalone.mjs work/x64/seshat-linux-x64-standalone.tar.gz "$proof_binary" 2>&1 | tee work/x64/standalone.log
+      # Repeat packing requires a clean checkout; install this fixture afterwards.
+      - name: Install locked Jest/Expo fixture dependencies
+        id: jest_dependencies
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
+        run: |
+          npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
       - name: Verify installed Jest/Expo runner
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/x64/jest-expo-check.json
         run: |
           set -euo pipefail
-          npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
           node benchmarks/proofs/jest-expo-check.mjs \
             --deps "$GITHUB_WORKSPACE/benchmarks/proofs/fixtures/jest-expo" \
             --tarball work/x64/seshat-linux-x64.tgz \
             --cases normal-1,assertion-kill,survivor,before-all \
             2>&1 | tee work/x64/jest-expo-check.log
       - name: Verify installed Vitest runner
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/x64/vitest-check.json
         run: |
@@ -172,6 +194,7 @@ jobs:
             --cases stack,assertion,survived,before-all \
             2>&1 | tee work/x64/vitest-check.log
       - name: Verify native lifecycle
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         env:
           SESHAT_DEBUG_CLEANUP: '1'
           SESHAT_PROOF_OUTPUT: work/x64/lifecycle.json
@@ -180,6 +203,7 @@ jobs:
           proof_binary="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/x64/package-result.json")).proofBinary);')"
           SESHAT_PROOF_BINARY="$proof_binary" node benchmarks/proofs/lifecycle.mjs 2>&1 | tee work/x64/lifecycle.log
       - name: Verify Unix supervision limits
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/x64/unix-supervision.json
         run: |
@@ -187,12 +211,16 @@ jobs:
           PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/x64/package-result.json")"
           SESHAT_PROOF_BINARY="$PROOF_BINARY" python3 benchmarks/proofs/unix-supervision.py 2>&1 | tee "work/x64/unix-supervision.log"
       - name: Install Bubblewrap for Debian proof
+        id: bubblewrap
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' && steps.payload.outcome == 'success' }}
         run: |
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install --no-install-recommends --yes bubblewrap
           bwrap --version
       - name: Warm locked public example npm cache
+        id: example_cache
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' && steps.payload.outcome == 'success' }}
         run: |
           set -euo pipefail
           cache=work/x64/examples-npm-cache
@@ -201,6 +229,7 @@ jobs:
             npm ci --prefix "examples/$example" --ignore-scripts --no-audit --no-fund --cache "$cache"
           done
       - name: Verify Debian 11 minimum userspace
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' && steps.payload.outcome == 'success' && steps.stage.outcome == 'success' && steps.debian_inputs.outcome == 'success' && steps.bubblewrap.outcome == 'success' && steps.example_cache.outcome == 'success' }}
         env:
           SESHAT_DEBIAN_OUTPUT: work/x64/debian11.json
         run: |
@@ -210,17 +239,21 @@ jobs:
             work/x64/seshat-entry.tgz work/x64/seshat-linux-x64-release.tgz examples work/x64/examples-npm-cache \
             2>&1 | tee work/x64/debian11.log
       - name: Verify proof execute cancellation
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         env:
           SESHAT_PROOF_OUTPUT: work/x64/execute-cancellation.json
         run: |
           PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/x64/package-result.json")"
           SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/execute-cancellation.mjs 2>&1 | tee "work/x64/execute-cancellation.log"
       - name: Set up latest supported Node runtime
+        id: latest_node
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24.x
           check-latest: true
       - name: Verify latest Node 24 compatibility
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.latest_node.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
         run: node benchmarks/proofs/runner-compatibility.mjs "work/x64/package-result.json"
       - name: Write portable summary
         if: always()

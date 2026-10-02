@@ -70,6 +70,11 @@ on:
       - docs/windows-package.md
   workflow_dispatch:
 
+# Supersede older PR checks; keep each push and manual evidence run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
@@ -82,6 +87,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -118,6 +125,7 @@ jobs:
           node benchmarks/proofs/windows-package-preflight.mjs --output work/windows/preflight.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Install locked JavaScript dependencies
+        id: dependencies
         shell: pwsh
         run: |
           npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund
@@ -145,6 +153,7 @@ jobs:
           node packaging/repeat-pack.mjs --native-windows 2>&1 | Tee-Object -FilePath work/windows/repeat-pack.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Build native Windows package
+        id: build
         shell: pwsh
         env:
           SESHAT_PACK_RESULT: work/windows/package-result.json
@@ -152,6 +161,7 @@ jobs:
           node packaging/pack.mjs --native-windows 2>&1 | Tee-Object -FilePath work/windows/pack.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Stage release entry and native packages
+        id: stage
         shell: pwsh
         run: |
           $result = Get-Content work/windows/package-result.json -Raw | ConvertFrom-Json
@@ -171,12 +181,17 @@ jobs:
           node packaging/metadata.test.mjs $result.tarball (Join-Path work/windows/release $nativeArchive)
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Copy-Item (Join-Path work/windows/release $nativeArchive) work/windows/seshat-win32-x64-release.tgz
+      # Repeat packing requires a clean checkout; install this fixture afterwards.
       - name: Install locked Jest/Expo fixture dependencies
+        id: jest_dependencies
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         shell: pwsh
         run: |
           npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Retain package payload and legacy proof binary
+        id: payload
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         shell: pwsh
         run: |
           $result = Get-Content work/windows/package-result.json -Raw | ConvertFrom-Json
@@ -185,7 +200,7 @@ jobs:
           }
           Copy-Item -LiteralPath $result.proofBinary -Destination work/windows/seshat-proofs.exe
           Copy-Item -LiteralPath $result.tarball -Destination work/windows/seshat-windows-x64.tgz
-          Copy-Item -LiteralPath $result.tarball -Destination work/windows/seshat-windows-x64-standalone.tar.gz
+          Copy-Item -LiteralPath $result.standalone.path -Destination work/windows/seshat-windows-x64-standalone.tar.gz
           $extract = Join-Path $env:RUNNER_TEMP 'seshat-windows-package-build'
           New-Item -ItemType Directory -Force $extract | Out-Null
           tar.exe -xf work/windows/seshat-windows-x64.tgz -C $extract
@@ -194,16 +209,20 @@ jobs:
           if ((Get-FileHash work/windows/seshat-windows-x64.tgz -Algorithm SHA256).Hash.ToLower() -ne $result.tarballSha256) { throw 'npm archive hash mismatch' }
           if ((Get-FileHash work/windows/seshat-windows-x64-standalone.tar.gz -Algorithm SHA256).Hash.ToLower() -ne $result.standalone.sha256) { throw 'standalone archive hash mismatch' }
       - name: Verify installed npm and standalone package
+        id: install
+        if: ${{ !cancelled() && steps.payload.outcome == 'success' }}
         shell: pwsh
         env:
           SESHAT_PROOF_OUTPUT: work/windows/windows-package-install.json
         run: |
           $package = Get-Content work/windows/package-result.json -Raw | ConvertFrom-Json
           $env:SESHAT_TARBALL_SHA256 = $package.tarballSha256
+          $env:SESHAT_STANDALONE_SHA256 = $package.standalone.sha256
           $env:SESHAT_BINARY_SHA256 = $package.binary
-          node benchmarks/proofs/windows-package-install.mjs work/windows/seshat-windows-x64.tgz 2>&1 | Tee-Object -FilePath work/windows/windows-package-install.log
+          node benchmarks/proofs/windows-package-install.mjs work/windows/seshat-windows-x64.tgz work/windows/seshat-windows-x64-standalone.tar.gz 2>&1 | Tee-Object -FilePath work/windows/windows-package-install.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify installed native Windows CLI and lifecycle
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' && steps.payload.outcome == 'success' && steps.install.outcome == 'success' }}
         shell: pwsh
         env:
           SESHAT_WINDOWS_EVIDENCE_PATH: ${{ github.workspace }}\work\windows\windows-runtime-cli-evidence.json
@@ -220,7 +239,7 @@ jobs:
           node benchmarks/proofs/windows-runtime-cli.mjs 2>&1 | Tee-Object -FilePath work/windows/windows-runtime-cli.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify installed shared CLI fixtures
-        if: always()
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' && steps.payload.outcome == 'success' && steps.install.outcome == 'success' }}
         shell: pwsh
         env:
           SESHAT_PROOF_OUTPUT: ${{ github.workspace }}\work\windows\shared-cli.json
@@ -241,6 +260,7 @@ jobs:
           node benchmarks/proofs/cli.mjs 2>&1 | Tee-Object -FilePath work/windows/shared-cli.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify proof execute cancellation
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' && steps.payload.outcome == 'success' }}
         shell: pwsh
         env:
           SESHAT_PROOF_OUTPUT: work/windows/execute-cancellation.json
@@ -251,7 +271,7 @@ jobs:
           node benchmarks/proofs/execute-cancellation.mjs 2>&1 | Tee-Object -FilePath work/windows/execute-cancellation.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify installed shared parallel fixtures
-        if: always()
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' && steps.payload.outcome == 'success' && steps.install.outcome == 'success' }}
         shell: pwsh
         env:
           SESHAT_PROOF_OUTPUT: ${{ github.workspace }}\work\windows\shared-parallel.json
@@ -270,7 +290,7 @@ jobs:
           node benchmarks/proofs/parallel.mjs 2>&1 | Tee-Object -FilePath work/windows/shared-parallel.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify installed Jest/Expo controls
-        if: always()
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' && steps.payload.outcome == 'success' && steps.install.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
         shell: pwsh
         env:
           SESHAT_PROOF_OUTPUT: ${{ github.workspace }}\work\windows\jest-expo-check.json
@@ -284,11 +304,11 @@ jobs:
           }
           node benchmarks/proofs/jest-expo-check.mjs `
             --cli $install.installedBinary `
-            --deps "${{ github.workspace }}\benchmarks\proofs\fixtures\jest-expo" `
+            --deps "$env:GITHUB_WORKSPACE\benchmarks\proofs\fixtures\jest-expo" `
             --cases normal-1,assertion-kill,survivor,before-all 2>&1 | Tee-Object -FilePath work/windows/jest-expo-check.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify installed Vitest controls
-        if: always()
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' && steps.payload.outcome == 'success' && steps.install.outcome == 'success' }}
         shell: pwsh
         env:
           SESHAT_PROOF_OUTPUT: ${{ github.workspace }}\work\windows\vitest-check.json
@@ -302,10 +322,11 @@ jobs:
           }
           node benchmarks/proofs/vitest-check.mjs `
             --cli $install.installedBinary `
-            --deps "${{ github.workspace }}\benchmarks\proofs" `
+            --deps "$env:GITHUB_WORKSPACE\benchmarks\proofs" `
             --cases stack,assertion,survived,before-all 2>&1 | Tee-Object -FilePath work/windows/vitest-check.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify release npm entry, shim and public examples
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' && steps.stage.outcome == 'success' }}
         shell: pwsh
         env:
           SESHAT_PROOF_OUTPUT: work/windows/npm-package.json
@@ -319,23 +340,72 @@ jobs:
           node benchmarks/proofs/npm-package.mjs work/windows/seshat-entry.tgz work/windows/seshat-win32-x64-release.tgz 2>&1 | Tee-Object -FilePath work/windows/npm-package.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Set up latest supported Node runtime
+        id: latest_node
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24.x
           check-latest: true
       - name: Verify latest Node 24 compatibility
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.latest_node.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
         shell: pwsh
         run: |
           node benchmarks/proofs/runner-compatibility.mjs work/windows/package-result.json
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Require shared fixture reports
+        shell: pwsh
+        run: |
+          foreach ($report in @('shared-cli.json', 'shared-parallel.json', 'jest-expo-check.json', 'vitest-check.json')) {
+            if (-not (Test-Path -LiteralPath (Join-Path work/windows $report) -PathType Leaf)) {
+              throw "expected fixture report is missing: $report"
+            }
+          }
       - name: Write portable summary
         if: always()
         shell: pwsh
-        run: node benchmarks/proofs/windows-package-summary.mjs work/windows
+        run: |
+          New-Item -ItemType Directory -Force work/windows | Out-Null
+          node benchmarks/proofs/windows-package-summary.mjs work/windows
       - name: Upload package proof evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: windows-x64-package-proof
-          path: work/windows
-          if-no-files-found: warn
+          path: |
+            work/windows/preflight.json
+            work/windows/package-result.json
+            work/windows/package-result.json.work.json
+            work/windows/BUILD.json
+            work/windows/THIRD_PARTY_NOTICES.txt
+            work/windows/release.json
+            work/windows/release.log
+            work/windows/seshat-entry.tgz
+            work/windows/npm-package.json
+            work/windows/npm-package.log
+            work/windows/public-consumer-examples.json
+            work/windows/jest-expo-check.json
+            work/windows/jest-expo-check.log
+            work/windows/vitest-check.json
+            work/windows/vitest-check.log
+            work/windows/execute-cancellation.json
+            work/windows/execute-cancellation.log
+            work/windows/rust-tests.log
+            work/windows/repeat-pack.json
+            work/windows/repeat-pack.log
+            work/windows/repeat-pack-attempts/**
+            work/windows/pack.log
+            work/windows/node-*/**
+            work/windows/summary.json
+            work/windows/seshat-win32-x64-release.tgz
+            work/windows/seshat-windows-x64.tgz
+            work/windows/seshat-windows-x64-standalone.tar.gz
+            work/windows/seshat-proofs.exe
+            work/windows/windows-package-install.json
+            work/windows/windows-package-install.log
+            work/windows/windows-runtime-cli-evidence.json
+            work/windows/windows-runtime-cli.log
+            work/windows/shared-cli.json
+            work/windows/shared-cli.log
+            work/windows/shared-parallel.json
+            work/windows/shared-parallel.log
+          if-no-files-found: error

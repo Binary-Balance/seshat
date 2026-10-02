@@ -40,6 +40,11 @@ on:
       - benchmarks/proofs/collect-node.mjs
   workflow_dispatch:
 
+# Supersede older PR checks; keep each push and manual evidence run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
@@ -52,6 +57,8 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -80,6 +87,7 @@ jobs:
           path: windows-runtime-preflight.json
           if-no-files-found: error
       - name: Install locked JavaScript dependencies
+        id: dependencies
         shell: pwsh
         run: |
           npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund
@@ -94,6 +102,7 @@ jobs:
           cargo fetch --locked --manifest-path crates/seshat/Cargo.toml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Build complete CLI binaries
+        id: build
         shell: pwsh
         run: |
           cargo build --release --locked --manifest-path crates/seshat/Cargo.toml --bins
@@ -112,19 +121,21 @@ jobs:
           cargo test --locked --manifest-path crates/seshat/Cargo.toml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Check CLI entry points
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         shell: pwsh
         run: |
-          & "${{ github.workspace }}\crates\seshat\target\release\seshat.exe" --help
+          & "$env:GITHUB_WORKSPACE\crates\seshat\target\release\seshat.exe" --help
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $source = Join-Path $env:RUNNER_TEMP 'seshat-runtime-subject.ts'
           Set-Content -Path $source -Value 'export const value = (input: number) => input >= 0;' -NoNewline
-          & "${{ github.workspace }}\crates\seshat\target\release\seshat-proofs.exe" inspect $source
+          & "$env:GITHUB_WORKSPACE\crates\seshat\target\release\seshat-proofs.exe" inspect $source
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Run native CLI proof
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         shell: pwsh
         run: |
-          $env:SESHAT_CONSOLE_HELPER_BINARY = "${{ github.workspace }}\crates\seshat\target\release\windows-console-helper.exe"
-          $env:SESHAT_WINDOWS_EVIDENCE_PATH = "${{ github.workspace }}\windows-runtime-cli-evidence.json"
+          $env:SESHAT_CONSOLE_HELPER_BINARY = "$env:GITHUB_WORKSPACE\crates\seshat\target\release\windows-console-helper.exe"
+          $env:SESHAT_WINDOWS_EVIDENCE_PATH = "$env:GITHUB_WORKSPACE\windows-runtime-cli-evidence.json"
           node benchmarks/proofs/windows-runtime-cli.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Upload native CLI evidence
@@ -133,8 +144,9 @@ jobs:
         with:
           name: windows-runtime-cli-evidence
           path: windows-runtime-cli-evidence.json
-          if-no-files-found: warn
+          if-no-files-found: error
       - name: Run shared CLI fixtures
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         shell: pwsh
         env:
           SESHAT_CLI_BINARY: ${{ github.workspace }}\crates\seshat\target\release\seshat.exe
@@ -146,6 +158,7 @@ jobs:
           node benchmarks/proofs/cli.mjs 2>&1 | Tee-Object -FilePath work/windows/shared-cli.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Run shared parallel fixtures
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         shell: pwsh
         env:
           SESHAT_CLI_BINARY: ${{ github.workspace }}\crates\seshat\target\release\seshat.exe
@@ -157,33 +170,50 @@ jobs:
           node benchmarks/proofs/parallel.mjs 2>&1 | Tee-Object -FilePath work/windows/shared-parallel.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Run built-executable Jest/Expo controls
-        if: always()
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         shell: pwsh
         env:
           SESHAT_PROOF_OUTPUT: ${{ github.workspace }}\work\windows\jest-expo-check.json
         run: |
           New-Item -ItemType Directory -Force work/windows | Out-Null
           node benchmarks/proofs/jest-expo-check.mjs `
-            --cli "${{ github.workspace }}\crates\seshat\target\release\seshat.exe" `
-            --deps "${{ github.workspace }}\benchmarks\proofs\fixtures\jest-expo" `
+            --cli "$env:GITHUB_WORKSPACE\crates\seshat\target\release\seshat.exe" `
+            --deps "$env:GITHUB_WORKSPACE\benchmarks\proofs\fixtures\jest-expo" `
             --cases normal-1,assertion-kill,survivor,before-all 2>&1 | Tee-Object -FilePath work/windows/jest-expo-check.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Run built-executable Vitest controls
-        if: always()
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         shell: pwsh
         env:
           SESHAT_PROOF_OUTPUT: ${{ github.workspace }}\work\windows\vitest-check.json
         run: |
           New-Item -ItemType Directory -Force work/windows | Out-Null
           node benchmarks/proofs/vitest-check.mjs `
-            --cli "${{ github.workspace }}\crates\seshat\target\release\seshat.exe" `
-            --deps "${{ github.workspace }}\benchmarks\proofs" `
+            --cli "$env:GITHUB_WORKSPACE\crates\seshat\target\release\seshat.exe" `
+            --deps "$env:GITHUB_WORKSPACE\benchmarks\proofs" `
             --cases stack,assertion,survived,before-all 2>&1 | Tee-Object -FilePath work/windows/vitest-check.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Require shared fixture reports
+        shell: pwsh
+        run: |
+          foreach ($report in @('shared-cli.json', 'shared-parallel.json', 'jest-expo-check.json', 'vitest-check.json')) {
+            if (-not (Test-Path -LiteralPath (Join-Path work/windows $report) -PathType Leaf)) {
+              throw "expected fixture report is missing: $report"
+            }
+          }
       - name: Upload shared fixture evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: windows-shared-fixture-evidence
-          path: work/windows
-          if-no-files-found: warn
+          path: |
+            work/windows/console-helper.log
+            work/windows/shared-cli.json
+            work/windows/shared-cli.log
+            work/windows/shared-parallel.json
+            work/windows/shared-parallel.log
+            work/windows/jest-expo-check.json
+            work/windows/jest-expo-check.log
+            work/windows/vitest-check.json
+            work/windows/vitest-check.log
+          if-no-files-found: error
