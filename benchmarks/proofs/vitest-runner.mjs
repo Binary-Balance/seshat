@@ -1,4 +1,4 @@
-// Vitest 5.0.0: observe the existing callback and its result before cleanup.
+// Vitest 5: observe the existing callback and its result before cleanup.
 import {createRequire} from 'node:module';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';

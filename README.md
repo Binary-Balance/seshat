@@ -34,11 +34,11 @@ including TypeScript, its test runner and a coverage tool.
 | Runner | Supported versions |
 | --- | --- |
 | Node's built-in test runner | Node `>=24.20.0 <25` |
-| Vitest | `5.0.0` |
+| Vitest | `>=5.0.0 <6` |
 | Jest with Expo | Jest `29.7.0` with jest-expo `57.0.5` |
 
-Seshat checks the runner version on every run and stops if it is not one of
-these. See the [runner compatibility guide](docs/runner-compatibility.md).
+Seshat checks the runner version on every run and stops if it is not
+supported. See the [runner compatibility guide](docs/runner-compatibility.md).
 
 ## Configure
 
