@@ -22,11 +22,23 @@ npm install --save-dev @binary-balance/seshat
 ```
 
 Seshat needs Node `>=24.20.0 <25`. npm installs a prebuilt binary for Linux
-x64/ARM64, macOS x64/ARM64 or Windows x64, so Rust is not required. See the
+x64/ARM64 (glibc), macOS x64/ARM64 or Windows x64, so Rust is not required.
+Alpine Linux, which uses musl instead of glibc, is not supported. See the
 [platform support matrix](https://github.com/Binary-Balance/seshat/blob/main/docs/platform-support.md) for details.
 
 The project being assessed must already have its own dependencies installed,
 including TypeScript, its test runner and a coverage tool.
+
+## Supported test runners
+
+| Runner | Supported versions |
+| --- | --- |
+| Node's built-in test runner | Node `>=24.20.0 <25` |
+| Vitest | `5.0.0` |
+| Jest with Expo | Jest `29.7.0` with jest-expo `57.0.5` |
+
+Seshat checks the runner version on every run and stops if it is not one of
+these. See the [runner compatibility guide](https://github.com/Binary-Balance/seshat/blob/main/docs/runner-compatibility.md).
 
 ## Configure
 
@@ -83,7 +95,7 @@ unrelated package of that name.
 
 Each command reads `./seshat.json`; use `--config PATH` for another file. Add
 `--json` to write a report to stdout, as described in the
-[report format](https://github.com/Binary-Balance/seshat/blob/main/docs/report-format.md). `seshat --help` lists all options.
+[report format](https://github.com/Binary-Balance/seshat/blob/main/docs/report-format.md). `--help` lists all options.
 
 Run only trusted test commands. Seshat's copies protect the project checkout,
 but tests can still access external files, services, databases and credentials.
