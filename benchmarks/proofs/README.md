@@ -46,7 +46,7 @@ project or writes mutants into the source fixture.
 
 The `seshat` and `seshat-proofs` binaries share the existing private Rust modules.
 No CLI framework or new dependency was added. The release crate is `seshat`
-version `0.1.0`. Running `cargo run` for `crates/seshat/Cargo.toml` defaults to
+version `0.2.0`. Running `cargo run` for `crates/seshat/Cargo.toml` defaults to
 the legacy `seshat-proofs` entry point. Select the user CLI explicitly from the
 repository root:
 
@@ -261,7 +261,7 @@ hashes in the retained JSON evidence. Set these paths to the resulting files:
 
 ```sh
 BASELINE_TARBALL=/absolute/path/to/baseline/native-seshat-package.tgz
-CANDIDATE_TARBALL=/absolute/path/to/candidate/binary-balance-seshat-linux-x64-0.1.0.tgz
+CANDIDATE_TARBALL=/absolute/path/to/candidate/binary-balance-seshat-linux-x64-0.2.0.tgz
 JEST_DEPS=/absolute/path/to/jest-expo-fixture
 ```
 
@@ -403,8 +403,8 @@ Then run the real installed proof with the two resulting archives:
 
 ```sh
 node benchmarks/proofs/npm-package.mjs \
-  /absolute/path/to/binary-balance-seshat-0.1.0.tgz \
-  /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0.tgz
+  /absolute/path/to/binary-balance-seshat-0.2.0.tgz \
+  /absolute/path/to/binary-balance-seshat-linux-x64-0.2.0.tgz
 ```
 
 The entry archive owns npm's `seshat` bin and pins all five native payloads as
@@ -1157,7 +1157,7 @@ or obtaining a local Seshat package:
 
 ```sh
 node benchmarks/proofs/jest-expo-check.mjs \
-  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0.tgz
+  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.2.0.tgz
 ```
 
 The driver installs the fixture's pinned lockfile into a fresh ignored proof
@@ -1170,7 +1170,7 @@ cp benchmarks/proofs/fixtures/jest-expo/package.json \
   benchmarks/proofs/fixtures/jest-expo/package-lock.json work/jest-expo-fixture/
 npm ci --prefix work/jest-expo-fixture --ignore-scripts --no-audit --no-fund
 node benchmarks/proofs/jest-expo-check.mjs \
-  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0.tgz \
+  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.2.0.tgz \
   --deps work/jest-expo-fixture
 ```
 
@@ -1247,7 +1247,7 @@ the dependency directory is never resolved or downloaded during the proof:
 
 ```sh
 node benchmarks/proofs/vitest-check.mjs \
-  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0.tgz \
+  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.2.0.tgz \
   --deps /absolute/path/to/vitest-dependencies
 ```
 

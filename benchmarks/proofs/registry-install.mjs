@@ -16,7 +16,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 import {parseArgs} from 'node:util';
 import {tmpdir} from 'node:os';
 
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';
 export const REGISTRY = 'https://registry.npmjs.org/';
 export const ENTRY_PACKAGE = '@binary-balance/seshat';
 const SLSA_PROVENANCE_PREDICATE = 'https://slsa.dev/provenance/v1';

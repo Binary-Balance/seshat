@@ -13,7 +13,7 @@ organisation:
 The [npm publication workflow](../.github/workflows/npm-publish.yml) is a
 manual, native-first publisher. Its default is a read-only dry run. It uses
 the fixed public registry `https://registry.npmjs.org/`, publishes prereleases
-with the `next` tag, and publishes the 0.1.0 stable version with `latest`. The
+with the `next` tag, and publishes stable versions with `latest`. The
 current free organisation needs public packages only; no paid npm service is
 needed.
 
@@ -36,16 +36,16 @@ git merge-base --is-ancestor <reviewed-sha> origin/main
 
 Read the version from `candidate.packageVersion` in
 [`docs/research/release-notice-audit.json`](research/release-notice-audit.json).
-The workflow version input must match it and must be valid semver. This release
-uses `0.1.0` and the `latest` tag. The checked-in audit records fresh 0.1.0
-coordinates from PR50's synthetic merge source, including the native proof
-results and exact archive hashes. The archived rc.1 record remains historical.
+The workflow version input must match it and must be valid semver. A stable
+version uses the `latest` tag. The checked-in audit records that version's
+archive coordinates, native proof results and exact archive hashes. Audits for
+earlier versions are archived under [`docs/releases`](releases).
 
-The fresh 0.1.0 native archives were built and audited from the exact reviewed
-source revision. The new package manifests contain the repository metadata
-required by npm trusted publishing. Do not reuse, edit or repack the archived
-rc.1 bytes. The publication checkout must remain equivalent to the audited
-source under `crates`, `packages` and `packaging`.
+The native archives must be built and audited from the exact reviewed source
+revision. Their package manifests contain the repository metadata required by
+npm trusted publishing. Do not reuse, edit or repack archives from an earlier
+version. The publication checkout must remain equivalent to the audited source
+under `crates`, `packages` and `packaging`.
 
 Before publication, manually run the [Release local install workflow](../.github/workflows/release-local-install.yml)
 from the reviewed release branch or tag containing the candidate audit. Wait
@@ -104,11 +104,11 @@ configuration for each package is:
 Direct `npm publish` is enabled and the environment is blank. The repository
 has no GitHub environment, so the workflow does not rely on an approval gate.
 The existing package names and their published rc.1 versions supplied the
-initial package records; 0.1.0 can use these trusted publishers directly.
+initial package records; later versions use these trusted publishers directly.
 
 npm also requires each package's `repository.url` to exactly identify this
-GitHub repository before it will accept a GitHub trusted publish. The new 0.1.0
-archives contain that metadata through `packaging/release.mjs`. The archived
+GitHub repository before it will accept a GitHub trusted publish. Archives from
+0.1.0 onwards contain that metadata through `packaging/release.mjs`. The archived
 rc.1 packages predate it and remain unchanged.
 
 The publish job alone has `id-token: write`; it has no `NPM_TOKEN` or other npm
@@ -123,7 +123,7 @@ From the current reviewed `main` head, open Actions → npm publication → Run
 workflow. Enter the full current `main` commit SHA; it must equal the
 workflow run's `GITHUB_SHA` and remain the workflow head:
 
-1. the fresh audit version `0.1.0`; and
+1. the version from the current audit; and
 2. leave **Publish after validation** unchecked.
 
 On pull requests, the validate job runs the publisher and archive-stager tests.
@@ -241,8 +241,8 @@ gh release create "v<version>" \
   work/npm-publishing/archives/*.tgz
 ```
 
-This command creates the stable `v0.1.0` release. Substitute the chosen version
-in the tag, title and notes filename so the release uses that version's notes.
+Substitute the chosen version in the tag, title and notes filename so the
+release uses that version's notes.
 
 If the tag or release already exists, inspect it first and upload only missing
 assets. Do not substitute historical `0.0.0` archives or ordinary/standalone

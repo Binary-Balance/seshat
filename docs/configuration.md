@@ -17,8 +17,8 @@ inputs and installed dependencies into an execution copy; it does not install or
 configure Node, TypeScript, a test runner or a coverage provider. Commands in a
 setup are argument arrays; Seshat does not interpret shell expressions.
 
-For a local 0.1.0 archive, use the [six-archive local installation
-recipe](../examples/README.md#install-and-run-a-local-010-archive) from the project root. For an
+For a local archive, use the [six-archive local installation
+recipe](../examples/README.md#install-and-run-a-local-archive) from the project root. For an
 npm workspace, that is the workspace root containing its root `package.json`
 and `package-lock.json`. Keep the entry and all five native archives under the
 project-relative `vendor/seshat` directory. The two npm install commands write
@@ -145,7 +145,7 @@ native archive and `--cli` accepts an installed native executable:
 
 ```sh
 node benchmarks/proofs/jest-expo-check.mjs \
-  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.1.0.tgz
+  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.2.0.tgz
 # or:
 node benchmarks/proofs/jest-expo-check.mjs \
   --cli /absolute/path/to/node_modules/@binary-balance/seshat-linux-x64/bin/seshat

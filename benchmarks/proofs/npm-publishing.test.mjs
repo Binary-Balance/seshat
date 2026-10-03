@@ -18,7 +18,7 @@ import {
 
 const revision = 'a'.repeat(40);
 const sourceCommit = 'b'.repeat(40);
-const version = '0.1.0';
+const version = '0.2.0';
 const temporaryDirectories = [];
 
 function hash(data) {
@@ -80,7 +80,7 @@ test('plans the native-first order and version tag', () => {
     'linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'win32-x64', 'universal',
   ]);
   assert.equal(expectedTag(version), 'latest');
-  assert.equal(expectedTag('0.1.0'), 'latest');
+  assert.equal(expectedTag('0.2.0'), 'latest');
   assert.deepEqual(publishArgs(plan.archives[0], {tag: plan.tag, dryRun: true}).slice(1), [
     '--access=public',
     '--tag=latest',
@@ -147,7 +147,7 @@ test('preflight detects a conflict before any npm write', async () => {
     publishPackage: async () => {
       published += 1;
     },
-  }), /conflicting existing version @binary-balance\/seshat-linux-arm64@0\.1\.0/);
+  }), /conflicting existing version @binary-balance\/seshat-linux-arm64@0\.2\.0/);
   assert.equal(published, 0);
 });
 
@@ -238,8 +238,8 @@ test('availability timeout reports pending records and safely resumes without re
   };
   await assert.rejects(executePublication(plan, options), error => {
     assert.match(error.message, /Timed out.*entry package was not published/);
-    assert.match(error.message, /seshat-linux-x64@0.1.0 \(version unavailable\)/);
-    assert.match(error.message, /seshat-win32-x64@0.1.0 \(provenance unavailable\)/);
+    assert.match(error.message, /seshat-linux-x64@0.2.0 \(version unavailable\)/);
+    assert.match(error.message, /seshat-win32-x64@0.2.0 \(provenance unavailable\)/);
     assert.doesNotMatch(error.message, /seshat-darwin/);
     assert.equal(error.publicationPackages.length, 5);
     return true;
@@ -328,7 +328,7 @@ test('availability deadline aborts a stalled registry body and retains publicati
     },
     publishPackage: async archive => published.push(archive.target),
   }), error => {
-    assert.match(error.message, /Timed out.*seshat-linux-x64@0.1.0/);
+    assert.match(error.message, /Timed out.*seshat-linux-x64@0.2.0/);
     assert.equal(error.publicationPackages.length, 5);
     return true;
   });
