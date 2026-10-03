@@ -88,7 +88,7 @@ build records give its SHA-256 as
 
 ## Proof results
 
-All five package workflows passed on the PR head, and each `summary.json`
+All five package jobs passed on the PR head, and each `summary.json`
 reports `validation.passed: true` for source commit `d5bbd70867c2`.
 The builds and baseline checks used Node 24.20.0.
 

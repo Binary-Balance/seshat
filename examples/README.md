@@ -94,9 +94,9 @@ SESHAT=./seshat-standalone/bin/seshat
 ```
 
 For a standalone Windows run, extract `vendor\seshat\win32-x64.tgz` with
-`tar.exe` and invoke `package\bin\seshat.exe` directly. The five fresh native
-package-proof runs passed on every supported target; run and archive evidence
-is in the [fresh release audit](../docs/research/release-notice-audit.md). The
+`tar.exe` and invoke `package\bin\seshat.exe` directly. The native package
+proofs passed on every supported target; run and archive evidence is in the
+[current release audit](../docs/research/release-notice-audit.md). The
 release process records the local six-archive installation matrix separately.
 Both routes still need the example project's Node, test runner, TypeScript and
 coverage dependencies.
