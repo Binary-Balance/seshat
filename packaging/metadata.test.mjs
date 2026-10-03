@@ -74,7 +74,7 @@ test('layout-only inspection describes metadata without creating archives', () =
           'A native code-assurance tool for TypeScript and TSX, written in Rust.',
           'Seshat needs Node `>=24.20.0 <25`',
           'npm install --save-dev @binary-balance/seshat',
-          'npx seshat mutate',
+          'npx --no-install seshat mutate',
           'Linux x64/ARM64, macOS x64/ARM64 or Windows x64',
           'configuration guide',
           'report format',

@@ -73,10 +73,12 @@ every field, including `workers` for parallel mutation runs.
 ## Use
 
 ```sh
-npx seshat check    # CRAP and mutation testing
-npx seshat crap     # coverage and CRAP only
-npx seshat mutate   # mutation testing only
+npx --no-install seshat check    # CRAP and mutation testing
+npx --no-install seshat crap     # coverage and CRAP only
+npx --no-install seshat mutate   # mutation testing only
 ```
+
+`--no-install` makes `npx` use only the locally installed package.
 
 Each command reads `./seshat.json`; use `--config PATH` for another file. Add
 `--json` to write a report to stdout, as described in the
@@ -118,6 +120,9 @@ Add optional thresholds to `seshat.json`:
 | `1` | Complete run, a threshold was not met. |
 | `2` | Invalid input, failed baseline or incomplete run. |
 | `130` / `143` | Cancelled by `SIGINT` / `SIGTERM` on Unix. |
+
+See [quality thresholds](https://github.com/Binary-Balance/seshat/blob/main/docs/configuration.md#quality-thresholds) for the full
+rules.
 
 ## Development
 
