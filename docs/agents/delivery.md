@@ -115,6 +115,30 @@ Continue autonomously through actionable fixes. If progress needs unavailable
 credentials, infrastructure or a user decision, report the specific blocker and
 keep the PR unready. Do not stop merely because one review/fix round completed.
 
+## Merging
+
+When merging is authorised, recheck the reviewed commit, required checks and
+conflict status. Use `gh pr merge <number> --merge --match-head-commit <sha>`
+with the reviewed head SHA so a later push cannot be merged accidentally.
+Confirm the PR merged and the resulting commit reached `main`. Close linked
+issues only when their acceptance criteria are met.
+
+## Branch and worktree cleanup
+
+After confirming the merge:
+
+1. Fetch the latest remote refs. Delete the task's remote branch if GitHub has
+   not already deleted it, provided it still points to the merged PR's head.
+2. Remove a task worktree only when it is clean and no other agent or session is
+   using it. Preserve unfinished work and unique evidence.
+3. Leave the task branch before deleting it locally with `git branch -d`. If Git
+   refuses, the branch holds unmerged work; keep it and report why.
+4. Prune stale remote refs and worktree entries, and update a clean local `main`
+   with a fast-forward only. Leave unrelated branches and active worktrees alone.
+
+If cleanup cannot safely finish, report what remains and why. Cleanup must not
+discard work or interrupt another session.
+
 ## npm publication checkpoint
 
 Before an agent publishes to npm, complete release preparation, applicable
