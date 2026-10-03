@@ -386,7 +386,7 @@ means a complete run with a null, not-applicable score, not 100%. That threshold
 is not evaluated and does not fail CI. `crap` and `mutate` do not evaluate limits
 for the other assessment. See the configuration guide for [threshold configuration and
 JSON states](../../docs/configuration.md#quality-thresholds) and
-[score interpretation](../../README.md#understanding-the-results).
+[score interpretation](../../README.md#understand-the-results).
 
 The existing trusted-input, Linux and verified-runner restrictions still apply.
 This is not a security sandbox. No cross-platform packaging, baseline reuse, cross-run caching,

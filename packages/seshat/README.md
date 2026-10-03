@@ -1,135 +1,130 @@
 # Seshat
 
-Seshat is a native CLI for TypeScript and TSX complexity analysis and mutation
-testing. `check` runs both assessments, `crap` runs complexity and coverage
-analysis, and `mutate` runs mutation testing from the original test baseline.
+> Seshat was the ancient Egyptian goddess of writing, wisdom, and knowledge. Seen as a scribe and record keeper, she became identified as the goddess of measurement, accounting, architecture, science, astronomy, mathematics, geometry, history and surveying.
+
+A native code-assurance tool for TypeScript and TSX, written in Rust. Seshat
+combines function-level [CRAP](https://testing.googleblog.com/2011/02/this-code-is-crap.html)
+analysis with [comparison-operator mutation testing](https://en.wikipedia.org/wiki/Mutation_testing) to find complex and/or
+insufficiently tested code.
+
+## What Seshat does
+
+- Calculates function complexity and CRAP scores from statement coverage.
+- Changes comparison operators one at a time and checks whether tests detect them.
+- Runs tests in isolated copies of the captured project.
+- Produces readable terminal output and versioned JSON, with optional CI thresholds.
+- Supports explicit source selection, multiple test setups and parallel mutation workers.
 
 ## Install
-
-Install the entry package in the project you want to assess:
 
 ```sh
 npm install --save-dev @binary-balance/seshat
 ```
 
-Assessments support Node.js >=24.20.0 <25. The native CLI checks the
-Node and runner versions reported by each test command. The npm launcher does
-not validate the runtime of commands in your configuration before starting them.
-The import-failure observer is verified only on Node 24.20.0 and 24.21.0.
-On other supported versions, import crashes requiring that evidence remain
-unresolved; ordinary test assertions still count. See the
-[compatibility policy](https://github.com/Binary-Balance/seshat/blob/main/docs/runner-compatibility.md).
-The package selects one native payload for the current platform from these five verified targets:
+Seshat needs Node `>=24.20.0 <25`. npm installs a prebuilt binary for Linux
+x64/ARM64, macOS x64/ARM64 or Windows x64, so Rust is not required. See the
+[platform support matrix](https://github.com/Binary-Balance/seshat/blob/main/docs/platform-support.md) for details.
 
-- Linux x64 (glibc; Debian 11 userspace, glibc 2.31)
-- Linux ARM64 (glibc; Ubuntu 22.04, glibc 2.35)
-- macOS x64 (macOS 15.0 minimum)
-- macOS ARM64 (macOS 15.0 minimum)
-- Windows x64 (Windows Server 2022 verification)
+The project being assessed must already have its own dependencies installed,
+including TypeScript, its test runner and a coverage tool.
 
-These are the known verification floors; see the [native platform support
-matrix](https://github.com/Binary-Balance/seshat/blob/main/docs/platform-support.md)
-for the detailed target evidence.
+## Configure
 
-## Minimal mutation example
-
-For a small Node test setup, install TypeScript in the project first:
-
-```sh
-npm install --save-dev typescript
-```
-
-Create `src/rules.mts`:
-
-```ts
-export function classify(value: number): 'positive' | 'negative' {
-  return value >= 0 ? 'positive' : 'negative';
-}
-```
-
-Create `tests/rules.test.mjs`:
-
-```js
-import assert from 'node:assert/strict';
-import {test} from 'node:test';
-import {classify} from '../src/rules.mts';
-
-test('classifies zero and positive values', () => {
-  assert.equal(classify(0), 'positive');
-  assert.equal(classify(1), 'positive');
-});
-```
-
-Create `tsconfig.json`:
+Add a `seshat.json` to the project root. This one is for Node's built-in test
+runner:
 
 ```json
 {
-  "compilerOptions": {
-    "strict": true,
-    "noEmit": true,
-    "skipLibCheck": true,
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "allowImportingTsExtensions": true
+  "source": {
+    "include": ["src/**/*.ts"]
   },
-  "include": ["src/**/*.mts"]
-}
-```
-
-Create `seshat.json`:
-
-```json
-{
-  "source": {"include": ["src/**/*.mts"]},
   "capture": [
-    "package.json",
-    "package-lock.json",
-    "tsconfig.json",
-    "src",
-    "tests",
-    "node_modules"
+    "package.json", "package-lock.json", "tsconfig.json", "collect-node.mjs",
+    "src", "tests", "node_modules"
   ],
   "setups": [{
     "name": "node",
     "runner": "node",
     "cwd": ".",
-    "typecheck": [
-      "node",
-      "node_modules/typescript/bin/tsc",
-      "--project",
-      "tsconfig.json"
-    ],
+    "typecheck": ["node", "node_modules/typescript/bin/tsc", "--project", "tsconfig.json"],
     "test": [
-      "node",
-      "--test",
-      "--test-concurrency=1",
-      "--test-reporter={seshatReporter}",
-      "tests/rules.test.mjs"
+      "node", "--test", "--test-concurrency=1",
+      "--test-reporter={seshatReporter}", "tests/rules.test.mjs"
     ],
     "coverage": {
-      "command": ["node", "-e", "process.exit(0)"],
-      "report": "coverage/unused.json"
+      "command": ["node", "collect-node.mjs", "tests/rules.test.mjs"],
+      "report": "coverage/coverage-final.json"
     }
   }]
 }
 ```
 
-Run mutation testing and save its JSON report:
+- `source` selects the files to assess, using glob patterns.
+- `capture` lists the files and directories copied into each isolated run. It
+  must include the selected source and everything the commands need.
+- `setups` gives the typecheck, test and coverage commands. The coverage
+  command must write an Istanbul JSON report; `collect-node.mjs` is a small
+  adapter from the [Node example](https://github.com/Binary-Balance/seshat/tree/main/examples/node).
+
+The [examples](https://github.com/Binary-Balance/seshat/blob/main/examples/README.md) include complete Node, npm workspace, Vitest
+and Jest/Expo projects. The [configuration guide](https://github.com/Binary-Balance/seshat/blob/main/docs/configuration.md) covers
+every field, including `workers` for parallel mutation runs.
+
+## Use
 
 ```sh
-./node_modules/.bin/seshat mutate --config ./seshat.json \
-  --json --no-progress > seshat-report.json
+npx seshat check    # CRAP and mutation testing
+npx seshat crap     # coverage and CRAP only
+npx seshat mutate   # mutation testing only
 ```
 
-The `coverage` block is required by the configuration schema but is not run by
-`mutate`; the no-op command above keeps this example dependency-light. `check`
-and `crap` do run coverage and need a command that writes a fresh Istanbul JSON
-report. Use the complete [Node example](https://github.com/Binary-Balance/seshat/tree/main/examples/node),
-[Vitest example](https://github.com/Binary-Balance/seshat/tree/main/examples/vitest),
-or [Jest/Expo example](https://github.com/Binary-Balance/seshat/tree/main/examples/jest-expo)
-for those commands.
+Each command reads `./seshat.json`; use `--config PATH` for another file. Add
+`--json` to write a report to stdout, as described in the
+[report format](https://github.com/Binary-Balance/seshat/blob/main/docs/report-format.md). `seshat --help` lists all options.
 
-See the [full configuration guide](https://github.com/Binary-Balance/seshat/blob/main/docs/configuration.md)
-for all fields and runner setup, and the [JSON report format](https://github.com/Binary-Balance/seshat/blob/main/docs/report-format.md)
-for the `--json` output contract.
+Run only trusted test commands. Seshat's copies protect the project checkout,
+but tests can still access external files, services, databases and credentials.
+
+## Understand the results
+
+CRAP uses complexity and statement coverage (a fraction from 0 to 1):
+
+```text
+complexity^2 * (1 - coverage)^3 + complexity
+```
+
+For complexity 10, zero coverage gives `110`, 50% coverage gives `22.5` and
+full coverage gives `10`.
+
+The mutation score is the percentage of mutants that made a test fail. A mutant
+is one changed comparison, such as `>` to `>=`. If tests catch two of three
+mutants, the score is `66.67%`. A timeout or execution error leaves the run
+incomplete and withholds the score. Neither score proves correctness.
+
+## Use in CI
+
+Add optional thresholds to `seshat.json`:
+
+```json
+"thresholds": {
+  "maxCrap": 30,
+  "minMutationScore": 80
+}
+```
+
+| Exit status | Meaning |
+| ---: | --- |
+| `0` | Complete run, thresholds met. |
+| `1` | Complete run, a threshold was not met. |
+| `2` | Invalid input, failed baseline or incomplete run. |
+| `130` / `143` | Cancelled by `SIGINT` / `SIGTERM` on Unix. |
+
+## Development
+
+See the [architecture](https://github.com/Binary-Balance/seshat/blob/main/docs/architecture.md), the
+[build and regression guide](https://github.com/Binary-Balance/seshat/blob/main/benchmarks/proofs/README.md) and the
+[packaging guide](https://github.com/Binary-Balance/seshat/blob/main/packaging/README.md).
+
+## License
+
+[MIT](https://github.com/Binary-Balance/seshat/blob/main/LICENSE).

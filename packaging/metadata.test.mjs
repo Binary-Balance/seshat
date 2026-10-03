@@ -71,18 +71,14 @@ test('layout-only inspection describes metadata without creating archives', () =
       if (directory === 'seshat') {
         const normalizedReadme = stagedReadme.replace(/\s+/g, ' ');
         for (const fragment of [
-          'Seshat is a native CLI for TypeScript and TSX complexity analysis and mutation testing.',
-          'Assessments support Node.js >=24.20.0 <25',
+          'A native code-assurance tool for TypeScript and TSX, written in Rust.',
+          'Seshat needs Node `>=24.20.0 <25`',
           'npm install --save-dev @binary-balance/seshat',
-          'seshat mutate --config ./seshat.json',
-          'Linux x64 (glibc; Debian 11 userspace, glibc 2.31)',
-          'Linux ARM64 (glibc; Ubuntu 22.04, glibc 2.35)',
-          'macOS x64 (macOS 15.0 minimum)',
-          'macOS ARM64 (macOS 15.0 minimum)',
-          'Windows x64 (Windows Server 2022 verification)',
-          'full configuration guide',
-          'JSON report format',
-          'native platform support matrix',
+          'npx seshat mutate',
+          'Linux x64/ARM64, macOS x64/ARM64 or Windows x64',
+          'configuration guide',
+          'report format',
+          'platform support matrix',
         ]) assert.ok(normalizedReadme.includes(fragment), `${directory}: README is missing ${fragment}`);
       } else {
         assert.equal(stagedReadme,
