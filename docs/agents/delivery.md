@@ -31,9 +31,10 @@ Delegate a bounded assignment when at least one of these benefits applies:
 
 Prefer direct work when explaining and supervising the assignment would
 approach the effort of completing it. For well-specified, independently
-verifiable implementation, consider delegating to a cheaper but still capable
-model. Retain required checks and the independent review below whether
-implementation is direct or delegated.
+verifiable implementation, consider delegating to the least expensive available
+model that can do the work reliably. The required checks and independent review
+below apply whether implementation is direct or delegated, so its mistakes are
+caught.
 
 ## Bounded delegation and implementation ownership
 
