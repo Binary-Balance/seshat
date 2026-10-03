@@ -30,8 +30,10 @@ Delegate a bounded assignment when at least one of these benefits applies:
   progress. Conversation length alone is insufficient.
 
 Prefer direct work when explaining and supervising the assignment would
-approach the effort of completing it. Retain required checks and the
-independent review below whether implementation is direct or delegated.
+approach the effort of completing it. For well-specified, independently
+verifiable implementation, consider delegating to a cheaper but still capable
+model. Retain required checks and the independent review below whether
+implementation is direct or delegated.
 
 ## Bounded delegation and implementation ownership
 
