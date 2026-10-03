@@ -11,8 +11,8 @@ PR and posting review/fix notes are part of the task; do not ask for separate
 permission for each step. Stop before merging unless the user has authorised the
 merge.
 
-Review passes use fresh agents with model `gpt-6-astra`; leave the reviewer's
-reasoning effort at its default unless the user specifies one.
+Review passes use fresh agents with no inherited conversation history. The
+fresh context is what matters, not which model reviews.
 
 ## When to delegate
 
@@ -74,12 +74,11 @@ to skip review or required validation.
    update the existing PR for that work. Describe the problem, resulting
    behaviour, validation and material limits. Link the originating issue with
    `Closes #N` when merging will fully resolve it. Keep the issue open until then.
-3. Start a fresh review agent with no inherited conversation history, using
-   model `gpt-6-astra` and its default reasoning effort. Give it the PR URL,
-   current head commit and originating issue/specification. It must read
-   repository instructions and inspect the full PR diff and relevant code,
-   checking correctness, requirements, simplicity and validation. It must not
-   edit the implementation.
+3. Start a fresh review agent with no inherited conversation history. Give it
+   the PR URL, current head commit and originating issue/specification. It
+   must read repository instructions and inspect the full PR diff and relevant
+   code, checking correctness, requirements, simplicity and validation. It must
+   not edit the implementation.
 4. Have the reviewer post its findings on the PR. Each actionable finding needs
    a file/line reference, the concrete problem and its impact. Record the
    reviewed commit, checks performed and any verification gaps. If there are
