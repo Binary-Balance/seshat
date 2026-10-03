@@ -68,7 +68,7 @@ assert.equal(entryArchiveManifest.description, entryDescription);
 assert.ok(normalizedEntryReadme.includes('A native code-assurance tool for TypeScript and TSX, written in Rust.'));
 assert.ok(normalizedEntryReadme.includes('Seshat needs Node `>=24.20.0 <25`'));
 assert.ok(normalizedEntryReadme.includes('npm install --save-dev @binary-balance/seshat'));
-assert.ok(normalizedEntryReadme.includes('npx --no-install seshat mutate'));
+assert.ok(normalizedEntryReadme.includes('npx @binary-balance/seshat mutate'));
 assert.ok(normalizedEntryReadme.includes('Linux x64/ARM64, macOS x64/ARM64 or Windows x64'));
 assert.ok(normalizedEntryReadme.includes('https://github.com/Binary-Balance/seshat/blob/main/docs/configuration.md'));
 assert.ok(normalizedEntryReadme.includes('https://github.com/Binary-Balance/seshat/blob/main/docs/report-format.md'));

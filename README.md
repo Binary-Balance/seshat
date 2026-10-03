@@ -73,12 +73,13 @@ every field, including `workers` for parallel mutation runs.
 ## Use
 
 ```sh
-npx --no-install seshat check    # CRAP and mutation testing
-npx --no-install seshat crap     # coverage and CRAP only
-npx --no-install seshat mutate   # mutation testing only
+npx @binary-balance/seshat check    # CRAP and mutation testing
+npx @binary-balance/seshat crap     # coverage and CRAP only
+npx @binary-balance/seshat mutate   # mutation testing only
 ```
 
-`--no-install` makes `npx` use only the locally installed package.
+Use the full package name with `npx`. A bare `npx seshat` can fetch an
+unrelated package of that name.
 
 Each command reads `./seshat.json`; use `--config PATH` for another file. Add
 `--json` to write a report to stdout, as described in the
