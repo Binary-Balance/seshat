@@ -140,8 +140,8 @@ The standalone, lifecycle and runner proofs remain separate native evidence.
 The local package check alone does not establish release acceptance. Version
 0.1.0 completed the hosted installation, notice and publication checks recorded
 in the [release audit](../docs/research/release-notice-audit.md) and
-[project release status](../README.md#release-status). Future releases must retain
-their own required evidence; fixes on `main` since 0.1.0 remain unreleased.
+[0.1.0 release notes](../docs/releases/0.1.0.md). Future releases must retain
+their own required evidence.
 
 `repeat-pack.mjs` invokes the ordinary native packer twice from a clean source
 and compares the native binary, `BUILD.json`, npm archive and standalone bytes.

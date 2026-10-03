@@ -9,8 +9,8 @@ the tested merge tree was therefore the implementation merged at that point. The
 pull-request head recorded by the workflows was
 `97a19aa27ac7c78e95ccf3dcfac68befbabf3460`.
 
-For published 0.1.0 package identities and subsequent unreleased changes, see
-the [current project status](../README.md#release-status). The identities below
+For published 0.1.0 package identities, see
+the [0.1.0 release notes](releases/0.1.0.md). The identities below
 belong to the earlier issue 2 proof, not the published archives.
 
 Each row links the final GitHub run, job and artifact. GitHub retains these raw

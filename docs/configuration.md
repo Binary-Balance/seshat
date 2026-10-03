@@ -1,11 +1,11 @@
 # Configuration
 
-Current source accepts stable Node versions `>=24.20.0 <25`. The published 0.1.0 package
-still requires 24.20.0. See the [runner compatibility matrix](runner-compatibility.md)
+Seshat accepts stable Node versions `>=24.20.0 <25`. Version 0.1.0 accepts only
+24.20.0. See the [runner compatibility matrix](runner-compatibility.md)
 for the exact runner versions and retained checks.
 
-This guide follows the current `main` source. See the [release status](../README.md#release-status)
-for the distinction between published `0.1.0` and unreleased fixes.
+This guide follows the current `main` source. See the [0.1.0 release notes](releases/0.1.0.md)
+for version 0.1.0 behaviour.
 
 Place a declarative `seshat.json` in the project to assess. Its directory is the
 project root. `seshat check` reads `./seshat.json` by default; `--config PATH`
@@ -18,7 +18,7 @@ configure Node, TypeScript, a test runner or a coverage provider. Commands in a
 setup are argument arrays; Seshat does not interpret shell expressions.
 
 For a local 0.1.0 archive, use the [six-archive local installation
-recipe](../README.md#install-a-local-010-archive) from the project root. For an
+recipe](../examples/README.md#install-and-run-a-local-010-archive) from the project root. For an
 npm workspace, that is the workspace root containing its root `package.json`
 and `package-lock.json`. Keep the entry and all five native archives under the
 project-relative `vendor/seshat` directory. The two npm install commands write

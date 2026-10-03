@@ -1,9 +1,9 @@
 # Runner compatibility
 
-Current source supports stable Node versions `>=24.20.0 <25`. Later Node 24
+Seshat supports stable Node versions `>=24.20.0 <25`. Later Node 24
 patch and minor releases are accepted without a Seshat update. Node 25 and
-prereleases are outside this range. This policy is unreleased; the published
-0.1.0 archives still accept only Node 24.20.0.
+prereleases are outside this range. Version 0.1.0 accepts only Node
+24.20.0.
 
 24.20.0 is the verified minimum, not a claim that every integration needs an API
 introduced in that release. Earlier Node 24 versions require additional testing;
