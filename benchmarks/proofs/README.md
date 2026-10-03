@@ -947,7 +947,7 @@ crates/seshat/target/release/seshat-proofs collect /path/to/project/seshat.json 
 ```
 
 This Linux proof supports **Node 24.20.0**, with its built-in runner,
-**Jest 29.7.0 / jest-expo 57.0.5**, or **Vitest 5.0.0** with Istanbul coverage.
+**Jest 29.7.0 / jest-expo 57.0.5**, or **Vitest 5** with Istanbul coverage.
 Unsupported versions in receipts prevent assessment. Each setup
 runs its baseline, then coverage, sequentially in the
 copy. A configured typecheck runs before the setup's baseline. After a failed job,

@@ -13,12 +13,35 @@ some locked runner dependencies require at least 24.11.0.
 | --- | --- | --- |
 | Node test runner | >=24.20.0 <25 | Checked-in TypeScript/Istanbul collector |
 | Jest/Expo | >=24.20.0 <25 | Jest 29.7.0, jest-expo 57.0.5, Expo 57.0.20, Jest Circus and Babel coverage |
-| Vitest | >=24.20.0 <25 | Vitest 5.0.0 and @vitest/coverage-istanbul 5.0.0 |
+| Vitest | >=24.20.0 <25 | Vitest >=5.0.0 <6 and the matching @vitest/coverage-istanbul |
 
-The runner dependencies remain locked. This policy does not expand Jest, Expo
-or Vitest versions, CPU targets or OS support. Node 24.20.0 and 24.21.0 have passed
+The Jest and Expo dependencies remain locked. This policy does not expand Jest
+or Expo versions, CPU targets or OS support. Node 24.20.0 and 24.21.0 have passed
 the native compatibility matrix; that tested set is distinct from the supported
 Node range.
+
+## Vitest range
+
+Seshat accepts stable Vitest versions `>=5.0.0 <6`. Later Vitest 5 releases are
+accepted without a Seshat update. Other major versions and prereleases are
+rejected, because the adapter extends Vitest's own test runner and matches its
+timeout messages, which a new major version can change. Version 0.1.0 accepts
+only Vitest 5.0.0.
+
+Vitest 5.0.0 and 5.0.3 have passed the 23 checks in
+[`vitest-check.mjs`](../benchmarks/proofs/vitest-check.mjs), each with the
+matching `@vitest/coverage-istanbul`, with the same verdicts on both. That
+tested set is distinct from the supported range. The 5.0.3 run was on Linux x64
+with Node 24.21.0; the package workflows keep the fixtures locked to 5.0.0 on
+every platform.
+
+To check another Vitest 5 release, install the proof dependencies with that
+version into a separate directory and pass it with `--deps`:
+
+```sh
+node benchmarks/proofs/vitest-check.mjs \
+  --cli /absolute/path/to/seshat --deps /absolute/path/to/dependencies
+```
 
 ## Import-failure observer
 

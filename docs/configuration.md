@@ -165,8 +165,9 @@ in the [report format](report-format.md).
 
 This example follows the [public Vitest example](../examples/vitest/README.md),
 which has TypeScript, React TSX, a Fastify route and three Vitest tests. Adjust
-the source paths and capture list for your project. The tested runner is Vitest
-5.0.0 with `@vitest/coverage-istanbul` 5.0.0 and Node `>=24.20.0 <25`.
+the source paths and capture list for your project. Seshat accepts Vitest
+`>=5.0.0 <6` with the matching `@vitest/coverage-istanbul` and Node
+`>=24.20.0 <25`. The example is locked to Vitest 5.0.0.
 
 Merge these settings into `vitest.config.mjs`:
 

@@ -194,6 +194,18 @@ fn validate_coverage_report(root: &Path, path: &Path) -> Result<Value, String> {
     Ok(Value::Object(normalized))
 }
 
+/// Parses a plain `major.minor.patch` version. Prereleases, build metadata and
+/// non-canonical numbers such as `024` are rejected.
+fn stable_version(text: &str) -> Option<[u32; 3]> {
+    let mut parts = text.split('.').map(|part| {
+        part.parse::<u32>()
+            .ok()
+            .filter(|number| number.to_string() == part)
+    });
+    let version = [parts.next()??, parts.next()??, parts.next()??];
+    parts.next().is_none().then_some(version)
+}
+
 fn validate_runner_receipt(report: &Value, runner: &Runner, id: &str) -> Result<(), String> {
     if report["version"] != 1 {
         return Err("runner receipt has invalid format version: expected 1".into());
@@ -227,21 +239,27 @@ fn validate_runner_receipt(report: &Value, runner: &Runner, id: &str) -> Result<
     let node = report["node"]
         .as_str()
         .ok_or("runner receipt has missing or invalid Node.js version")?;
-    let parts: Vec<_> = node.split('.').collect();
-    if parts.len() != 3
-        || !parts.iter().all(|part| {
-            part.parse::<u32>()
-                .is_ok_and(|number| number.to_string() == *part)
-        })
-    {
-        return Err("runner receipt has missing or invalid Node.js version".into());
-    }
+    let [major, minor, _] =
+        stable_version(node).ok_or("runner receipt has missing or invalid Node.js version")?;
     // The tested floor is independent of the observer's narrower version set.
-    if parts[0] != "24" || parts[1].parse::<u32>().unwrap() < 20 {
+    if major != 24 || minor < 20 {
         return Err(format!(
             "unsupported Node.js version {node:?}; supported: >=24.20.0 <25"
         ));
     }
+    // The adapter uses Vitest internals, so other majors and prereleases stay
+    // rejected until they are tested.
+    let vitest = |value: &Value, component: &str| {
+        let actual = value
+            .as_str()
+            .ok_or_else(|| format!("runner receipt has missing or invalid {component} version"))?;
+        if !matches!(stable_version(actual), Some([5, _, _])) {
+            return Err(format!(
+                "unsupported {component} version {actual:?}; supported: >=5.0.0 <6"
+            ));
+        }
+        Ok(())
+    };
     match runner {
         Runner::Node => Ok(()),
         Runner::Jest => {
@@ -252,8 +270,8 @@ fn validate_runner_receipt(report: &Value, runner: &Runner, id: &str) -> Result<
             version(&report["expo"], "cwd jest-expo", &["57.0.5"])
         }
         Runner::Vitest => {
-            version(&report["actual"]["vitest"], "Vitest", &["5.0.0"])?;
-            version(&report["vitest"], "reported Vitest", &["5.0.0"])
+            vitest(&report["actual"]["vitest"], "Vitest")?;
+            vitest(&report["vitest"], "reported Vitest")
         }
     }
 }
@@ -2146,6 +2164,26 @@ mod tests {
             assert_eq!(
                 validate_runner_receipt(&receipt, &Runner::Node, "current").unwrap_err(),
                 format!("unsupported Node.js version {node:?}; supported: >=24.20.0 <25")
+            );
+        }
+        let vitest = |actual: &str, reported: &str| {
+            let mut receipt = base.clone();
+            receipt["runner"] = json!("vitest");
+            receipt["vitest"] = json!(reported);
+            receipt["actual"] = json!({"vitest":actual});
+            validate_runner_receipt(&receipt, &Runner::Vitest, "current")
+        };
+        for version in ["5.0.0", "5.0.3", "5.1.0", "5.99.99"] {
+            assert!(vitest(version, version).is_ok(), "{version}");
+        }
+        for version in ["4.1.11", "6.0.0", "5.1.0-beta.1", "5.0", "05.0.0", ""] {
+            assert_eq!(
+                vitest(version, "5.0.0").unwrap_err(),
+                format!("unsupported Vitest version {version:?}; supported: >=5.0.0 <6")
+            );
+            assert_eq!(
+                vitest("5.0.0", version).unwrap_err(),
+                format!("unsupported reported Vitest version {version:?}; supported: >=5.0.0 <6")
             );
         }
         for node in [
