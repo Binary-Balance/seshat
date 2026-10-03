@@ -190,7 +190,7 @@ function validate({preflight, packed, build, npm, standalone, jestExpo, vitest, 
 
 const selfCheckRunner = (cases, binary = 'binary', tarball = 'tarball') => ({
   version: 1,
-  cli: {source: 'tarball', version: 'seshat 0.1.0', tarballSha256: tarball, binarySha256: binary},
+  cli: {source: 'tarball', version: 'seshat 0.2.0', tarballSha256: tarball, binarySha256: binary},
   noConsumingRust: {
     probes: [{command: 'cargo', unavailable: true}, {command: 'rustc', unavailable: true}],
     environmentUnset: environmentNames,
@@ -221,13 +221,13 @@ function selfCheckSummary() {
       node: {version: 'v24.20.0'}, npm: {version: '11.0.0'},
       toolchain: {rust: {rustc: {version: 'rustc 1.98.1'}, cargo: {version: 'cargo 1.98.1'}}},
     }},
-    packed: {version: '0.1.0', tarballSha256: archiveHash, binary: binaryHash, binaryBytes: 1, standalone: {sha256: archiveHash, bytes: 2}},
+    packed: {version: '0.2.0', tarballSha256: archiveHash, binary: binaryHash, binaryBytes: 1, standalone: {sha256: archiveHash, bytes: 2}},
     build: {target: 'aarch64-apple-darwin', rust: 'rustc 1.98.1', binarySha256: binaryHash, binaryBytes: 1},
-    npm: {kind: 'seshat-release-npm-install', schemaVersion: 1, version: '0.1.0',
+    npm: {kind: 'seshat-release-npm-install', schemaVersion: 1, version: '0.2.0',
       build: {target: 'aarch64-apple-darwin', rust: 'rustc 1.98.1', binarySha256: binaryHash, binaryBytes: 1,
-        package: '@binary-balance/seshat-darwin-arm64', packageVersion: '0.1.0'},
-      entryArchive: {name: '@binary-balance/seshat', version: '0.1.0'},
-      nativeArchive: {name: '@binary-balance/seshat-darwin-arm64', version: '0.1.0'},
+        package: '@binary-balance/seshat-darwin-arm64', packageVersion: '0.2.0'},
+      entryArchive: {name: '@binary-balance/seshat', version: '0.2.0'},
+      nativeArchive: {name: '@binary-balance/seshat-darwin-arm64', version: '0.2.0'},
       nativeNotices: {hasCopyright: true, hasUnlicense: true}, checks},
     standalone: {
       archiveSha256: archiveHash, archiveBytes: 2, cliScenarios: 49,

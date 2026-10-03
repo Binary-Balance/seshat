@@ -1,6 +1,6 @@
 # Seshat release packaging
 
-The release crate in `crates/seshat/Cargo.toml` owns version `0.1.0`.
+The release crate in `crates/seshat/Cargo.toml` owns version `0.2.0`.
 Packaging reads its literal `[package].version`; workspace inheritance is not
 supported. Dependency versions cannot supply a missing package version.
 `pack.mjs` builds one native payload for the current platform. `release.mjs`
@@ -70,11 +70,11 @@ Pass one built binary per target to produce packed entry and native archives:
 
 ```sh
 node packaging/release.mjs \
-  --output work/release-0.1.0 \
+  --output work/release-0.2.0 \
   --binary linux-x64=/absolute/path/to/seshat \
   --build-info linux-x64=/absolute/path/to/BUILD.json \
   --notices linux-x64=/absolute/path/to/THIRD_PARTY_NOTICES.txt \
-  --manifest work/release-0.1.0/release.json
+  --manifest work/release-0.2.0/release.json
 ```
 
 Each supplied binary requires its packer's `BUILD.json` and
@@ -132,14 +132,14 @@ and that cache are prerequisites for the offline step.
 
 ```sh
 node benchmarks/proofs/npm-package.mjs \
-  work/release-0.1.0/binary-balance-seshat-0.1.0.tgz \
-  work/release-0.1.0/binary-balance-seshat-linux-x64-0.1.0.tgz
+  work/release-0.2.0/binary-balance-seshat-0.2.0.tgz \
+  work/release-0.2.0/binary-balance-seshat-linux-x64-0.2.0.tgz
 ```
 
 The standalone, lifecycle and runner proofs remain separate native evidence.
 The local package check alone does not establish release acceptance. Version
 0.1.0 completed the hosted installation, notice and publication checks recorded
-in the [release audit](../docs/research/release-notice-audit.md) and
+in the [0.1.0 audit](../docs/releases/0.1.0-audit.md) and
 [0.1.0 release notes](../docs/releases/0.1.0.md). Future releases must retain
 their own required evidence.
 

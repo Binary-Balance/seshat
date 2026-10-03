@@ -8,7 +8,7 @@ native library requirements and dependency versions in `BUILD.json`. Node
 Install the local tarball as a development dependency:
 
 ```sh
-npm install --save-dev --save-exact --ignore-scripts /absolute/path/to/binary-balance-seshat-linux-arm64-0.1.0.tgz
+npm install --save-dev --save-exact --ignore-scripts /absolute/path/to/binary-balance-seshat-linux-arm64-0.2.0.tgz
 ./node_modules/@binary-balance/seshat-linux-arm64/bin/seshat --help
 ```
 

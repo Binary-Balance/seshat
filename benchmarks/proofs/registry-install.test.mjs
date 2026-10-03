@@ -38,8 +38,8 @@ test('rejects binary size or hash drift from the audit', () => {
 
 test('rejects missing or mismatched package attestations', () => {
   const expected = [
-    {name: '@binary-balance/seshat', version: '0.1.0'},
-    {name: '@binary-balance/seshat-linux-x64', version: '0.1.0'},
+    {name: '@binary-balance/seshat', version: '0.2.0'},
+    {name: '@binary-balance/seshat-linux-x64', version: '0.2.0'},
   ];
   const verified = expected.map(value => ({
     ...value,
@@ -48,13 +48,13 @@ test('rejects missing or mismatched package attestations', () => {
   }));
   assert.throws(
     () => validateAttestations({invalid: [], missing: [], verified: verified.slice(1)}, expected),
-    /verified attestation is missing for @binary-balance\/seshat@0\.1\.0/,
+    /verified attestation is missing for @binary-balance\/seshat@0\.2\.0/,
   );
   assert.throws(
     () => validateAttestations({invalid: [], missing: [], verified: [
-      {...verified[0], version: '0.1.0-rc.1'}, verified[1],
+      {...verified[0], version: '0.2.0-rc.1'}, verified[1],
     ]}, expected),
-    /verified attestation is missing for @binary-balance\/seshat@0\.1\.0/,
+    /verified attestation is missing for @binary-balance\/seshat@0\.2\.0/,
   );
   assert.throws(
     () => validateAttestations({invalid: [], missing: [], verified: expected.map(value => ({
@@ -62,6 +62,6 @@ test('rejects missing or mismatched package attestations', () => {
       attestations: {url: 'https://registry.npmjs.org/-/npm/v1/attestations'},
       attestationBundles: [{predicateType: 'https://slsa.dev/dependencies/v1', bundle: {}}],
     }))}, expected),
-    /verified SLSA provenance bundle is missing for @binary-balance\/seshat@0\.1\.0/,
+    /verified SLSA provenance bundle is missing for @binary-balance\/seshat@0\.2\.0/,
   );
 });
