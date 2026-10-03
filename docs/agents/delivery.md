@@ -119,10 +119,17 @@ keep the PR unready. Do not stop merely because one review/fix round completed.
 ## Merging
 
 When merging is authorised, recheck the reviewed commit, required checks and
-conflict status. Use `gh pr merge <number> --merge --match-head-commit <sha>`
-with the reviewed head SHA so a later push cannot be merged accidentally.
-Confirm the PR merged and the resulting commit reached `main`. Close linked
-issues only when their acceptance criteria are met.
+conflict status. Choose the merge method that leaves the clearer history:
+
+- Squash (`--squash`) when the branch's commits are mostly review fixes or
+  other steps that mean little on their own.
+- Use a merge commit (`--merge`) when each commit is a meaningful step worth
+  keeping, or when another open PR is stacked on the branch.
+
+Use `gh pr merge <number> <method> --match-head-commit <sha>` with the reviewed
+head SHA so a later push cannot be merged accidentally. Confirm the PR merged
+and the resulting commit reached `main`. Close linked issues only when their
+acceptance criteria are met.
 
 ## Branch and worktree cleanup
 
@@ -132,8 +139,10 @@ After confirming the merge:
    not already deleted it, provided it still points to the merged PR's head.
 2. Remove a task worktree only when it is clean and no other agent or session is
    using it. Preserve unfinished work and unique evidence.
-3. Leave the task branch before deleting it locally with `git branch -d`. If Git
-   refuses, the branch holds unmerged work; keep it and report why.
+3. Leave the task branch before deleting it locally with `git branch -d`. After
+   a squash merge Git refuses, because the original commits are not in `main`.
+   Use `git branch -D` only after confirming the branch tip matches the merged
+   PR's head and holds no later or unpushed work.
 4. Prune stale remote refs and worktree entries, and update a clean local `main`
    with a fast-forward only. Leave unrelated branches and active worktrees alone.
 
