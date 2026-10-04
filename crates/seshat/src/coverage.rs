@@ -84,10 +84,10 @@ fn span_matches(
     expected: oxc_span::Span,
     extension_end: Option<u32>,
 ) -> bool {
-    // Sorted AST ranges contain only closing delimiters. Combining adjacent
-    // ranges also handles parentheses inside a final JSX expression child.
+    // AST ranges cover punctuation, whitespace and empty JSX containers.
+    // Combining adjacent ranges handles enclosing expressions.
     let closing_end = analysis
-        .closing_ranges
+        .branch_end_ranges
         .iter()
         .fold(expected.end, |end, range| {
             if range.start <= end && end < range.end {
@@ -126,23 +126,29 @@ fn decode_branches(
         let kind = branch["type"].as_str().ok_or("missing branch kind")?;
         let span = branch_span(source, &branch["loc"])?;
         // Source maps may extend a default's end through its type annotation
-        // and closing parameter delimiters. Stop at the next recorded default
-        // or the body, so the range cannot swallow another executable value.
+        // and closing parameter delimiters. Stop before the next executable
+        // parameter value, including computed keys and decorators.
         let parameter_end = analysis.owner(span.0).and_then(|i| {
             let scope = &analysis.scopes[i];
             if kind != "default-arg" || span.0 >= scope.body.start {
                 return None;
             }
+            let site_end = analysis
+                .branches
+                .iter()
+                .find(|site| site.kind == kind && site.span.start == span.0)?
+                .span
+                .end;
             Some(
                 analysis
-                    .branches
+                    .parameter_values
                     .iter()
-                    .filter(|site| {
-                        site.kind == "default-arg"
-                            && span.0 < site.span.start
-                            && site.span.start < scope.body.start
+                    .filter(|value| {
+                        site_end <= value.start
+                            && value.start < scope.body.start
+                            && analysis.owner(value.start) == Some(i)
                     })
-                    .map(|site| site.span.start)
+                    .map(|value| value.start)
                     .min()
                     .unwrap_or(scope.body.start),
             )
@@ -169,20 +175,11 @@ fn decode_branches(
             return Err("branch outcome/counter mismatch".into());
         }
         let mut covered = Vec::new();
-        for (index, ((location, hits), expected)) in
-            outcomes.iter().zip(hits).zip(&site.outcomes).enumerate()
-        {
+        for ((location, hits), expected) in outcomes.iter().zip(hits).zip(&site.outcomes) {
             match expected {
                 Some(expected) => {
                     let mapped = branch_span(source, location)?;
-                    // Vitest may include the separating ':' or logical operator
-                    // in an outcome's range. Its next outcome proves the boundary.
-                    let extension_end = parameter_end.or_else(|| {
-                        site.outcomes
-                            .get(index + 1)
-                            .and_then(|span| span.map(|s| s.start))
-                    });
-                    if !span_matches(analysis, source, mapped, *expected, extension_end) {
+                    if !span_matches(analysis, source, mapped, *expected, parameter_end) {
                         return Err(format!(
                             "coverage is not mapped to a {kind} outcome: {}..{}",
                             mapped.0, mapped.1

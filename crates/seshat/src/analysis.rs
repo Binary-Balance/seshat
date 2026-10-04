@@ -115,10 +115,10 @@ pub struct Comparison {
 pub struct Analysis {
     pub scopes: Vec<Scope>,
     pub branches: Vec<BranchSite>,
-    pub closing_ranges: Vec<Span>,
+    pub branch_end_ranges: Vec<Span>,
     pub comparisons: Vec<Comparison>,
     decisions: Vec<Span>,
-    parameter_values: Vec<Span>,
+    pub parameter_values: Vec<Span>,
     pub statement_starts: std::collections::BTreeSet<u32>,
     throws: Vec<Span>,
     caught_blocks: Vec<Span>,
@@ -140,26 +140,35 @@ fn plain_parameters(params: &FormalParameters<'_>) -> bool {
 impl<'a> Visit<'a> for Analysis {
     fn enter_node(&mut self, node: AstKind<'a>) {
         if let AstKind::ParenthesizedExpression(expression) = node {
-            self.closing_ranges.push(Span::new(
+            self.branch_end_ranges.push(Span::new(
                 expression.expression.without_parentheses().span().end,
                 expression.span.end,
             ));
         }
-        if let AstKind::JSXExpressionContainer(container) = node
-            && let Some(expression) = container.expression.as_expression()
-        {
-            // Every container closes before any following child or attribute.
-            self.closing_ranges.push(Span::new(
-                expression.without_parentheses().span().end,
+        if let AstKind::JSXExpressionContainer(container) = node {
+            // Empty comment containers have no executable value. Both forms
+            // close before any following child or attribute.
+            self.branch_end_ranges.push(Span::new(
+                container
+                    .expression
+                    .as_expression()
+                    .map_or(container.span.start, |expression| {
+                        expression.without_parentheses().span().end
+                    }),
                 container.span.end,
             ));
+        }
+        if let AstKind::JSXText(text) = node
+            && text.value.trim().is_empty()
+        {
+            self.branch_end_ranges.push(text.span);
         }
         if let AstKind::JSXOpeningElement(element) = node
             && let Some(JSXAttributeItem::Attribute(attribute)) = element.attributes.last()
             && let Some(JSXAttributeValue::ExpressionContainer(container)) = &attribute.value
         {
             // Only the final attribute is followed solely by tag punctuation.
-            self.closing_ranges
+            self.branch_end_ranges
                 .push(Span::new(container.span.end, element.span.end));
         }
         let jsx = match node {
@@ -171,7 +180,29 @@ impl<'a> Visit<'a> for Analysis {
             && let Some(JSXChild::ExpressionContainer(container)) = children.last()
         {
             // Only a final expression child is followed solely by a closing tag.
-            self.closing_ranges.push(Span::new(container.span.end, end));
+            self.branch_end_ranges
+                .push(Span::new(container.span.end, end));
+        }
+        match node {
+            // Source maps can include an enclosing operator's punctuation, but
+            // must stop before its next executable operand or outcome.
+            AstKind::ConditionalExpression(expression) => {
+                self.branch_end_ranges.push(Span::new(
+                    expression.test.without_parentheses().span().end,
+                    expression.consequent.without_parentheses().span().start,
+                ));
+                self.branch_end_ranges.push(Span::new(
+                    expression.consequent.without_parentheses().span().end,
+                    expression.alternate.without_parentheses().span().start,
+                ));
+            }
+            AstKind::LogicalExpression(expression) => {
+                self.branch_end_ranges.push(Span::new(
+                    expression.left.without_parentheses().span().end,
+                    expression.right.without_parentheses().span().start,
+                ));
+            }
+            _ => {}
         }
         let branch = match node {
             AstKind::IfStatement(statement) => Some(BranchSite {
@@ -341,6 +372,12 @@ impl<'a> Visit<'a> for Analysis {
                 self.parameter_values.push(p.right.span());
                 self.statement_starts.insert(p.right.span().start);
             }
+            AstKind::BindingProperty(p) if p.computed => {
+                self.parameter_values.push(p.key.span());
+            }
+            AstKind::Decorator(decorator) => {
+                self.parameter_values.push(decorator.expression.span());
+            }
             AstKind::ArrowFunctionExpression(f)
                 if !matches!(f.body, ArrowFunctionBody::FunctionBody(_)) =>
             {
@@ -467,7 +504,7 @@ impl Analysis {
             ..Self::default()
         };
         result.visit_program(&parsed.program);
-        result.closing_ranges.sort_by_key(|range| range.start);
+        result.branch_end_ranges.sort_by_key(|range| range.start);
         let decisions = std::mem::take(&mut result.decisions);
         for span in decisions {
             if let Some(i) = result.owner(span.start) {

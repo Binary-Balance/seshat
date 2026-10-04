@@ -31,6 +31,12 @@ export function conditional(flag: boolean) { return flag ? 1 : 2; }
 export function parenthesized(flag: boolean) {
   return flag ? (1) : (2);
 }
+export function nestedConditional(flag: boolean, other: boolean) {
+  return flag ? (other ? 1 : 2) : 3;
+}
+export function nestedLogical(flag: boolean, value: boolean, other: boolean) {
+  return flag ? (value && other) : false;
+}
 export function logical(value: boolean, other: boolean) { return value && other; }
 export function logicalWrapped(value: boolean, other: boolean, last: boolean) {
   return value && (other || last);
@@ -78,10 +84,28 @@ export function attribute(flag: boolean) {
 export function attributeClosed(flag: boolean) {
   return <span title={flag ? 'on' : 'off'} />;
 }
+export function viewComment(flag: boolean) {
+  return <span>{flag ? 'on' : 'off'} {/* comment */}</span>;
+}
+export function fragmentComment(flag: boolean) {
+  return <>{flag ? 'on' : 'off'} {/* comment */}</>;
+}
+export function viewNested(flag: boolean, other: boolean) {
+  return <span>{flag ? (other ? 'on' : 'off') : 'missing'}</span>;
+}
+export function attributeNested(flag: boolean, other: boolean) {
+  return <span title={flag ? (other ? 'on' : 'off') : 'missing'} />;
+}
+function key() { return 'present'; }
+export function computed(value = 7, {[key()]: other}: {present: number}) {
+  return value + other;
+}
 `);
 const checks = `assert.equal(subject.price(100, true), 90);
 assert.equal(subject.conditional(true), 1);
 assert.equal(subject.parenthesized(true), 1);
+assert.equal(subject.nestedConditional(true, true), 1);
+assert.equal(subject.nestedLogical(true, false, true), false);
 assert.equal(subject.logical(false, true), false);
 assert.equal(subject.logicalWrapped(false, true, false), false);
 assert.equal(subject.nullish('present'), 'present');
@@ -100,6 +124,11 @@ assert.equal(subject.fragmentText(true), 'on');
 assert.equal(subject.fragmentSibling(true), 'on');
 assert.equal(subject.attribute(true), 'tail');
 assert.equal(subject.attributeClosed(true), undefined);
+assert.equal(subject.viewComment(true), 'on');
+assert.equal(subject.fragmentComment(true), 'on');
+assert.equal(subject.viewNested(true, true), 'on');
+assert.equal(subject.attributeNested(true, true), undefined);
+assert.equal(subject.computed(undefined, {present: 3}), 10);
 `;
 function run(args) {
   const child = spawnSync(process.execPath, args, {
@@ -174,7 +203,7 @@ for (const [provider, path] of Object.entries(reports)) {
   const named = Object.fromEntries(result.functions.map(row => [row.name, row]));
   for (const name of ['price', 'conditional', 'parenthesized', 'logical', 'nullish',
     'view', 'fragment', 'fragmentMultiline', 'elementMultiline', 'fragmentText',
-    'fragmentSibling', 'attribute', 'attributeClosed']) {
+    'fragmentSibling', 'attribute', 'attributeClosed', 'viewComment', 'fragmentComment']) {
     assert.equal(named[name].coverage, 1, `${provider}/${name}: statement coverage`);
     assert.equal(named[name].branchCoverage, 0.5, `${provider}/${name}: branch coverage`);
     assert.equal(named[name].coverageBasis, 'branch');
@@ -203,6 +232,29 @@ for (const [provider, path] of Object.entries(reports)) {
     assert.equal(named[name].branchTotal, 3);
     assert.ok(Math.abs(named[name].crap - 17 / 3) < 1e-12);
   }
+  for (const name of ['nestedConditional', 'nestedLogical', 'viewNested', 'attributeNested']) {
+    assert.equal(named[name].branchCovered, 2);
+    assert.equal(named[name].branchTotal, 4);
+    assert.equal(named[name].crap, 4.125);
+  }
+  assert.equal(named.computed.branchCovered, 1);
+  assert.equal(named.computed.branchTotal, 1);
+  assert.equal(named.computed.crap, 2);
+  const invalid = JSON.parse(readFileSync(path, 'utf8'));
+  const computedLine = readFileSync(source, 'utf8').split('\n')
+    .findIndex(line => line.startsWith('export function computed(')) + 1;
+  const branch = Object.values(invalid[source].branchMap)
+    .find(branch => branch.type === 'default-arg' && branch.loc.start.line === computedLine);
+  const line = readFileSync(source, 'utf8').split('\n')[computedLine - 1];
+  const end = {line: computedLine, column: line.indexOf('key()') + 'key()'.length};
+  branch.loc.end = end;
+  branch.locations[0].end = end;
+  const invalidPath = join(work, `${provider}-computed-key-crossing.json`);
+  json(invalidPath, invalid);
+  const rejected = spawnSync(binary, ['score', source, invalidPath], {encoding: 'utf8', timeout: 10000});
+  assert.ifError(rejected.error);
+  assert.equal(rejected.status, 2, rejected.stdout + rejected.stderr);
+  assert.equal(JSON.parse(rejected.stdout).complete, false);
   console.log(`${provider}: partial branches scored; defaults, nested scopes and statement fallback verified`);
 }
 const output = resolve(process.env.SESHAT_PROOF_OUTPUT ?? join(work, 'summary.json'));
