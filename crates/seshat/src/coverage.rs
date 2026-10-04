@@ -146,7 +146,9 @@ fn decode_branches(
                     .filter(|value| {
                         site_end <= value.start
                             && value.start < scope.body.start
-                            && analysis.owner(value.start) == Some(i)
+                            // Creating a function-valued default belongs to the
+                            // containing function; its body has its own scope.
+                            && analysis.statement_owner(value.start) == Some(i)
                     })
                     .map(|value| value.start)
                     .min()
@@ -696,6 +698,39 @@ fn functions_in_default_parameters_own_their_internal_branches() {
     assert_eq!(result["functions"][0]["crap"], 2.0);
     assert_eq!(result["functions"][1]["branchTotal"], 2);
     assert_eq!(result["functions"][1]["crap"], 2.5);
+}
+
+#[test]
+fn default_ranges_stop_before_a_later_function_value() {
+    let path = "/fixture.tsx";
+    let source = "export function f(x = 1, next = () => 2) {\n  return x + next();\n}\n";
+    let analysis = Analysis::inspect(path, source).unwrap();
+    // Real Node/Istanbul positions. The second initializer creates a function
+    // in f's parameter evaluation; executing its body has a separate owner.
+    let report = json!({path:{"path":path,
+        "statementMap":{"0":recorded_location(1,0,json!(16)),"1":recorded_location(1,38,json!(39)),"2":recorded_location(2,2,json!(20))},
+        "s":{"0":1,"1":2,"2":2},
+        "branchMap":{
+            "0":{"type":"default-arg","loc":recorded_location(1,18,json!(23)),"locations":[recorded_location(1,22,json!(23))]},
+            "1":{"type":"default-arg","loc":recorded_location(1,25,json!(39)),"locations":[recorded_location(1,32,json!(39))]}
+        },"b":{"0":[1],"1":[2]}
+    }});
+    let result = attribute(&analysis, path, source, [&report]);
+    assert_eq!(result["complete"], true, "{result}");
+    assert_eq!(result["functions"][0]["crap"], 3.0);
+    assert_eq!(result["functions"][1]["crap"], 1.0);
+    for (branch, outcome) in [(true, false), (false, true), (true, true)] {
+        let mut invalid = report.clone();
+        if branch {
+            invalid[path]["branchMap"]["0"]["loc"]["end"]["column"] = json!(39);
+        }
+        if outcome {
+            invalid[path]["branchMap"]["0"]["locations"][0]["end"]["column"] = json!(39);
+        }
+        let result = attribute(&analysis, path, source, [&invalid]);
+        assert_eq!(result["complete"], false, "{result}");
+        assert_eq!(result["functions"][0]["crap"], Value::Null);
+    }
 }
 
 #[test]

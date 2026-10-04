@@ -27,6 +27,7 @@ routes evaluate the same JSX expression without a React dependency.
 | Multiline JSX, following children, comments and conditional attributes | 100% | 1/2 | 2 | 2.5 |
 | Nested conditional/logical branches, including JSX | 100% | 2/4 | 3 | 4.125 |
 | `computed`, default followed by a computed parameter key | 100% | 1/1 | 2 | 2 |
+| `defaultsNamed`, default followed by a function-valued default | 100% | 2/2 | 3 | 3 |
 | `defaults`, a parameter default | 100% | 0/1 | 2 | 6 |
 | `destructured`, a destructuring default | 100% | 0/1 | 2 | 6 |
 | `optional`, `?.` | 100% | No recorded branches | 2 | 2 |
@@ -54,6 +55,8 @@ its element or fragment's closing tag. The syntax tree must identify these
 as punctuation or empty JSX comment containers. Seshat rejects ranges that
 include another executable expression, attribute or JSX child. Default ranges
 stop before later parameter initializers, computed keys or decorators.
+Vitest can map an earlier default across a later arrow-function initializer;
+that report remains unknown because the range includes another expression.
 Branch hits combine across setups only when the validated outcome identities
 agree, alongside the existing statement-mapping checks.
 

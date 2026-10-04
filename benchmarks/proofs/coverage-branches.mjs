@@ -100,6 +100,9 @@ function key() { return 'present'; }
 export function computed(value = 7, {[key()]: other}: {present: number}) {
   return value + other;
 }
+export function defaultsNamed(value = 7, next = function defaultNext() { return 3; }) {
+  return value + next();
+}
 `);
 const checks = `assert.equal(subject.price(100, true), 90);
 assert.equal(subject.conditional(true), 1);
@@ -129,6 +132,7 @@ assert.equal(subject.fragmentComment(true), 'on');
 assert.equal(subject.viewNested(true, true), 'on');
 assert.equal(subject.attributeNested(true, true), undefined);
 assert.equal(subject.computed(undefined, {present: 3}), 10);
+assert.equal(subject.defaultsNamed(), 10);
 `;
 function run(args) {
   const child = spawnSync(process.execPath, args, {
@@ -240,6 +244,17 @@ for (const [provider, path] of Object.entries(reports)) {
   assert.equal(named.computed.branchCovered, 1);
   assert.equal(named.computed.branchTotal, 1);
   assert.equal(named.computed.crap, 2);
+  assert.equal(named.defaultsNamed.branchCovered, 2);
+  assert.equal(named.defaultsNamed.branchTotal, 2);
+  assert.equal(named.defaultsNamed.crap, 3);
+  function rejects(name, invalid) {
+    const invalidPath = join(work, `${provider}-${name}.json`);
+    json(invalidPath, invalid);
+    const rejected = spawnSync(binary, ['score', source, invalidPath], {encoding: 'utf8', timeout: 10000});
+    assert.ifError(rejected.error);
+    assert.equal(rejected.status, 2, rejected.stdout + rejected.stderr);
+    assert.equal(JSON.parse(rejected.stdout).complete, false);
+  }
   const invalid = JSON.parse(readFileSync(path, 'utf8'));
   const computedLine = readFileSync(source, 'utf8').split('\n')
     .findIndex(line => line.startsWith('export function computed(')) + 1;
@@ -249,12 +264,21 @@ for (const [provider, path] of Object.entries(reports)) {
   const end = {line: computedLine, column: line.indexOf('key()') + 'key()'.length};
   branch.loc.end = end;
   branch.locations[0].end = end;
-  const invalidPath = join(work, `${provider}-computed-key-crossing.json`);
-  json(invalidPath, invalid);
-  const rejected = spawnSync(binary, ['score', source, invalidPath], {encoding: 'utf8', timeout: 10000});
-  assert.ifError(rejected.error);
-  assert.equal(rejected.status, 2, rejected.stdout + rejected.stderr);
-  assert.equal(JSON.parse(rejected.stdout).complete, false);
+  rejects('computed-key-crossing', invalid);
+  const defaultsLine = readFileSync(source, 'utf8').split('\n')
+    .findIndex(line => line.startsWith('export function defaultsNamed(')) + 1;
+  const defaults = Object.entries(file.branchMap)
+    .filter(([, branch]) => branch.type === 'default-arg' && branch.loc.start.line === defaultsLine)
+    .sort(([, a], [, b]) => a.loc.start.column - b.loc.start.column);
+  assert.equal(defaults.length, 2);
+  for (const range of ['branch', 'outcome', 'both']) {
+    const invalid = JSON.parse(readFileSync(path, 'utf8'));
+    const first = invalid[source].branchMap[defaults[0][0]];
+    const end = defaults[1][1].locations[0].end;
+    if (range !== 'outcome') first.loc.end = end;
+    if (range !== 'branch') first.locations[0].end = end;
+    rejects(`defaultsNamed-${range}-crossing`, invalid);
+  }
   console.log(`${provider}: partial branches scored; defaults, nested scopes and statement fallback verified`);
 }
 const output = resolve(process.env.SESHAT_PROOF_OUTPUT ?? join(work, 'summary.json'));
