@@ -145,7 +145,7 @@ native archive and `--cli` accepts an installed native executable:
 
 ```sh
 node benchmarks/proofs/jest-expo-check.mjs \
-  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.2.0.tgz
+  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.3.0.tgz
 # or:
 node benchmarks/proofs/jest-expo-check.mjs \
   --cli /absolute/path/to/node_modules/@binary-balance/seshat-linux-x64/bin/seshat
