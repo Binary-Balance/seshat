@@ -96,9 +96,9 @@ for (const runner of ['node','jest','vitest-istanbul']) {
   assert.equal(measured.complete,true,JSON.stringify(measured));
   assert.equal(unused.complete,true);
   const named=Object.fromEntries(measured.functions.map(f=>[f.name,f]));
-  for (const [name,complexity,covered,total] of [['covered',2,3,3],['partial',2,2,3],['never',1,0,1],['defaults',4,1,1],['outer',2,3,3],['inner',2,2,3],['unicode',2,3,4]]) {
+  for (const [name,complexity,covered,total,crap] of [['covered',2,3,3,2],['partial',2,2,3,2.5],['never',1,0,1,2],['defaults',4,1,1,4],['outer',2,3,3,2],['inner',2,2,3,2.5],['unicode',2,3,4,2.5]]) {
     assert.deepEqual([named[name].complexity,named[name].covered,named[name].total],[complexity,covered,total],`${runner}/${name}`);
-    assert.ok(Math.abs(named[name].crap - (complexity**2*(1-covered/total)**3+complexity))<1e-12);
+    assert.ok(Math.abs(named[name].crap - crap)<1e-12, `${runner}/${name}: CRAP`);
   }
   assert.equal(named.empty.status,'not-applicable');
   const arrows=measured.functions.filter(f=>f.name.startsWith('arrow@'));

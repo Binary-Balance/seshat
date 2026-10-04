@@ -125,7 +125,7 @@ mod tests {
     use TestState::*;
 
     #[test]
-    fn crap_requires_valid_statement_counts() {
+    fn crap_requires_valid_coverage_counts() {
         assert_eq!(score(10, 0, 2), Some(110.0));
         assert_eq!(score(10, 1, 2), Some(22.5));
         assert_eq!(score(10, 2, 2), Some(10.0));

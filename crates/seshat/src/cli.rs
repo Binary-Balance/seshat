@@ -283,9 +283,17 @@ fn readable(report: &Value) -> String {
                 .as_f64()
                 .map(|v| format!("{v:.3}"))
                 .unwrap_or_else(|| unmeasured.into());
+            let branches = if function["coverageBasis"] == "branch" {
+                format!(
+                    ", branches {}/{}",
+                    function["branchCovered"], function["branchTotal"]
+                )
+            } else {
+                String::new()
+            };
             let _ = writeln!(
                 output,
-                "  {:?}: complexity {}, statements {statements}, CRAP {crap}",
+                "  {:?}: complexity {}, statements {statements}{branches}, CRAP {crap}",
                 text(&function["name"]),
                 function["complexity"]
             );
@@ -922,7 +930,8 @@ mod tests {
                 "complete":true,"sources":[{"path":"a.ts","result":{"functions":[
                     {"name":"empty","complexity":1,"status":"not-applicable"},
                     {"name":"field","complexity":2,"status":"complexity-only"},
-                    {"name":"covered","complexity":1,"status":"measured","covered":1,"total":1,"crap":1}
+                    {"name":"covered","complexity":1,"status":"measured","covered":1,"total":1,"crap":1},
+                    {"name":"branched","complexity":2,"status":"measured","covered":1,"total":1,"branchCovered":1,"branchTotal":2,"coverageBasis":"branch","crap":2.5}
                 ]}}],"mutation":{"complete":true,"planned":0,"score":null}
             }),
             1.0,
@@ -933,6 +942,7 @@ mod tests {
         let rendered = readable(&report);
         assert!(rendered.contains("CRAP not applicable (complexity only)"));
         assert!(rendered.contains("statements 1/1, CRAP 1.000"));
+        assert!(rendered.contains("statements 1/1, branches 1/2, CRAP 2.500"));
         assert!(rendered.contains("score not applicable"));
         assert!(rendered.contains("Capture: 0.5 ms"));
         assert!(!rendered.contains("CRAP unknown"));

@@ -50,7 +50,8 @@ assert.deepEqual(good.sources.map(s => s.result.functions.map(f => [f.complexity
 const partial = collect('single-setup', c => c.setups.pop());
 assert.equal(partial.complete, true);
 assert.equal(partial.sources[0].result.functions[0].covered, 2);
-assert.ok(Math.abs(partial.sources[0].result.functions[0].crap - (2 + 4/27)) < 1e-10);
+assert.equal(partial.sources[0].result.functions[0].branchCoverage, 0.5);
+assert.equal(partial.sources[0].result.functions[0].crap, 2.5);
 
 const node = code => [process.execPath, '-e', code];
 const afterCoverage = code => node(`const run=require('child_process').spawnSync(process.execPath,${JSON.stringify([join(here, 'collect-node.mjs'), 'tests/high.mjs'])},{stdio:'inherit'});if(run.status!==0)process.exit(2);const fs=require('fs'),path=process.env.SESHAT_COVERAGE_REPORT;${code}`);

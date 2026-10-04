@@ -127,7 +127,8 @@ async function check(name,workers,mode='normal',signal){
       assert.deepEqual(result.mutation.outcomes.map(m=>m.verdict),['survived','killed','survived','killed']);
       assert.equal(result.mutation.score,50);assert.equal(result.mutation.jobsAttempted,8);
       assert.deepEqual(result.sources,[{path:'subject.ts',result:{complete:true,functions:[{
-        complexity:1,coverage:1,covered:1,crap:1,name:'adult',start:7,status:'measured',total:1
+        complexity:1,coverage:1,covered:1,crap:1,name:'adult',start:7,status:'measured',total:1,
+        branchCovered:0,branchTotal:0,branchCoverage:null,coverageBasis:'statement'
       }],problems:[]}}]);
       const count=Math.min(workers??1,4);
       assert.equal(result.mutation.workersUsed,count);assert.equal(result.mutation.workerBaselineJobs,(count-1)*2);

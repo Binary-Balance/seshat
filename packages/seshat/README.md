@@ -9,7 +9,7 @@ insufficiently tested code.
 
 ## What Seshat does
 
-- Calculates function complexity and CRAP scores from statement coverage.
+- Calculates function complexity and CRAP scores from branch coverage.
 - Changes comparison operators one at a time and checks whether tests detect them.
 - Runs tests in isolated copies of the captured project.
 - Produces readable terminal output and versioned JSON, with optional CI thresholds.
@@ -102,7 +102,8 @@ but tests can still access external files, services, databases and credentials.
 
 ## Understand the results
 
-CRAP uses complexity and statement coverage (a fraction from 0 to 1):
+CRAP uses complexity and branch coverage, a fraction from 0 to 1. Functions
+with no recorded branches use statement coverage instead:
 
 ```text
 complexity^2 * (1 - coverage)^3 + complexity
@@ -110,6 +111,12 @@ complexity^2 * (1 - coverage)^3 + complexity
 
 For complexity 10, zero coverage gives `110`, 50% coverage gives `22.5` and
 full coverage gives `10`.
+
+Statement coverage counts code that ran; branch coverage counts the recorded
+outcomes of decisions. For example, testing only the member price in
+`if (member) total *= 0.9; return total;` can run every statement while
+leaving the non-member outcome untested. Its statement coverage is 100%,
+but its branch coverage is 50%. Both measurements appear in the report.
 
 The mutation score is the percentage of mutants that made a test fail. A mutant
 is one changed comparison, such as `>` to `>=`. If tests catch two of three

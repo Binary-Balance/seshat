@@ -91,7 +91,7 @@ for (const [name, covered, total] of [['covered',3,3],['partial',2,3],['never',0
   assert.deepEqual([measured[name].covered, measured[name].total], [covered,total], `statement attribution: ${name}`);
 }
 assert.equal(measured.empty.status, 'not-applicable');
-assert.ok(Math.abs(measured.partial.crap - (2 + 4/27)) < 1e-12);
+assert.equal(measured.partial.crap, 2.5);
 assert.ok(results.coverage.jest.result.functions.filter(f => f.name.startsWith('arrow@')).every(f => f.total === 1));
 const sameReport = native(['score',coverageSource,results.coverage.jest.report,results.coverage.jest.report]);
 assert.deepEqual(sameReport.data, results.coverage.jest.result, 'compatible reports merge without double counting');

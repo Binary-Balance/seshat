@@ -386,6 +386,11 @@ coverage commands, and keep `--maxWorkers`, `--no-file-parallelism` and
 
 ## Coverage
 
+CRAP uses the fraction of recorded branch outcomes taken within each function.
+When the provider records no branches for a function, it uses that function's
+statement coverage. Statement coverage stays in the report for reference.
+There is no configuration switch for the coverage input.
+
 `check` and `crap` run the configured coverage command, remove its previous output
 and consume the fresh full Istanbul JSON. A summary-only report is insufficient.
 Locations must refer to original TypeScript source. Include unimported files so
@@ -405,13 +410,25 @@ containing lone CR, U+2028 or U+2029 separators produce incomplete coverage with
 a diagnostic and no coverage or CRAP scores. The load-failure observer likewise
 withholds location-based evidence for these sources.
 
-Reports from multiple setups are merged only when their source and statement
-mappings agree. A shared JSON format alone does not establish compatibility.
+Reports must include `statementMap` and `s`, plus `branchMap` and `b` for branch
+locations and their outcome counters. An empty branch map is valid; missing
+branch data is unknown. The recorded branch kinds depend on the provider and
+its transforms, so even 100% branch coverage does not prove all paths were tested.
+
+Reports from multiple setups are merged only when their source, statement and
+branch mappings agree. A shared JSON format alone does not establish
+compatibility.
 Missing counters and ambiguous mappings make the run incomplete. Valid counters
 showing zero execution are measured 0% coverage. Functions verified to have no
 executable body or parameter work have not-applicable coverage and CRAP. Class
 initialisers and static blocks retain complexity results but are outside CRAP
 scoring. Unknown and not-applicable rows do not become passing numbers.
+
+Branch entries must match source `if`, ternary, logical, default-value or switch
+syntax. Partially suppressed outcomes, such as `istanbul ignore else`, remain
+unknown when the remaining entry cannot describe the complete source branch.
+A function with executable parameters but no mapped statements also remains
+unknown, even when it has branch counters.
 
 ## Parallel execution
 
