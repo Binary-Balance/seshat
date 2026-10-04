@@ -34,6 +34,14 @@ separately to each function. Calling a function does not imply that all of its
 statements ran.
 _Avoid_: function invocation coverage
 
+**Branch coverage**:
+The fraction of recorded Istanbul branch outcomes that ran at least once,
+attributed separately to each function. CRAP uses this fraction, falling back
+to statement coverage when the provider records no branches for a function.
+Providers can record different branch kinds; this does not measure every
+possible execution path.
+_Avoid_: path coverage
+
 **Mutant**:
 A version of the code containing one deliberate change whose detection by the
 tests is being assessed.

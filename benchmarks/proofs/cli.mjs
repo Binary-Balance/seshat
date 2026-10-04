@@ -364,6 +364,22 @@ try {
   if (!receiptClosed) forceKill();
   await receiptDone;
 }
+// Every statement runs, but the missing non-adult outcome must raise CRAP and
+// fail a threshold that passed when the input was statement coverage.
+originals['subject.ts'] = 'export function adult(age: number) { let result = false; if (age >= 18) result = true; return result; }\n';
+writeFileSync(join(project, 'subject.ts'), originals['subject.ts']);
+configure({...config, thresholds: {maxCrap: 2}});
+const branchThreshold = json('branch-coverage-threshold', 'crap', 1);
+const branchFunction = branchThreshold.result.sources[0].result.functions[0];
+assert.equal(branchFunction.coverage, 1);
+assert.equal(branchFunction.branchCoverage, 0.5);
+assert.equal(branchFunction.coverageBasis, 'branch');
+assert.equal(branchFunction.crap, 2.5);
+assert.equal(branchThreshold.quality.checks[0].actual, 2.5);
+assert.equal(branchThreshold.quality.checks[0].state, 'failed');
+configure({...config, thresholds: {maxCrap: 2.5}});
+assert.equal(json('branch-threshold-equality', 'crap').quality.checks[0].state, 'passed');
+
 const resultPath = process.env.SESHAT_PROOF_OUTPUT ? resolve(process.env.SESHAT_PROOF_OUTPUT) : join(work, 'result.json');
 mkdirSync(dirname(resultPath), {recursive: true});
 writeFileSync(resultPath, JSON.stringify(results, null, 2) + '\n');

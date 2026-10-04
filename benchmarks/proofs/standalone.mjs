@@ -75,7 +75,7 @@ for (const command of ['cargo', 'rustc']) assert.equal(spawnSync(command, ['--ve
 
 const cli = run('installed-cli', process.execPath, [join(repo, 'benchmarks/proofs/cli.mjs')], env, 0);
 const cliSummary = cli.stdout.match(/CLI passed: (\d+) scenarios plus legacy parity/);
-assert.ok(cliSummary && Number(cliSummary[1]) === 49, cli.stdout);
+assert.ok(cliSummary && Number(cliSummary[1]) === 51, cli.stdout);
 const parallel = run('installed-parallel', process.execPath, [join(repo, 'benchmarks/proofs/parallel.mjs')],
   {...env, SESHAT_PARALLEL_CLI: '1'});
 const parallelPath = parallel.stdout.match(/Parallel evidence: (.+)/)?.[1];

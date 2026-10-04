@@ -28,14 +28,14 @@ child `cwd` and omitting `-C` because stock `tar.exe` cannot reliably receive
 that path argument, then runs the extracted executable. Consumer PATH keeps
 `SystemRoot`, `ComSpec`, `System32`, Node and `npm.cmd`, while `cargo`, `rustc`
 and Cargo environment variables are absent. The workflow also retains the
-separately built `seshat-proofs.exe` for the shared 49-scenario legacy parity
+separately built `seshat-proofs.exe` for the shared 51-scenario legacy parity
 check. It then runs `windows-runtime-cli.mjs` against the installed executable,
 retaining cleanup, timeout, overflow, repeated leader-exit and
 console-cancellation evidence.
 
 The package summary is fail-closed for the preflight, two-run reproducibility,
 archive identity, install, no-Rust and native Windows runtime checks. The
-workflow runs the shared 49 CLI scenarios, 11 parallel controls and four
+workflow runs the shared 51 CLI scenarios, 11 parallel controls and four
 installed Jest/Expo and Vitest cases against the installed executable. Missing
 or partial integration evidence remains an explicit summary gap. This slice
 does not claim desktop Windows, Windows ARM64, POSIX signal semantics, signing,

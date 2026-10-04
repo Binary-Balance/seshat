@@ -80,10 +80,11 @@ access to external systems.
 ## CRAP calculation
 
 Use `complexity^2 * (1 - coverage)^3 + complexity`, where coverage is the fraction
-of measured executable statements executed, from 0 to 1. Attribute statements
-separately to their owning functions rather than treating a function invocation
-as full coverage. Label the result as CRAP using statement coverage; do not imply
-numerical interchangeability with implementations using other coverage measures.
+of recorded branch outcomes executed, from 0 to 1. Attribute branches separately
+to their owning functions, including parameter defaults. Functions with no
+recorded branches use statement coverage. Keep statement coverage in the report.
+Missing or unreliable branch data stays unknown. Do not imply numerical
+interchangeability with implementations using other coverage measures.
 
 Use one fixed, documented and versioned complexity rule set based on ESLint's
 classic calculation, not the benchmark's simplified rules or selectable variants.
@@ -156,10 +157,11 @@ working directory, test and coverage commands, and coverage-report location. A
 single-package project can use one entry; a mixed-runner project can declare
 several. Run all configured setups for each mutant.
 
-Combine coverage only when the source and statement mappings agree. Combine
-execution evidence for matching statements, not independently calculated
-percentages. Conflicting reports make the result incomplete with an explanation;
-do not guess a combined score. Verify exact configuration fields against working
+Combine coverage only when the source, statement and branch mappings agree.
+Combine execution evidence for matching statements and branch outcomes, not
+independently calculated percentages. Conflicting reports make the result
+incomplete with an explanation; do not guess a combined score. Verify exact
+configuration fields against working
 runner integrations before publishing setup examples.
 
 ## Commands and CI

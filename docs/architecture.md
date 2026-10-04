@@ -38,6 +38,9 @@ It validates locations and counters, combines compatible reports and rejects
 ambiguous mappings. Existing JavaScript coverage tools provide source-mapped
 reports; Rust does not convert raw V8 coverage or process source maps.
 Missing or unreliable evidence remains unknown. It never becomes zero coverage.
+CRAP uses mapped branch outcome counters, with statement coverage as the
+fallback when a function has no recorded branches. Statement measurements stay
+in the report. Both mapping kinds must agree before setup hits are combined.
 
 ## Assessment
 

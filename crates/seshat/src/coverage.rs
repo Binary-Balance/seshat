@@ -5,6 +5,18 @@ use crate::{
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
 
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+struct BranchKey {
+    kind: String,
+    span: (u32, u32),
+    outcomes: Vec<Option<(u32, u32)>>,
+}
+
+struct Coverage {
+    statements: BTreeMap<(u32, u32), bool>,
+    branches: BTreeMap<BranchKey, Vec<bool>>,
+}
+
 fn byte_position(source: &str, position: &Value, open_end: bool) -> Result<u32, String> {
     let line = position["line"].as_u64().ok_or("missing line")? as usize;
     if line == 0 {
@@ -65,13 +77,150 @@ fn same_line_trivia(mut text: &str) -> bool {
     }
 }
 
+fn span_matches(
+    analysis: &Analysis,
+    source: &str,
+    mapped: (u32, u32),
+    expected: oxc_span::Span,
+    extension_end: Option<u32>,
+) -> bool {
+    // AST ranges cover punctuation, whitespace and empty JSX containers.
+    // Combining adjacent ranges handles enclosing expressions.
+    let closing_end = analysis
+        .branch_end_ranges
+        .iter()
+        .fold(expected.end, |end, range| {
+            if range.start <= end && end < range.end {
+                range.end
+            } else {
+                end
+            }
+        });
+    let end = closing_end.max(extension_end.unwrap_or(expected.end));
+    mapped.0 == expected.start
+        && mapped.1 >= expected.end
+        && (mapped.1 <= end || same_line_trivia(&source[end as usize..mapped.1 as usize]))
+}
+
+fn branch_span(source: &str, location: &Value) -> Result<(u32, u32), String> {
+    let start = byte_position(source, &location["start"], false)?;
+    let end = byte_position(source, &location["end"], true)?;
+    if start >= end {
+        return Err("empty or reversed branch span".into());
+    }
+    Ok((start, end))
+}
+
+fn decode_branches(
+    analysis: &Analysis,
+    source: &str,
+    file: &Value,
+) -> Result<BTreeMap<BranchKey, Vec<bool>>, String> {
+    let locations = file["branchMap"].as_object().ok_or("missing branchMap")?;
+    let counters = file["b"].as_object().ok_or("missing branch counters")?;
+    if locations.len() != counters.len() {
+        return Err("branch/counter mismatch".into());
+    }
+    let mut map = BTreeMap::new();
+    for (id, branch) in locations {
+        let kind = branch["type"].as_str().ok_or("missing branch kind")?;
+        let span = branch_span(source, &branch["loc"])?;
+        // Source maps may extend a default's end through its type annotation
+        // and closing parameter delimiters. Stop before the next executable
+        // parameter value, including computed keys and decorators.
+        let parameter_end = analysis.owner(span.0).and_then(|i| {
+            let scope = &analysis.scopes[i];
+            if kind != "default-arg" || span.0 >= scope.body.start {
+                return None;
+            }
+            let site_end = analysis
+                .branches
+                .iter()
+                .find(|site| site.kind == kind && site.span.start == span.0)?
+                .span
+                .end;
+            Some(
+                analysis
+                    .parameter_values
+                    .iter()
+                    .filter(|value| {
+                        site_end <= value.start
+                            && value.start < scope.body.start
+                            // Creating a function-valued default belongs to the
+                            // containing function; its body has its own scope.
+                            && analysis.statement_owner(value.start) == Some(i)
+                    })
+                    .map(|value| value.start)
+                    .min()
+                    .unwrap_or(scope.body.start),
+            )
+        });
+        let Some(site) = analysis.branches.iter().find(|site| {
+            site.kind == kind && span_matches(analysis, source, span, site.span, parameter_end)
+        }) else {
+            return Err(format!(
+                "coverage is not mapped to a {kind} branch: {}..{}",
+                span.0, span.1
+            ));
+        };
+        let outcomes = branch["locations"]
+            .as_array()
+            .ok_or("missing branch locations")?;
+        let hits = counters
+            .get(id)
+            .and_then(Value::as_array)
+            .ok_or("invalid branch counters")?;
+        if outcomes.len() != hits.len()
+            || outcomes.len() != site.outcomes.len()
+            || outcomes.is_empty()
+        {
+            return Err("branch outcome/counter mismatch".into());
+        }
+        let mut covered = Vec::new();
+        for ((location, hits), expected) in outcomes.iter().zip(hits).zip(&site.outcomes) {
+            match expected {
+                Some(expected) => {
+                    let mapped = branch_span(source, location)?;
+                    if !span_matches(analysis, source, mapped, *expected, parameter_end) {
+                        return Err(format!(
+                            "coverage is not mapped to a {kind} outcome: {}..{}",
+                            mapped.0, mapped.1
+                        ));
+                    }
+                }
+                None => {
+                    // The instrumenter serializes the absent else as empty
+                    // positions. Only this AST-proven implicit outcome permits it.
+                    if *location != json!({"start":{},"end":{}}) {
+                        return Err("invalid implicit else location".into());
+                    }
+                }
+            }
+            covered.push(hits.as_u64().ok_or("invalid branch count")? > 0);
+        }
+        let key = BranchKey {
+            kind: kind.into(),
+            span: (site.span.start, site.span.end),
+            outcomes: site
+                .outcomes
+                .iter()
+                .map(|span| span.map(|s| (s.start, s.end)))
+                .collect(),
+        };
+        if map.insert(key, covered).is_some() {
+            return Err("duplicate branch mapping".into());
+        }
+    }
+    Ok(map)
+}
+
 pub fn attribute<'a>(
     analysis: &Analysis,
     path: &str,
     source: &str,
     reports: impl IntoIterator<Item = &'a Value>,
 ) -> Value {
-    let mut merged: Option<BTreeMap<(u32, u32), bool>> = None;
+    let mut merged: Option<Coverage> = None;
     let mut problems = Vec::new();
     let mut report_count = 0;
     let supported_positions = supports_line_positions(source);
@@ -81,7 +230,7 @@ pub fn attribute<'a>(
             problems.push(format!("missing source coverage: {path}"));
             continue;
         };
-        let decode = || -> Result<BTreeMap<(u32, u32), bool>, String> {
+        let decode = || -> Result<Coverage, String> {
             // Shifted lines can land on valid statements and silently inflate coverage.
             if !supported_positions {
                 return Err(
@@ -124,17 +273,33 @@ pub fn attribute<'a>(
                     return Err("duplicate statement span".into());
                 }
             }
-            Ok(map)
+            Ok(Coverage {
+                statements: map,
+                branches: decode_branches(analysis, source, file)?,
+            })
         };
         match decode() {
             Err(e) => problems.push(e),
             Ok(map) => {
                 if let Some(previous) = merged.as_mut() {
-                    if !previous.keys().eq(map.keys()) {
+                    if !previous.statements.keys().eq(map.statements.keys()) {
                         problems.push("incompatible statement mappings".into());
+                    } else if !previous.branches.keys().eq(map.branches.keys()) {
+                        problems.push("incompatible branch mappings".into());
                     } else {
-                        for (key, covered) in map {
-                            *previous.get_mut(&key).unwrap() |= covered;
+                        for (key, covered) in map.statements {
+                            *previous.statements.get_mut(&key).unwrap() |= covered;
+                        }
+                        for (key, outcomes) in map.branches {
+                            for (previous, covered) in previous
+                                .branches
+                                .get_mut(&key)
+                                .unwrap()
+                                .iter_mut()
+                                .zip(outcomes)
+                            {
+                                *previous |= covered;
+                            }
                         }
                     }
                 } else {
@@ -147,8 +312,9 @@ pub fn attribute<'a>(
         problems.push("no coverage reports".into());
     }
     let mut statements = vec![Vec::new(); analysis.scopes.len()];
+    let mut branches = vec![Vec::new(); analysis.scopes.len()];
     if let Some(map) = merged.as_ref() {
-        for (&(start, end), &hit) in map {
+        for (&(start, end), &hit) in &map.statements {
             if let Some(i) = analysis.statement_owner(start) {
                 if end > analysis.scopes[i].span.end {
                     problems.push(format!("statement escapes owning scope: {start}..{end}"));
@@ -163,24 +329,612 @@ pub fn attribute<'a>(
                 }
             }
         }
+        for (key, outcomes) in &map.branches {
+            if let Some(i) = analysis.owner(key.span.0) {
+                if key.span.1 > analysis.scopes[i].span.end {
+                    problems.push(format!(
+                        "branch escapes owning scope: {}..{}",
+                        key.span.0, key.span.1
+                    ));
+                } else {
+                    branches[i].extend(outcomes);
+                }
+            }
+        }
     }
     let mut complete = problems.is_empty();
     let rows: Vec<_> = analysis.scopes.iter().enumerate().map(|(i,s)| {
         let total = statements[i].len();
         let covered = statements[i].iter().filter(|&&hit| hit).count();
+        let branch_total = branches[i].len();
+        let branch_covered = branches[i].iter().filter(|&&hit| hit).count();
         let status = if s.implicit { "complexity-only" } else if s.empty { "not-applicable" }
             else if !problems.is_empty() || total == 0 { complete = false; "unknown" } else { "measured" };
         json!({"name":s.name,"start":s.span.start,"complexity":s.complexity,"status":status,
             "covered":covered,"total":total,"coverage":if status=="measured" {Some(covered as f64/total as f64)}else{None},
-            "crap":if status=="measured" {assessment::score(s.complexity,covered,total)}else{None}})
+            "branchCovered":branch_covered,"branchTotal":branch_total,
+            "branchCoverage":if status=="measured" && branch_total > 0 {Some(branch_covered as f64/branch_total as f64)}else{None},
+            "coverageBasis":if status=="measured" {Some(if branch_total > 0 {"branch"} else {"statement"})}else{None},
+            "crap":if status=="measured" {if branch_total > 0 {assessment::score(s.complexity,branch_covered,branch_total)} else {assessment::score(s.complexity,covered,total)}}else{None}})
     }).collect();
     json!({"complete":complete,"functions":rows,"problems":problems})
+}
+
+#[cfg(test)]
+fn recorded_fixture() -> (&'static str, Value) {
+    // Regenerated by the Node, Jest/Expo and Vitest provider proof. These
+    // coordinates are recorded runner output, independent of our AST analysis.
+    let source = concat!(
+        "export function price(amount: number, member: boolean) {\n",
+        "  let total = amount;\n",
+        "  if (member) total = amount * 0.9;\n",
+        "  return total;\n",
+        "}\n",
+        "export function conditional(flag: boolean) { return flag ? 1 : 2; }\n",
+        "export function logical(value: boolean, other: boolean) { return value && other; }\n",
+        "export function nullish(value: string | null) { return value ?? 'missing'; }\n",
+        "export function defaults(value = 7) { return value; }\n",
+        "export function destructured({value = 7}: {value?: number}) { return value; }\n",
+        "export function optional(value: {name: string} | null) { return value?.name; }\n",
+        "export function nested(value: boolean) {\n",
+        "  const inner = (flag: boolean) => flag ? 1 : 2;\n",
+        "  return inner(value);\n",
+        "}\n",
+        "export function choice(value: number) {\n",
+        "  switch (value) { case 1: return 1; case 2: return 2; default: return 3; }\n",
+        "}\n",
+        "export function straight() { return 1; }\n",
+        "export function empty() {}\n",
+        "export function parameterOnly(value = 7) {}\n",
+    );
+    let mut file = json!({"path":"/fixture.tsx","statementMap":{},"s":{},"branchMap":{},"b":{}});
+    for (id, (line, start, end, hits)) in [
+        (2, 14, 20, 1),
+        (3, 2, 35, 1),
+        (3, 14, 35, 1),
+        (4, 2, 15, 1),
+        (6, 45, 65, 1),
+        (7, 58, 80, 1),
+        (8, 48, 74, 1),
+        (9, 38, 51, 1),
+        (10, 62, 75, 1),
+        (11, 57, 76, 1),
+        (13, 16, 47, 1),
+        (13, 35, 47, 1),
+        (14, 2, 22, 1),
+        (17, 2, 75, 1),
+        (17, 27, 36, 1),
+        (17, 45, 54, 0),
+        (17, 64, 73, 0),
+        (19, 29, 38, 1),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        file["statementMap"][id.to_string()] = recorded_location(line, start, json!(end));
+        file["s"][id.to_string()] = json!(hits);
+    }
+    for (id, (kind, line, start, end, outcomes, hits)) in [
+        ("if", 3, 2, 35, vec![Some((2, 35)), None], vec![1, 0]),
+        (
+            "cond-expr",
+            6,
+            52,
+            64,
+            vec![Some((59, 60)), Some((63, 64))],
+            vec![1, 0],
+        ),
+        (
+            "binary-expr",
+            7,
+            65,
+            79,
+            vec![Some((65, 70)), Some((74, 79))],
+            vec![1, 0],
+        ),
+        (
+            "binary-expr",
+            8,
+            55,
+            73,
+            vec![Some((55, 60)), Some((64, 73))],
+            vec![1, 0],
+        ),
+        ("default-arg", 9, 25, 34, vec![Some((33, 34))], vec![0]),
+        ("default-arg", 10, 30, 39, vec![Some((38, 39))], vec![0]),
+        (
+            "cond-expr",
+            13,
+            35,
+            47,
+            vec![Some((42, 43)), Some((46, 47))],
+            vec![1, 0],
+        ),
+        (
+            "switch",
+            17,
+            2,
+            75,
+            vec![Some((19, 36)), Some((37, 54)), Some((55, 73))],
+            vec![1, 0, 0],
+        ),
+        ("default-arg", 21, 30, 39, vec![Some((38, 39))], vec![0]),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        file["branchMap"][id.to_string()] = json!({
+            "type":kind,"loc":recorded_location(line, start, json!(end)),
+            "locations":outcomes.into_iter().map(|outcome| outcome.map_or_else(
+                || json!({"start":{},"end":{}}),
+                |(start,end)| recorded_location(line,start,json!(end))
+            )).collect::<Vec<_>>()
+        });
+        file["b"][id.to_string()] = json!(hits);
+    }
+    (source, json!({"/fixture.tsx":file}))
+}
+
+#[cfg(test)]
+fn recorded_location(line: u32, start: u32, end: Value) -> Value {
+    json!({"start":{"line":line,"column":start},"end":{"line":line,"column":end}})
+}
+
+#[test]
+fn recorded_branches_drive_crap_without_changing_statement_coverage() {
+    let path = "/fixture.tsx";
+    let (source, report) = recorded_fixture();
+    let analysis = Analysis::inspect(path, source).unwrap();
+    let result = attribute(&analysis, path, source, [&report]);
+    assert_eq!(result["problems"], json!([]));
+    let rows = result["functions"].as_array().unwrap();
+    for name in ["price", "conditional", "logical", "nullish"] {
+        let row = rows.iter().find(|row| row["name"] == name).unwrap();
+        assert_eq!(row["status"], "measured", "{row}");
+        assert_eq!(row["coverage"], 1.0);
+        assert_eq!(row["branchCovered"], 1);
+        assert_eq!(row["branchTotal"], 2);
+        assert_eq!(row["branchCoverage"], 0.5);
+        assert_eq!(row["coverageBasis"], "branch");
+        assert_eq!(row["crap"], 2.5);
+    }
+    for name in ["defaults", "destructured"] {
+        let row = rows.iter().find(|row| row["name"] == name).unwrap();
+        assert_eq!(row["coverage"], 1.0);
+        assert_eq!(row["branchTotal"], 1);
+        assert_eq!(row["branchCovered"], 0);
+        assert_eq!(row["branchCoverage"], 0.0);
+        assert_eq!(row["crap"], 6.0);
+    }
+    for (name, complexity) in [("optional", 2.0), ("nested", 1.0), ("straight", 1.0)] {
+        let row = rows.iter().find(|row| row["name"] == name).unwrap();
+        assert_eq!(row["coverageBasis"], "statement");
+        assert_eq!(row["branchTotal"], 0);
+        assert_eq!(row["branchCoverage"], Value::Null);
+        assert_eq!(row["crap"], complexity);
+    }
+    let arrow = rows
+        .iter()
+        .find(|row| row["name"].as_str().unwrap().starts_with("arrow@"))
+        .unwrap();
+    assert_eq!(arrow["branchTotal"], 2);
+    assert_eq!(arrow["crap"], 2.5);
+    let switch = rows.iter().find(|row| row["name"] == "choice").unwrap();
+    assert_eq!(switch["branchCovered"], 1);
+    assert_eq!(switch["branchTotal"], 3);
+    assert_eq!(switch["coverage"], 0.5);
+    let empty = rows.iter().find(|row| row["name"] == "empty").unwrap();
+    assert_eq!(empty["status"], "not-applicable");
+    assert_eq!(empty["coverageBasis"], Value::Null);
+    // A branch counter alone cannot establish statement coverage in a function
+    // whose parameters execute but whose body has no mapped statements.
+    let parameter_only = rows
+        .iter()
+        .find(|row| row["name"] == "parameterOnly")
+        .unwrap();
+    assert_eq!(parameter_only["status"], "unknown");
+    assert_eq!(parameter_only["branchTotal"], 1);
+    assert_eq!(parameter_only["branchCoverage"], Value::Null);
+    assert_eq!(parameter_only["coverageBasis"], Value::Null);
+    assert_eq!(parameter_only["crap"], Value::Null);
+    assert_eq!(result["complete"], false);
+}
+
+#[test]
+fn provider_end_extensions_normalize_before_branch_hit_merging() {
+    let path = "/fixture.tsx";
+    let (source, report) = recorded_fixture();
+    let analysis = Analysis::inspect(path, source).unwrap();
+    let mut widened = report.clone();
+    // Actual Vitest mapped branch ends. Retain identical statement mappings to
+    // isolate branch compatibility from the independently checked statement map.
+    for (id, end, outcome_ends) in [
+        (0, Value::Null, vec![Value::Null, json!(null)]),
+        (1, json!(66), vec![json!(63), json!(66)]),
+        (2, json!(81), vec![json!(74), json!(81)]),
+        (3, json!(75), vec![json!(64), json!(75)]),
+        (4, json!(36), vec![json!(36)]),
+        (5, json!(60), vec![json!(60)]),
+        (6, Value::Null, vec![json!(46), Value::Null]),
+        (7, Value::Null, vec![json!(37), json!(55), json!(74)]),
+        (8, json!(41), vec![json!(41)]),
+    ] {
+        let branch = &mut widened[path]["branchMap"][id.to_string()];
+        branch["loc"]["end"]["column"] = end;
+        for (index, end) in outcome_ends.into_iter().enumerate() {
+            if branch["locations"][index]["end"] != json!({}) {
+                branch["locations"][index]["end"]["column"] = end;
+            }
+        }
+    }
+    let reference = attribute(&analysis, path, source, [&report]);
+    assert_eq!(attribute(&analysis, path, source, [&widened]), reference);
+    widened[path]["b"]["0"] = json!([0, 3]);
+    let merged = attribute(&analysis, path, source, [&report, &widened]);
+    assert_eq!(merged["problems"], json!([]));
+    assert_eq!(merged["functions"][0]["branchCovered"], 2);
+    assert_eq!(merged["functions"][0]["branchCoverage"], 1.0);
+    assert_eq!(merged["functions"][0]["crap"], 2.0);
+    // Branch IDs are runner-local. Source identity determines compatibility.
+    widened[path]["branchMap"]["other"] = widened[path]["branchMap"]["0"].take();
+    widened[path]["branchMap"]
+        .as_object_mut()
+        .unwrap()
+        .remove("0");
+    widened[path]["b"]["other"] = widened[path]["b"]["0"].take();
+    widened[path]["b"].as_object_mut().unwrap().remove("0");
+    assert_eq!(
+        attribute(&analysis, path, source, [&report, &widened]),
+        merged
+    );
+}
+
+#[test]
+fn missing_malformed_and_shifted_branch_evidence_never_falls_back() {
+    let path = "/fixture.tsx";
+    let (source, report) = recorded_fixture();
+    let analysis = Analysis::inspect(path, source).unwrap();
+    for (pointer, malformed) in [
+        ("/branchMap", Value::Null),
+        ("/b", Value::Null),
+        ("/branchMap/0/type", json!("unknown")),
+        ("/branchMap/0/loc/start/column", json!(3)),
+        ("/branchMap/0/loc/end/column", json!(2)),
+        ("/branchMap/0/loc/end/column", json!(999)),
+        ("/branchMap/0/locations/0/start/column", json!(14)),
+        (
+            "/branchMap/0/locations/1",
+            recorded_location(3, 2, json!(35)),
+        ),
+        ("/branchMap/1/locations/0/end/column", json!(59)),
+        ("/branchMap/4/loc/end/column", json!(37)),
+        ("/branchMap/5/locations/0/end/column", json!(61)),
+        ("/branchMap/0/locations", json!([])),
+        ("/b/0", json!([1])),
+        ("/b/0", json!([1, 0, 0])),
+        ("/b/0", json!([1, -1])),
+        ("/b/0", json!([1, 0.5])),
+        ("/b/0", json!([1, "0"])),
+        ("/b/0", json!([1, true])),
+        ("/b/0", json!([1, null])),
+    ] {
+        let mut invalid = report.clone();
+        *invalid[path].pointer_mut(pointer).unwrap() = malformed;
+        let result = attribute(&analysis, path, source, [&invalid]);
+        assert_eq!(result["complete"], false, "{pointer}: {result}");
+        assert!(
+            !result["problems"].as_array().unwrap().is_empty(),
+            "{pointer}: {result}"
+        );
+        assert_eq!(result["functions"][0]["status"], "unknown");
+        assert_eq!(result["functions"][0]["coverage"], Value::Null);
+        assert_eq!(result["functions"][0]["branchCoverage"], Value::Null);
+        assert_eq!(result["functions"][0]["coverageBasis"], Value::Null);
+        assert_eq!(result["functions"][0]["crap"], Value::Null);
+    }
+    let mut duplicate = report.clone();
+    duplicate[path]["branchMap"]["extra"] = duplicate[path]["branchMap"]["0"].clone();
+    duplicate[path]["b"]["extra"] = json!([1, 1]);
+    let result = attribute(&analysis, path, source, [&duplicate]);
+    assert_eq!(result["problems"], json!(["duplicate branch mapping"]));
+
+    let mut missing_counter = report.clone();
+    missing_counter[path]["b"]
+        .as_object_mut()
+        .unwrap()
+        .remove("0");
+    let result = attribute(&analysis, path, source, [&missing_counter]);
+    assert_eq!(result["problems"], json!(["branch/counter mismatch"]));
+    let mut incompatible = report.clone();
+    incompatible[path]["branchMap"]
+        .as_object_mut()
+        .unwrap()
+        .remove("0");
+    incompatible[path]["b"].as_object_mut().unwrap().remove("0");
+    let result = attribute(&analysis, path, source, [&report, &incompatible]);
+    assert_eq!(result["problems"], json!(["incompatible branch mappings"]));
+    assert_eq!(result["functions"][0]["crap"], Value::Null);
+}
+
+#[test]
+fn flattened_logical_branches_cannot_be_counted_again_as_nested_sites() {
+    let path = "/fixture.js";
+    let source = "function f(a,b,c) { return a && (b || c); }";
+    let analysis = Analysis::inspect(path, source).unwrap();
+    let mut report = json!({path:{"path":path,
+        "statementMap":{"0":recorded_location(1,20,json!(41))},"s":{"0":1},
+        "branchMap":{"0":{"type":"binary-expr","loc":recorded_location(1,27,json!(40)),
+            "locations":[recorded_location(1,27,json!(28)),recorded_location(1,33,json!(34)),recorded_location(1,38,json!(39))]}},
+        "b":{"0":[1,1,0]}
+    }});
+    let result = attribute(&analysis, path, source, [&report]);
+    assert_eq!(result["complete"], true, "{result}");
+    assert_eq!(result["functions"][0]["complexity"], 3);
+    assert_eq!(result["functions"][0]["branchCovered"], 2);
+    assert_eq!(result["functions"][0]["branchTotal"], 3);
+    report[path]["branchMap"]["1"] = json!({"type":"binary-expr","loc":recorded_location(1,33,json!(39)),
+        "locations":[recorded_location(1,33,json!(34)),recorded_location(1,38,json!(39))]});
+    report[path]["b"]["1"] = json!([1, 0]);
+    let invalid = attribute(&analysis, path, source, [&report]);
+    assert_eq!(invalid["complete"], false);
+    assert_eq!(invalid["functions"][0]["crap"], Value::Null);
+}
+
+#[test]
+fn functions_in_default_parameters_own_their_internal_branches() {
+    let path = "/fixture.js";
+    let source = "function outer(value = () => flag ? 1 : 2) { return value; }";
+    let analysis = Analysis::inspect(path, source).unwrap();
+    let report = json!({path:{"path":path,
+        "statementMap":{"0":recorded_location(1,29,json!(41)),"1":recorded_location(1,45,json!(58))},"s":{"0":1,"1":1},
+        "branchMap":{
+            "0":{"type":"default-arg","loc":recorded_location(1,15,json!(41)),"locations":[recorded_location(1,23,json!(41))]},
+            "1":{"type":"cond-expr","loc":recorded_location(1,29,json!(41)),"locations":[recorded_location(1,36,json!(37)),recorded_location(1,40,json!(41))]}
+        },"b":{"0":[1],"1":[1,0]}
+    }});
+    let result = attribute(&analysis, path, source, [&report]);
+    assert_eq!(result["complete"], true, "{result}");
+    assert_eq!(result["functions"][0]["branchTotal"], 1);
+    assert_eq!(result["functions"][0]["crap"], 2.0);
+    assert_eq!(result["functions"][1]["branchTotal"], 2);
+    assert_eq!(result["functions"][1]["crap"], 2.5);
+}
+
+#[test]
+fn default_ranges_stop_before_a_later_function_value() {
+    let path = "/fixture.tsx";
+    let source = "export function f(x = 1, next = () => 2) {\n  return x + next();\n}\n";
+    let analysis = Analysis::inspect(path, source).unwrap();
+    // Real Node/Istanbul positions. The second initializer creates a function
+    // in f's parameter evaluation; executing its body has a separate owner.
+    let report = json!({path:{"path":path,
+        "statementMap":{"0":recorded_location(1,0,json!(16)),"1":recorded_location(1,38,json!(39)),"2":recorded_location(2,2,json!(20))},
+        "s":{"0":1,"1":2,"2":2},
+        "branchMap":{
+            "0":{"type":"default-arg","loc":recorded_location(1,18,json!(23)),"locations":[recorded_location(1,22,json!(23))]},
+            "1":{"type":"default-arg","loc":recorded_location(1,25,json!(39)),"locations":[recorded_location(1,32,json!(39))]}
+        },"b":{"0":[1],"1":[2]}
+    }});
+    let result = attribute(&analysis, path, source, [&report]);
+    assert_eq!(result["complete"], true, "{result}");
+    assert_eq!(result["functions"][0]["crap"], 3.0);
+    assert_eq!(result["functions"][1]["crap"], 1.0);
+    for (branch, outcome) in [(true, false), (false, true), (true, true)] {
+        let mut invalid = report.clone();
+        if branch {
+            invalid[path]["branchMap"]["0"]["loc"]["end"]["column"] = json!(39);
+        }
+        if outcome {
+            invalid[path]["branchMap"]["0"]["locations"][0]["end"]["column"] = json!(39);
+        }
+        let result = attribute(&analysis, path, source, [&invalid]);
+        assert_eq!(result["complete"], false, "{result}");
+        assert_eq!(result["functions"][0]["crap"], Value::Null);
+    }
+}
+
+#[test]
+fn mapped_closing_parentheses_allow_trivia_but_not_executable_code() {
+    let path = "/fixture.tsx";
+    // Actual Vitest/Istanbul positions: the final outcomes have open ends that
+    // include the closing parentheses and return statement's semicolon.
+    for (expression, kind, starts, ends, hits, complexity) in [
+        (
+            "a ? (1) : (2)",
+            "cond-expr",
+            vec![14, 20],
+            vec![json!(20), Value::Null],
+            vec![1, 1],
+            2,
+        ),
+        (
+            "a && (b || c)",
+            "binary-expr",
+            vec![9, 15, 20],
+            vec![json!(15), json!(20), Value::Null],
+            vec![3, 2, 1],
+            3,
+        ),
+    ] {
+        let source = format!(
+            "export function f(a: boolean, b: boolean, c: boolean) {{\n  return {expression};\n}}\n"
+        );
+        let locations: Vec<_> = starts
+            .into_iter()
+            .zip(ends)
+            .map(|(start, end)| recorded_location(2, start, end))
+            .collect();
+        let report = json!({path:{"path":path,
+            "statementMap":{"0":recorded_location(2,2,Value::Null)},"s":{"0":1},
+            "branchMap":{"0":{"type":kind,"loc":recorded_location(2,9,Value::Null),"locations":locations}},
+            "b":{"0":hits}
+        }});
+        for (suffix, complete) in [
+            ("", true),
+            (" // trailing", true),
+            (" sideEffect();", false),
+        ] {
+            let source = source.replace(";\n", &format!(";{suffix}\n"));
+            let analysis = Analysis::inspect(path, &source).unwrap();
+            let result = attribute(&analysis, path, &source, [&report]);
+            assert_eq!(result["complete"], complete, "{source}: {result}");
+            assert_eq!(
+                result["functions"][0]["crap"],
+                if complete {
+                    json!(f64::from(complexity))
+                } else {
+                    Value::Null
+                }
+            );
+        }
+    }
+}
+
+#[test]
+fn jsx_fragment_closing_ranges_preserve_child_boundaries() {
+    let path = "/fixture.tsx";
+    let source = "export function f(a: boolean) {\n  return <>{a ? 1 : 2}</>;\n}\n";
+    let report = json!({path:{"path":path,
+        "statementMap":{"0":recorded_location(2,2,Value::Null)},"s":{"0":1},
+        "branchMap":{"0":{"type":"cond-expr","loc":recorded_location(2,12,json!(24)),
+            "locations":[recorded_location(2,16,json!(20)),recorded_location(2,20,json!(24))]}},
+        "b":{"0":[1,1]}
+    }});
+    let analysis = Analysis::inspect(path, source).unwrap();
+    let result = attribute(&analysis, path, source, [&report]);
+    assert_eq!(result["complete"], true, "{result}");
+    assert_eq!(result["functions"][0]["crap"], 2.0);
+    let mut invalid = report.clone();
+    invalid[path]["branchMap"]["0"]["loc"]["end"]["column"] = Value::Null;
+    invalid[path]["branchMap"]["0"]["locations"][1]["end"]["column"] = Value::Null;
+    for source in [
+        source.replace("}</>", "}{sideEffect()}</>"),
+        source.replace("}</>", "}<Other value={sideEffect()} /></>"),
+        source.replace("</>;", "</> + sideEffect();"),
+    ] {
+        let analysis = Analysis::inspect(path, &source).unwrap();
+        let result = attribute(&analysis, path, &source, [&invalid]);
+        assert_eq!(result["complete"], false, "{source}: {result}");
+        assert_eq!(result["functions"][0]["crap"], Value::Null);
+    }
+}
+
+#[test]
+fn jsx_container_and_opening_tag_ends_do_not_swallow_other_attributes_or_children() {
+    let path = "/fixture.tsx";
+    for (jsx, opening_tag, complete) in [
+        ("<>{flag ? 'on' : 'off'} tail</>", false, true),
+        ("<>{flag ? 'on' : 'off'}<span>tail</span></>", false, true),
+        ("<span title={flag ? 'on' : 'off'}>tail</span>", true, true),
+        ("<span title={flag ? 'on' : 'off'} />", true, true),
+        (
+            "<span title={flag ? 'on' : 'off'} data={sideEffect()}>tail</span>",
+            true,
+            false,
+        ),
+        (
+            "<span title={flag ? 'on' : 'off'} data={sideEffect()} />",
+            true,
+            false,
+        ),
+    ] {
+        let line = format!("  return {jsx};");
+        let start = line.find("flag ?").unwrap() as u32;
+        let consequent = line.find("'on'").unwrap() as u32;
+        let alternate = line.find("'off'").unwrap() as u32;
+        // Vitest can include the brace, or the final attribute's tag punctuation.
+        let end = if opening_tag {
+            line.find('>').unwrap() + 1
+        } else {
+            line.find('}').unwrap() + 1
+        } as u32;
+        let source = format!("function view(flag: boolean) {{\n{line}\n}}\n");
+        let analysis = Analysis::inspect(path, &source).unwrap();
+        let report = json!({path:{"path":path,
+            "statementMap":{"0":recorded_location(2,2,Value::Null)},"s":{"0":1},
+            "branchMap":{"0":{"type":"cond-expr","loc":recorded_location(2,start,json!(end)),
+                "locations":[recorded_location(2,consequent,json!(alternate)),recorded_location(2,alternate,json!(end))]}},
+            "b":{"0":[1,1]}
+        }});
+        let result = attribute(&analysis, path, &source, [&report]);
+        assert_eq!(result["complete"], complete, "{source}: {result}");
+        assert_eq!(
+            result["functions"][0]["crap"],
+            if complete { json!(2.0) } else { Value::Null }
+        );
+        if complete {
+            let source = source.replace(";\n", " + sideEffect();\n");
+            let analysis = Analysis::inspect(path, &source).unwrap();
+            let mut invalid = report.clone();
+            invalid[path]["branchMap"]["0"]["loc"]["end"]["column"] = Value::Null;
+            invalid[path]["branchMap"]["0"]["locations"][1]["end"]["column"] = Value::Null;
+            let result = attribute(&analysis, path, &source, [&invalid]);
+            assert_eq!(result["complete"], false, "{source}: {result}");
+            assert_eq!(result["functions"][0]["crap"], Value::Null);
+        }
+    }
+}
+
+#[test]
+fn jsx_closing_delimiters_do_not_allow_other_executable_children_or_code() {
+    let path = "/fixture.tsx";
+    let source = "export const view = (n: number) => <span>{n >= 18 ? 'adult' : 'minor'}</span>;";
+    let report = json!({path:{"path":path,
+        "statementMap":{"0":recorded_location(1,35,json!(77))},"s":{"0":1},
+        "branchMap":{"0":{"type":"cond-expr","loc":recorded_location(1,42,json!(69)),
+            "locations":[recorded_location(1,52,json!(59)),recorded_location(1,62,json!(69))]}},
+        "b":{"0":[1,0]}
+    }});
+    let analysis = Analysis::inspect(path, source).unwrap();
+    let reference = attribute(&analysis, path, source, [&report]);
+    assert_eq!(reference["complete"], true, "{reference}");
+    assert_eq!(reference["functions"][0]["crap"], 2.5);
+    let mut widened = report.clone();
+    // Actual mapped Vitest ends include `}</span` and the first outcome's ':'.
+    widened[path]["branchMap"]["0"]["loc"]["end"]["column"] = json!(76);
+    widened[path]["branchMap"]["0"]["locations"][0]["end"]["column"] = json!(62);
+    widened[path]["branchMap"]["0"]["locations"][1]["end"]["column"] = json!(76);
+    assert_eq!(attribute(&analysis, path, source, [&widened]), reference);
+    assert_eq!(
+        attribute(&analysis, path, source, [&report, &widened]),
+        reference
+    );
+
+    for source in [
+        source.replace("}</span>", "}{sideEffect()}</span>"),
+        source.replace("}</span>", "}<Other value={sideEffect()} /></span>"),
+        source.replace("</span>;", "</span> + sideEffect();"),
+    ] {
+        let analysis = Analysis::inspect(path, &source).unwrap();
+        let mut invalid = widened.clone();
+        invalid[path]["statementMap"]["0"]["end"]["column"] = json!(source.len() - 1);
+        for extend_branch in [true, false] {
+            invalid[path]["branchMap"]["0"]["loc"]["end"]["column"] = if extend_branch {
+                json!(source.len() - 1)
+            } else {
+                json!(69)
+            };
+            invalid[path]["branchMap"]["0"]["locations"][1]["end"]["column"] =
+                json!(source.len() - 1);
+            let result = attribute(&analysis, path, &source, [&invalid]);
+            assert_eq!(result["complete"], false, "{source}: {result}");
+            assert_eq!(result["functions"][0]["crap"], Value::Null);
+            assert!(
+                result["problems"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|problem| problem.as_str().unwrap().contains("cond-expr")),
+                "{result}"
+            );
+        }
+    }
 }
 
 #[test]
 fn empty_bodies_require_non_executing_parameters() {
     let path = "/fixture.ts";
-    let report = json!({path:{"path":path,"statementMap":{},"s":{}}});
+    let report = json!({path:{"path":path,"branchMap":{},"b":{},"statementMap":{},"s":{}}});
     for (parameters, empty) in [
         ("", true),
         ("x: number", true),
@@ -235,7 +989,7 @@ fn empty_bodies_require_non_executing_parameters() {
 #[test]
 fn declarations_without_bodies_do_not_create_coverage_rows() {
     let path = "/fixture.ts";
-    let report = json!({path:{"path":path,"statementMap":{},"s":{}}});
+    let report = json!({path:{"path":path,"branchMap":{},"b":{},"statementMap":{},"s":{}}});
     for source in [
         "declare function noop(x: number): void;",
         "declare class C { constructor(x: number); method(x: number): void; }",
@@ -270,7 +1024,7 @@ fn istanbul_label_and_debugger_mappings() {
     ] {
         let analysis = Analysis::inspect(path, source).unwrap();
         for hits in [0, 1] {
-            let mut file = json!({"path":path,"statementMap":{},"s":{}});
+            let mut file = json!({"path":path,"branchMap":{},"b":{},"statementMap":{},"s":{}});
             for (id, &(start, end)) in spans.iter().enumerate() {
                 file["statementMap"][id.to_string()] = json!({
                     "start":{"line":1,"column":start},
@@ -311,7 +1065,7 @@ fn remapped_line_ends_allow_comments_but_not_code_or_newlines() {
     ] {
         let source = format!("const arrow = () => 1{suffix}\n");
         let analysis = Analysis::inspect(path, &source).unwrap();
-        let report = json!({path:{"path":path,"statementMap":{"0":{
+        let report = json!({path:{"path":path,"branchMap":{},"b":{},"statementMap":{"0":{
             "start":{"line":1,"column":20},"end":{"line":1,"column":null}
         }},"s":{"0":1}}});
         let result = attribute(&analysis, path, &source, [&report]);
@@ -330,7 +1084,7 @@ fn coincident_spans_and_incompatible_reports_stay_incomplete() {
     let path = "/fixture.ts";
     let source = "const arrow = () => 1; // trailing\n";
     let analysis = Analysis::inspect(path, source).unwrap();
-    let report = json!({path:{"path":path,"statementMap":{"0":{
+    let report = json!({path:{"path":path,"branchMap":{},"b":{},"statementMap":{"0":{
         "start":{"line":1,"column":20},"end":{"line":1,"column":21}
     }},"s":{"0":0}}});
     for end in [json!(21), Value::Null] {
@@ -344,7 +1098,7 @@ fn coincident_spans_and_incompatible_reports_stay_incomplete() {
         assert_eq!(result["problems"], json!(["duplicate statement span"]));
         assert_eq!(result["functions"][0]["coverage"], Value::Null);
     }
-    let empty = json!({path:{"path":path,"statementMap":{},"s":{}}});
+    let empty = json!({path:{"path":path,"branchMap":{},"b":{},"statementMap":{},"s":{}}});
     let result = attribute(&analysis, path, source, [&report, &empty]);
     assert_eq!(result["complete"], false);
     assert_eq!(
@@ -390,7 +1144,7 @@ fn malformed_columns_are_not_missing_columns() {
             json!([]),
             json!({}),
         ] {
-            let mut report = json!({path:{"path":path,"statementMap":{"0":{
+            let mut report = json!({path:{"path":path,"branchMap":{},"b":{},"statementMap":{"0":{
                 "start":{"line":1,"column":15},"end":{"line":1,"column":24}
             }},"s":{"0":1}}});
             report[path]["statementMap"]["0"][endpoint]["column"] = column;
@@ -418,7 +1172,7 @@ fn parenthesized_arrow_return_has_an_executable_inner_start() {
     let path = "/fixture.ts";
     let source = "const make = () => (({value: 1}));";
     let analysis = Analysis::inspect(path, source).unwrap();
-    let report = json!({path:{"path":path,"statementMap":{"0":{
+    let report = json!({path:{"path":path,"branchMap":{},"b":{},"statementMap":{"0":{
         "start":{"line":1,"column":source.find('{').unwrap()},
         "end":{"line":1,"column":source.find('}').unwrap()+1}
     }},"s":{"0":1}}});
@@ -439,7 +1193,7 @@ fn parenthesized_arrow_return_has_an_executable_inner_start() {
 fn line_separators_cannot_inflate_coverage() {
     let path = "/fixture.ts";
     // Actual Istanbul mappings/counters for the reproduction in issue #59.
-    let report = json!({path:{"path":path,"statementMap":{
+    let report = json!({path:{"path":path,"branchMap":{},"b":{},"statementMap":{
         "0":{"start":{"line":2,"column":0},"end":{"line":2,"column":9}},
         "1":{"start":{"line":3,"column":0},"end":{"line":3,"column":9}},
         "2":{"start":{"line":4,"column":16},"end":{"line":4,"column":17}}

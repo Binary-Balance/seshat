@@ -79,6 +79,7 @@ test('layout-only inspection describes metadata without creating archives', () =
           'configuration guide',
           'report format',
           'platform support matrix',
+          'CRAP uses complexity and branch coverage',
         ]) assert.ok(normalizedReadme.includes(fragment), `${directory}: README is missing ${fragment}`);
       } else {
         assert.equal(stagedReadme,

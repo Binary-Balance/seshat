@@ -436,7 +436,7 @@ The standalone proof consumes the same npm `.tgz` bytes. It requires npm's
 runs the binary without npm, preserving the same archive and `BUILD.json`
 checks.
 
-The selected native CLI and runner proofs separately rerun the broad 49-scenario
+The selected native CLI and runner proofs separately rerun the broad 51-scenario
 CLI fixture, parallel controls, lifecycle checks and Jest/Expo/Vitest cases
 through the installed native executable. They reuse fixture compilers and
 coverage collectors from the source checkout; the package does not install or
@@ -449,7 +449,7 @@ documented in the [Windows package protocol](../../docs/windows-package.md).
 Its current native install proof covers the packaged executable and the same
 archive extracted with `tar.exe`; the entry launcher and Windows npm ownership
 proof are staged separately for the release package set. The workflow also runs the
-shared 49 CLI scenarios, 11 parallel controls and four installed Jest/Expo and
+shared 51 CLI scenarios, 11 parallel controls and four installed Jest/Expo and
 Vitest cases against that executable. The summary records missing or partial
 integration evidence as a gap.
 
@@ -775,6 +775,29 @@ are untouched. Generated sources and reports remain under ignored
 See the [coverage findings](../../outputs/coverage-routes.md) and the root
 [coverage setup guidance](../../docs/configuration.md#coverage).
 
+### Branch coverage for CRAP
+
+After the same build and dependencies, install the pinned Jest/Expo fixture
+dependencies and run:
+
+```sh
+npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
+node benchmarks/proofs/coverage-branches.mjs
+```
+
+This checks Node/Istanbul, Vitest/Istanbul and Jest/Expo against hand-counted
+branch outcomes, including an `if` without an `else`, ternaries, logical and
+nullish expressions, parameter defaults, nested arrows and a switch. It verifies
+that fully executed statements can still produce a higher CRAP score when
+branch outcomes are untested. Functions with no recorded branches retain
+statement-based scoring. See the [measurements](../../docs/research/coverage-branches.md).
+
+Set `SESHAT_PROOF_BINARY` for an alternate fresh proof executable and
+`SESHAT_JEST_EXPO_DEPS` for an existing copy of the pinned fixture dependencies.
+`SESHAT_PROOF_OUTPUT` selects the JSON evidence path; the default is inside the
+proof's unique directory under ignored `work/assurance-proofs/coverage-branches-*`.
+The Linux x64 package workflow runs this check and retains its evidence.
+
 ## Project capture and configuration
 
 After building the native proof executable, run:
@@ -982,7 +1005,7 @@ Coverage paths must identify regular files in the copy. Selected source bytes
 are checked before and after each job. These checks detect accidental rewrites,
 not malicious commands or concurrent changes.
 
-Compatible statement maps merge across setups. A file missing from one setup may
+Compatible statement and branch maps merge across setups. A file missing from one setup may
 be covered by another; missing from all reports means unknown. JSON includes
 per-file scores, per-setup job states, `jobsAttempted` and per-job `ms`. Attempts
 include preflight failures, not just spawned processes. `executionMs` covers
@@ -991,7 +1014,7 @@ and timing vary; source ordering and scoring are deterministic for the same evid
 
 `complete: true` means required jobs passed and coverage attribution completed,
 not that scores are good or code is defect-free. The fixture's complexity-2 function
-scores 2 with full statement coverage, about 2.148 with 2/3 coverage; its untested
+scores 2 with full branch coverage, 2.5 with 1/2 branch coverage; its untested
 complexity-1 function scores 2. See the root README for interpretation. Failed runs
 can retain earlier measurements, but stay incomplete and exit 2.
 

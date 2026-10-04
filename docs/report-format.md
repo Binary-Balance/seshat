@@ -144,17 +144,29 @@ Each `functions` row has these fields:
 | `covered` | Number of mapped statements with at least one hit. |
 | `total` | Number of mapped statements. |
 | `coverage` | `covered / total` as a fraction from `0` to `1`, only for `measured` rows. It is not a percentage. |
-| `crap` | `complexity² × (1 − coverage)³ + complexity`, only for `measured` rows. |
+| `branchCovered` | Number of mapped branch outcomes with at least one hit. |
+| `branchTotal` | Number of mapped branch outcomes. An `if` usually has two outcomes; a default argument usually has one. |
+| `branchCoverage` | `branchCovered / branchTotal` as a fraction from `0` to `1`, only for `measured` rows with recorded branches. Otherwise `null`. |
+| `coverageBasis` | `"branch"` when CRAP uses `branchCoverage`, `"statement"` when the function has no recorded branches and CRAP uses `coverage`, or `null` when unscored. |
+| `crap` | `complexity² × (1 − input)³ + complexity`, using the coverage selected by `coverageBasis`, only for `measured` rows. |
 | `status` | `measured`, `unknown`, `not-applicable` or `complexity-only`. |
 
 `measured` means valid coverage mapped to a non-empty ordinary function.
 `unknown` means coverage is missing or unreliable. It can retain decoded
-`covered` and `total` counts, but `coverage` and `crap` remain `null`.
+statement and branch counts, but `coverage`, `branchCoverage`, `coverageBasis`
+and `crap` remain `null`.
 `not-applicable` identifies an empty function. `complexity-only` identifies an
 implicit scope such as a class field initializer or static block. Those rows
 retain complexity but have `null` coverage and CRAP, regardless of any counters
 retained from decoded evidence. A `null` measurement is therefore different
 from a measured zero.
+
+The existing `covered`, `total` and `coverage` fields retain their statement
+semantics. The branch fields and `coverageBasis` are additive under schema
+version 1. A valid empty branch map allows statement fallback; missing or
+unreliable branch data makes the measurement unknown. Reports from multiple
+setups must have compatible statement and branch mappings before their hits
+can be combined.
 
 ### Setup jobs and evidence
 
