@@ -1,6 +1,25 @@
 # Seshat
 
-Seshat assesses code through CRAP analysis and mutation testing.
+Seshat provides deterministic checks that help ensure AI-generated code is good
+code. Today it assesses TypeScript and TSX through CRAP analysis and mutation
+testing.
+
+## Purpose
+
+Coding agents produce code faster than people can review it. Seshat shows where
+that code is risky, so review effort goes where it matters.
+
+- **Deterministic.** The same code and tests give the same result. Seshat
+  measures; it does not ask a model for an opinion.
+- **Practical.** A check belongs in Seshat when its findings lead to a concrete
+  improvement. Measurement for its own sake does not.
+- **Type safety.** TypeScript's checking can be switched off locally or weakened
+  by configuration. Showing where that has happened is part of Seshat's job.
+- **Built on the project's own tools.** Seshat uses the project's test runner,
+  coverage and TypeScript. It does not reimplement them.
+
+Planned assessments are tracked in
+[issue 136](https://github.com/Binary-Balance/seshat/issues/136).
 
 ## Language
 
