@@ -112,7 +112,7 @@ pub struct Comparison {
 pub struct Analysis {
     pub scopes: Vec<Scope>,
     pub branches: Vec<BranchSite>,
-    pub jsx_closing_ranges: Vec<Span>,
+    pub closing_ranges: Vec<Span>,
     pub comparisons: Vec<Comparison>,
     decisions: Vec<Span>,
     parameter_values: Vec<Span>,
@@ -136,17 +136,26 @@ fn plain_parameters(params: &FormalParameters<'_>) -> bool {
 
 impl<'a> Visit<'a> for Analysis {
     fn enter_node(&mut self, node: AstKind<'a>) {
-        if let AstKind::JSXElement(element) = node
-            && let Some(JSXChild::ExpressionContainer(container)) = element.children.last()
+        if let AstKind::ParenthesizedExpression(expression) = node {
+            self.closing_ranges.push(Span::new(
+                expression.expression.without_parentheses().span().end,
+                expression.span.end,
+            ));
+        }
+        let jsx = match node {
+            AstKind::JSXElement(element) => Some((&element.children, element.span.end)),
+            AstKind::JSXFragment(fragment) => Some((&fragment.children, fragment.span.end)),
+            _ => None,
+        };
+        if let Some((children, end)) = jsx
+            && let Some(JSXChild::ExpressionContainer(container)) = children.last()
             && let Some(expression) = container.expression.as_expression()
         {
             // A final expression child is followed only by its closing brace
-            // and this element's closing tag. Source maps can include those
-            // delimiters, but must never extend across another JSX child.
-            self.jsx_closing_ranges.push(Span::new(
-                expression.without_parentheses().span().end,
-                element.span.end,
-            ));
+            // and the element or fragment's closing tag. Source maps can include
+            // those delimiters, but must never cross another JSX child.
+            self.closing_ranges
+                .push(Span::new(expression.without_parentheses().span().end, end));
         }
         let branch = match node {
             AstKind::IfStatement(statement) => Some(BranchSite {
@@ -442,6 +451,7 @@ impl Analysis {
             ..Self::default()
         };
         result.visit_program(&parsed.program);
+        result.closing_ranges.sort_by_key(|range| range.start);
         let decisions = std::mem::take(&mut result.decisions);
         for span in decisions {
             if let Some(i) = result.owner(span.start) {

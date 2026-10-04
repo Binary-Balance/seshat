@@ -231,8 +231,8 @@ function validate({preflight, packed, repeat, install, runtime, releaseNpm, publ
   validateReleaseNpm(releaseNpm, packed, artifacts, publicExamples, artifactDirectory, fail);
 
   const integrationGaps = [];
-  if (!sharedCli) integrationGaps.push('shared 49-scenario CLI fixture evidence was not retained');
-  else if (Object.keys(sharedCli).length !== 49) fail('shared CLI fixture evidence did not retain 49 scenarios');
+  if (!sharedCli) integrationGaps.push('shared 51-scenario CLI fixture evidence was not retained');
+  else if (Object.keys(sharedCli).length !== 51) fail('shared CLI fixture evidence did not retain 51 scenarios');
   if (!sharedParallel) integrationGaps.push('shared 11-case parallel fixture evidence was not retained');
   else if (Object.keys(sharedParallel).length !== 11) fail('shared parallel fixture evidence did not retain 11 cases');
   if (!jestExpo) integrationGaps.push('installed Jest/Expo four-case evidence was not retained');

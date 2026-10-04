@@ -84,18 +84,22 @@ fn span_matches(
     expected: oxc_span::Span,
     extension_end: Option<u32>,
 ) -> bool {
-    let extension_end = extension_end.or_else(|| {
-        analysis
-            .jsx_closing_ranges
-            .iter()
-            .find(|range| range.start == expected.end)
-            .map(|range| range.end)
-    });
+    // Sorted AST ranges contain only closing delimiters. Combining adjacent
+    // ranges also handles parentheses inside a final JSX expression child.
+    let closing_end = analysis
+        .closing_ranges
+        .iter()
+        .fold(expected.end, |end, range| {
+            if range.start <= end && end < range.end {
+                range.end
+            } else {
+                end
+            }
+        });
+    let end = closing_end.max(extension_end.unwrap_or(expected.end));
     mapped.0 == expected.start
-        && (mapped.1 == expected.end
-            || mapped.1 > expected.end
-                && (extension_end.is_some_and(|end| mapped.1 <= end)
-                    || same_line_trivia(&source[expected.end as usize..mapped.1 as usize])))
+        && mapped.1 >= expected.end
+        && (mapped.1 <= end || same_line_trivia(&source[end as usize..mapped.1 as usize]))
 }
 
 fn branch_span(source: &str, location: &Value) -> Result<(u32, u32), String> {
@@ -695,6 +699,92 @@ fn functions_in_default_parameters_own_their_internal_branches() {
     assert_eq!(result["functions"][0]["crap"], 2.0);
     assert_eq!(result["functions"][1]["branchTotal"], 2);
     assert_eq!(result["functions"][1]["crap"], 2.5);
+}
+
+#[test]
+fn mapped_closing_parentheses_allow_trivia_but_not_executable_code() {
+    let path = "/fixture.tsx";
+    // Actual Vitest/Istanbul positions: the final outcomes have open ends that
+    // include the closing parentheses and return statement's semicolon.
+    for (expression, kind, starts, ends, hits, complexity) in [
+        (
+            "a ? (1) : (2)",
+            "cond-expr",
+            vec![14, 20],
+            vec![json!(20), Value::Null],
+            vec![1, 1],
+            2,
+        ),
+        (
+            "a && (b || c)",
+            "binary-expr",
+            vec![9, 15, 20],
+            vec![json!(15), json!(20), Value::Null],
+            vec![3, 2, 1],
+            3,
+        ),
+    ] {
+        let source = format!(
+            "export function f(a: boolean, b: boolean, c: boolean) {{\n  return {expression};\n}}\n"
+        );
+        let locations: Vec<_> = starts
+            .into_iter()
+            .zip(ends)
+            .map(|(start, end)| recorded_location(2, start, end))
+            .collect();
+        let report = json!({path:{"path":path,
+            "statementMap":{"0":recorded_location(2,2,Value::Null)},"s":{"0":1},
+            "branchMap":{"0":{"type":kind,"loc":recorded_location(2,9,Value::Null),"locations":locations}},
+            "b":{"0":hits}
+        }});
+        for (suffix, complete) in [
+            ("", true),
+            (" // trailing", true),
+            (" sideEffect();", false),
+        ] {
+            let source = source.replace(";\n", &format!(";{suffix}\n"));
+            let analysis = Analysis::inspect(path, &source).unwrap();
+            let result = attribute(&analysis, path, &source, [&report]);
+            assert_eq!(result["complete"], complete, "{source}: {result}");
+            assert_eq!(
+                result["functions"][0]["crap"],
+                if complete {
+                    json!(f64::from(complexity))
+                } else {
+                    Value::Null
+                }
+            );
+        }
+    }
+}
+
+#[test]
+fn jsx_fragment_closing_ranges_preserve_child_boundaries() {
+    let path = "/fixture.tsx";
+    let source = "export function f(a: boolean) {\n  return <>{a ? 1 : 2}</>;\n}\n";
+    let report = json!({path:{"path":path,
+        "statementMap":{"0":recorded_location(2,2,Value::Null)},"s":{"0":1},
+        "branchMap":{"0":{"type":"cond-expr","loc":recorded_location(2,12,json!(24)),
+            "locations":[recorded_location(2,16,json!(20)),recorded_location(2,20,json!(24))]}},
+        "b":{"0":[1,1]}
+    }});
+    let analysis = Analysis::inspect(path, source).unwrap();
+    let result = attribute(&analysis, path, source, [&report]);
+    assert_eq!(result["complete"], true, "{result}");
+    assert_eq!(result["functions"][0]["crap"], 2.0);
+    let mut invalid = report.clone();
+    invalid[path]["branchMap"]["0"]["loc"]["end"]["column"] = Value::Null;
+    invalid[path]["branchMap"]["0"]["locations"][1]["end"]["column"] = Value::Null;
+    for source in [
+        source.replace("}</>", "}{sideEffect()}</>"),
+        source.replace("}</>", "}<Other value={sideEffect()} /></>"),
+        source.replace("</>;", "</> + sideEffect();"),
+    ] {
+        let analysis = Analysis::inspect(path, &source).unwrap();
+        let result = attribute(&analysis, path, &source, [&invalid]);
+        assert_eq!(result["complete"], false, "{source}: {result}");
+        assert_eq!(result["functions"][0]["crap"], Value::Null);
+    }
 }
 
 #[test]

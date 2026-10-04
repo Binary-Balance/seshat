@@ -18,9 +18,12 @@ routes evaluate the same JSX expression without a React dependency.
 | --- | ---: | ---: | ---: | ---: |
 | `price`, an `if` without `else` | 100% | 1/2 | 2 | 2.5 |
 | `conditional`, a ternary | 100% | 1/2 | 2 | 2.5 |
+| `parenthesized`, a ternary with parentheses | 100% | 1/2 | 2 | 2.5 |
 | `logical`, `&&` | 100% | 1/2 | 2 | 2.5 |
+| `logicalWrapped`, `&&` with parenthesized `||` | 100% | 1/3 | 3 | 5.667 |
 | `nullish`, `??` | 100% | 1/2 | 2 | 2.5 |
 | `view`, a ternary inside JSX | 100% | 1/2 | 2 | 2.5 |
+| `fragment`, a parenthesized ternary inside a JSX fragment | 100% | 1/2 | 2 | 2.5 |
 | `defaults`, a parameter default | 100% | 0/1 | 2 | 6 |
 | `destructured`, a destructuring default | 100% | 0/1 | 2 | 6 |
 | `optional`, `?.` | 100% | No recorded branches | 2 | 2 |
@@ -42,9 +45,10 @@ often extends an expression range into following punctuation or uses a null
 end column for the rest of the line. Default-value ranges can include the
 parameter's type annotation. Seshat validates branch kinds and outcome starts
 against the source syntax before accepting these bounded range differences.
-Vitest also extends a final JSX expression through its closing container and
-element tags. The syntax tree must identify these as closing delimiters.
-Seshat rejects ranges that include another executable JSX child.
+Vitest also includes closing parentheses or extends a final JSX expression
+through its closing container and element or fragment tags. The syntax tree
+must identify these as closing delimiters. Seshat rejects ranges that include
+another executable expression or JSX child.
 Branch hits combine across setups only when the validated outcome identities
 agree, alongside the existing statement-mapping checks.
 

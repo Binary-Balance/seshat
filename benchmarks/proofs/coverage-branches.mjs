@@ -28,7 +28,13 @@ export function price(amount: number, member: boolean) {
   return total;
 }
 export function conditional(flag: boolean) { return flag ? 1 : 2; }
+export function parenthesized(flag: boolean) {
+  return flag ? (1) : (2);
+}
 export function logical(value: boolean, other: boolean) { return value && other; }
+export function logicalWrapped(value: boolean, other: boolean, last: boolean) {
+  return value && (other || last);
+}
 export function nullish(value: string | null) { return value ?? 'missing'; }
 export function defaults(value = 7) { return value; }
 export function destructured({value = 7}: {value?: number}) { return value; }
@@ -43,14 +49,19 @@ export function choice(value: number) {
 export function straight() { return 1; }
 export function empty() {}
 function element(_tag: string, _props: unknown, text: string) { return text; }
-const React = {createElement: element};
+const React = {createElement: element, Fragment: 'fragment'};
 export function view(flag: boolean) {
   return <span>{flag ? 'on' : 'off'}</span>;
+}
+export function fragment(flag: boolean) {
+  return <>{flag ? ('on') : ('off')}</>;
 }
 `);
 const checks = `assert.equal(subject.price(100, true), 90);
 assert.equal(subject.conditional(true), 1);
+assert.equal(subject.parenthesized(true), 1);
 assert.equal(subject.logical(false, true), false);
+assert.equal(subject.logicalWrapped(false, true, false), false);
 assert.equal(subject.nullish('present'), 'present');
 assert.equal(subject.defaults(3), 3);
 assert.equal(subject.destructured({value: 3}), 3);
@@ -60,6 +71,7 @@ assert.equal(subject.choice(1), 1);
 assert.equal(subject.straight(), 1);
 subject.empty();
 assert.equal(subject.view(true), 'on');
+assert.equal(subject.fragment(true), 'on');
 `;
 function run(args) {
   const child = spawnSync(process.execPath, args, {
@@ -132,7 +144,7 @@ for (const [provider, path] of Object.entries(reports)) {
     .map(([id, branch]) => ({...branch, hits: file.b[id]}))};
   assert.equal(child.status, 0, JSON.stringify(result));
   const named = Object.fromEntries(result.functions.map(row => [row.name, row]));
-  for (const name of ['price', 'conditional', 'logical', 'nullish', 'view']) {
+  for (const name of ['price', 'conditional', 'parenthesized', 'logical', 'nullish', 'view', 'fragment']) {
     assert.equal(named[name].coverage, 1, `${provider}/${name}: statement coverage`);
     assert.equal(named[name].branchCoverage, 0.5, `${provider}/${name}: branch coverage`);
     assert.equal(named[name].coverageBasis, 'branch');
@@ -156,9 +168,11 @@ for (const [provider, path] of Object.entries(reports)) {
   const inner = result.functions.find(row => row.name.startsWith('arrow@'));
   assert.equal(inner.branchCoverage, 0.5);
   assert.equal(inner.crap, 2.5);
-  assert.equal(named.choice.branchCovered, 1);
-  assert.equal(named.choice.branchTotal, 3);
-  assert.ok(Math.abs(named.choice.crap - 17 / 3) < 1e-12);
+  for (const name of ['choice', 'logicalWrapped']) {
+    assert.equal(named[name].branchCovered, 1);
+    assert.equal(named[name].branchTotal, 3);
+    assert.ok(Math.abs(named[name].crap - 17 / 3) < 1e-12);
+  }
   console.log(`${provider}: partial branches scored; defaults, nested scopes and statement fallback verified`);
 }
 const output = resolve(process.env.SESHAT_PROOF_OUTPUT ?? join(work, 'summary.json'));
