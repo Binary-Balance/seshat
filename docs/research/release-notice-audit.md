@@ -1,8 +1,8 @@
 # Seshat 0.2.0 release audit
 
 Status: the five native package proofs, the Windows runtime proof and the six
-archive audit passed. The local install matrix, publisher dry run on `main`,
-registry checks and publication remain release gates.
+archive audit passed. The archives were then published; the later checks and
+their run links are in the [0.2.0 release notes](../releases/0.2.0.md).
 
 This audit covers the 0.2.0 archives built by the PR 128 workflows from the
 merge source
@@ -116,13 +116,8 @@ The stager downloaded the six archives again, matched every size and SHA-256
 to this audit and confirmed the three source trees match the checkout. The
 publisher dry run against the PR head passed with tag `latest`.
 
-## Remaining release gates
+## Release gates at the time of this audit
 
-- Run the release local install workflow on all five targets.
-- Run the publisher dry run from the reviewed `main` commit.
-- After publication, verify the six registry versions, tarball bytes and
-  provenance against this audit.
-- Create the GitHub release with the six audited archives.
-
-This audit does not claim a local install matrix result, a registry result or
-publication.
+When this audit was recorded, the local install matrix, the publisher dry run
+from `main`, the registry checks and the GitHub release were still to come. The
+audit itself does not claim their results.
