@@ -47,6 +47,55 @@ npm trusted publishing. Do not reuse, edit or repack archives from an earlier
 version. The publication checkout must remain equivalent to the audited source
 under `crates`, `packages` and `packaging`.
 
+After the native package workflows and Windows runtime workflow pass for the
+release PR head, generate the audit and its Markdown note. The read-only
+[audit generator](../benchmarks/proofs/release-audit.mjs) finds the matching
+successful runs and downloads their artifacts. It checks source trees,
+provenance, package identities, member modes, and archive, binary and notice
+hashes before writing either output.
+
+First archive the previous version's audit JSON and Markdown under
+`docs/releases/<previous-version>-audit.json` and `.md`.
+
+```sh
+node --test --test-isolation=none benchmarks/proofs/release-audit.test.mjs
+node benchmarks/proofs/release-audit.mjs \
+  --pr <release-pr> \
+  --previous-audit docs/releases/<previous-version>-audit.json \
+  --output work/release-audit
+```
+
+Use `--head <full-build-head-sha>` instead of `--pr` to audit a fixed revision.
+`--pr` uses the current PR head and rejects artifacts built for an earlier
+head. This matters after later audit or documentation commits. For example,
+the retained PR #128 builds use head
+`2dc97566ad29ed414798abb499e1f87c004d2279`.
+
+To reuse downloaded evidence, add `--evidence <native-evidence-directory>`.
+It must contain the five target directories, each with `summary.json`,
+`seshat-entry.tgz` and `seshat-<target>-release.tgz`, plus
+`windows-runtime/windows-runtime-preflight/windows-runtime-preflight.json`
+and `windows-runtime/windows-runtime-cli-evidence/windows-runtime-cli-evidence.json`.
+The generator still reads GitHub run, job and artifact metadata to check the
+coordinates. Without `--evidence`, its download directory must be empty.
+An authenticated `gh` CLI and the repository's Git history are required.
+
+Provide `--previous-archive <previous-linux-x64-release.tgz>` for a complete
+dependency and runtime notice asset comparison. It can replace or accompany
+`--previous-audit`; when both are supplied, the archive hash and version must
+match the audit. Older audits may record only hashes, so comparisons report
+unknown entry or asset details instead of assuming equality. Changed
+dependencies or notices are reported for review, rather than rejected.
+The JSON retains schema version 1 and the six coordinates used by the stager
+and publisher. `--issue <release-issue>` adds the release issue number.
+
+Review `work/release-audit/release-notice-audit.json` and
+`work/release-audit/release-notice-audit.md`. Save the reviewed outputs as
+`docs/research/release-notice-audit.json` and `.md`. Add any release-specific
+notice explanation after inspecting the reported changes. Generated audit
+status and remaining checks describe preparation only; they do not claim the
+local install matrix or publication passed.
+
 Before publication, manually run the [Release local install workflow](../.github/workflows/release-local-install.yml)
 from the reviewed release branch or tag containing the candidate audit. Wait
 for all five targets to pass and retain the run link with the release evidence.
