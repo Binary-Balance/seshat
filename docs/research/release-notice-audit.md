@@ -1,123 +1,91 @@
-# Seshat 0.2.0 release audit
+# Seshat 0.3.0 release audit
 
-Status: the five native package proofs, the Windows runtime proof and the six
-archive audit passed. The archives were then published; the later checks and
-their run links are in the [0.2.0 release notes](../releases/0.2.0.md).
+Captured 2026-10-04. Native audit, five-target local install matrix and local
+publisher dry run passed. The final main dry run and publication checks remain.
 
-This audit covers the 0.2.0 archives built by the PR 128 workflows from the
-merge source
-[`d5bbd70867c2e4e5a276f4ce23ad67b8af3e9ef3`](https://github.com/Binary-Balance/seshat/commit/d5bbd70867c2e4e5a276f4ce23ad67b8af3e9ef3)
-(`refs/pull/128/merge`). The PR head was
-[`2dc97566ad29ed414798abb499e1f87c004d2279`](https://github.com/Binary-Balance/seshat/commit/2dc97566ad29ed414798abb499e1f87c004d2279).
-The three audited source trees are `crates`
-`8df0781116bd98e88e430aeb060103f590cc2bf4`, `packages`
-`b4ed804f1b45f0b49bb91485b2e35abe0ad08dd5` and `packaging`
-`2d4b720a08f48227a0efa75b50a382ddf2f95576`. They are identical at the PR head.
+Build source [7c74283ea3eeabb7fc6a43bb0fb08a0b91c29042](https://github.com/Binary-Balance/seshat/commit/7c74283ea3eeabb7fc6a43bb0fb08a0b91c29042), ref `refs/pull/139/merge`.
 
-The [machine-readable audit](release-notice-audit.json) is the source for every
-value in this note. It was generated from the downloaded GitHub Actions
-artifacts, which were read and hashed directly; no archive was repacked. The
-[0.1.0 audit](../releases/0.1.0-audit.md) and
-[0.1.0-rc.1 audit](../releases/0.1.0-rc.1-audit.md) are historical.
+Reviewed head [718168b0848c434973fbef9990e82c22bd44ae98](https://github.com/Binary-Balance/seshat/commit/718168b0848c434973fbef9990e82c22bd44ae98), [pull request](https://github.com/Binary-Balance/seshat/pull/139).
 
-## Archive coordinates
-
-Each coordinate names a `.tgz` file in its GitHub Actions artifact. The
-artifacts expire on `2027-01-01T11:14:46Z`.
+| source directory | Git tree |
+| --- | --- |
+| `crates` | `13626f9648bdd1ee723c92e7a7182f0c01d9361e` |
+| `packages` | `f9fa15bf236b9ff520a00d1fe79ce72ebfbb75f1` |
+| `packaging` | `fe98e9989f217523284ef9980ebe45b8ced9f06a` |
 
 | package | target | run and artifact | archive | bytes | SHA-256 |
 | --- | --- | --- | --- | ---: | --- |
-| `@binary-balance/seshat-linux-x64` | `linux-x64` | [37119032646](https://github.com/Binary-Balance/seshat/actions/runs/37119032646), `linux-x64-package-proof` | `seshat-linux-x64-release.tgz` | 954,482 | `199f8dc059915cac3acfa240e913fbc9833e6f7bccbeb58c5d6fb004ef0d2c71` |
-| `@binary-balance/seshat-linux-arm64` | `linux-arm64` | [37119032632](https://github.com/Binary-Balance/seshat/actions/runs/37119032632), `linux-arm64-package-proof` | `seshat-linux-arm64-release.tgz` | 900,196 | `4ed46b3a530c410ca8194ce4dea5b40704b148857ac79d31e8cd2f67c2d3e412` |
-| `@binary-balance/seshat-darwin-x64` | `darwin-x64` | [37119032678](https://github.com/Binary-Balance/seshat/actions/runs/37119032678), `macos-x64-package-proof` | `seshat-darwin-x64-release.tgz` | 898,491 | `9342d4d61bf48b8951312eb3529ebacbc1b6e03b5a6fe3750b853da8624b69f8` |
-| `@binary-balance/seshat-darwin-arm64` | `darwin-arm64` | [37119032678](https://github.com/Binary-Balance/seshat/actions/runs/37119032678), `macos-arm64-package-proof` | `seshat-darwin-arm64-release.tgz` | 875,423 | `84d24214d94415b453129449c1ec2ce4807b707a1339fea367868a04f040c183` |
-| `@binary-balance/seshat-win32-x64` | `win32-x64` | [37119032658](https://github.com/Binary-Balance/seshat/actions/runs/37119032658), `windows-x64-package-proof` | `seshat-win32-x64-release.tgz` | 913,580 | `d89e3c16c45b0469cc27331128daf3dcfa180f7a876ac51f24f704c03367f2bc` |
-| `@binary-balance/seshat` | `universal` entry | [37119032646](https://github.com/Binary-Balance/seshat/actions/runs/37119032646), `linux-x64-package-proof` | `seshat-entry.tgz` | 5,217 | `b4217202b420e9e74ef692722f7d1fd03f1eba56844ddf654c03729ff9defd38` |
+| `@binary-balance/seshat-linux-x64` | `linux-x64` | [37181509180](https://github.com/Binary-Balance/seshat/actions/runs/37181509180), `linux-x64-package-proof` | `seshat-linux-x64-release.tgz` | 971,855 | `9fa5484581431ab4228e89320b2a6f03dfa83c49e0dd36f27900479d9c97f489` |
+| `@binary-balance/seshat-linux-arm64` | `linux-arm64` | [37181509177](https://github.com/Binary-Balance/seshat/actions/runs/37181509177), `linux-arm64-package-proof` | `seshat-linux-arm64-release.tgz` | 920,518 | `762c8ff693a7c0bd0e37a31e53344dbc0c12469247db970ab06c7c40e2397932` |
+| `@binary-balance/seshat-darwin-x64` | `darwin-x64` | [37181509135](https://github.com/Binary-Balance/seshat/actions/runs/37181509135), `macos-x64-package-proof` | `seshat-darwin-x64-release.tgz` | 915,081 | `1c1491d012539de0d7b765043afb55188374426e229d63183dac0ffa4b51fabe` |
+| `@binary-balance/seshat-darwin-arm64` | `darwin-arm64` | [37181509135](https://github.com/Binary-Balance/seshat/actions/runs/37181509135), `macos-arm64-package-proof` | `seshat-darwin-arm64-release.tgz` | 891,425 | `f01859968a3027a24dc572b71f1f51088c28cfe5f44de606a0efd9d4e4ae55a4` |
+| `@binary-balance/seshat-win32-x64` | `win32-x64` | [37181509157](https://github.com/Binary-Balance/seshat/actions/runs/37181509157), `windows-x64-package-proof` | `seshat-win32-x64-release.tgz` | 931,344 | `5402e094b15fc87e53e53fdacb44e2bae42f5229949a58408c8b20e9a2a35749` |
+| `@binary-balance/seshat` | `universal` | [37181509180](https://github.com/Binary-Balance/seshat/actions/runs/37181509180), `linux-x64-package-proof` | `seshat-entry.tgz` | 5,387 | `fcc43298f39c9a4c5028495ab25ca36332e1d0b4f50cea3b317d782ada9742ef` |
 
-The entry archive from the Linux x64 artifact is the one to publish. The Linux
-ARM64 and macOS runs produced a byte-identical entry archive. The Windows run
-produced the same four member files in a different tarball
-(5,219 bytes, `1e737c1fd813cc06332d471c8238e5e7e5c1dafabe688f933b6b6f3f60f5a12c`), which is not published.
-
-## Archive members
-
-The entry archive contains exactly these four members:
+## Canonical entry members
 
 | member | bytes | SHA-256 | mode |
 | --- | ---: | --- | --- |
 | `package/bin/seshat.mjs` | 5,036 | `a8042d06d93200c3c98cc1c22da7e8bb100c5f5a5cf03075c820209a801a6426` | `0755` |
 | `package/LICENSE` | 1,074 | `d2895ef18f0ba19d7c3e0b8c08a087554bddfb2f3cacb22343b412f3b32cbd91` | `0644` |
-| `package/package.json` | 752 | `11297aa7f5cab9a7313227e745ed302ce73ed60fa44aa0e02b518884732b431b` | `0644` |
-| `package/README.md` | 5,710 | `9a48e021a8f044a0608efccaa72d6f0fd1ddeb9a188d703936197cd34c924d71` | `0644` |
+| `package/package.json` | 752 | `57bf872df4dd4afe3e353d593a16396f29bcc853905bc4e94ddf51e087803232` | `0644` |
+| `package/README.md` | 6,135 | `88a6c56fdbf3f5fdc116eee934e8d210c44e7683c09ee7d060670e778191e687` | `0644` |
 
-Each native archive contains exactly six members under `package/`. `LICENSE`
-is 1,074 bytes with SHA-256
-`d2895ef18f0ba19d7c3e0b8c08a087554bddfb2f3cacb22343b412f3b32cbd91` in all five.
-`README.md` and the full member list with modes are in the JSON. The other
-members are:
+## Native members
 
 | target | binary | `BUILD.json` | `package.json` | notices |
 | --- | --- | --- | --- | --- |
-| `linux-x64` | `package/bin/seshat`, 2,014,168 bytes, `8f09d5a808eaddf4012373e39e57b5451bc0c0febde746d8d0bd6e6e96b4cbdd`, `0755` | 9,952 bytes, `51eeb3bd1869b81ee23b722135fa6482a46732c9a78b1deb5fd817b2b2c9e134` | 497 bytes, `86b656e2d33df7d829618387cdf24dd063c8c827b6552cdd054998f6d81a225a` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
-| `linux-arm64` | `package/bin/seshat`, 1,798,864 bytes, `92b8f856472f7293cc9dffb80977827575c5dcbf77f2b7c643f3d4108ca94751`, `0755` | 9,427 bytes, `266c345568e2405c9b26ba97e5b95d237e2eb3783288bc4a49ce052771eec927` | 503 bytes, `ccda52902796448915fcaa5efe7bcc0e42fdfcc4bdf548be6c2b9bbb31fe7af0` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
-| `darwin-x64` | `package/bin/seshat`, 1,849,920 bytes, `a243d5de3d641b89ee62d5f099c17864a628ab593680b308f8d58a0b58cdebad`, `0755` | 9,385 bytes, `5862fa3e2c176e67860d5d9bef2faf5808eb3beaaee916b4de744f30aa0cf700` | 471 bytes, `c7e90c4815737cb544a29f6d3c091730ff3168e66dceaff3ae4e9e5369db79c1` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
-| `darwin-arm64` | `package/bin/seshat`, 1,805,968 bytes, `de57ea0a371929378a55a538cb20bea4793ce0f0903ad46f9a2b415b7b352fe2`, `0755` | 9,389 bytes, `38ca1f533571eadd9fbfe7a92356211ae9b50a4240c416c689c044e776a4586a` | 477 bytes, `bfbb8f0c420a9639076e1dba194028a61edd9b720f30e41c620af47ad31afc6f` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
-| `win32-x64` | `package/bin/seshat.exe`, 2,028,544 bytes, `f8342a0ba16c644ddc4a8fd13a1de994081fa005a42a6748d8ca04c0379920b9`, `0644` | 10,224 bytes, `6aa2d12c1b8eddd015220366e333f764a5d8297704b73024a63f5c5420c0cf73` | 472 bytes, `8b0c73ab30b01e2d9eabfbfa36ffbbbcb939a579c984aece26727b94973ec0d1` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
+| `linux-x64` | `package/bin/seshat`, 2,050,464 bytes, `cbdcca92cceb964cfc047192d3db743937969047259484125092d7ea8638e6c6`, `0755` | 9,952 bytes, `cebc66a751d61e6597784843e9fdc2547813b221c285aa3defc96b124f270e3f` | 497 bytes, `82313e70fee8219986539158f56c8b482a7a3c6083b621f3d1322bec70db63c2` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
+| `linux-arm64` | `package/bin/seshat`, 1,843,920 bytes, `202221a1d40cc17dd8fb81252286aa8c80ce6cc844303dd46d40ca9cd8e0688a`, `0755` | 9,427 bytes, `a251e18ab54d628964803ae9f329edef97209a64fa2c1f1fcce01e1149364160` | 503 bytes, `18f9c736063cdd3bb260b9d97afc38260100aec7cdc861ab4b2090f77ce45582` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
+| `darwin-x64` | `package/bin/seshat`, 1,887,280 bytes, `d47a8eb4f555f70bdf98b1a4a9cc1c6c2abd0a879babb1c8f3c4755c6dd52562`, `0755` | 9,385 bytes, `f190aedc107a3650f983eb9dd0281228999fd9beb37ae4d18e59184a115fc785` | 471 bytes, `dc6b2614ebd178f924667997f44838a60e3b98ff7a666c2755da92b5a33b08fb` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
+| `darwin-arm64` | `package/bin/seshat`, 1,839,472 bytes, `8a2ac6dc211c251629b633fd13925f5265b8f4cf59eb2468b245274bc077fbfb`, `0755` | 9,389 bytes, `434ba2cd6817214b98300c8258d1fe3088dc5c6211bcb592962f9830b1db86ab` | 477 bytes, `b049a4e7e613ce1bbef3f8f5b1447092027fb41903a69d3fac3d8c78096de1a7` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
+| `win32-x64` | `package/bin/seshat.exe`, 2,073,600 bytes, `5e9eaeecc2c77e70f9241b863473e7a5ad158957e01e81f60af432749afa6f18`, `0644` | 10,224 bytes, `d9c2f0bae939557bfd41c7f813a1e806f7e8e3fc2ade126bdf018738fe0c783d` | 472 bytes, `134f9fccab1279ced5916aa64fa7fd8b39dde6adeba42498d1a2104aa0f2dfe3` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
 
-For each target, the binary hash in `BUILD.json`, the hash in the workflow's
-`summary.json` and the hash of the member extracted from the release archive
-are the same.
+## Previous release comparison
 
-## Dependencies and notices
+Previous version `0.2.0`.
 
-Compared with the published 0.1.0 Linux x64 archive:
+| check | matches previous release |
+| --- | --- |
+| Dependency inventory | true |
+| Runtime notice assets | true |
+| Rust toolchain | true |
 
-- The dependency list in `BUILD.json` is identical: 65 locked packages.
-- The Rust toolchain is the same: `rustc 1.98.1 (48a229cea 2026-09-01)`.
-- The nine Rust runtime notice source files are identical. Their review is in
-  the [0.1.0 audit](../releases/0.1.0-audit.md#runtime-boundaries-and-notices).
-- `THIRD_PARTY_NOTICES.txt` gained one paragraph, attributing Windows launch
-  argument and path handling adapted from Rust 1.98.1.
+Notice bytes and SHA-256 match the previous release.
 
-The notice file is now byte-identical on all five targets: 2,057,917 bytes,
-SHA-256 `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8`. In 0.1.0 the Windows copy had different line endings.
+| item | added | removed | changed |
+| --- | ---: | ---: | ---: |
+| Dependencies | 0 | 0 | 0 |
+| Runtime notice assets | 0 | 0 | 0 |
 
-`Cargo.lock` differs from 0.1.0 only in the root package version. All five
-build records give its SHA-256 as
-`610b44af7b009d6e66eacc9fa6c0b79c56af892ba4e5320f5e6f8884605c9f96`.
+Rust toolchain: `rustc 1.98.1 (48a229cea 2026-09-01)` → `rustc 1.98.1 (48a229cea 2026-09-01)`.
 
-## Proof results
+## Windows runtime
 
-All five package jobs passed on the PR head, and each `summary.json`
-reports `validation.passed: true` for source commit `d5bbd70867c2`.
-The builds and baseline checks used Node 24.20.0.
+[Run 37181509119](https://github.com/Binary-Balance/seshat/actions/runs/37181509119) passed the runtime proof.
 
-The Windows runtime run [37119032649](https://github.com/Binary-Balance/seshat/actions/runs/37119032649)
-passed its six scenarios: baseline, timeout, overflow, leader exit, repeat
-leader exit and console cancellation. It builds its own binary
-(`954c6bf0188d200fca6a1664cd1c8d5a3f81590a4b8f9bd01996f1f79104d5f7`), which is not the published Windows binary.
+Scenarios: `baseline`, `timeout`, `overflow`, `leaderExit`, `leaderExitRepeat`, `consoleCancellation`.
 
-## Checks run on this audit
+## Local release validation
 
-```sh
-node benchmarks/proofs/release-local-archive-stager.mjs \
-  --manifest docs/research/release-notice-audit.json \
-  --output work/npm-publishing/archives \
-  --evidence work/npm-publishing/archive-staging.json
-node benchmarks/proofs/npm-publishing.mjs \
-  --manifest docs/research/release-notice-audit.json \
-  --archives work/npm-publishing/archives \
-  --staging-evidence work/npm-publishing/archive-staging.json \
-  --revision <sha> --version 0.2.0 \
-  --report work/npm-publishing/dry-run.json
-```
+The [five-target local install matrix](https://github.com/Binary-Balance/seshat/actions/runs/37183899755)
+passed at `ae97c2805f963ba8cd23acd0d27e39874b9a532d` using Node `24.20.0`
+and npm `11.19.0`. Each host installed the six audited archives, selected its
+expected native payload and verified that binary's bytes and SHA-256 against
+the audit. The Node, Vitest, Jest/Expo and workspace examples passed with
+`toolVersion` `0.3.0`. The checkout's three source trees matched the build.
 
-The stager downloaded the six archives again, matched every size and SHA-256
-to this audit and confirmed the three source trees match the checkout. The
-publisher dry run against the PR head passed with tag `latest`.
+The local publisher dry run passed at the same revision. It verified all six
+exact archives and planned the five native packages followed by the entry
+package, all at `0.3.0`, using `https://registry.npmjs.org/`, public access and
+the `latest` tag. Every planned command included `--dry-run`.
 
-## Release gates at the time of this audit
+## Checks remaining at this capture
 
-When this audit was recorded, the local install matrix, the publisher dry run
-from `main`, the registry checks and the GitHub release were still to come. The
-audit itself does not claim their results.
+- Run the read-only npm publication workflow from the final reviewed main revision.
+- Obtain maintainer approval of the prepared release before enabling npm publication.
+- After publication, verify the six registry versions, tarball bytes and provenance against this audit, then pass the five-target registry install matrix.
+- Create the GitHub release with the six audited archives.
+
+Later preparation results belong in [the audit PR](https://github.com/Binary-Balance/seshat/pull/141)
+so this recorded checkpoint does not change the final release revision.
