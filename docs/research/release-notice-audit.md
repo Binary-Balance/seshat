@@ -1,6 +1,7 @@
 # Seshat 0.3.0 release audit
 
-Captured 2026-10-04. Native audit complete; local install and publication checks remain.
+Captured 2026-10-04. Native audit, five-target local install matrix and local
+publisher dry run passed. The final main dry run and publication checks remain.
 
 Build source [7c74283ea3eeabb7fc6a43bb0fb08a0b91c29042](https://github.com/Binary-Balance/seshat/commit/7c74283ea3eeabb7fc6a43bb0fb08a0b91c29042), ref `refs/pull/139/merge`.
 
@@ -65,9 +66,26 @@ Rust toolchain: `rustc 1.98.1 (48a229cea 2026-09-01)` → `rustc 1.98.1 (48a229c
 
 Scenarios: `baseline`, `timeout`, `overflow`, `leaderExit`, `leaderExitRepeat`, `consoleCancellation`.
 
-## Remaining checks
+## Local release validation
 
-- Run the release local install workflow on all five targets.
-- Run the read-only publisher dry run against the six staged archives and the reviewed revision.
-- After publication, verify the six registry versions, tarball bytes and provenance against this audit.
+The [five-target local install matrix](https://github.com/Binary-Balance/seshat/actions/runs/37183899755)
+passed at `ae97c2805f963ba8cd23acd0d27e39874b9a532d` using Node `24.20.0`
+and npm `11.19.0`. Each host installed the six audited archives, selected its
+expected native payload and verified that binary's bytes and SHA-256 against
+the audit. The Node, Vitest, Jest/Expo and workspace examples passed with
+`toolVersion` `0.3.0`. The checkout's three source trees matched the build.
+
+The local publisher dry run passed at the same revision. It verified all six
+exact archives and planned the five native packages followed by the entry
+package, all at `0.3.0`, using `https://registry.npmjs.org/`, public access and
+the `latest` tag. Every planned command included `--dry-run`.
+
+## Checks remaining at this capture
+
+- Run the read-only npm publication workflow from the final reviewed main revision.
+- Obtain maintainer approval of the prepared release before enabling npm publication.
+- After publication, verify the six registry versions, tarball bytes and provenance against this audit, then pass the five-target registry install matrix.
 - Create the GitHub release with the six audited archives.
+
+Later preparation results belong in [the audit PR](https://github.com/Binary-Balance/seshat/pull/141)
+so this recorded checkpoint does not change the final release revision.
