@@ -56,6 +56,28 @@ export function view(flag: boolean) {
 export function fragment(flag: boolean) {
   return <>{flag ? ('on') : ('off')}</>;
 }
+export function fragmentMultiline(flag: boolean) {
+  return <>
+    {flag ? 'on' : 'off'}
+  </>;
+}
+export function elementMultiline(flag: boolean) {
+  return <span>
+    {flag ? 'on' : 'off'}
+  </span>;
+}
+export function fragmentText(flag: boolean) {
+  return <>{flag ? 'on' : 'off'} tail</>;
+}
+export function fragmentSibling(flag: boolean) {
+  return <>{flag ? 'on' : 'off'}<span>tail</span></>;
+}
+export function attribute(flag: boolean) {
+  return <span title={flag ? 'on' : 'off'}>tail</span>;
+}
+export function attributeClosed(flag: boolean) {
+  return <span title={flag ? 'on' : 'off'} />;
+}
 `);
 const checks = `assert.equal(subject.price(100, true), 90);
 assert.equal(subject.conditional(true), 1);
@@ -72,6 +94,12 @@ assert.equal(subject.straight(), 1);
 subject.empty();
 assert.equal(subject.view(true), 'on');
 assert.equal(subject.fragment(true), 'on');
+assert.equal(subject.fragmentMultiline(true), 'on');
+assert.equal(subject.elementMultiline(true), 'on');
+assert.equal(subject.fragmentText(true), 'on');
+assert.equal(subject.fragmentSibling(true), 'on');
+assert.equal(subject.attribute(true), 'tail');
+assert.equal(subject.attributeClosed(true), undefined);
 `;
 function run(args) {
   const child = spawnSync(process.execPath, args, {
@@ -144,7 +172,9 @@ for (const [provider, path] of Object.entries(reports)) {
     .map(([id, branch]) => ({...branch, hits: file.b[id]}))};
   assert.equal(child.status, 0, JSON.stringify(result));
   const named = Object.fromEntries(result.functions.map(row => [row.name, row]));
-  for (const name of ['price', 'conditional', 'parenthesized', 'logical', 'nullish', 'view', 'fragment']) {
+  for (const name of ['price', 'conditional', 'parenthesized', 'logical', 'nullish',
+    'view', 'fragment', 'fragmentMultiline', 'elementMultiline', 'fragmentText',
+    'fragmentSibling', 'attribute', 'attributeClosed']) {
     assert.equal(named[name].coverage, 1, `${provider}/${name}: statement coverage`);
     assert.equal(named[name].branchCoverage, 0.5, `${provider}/${name}: branch coverage`);
     assert.equal(named[name].coverageBasis, 'branch');

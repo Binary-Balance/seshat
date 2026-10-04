@@ -2,7 +2,10 @@
 use oxc_allocator::Allocator;
 use oxc_ast::{
     AstKind,
-    ast::{ArrowFunctionBody, Expression, FormalParameters, JSXChild},
+    ast::{
+        ArrowFunctionBody, Expression, FormalParameters, JSXAttributeItem, JSXAttributeValue,
+        JSXChild,
+    },
 };
 use oxc_ast_visit::Visit;
 use oxc_parser::Parser;
@@ -142,6 +145,23 @@ impl<'a> Visit<'a> for Analysis {
                 expression.span.end,
             ));
         }
+        if let AstKind::JSXExpressionContainer(container) = node
+            && let Some(expression) = container.expression.as_expression()
+        {
+            // Every container closes before any following child or attribute.
+            self.closing_ranges.push(Span::new(
+                expression.without_parentheses().span().end,
+                container.span.end,
+            ));
+        }
+        if let AstKind::JSXOpeningElement(element) = node
+            && let Some(JSXAttributeItem::Attribute(attribute)) = element.attributes.last()
+            && let Some(JSXAttributeValue::ExpressionContainer(container)) = &attribute.value
+        {
+            // Only the final attribute is followed solely by tag punctuation.
+            self.closing_ranges
+                .push(Span::new(container.span.end, element.span.end));
+        }
         let jsx = match node {
             AstKind::JSXElement(element) => Some((&element.children, element.span.end)),
             AstKind::JSXFragment(fragment) => Some((&fragment.children, fragment.span.end)),
@@ -149,13 +169,9 @@ impl<'a> Visit<'a> for Analysis {
         };
         if let Some((children, end)) = jsx
             && let Some(JSXChild::ExpressionContainer(container)) = children.last()
-            && let Some(expression) = container.expression.as_expression()
         {
-            // A final expression child is followed only by its closing brace
-            // and the element or fragment's closing tag. Source maps can include
-            // those delimiters, but must never cross another JSX child.
-            self.closing_ranges
-                .push(Span::new(expression.without_parentheses().span().end, end));
+            // Only a final expression child is followed solely by a closing tag.
+            self.closing_ranges.push(Span::new(container.span.end, end));
         }
         let branch = match node {
             AstKind::IfStatement(statement) => Some(BranchSite {

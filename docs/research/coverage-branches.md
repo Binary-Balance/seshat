@@ -24,6 +24,7 @@ routes evaluate the same JSX expression without a React dependency.
 | `nullish`, `??` | 100% | 1/2 | 2 | 2.5 |
 | `view`, a ternary inside JSX | 100% | 1/2 | 2 | 2.5 |
 | `fragment`, a parenthesized ternary inside a JSX fragment | 100% | 1/2 | 2 | 2.5 |
+| Multiline elements/fragments, text/sibling children and conditional attributes | 100% | 1/2 | 2 | 2.5 |
 | `defaults`, a parameter default | 100% | 0/1 | 2 | 6 |
 | `destructured`, a destructuring default | 100% | 0/1 | 2 | 6 |
 | `optional`, `?.` | 100% | No recorded branches | 2 | 2 |
@@ -45,10 +46,11 @@ often extends an expression range into following punctuation or uses a null
 end column for the rest of the line. Default-value ranges can include the
 parameter's type annotation. Seshat validates branch kinds and outcome starts
 against the source syntax before accepting these bounded range differences.
-Vitest also includes closing parentheses or extends a final JSX expression
-through its closing container and element or fragment tags. The syntax tree
-must identify these as closing delimiters. Seshat rejects ranges that include
-another executable expression or JSX child.
+Vitest also includes closing parentheses, JSX container braces and final
+attribute opening-tag punctuation. A final JSX expression can extend through
+its element or fragment's closing tag. The syntax tree must identify these
+as closing delimiters. Seshat rejects ranges that include another executable
+expression, attribute or JSX child.
 Branch hits combine across setups only when the validated outcome identities
 agree, alongside the existing statement-mapping checks.
 

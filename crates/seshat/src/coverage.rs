@@ -788,6 +788,62 @@ fn jsx_fragment_closing_ranges_preserve_child_boundaries() {
 }
 
 #[test]
+fn jsx_container_and_opening_tag_ends_do_not_swallow_other_attributes_or_children() {
+    let path = "/fixture.tsx";
+    for (jsx, opening_tag, complete) in [
+        ("<>{flag ? 'on' : 'off'} tail</>", false, true),
+        ("<>{flag ? 'on' : 'off'}<span>tail</span></>", false, true),
+        ("<span title={flag ? 'on' : 'off'}>tail</span>", true, true),
+        ("<span title={flag ? 'on' : 'off'} />", true, true),
+        (
+            "<span title={flag ? 'on' : 'off'} data={sideEffect()}>tail</span>",
+            true,
+            false,
+        ),
+        (
+            "<span title={flag ? 'on' : 'off'} data={sideEffect()} />",
+            true,
+            false,
+        ),
+    ] {
+        let line = format!("  return {jsx};");
+        let start = line.find("flag ?").unwrap() as u32;
+        let consequent = line.find("'on'").unwrap() as u32;
+        let alternate = line.find("'off'").unwrap() as u32;
+        // Vitest can include the brace, or the final attribute's tag punctuation.
+        let end = if opening_tag {
+            line.find('>').unwrap() + 1
+        } else {
+            line.find('}').unwrap() + 1
+        } as u32;
+        let source = format!("function view(flag: boolean) {{\n{line}\n}}\n");
+        let analysis = Analysis::inspect(path, &source).unwrap();
+        let report = json!({path:{"path":path,
+            "statementMap":{"0":recorded_location(2,2,Value::Null)},"s":{"0":1},
+            "branchMap":{"0":{"type":"cond-expr","loc":recorded_location(2,start,json!(end)),
+                "locations":[recorded_location(2,consequent,json!(alternate)),recorded_location(2,alternate,json!(end))]}},
+            "b":{"0":[1,1]}
+        }});
+        let result = attribute(&analysis, path, &source, [&report]);
+        assert_eq!(result["complete"], complete, "{source}: {result}");
+        assert_eq!(
+            result["functions"][0]["crap"],
+            if complete { json!(2.0) } else { Value::Null }
+        );
+        if complete {
+            let source = source.replace(";\n", " + sideEffect();\n");
+            let analysis = Analysis::inspect(path, &source).unwrap();
+            let mut invalid = report.clone();
+            invalid[path]["branchMap"]["0"]["loc"]["end"]["column"] = Value::Null;
+            invalid[path]["branchMap"]["0"]["locations"][1]["end"]["column"] = Value::Null;
+            let result = attribute(&analysis, path, &source, [&invalid]);
+            assert_eq!(result["complete"], false, "{source}: {result}");
+            assert_eq!(result["functions"][0]["crap"], Value::Null);
+        }
+    }
+}
+
+#[test]
 fn jsx_closing_delimiters_do_not_allow_other_executable_children_or_code() {
     let path = "/fixture.tsx";
     let source = "export const view = (n: number) => <span>{n >= 18 ? 'adult' : 'minor'}</span>;";
