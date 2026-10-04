@@ -19,7 +19,7 @@ on:
       version:
         description: Exact stable semver to publish
         required: true
-        default: 0.2.0
+        default: 0.3.0
         type: string
       publish:
         description: Publish after validation (leave off for a dry run)
@@ -47,7 +47,7 @@ jobs:
     timeout-minutes: 20
     env:
       RELEASE_REVISION: ${{ inputs.revision || github.sha }}
-      RELEASE_VERSION: ${{ inputs.version || '0.2.0' }}
+      RELEASE_VERSION: ${{ inputs.version || '0.3.0' }}
     steps:
       - name: Check out requested revision
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4

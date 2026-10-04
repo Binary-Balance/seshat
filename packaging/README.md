@@ -1,6 +1,6 @@
 # Seshat release packaging
 
-The release crate in `crates/seshat/Cargo.toml` owns version `0.2.0`.
+The release crate in `crates/seshat/Cargo.toml` owns version `0.3.0`.
 Packaging reads its literal `[package].version`; workspace inheritance is not
 supported. Dependency versions cannot supply a missing package version.
 `pack.mjs` builds one native payload for the current platform. `release.mjs`
@@ -70,11 +70,11 @@ Pass one built binary per target to produce packed entry and native archives:
 
 ```sh
 node packaging/release.mjs \
-  --output work/release-0.2.0 \
+  --output work/release-0.3.0 \
   --binary linux-x64=/absolute/path/to/seshat \
   --build-info linux-x64=/absolute/path/to/BUILD.json \
   --notices linux-x64=/absolute/path/to/THIRD_PARTY_NOTICES.txt \
-  --manifest work/release-0.2.0/release.json
+  --manifest work/release-0.3.0/release.json
 ```
 
 Each supplied binary requires its packer's `BUILD.json` and
@@ -132,8 +132,8 @@ and that cache are prerequisites for the offline step.
 
 ```sh
 node benchmarks/proofs/npm-package.mjs \
-  work/release-0.2.0/binary-balance-seshat-0.2.0.tgz \
-  work/release-0.2.0/binary-balance-seshat-linux-x64-0.2.0.tgz
+  work/release-0.3.0/binary-balance-seshat-0.3.0.tgz \
+  work/release-0.3.0/binary-balance-seshat-linux-x64-0.3.0.tgz
 ```
 
 The standalone, lifecycle and runner proofs remain separate native evidence.
