@@ -2,11 +2,20 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   TARGETS,
+  auditVersion,
   validateBinaryIdentity,
   validateAttestations,
   validateHost,
   validateNativePackages,
 } from './registry-install.mjs';
+
+test('uses the audit version for subsequent releases and rejects invalid versions', () => {
+  for (const version of ['0.3.0', '0.4.0-rc.1']) {
+    assert.equal(auditVersion({candidate: {packageVersion: version}}), version);
+  }
+  assert.throws(() => auditVersion({}), /audit package version is missing/);
+  assert.throws(() => auditVersion({candidate: {packageVersion: '0.3'}}), /not valid semver/);
+});
 
 test('rejects a registry target on the wrong host', () => {
   assert.throws(
