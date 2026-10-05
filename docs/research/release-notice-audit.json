@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "kind": "seshat-release-notice-audit",
   "issue": 138,
-  "status": "local-validation-complete-pending-main-dry-run-and-publication",
-  "capturedAt": "2026-10-04",
+  "status": "published-and-registry-verified",
+  "capturedAt": "2026-10-05",
   "candidate": {
     "packageVersion": "0.3.0",
     "sourceCommit": "7c74283ea3eeabb7fc6a43bb0fb08a0b91c29042",
@@ -1070,12 +1070,7 @@
     "validationPassed": true,
     "evidenceSha256": "1cefe05d8ac08a09a760434cd0c41f777445e5b6cee90e8b70b477ea8050c6b4"
   },
-  "remainingChecks": [
-    "Run the read-only npm publication workflow from the final reviewed main revision.",
-    "Obtain maintainer approval of the prepared release before enabling npm publication.",
-    "After publication, verify the six registry versions, tarball bytes and provenance against this audit, then pass the five-target registry install matrix.",
-    "Create the GitHub release with the six audited archives."
-  ],
+  "remainingChecks": [],
   "historicalEvidence": [
     {
       "record": "docs/releases/0.2.0-audit.json",
@@ -1117,6 +1112,47 @@
       "tag": "latest",
       "archiveCount": 6,
       "validationPassed": true
+    },
+    "mainPublisherDryRun": {
+      "runId": 37185092711,
+      "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/37185092711",
+      "revision": "db2b506b7c64e303c87452d4660dd233a56142d7",
+      "validationPassed": true,
+      "publicationEnabled": false
+    }
+  },
+  "publication": {
+    "version": "0.3.0",
+    "revision": "db2b506b7c64e303c87452d4660dd233a56142d7",
+    "registry": "https://registry.npmjs.org/",
+    "tag": "latest",
+    "runId": 37266357652,
+    "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/37266357652",
+    "allSixRegistryArchivesMatchAudit": true,
+    "allSixLatestTagsVerified": true,
+    "registryInstall": {
+      "runId": 37266947763,
+      "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/37266947763",
+      "verifierRevision": "44493fc7355392942b82db21c84f7953708d3761",
+      "node": "24.20.0",
+      "npm": "11.19.0",
+      "targets": [
+        "linux-x64",
+        "linux-arm64",
+        "darwin-x64",
+        "darwin-arm64",
+        "win32-x64"
+      ],
+      "validationPassed": true,
+      "verifiedSignaturesAndProvenance": true,
+      "sourceTreesMatchPublication": true
+    },
+    "githubRelease": {
+      "tag": "v0.3.0",
+      "url": "https://github.com/Binary-Balance/seshat/releases/tag/v0.3.0",
+      "revision": "db2b506b7c64e303c87452d4660dd233a56142d7",
+      "archiveCount": 6,
+      "downloadedArchivesMatchAudit": true
     }
   }
 }

@@ -1,7 +1,8 @@
 # Seshat 0.3.0 release audit
 
-Captured 2026-10-04. Native audit, five-target local install matrix and local
-publisher dry run passed. The final main dry run and publication checks remain.
+Captured 2026-10-05. Version 0.3.0 is published on npm. Native and runtime
+proofs, local installs, final main dry run and five-target registry/provenance
+verification passed. The GitHub release contains the six exact archives.
 
 Build source [7c74283ea3eeabb7fc6a43bb0fb08a0b91c29042](https://github.com/Binary-Balance/seshat/commit/7c74283ea3eeabb7fc6a43bb0fb08a0b91c29042), ref `refs/pull/139/merge`.
 
@@ -80,12 +81,35 @@ exact archives and planned the five native packages followed by the entry
 package, all at `0.3.0`, using `https://registry.npmjs.org/`, public access and
 the `latest` tag. Every planned command included `--dry-run`.
 
-## Checks remaining at this capture
+## Publication
 
-- Run the read-only npm publication workflow from the final reviewed main revision.
-- Obtain maintainer approval of the prepared release before enabling npm publication.
-- After publication, verify the six registry versions, tarball bytes and provenance against this audit, then pass the five-target registry install matrix.
-- Create the GitHub release with the six audited archives.
+The [final main dry run](https://github.com/Binary-Balance/seshat/actions/runs/37185092711)
+and [publication](https://github.com/Binary-Balance/seshat/actions/runs/37266357652)
+passed at `db2b506b7c64e303c87452d4660dd233a56142d7`. The maintainer approved
+that prepared release before publication. All six packages were published at
+`0.3.0` with public access, registry `https://registry.npmjs.org/` and tag
+`latest`. Registry downloads match every audited archive's bytes and SHA-256;
+all six `latest` tags point to `0.3.0`.
 
-Later preparation results belong in [the audit PR](https://github.com/Binary-Balance/seshat/pull/141)
-so this recorded checkpoint does not change the final release revision.
+## Registry installation and provenance
+
+The [five-target registry install matrix](https://github.com/Binary-Balance/seshat/actions/runs/37266947763)
+passed using Node `24.20.0` and npm `11.19.0`. Each host installed the exact
+entry version, selected the expected native payload and matched its binary to
+the audit. The installed CLI reported `0.3.0` before and after `npm ci`, and
+the Node fixture completed with three of four mutants killed.
+
+npm verified registry signatures and SLSA provenance for the exact entry and
+selected native versions on every host. The proof validates the full npm JSON
+before writing success; retained stdout is clipped when it exceeds the log
+limit. See the [matrix evidence review](https://github.com/Binary-Balance/seshat/pull/143#issuecomment-5988604396).
+
+Verification used `44493fc7355392942b82db21c84f7953708d3761`, which fixes the
+registry proof's old version constant. Its `crates`, `packages` and `packaging`
+trees match the publication revision and the audited build.
+
+## GitHub release
+
+[Seshat v0.3.0](https://github.com/Binary-Balance/seshat/releases/tag/v0.3.0)
+targets `db2b506b7c64e303c87452d4660dd233a56142d7`. All six downloaded release
+archives match the audited sizes and SHA-256 values.
