@@ -15,8 +15,8 @@ import {dirname, join, relative, resolve} from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {parseArgs} from 'node:util';
 import {tmpdir} from 'node:os';
+import {expectedTag} from './npm-publishing.mjs';
 
-export const VERSION = '0.2.0';
 export const REGISTRY = 'https://registry.npmjs.org/';
 export const ENTRY_PACKAGE = '@binary-balance/seshat';
 const SLSA_PROVENANCE_PREDICATE = 'https://slsa.dev/provenance/v1';
@@ -30,6 +30,13 @@ export const TARGETS = new Map([
 ]);
 
 export const NATIVE_PACKAGES = [...TARGETS.values()].map(target => target.package);
+
+export function auditVersion(audit) {
+  const version = audit.candidate?.packageVersion;
+  assert.equal(typeof version, 'string', 'audit package version is missing');
+  expectedTag(version); // Reuse the publisher's semver validation.
+  return version;
+}
 
 export function validateHost(targetName, actual = {platform: process.platform, arch: process.arch}) {
   const target = TARGETS.get(targetName);
@@ -89,10 +96,11 @@ if (invoked) {
   const output = resolve(values.output ?? join(repo, 'work/registry-install', targetName, 'registry-install.json'));
   mkdirSync(dirname(output), {recursive: true});
 
+  let version = null;
   const report = {
     schemaVersion: 1,
     kind: 'seshat-release-registry-install',
-    version: VERSION,
+    version,
     registry: REGISTRY,
     host: {
       target: targetName,
@@ -181,7 +189,7 @@ if (invoked) {
   const inspectInstallation = coordinate => {
     const rootPackage = readJson(join(consumer, 'package.json'));
     const lock = readJson(join(consumer, 'package-lock.json'));
-    assert.equal(rootPackage.devDependencies?.[ENTRY_PACKAGE], VERSION,
+    assert.equal(rootPackage.devDependencies?.[ENTRY_PACKAGE], version,
       'consumer does not record the exact entry package version');
     for (const packageName of NATIVE_PACKAGES) {
       assert.equal(rootPackage.dependencies?.[packageName], undefined);
@@ -191,14 +199,14 @@ if (invoked) {
 
     const entryRoot = join(consumer, 'node_modules', ENTRY_PACKAGE);
     const entryLock = lock.packages?.[`node_modules/${ENTRY_PACKAGE}`];
-    assert.equal(entryLock?.version, VERSION, 'lockfile entry package version changed');
+    assert.equal(entryLock?.version, version, 'lockfile entry package version changed');
     assert.equal(entryLock?.resolved?.startsWith(REGISTRY), true,
       'lockfile entry package is not resolved from the public registry');
     const entryManifest = readJson(join(entryRoot, 'package.json'));
     assert.equal(entryManifest.name, ENTRY_PACKAGE);
-    assert.equal(entryManifest.version, VERSION);
+    assert.equal(entryManifest.version, version);
     assert.deepEqual(entryManifest.optionalDependencies, Object.fromEntries(
-      NATIVE_PACKAGES.map(name => [name, VERSION]),
+      NATIVE_PACKAGES.map(name => [name, version]),
     ));
 
     const installedPackages = NATIVE_PACKAGES.filter(name =>
@@ -206,7 +214,7 @@ if (invoked) {
     validateNativePackages(installedPackages, target.package);
     for (const packageName of NATIVE_PACKAGES) {
       const nativeLock = lock.packages?.[`node_modules/${packageName}`];
-      assert.equal(nativeLock?.version, VERSION,
+      assert.equal(nativeLock?.version, version,
         `lockfile native package version changed: ${packageName}`);
       assert.equal(nativeLock?.resolved?.startsWith(REGISTRY), true,
         `lockfile native package is not resolved from the public registry: ${packageName}`);
@@ -214,7 +222,7 @@ if (invoked) {
     const nativeRoot = join(consumer, 'node_modules', target.package);
     const nativeManifest = readJson(join(nativeRoot, 'package.json'));
     assert.equal(nativeManifest.name, target.package);
-    assert.equal(nativeManifest.version, VERSION);
+    assert.equal(nativeManifest.version, version);
     assert.deepEqual(nativeManifest.os, [target.platform]);
     assert.deepEqual(nativeManifest.cpu, [target.arch]);
 
@@ -223,16 +231,16 @@ if (invoked) {
     const binary = validateBinaryIdentity(identity(binaryPath), coordinate);
     const build = readJson(join(nativeRoot, 'BUILD.json'));
     assert.equal(build.package, target.package);
-    assert.equal(build.packageVersion, VERSION);
+    assert.equal(build.packageVersion, version);
     assert.equal(build.binarySha256, binary.sha256);
     assert.equal(build.binaryBytes, binary.bytes);
 
     return {
       host: {platform: process.platform, arch: process.arch},
-      entry: {package: ENTRY_PACKAGE, version: VERSION},
+      entry: {package: ENTRY_PACKAGE, version},
       native: {
         package: target.package,
-        version: VERSION,
+        version,
         path: `node_modules/${target.package}/bin/${target.executable}`,
         binary,
       },
@@ -243,11 +251,12 @@ if (invoked) {
   try {
     target = validateHost(targetName);
     const audit = readJson(join(repo, 'docs/research/release-notice-audit.json'));
-    assert.equal(audit.candidate?.packageVersion, VERSION, 'audit package version changed');
+    version = auditVersion(audit);
+    report.version = version;
     const coordinate = audit.coordinates?.find(value => value.target === targetName);
     assert.ok(coordinate, `audit coordinate is missing: ${targetName}`);
     assert.equal(coordinate.package, target.package);
-    assert.equal(coordinate.version, VERSION);
+    assert.equal(coordinate.version, version);
     assert.equal(process.version, 'v24.20.0');
     report.host.npm = spawnSync(npmCommand, ['--version'], {
       encoding: 'utf8',
@@ -264,12 +273,12 @@ if (invoked) {
     });
     run('fixture-dependencies', npmCommand, ['ci', ...npmOptions]);
     run('registry-install', npmCommand, [
-      'install', ...npmOptions, '--save-dev', '--save-exact', `${ENTRY_PACKAGE}@${VERSION}`,
+      'install', ...npmOptions, '--save-dev', '--save-exact', `${ENTRY_PACKAGE}@${version}`,
     ]);
 
     const expectedAttestations = [
-      {name: ENTRY_PACKAGE, version: VERSION},
-      {name: target.package, version: VERSION},
+      {name: ENTRY_PACKAGE, version},
+      {name: target.package, version},
     ];
     const signatures = JSON.parse(run('provenance', npmCommand, [
       'audit', 'signatures', '--json', '--include-attestations', ...npmOptions,
@@ -279,7 +288,7 @@ if (invoked) {
     const launcherPath = join(consumer, 'node_modules', '.bin', process.platform === 'win32' ? 'seshat.cmd' : 'seshat');
     const [versionCommand, versionArgs] = shim(launcherPath);
     const versionBefore = run('shim-version-before-ci', versionCommand, [...versionArgs, '--version']).stdout;
-    assert.equal(versionBefore, `seshat ${VERSION}\n`);
+    assert.equal(versionBefore, `seshat ${version}\n`);
     report.installed = inspectInstallation(coordinate);
 
     const mutation = JSON.parse(run('mutation-fixture', versionCommand, [
