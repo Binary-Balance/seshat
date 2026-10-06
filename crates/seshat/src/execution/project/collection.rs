@@ -1501,6 +1501,9 @@ impl CapturedProject {
         if with_coverage {
             progress.phase(format_args!("coverage attribution"));
         }
+        // Original jobs must pass before mutations run. Coverage attribution
+        // affects CRAP completeness, not the already established baseline.
+        let mutation_ready = complete;
         let attribution_started = Instant::now();
         let sources: Vec<_> = self
             .sources
@@ -1535,7 +1538,7 @@ impl CapturedProject {
                 &facts,
                 &baselines,
                 &evidence.0,
-                complete,
+                mutation_ready,
                 &progress,
                 switching,
             );
@@ -1686,6 +1689,97 @@ mod tests {
             } else {
                 assert_eq!(concurrency["state"], "not-requested");
                 assert!(concurrency["effectiveWorkers"].is_null());
+            }
+            fixture.assert_clean();
+        }
+    }
+
+    #[test]
+    fn attribution_failure_allows_mutations_but_original_job_failures_stop_them() {
+        for failure in ["attribution", "typecheck", "baseline", "coverage"] {
+            let fixture = super::super::tests::Fixture::new();
+            let mut captured = fixture.capture().unwrap();
+            let setup = &mut captured.config.setups[0];
+            setup.typecheck = Some(vec![
+                "node".into(),
+                "-e".into(),
+                if failure == "typecheck" {
+                    "process.exit(1)"
+                } else {
+                    ""
+                }
+                .into(),
+            ]);
+            setup.test = vec![
+                "node".into(),
+                "-e".into(),
+                format!(
+                    r#"
+                import('./src/calc.ts').then(({{below}}) => {{
+                    const passed = below(0) && {baseline_passes};
+                    require('fs').writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({{
+                        version:1, executionId:process.env.SESHAT_EXECUTION_ID,
+                        node:process.versions.node, complete:true,
+                        passed:passed ? 1 : 0, failed:passed ? 0 : 1, errors:0
+                    }}));
+                    process.exitCode = passed ? 0 : 1;
+                }});
+            "#,
+                    baseline_passes = failure != "baseline"
+                ),
+            ];
+            setup.coverage.command = vec![
+                "node".into(),
+                "-e".into(),
+                format!(
+                    r#"
+                const fs = require('fs'), path = require('path');
+                const report = {{}};
+                for (const file of ['src/calc.ts','src/nested/render.tsx','packages/rules/index.ts']) {{
+                    const source = fs.readFileSync(file, 'utf8'), name = path.resolve(file);
+                    const start = source.indexOf('=>') + 3, end = source.indexOf(';', start);
+                    const loc = {{start:{{line:1,column:start}},end:{{line:1,column:end}}}};
+                    report[name] = {{path:name, statementMap:{{0:loc}}, s:{{0:1}}, branchMap:{{}}, b:{{}}}};
+                    if (file === 'src/calc.ts') {{
+                        report[name].branchMap = {{0:{{type:'unknown',loc,locations:[loc]}}}};
+                        report[name].b = {{0:[1]}};
+                    }}
+                }}
+                fs.mkdirSync('coverage', {{recursive:true}});
+                fs.writeFileSync('coverage/coverage-final.json', {coverage});
+                fs.writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({{
+                    version:1, executionId:process.env.SESHAT_EXECUTION_ID,
+                    node:process.versions.node, complete:true, passed:1, failed:0, errors:0
+                }}));
+            "#,
+                    coverage = if failure == "coverage" {
+                        "'invalid JSON'"
+                    } else {
+                        "JSON.stringify(report)"
+                    }
+                ),
+            ];
+            let result = captured.assess(AssessmentMode::Check, false).unwrap();
+            assert_eq!(result["complete"], false, "{failure}: {result}");
+            if failure == "attribution" {
+                assert_eq!(
+                    result["sources"][1]["result"]["functions"][0]["coverage"],
+                    1.0
+                );
+                assert_eq!(result["mutation"]["complete"], true, "{result}");
+                assert_eq!(result["mutation"]["jobsAttempted"], 2);
+                assert_eq!(result["mutation"]["killed"], 1);
+                assert_eq!(result["mutation"]["survived"], 1);
+                assert_eq!(result["mutation"]["score"], 50.0);
+            } else {
+                assert_eq!(
+                    result["mutation"]["jobsAttempted"], 0,
+                    "{failure}: {result}"
+                );
+                assert_eq!(
+                    result["mutation"]["outcomes"][0]["setups"][0]["state"],
+                    "not-run"
+                );
             }
             fixture.assert_clean();
         }

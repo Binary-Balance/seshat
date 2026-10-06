@@ -787,13 +787,17 @@ node benchmarks/proofs/coverage-branches.mjs
 
 This checks Node/Istanbul, Vitest/Istanbul and Jest/Expo against hand-counted
 branch outcomes, including an `if` without an `else`, ternaries, logical and
-nullish expressions, parameter defaults, nested arrows and a switch. It verifies
+nullish expressions, logical conditions inside an `if`, ternaries in object
+properties, parameter defaults, nested arrows and a switch. It verifies
 that fully executed statements can still produce a higher CRAP score when
 branch outcomes are untested. Functions with no recorded branches retain
 statement-based scoring. See the [measurements](../../docs/research/coverage-branches.md).
 
 Set `SESHAT_PROOF_BINARY` for an alternate fresh proof executable and
 `SESHAT_JEST_EXPO_DEPS` for an existing copy of the pinned fixture dependencies.
+`SESHAT_VITEST_DEPS` selects an alternate Vitest `node_modules` directory without
+changing the pinned default. This also permits checking a provider patch version
+against the same Node and Jest/Expo fixtures.
 `SESHAT_PROOF_OUTPUT` selects the JSON evidence path; the default is inside the
 proof's unique directory under ignored `work/assurance-proofs/coverage-branches-*`.
 The Linux x64 package workflow runs this check and retains its evidence.

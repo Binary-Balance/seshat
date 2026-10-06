@@ -274,11 +274,12 @@ fn readable(report: &Value) -> String {
                 "complexity-only" => "not applicable (complexity only)",
                 _ => "unknown",
             };
-            let statements = if function["status"] == "measured" {
-                format!("{}/{}", function["covered"], function["total"])
-            } else {
-                unmeasured.into()
-            };
+            let statements =
+                if function["status"] == "measured" || function["coverage"].as_f64().is_some() {
+                    format!("{}/{}", function["covered"], function["total"])
+                } else {
+                    unmeasured.into()
+                };
             let crap = function["crap"]
                 .as_f64()
                 .map(|v| format!("{v:.3}"))
@@ -919,6 +920,23 @@ mod tests {
         assert!(rendered.contains("CRAP unknown"));
         assert!(rendered.contains("statements unknown"));
         assert!(rendered.contains("jobs attempted: unknown"));
+    }
+
+    #[test]
+    fn unknown_crap_retains_measured_statement_display() {
+        let (report, code) = report(
+            Some("crap"),
+            Value::Null,
+            json!({"complete":false,"sources":[{"path":"a.ts","result":{"functions":[{
+                "name":"f","complexity":2,"crap":null,"status":"unknown",
+                "covered":1,"total":2,"coverage":0.5,"branchCoverage":null,"coverageBasis":null
+            }]}}]}),
+            1.0,
+            None,
+            None,
+        );
+        assert_eq!(code, 2);
+        assert!(readable(&report).contains("statements 1/2, CRAP unknown"));
     }
 
     #[test]
