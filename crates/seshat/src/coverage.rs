@@ -237,22 +237,41 @@ fn decode_branches(analysis: &Analysis, source: &str, file: &Value) -> BranchCov
         }
     };
     for (id, branch) in locations {
-        // An exact AST start and a range contained in its scope identify the
-        // affected function even when an outcome or counter is unreliable.
-        let owner = branch_span(source, &branch["loc"]).ok().and_then(|span| {
-            analysis
-                .branches
-                .iter()
-                .find(|site| site.span.start == span.0)?;
-            analysis
-                .owner(span.0)
-                .filter(|&i| span.1 <= analysis.scopes[i].span.end)
-        });
+        // Main and outcome locations must agree on the affected owner. A
+        // conflicting map cannot establish whose branch evidence was lost.
+        let owner = || {
+            branch_span(source, &branch["loc"]).ok().and_then(|span| {
+                let site = analysis
+                    .branches
+                    .iter()
+                    .find(|site| site.span.start == span.0)?;
+                analysis.owner(span.0).filter(|&i| {
+                    let scope = &analysis.scopes[i];
+                    span.1 <= scope.span.end
+                        && branch["locations"].as_array().is_some_and(|locations| {
+                            locations.iter().enumerate().all(|(index, location)| {
+                                if *location == json!({"start":{},"end":{}}) {
+                                    return true;
+                                }
+                                branch_span(source, location).is_ok_and(|outcome| {
+                                    scope.span.start <= outcome.0
+                                        && outcome.1 <= scope.span.end
+                                        && (analysis.owner(outcome.0) == Some(i)
+                                        // Creating a function-valued outcome
+                                        // belongs to the containing branch.
+                                        || site.outcomes.get(index).and_then(|span| *span)
+                                            .is_some_and(|span| span.start == outcome.0))
+                                })
+                            })
+                        })
+                })
+            })
+        };
         match decode_branch(analysis, source, branch, counters.get(id)) {
-            Err(error) => result.invalidate(analysis, owner, error),
+            Err(error) => result.invalidate(analysis, owner(), error),
             Ok((key, covered)) => {
                 if result.map.insert(key, covered).is_some() {
-                    result.invalidate(analysis, owner, "duplicate branch mapping".into());
+                    result.invalidate(analysis, owner(), "duplicate branch mapping".into());
                 }
             }
         }
@@ -673,6 +692,61 @@ fn unreliable_branches_preserve_statements_and_other_functions() {
     let result = attribute(&analysis, path, source, [&invalid]);
     assert_eq!(result["functions"][0]["crap"], Value::Null);
     assert_eq!(result["functions"][0]["coverage"], 1.0);
+}
+
+#[test]
+fn conflicting_branch_owners_never_gain_statement_fallback() {
+    let path = "/fixture.ts";
+    let source = "function f(a: boolean) { return a ? 1 : 2; }\nfunction g(b: boolean) { return b ? 3 : 4; }\n";
+    let analysis = Analysis::inspect(path, source).unwrap();
+    let mut file = json!({"path":path,"statementMap":{},"s":{},"branchMap":{},"b":{}});
+    for (id, line) in [("0", 1), ("1", 2)] {
+        file["statementMap"][id] = recorded_location(line, 25, json!(42));
+        file["s"][id] = json!(1);
+        file["branchMap"][id] = json!({"type":"cond-expr",
+            "loc":recorded_location(line,32,json!(41)),
+            "locations":[recorded_location(line,36,json!(37)),recorded_location(line,40,json!(41))]});
+        file["b"][id] = json!([1, 0]);
+    }
+    let valid = json!({path:file});
+    let reference = attribute(&analysis, path, source, [&valid]);
+    assert_eq!(reference["complete"], true);
+    for row in reference["functions"].as_array().unwrap() {
+        assert_eq!(row["crap"], 2.5);
+    }
+    let mut conflicting = valid.clone();
+    conflicting[path]["branchMap"]["0"]["loc"] = conflicting[path]["branchMap"]["1"]["loc"].clone();
+    for reports in [
+        vec![&conflicting],
+        vec![&valid, &conflicting],
+        vec![&conflicting, &valid],
+    ] {
+        let result = attribute(&analysis, path, source, reports);
+        assert_eq!(result["complete"], false);
+        for row in result["functions"].as_array().unwrap() {
+            assert_eq!(row["coverage"], 1.0);
+            assert_eq!(row["covered"], 1);
+            assert_eq!(row["total"], 1);
+            assert_eq!(row["status"], "unknown", "{result}");
+            for key in ["crap", "branchCoverage", "coverageBasis"] {
+                assert_eq!(row[key], Value::Null, "{result}");
+            }
+        }
+    }
+    // A provider can legitimately record no branches for a function. Only
+    // conflicting evidence, not AST decisions alone, disables its fallback.
+    let mut unrecorded = valid.clone();
+    unrecorded[path]["branchMap"]
+        .as_object_mut()
+        .unwrap()
+        .remove("0");
+    unrecorded[path]["b"].as_object_mut().unwrap().remove("0");
+    let result = attribute(&analysis, path, source, [&unrecorded]);
+    assert_eq!(result["complete"], true);
+    assert_eq!(result["functions"][0]["coverageBasis"], "statement");
+    assert_eq!(result["functions"][0]["crap"], 2.0);
+    assert_eq!(result["functions"][1]["coverageBasis"], "branch");
+    assert_eq!(result["functions"][1]["crap"], 2.5);
 }
 
 #[test]
