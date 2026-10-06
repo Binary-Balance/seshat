@@ -97,9 +97,10 @@ Report complexity separately for class-field initialisers and static blocks,
 identifying them as outside first-release CRAP scoring. Their comparison operators
 remain eligible for mutation testing.
 
-For an in-scope function without reliable matching coverage, report coverage and
-CRAP as unknown, mark the run incomplete, and return a non-zero exit status.
-Retain successfully analysed results. Valid coverage counters showing no
+For an in-scope function without reliable matching coverage, report the affected
+measurement and CRAP as unknown, mark the run incomplete, and return a non-zero
+exit status. Retain independent valid measurements, including statement coverage
+when branch attribution fails. Valid coverage counters showing no
 executions mean 0% coverage; missing evidence does not.
 
 For a function verified from source to contain no executable statements to
@@ -157,10 +158,12 @@ working directory, test and coverage commands, and coverage-report location. A
 single-package project can use one entry; a mixed-runner project can declare
 several. Run all configured setups for each mutant.
 
-Combine coverage only when the source, statement and branch mappings agree.
-Combine execution evidence for matching statements and branch outcomes, not
-independently calculated percentages. Conflicting reports make the result
-incomplete with an explanation; do not guess a combined score. Verify exact
+Combine statement hits when source and statement mappings agree. Combine branch
+hits for matching source outcomes independently of statement merging. Conflicting
+branch reports leave affected CRAP scores unknown while retaining valid statement
+coverage and unaffected scores. Combine execution evidence, not independently
+calculated percentages. Conflicting reports make the result incomplete with an
+explanation; do not guess a combined score. Verify exact
 configuration fields against working
 runner integrations before publishing setup examples.
 

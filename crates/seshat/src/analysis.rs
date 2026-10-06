@@ -202,6 +202,25 @@ impl<'a> Visit<'a> for Analysis {
                     expression.right.without_parentheses().span().start,
                 ));
             }
+            AstKind::IfStatement(statement) => {
+                self.branch_end_ranges.push(Span::new(
+                    statement.test.without_parentheses().span().end,
+                    statement.consequent.span().start,
+                ));
+            }
+            AstKind::ObjectExpression(expression) => {
+                // A property's comma and the final closing brace evaluate no
+                // code. Stop at the next property, including computed keys.
+                for (index, property) in expression.properties.iter().enumerate() {
+                    self.branch_end_ranges.push(Span::new(
+                        property.span().end,
+                        expression
+                            .properties
+                            .get(index + 1)
+                            .map_or(expression.span.end, |next| next.span().start),
+                    ));
+                }
+            }
             _ => {}
         }
         let branch = match node {

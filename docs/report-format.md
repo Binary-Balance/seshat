@@ -5,7 +5,7 @@ newline to stdout. Progress stays on stderr. This document defines the public
 wire contract for `schemaVersion: 1`.
 
 `schemaVersion` identifies this document. `toolVersion` identifies the
-executable, such as `0.3.0`. They are separate values. Valid standalone
+executable, such as `0.3.1`. They are separate values. Valid standalone
 help and version commands print text. They do not produce this JSON report.
 
 ## Arguments and readable output
@@ -143,7 +143,7 @@ Each `functions` row has these fields:
 | `complexity` | Integer cyclomatic complexity used by the CRAP calculation. |
 | `covered` | Number of mapped statements with at least one hit. |
 | `total` | Number of mapped statements. |
-| `coverage` | `covered / total` as a fraction from `0` to `1`, only for `measured` rows. It is not a percentage. |
+| `coverage` | `covered / total` as a fraction from `0` to `1` when statement evidence is reliable for a non-empty ordinary function. It is not a percentage. |
 | `branchCovered` | Number of mapped branch outcomes with at least one hit. |
 | `branchTotal` | Number of mapped branch outcomes. An `if` usually has two outcomes; a default argument usually has one. |
 | `branchCoverage` | `branchCovered / branchTotal` as a fraction from `0` to `1`, only for `measured` rows with recorded branches. Otherwise `null`. |
@@ -151,10 +151,12 @@ Each `functions` row has these fields:
 | `crap` | `complexity² × (1 − input)³ + complexity`, using the coverage selected by `coverageBasis`, only for `measured` rows. |
 | `status` | `measured`, `unknown`, `not-applicable` or `complexity-only`. |
 
-`measured` means valid coverage mapped to a non-empty ordinary function.
-`unknown` means coverage is missing or unreliable. It can retain decoded
-statement and branch counts, but `coverage`, `branchCoverage`, `coverageBasis`
-and `crap` remain `null`.
+`measured` means valid coverage supports CRAP for a non-empty ordinary function.
+`unknown` means required coverage is missing or unreliable. When only branch
+evidence is unreliable, independently valid statement counts and `coverage`
+remain available, while `branchCoverage`, `coverageBasis` and `crap` are `null`.
+Unreliable statement evidence also leaves `coverage` null. Decoded counts can
+remain available even when their corresponding fraction is unknown.
 `not-applicable` identifies an empty function. `complexity-only` identifies an
 implicit scope such as a class field initializer or static block. Those rows
 retain complexity but have `null` coverage and CRAP, regardless of any counters
@@ -164,9 +166,17 @@ from a measured zero.
 The existing `covered`, `total` and `coverage` fields retain their statement
 semantics. The branch fields and `coverageBasis` are additive under schema
 version 1. A valid empty branch map allows statement fallback; missing or
-unreliable branch data makes the measurement unknown. Reports from multiple
-setups must have compatible statement and branch mappings before their hits
-can be combined.
+unreliable branch data makes CRAP unknown for the affected function. If Seshat
+cannot establish the affected owner, CRAP is unknown throughout the file.
+Reports from multiple setups merge compatible statement hits independently
+of branch compatibility. Missing or incompatible branch sites leave their
+owners' CRAP unknown; compatible functions retain their measurements.
+
+Coverage attribution problems keep the assessment incomplete and its exit
+status at `2`. After all original typechecks, test baselines and coverage jobs
+pass, mutations can still run and produce their own complete result. A failed
+original job, invalid coverage file or other execution failure still stops
+mutations. A complete mutation result does not make incomplete CRAP complete.
 
 ### Setup jobs and evidence
 

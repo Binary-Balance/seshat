@@ -9,7 +9,7 @@ matching native GitHub-hosted runners and do not run through Rosetta.
 Install the local tarball as a development dependency:
 
 ```sh
-npm install --save-dev --save-exact --ignore-scripts --offline /absolute/path/to/binary-balance-seshat-darwin-x64-0.3.0.tgz
+npm install --save-dev --save-exact --ignore-scripts --offline /absolute/path/to/binary-balance-seshat-darwin-x64-0.3.1.tgz
 ./node_modules/@binary-balance/seshat-darwin-x64/bin/seshat --help
 ```
 

@@ -145,7 +145,7 @@ native archive and `--cli` accepts an installed native executable:
 
 ```sh
 node benchmarks/proofs/jest-expo-check.mjs \
-  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.3.0.tgz
+  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.3.1.tgz
 # or:
 node benchmarks/proofs/jest-expo-check.mjs \
   --cli /absolute/path/to/node_modules/@binary-balance/seshat-linux-x64/bin/seshat
@@ -415,9 +415,13 @@ locations and their outcome counters. An empty branch map is valid; missing
 branch data is unknown. The recorded branch kinds depend on the provider and
 its transforms, so even 100% branch coverage does not prove all paths were tested.
 
-Reports from multiple setups are merged only when their source, statement and
-branch mappings agree. A shared JSON format alone does not establish
-compatibility.
+Reports from multiple setups merge statement hits when source and statement
+mappings agree. Branch hits combine for compatible outcomes. Unreliable branch
+data leaves affected CRAP unknown while retaining independent statement coverage
+and unaffected function scores. A shared JSON format alone does not establish
+compatibility. Coverage attribution problems keep the assessment incomplete,
+but passing original checks still allow mutations to run. Failed original jobs
+and invalid coverage files stop mutations.
 Missing counters and ambiguous mappings make the run incomplete. Valid counters
 showing zero execution are measured 0% coverage. Functions verified to have no
 executable body or parameter work have not-applicable coverage and CRAP. Class

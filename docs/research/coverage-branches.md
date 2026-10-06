@@ -21,6 +21,8 @@ routes evaluate the same JSX expression without a React dependency.
 | `parenthesized`, a ternary with parentheses | 100% | 1/2 | 2 | 2.5 |
 | `logical`, `&&` | 100% | 1/2 | 2 | 2.5 |
 | `logicalWrapped`, `&&` with parenthesized `||` | 100% | 1/3 | 3 | 5.667 |
+| `logicalIf`, a logical condition inside an `if` | 100% | 4/4 | 3 | 3 |
+| `objectConditional`, multiline and nested object property ternaries | 100% | 2/4 | 3 | 4.125 |
 | `nullish`, `??` | 100% | 1/2 | 2 | 2.5 |
 | `view`, a ternary inside JSX | 100% | 1/2 | 2 | 2.5 |
 | `fragment`, a parenthesized ternary inside a JSX fragment | 100% | 1/2 | 2 | 2.5 |
@@ -50,7 +52,12 @@ end column for the rest of the line. Default-value ranges can include the
 parameter's type annotation. Seshat validates branch kinds and outcome starts
 against the source syntax before accepting these bounded range differences.
 Vitest also includes enclosing branch separators, closing parentheses, JSX
-container braces and final attribute opening-tag punctuation. A final JSX expression can extend through
+container braces and final attribute opening-tag punctuation. Logical conditions
+can extend through the `if` condition's closing parenthesis and whitespace before
+the body. Object property expressions can extend through their trailing comma,
+or a final property's closing object brace. The syntax tree bounds these ranges
+before the next property, including computed keys and spreads.
+A final JSX expression can extend through
 its element or fragment's closing tag. The syntax tree must identify these
 as punctuation or empty JSX comment containers. Seshat rejects ranges that
 include another executable expression, attribute or JSX child. Default ranges
@@ -71,6 +78,22 @@ Missing or malformed counters and partial branch entries remain unknown.
 This includes partially suppressed outcomes such as `istanbul ignore else`.
 Executable parameters without any mapped statements remain unknown too; branch
 counters alone do not change that existing policy.
+
+Issue [#145](https://github.com/Binary-Balance/seshat/issues/145) exposed the
+missing condition and object property delimiter ranges in 0.3.0. The extended
+fixture passes with Vitest/Istanbul 5.0.0 and Vite 8.2.2, and with
+Vitest/Istanbul 5.0.3 and Vite 8.3.2. Both runs use Node 24.21.0 and
+TypeScript 6.0.3 for the Node route, plus the same Jest/Expo dependencies above.
+The new function counts and scores agree across all routes in both runs.
+
+Unreliable branch data preserves independently valid statement coverage.
+Seshat withholds CRAP for the affected function, or throughout the file when
+the affected owner cannot be established. Incompatible branch maps across
+setups also preserve compatible statement hits and unaffected function scores.
+They never trigger statement fallback for the affected CRAP score. The whole
+assessment remains incomplete, but passing original checks still allow mutations
+to run. The [report contract](../report-format.md#source-rows-and-function-measurements)
+describes the retained fields and completion rules.
 
 Run from the repository root after the documented Rust build and dependency
 installation:

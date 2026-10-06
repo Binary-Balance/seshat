@@ -13,7 +13,8 @@ const ts = require('../node_modules/typescript');
 const instrument = require('istanbul-lib-instrument');
 const coverage = require('istanbul-lib-coverage');
 const sourceMaps = require('istanbul-lib-source-maps');
-const modules = join(here, 'node_modules');
+const modules = resolve(process.env.SESHAT_VITEST_DEPS ?? join(here, 'node_modules'));
+const vitestRequire = createRequire(join(modules, 'coverage-proof.cjs'));
 const expo = resolve(process.env.SESHAT_JEST_EXPO_DEPS ?? join(here, 'fixtures/jest-expo'));
 const binary = resolve(process.env.SESHAT_PROOF_BINARY ?? 'crates/seshat/target/release/seshat-proofs');
 mkdirSync(join(repo, 'work/assurance-proofs'), {recursive: true});
@@ -40,6 +41,21 @@ export function nestedLogical(flag: boolean, value: boolean, other: boolean) {
 export function logical(value: boolean, other: boolean) { return value && other; }
 export function logicalWrapped(value: boolean, other: boolean, last: boolean) {
   return value && (other || last);
+}
+export function logicalIf(value: boolean, other: boolean) {
+  if (value || other) { return 1; }
+  return 0;
+}
+export function objectConditional(flag: boolean) {
+  return {
+    value: flag
+      ? {answer: 1}
+      : {answer: 2},
+    nested: {
+      port: flag ? 1234 : 5678,
+      next: true,
+    },
+  };
 }
 export function nullish(value: string | null) { return value ?? 'missing'; }
 export function defaults(value = 7) { return value; }
@@ -111,6 +127,9 @@ assert.equal(subject.nestedConditional(true, true), 1);
 assert.equal(subject.nestedLogical(true, false, true), false);
 assert.equal(subject.logical(false, true), false);
 assert.equal(subject.logicalWrapped(false, true, false), false);
+assert.equal(subject.logicalIf(false, false), 0);
+assert.equal(subject.logicalIf(true, false), 1);
+assert.deepEqual(subject.objectConditional(true), {value: {answer: 1}, nested: {port: 1234, next: true}});
 assert.equal(subject.nullish('present'), 'present');
 assert.equal(subject.defaults(3), 3);
 assert.equal(subject.destructured({value: 3}), 3);
@@ -192,7 +211,9 @@ const reports = {
 };
 const results = {environment: {
   node: process.version, typescript: ts.version,
-  vitest: require('vitest/package.json').version,
+  vitest: vitestRequire('vitest/package.json').version,
+  vite: vitestRequire('vite/package.json').version,
+  'coverage-istanbul': vitestRequire('@vitest/coverage-istanbul/package.json').version,
   jest: JSON.parse(readFileSync(join(expo, 'node_modules/jest/package.json'), 'utf8')).version,
   'jest-expo': JSON.parse(readFileSync(join(expo, 'node_modules/jest-expo/package.json'), 'utf8')).version,
 }, routes: {}};
@@ -247,14 +268,37 @@ for (const [provider, path] of Object.entries(reports)) {
   assert.equal(named.defaultsNamed.branchCovered, 2);
   assert.equal(named.defaultsNamed.branchTotal, 2);
   assert.equal(named.defaultsNamed.crap, 3);
+  assert.equal(named.logicalIf.coverage, 1);
+  assert.equal(named.logicalIf.branchCovered, 4);
+  assert.equal(named.logicalIf.branchTotal, 4);
+  assert.equal(named.logicalIf.crap, 3);
+  assert.equal(named.objectConditional.coverage, 1);
+  assert.equal(named.objectConditional.branchCovered, 2);
+  assert.equal(named.objectConditional.branchTotal, 4);
+  assert.equal(named.objectConditional.crap, 4.125);
   function rejects(name, invalid) {
     const invalidPath = join(work, `${provider}-${name}.json`);
     json(invalidPath, invalid);
     const rejected = spawnSync(binary, ['score', source, invalidPath], {encoding: 'utf8', timeout: 10000});
     assert.ifError(rejected.error);
     assert.equal(rejected.status, 2, rejected.stdout + rejected.stderr);
-    assert.equal(JSON.parse(rejected.stdout).complete, false);
+    const result = JSON.parse(rejected.stdout);
+    assert.equal(result.complete, false);
+    return Object.fromEntries(result.functions.map(row => [row.name, row]));
   }
+  const malformed = JSON.parse(readFileSync(path, 'utf8'));
+  const logicalLine = readFileSync(source, 'utf8').split('\n')
+    .findIndex(line => line.startsWith('export function logicalIf(')) + 2;
+  const logicalId = Object.entries(malformed[source].branchMap)
+    .find(([, branch]) => branch.type === 'binary-expr' && branch.loc.start.line === logicalLine)[0];
+  malformed[source].b[logicalId][1] = -1;
+  const isolated = rejects('invalid-logical-counter', malformed);
+  assert.equal(isolated.logicalIf.coverage, 1);
+  assert.equal(isolated.logicalIf.status, 'unknown');
+  assert.equal(isolated.logicalIf.crap, null);
+  assert.equal(isolated.logicalIf.coverageBasis, null);
+  assert.equal(isolated.price.crap, 2.5);
+  assert.equal(isolated.objectConditional.crap, 4.125);
   const invalid = JSON.parse(readFileSync(path, 'utf8'));
   const computedLine = readFileSync(source, 'utf8').split('\n')
     .findIndex(line => line.startsWith('export function computed(')) + 1;
