@@ -29,14 +29,6 @@ Before publishing to npm, obtain approval of the prepared release under the
 [npm publication checkpoint](docs/agents/delivery.md#npm-publication-checkpoint).
 Release preparation alone does not authorise publication.
 
-## Disk housekeeping
-
-Periodically check free disk space and repository build/cache usage, especially
-before large builds and after completing work. Reclaim obsolete, reproducible
-artifacts once required evidence is retained. Preserve active work, needed
-toolchains and unique evidence; do not indiscriminately clear shared caches.
-Use `df -h .` and targeted `du -sh` checks to confirm space stays under control.
-
 ## Public repository
 
 Keep source, documentation, examples, committed reports and issue text independent
