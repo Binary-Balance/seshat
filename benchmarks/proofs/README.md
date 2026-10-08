@@ -21,6 +21,7 @@ npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund
 npm ci --prefix benchmarks/proofs --ignore-scripts --no-audit --no-fund
 export CARGO_TARGET_DIR="$PWD/crates/seshat/target"
 cargo test --locked --manifest-path crates/seshat/Cargo.toml
+node benchmarks/proofs/compiler-strictness.mjs
 cargo build --release --locked --manifest-path crates/seshat/Cargo.toml
 node benchmarks/proofs/run.mjs
 ```
@@ -29,6 +30,12 @@ To reuse this checkout's project-local Rust installation, first set the three
 toolchain variables shown in [the original benchmark instructions](../README.md).
 The proof dependencies are development tools, not proposed Seshat runtime
 dependencies. Do not run untrusted test suites with this experimental executor.
+
+The compiler strictness proof checks JSONC, relative and package inheritance,
+multiple `extends`, command-line overrides, omitted defaults, setup working
+directories and unavailable configuration. It uses installed TypeScript without
+creating a type checker. Pass another installed `typescript/bin/tsc` as its first
+argument to check that compiler's defaults and supported options.
 
 The default is three samples per runner and strategy. For a shorter correctness
 run, use `SESHAT_PROOF_SAMPLES=1 node benchmarks/proofs/run.mjs`. Use
