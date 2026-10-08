@@ -440,7 +440,7 @@ pub fn attribute<'a>(
         let branch_covered = branches[i].iter().filter(|&&hit| hit).count();
         let status = if s.implicit { "complexity-only" } else if s.empty { "not-applicable" }
             else if !statements_reliable || unreliable_branches.contains(&i) || total == 0 { complete = false; "unknown" } else { "measured" };
-        json!({"name":s.name,"start":s.span.start,"complexity":s.complexity,"status":status,
+        json!({"name":s.name,"start":s.span.start,"complexity":s.complexity,"cognitiveComplexity":s.cognitive_complexity,"status":status,
             "typeSafety":s.type_safety,
             "covered":covered,"total":total,"coverage":if statements_reliable && !s.implicit && !s.empty && total > 0 {Some(covered as f64/total as f64)}else{None},
             "branchCovered":branch_covered,"branchTotal":branch_total,
