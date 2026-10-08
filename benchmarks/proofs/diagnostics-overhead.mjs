@@ -409,8 +409,10 @@ function makeJestFixture() {
   };
 }
 
-function expectedJobs(fixture, workers, strategy = 'replace') {
-  return 3 + fixture.expected.mutants.length + (workers - 1) + (strategy === 'switch' ? 1 : 0);
+function expectedJobs(fixture, workers, strategy = 'replace', withExtreme = false) {
+  const functions = Object.values(fixture.expected.sourceMetrics).flat().length;
+  const extremeJobs = withExtreme ? functions + Math.min(workers, functions) - 1 : 0;
+  return 3 + fixture.expected.mutants.length + (workers - 1) + (strategy === 'switch' ? 1 : 0) + extremeJobs;
 }
 
 function reportResult(report) {
@@ -435,8 +437,8 @@ function sourceProjection(source) {
     path: source.path,
     complete: source.result?.complete ?? null,
     problems: source.result?.problems ?? null,
-    functions: (source.result?.functions ?? []).map(({name, start, complexity, coverage, covered, total, crap, status}) =>
-      ({name, start, complexity, coverage, covered, total, crap, status})),
+    functions: (source.result?.functions ?? []).map(({name, start, complexity, coverage, covered, total, crap, status, pseudoTested, pseudoTestStatus, pseudoTestReason}) =>
+      ({name, start, complexity, coverage, covered, total, crap, status, pseudoTested, pseudoTestStatus, pseudoTestReason})),
   };
 }
 
@@ -471,6 +473,14 @@ function semanticProjection(report) {
       jobsAttempted: result.jobsAttempted,
       sources: (result.sources ?? []).map(sourceProjection),
       setups: (result.setups ?? []).map(setupProjection),
+      pseudoTesting: result.pseudoTesting ? {
+        complete: result.pseudoTesting.complete,
+        planned: result.pseudoTesting.planned,
+        pseudoTested: result.pseudoTesting.pseudoTested,
+        checked: result.pseudoTesting.checked,
+        unknown: result.pseudoTesting.unknown,
+        outcomes: result.pseudoTesting.outcomes.map(outcomeProjection),
+      } : null,
       mutation: mutation ? {
         complete: mutation.complete,
         planned: mutation.planned,
@@ -522,7 +532,13 @@ function metricsFor(result) {
 function assertExpected(fixture, result, workers, strategy = 'replace', includeStrategy = switchingMode) {
   const {expected} = fixture;
   assert.equal(result.complete, true, `${fixture.id} report incomplete`);
-  assert.equal(result.jobsAttempted, expectedJobs(fixture, workers, strategy));
+  assert.equal(result.jobsAttempted, expectedJobs(fixture, workers, strategy, Boolean(result.pseudoTesting)));
+  if (result.pseudoTesting) {
+    const functions = Object.values(expected.sourceMetrics).flat().length;
+    assert.equal(result.pseudoTesting.planned, functions);
+    assert.equal(result.pseudoTesting.checked, functions);
+    assert.equal(result.pseudoTesting.unknown, 0);
+  }
   assert.equal(result.setups.length, 1);
   const setup = result.setups[0];
   assert.equal(setup.typecheck.state, 'passed');

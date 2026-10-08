@@ -55,6 +55,18 @@ pub struct MutationAssessment {
     pub outcomes: Vec<Verdict>,
 }
 
+pub fn pseudo_tested(coverage: Option<f64>, verdict: Verdict) -> Option<bool> {
+    let coverage = coverage?;
+    if !(0.0 < coverage && coverage <= 1.0) {
+        return None;
+    }
+    match verdict {
+        Verdict::Survived => Some(true),
+        Verdict::Killed => Some(false),
+        _ => None,
+    }
+}
+
 pub fn score(complexity: u32, covered: usize, total: usize) -> Option<f64> {
     if complexity == 0 || total == 0 || covered > total {
         return None;
@@ -123,6 +135,25 @@ pub fn mutation(
 mod tests {
     use super::*;
     use TestState::*;
+
+    #[test]
+    fn pseudo_testing_requires_execution_and_resolved_mutants() {
+        for coverage in [None, Some(0.0), Some(-1.0), Some(2.0), Some(f64::NAN)] {
+            assert_eq!(pseudo_tested(coverage, Verdict::Survived), None);
+            assert_eq!(pseudo_tested(coverage, Verdict::Killed), None);
+        }
+        assert_eq!(pseudo_tested(Some(0.5), Verdict::Survived), Some(true));
+        assert_eq!(pseudo_tested(Some(1.0), Verdict::Killed), Some(false));
+        for verdict in [
+            Verdict::TimedOut,
+            Verdict::ExecutionError,
+            Verdict::Cancelled,
+            Verdict::NotRun,
+            Verdict::Unassessed,
+        ] {
+            assert_eq!(pseudo_tested(Some(1.0), verdict), None);
+        }
+    }
 
     #[test]
     fn crap_requires_valid_coverage_counts() {

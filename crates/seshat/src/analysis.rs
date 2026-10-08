@@ -4,7 +4,7 @@ use oxc_ast::{
     AstKind,
     ast::{
         ArrowFunctionBody, Expression, FormalParameters, JSXAttributeItem, JSXAttributeValue,
-        JSXChild,
+        JSXChild, MethodDefinitionKind, PropertyKind, TSType,
     },
 };
 use oxc_ast_visit::Visit;
@@ -20,6 +20,8 @@ pub struct Scope {
     pub complexity: u32,
     pub implicit: bool,
     pub empty: bool,
+    pub extreme_skip: Option<&'static str>,
+    pub returns_value: bool,
 }
 
 pub struct BranchSite {
@@ -123,6 +125,9 @@ pub struct Analysis {
     throws: Vec<Span>,
     caught_blocks: Vec<Span>,
     switching_start: Option<u32>,
+    excluded_methods: std::collections::BTreeMap<u32, &'static str>,
+    return_values: Vec<Span>,
+    void_functions: std::collections::BTreeSet<u32>,
 }
 
 // Plain bindings do not execute user code. Other parameter forms may evaluate
@@ -139,6 +144,46 @@ fn plain_parameters(params: &FormalParameters<'_>) -> bool {
 
 impl<'a> Visit<'a> for Analysis {
     fn enter_node(&mut self, node: AstKind<'a>) {
+        match node {
+            AstKind::Function(function) => {
+                if function.return_type.as_ref().is_some_and(|annotation| {
+                    matches!(annotation.type_annotation, TSType::TSVoidKeyword(_))
+                }) {
+                    self.void_functions.insert(function.span.start);
+                }
+            }
+            AstKind::ArrowFunctionExpression(function) => {
+                if function.return_type.as_ref().is_some_and(|annotation| {
+                    matches!(annotation.type_annotation, TSType::TSVoidKeyword(_))
+                }) {
+                    self.void_functions.insert(function.span.start);
+                }
+            }
+            AstKind::MethodDefinition(method) => {
+                let reason = match method.kind {
+                    MethodDefinitionKind::Constructor => Some("constructor"),
+                    MethodDefinitionKind::Get | MethodDefinitionKind::Set => Some("accessor"),
+                    MethodDefinitionKind::Method => None,
+                };
+                if let Some(reason) = reason {
+                    self.excluded_methods
+                        .insert(method.value.span.start, reason);
+                }
+            }
+            AstKind::ObjectProperty(property) if property.kind != PropertyKind::Init => {
+                self.excluded_methods
+                    .insert(property.value.span().start, "accessor");
+            }
+            AstKind::ReturnStatement(statement) => {
+                if let Some(argument) = &statement.argument {
+                    let returns_void = matches!(argument.without_parentheses(), Expression::UnaryExpression(unary) if unary.operator.as_str() == "void");
+                    if !returns_void {
+                        self.return_values.push(statement.span);
+                    }
+                }
+            }
+            _ => {}
+        }
         if let AstKind::ParenthesizedExpression(expression) = node {
             self.branch_end_ranges.push(Span::new(
                 expression.expression.without_parentheses().span().end,
@@ -325,6 +370,9 @@ impl<'a> Visit<'a> for Analysis {
                 empty: b.statements.is_empty()
                     && b.directives.is_empty()
                     && plain_parameters(&f.params),
+                extreme_skip: self.excluded_methods.get(&f.span.start).copied()
+                    .or(if f.generator { Some("generator") } else if b.statements.is_empty() && b.directives.is_empty() { Some("empty") } else { None }),
+                returns_value: false,
             }),
             AstKind::ArrowFunctionExpression(f) => Some(Scope {
                 name: format!("arrow@{}", f.span.start),
@@ -334,6 +382,10 @@ impl<'a> Visit<'a> for Analysis {
                 implicit: false,
                 empty: matches!(&f.body, ArrowFunctionBody::FunctionBody(b) if b.statements.is_empty() && b.directives.is_empty())
                     && plain_parameters(&f.params),
+                extreme_skip: matches!(&f.body, ArrowFunctionBody::FunctionBody(b) if b.statements.is_empty() && b.directives.is_empty()).then_some("empty"),
+                returns_value: !matches!(f.body, ArrowFunctionBody::FunctionBody(_))
+                    && !self.void_functions.contains(&f.span.start)
+                    && !f.body.as_expression().is_some_and(|expression| matches!(expression.without_parentheses(), Expression::UnaryExpression(unary) if unary.operator.as_str() == "void")),
             }),
             AstKind::PropertyDefinition(p) => p.value.as_ref().map(|v| Scope {
                 name: format!("field@{}", p.span.start),
@@ -342,6 +394,8 @@ impl<'a> Visit<'a> for Analysis {
                 complexity: 1,
                 implicit: true,
                 empty: false,
+                extreme_skip: Some("implicit-scope"),
+                returns_value: false,
             }),
             AstKind::StaticBlock(b) => Some(Scope {
                 name: format!("static@{}", b.span.start),
@@ -350,6 +404,8 @@ impl<'a> Visit<'a> for Analysis {
                 complexity: 1,
                 implicit: true,
                 empty: false,
+                extreme_skip: Some("implicit-scope"),
+                returns_value: false,
             }),
             _ => None,
         };
@@ -523,6 +579,14 @@ impl Analysis {
             ..Self::default()
         };
         result.visit_program(&parsed.program);
+        for span in std::mem::take(&mut result.return_values) {
+            if let Some(index) = result.owner(span.start) {
+                let scope = &mut result.scopes[index];
+                if !result.void_functions.contains(&scope.span.start) {
+                    scope.returns_value = true;
+                }
+            }
+        }
         result.branch_end_ranges.sort_by_key(|range| range.start);
         let decisions = std::mem::take(&mut result.decisions);
         for span in decisions {
@@ -608,6 +672,27 @@ impl Analysis {
         Err("unknown mutant".into())
     }
 
+    pub fn replace_extreme(&self, source: &str, index: usize) -> Result<String, String> {
+        let scope = self.scopes.get(index).ok_or("unknown function")?;
+        if scope.extreme_skip.is_some() {
+            return Err("function is excluded from extreme mutation".into());
+        }
+        Ok(format!(
+            "{}{}{}",
+            &source[..scope.body.start as usize],
+            self.extreme_body(scope),
+            &source[scope.body.end as usize..]
+        ))
+    }
+
+    pub fn extreme_body(&self, scope: &Scope) -> &'static str {
+        if scope.returns_value {
+            "{ return undefined; }"
+        } else {
+            "{}"
+        }
+    }
+
     pub fn switched(&self, source: &str) -> Result<String, String> {
         self.switched_with_offset(source, 0)
     }
@@ -662,6 +747,82 @@ impl Analysis {
     pub fn json(&self) -> Value {
         json!({"scopes": self.scopes.iter().map(|s| json!({"name":s.name,"start":s.span.start,"end":s.span.end,"complexity":s.complexity,"implicit":s.implicit,"empty":s.empty})).collect::<Vec<_>>(),
             "mutants": self.comparisons.iter().flat_map(|c| c.replacements.iter().enumerate().map(move |(i, op)| json!({"id":c.first_id+i,"offset":c.offset,"original":c.original,"replacement":op}))).collect::<Vec<_>>()})
+    }
+}
+
+#[test]
+fn extreme_mutation_replaces_only_the_owning_body() {
+    for (source, expected) in [
+        (
+            "function side() { console.log('side'); }",
+            "function side() {}",
+        ),
+        ("function side() { return; }", "function side() {}"),
+        (
+            "function side(): void { return work(); }",
+            "function side(): void {}",
+        ),
+        (
+            "function side() { return void work(); }",
+            "function side() {}",
+        ),
+        (
+            "const side = (): void => work();",
+            "const side = (): void => {};",
+        ),
+        ("const side = () => void work();", "const side = () => {};"),
+        (
+            "function outer() { function inner() { return 1; } inner(); }",
+            "function outer() {}",
+        ),
+        (
+            "async function value() { return 1; }",
+            "async function value() { return undefined; }",
+        ),
+        (
+            "const value = () => ({ answer: 42 });",
+            "const value = () => { return undefined; };",
+        ),
+        (
+            "const side = () => { console.log('side'); };",
+            "const side = () => {};",
+        ),
+    ] {
+        let analysis = Analysis::inspect("fixture.ts", source).unwrap();
+        let replacement = analysis.replace_extreme(source, 0).unwrap();
+        assert_eq!(replacement, expected, "{source}");
+        Analysis::inspect("fixture.ts", &replacement).unwrap();
+    }
+}
+
+#[test]
+fn extreme_mutation_skips_empty_functions_and_special_methods() {
+    let source = "function empty(a = work()) {} function* generator() { yield 1; } const obj = { get value() { return 1; }, set value(v) { work(v); }, method() { return 1; } }; class C { constructor() { work(); } get value() { return 1; } set value(v) { work(v); } method() { work(); } }";
+    let analysis = Analysis::inspect("fixture.ts", source).unwrap();
+    let reasons: Vec<_> = analysis
+        .scopes
+        .iter()
+        .map(|scope| scope.extreme_skip)
+        .collect();
+    assert_eq!(
+        reasons,
+        [
+            Some("empty"),
+            Some("generator"),
+            Some("accessor"),
+            Some("accessor"),
+            None,
+            Some("constructor"),
+            Some("accessor"),
+            Some("accessor"),
+            None
+        ]
+    );
+    for (index, scope) in analysis.scopes.iter().enumerate() {
+        assert_eq!(
+            analysis.replace_extreme(source, index).is_err(),
+            scope.extreme_skip.is_some()
+        );
     }
 }
 
