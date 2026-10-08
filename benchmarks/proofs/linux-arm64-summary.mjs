@@ -163,7 +163,7 @@ function validate({preflight, packed, npm, standalone, jestExpo, vitest, lifecyc
   else if (!validateReleaseNpm(npm, packed, fail, artifacts, publicExamples, artifactDirectory)) {
     if (Object.keys(npm.checks ?? {}).length !== 16) fail('npm proof did not retain 16 checks');
     if (npm.checks?.['installed-cli-regression']?.status !== 0) fail('npm installed CLI check failed');
-    if (cliScenarios(npm) !== 51) fail('npm proof did not retain 51 CLI scenarios');
+    if (cliScenarios(npm) !== 63) fail('npm proof did not retain 63 CLI scenarios');
     if (packed && npm.build?.binarySha256 !== packed.binary) fail('npm binary hash differs from package metadata');
   }
   if (!standalone) fail('standalone result missing');
@@ -171,7 +171,7 @@ function validate({preflight, packed, npm, standalone, jestExpo, vitest, lifecyc
     for (const name of ['installed-cli', 'installed-parallel']) {
       if (standalone.checks?.[name]?.status !== 0) fail(`standalone ${name} check failed`);
     }
-    if (standalone.cliScenarios !== 51) fail('standalone proof did not retain 51 CLI scenarios');
+    if (standalone.cliScenarios !== 63) fail('standalone proof did not retain 63 CLI scenarios');
     if (Object.keys(standalone.parallelChecks ?? {}).length !== 11) fail('standalone proof did not retain 11 parallel controls');
     if (packed?.standalone?.sha256 !== standalone.archiveSha256) fail('standalone archive hash differs from package metadata');
     if (packed && standalone.build?.binarySha256 !== packed.binary) fail('standalone binary hash differs from package metadata');
@@ -233,7 +233,7 @@ function selfCheckSummary() {
       nativeArchive: {name: '@binary-balance/seshat-linux-arm64', version: '0.2.0'},
       nativeNotices: {hasCopyright: true, hasUnlicense: true}},
     standalone: {
-      archiveSha256: archiveHash, archiveBytes: 2, cliScenarios: 51,
+      archiveSha256: archiveHash, archiveBytes: 2, cliScenarios: 63,
       build: {target: 'aarch64-unknown-linux-gnu', rust: 'rustc 1.98.1', binarySha256: binaryHash, binaryBytes: 1},
       checks: {'installed-cli': {status: 0}, 'installed-parallel': {status: 0}},
       parallelChecks: Object.fromEntries(Array.from({length: 11}, (_, index) => [`case-${index}`, {}])),
@@ -261,6 +261,7 @@ function selfCheckSummary() {
   };
   const artifacts = {tarball: {sha256: archiveHash, bytes: 2}, standalone: {sha256: archiveHash, bytes: 2}};
   assert.deepEqual(validate({...base, repeat}, {}, null, artifacts), []);
+  assert.match(validate({...base, standalone: {...base.standalone, cliScenarios: 62}}).join('\n'), /standalone proof did not retain 63 CLI scenarios/);
   assert.match(validate({...base, npm: null}).join('\n'), /npm result missing/);
   assert.match(validate({...base, vitest: null}).join('\n'), /Vitest result missing/);
   const partial = structuredClone(base);
