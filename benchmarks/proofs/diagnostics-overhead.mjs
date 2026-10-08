@@ -409,10 +409,10 @@ function makeJestFixture() {
   };
 }
 
-function expectedJobs(fixture, workers, strategy = 'replace', withExtreme = false) {
+function expectedJobs(fixture, workers, strategy = 'replace', withExtreme = false, withStrictness = false) {
   const functions = Object.values(fixture.expected.sourceMetrics).flat().length;
   const extremeJobs = withExtreme ? functions + Math.min(workers, functions) - 1 : 0;
-  return 3 + fixture.expected.mutants.length + (workers - 1) + (strategy === 'switch' ? 1 : 0) + extremeJobs;
+  return 3 + fixture.expected.mutants.length + (workers - 1) + (strategy === 'switch' ? 1 : 0) + extremeJobs + Number(withStrictness);
 }
 
 function reportResult(report) {
@@ -532,7 +532,7 @@ function metricsFor(result) {
 function assertExpected(fixture, result, workers, strategy = 'replace', includeStrategy = switchingMode) {
   const {expected} = fixture;
   assert.equal(result.complete, true, `${fixture.id} report incomplete`);
-  assert.equal(result.jobsAttempted, expectedJobs(fixture, workers, strategy, Boolean(result.pseudoTesting)));
+  assert.equal(result.jobsAttempted, expectedJobs(fixture, workers, strategy, Boolean(result.pseudoTesting), Boolean(result.setups?.[0]?.compilerStrictness?.job)));
   if (result.pseudoTesting) {
     const functions = Object.values(expected.sourceMetrics).flat().length;
     assert.equal(result.pseudoTesting.planned, functions);

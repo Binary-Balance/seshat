@@ -485,6 +485,27 @@ fn runner_option_args(args: &[String]) -> &[String] {
     args.split(|arg| arg == "--").next().unwrap_or(args)
 }
 
+fn direct_typescript(args: &[String]) -> Option<(&str, &[String])> {
+    let program = Path::new(args.first()?)
+        .file_name()?
+        .to_str()?
+        .to_ascii_lowercase();
+    if !matches!(
+        program.strip_suffix(".exe").unwrap_or(&program),
+        "node" | "nodejs"
+    ) {
+        return None;
+    }
+    let script = args.get(1)?;
+    let path = Path::new(script);
+    let filename = path.file_name()?.to_str()?;
+    let directory = path.parent()?.file_name()?.to_str()?;
+    let package = path.parent()?.parent()?.file_name()?.to_str()?;
+    ((filename == "tsc" && directory == "bin" || filename == "tsc.js" && directory == "lib")
+        && package == "typescript")
+        .then_some((script, &args[2..]))
+}
+
 fn direct_runner_args<'a>(runner: Runner, args: &'a [String]) -> Option<&'a [String]> {
     let program = args.first()?;
     let program_name = Path::new(program)
@@ -671,6 +692,10 @@ impl CapturedProject {
             (
                 "jest-expo-environment.cjs",
                 include_str!("../../../../../benchmarks/proofs/jest-expo-environment.cjs"),
+            ),
+            (
+                "compiler-strictness.cjs",
+                include_str!("compiler-strictness.cjs"),
             ),
         ] {
             fs::write(evidence.0.join(name), content).map_err(|e| e.to_string())?;
@@ -875,6 +900,79 @@ impl CapturedProject {
                 .remove("diagnostic");
         }
         Ok(outcome)
+    }
+
+    fn compiler_strictness(&self, setup: &Setup, evidence: &Path, index: usize) -> (Value, bool) {
+        let unknown = |error: &str| {
+            json!({"state":"unknown","compilerVersion":null,
+            "config":null,"configSource":null,"options":null,"disabled":null,
+            "unsupported":[],"enabledBypassOptions":null,"error":error})
+        };
+        let Some((compiler, args)) = setup.typecheck.as_deref().and_then(direct_typescript) else {
+            return (
+                unknown(
+                    "strictness reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js",
+                ),
+                false,
+            );
+        };
+        let context = evidence.join(format!("strictness-{index}-context.json"));
+        let receipt = evidence.join(format!("strictness-{index}.json"));
+        let mut attempted = false;
+        let run = || -> Result<Value, String> {
+            self.unchanged()?;
+            let cwd = fs::canonicalize(self.directory.0.join(&setup.cwd))
+                .map_err(|error| error.to_string())?;
+            if !within(&self.directory.0, &cwd) || !cwd.is_dir() {
+                return Err("setup cwd escaped captured project".into());
+            }
+            fs::write(
+                &context,
+                serde_json::to_vec(&json!({"compiler":compiler,"args":args,
+                "root":module_path(&self.directory.0)?}))
+                .unwrap(),
+            )
+            .map_err(|error| error.to_string())?;
+            let mut command = Command::new(&setup.typecheck.as_ref().unwrap()[0]);
+            command
+                .args([
+                    module_path(&evidence.join("compiler-strictness.cjs"))?,
+                    module_path(&context)?,
+                    module_path(&receipt)?,
+                ])
+                .current_dir(&cwd)
+                .env("PWD", &cwd)
+                .env_remove("NODE_OPTIONS")
+                .env_remove("NODE_PATH");
+            attempted = true;
+            let job = job::run(&mut command, Duration::from_millis(setup.timeout_ms))?;
+            self.unchanged()?;
+            let mut result = if job["exit"] == 0
+                && job["cancelled"] == false
+                && job["timedOut"] == false
+                && job["overflow"] == false
+                && job["error"].is_null()
+                && job["cleanupError"].is_null()
+                && job["pipeError"].is_null()
+            {
+                read_report(evidence, &receipt)?
+            } else {
+                unknown("compiler strictness helper did not complete successfully")
+            };
+            result["job"] = job;
+            Ok(result)
+        };
+        let mut run = run;
+        let mut result = run().unwrap_or_else(|error| unknown(&error));
+        for path in [&context, &receipt] {
+            if path.exists()
+                && let Err(error) = fs::remove_file(path)
+            {
+                result["state"] = json!("unknown");
+                result["error"] = json!(format!("remove strictness evidence: {error}"));
+            }
+        }
+        (result, attempted)
     }
 
     fn replace_source(&mut self, index: usize, replacement: Option<String>) -> Result<(), String> {
@@ -1420,7 +1518,7 @@ impl CapturedProject {
             .map(|(path, source)| Analysis::inspect(&stable_path(path), source))
             .collect();
         let mut timings = json!({"analysisMs":started.elapsed().as_secs_f64()*1000.0,
-            "preparationMs":null,"typecheckMs":null,"baselineMs":null,"coverageMs":null,"attributionMs":null,"cleanupMs":null});
+            "preparationMs":null,"compilerStrictnessMs":null,"typecheckMs":null,"baselineMs":null,"coverageMs":null,"attributionMs":null,"cleanupMs":null});
         let mut complete = facts.iter().all(Result::is_ok);
         progress.phase(format_args!("preparing runner evidence"));
         let preparation_started = Instant::now();
@@ -1428,11 +1526,21 @@ impl CapturedProject {
         timings["preparationMs"] = json!(preparation_started.elapsed().as_secs_f64() * 1000.0);
         let mut setups: Vec<_> = self.config.setups.iter().map(|setup| json!({"name":setup.name,"typecheck":{"state":"not-run"},"baseline":{"state":"not-run"},"coverage":{"state":"not-run"}})).collect();
         for setup in &mut setups {
-            setup["timings"] = json!({"typecheckMs":null,"baselineMs":null,"coverageMs":null});
+            setup["timings"] = json!({"compilerStrictnessMs":null,"typecheckMs":null,"baselineMs":null,"coverageMs":null});
         }
         let mut baselines = vec![TestState::NotRun; setups.len()];
         let mut reports = Vec::new();
         let mut commands_run = 0;
+        for (index, setup) in self.config.setups.iter().enumerate() {
+            let phase_started = Instant::now();
+            let (strictness, attempted) = self.compiler_strictness(setup, &evidence.0, index);
+            setups[index]["compilerStrictness"] = strictness;
+            if attempted {
+                commands_run += 1;
+                setups[index]["timings"]["compilerStrictnessMs"] =
+                    json!(phase_started.elapsed().as_secs_f64() * 1000.0);
+            }
+        }
         for (index, setup) in self.config.setups.iter().enumerate() {
             if cancellation_signal() != 0 {
                 complete = false;
@@ -1537,7 +1645,12 @@ impl CapturedProject {
             setups[index]["timings"]["coverageMs"] =
                 json!(phase_started.elapsed().as_secs_f64() * 1000.0);
         }
-        for key in ["typecheckMs", "baselineMs", "coverageMs"] {
+        for key in [
+            "compilerStrictnessMs",
+            "typecheckMs",
+            "baselineMs",
+            "coverageMs",
+        ] {
             let measured = setups
                 .iter()
                 .filter_map(|setup| setup["timings"][key].as_f64())
@@ -1703,6 +1816,79 @@ impl CapturedProject {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn compiler_strictness_recognition_is_explicit_and_failures_are_bounded() {
+        for (command, recognized) in [
+            (
+                vec!["node", "node_modules/typescript/bin/tsc", "-p", "."],
+                true,
+            ),
+            (
+                vec!["node.exe", "../node_modules/typescript/lib/tsc.js"],
+                true,
+            ),
+            (vec!["tsc", "-p", "."], false),
+            (vec!["npm", "run", "typecheck"], false),
+            (
+                vec![
+                    "node",
+                    "--require",
+                    "hook.cjs",
+                    "node_modules/typescript/bin/tsc",
+                ],
+                false,
+            ),
+            (vec!["node", "typecheck.cjs"], false),
+        ] {
+            let command: Vec<_> = command.into_iter().map(str::to_owned).collect();
+            assert_eq!(direct_typescript(&command).is_some(), recognized);
+        }
+        let fixture = super::super::tests::Fixture::new();
+        let mut captured = fixture.capture().unwrap();
+        let evidence = captured.prepare_evidence().unwrap();
+        let setup = &mut captured.config.setups[0];
+        setup.typecheck = Some(vec![
+            "node".into(),
+            "node_modules/typescript/bin/tsc".into(),
+        ]);
+        let (missing, attempted) =
+            captured.compiler_strictness(&captured.config.setups[0], &evidence.0, 0);
+        assert!(attempted);
+        assert_eq!(missing["state"], "unknown");
+        assert_eq!(missing["options"], Value::Null);
+        assert!(missing["error"].as_str().unwrap().contains("ENOENT"));
+        assert_eq!(missing["job"]["exit"], 0);
+
+        captured.config.setups[0].typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
+        let (wrapper, attempted) =
+            captured.compiler_strictness(&captured.config.setups[0], &evidence.0, 0);
+        assert!(!attempted);
+        assert_eq!(wrapper["state"], "unknown");
+        assert!(wrapper.get("job").is_none());
+
+        let compiler = captured.directory.0.join("node_modules/typescript");
+        fs::create_dir_all(compiler.join("bin")).unwrap();
+        fs::create_dir_all(compiler.join("lib")).unwrap();
+        fs::write(compiler.join("bin/tsc"), "").unwrap();
+        fs::write(compiler.join("package.json"), r#"{"name":"typescript"}"#).unwrap();
+        fs::write(compiler.join("lib/typescript.js"), "while (true) {}").unwrap();
+        captured.config.setups[0].typecheck = Some(vec![
+            "node".into(),
+            "node_modules/typescript/bin/tsc".into(),
+        ]);
+        captured.config.setups[0].timeout_ms = 30;
+        let (timeout, attempted) =
+            captured.compiler_strictness(&captured.config.setups[0], &evidence.0, 0);
+        assert!(attempted);
+        assert_eq!(timeout["state"], "unknown");
+        assert_eq!(timeout["job"]["timedOut"], true);
+        assert!(!evidence.0.join("strictness-0.json").exists());
+        assert!(!evidence.0.join("strictness-0-context.json").exists());
+        drop(evidence);
+        drop(captured);
+        fixture.assert_clean();
+    }
 
     #[test]
     fn reporter_arguments_expand_without_changing_the_program() {
@@ -2092,7 +2278,7 @@ mod tests {
                 .unwrap();
             assert_eq!(result.state, TestState::Passed, "{}", result.details);
             assert_eq!(result.details["report"]["executionId"], id);
-            assert_eq!(fs::read_dir(&evidence.0).unwrap().count(), 6);
+            assert_eq!(fs::read_dir(&evidence.0).unwrap().count(), 7);
         }
         evidence.close().unwrap();
         let config = captured.config.clone();

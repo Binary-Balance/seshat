@@ -3,14 +3,65 @@ use oxc_allocator::Allocator;
 use oxc_ast::{
     AstKind,
     ast::{
-        ArrowFunctionBody, Expression, FormalParameters, JSXAttributeItem, JSXAttributeValue,
-        JSXChild, MethodDefinitionKind, PropertyKind, TSType,
+        ArrowFunctionBody, Declaration, ExportDefaultDeclarationKind, Expression, FormalParameters,
+        JSXAttributeItem, JSXAttributeValue, JSXChild, MethodDefinitionKind, PropertyKind, TSType,
+        TSTypeName,
     },
 };
 use oxc_ast_visit::Visit;
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 use serde_json::{Value, json};
+
+#[derive(Debug, Default, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TypeSafety {
+    explicit_any: u32,
+    type_assertions: u32,
+    double_assertions: u32,
+    non_null_assertions: u32,
+    ts_ignore: u32,
+    ts_expect_error: u32,
+    ts_nocheck: u32,
+}
+
+enum Escape {
+    Any,
+    Assertion,
+    DoubleAssertion,
+    NonNull,
+    Ignore,
+    ExpectError,
+    Nocheck,
+}
+
+impl TypeSafety {
+    fn count(&mut self, escape: Escape) {
+        let count = match escape {
+            Escape::Any => &mut self.explicit_any,
+            Escape::Assertion => &mut self.type_assertions,
+            Escape::DoubleAssertion => &mut self.double_assertions,
+            Escape::NonNull => &mut self.non_null_assertions,
+            Escape::Ignore => &mut self.ts_ignore,
+            Escape::ExpectError => &mut self.ts_expect_error,
+            Escape::Nocheck => &mut self.ts_nocheck,
+        };
+        *count += 1;
+    }
+}
+
+fn const_assertion(annotation: &TSType<'_>) -> bool {
+    matches!(annotation, TSType::TSTypeReference(reference)
+        if matches!(&reference.type_name, TSTypeName::IdentifierReference(name) if name.name == "const"))
+}
+
+fn asserted(expression: &Expression<'_>) -> bool {
+    match expression.without_parentheses() {
+        Expression::TSAsExpression(assertion) => !const_assertion(&assertion.type_annotation),
+        Expression::TSTypeAssertion(assertion) => !const_assertion(&assertion.type_annotation),
+        _ => false,
+    }
+}
 
 #[derive(Debug)]
 pub struct Scope {
@@ -22,6 +73,7 @@ pub struct Scope {
     pub empty: bool,
     pub extreme_skip: Option<&'static str>,
     pub returns_value: bool,
+    pub type_safety: TypeSafety,
 }
 
 pub struct BranchSite {
@@ -128,6 +180,10 @@ pub struct Analysis {
     excluded_methods: std::collections::BTreeMap<u32, &'static str>,
     return_values: Vec<Span>,
     void_functions: std::collections::BTreeSet<u32>,
+    escapes: Vec<(Span, Escape)>,
+    unowned_type_safety: TypeSafety,
+    suppressions: Vec<Value>,
+    suppression_targets: std::collections::BTreeMap<u32, u32>,
 }
 
 // Plain bindings do not execute user code. Other parameter forms may evaluate
@@ -183,6 +239,52 @@ impl<'a> Visit<'a> for Analysis {
                 }
             }
             _ => {}
+        }
+        let exported_function = match node {
+            AstKind::ExportDeclaration(export) => match &export.declaration {
+                Declaration::FunctionDeclaration(function) => {
+                    Some((export.span.start, function.span.start))
+                }
+                _ => None,
+            },
+            AstKind::ExportDefaultDeclaration(export) => match &export.declaration {
+                ExportDefaultDeclarationKind::FunctionDeclaration(function) => {
+                    Some((export.span.start, function.span.start))
+                }
+                ExportDefaultDeclarationKind::ArrowFunctionExpression(function) => {
+                    Some((export.span.start, function.span.start))
+                }
+                _ => None,
+            },
+            _ => None,
+        };
+        if let Some((export, function)) = exported_function {
+            self.suppression_targets.insert(export, function);
+        }
+        let assertion = match node {
+            AstKind::TSAnyKeyword(_) => {
+                self.escapes.push((node.span(), Escape::Any));
+                None
+            }
+            AstKind::TSNonNullExpression(_) => {
+                let end = node.span().end;
+                self.escapes
+                    .push((Span::new(end - 1, end), Escape::NonNull));
+                None
+            }
+            AstKind::TSAsExpression(assertion) if !const_assertion(&assertion.type_annotation) => {
+                Some((&assertion.expression, assertion.type_annotation.span()))
+            }
+            AstKind::TSTypeAssertion(assertion) if !const_assertion(&assertion.type_annotation) => {
+                Some((&assertion.expression, assertion.type_annotation.span()))
+            }
+            _ => None,
+        };
+        if let Some((expression, span)) = assertion {
+            self.escapes.push((span, Escape::Assertion));
+            if asserted(expression) {
+                self.escapes.push((span, Escape::DoubleAssertion));
+            }
         }
         if let AstKind::ParenthesizedExpression(expression) = node {
             self.branch_end_ranges.push(Span::new(
@@ -366,6 +468,7 @@ impl<'a> Visit<'a> for Analysis {
                 body: b.span,
                 complexity: 1,
                 implicit: false,
+                type_safety: TypeSafety::default(),
                 // Only claim emptiness where parameter evaluation cannot hide work.
                 empty: b.statements.is_empty()
                     && b.directives.is_empty()
@@ -380,6 +483,7 @@ impl<'a> Visit<'a> for Analysis {
                 body: f.body.span(),
                 complexity: 1,
                 implicit: false,
+                type_safety: TypeSafety::default(),
                 empty: matches!(&f.body, ArrowFunctionBody::FunctionBody(b) if b.statements.is_empty() && b.directives.is_empty())
                     && plain_parameters(&f.params),
                 extreme_skip: matches!(&f.body, ArrowFunctionBody::FunctionBody(b) if b.statements.is_empty() && b.directives.is_empty()).then_some("empty"),
@@ -393,6 +497,7 @@ impl<'a> Visit<'a> for Analysis {
                 body: v.span(),
                 complexity: 1,
                 implicit: true,
+                type_safety: TypeSafety::default(),
                 empty: false,
                 extreme_skip: Some("implicit-scope"),
                 returns_value: false,
@@ -403,6 +508,7 @@ impl<'a> Visit<'a> for Analysis {
                 body: b.span,
                 complexity: 1,
                 implicit: true,
+                type_safety: TypeSafety::default(),
                 empty: false,
                 extreme_skip: Some("implicit-scope"),
                 returns_value: false,
@@ -587,6 +693,72 @@ impl Analysis {
                 }
             }
         }
+        for (span, escape) in std::mem::take(&mut result.escapes) {
+            result.count_escape(result.owner(span.start), escape);
+        }
+        for comment in &parsed.program.comments {
+            let span = comment.content_span();
+            let content = &source[span.start as usize..span.end as usize];
+            // TypeScript line directives start the comment; block directives use its last line.
+            let line = if comment.is_line() {
+                content.strip_prefix('/').unwrap_or(content).trim_start()
+            } else {
+                content
+                    .split(['\r', '\n', '\u{2028}', '\u{2029}'])
+                    .next_back()
+                    .unwrap_or("")
+                    .trim_start()
+                    .trim_start_matches(['/', '*'])
+                    .trim_start()
+            };
+            let directive = [
+                ("@ts-ignore", Escape::Ignore),
+                ("@ts-expect-error", Escape::ExpectError),
+                ("@ts-nocheck", Escape::Nocheck),
+            ]
+            .into_iter()
+            .find(|(name, _)| {
+                if *name == "@ts-nocheck" {
+                    comment.is_line()
+                        && line
+                            .get(..name.len())
+                            .is_some_and(|prefix| prefix.eq_ignore_ascii_case(name))
+                        && line.get(name.len()..).is_some_and(|rest| {
+                            rest.is_empty() || rest.starts_with(char::is_whitespace)
+                        })
+                } else {
+                    line.starts_with(name)
+                }
+            });
+            if let Some((kind, escape)) = directive {
+                let first_code = parsed
+                    .program
+                    .directives
+                    .first()
+                    .map(GetSpan::span)
+                    .or_else(|| parsed.program.body.first().map(GetSpan::span));
+                let file_level = kind == "@ts-nocheck"
+                    && first_code.is_none_or(|span| comment.span.end <= span.start);
+                let owner = if file_level {
+                    None
+                } else if comment.is_leading() {
+                    let target = result
+                        .suppression_targets
+                        .get(&comment.attached_to)
+                        .copied()
+                        .unwrap_or(comment.attached_to);
+                    result
+                        .owner(target)
+                        .or_else(|| result.owner(comment.span.start))
+                } else {
+                    result.owner(comment.span.start)
+                };
+                result.suppressions.push(json!({"kind":kind,"start":comment.span.start,
+                    "end":comment.span.end,"owner":owner.map(|index| result.scopes[index].span.start),
+                    "fileLevel":file_level}));
+                result.count_escape(owner, escape);
+            }
+        }
         result.branch_end_ranges.sort_by_key(|range| range.start);
         let decisions = std::mem::take(&mut result.decisions);
         for span in decisions {
@@ -632,6 +804,18 @@ impl Analysis {
             .filter(|(_, s)| s.span.start <= byte && byte < s.span.end)
             .min_by_key(|(_, s)| (s.span.end - s.span.start, s.implicit))
             .map(|(i, _)| i)
+    }
+
+    fn count_escape(&mut self, owner: Option<usize>, escape: Escape) {
+        if let Some(index) = owner {
+            self.scopes[index].type_safety.count(escape);
+        } else {
+            self.unowned_type_safety.count(escape);
+        }
+    }
+
+    pub fn type_safety(&self) -> Value {
+        json!({"unowned":self.unowned_type_safety,"suppressions":self.suppressions})
     }
 
     pub fn count(&self) -> usize {
@@ -746,7 +930,8 @@ impl Analysis {
     }
 
     pub fn json(&self) -> Value {
-        json!({"scopes": self.scopes.iter().map(|s| json!({"name":s.name,"start":s.span.start,"end":s.span.end,"complexity":s.complexity,"implicit":s.implicit,"empty":s.empty})).collect::<Vec<_>>(),
+        json!({"scopes": self.scopes.iter().map(|s| json!({"name":s.name,"start":s.span.start,"end":s.span.end,"complexity":s.complexity,"implicit":s.implicit,"empty":s.empty,"typeSafety":s.type_safety})).collect::<Vec<_>>(),
+            "typeSafety":self.type_safety(),
             "mutants": self.comparisons.iter().flat_map(|c| c.replacements.iter().enumerate().map(move |(i, op)| json!({"id":c.first_id+i,"offset":c.offset,"original":c.original,"replacement":op}))).collect::<Vec<_>>()})
     }
 }
@@ -877,6 +1062,82 @@ fn switching_preserves_hashbangs_and_directives() {
                 .collect::<Vec<_>>(),
             "{source}"
         );
+    }
+}
+
+#[test]
+fn type_safety_counts_syntax_and_preserves_unowned_suppressions() {
+    let source = r#"// @TS-NOCHECK
+let moduleValue: any;
+// @ts-ignore deliberate suppression
+export function outer<T extends any>(value: any): any {
+  const quoted = "any as T ! // @ts-ignore";
+  const template = `@ts-expect-error ${value}`;
+  /* mention @ts-ignore, not a directive */
+  // prose @ts-ignore is not a directive
+  /* @ts-nocheck is not a file pragma */
+  const narrowed = value as const;
+  const asserted = value as unknown as string;
+  const angle = <number>value;
+  const present = value!;
+  // @ts-expect-error nested declaration
+  function nested(input: Array<any>): any {
+    /* @ts-ignore reason */
+    return input[0] as any;
+  }
+  return nested(value);
+}
+const callback = ((input: any): any => input) as unknown as Function;
+"#;
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let scopes = analysis.json()["scopes"].as_array().unwrap().clone();
+    assert_eq!(
+        scopes[0]["typeSafety"],
+        json!({"explicitAny":3,"typeAssertions":3,
+        "doubleAssertions":1,"nonNullAssertions":1,"tsIgnore":1,"tsExpectError":0,"tsNocheck":0})
+    );
+    assert_eq!(
+        scopes[1]["typeSafety"],
+        json!({"explicitAny":3,"typeAssertions":1,
+        "doubleAssertions":0,"nonNullAssertions":0,"tsIgnore":1,"tsExpectError":1,"tsNocheck":0})
+    );
+    assert_eq!(scopes[2]["typeSafety"]["explicitAny"], 2);
+    assert_eq!(scopes[2]["typeSafety"]["typeAssertions"], 0);
+    let file = analysis.type_safety();
+    assert_eq!(file["unowned"]["explicitAny"], 1);
+    assert_eq!(file["unowned"]["typeAssertions"], 2);
+    assert_eq!(file["unowned"]["doubleAssertions"], 1);
+    assert_eq!(file["unowned"]["tsNocheck"], 1);
+    assert_eq!(file["suppressions"].as_array().unwrap().len(), 4);
+    assert_eq!(file["suppressions"][0]["fileLevel"], true);
+    assert_eq!(file["suppressions"][0]["owner"], Value::Null);
+    let failed_coverage =
+        crate::coverage::attribute(&analysis, "source.ts", source, std::iter::empty());
+    assert_eq!(
+        failed_coverage["functions"][0]["typeSafety"],
+        scopes[0]["typeSafety"]
+    );
+    assert_eq!(failed_coverage["typeSafety"], file);
+}
+
+#[test]
+fn type_safety_handles_tsx_and_angle_const_assertions() {
+    for (path, source) in [
+        (
+            "source.tsx",
+            "// @ts-ignore\nexport default function render(value: any) { return <div>{(value as string)!}</div>; }",
+        ),
+        (
+            "source.ts",
+            "// @ts-ignore\nexport default (value: any) => { const literal = <const>[1]; return <string>value!; };",
+        ),
+    ] {
+        let analysis = Analysis::inspect(path, source).unwrap();
+        let counts = &analysis.json()["scopes"][0]["typeSafety"];
+        assert_eq!(counts["explicitAny"], 1);
+        assert_eq!(counts["typeAssertions"], 1);
+        assert_eq!(counts["nonNullAssertions"], 1);
+        assert_eq!(counts["tsIgnore"], 1);
     }
 }
 
