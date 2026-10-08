@@ -567,12 +567,17 @@ Add optional thresholds at the top level of `seshat.json`:
 ```json
 "thresholds": {
   "maxCrap": 30,
+  "maxCognitiveComplexity": 15,
   "minMutationScore": 80
 }
 ```
 
 These are examples, not defaults. `maxCrap` applies to each measured function,
-not an average. `minMutationScore` applies to a complete mutation run. Equality
+not an average. `maxCognitiveComplexity` accepts a finite number at least zero
+and applies to ordinary functions in all three commands, independently of
+coverage status. Implicit class scopes are excluded. See the
+[calculation and TypeScript choices](cognitive-complexity.md).
+`minMutationScore` applies to a complete mutation run. Equality
 passes and comparisons use unrounded values, so a measured value exactly equal
 to its limit passes. Omit a field or set it to null to disable it. Unknown
 fields, invalid types and out-of-range values are errors.

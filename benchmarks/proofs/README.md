@@ -83,6 +83,11 @@ controls verify inclusive boundaries, unchanged assessment results, exit 1,
 invalid limits, command-specific checks and incomplete/cancellation precedence. It retains
 results under `work/assurance-proofs/cli-*`, not the recorded benchmark outputs.
 Rust tests additionally check human formatting of unknown and unscored functions.
+Cognitive complexity checks cover flow nesting, logical sequences, conservative
+direct/indirect recursion, separate nested-function ownership and static scores
+when coverage is unknown. CLI controls exercise zero, equality, fractional
+limits, disabled and invalid limits across all commands. See the
+[definition and TypeScript choices](../../docs/cognitive-complexity.md).
 
 Use the [configuration guide](../../docs/configuration.md).
 The configuration directory is the project root; all commands use its source and
