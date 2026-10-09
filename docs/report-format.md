@@ -367,7 +367,8 @@ Each extreme outcome has `kind: "extreme"`, the owning function's `name` and
 points to the replaced body; `original` and `replacement` contain body text.
 IDs are local to this separate section. Functions without a return expression
 or explicitly returning `void` get an empty body; other functions get
-`return undefined`. A `void` expression also returns nothing. Nested returns do
+the undefined value with `return void 0`, avoiding a shadowed `undefined`.
+A `void` expression also returns nothing. Nested returns do
 not change their enclosing function's replacement. Mutant bodies are not
 typechecked. Skipped functions create no extreme outcome.
 Each extreme outcome also retains the statement `coverage` fraction and the

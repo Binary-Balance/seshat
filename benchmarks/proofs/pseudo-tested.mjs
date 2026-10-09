@@ -22,6 +22,9 @@ export function empty() {}
 export function outer() { function nested() { return 3; } nested(); }
 export async function asyncValue() { return 2; }
 export const concise = () => ({ value: 2 });
+export function shadowedParameter(undefined: number) { return 1; }
+const undefined = 1;
+export const shadowedOuter = () => 1;
 export function* generator() { yield 1; }
 export class Model {
   constructor() { count += 1; }
@@ -32,10 +35,11 @@ export class Model {
 `;
 const tests = `import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {checked, unchecked, side, empty, outer, asyncValue, concise, generator, Model} from './subject.ts';
+import {checked, unchecked, side, empty, outer, asyncValue, concise, shadowedParameter, shadowedOuter, generator, Model} from './subject.ts';
 test('functions', async () => {
   assert.equal(checked(2), 3); unchecked(2); side(); empty(); outer();
   assert.equal(await asyncValue(), 2); assert.deepEqual(concise(), {value:2});
+  assert.equal(shadowedParameter(1), 1); assert.equal(shadowedOuter(), 1);
   assert.deepEqual([...generator()], [1]);
   const model = new Model(); assert.equal(model.value, 1); model.value = 1;
   assert.equal(model.method(), 1);
@@ -76,20 +80,22 @@ assert.equal(named('side').pseudoTested, true);
 assert.equal(named('outer').pseudoTested, true);
 assert.equal(named('nested').pseudoTested, true);
 assert.equal(named('asyncValue').pseudoTested, false);
+assert.equal(named('shadowedParameter').pseudoTested, false);
+assert.equal(rows.find(row => row.name.startsWith('arrow@') && row.start > named('shadowedParameter').start).pseudoTested, false);
 assert.equal(named('absent').pseudoTestReason, 'zero-coverage');
 assert.equal(named('empty').pseudoTestReason, 'empty');
 assert.equal(named('generator').pseudoTestReason, 'generator');
 assert.equal(rows.filter(row => row.pseudoTestReason === 'constructor').length, 1);
 assert.equal(rows.filter(row => row.pseudoTestReason === 'accessor').length, 2);
 assert.equal(checked.result.pseudoTesting.pseudoTested, 4);
-assert.equal(checked.result.pseudoTesting.checked, 4);
-assert.equal(checked.result.pseudoTesting.planned, 8);
+assert.equal(checked.result.pseudoTesting.checked, 6);
+assert.equal(checked.result.pseudoTesting.planned, 10);
 assert.equal(checked.result.pseudoTesting.unknown, 0);
 assert.equal(checked.result.pseudoTesting.score, undefined);
 assert.equal(checked.result.mutation.planned, 0);
 assert.equal(checked.result.mutation.score, null);
 assert.equal(checked.result.pseudoTesting.outcomes.find(row => row.name === 'side').replacement, '{}');
-assert.equal(checked.result.pseudoTesting.outcomes.find(row => row.name === 'unchecked').replacement, '{ return undefined; }');
+assert.equal(checked.result.pseudoTesting.outcomes.find(row => row.name === 'unchecked').replacement, '{ return void 0; }');
 assert.deepEqual(run('mutate', 'mutate').result.sources, checked.result.sources);
 assert.equal(run('switching', 'mutate', () => {}, ['--experimental-switching']).result.pseudoTesting.strategy, 'replace');
 const crap = run('crap', 'crap');

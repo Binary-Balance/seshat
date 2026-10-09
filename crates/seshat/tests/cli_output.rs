@@ -84,7 +84,7 @@ fn closed_stdout_succeeds_only_for_information() {
             assert!(output.stderr.is_empty());
         } else {
             let error = String::from_utf8(output.stderr).unwrap();
-            assert!(error.contains("write report"), "{error}");
+            assert!(error.contains("write report"), "{args:?}: {error:?}");
             assert!(!error.contains("panicked"));
         }
     }

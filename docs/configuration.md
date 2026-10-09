@@ -341,7 +341,8 @@ mutation; it still does not evaluate `maxCrap` thresholds.
 `check` and `mutate` replace each eligible function body once before comparison
 mutation. Functions explicitly returning `void`, using a `void` expression or
 without a return expression get an empty body; other functions get
-`return undefined`. Nested functions' returns belong to their own
+the undefined value with `return void 0`, avoiding a shadowed `undefined`.
+Nested functions' returns belong to their own
 bodies. These replacements are not typechecked. Empty functions, constructors,
 accessors, generators, implicit scopes and reliably zero-covered functions are
 skipped. A surviving replacement with reliable positive statement coverage

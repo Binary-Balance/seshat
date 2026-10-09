@@ -687,7 +687,8 @@ impl Analysis {
 
     pub fn extreme_body(&self, scope: &Scope) -> &'static str {
         if scope.returns_value {
-            "{ return undefined; }"
+            // Target functions can shadow the identifier `undefined`.
+            "{ return void 0; }"
         } else {
             "{}"
         }
@@ -777,11 +778,19 @@ fn extreme_mutation_replaces_only_the_owning_body() {
         ),
         (
             "async function value() { return 1; }",
-            "async function value() { return undefined; }",
+            "async function value() { return void 0; }",
         ),
         (
             "const value = () => ({ answer: 42 });",
-            "const value = () => { return undefined; };",
+            "const value = () => { return void 0; };",
+        ),
+        (
+            "function value(undefined: number) { return 1; }",
+            "function value(undefined: number) { return void 0; }",
+        ),
+        (
+            "const undefined = 1; const value = () => 1;",
+            "const undefined = 1; const value = () => { return void 0; };",
         ),
         (
             "const side = () => { console.log('side'); };",
