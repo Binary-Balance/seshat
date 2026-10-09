@@ -63,6 +63,14 @@ fn asserted(expression: &Expression<'_>) -> bool {
     }
 }
 
+fn initialized_function(expression: &Expression<'_>) -> Option<u32> {
+    match expression.without_parentheses() {
+        Expression::ArrowFunctionExpression(function) => Some(function.span.start),
+        Expression::FunctionExpression(function) => Some(function.span.start),
+        _ => None,
+    }
+}
+
 #[derive(Debug)]
 pub struct Scope {
     pub name: String,
@@ -240,26 +248,42 @@ impl<'a> Visit<'a> for Analysis {
             }
             _ => {}
         }
-        let exported_function = match node {
+        let suppression_target = match node {
             AstKind::ExportDeclaration(export) => match &export.declaration {
-                Declaration::FunctionDeclaration(function) => {
-                    Some((export.span.start, function.span.start))
-                }
+                Declaration::FunctionDeclaration(function) => Some(function.span.start),
+                Declaration::VariableDeclaration(declaration) => declaration
+                    .declarations
+                    .first()
+                    .and_then(|declarator| declarator.init.as_ref())
+                    .and_then(initialized_function),
                 _ => None,
             },
             AstKind::ExportDefaultDeclaration(export) => match &export.declaration {
                 ExportDefaultDeclarationKind::FunctionDeclaration(function) => {
-                    Some((export.span.start, function.span.start))
+                    Some(function.span.start)
                 }
                 ExportDefaultDeclarationKind::ArrowFunctionExpression(function) => {
-                    Some((export.span.start, function.span.start))
+                    Some(function.span.start)
                 }
                 _ => None,
             },
+            AstKind::VariableDeclaration(declaration) => declaration
+                .declarations
+                .first()
+                .and_then(|declarator| declarator.init.as_ref())
+                .and_then(initialized_function),
+            AstKind::VariableDeclarator(declarator) => {
+                declarator.init.as_ref().and_then(initialized_function)
+            }
+            AstKind::MethodDefinition(method) => Some(method.value.span.start),
+            AstKind::ObjectProperty(property) => initialized_function(&property.value),
+            AstKind::PropertyDefinition(property) => {
+                property.value.as_ref().and_then(initialized_function)
+            }
             _ => None,
         };
-        if let Some((export, function)) = exported_function {
-            self.suppression_targets.insert(export, function);
+        if let Some(target) = suppression_target {
+            self.suppression_targets.insert(node.span().start, target);
         }
         let assertion = match node {
             AstKind::TSAnyKeyword(_) => {
@@ -703,7 +727,8 @@ impl Analysis {
             let line = if comment.is_line() {
                 content.strip_prefix('/').unwrap_or(content).trim_start()
             } else {
-                content
+                // Keep delimiters before whitespace to match TypeScript's directive prefix.
+                source[comment.span.start as usize..comment.span.end as usize]
                     .split(['\r', '\n', '\u{2028}', '\u{2029}'])
                     .next_back()
                     .unwrap_or("")
@@ -1118,6 +1143,97 @@ const callback = ((input: any): any => input) as unknown as Function;
         scopes[0]["typeSafety"]
     );
     assert_eq!(failed_coverage["typeSafety"], file);
+}
+
+#[test]
+fn type_safety_assigns_leading_suppressions_to_initialized_functions_and_methods() {
+    let source = r#"function outer() {
+  // @ts-ignore
+  const inner = (value: number = "wrong"): number => value;
+  // @ts-expect-error
+  const expression = function expression(value: number = "wrong"): number { return value; };
+  const object = {
+    // @ts-ignore
+    method(value: number = "wrong"): number { return value; },
+    // @ts-expect-error
+    callback: (value: number = "wrong"): number => value,
+  };
+}
+class Base { method(): number { return 1; } }
+class Model extends Base {
+  // @ts-ignore
+  override method(): string { return "wrong"; }
+  // @ts-expect-error
+  callback = (value: number = "wrong"): number => value;
+}
+// @ts-ignore
+export const exported = (value: number = "wrong"): number => value;
+"#;
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let findings = analysis.type_safety();
+    let suppressions = findings["suppressions"].as_array().unwrap();
+    let targets = [
+        "const inner = (value",
+        "const expression = function expression(value",
+        "method(value",
+        "callback: (value",
+        "override method()",
+        "callback = (value",
+        "export const exported = (value",
+    ];
+    assert_eq!(suppressions.len(), targets.len());
+    for (suppression, target) in suppressions.iter().zip(targets) {
+        let start = source.find(target).unwrap() + target.find('(').unwrap();
+        let owner = analysis.owner(start as u32).unwrap();
+        assert_eq!(
+            suppression["owner"], analysis.scopes[owner].span.start,
+            "{suppression}, target {target}"
+        );
+        let counts = serde_json::to_value(&analysis.scopes[owner].type_safety).unwrap();
+        assert_eq!(
+            counts[if suppression["kind"] == "@ts-ignore" {
+                "tsIgnore"
+            } else {
+                "tsExpectError"
+            }],
+            1
+        );
+    }
+    assert_eq!(analysis.json()["scopes"][0]["typeSafety"]["tsIgnore"], 0);
+    assert_eq!(
+        analysis.json()["scopes"][0]["typeSafety"]["tsExpectError"],
+        0
+    );
+    assert_eq!(findings["unowned"]["tsIgnore"], 0);
+    assert_eq!(findings["unowned"]["tsExpectError"], 0);
+}
+
+#[test]
+fn type_safety_block_directives_preserve_prefix_order_and_last_line() {
+    for (comment, count) in [
+        ("/* * @ts-ignore */", 0),
+        ("/* / @ts-expect-error */", 0),
+        ("/* @ts-ignore */", 1),
+        ("/** @ts-expect-error */", 1),
+        ("/* explanation\n * @ts-ignore */", 1),
+        ("/* explanation\r\n * @ts-expect-error */", 1),
+        ("/* @ts-ignore\n */", 0),
+    ] {
+        let source = format!("function f() {{\n{comment}\nreturn 1;\n}}");
+        let analysis = Analysis::inspect("source.ts", &source).unwrap();
+        let findings = analysis.type_safety();
+        assert_eq!(
+            findings["suppressions"].as_array().unwrap().len(),
+            count,
+            "{comment}"
+        );
+        let counts = &analysis.json()["scopes"][0]["typeSafety"];
+        assert_eq!(
+            counts["tsIgnore"].as_u64().unwrap() + counts["tsExpectError"].as_u64().unwrap(),
+            count as u64,
+            "{comment}"
+        );
+    }
 }
 
 #[test]
