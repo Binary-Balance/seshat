@@ -306,8 +306,10 @@ Each function row has a `typeSafety` object of non-negative integer counts:
 | `tsNocheck` | Directive comments starting with `@ts-nocheck`. |
 
 Escapes belong to the smallest enclosing function or implicit scope. Nested
-functions do not inflate their parent's counts. Strings, templates, ordinary
-comments mentioning directives and `satisfies` expressions are not escapes.
+functions do not inflate their parent's counts. Functions assigned directly to
+variables or properties also own their leading suppressions, as do methods.
+Strings, templates, ordinary comments mentioning directives and `satisfies`
+expressions are not escapes.
 Counts describe syntax, including a suppression's existence; they do not prove
 that a directive suppressed an error or that a double assertion changed a type.
 
