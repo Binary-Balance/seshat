@@ -151,8 +151,8 @@ Original typecheck/baseline/coverage totals sum the sequential measured setup
 phases. Each setup also retains these three fields under `timings`. They include
 validation and receipt handling; coverage includes report reading and validation.
 Attribution includes producing the source-assessment rows. No attempted phase
-means null, including coverage/attribution in `mutate`. Failed or cancelled phases
-retain elapsed time, not a fabricated zero. Errors before runner-evidence
+means null. Failed or cancelled phases retain elapsed time, not a fabricated
+zero. Errors before runner-evidence
 preparation succeeds can still lack these phase measurements.
 
 Each attempted mutant gets `executionMs`, covering replacement, its setup jobs
