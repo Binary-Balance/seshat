@@ -1954,7 +1954,10 @@ mod tests {
                 assert!(mutation["workerBaselines"][0]["cleanupError"].is_string());
                 assert_eq!(mutation["outcomes"][0]["verdict"], "not-run");
             } else {
-                assert_eq!(mutation["jobsAttempted"], 1);
+                assert_eq!(
+                    mutation["jobsAttempted"], 1,
+                    "switching={switching}, worker_baseline={worker_baseline}: {result}"
+                );
                 assert!(mutation["outcomes"][0]["setups"][0]["cleanupError"].is_string());
                 assert_eq!(mutation["outcomes"][0]["setups"][1]["state"], "not-run");
                 assert_eq!(mutation["outcomes"][1]["verdict"], "not-run");
