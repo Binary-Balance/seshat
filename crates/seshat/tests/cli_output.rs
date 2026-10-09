@@ -2,12 +2,16 @@ use serde_json::Value;
 use std::{
     io,
     process::{Command, Stdio},
+    sync::Mutex,
 };
 
 const BINARY: &str = env!("CARGO_BIN_EXE_seshat");
+// macOS creates pipes before setting close-on-exec, so concurrent children can inherit the reader.
+static CHILD_PROCESS_LOCK: Mutex<()> = Mutex::new(());
 
 #[test]
 fn help_and_version_forms_match_the_usage() {
+    let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
     for args in [
         vec!["--help"],
         vec!["-h"],
@@ -26,6 +30,7 @@ fn help_and_version_forms_match_the_usage() {
 
 #[test]
 fn argument_errors_are_concise_or_json_and_escape_controls() {
+    let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
     for args in [
         vec![],
         vec!["bogus\u{001b}[2J\nnext"],
@@ -60,6 +65,7 @@ fn argument_errors_are_concise_or_json_and_escape_controls() {
 
 #[test]
 fn closed_stdout_succeeds_only_for_information() {
+    let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
     for (args, status) in [
         (vec!["--help"], 0),
         (vec!["--version"], 0),
