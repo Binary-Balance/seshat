@@ -143,6 +143,7 @@ Function rows produced by coverage attribution have these fields:
 | `name` | Function identity. Named declarations use their name. Anonymous functions and implicit scopes use generated names such as `function@<start>`, `arrow@<start>`, `field@<start>` and `static@<start>`. Use `path` and `start` when a name is not unique. |
 | `start` | Zero-based source byte offset of the analyzed scope. |
 | `complexity` | Integer cyclomatic complexity used by the CRAP calculation. |
+| `cognitiveComplexity` | Nonnegative integer [cognitive complexity](cognitive-complexity.md), independent of coverage and CRAP. |
 | `covered` | Number of mapped statements with at least one hit. |
 | `total` | Number of mapped statements. |
 | `coverage` | `covered / total` as a fraction from `0` to `1` when statement evidence is reliable for a non-empty ordinary function. It is not a percentage. |
@@ -168,6 +169,8 @@ implicit scope such as a class field initializer or static block. Those rows
 retain complexity but have `null` coverage and CRAP, regardless of any counters
 retained from decoded evidence. A `null` measurement is therefore different
 from a measured zero.
+
+Cognitive complexity remains available in function rows when coverage fails.
 
 The existing `covered`, `total` and `coverage` fields retain their statement
 semantics. The branch fields and `coverageBasis` are additive under schema
@@ -352,13 +355,15 @@ unattempted helper has `null` timing. See the
 
 When capture succeeds, `quality` is an object even when no thresholds are
 configured. Its `checks` array contains one entry for each configured
-`thresholds.maxCrap` or `thresholds.minMutationScore`, in that order.
+`thresholds.maxCrap`, `thresholds.maxCognitiveComplexity` or
+`thresholds.minMutationScore`, in that order.
 
 Each check has `metric`, `limit`, `actual` and `state`:
 
 | Metric | Requested by | Actual and pass rule |
 | --- | --- | --- |
 | `maxCrap` | `check` and `crap` | The maximum CRAP among measured functions. It passes when the unrounded value is less than or equal to `limit`. |
+| `maxCognitiveComplexity` | `check`, `crap` and `mutate` | The maximum cognitive complexity among ordinary functions, including empty functions and regardless of coverage status. Implicit class scopes are excluded. It passes when the value is less than or equal to `limit`. |
 | `minMutationScore` | `check` and `mutate` | The complete mutation percentage. It passes when the unrounded value is greater than or equal to `limit`. |
 
 Per-check states are `not-requested`, `incomplete`, `failed`, `passed` and
@@ -368,6 +373,8 @@ number. If a requested metric has no applicable score, it is
 `not-applicable`, not an invented pass. A requested `maxCrap` check with a
 measured function whose CRAP value is missing or non-numeric makes the report
 incomplete, preserves the source rows and returns exit status `2`.
+A requested cognitive check similarly rejects missing or invalid nonnegative
+integer scores in ordinary-function rows.
 
 The aggregate `quality.state` is one of:
 

@@ -35,7 +35,7 @@ Path options take a separate, non-empty argument. For names beginning with --,
 use ./--name or an absolute path. --flag=value and the -- separator are unsupported.
 
 Use the same explicit source, capture and setup configuration for all commands.
-Optional config thresholds: maxCrap and minMutationScore under thresholds.
+Optional config thresholds: maxCrap, maxCognitiveComplexity and minMutationScore under thresholds.
 Threshold failures exit 1; incomplete runs exit 2; cancellation uses the host's console/signal status.
 ";
 
@@ -144,6 +144,20 @@ fn report(
         result["complete"] = json!(false);
         result["error"] = json!("measured function has a missing or invalid CRAP value");
     }
+    if command.is_some()
+        && thresholds.is_some_and(|limits| limits.max_cognitive_complexity.is_some())
+        && result["complete"] == true
+        && array(&result["sources"])
+            .iter()
+            .flat_map(|source| array(&source["result"]["functions"]))
+            .any(|function| {
+                function["status"] != "complexity-only"
+                    && function["cognitiveComplexity"].as_u64().is_none()
+            })
+    {
+        result["complete"] = json!(false);
+        result["error"] = json!("function has a missing or invalid cognitive complexity value");
+    }
     let (result, mut status) = crate::finish(result);
     let quality = thresholds.map(|limits| quality(command, &result, limits));
     if status == 0 && quality.as_ref().is_some_and(|q| q["state"] == "failed") {
@@ -168,6 +182,18 @@ fn quality(command: Option<&str>, result: &Value, limits: Thresholds) -> Value {
     } else {
         None
     };
+    let cognitive_maximum =
+        if limits.max_cognitive_complexity.is_some() && result["complete"] == true {
+            array(&result["sources"])
+                .iter()
+                .flat_map(|source| array(&source["result"]["functions"]))
+                .filter(|function| function["status"] != "complexity-only")
+                .filter_map(|function| function["cognitiveComplexity"].as_u64())
+                .max()
+                .map(|maximum| maximum as f64)
+        } else {
+            None
+        };
     let mut checks = Vec::new();
     for (metric, limit, requested, actual) in [
         (
@@ -175,6 +201,12 @@ fn quality(command: Option<&str>, result: &Value, limits: Thresholds) -> Value {
             limits.max_crap,
             matches!(command, Some("check" | "crap")),
             maximum,
+        ),
+        (
+            "maxCognitiveComplexity",
+            limits.max_cognitive_complexity,
+            matches!(command, Some("check" | "crap" | "mutate")),
+            cognitive_maximum,
         ),
         (
             "minMutationScore",
@@ -189,7 +221,7 @@ fn quality(command: Option<&str>, result: &Value, limits: Thresholds) -> Value {
         } else if result["complete"] != true {
             "incomplete"
         } else if let Some(actual) = actual {
-            if (metric == "maxCrap" && actual > limit)
+            if (matches!(metric, "maxCrap" | "maxCognitiveComplexity") && actual > limit)
                 || (metric == "minMutationScore" && actual < limit)
             {
                 "failed"
@@ -299,9 +331,10 @@ fn readable(report: &Value) -> String {
                 });
             let _ = writeln!(
                 output,
-                "  {:?}: complexity {}, statements {statements}{branches}, CRAP {crap}{pseudo}",
+                "  {:?}: complexity {}, cognitive complexity {}, statements {statements}{branches}, CRAP {crap}{pseudo}",
                 text(&function["name"]),
-                function["complexity"]
+                function["complexity"],
+                function["cognitiveComplexity"]
             );
             if let Some(escapes) = function.get("typeSafety") {
                 let _ = writeln!(
@@ -754,7 +787,7 @@ mod tests {
     fn readable_type_safety_keeps_static_findings_and_unknown_config_visible() {
         let output = readable(
             &json!({"command":"crap","complete":false,"timings":{"wallMs":1},"result":{
-                "sources":[{"path":"source.ts","result":{"functions":[{"name":"f","complexity":1,
+                "sources":[{"path":"source.ts","result":{"functions":[{"name":"f","complexity":1,"cognitiveComplexity":3,
                     "status":"unknown","typeSafety":{"explicitAny":2,"typeAssertions":2,
                     "doubleAssertions":1,"nonNullAssertions":1,"tsIgnore":0,"tsExpectError":1,"tsNocheck":0}}],
                     "typeSafety":{"unowned":{"tsNocheck":1}}}}],
@@ -762,12 +795,89 @@ mod tests {
                     "compilerVersion":null,"config":null,"error":"missing config\u{001b}[2J"}}]
             }}),
         );
+        assert!(output.contains("cognitive complexity 3"));
         assert!(output.contains("any 2, assertions 2 (double 1), non-null 1"));
         assert!(output.contains("Type safety outside function rows: {\"tsNocheck\":1}"));
         assert!(output.contains("Compiler strictness: unknown"));
         assert!(output.contains("missing config\\u{1b}[2J"));
         assert!(!output.contains('\u{001b}'));
     }
+    #[test]
+    fn cognitive_thresholds_ignore_coverage_status_and_include_zero() {
+        let limits = |value| Thresholds {
+            max_cognitive_complexity: Some(value),
+            ..Thresholds::default()
+        };
+        for command in ["check", "crap", "mutate"] {
+            for (maximum, limit, expected) in [(0, 0.0, 0), (3, 3.0, 0), (3, 2.9999, 1)] {
+                let result = json!({"complete":true,"sources":[{"result":{"functions":[
+                    {"status":"measured","cognitiveComplexity":0,"crap":22.5},
+                    {"status":"unknown","cognitiveComplexity":maximum,"crap":null},
+                    {"status":"not-applicable","cognitiveComplexity":0},
+                    {"status":"complexity-only","cognitiveComplexity":99}
+                ]}}]});
+                let (value, code) = report(
+                    Some(command),
+                    Value::Null,
+                    result.clone(),
+                    0.0,
+                    None,
+                    Some(limits(limit)),
+                );
+                assert_eq!(code, expected);
+                assert_eq!(
+                    value["quality"]["checks"][0]["metric"],
+                    "maxCognitiveComplexity"
+                );
+                assert_eq!(
+                    value["quality"]["checks"][0]["actual"].as_f64(),
+                    Some(maximum as f64)
+                );
+                assert_eq!(value["result"]["sources"], result["sources"]);
+                let mut incomplete = result;
+                incomplete["complete"] = json!(false);
+                let (value, code) = report(
+                    Some(command),
+                    Value::Null,
+                    incomplete,
+                    0.0,
+                    None,
+                    Some(limits(limit)),
+                );
+                assert_eq!(code, 2);
+                assert_eq!(value["quality"]["checks"][0]["state"], "incomplete");
+                assert!(value["quality"]["checks"][0]["actual"].is_null());
+            }
+            let (value, code) = report(
+                Some(command),
+                Value::Null,
+                json!({"complete":true,"sources":[{"result":{"functions":[{"status":"complexity-only","cognitiveComplexity":99}]}}]}),
+                0.0,
+                None,
+                Some(limits(0.0)),
+            );
+            assert_eq!(code, 0);
+            assert_eq!(value["quality"]["checks"][0]["state"], "not-applicable");
+            for malformed in [Value::Null, json!("3"), json!(true), json!(-1), json!(1.5)] {
+                let (value, code) = report(
+                    Some(command),
+                    Value::Null,
+                    json!({"complete":true,"sources":[{"result":{"functions":[{"status":"unknown","cognitiveComplexity":malformed}]}}]}),
+                    0.0,
+                    None,
+                    Some(limits(10.0)),
+                );
+                assert_eq!(code, 2);
+                assert!(
+                    value["result"]["error"]
+                        .as_str()
+                        .unwrap()
+                        .contains("cognitive complexity")
+                );
+            }
+        }
+    }
+
     #[test]
     fn threshold_boundaries_and_incomplete_precedence() {
         let result = json!({"complete":true,"sources":[
@@ -783,6 +893,7 @@ mod tests {
             let limits = Thresholds {
                 max_crap: Some(max_crap),
                 min_mutation_score: Some(min_mutation_score),
+                max_cognitive_complexity: None,
             };
             let (report, code) = report(
                 Some("check"),
@@ -808,6 +919,7 @@ mod tests {
         let limits = Thresholds {
             max_crap: Some(0.0),
             min_mutation_score: Some(100.0),
+            max_cognitive_complexity: None,
         };
         let mut incomplete = result.clone();
         incomplete["complete"] = json!(false);
@@ -837,6 +949,7 @@ mod tests {
         let limits = Thresholds {
             max_crap: Some(10.0),
             min_mutation_score: Some(50.0),
+            max_cognitive_complexity: None,
         };
         for malformed in [
             json!({"status":"measured"}),
@@ -895,6 +1008,7 @@ mod tests {
         let limits = Thresholds {
             max_crap: Some(0.0),
             min_mutation_score: Some(100.0),
+            max_cognitive_complexity: None,
         };
         let empty = json!({"complete":true,"sources":[{"result":{"functions":[{"status":"complexity-only","crap":null}]}}],"mutation":{"planned":0,"score":null}});
         for command in ["check", "crap", "mutate"] {
@@ -1117,6 +1231,7 @@ mod tests {
                 Some(Thresholds {
                     max_crap: None,
                     min_mutation_score: Some(0.0),
+                    max_cognitive_complexity: None,
                 }),
             );
             assert_eq!(status, 2);

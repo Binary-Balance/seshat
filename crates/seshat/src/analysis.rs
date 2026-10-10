@@ -4,14 +4,15 @@ use oxc_ast::{
     AstKind,
     ast::{
         ArrowFunctionBody, Declaration, ExportDefaultDeclarationKind, Expression, FormalParameters,
-        JSXAttributeItem, JSXAttributeValue, JSXChild, MethodDefinitionKind, PropertyKind, TSType,
-        TSTypeName,
+        FunctionType, JSXAttributeItem, JSXAttributeValue, JSXChild, MethodDefinitionKind,
+        PropertyKind, Statement, TSType, TSTypeName, VariableDeclarationKind,
     },
 };
 use oxc_ast_visit::Visit;
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 use serde_json::{Value, json};
+use std::collections::{BTreeMap, BTreeSet};
 
 #[derive(Debug, Default, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -77,6 +78,7 @@ pub struct Scope {
     pub span: Span,
     pub body: Span,
     pub complexity: u32,
+    pub cognitive_complexity: u32,
     pub implicit: bool,
     pub empty: bool,
     pub extreme_skip: Option<&'static str>,
@@ -192,6 +194,19 @@ pub struct Analysis {
     unowned_type_safety: TypeSafety,
     suppressions: Vec<Value>,
     suppression_targets: std::collections::BTreeMap<u32, u32>,
+    cognitive_owner: Option<usize>,
+    cognitive_depth: u32,
+    cognitive_stack: Vec<(Option<usize>, u32)>,
+    cognitive_bodies: BTreeSet<(u32, u32)>,
+    else_ifs: BTreeSet<u32>,
+    logical_children: BTreeSet<u32>,
+    lexical_scopes: Vec<Span>,
+    bindings: BTreeMap<String, usize>,
+    functions: Vec<(String, Span, Span)>,
+    calls: Vec<(usize, String, Span)>,
+    write_ranges: Vec<Span>,
+    writes: BTreeSet<String>,
+    dynamic_bindings: bool,
 }
 
 // Plain bindings do not execute user code. Other parameter forms may evaluate
@@ -208,6 +223,73 @@ fn plain_parameters(params: &FormalParameters<'_>) -> bool {
 
 impl<'a> Visit<'a> for Analysis {
     fn enter_node(&mut self, node: AstKind<'a>) {
+        self.cognitive_stack
+            .push((self.cognitive_owner, self.cognitive_depth));
+        let span = node.span();
+        if self.cognitive_bodies.remove(&(span.start, span.end)) {
+            self.cognitive_depth += 1;
+        }
+        match node {
+            AstKind::BindingIdentifier(id) => {
+                *self.bindings.entry(id.name.to_string()).or_default() += 1;
+            }
+            AstKind::Function(f) if f.body.is_some() => {
+                if let Some(id) = &f.id {
+                    let visibility = if f.r#type == FunctionType::FunctionDeclaration {
+                        *self.lexical_scopes.last().unwrap()
+                    } else {
+                        f.span
+                    };
+                    self.functions
+                        .push((id.name.to_string(), f.span, visibility));
+                }
+            }
+            AstKind::VariableDeclaration(declaration)
+                if declaration.kind == VariableDeclarationKind::Const =>
+            {
+                for binding in &declaration.declarations {
+                    if let Some(id) = binding.id.get_binding_identifier()
+                        && let Some(init) = &binding.init
+                        && matches!(
+                            init.without_parentheses(),
+                            Expression::FunctionExpression(_)
+                                | Expression::ArrowFunctionExpression(_)
+                        )
+                    {
+                        self.functions.push((
+                            id.name.to_string(),
+                            init.without_parentheses().span(),
+                            *self.lexical_scopes.last().unwrap(),
+                        ));
+                    }
+                }
+            }
+            AstKind::AssignmentExpression(a) => self.write_ranges.push(a.left.span()),
+            AstKind::UpdateExpression(a) => self.write_ranges.push(a.argument.span()),
+            AstKind::ForInStatement(a) => self.write_ranges.push(a.left.span()),
+            AstKind::ForOfStatement(a) => self.write_ranges.push(a.left.span()),
+            AstKind::IdentifierReference(id)
+                if self
+                    .write_ranges
+                    .iter()
+                    .any(|range| range.start <= span.start && span.end <= range.end) =>
+            {
+                self.writes.insert(id.name.to_string());
+            }
+            AstKind::CallExpression(call) => {
+                if let Expression::Identifier(id) = call.callee.without_parentheses() {
+                    self.dynamic_bindings |= id.name == "eval";
+                    if let Some(owner) = self.cognitive_owner {
+                        self.calls.push((owner, id.name.to_string(), call.span));
+                    }
+                }
+            }
+            AstKind::WithStatement(_) => self.dynamic_bindings = true,
+            _ => {}
+        }
+        if lexical_boundary(node) {
+            self.lexical_scopes.push(span);
+        }
         match node {
             AstKind::Function(function) => {
                 if function.return_type.as_ref().is_some_and(|annotation| {
@@ -491,6 +573,7 @@ impl<'a> Visit<'a> for Analysis {
                 span: f.span,
                 body: b.span,
                 complexity: 1,
+                cognitive_complexity: 0,
                 implicit: false,
                 type_safety: TypeSafety::default(),
                 // Only claim emptiness where parameter evaluation cannot hide work.
@@ -506,6 +589,7 @@ impl<'a> Visit<'a> for Analysis {
                 span: f.span,
                 body: f.body.span(),
                 complexity: 1,
+                cognitive_complexity: 0,
                 implicit: false,
                 type_safety: TypeSafety::default(),
                 empty: matches!(&f.body, ArrowFunctionBody::FunctionBody(b) if b.statements.is_empty() && b.directives.is_empty())
@@ -520,6 +604,7 @@ impl<'a> Visit<'a> for Analysis {
                 span: v.span(),
                 body: v.span(),
                 complexity: 1,
+                cognitive_complexity: 0,
                 implicit: true,
                 type_safety: TypeSafety::default(),
                 empty: false,
@@ -531,6 +616,7 @@ impl<'a> Visit<'a> for Analysis {
                 span: b.span,
                 body: b.span,
                 complexity: 1,
+                cognitive_complexity: 0,
                 implicit: true,
                 type_safety: TypeSafety::default(),
                 empty: false,
@@ -540,8 +626,11 @@ impl<'a> Visit<'a> for Analysis {
             _ => None,
         };
         if let Some(scope) = scope {
+            self.cognitive_owner = Some(self.scopes.len());
+            self.cognitive_depth = 0;
             self.scopes.push(scope);
         }
+        self.cognitive_node(node);
         match node {
             AstKind::IfStatement(_)
             | AstKind::ForStatement(_)
@@ -644,13 +733,285 @@ impl<'a> Visit<'a> for Analysis {
             });
         }
     }
+
+    fn leave_node(&mut self, node: AstKind<'a>) {
+        if lexical_boundary(node) {
+            self.lexical_scopes.pop();
+        }
+        (self.cognitive_owner, self.cognitive_depth) = self.cognitive_stack.pop().unwrap();
+    }
+}
+
+fn lexical_boundary(node: AstKind<'_>) -> bool {
+    matches!(
+        node,
+        AstKind::Program(_)
+            | AstKind::BlockStatement(_)
+            | AstKind::FunctionBody(_)
+            | AstKind::ForStatement(_)
+            | AstKind::ForInStatement(_)
+            | AstKind::ForOfStatement(_)
+            | AstKind::CatchClause(_)
+            | AstKind::SwitchStatement(_)
+            | AstKind::Class(_)
+            | AstKind::TSModuleBlock(_)
+    )
 }
 
 pub fn supports_line_positions(source: &str) -> bool {
     !source.contains(['\u{2028}', '\u{2029}']) && !source.replace("\r\n", "").contains('\r')
 }
 
+#[test]
+fn cognitive_complexity_follows_flow_and_nesting_rules() {
+    for (body, expected) in [
+        ("return value;", 0),
+        ("if(a) return 1; if(b) return 2;", 2),
+        ("if(a) { if(b) { if(c) return 1; } }", 6),
+        ("if(a) {} else if(b) {} else if(c) {} else {}", 4),
+        (
+            "if(a) { if(b) {} else if(c) { if(d) {} } else { if(e) {} } }",
+            11,
+        ),
+        ("if(a) {} else { if(b) {} }", 4),
+        ("for(;;) { while(a) { do {} while(b); } }", 6),
+        ("for(const item in value) {} for(const item of value) {}", 2),
+        (
+            "try { if(a) {} } catch(error) { if(b) {} } finally { if(c) {} }",
+            5,
+        ),
+        ("try { return value; } finally {}", 0),
+        (
+            "switch(value) { case 1: break; case 2: break; default: return 0; }",
+            1,
+        ),
+        (
+            "if(a) { switch(value) { case 1: if(b) {} break; default: break; } }",
+            6,
+        ),
+        ("return a ? b : c;", 1),
+        ("return a ? (b ? c : d) : (e ? f : g);", 5),
+        ("return a && b && c && d;", 1),
+        ("return a || b || c || d;", 1),
+        ("return a && b || c || d && e;", 3),
+        ("return a && (b || c) && d;", 3),
+        ("return a && !(b && c);", 2),
+        ("return call(a && b, c && d);", 2),
+        ("if(a && b || c) {}", 3),
+        ("value &&= a; value ||= b; value ??= c;", 2),
+        ("return a?.b?.(c) ?? d;", 0),
+        ("return a ?? (b && c);", 1),
+        ("return a && (b ?? (c && d));", 2),
+        ("outer: for(;;) { if(a) continue outer; break outer; }", 5),
+        ("for(;;) { if(a) break; continue; } throw error;", 3),
+        ("return <div>{a && b}{a ? b : c}</div>;", 2),
+    ] {
+        let source = format!("function f() {{{body}}}");
+        let analysis = Analysis::inspect("fixture.tsx", &source).unwrap();
+        assert_eq!(analysis.scopes[0].cognitive_complexity, expected, "{body}");
+    }
+}
+
+#[test]
+fn cognitive_complexity_owns_nested_functions_separately() {
+    let source = "function outer(a = value ?? 1) { if(a) { const inner = () => { if(a) return 1; }; function nested() { while(a) {} } } } class C { field = value ? 1 : 2; static { if(value) {} } method() { if(value) {} } }";
+    let analysis = Analysis::inspect("fixture.ts", source).unwrap();
+    assert_eq!(
+        analysis
+            .scopes
+            .iter()
+            .map(|scope| scope.cognitive_complexity)
+            .collect::<Vec<_>>(),
+        [1, 1, 1, 1, 1, 1]
+    );
+    assert_eq!(
+        analysis.scopes[0].complexity, 4,
+        "cyclomatic defaults/nullish still count"
+    );
+    let unmeasured = crate::coverage::attribute(
+        &analysis,
+        "fixture.ts",
+        source,
+        std::iter::empty::<&Value>(),
+    );
+    assert_eq!(unmeasured["functions"][0]["status"], "unknown");
+    assert_eq!(unmeasured["functions"][0]["cognitiveComplexity"], 1);
+}
+
+#[test]
+fn cognitive_recursion_requires_unambiguous_visible_bindings() {
+    for (source, expected) in [
+        ("function f() { f(); f(); }", vec![1]),
+        ("function f() { g(); } function g() { f(); }", vec![1, 1]),
+        ("const f = () => f();", vec![1]),
+        ("const f = function named() { named(); };", vec![1]),
+        (
+            "function outer() { function f() { g(); } function g() { f(); } }",
+            vec![0, 1, 1],
+        ),
+        ("function f(f) { f(); }", vec![0]),
+        ("function f() { const f = external; f(); }", vec![0]),
+        ("function f() { f(); } f = external;", vec![0]),
+        ("function f() { f(); } ({f} = external);", vec![0]),
+        ("function f() { f(); } for(f of external) {}", vec![0]),
+        ("function f(n) { n--; f(n); }", vec![1]),
+        ("function f() { this.f(); }", vec![0]),
+        ("function f() { const alias = f; alias(); }", vec![0]),
+        ("let f = () => f();", vec![0]),
+        (
+            "const f = function g() { f(); }; function h() { g(); }",
+            vec![1, 0],
+        ),
+        (
+            "{ function f() { g(); } } function g() { f(); }",
+            vec![0, 0],
+        ),
+        (
+            "function f() { f(); } function g() { eval('f = external'); }",
+            vec![0, 0],
+        ),
+    ] {
+        let analysis = Analysis::inspect("fixture.ts", source).unwrap();
+        assert_eq!(
+            analysis
+                .scopes
+                .iter()
+                .map(|scope| scope.cognitive_complexity)
+                .collect::<Vec<_>>(),
+            expected,
+            "{source}"
+        );
+    }
+}
+
 impl Analysis {
+    fn cognitive_node(&mut self, node: AstKind<'_>) {
+        let Some(owner) = self.cognitive_owner else {
+            return;
+        };
+        let mut increment = 0;
+        let mut bodies = Vec::new();
+        match node {
+            AstKind::IfStatement(statement) => {
+                increment = if self.else_ifs.remove(&statement.span.start) {
+                    1
+                } else {
+                    1 + self.cognitive_depth
+                };
+                bodies.push(statement.consequent.span());
+                if let Some(alternate) = &statement.alternate {
+                    if let Statement::IfStatement(next) = alternate {
+                        self.else_ifs.insert(next.span.start);
+                    } else {
+                        increment += 1;
+                        bodies.push(alternate.span());
+                    }
+                }
+            }
+            AstKind::ForStatement(statement) => bodies.push(statement.body.span()),
+            AstKind::ForInStatement(statement) => bodies.push(statement.body.span()),
+            AstKind::ForOfStatement(statement) => bodies.push(statement.body.span()),
+            AstKind::WhileStatement(statement) => bodies.push(statement.body.span()),
+            AstKind::DoWhileStatement(statement) => bodies.push(statement.body.span()),
+            AstKind::CatchClause(clause) => bodies.push(clause.body.span),
+            AstKind::SwitchStatement(statement) => {
+                increment = 1 + self.cognitive_depth;
+                bodies.extend(statement.cases.iter().map(GetSpan::span));
+            }
+            AstKind::ConditionalExpression(expression) => {
+                bodies.extend([expression.consequent.span(), expression.alternate.span()]);
+            }
+            AstKind::BreakStatement(statement) if statement.label.is_some() => increment = 1,
+            AstKind::ContinueStatement(statement) if statement.label.is_some() => increment = 1,
+            AstKind::AssignmentExpression(expression)
+                if matches!(expression.operator.as_str(), "&&=" | "||=") =>
+            {
+                increment = 1
+            }
+            AstKind::LogicalExpression(expression)
+                if expression.operator.as_str() != "??"
+                    && !self.logical_children.contains(&expression.span.start) =>
+            {
+                fn operators(
+                    expression: &Expression<'_>,
+                    result: &mut Vec<&'static str>,
+                    children: &mut BTreeSet<u32>,
+                ) {
+                    if let Expression::LogicalExpression(expression) =
+                        expression.without_parentheses()
+                        && expression.operator.as_str() != "??"
+                    {
+                        children.insert(expression.span.start);
+                        operators(&expression.left, result, children);
+                        result.push(expression.operator.as_str());
+                        operators(&expression.right, result, children);
+                    }
+                }
+                let mut sequence = Vec::new();
+                operators(&expression.left, &mut sequence, &mut self.logical_children);
+                sequence.push(expression.operator.as_str());
+                operators(&expression.right, &mut sequence, &mut self.logical_children);
+                increment = 1 + sequence
+                    .windows(2)
+                    .filter(|pair| pair[0] != pair[1])
+                    .count() as u32;
+            }
+            _ => {}
+        }
+        if increment == 0 && !bodies.is_empty() {
+            increment = 1 + self.cognitive_depth;
+        }
+        self.scopes[owner].cognitive_complexity += increment;
+        self.cognitive_bodies
+            .extend(bodies.into_iter().map(|body| (body.start, body.end)));
+    }
+
+    fn cognitive_recursion(&mut self) {
+        if self.dynamic_bindings {
+            return;
+        }
+        // Syntax alone cannot resolve aliases or shadowing. Only unique, unwritten bindings qualify.
+        let functions: BTreeMap<_, _> = self
+            .functions
+            .iter()
+            .filter(|(name, _, _)| {
+                self.bindings.get(name) == Some(&1) && !self.writes.contains(name)
+            })
+            .filter_map(|(name, target, visibility)| {
+                self.scopes
+                    .iter()
+                    .position(|scope| !scope.implicit && scope.span == *target)
+                    .map(|index| (name.as_str(), (index, *visibility)))
+            })
+            .collect();
+        let mut edges = vec![BTreeSet::new(); self.scopes.len()];
+        for (caller, name, span) in &self.calls {
+            if let Some((callee, visibility)) = functions.get(name.as_str())
+                && visibility.start <= span.start
+                && span.end <= visibility.end
+            {
+                edges[*caller].insert(*callee);
+            }
+        }
+        // shortcut: reachability per function, use strongly connected components if call graphs grow large.
+        for start in 0..edges.len() {
+            if edges[start].is_empty() {
+                continue;
+            }
+            let mut pending: Vec<_> = edges[start].iter().copied().collect();
+            let mut seen = BTreeSet::new();
+            while let Some(next) = pending.pop() {
+                if next == start {
+                    self.scopes[start].cognitive_complexity += 1;
+                    break;
+                }
+                if seen.insert(next) {
+                    pending.extend(edges[next].iter().copied());
+                }
+            }
+        }
+    }
+
     pub fn load_failure_sites(&self, source: &str) -> Vec<[usize; 4]> {
         // The bounded observer verifies LF/CRLF positions; reject other JS line separators.
         if !supports_line_positions(source) {
@@ -784,6 +1145,7 @@ impl Analysis {
                 result.count_escape(owner, escape);
             }
         }
+        result.cognitive_recursion();
         result.branch_end_ranges.sort_by_key(|range| range.start);
         let decisions = std::mem::take(&mut result.decisions);
         for span in decisions {
@@ -955,7 +1317,7 @@ impl Analysis {
     }
 
     pub fn json(&self) -> Value {
-        json!({"scopes": self.scopes.iter().map(|s| json!({"name":s.name,"start":s.span.start,"end":s.span.end,"complexity":s.complexity,"implicit":s.implicit,"empty":s.empty,"typeSafety":s.type_safety})).collect::<Vec<_>>(),
+        json!({"scopes": self.scopes.iter().map(|s| json!({"name":s.name,"start":s.span.start,"end":s.span.end,"complexity":s.complexity,"cognitiveComplexity":s.cognitive_complexity,"implicit":s.implicit,"empty":s.empty,"typeSafety":s.type_safety})).collect::<Vec<_>>(),
             "typeSafety":self.type_safety(),
             "mutants": self.comparisons.iter().flat_map(|c| c.replacements.iter().enumerate().map(move |(i, op)| json!({"id":c.first_id+i,"offset":c.offset,"original":c.original,"replacement":op}))).collect::<Vec<_>>()})
     }

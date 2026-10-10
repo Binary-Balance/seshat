@@ -2,6 +2,11 @@
 
 The coverage-import fix for #145 was released in [Seshat 0.3.1](0.3.1.md).
 
+- Function rows now include cognitive complexity beside cyclomatic complexity.
+  An optional `maxCognitiveComplexity` threshold applies in all three commands.
+  CRAP's calculation is unchanged. See the
+  [rules and TypeScript choices](../cognitive-complexity.md).
+
 - `check` and `mutate` now detect pseudo-tested functions by replacing eligible
   function bodies once and running every configured test setup. Per-function
   flags and counts are separate from comparison mutation scores. Unresolved
