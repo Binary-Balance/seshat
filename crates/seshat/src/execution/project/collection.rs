@@ -54,6 +54,7 @@ impl MutationProgress {
         finished: bool,
         states: &[TestState],
         setup_count: usize,
+        label: &str,
     ) {
         if finished {
             self.completed += 1;
@@ -81,7 +82,7 @@ impl MutationProgress {
             || self.completed == total
         {
             progress.phase(format_args!(
-                "mutation: completed {}/{total}, running {}, remaining {}, unresolved timed-out {}, execution-error {}, cancelled {}, not-run {}",
+                "{label}: completed {}/{total}, running {}, remaining {}, unresolved timed-out {}, execution-error {}, cancelled {}, not-run {}",
                 self.completed,
                 self.started - self.completed,
                 total - self.started,
@@ -100,6 +101,11 @@ struct MutantExecution {
     states: Vec<TestState>,
     jobs: usize,
     restoration_error: Option<String>,
+}
+
+enum MutationKind<'a> {
+    Comparisons { switching: bool },
+    Extreme { sources: &'a [Value] },
 }
 
 enum JobKind<'a> {
@@ -957,7 +963,13 @@ impl CapturedProject {
             })
         } else {
             self.unchanged()
-                .and_then(|()| analysis.replace(&self.sources[source_index].1, local_id))
+                .and_then(|()| {
+                    if row["kind"] == "extreme" {
+                        analysis.replace_extreme(&self.sources[source_index].1, local_id)
+                    } else {
+                        analysis.replace(&self.sources[source_index].1, local_id)
+                    }
+                })
                 .and_then(|source| self.replace_source(source_index, Some(source)))
         };
         if let Err(error) = prepared {
@@ -976,8 +988,13 @@ impl CapturedProject {
                 break;
             }
             let id = format!(
-                "{}-mutant-{}-{index}",
+                "{}-{}-{}-{index}",
                 evidence.file_name().unwrap().to_str().unwrap(),
+                if row["kind"] == "extreme" {
+                    "extreme"
+                } else {
+                    "mutant"
+                },
                 row["id"]
             );
             let observed = self
@@ -1019,13 +1036,38 @@ impl CapturedProject {
         evidence: &Path,
         ready: bool,
         progress: &Progress,
-        switching: bool,
+        kind: MutationKind<'_>,
     ) -> Value {
         let started = Instant::now();
+        let (switching, extreme_sources) = match kind {
+            MutationKind::Comparisons { switching } => (switching, None),
+            MutationKind::Extreme { sources } => (false, Some(sources)),
+        };
+        let label = if extreme_sources.is_some() {
+            "extreme"
+        } else {
+            "mutation"
+        };
         let mut plan = Vec::new();
         let mut outcomes = Vec::new();
         for (source_index, fact) in facts.iter().enumerate() {
             if let Ok(analysis) = fact {
+                if let Some(sources) = extreme_sources {
+                    for (index, scope) in analysis.scopes.iter().enumerate() {
+                        let function = &sources[source_index]["result"]["functions"][index];
+                        if !function["pseudoTestReason"].is_null() {
+                            continue;
+                        }
+                        outcomes.push(json!({"id":plan.len(),"localId":index,"kind":"extreme",
+                            "coverage":function["coverage"],
+                            "start":scope.span.start,"name":scope.name,"offset":scope.body.start,
+                            "original":&self.sources[source_index].1[scope.body.start as usize..scope.body.end as usize],
+                            "replacement":analysis.extreme_body(scope),"path":stable_path(&self.sources[source_index].0),
+                            "setups":self.config.setups.iter().map(|setup| json!({"name":setup.name,"state":"not-run"})).collect::<Vec<_>>()}));
+                        plan.push((source_index, index));
+                    }
+                    continue;
+                }
                 for comparison in &analysis.comparisons {
                     for (alternative, replacement) in comparison.replacements.iter().enumerate() {
                         let local_id = comparison.first_id + alternative;
@@ -1120,10 +1162,17 @@ impl CapturedProject {
                             worker_ready = false;
                             break;
                         }
-                        let id = format!(
-                            "{}-worker-{worker_id}-baseline-{index}",
-                            receipts.0.file_name().unwrap().to_str().unwrap()
-                        );
+                        let id = if extreme_sources.is_some() {
+                            format!(
+                                "{}-extreme-baseline-worker-{worker_id}-{index}",
+                                receipts.0.file_name().unwrap().to_str().unwrap()
+                            )
+                        } else {
+                            format!(
+                                "{}-worker-{worker_id}-baseline-{index}",
+                                receipts.0.file_name().unwrap().to_str().unwrap()
+                            )
+                        };
                         baseline_jobs += 1;
                         progress
                             .phase(format_args!("worker {worker_id} baseline {:?}", setup.name));
@@ -1176,7 +1225,7 @@ impl CapturedProject {
         };
         let scheduling_started = Instant::now();
         progress.phase(format_args!(
-            "mutation: {} worker(s) used, {} planned",
+            "{label}: {} worker(s) used, {} planned",
             workers_used,
             plan.len()
         ));
@@ -1199,6 +1248,7 @@ impl CapturedProject {
                             false,
                             &[],
                             setup_count,
+                            label,
                         );
                     }
                     let result = project.run_mutant(
@@ -1217,6 +1267,7 @@ impl CapturedProject {
                             true,
                             &result.states,
                             setup_count,
+                            label,
                         );
                     }
                     if result.restoration_error.is_some()
@@ -1281,6 +1332,10 @@ impl CapturedProject {
         let assessed = assessment::mutation(baselines, plan.len(), &executions);
         for (row, verdict) in outcomes.iter_mut().zip(assessed.outcomes) {
             row["verdict"] = json!(verdict.label());
+            if row["kind"] == "extreme" {
+                row["pseudoTested"] =
+                    json!(assessment::pseudo_tested(row["coverage"].as_f64(), verdict));
+            }
         }
         let complete =
             worker_ready && assessed.complete && run_error.is_none() && cancellation_signal() == 0;
@@ -1292,7 +1347,7 @@ impl CapturedProject {
         let resolved = assessed.killed + assessed.survived;
         let diagnostics = mutation_diagnostics(&outcomes, completed, jobs_attempted, scheduling_ms);
         progress.phase(format_args!(
-            "mutation finished: completed {}/{}, running 0, not run {}, resolved {}, unresolved {} (timed-out {}, execution-error {}, cancelled {}, not-run {}, unassessed {})",
+            "{label} finished: completed {}/{}, running 0, not run {}, resolved {}, unresolved {} (timed-out {}, execution-error {}, cancelled {}, not-run {}, unassessed {})",
             completed,
             plan.len(),
             plan.len() - completed,
@@ -1349,7 +1404,6 @@ impl CapturedProject {
         switching: bool,
     ) -> Result<Value, String> {
         let mutate = mode != AssessmentMode::Crap;
-        let with_coverage = mode != AssessmentMode::Mutate;
         self.config.validate_mode(mode)?;
         let started = Instant::now();
         let progress = Progress {
@@ -1373,11 +1427,6 @@ impl CapturedProject {
         let evidence = self.prepare_evidence()?;
         timings["preparationMs"] = json!(preparation_started.elapsed().as_secs_f64() * 1000.0);
         let mut setups: Vec<_> = self.config.setups.iter().map(|setup| json!({"name":setup.name,"typecheck":{"state":"not-run"},"baseline":{"state":"not-run"},"coverage":{"state":"not-run"}})).collect();
-        if !with_coverage {
-            for setup in &mut setups {
-                setup["coverage"]["state"] = json!("not-requested");
-            }
-        }
         for setup in &mut setups {
             setup["timings"] = json!({"typecheckMs":null,"baselineMs":null,"coverageMs":null});
         }
@@ -1428,9 +1477,6 @@ impl CapturedProject {
             if setups[index]["baseline"]["state"] != "passed" {
                 complete = false;
                 break;
-            }
-            if !with_coverage {
-                continue;
             }
             let collect =
                 || -> Result<(Value, Value), String> {
@@ -1498,14 +1544,12 @@ impl CapturedProject {
                 .reduce(|sum, ms| sum + ms);
             timings[key] = json!(measured);
         }
-        if with_coverage {
-            progress.phase(format_args!("coverage attribution"));
-        }
+        progress.phase(format_args!("coverage attribution"));
         // Original jobs must pass before mutations run. Coverage attribution
         // affects CRAP completeness, not the already established baseline.
         let mutation_ready = complete;
         let attribution_started = Instant::now();
-        let sources: Vec<_> = self
+        let mut sources: Vec<_> = self
             .sources
             .iter()
             .zip(&facts)
@@ -1513,7 +1557,6 @@ impl CapturedProject {
                 let path = self.directory.0.join(relative);
                 match analysis {
                     Err(error) => json!({"path":stable_path(relative),"error":error}),
-                    Ok(_) if !with_coverage => json!({"path":stable_path(relative)}),
                     Ok(analysis) => {
                         // A setup may cover a different package. Merge only its entries for this file;
                         // failed collection still makes the whole run incomplete above.
@@ -1530,17 +1573,91 @@ impl CapturedProject {
                 }
             })
             .collect();
-        if with_coverage {
-            timings["attributionMs"] = json!(attribution_started.elapsed().as_secs_f64() * 1000.0);
+        timings["attributionMs"] = json!(attribution_started.elapsed().as_secs_f64() * 1000.0);
+        let mut pseudo_testing = None;
+        let mut comparison_ready = mutation_ready;
+        if mutate {
+            for (source, fact) in sources.iter_mut().zip(&facts) {
+                if let Ok(analysis) = fact {
+                    for (function, scope) in source["result"]["functions"]
+                        .as_array_mut()
+                        .unwrap()
+                        .iter_mut()
+                        .zip(&analysis.scopes)
+                    {
+                        let reason = scope.extreme_skip.or_else(|| {
+                            (mutation_ready && function["coverage"].as_f64() == Some(0.0))
+                                .then_some("zero-coverage")
+                        });
+                        function["pseudoTested"] = Value::Null;
+                        function["pseudoTestStatus"] = json!(if reason.is_some() {
+                            "not-applicable"
+                        } else {
+                            "unknown"
+                        });
+                        function["pseudoTestReason"] = json!(reason);
+                    }
+                }
+            }
+            progress.phase(format_args!("extreme mutation using source replacement"));
+            let mut measured = self.mutate(
+                &facts,
+                &baselines,
+                &evidence.0,
+                mutation_ready,
+                &progress,
+                MutationKind::Extreme { sources: &sources },
+            );
+            comparison_ready &= measured["complete"] == true;
+            commands_run += measured["jobsAttempted"].as_u64().unwrap();
+            commands_run += measured["workerBaselineJobs"].as_u64().unwrap();
+            for outcome in measured["outcomes"].as_array().unwrap() {
+                let source = sources
+                    .iter_mut()
+                    .find(|source| source["path"] == outcome["path"])
+                    .unwrap();
+                let function = &mut source["result"]["functions"]
+                    [outcome["localId"].as_u64().unwrap() as usize];
+                function["pseudoTested"] = outcome["pseudoTested"].clone();
+                function["pseudoTestStatus"] = json!(match outcome["pseudoTested"].as_bool() {
+                    Some(true) => "pseudo-tested",
+                    Some(false) => "checked",
+                    None => "unknown",
+                });
+            }
+            let functions = sources
+                .iter()
+                .filter_map(|source| source["result"]["functions"].as_array())
+                .flatten();
+            let mut pseudo_tested = 0;
+            let mut checked = 0;
+            let mut unknown = 0;
+            for function in functions {
+                match function["pseudoTestStatus"].as_str() {
+                    Some("pseudo-tested") => pseudo_tested += 1,
+                    Some("checked") => checked += 1,
+                    Some("unknown") => unknown += 1,
+                    _ => {}
+                }
+            }
+            measured.as_object_mut().unwrap().remove("score");
+            measured["pseudoTested"] = json!(pseudo_tested);
+            measured["checked"] = json!(checked);
+            measured["unknown"] = json!(unknown);
+            if unknown > 0 {
+                measured["complete"] = json!(false);
+            }
+            complete &= measured["complete"] == true;
+            pseudo_testing = Some(measured);
         }
         let mutation = if mutate {
             let measured = self.mutate(
                 &facts,
                 &baselines,
                 &evidence.0,
-                mutation_ready,
+                comparison_ready,
                 &progress,
-                switching,
+                MutationKind::Comparisons { switching },
             );
             complete &= measured["complete"] == true;
             commands_run += measured["jobsAttempted"].as_u64().unwrap();
@@ -1557,6 +1674,9 @@ impl CapturedProject {
         if let Some(mutation) = mutation {
             result["mutation"] = mutation;
         }
+        if let Some(pseudo_testing) = pseudo_testing {
+            result["pseudoTesting"] = pseudo_testing;
+        }
         progress.phase(format_args!("cleanup"));
         let cleanup_started = Instant::now();
         for directory in [evidence, self.directory] {
@@ -1566,6 +1686,7 @@ impl CapturedProject {
                 if mutate {
                     result["mutation"]["complete"] = json!(false);
                     result["mutation"]["score"] = Value::Null;
+                    result["pseudoTesting"]["complete"] = json!(false);
                 }
             }
         }
@@ -1646,7 +1767,7 @@ mod tests {
             Path::new("unused"),
             false,
             &progress,
-            false,
+            MutationKind::Comparisons { switching: false },
         );
         assert_eq!(result["planned"], 5);
         assert_eq!(result["jobsAttempted"], 0);
@@ -1833,7 +1954,10 @@ mod tests {
                 assert!(mutation["workerBaselines"][0]["cleanupError"].is_string());
                 assert_eq!(mutation["outcomes"][0]["verdict"], "not-run");
             } else {
-                assert_eq!(mutation["jobsAttempted"], 1);
+                assert_eq!(
+                    mutation["jobsAttempted"], 1,
+                    "switching={switching}, worker_baseline={worker_baseline}: {result}"
+                );
                 assert!(mutation["outcomes"][0]["setups"][0]["cleanupError"].is_string());
                 assert_eq!(mutation["outcomes"][0]["setups"][1]["state"], "not-run");
                 assert_eq!(mutation["outcomes"][1]["verdict"], "not-run");

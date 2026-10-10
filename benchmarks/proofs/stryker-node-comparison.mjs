@@ -411,7 +411,7 @@ function assertSeshatReport(report, workers) {
   const setup = result.setups[0];
   assert.equal(setup.typecheck.state, 'passed');
   assert.equal(setup.baseline.state, 'passed');
-  assert.equal(setup.coverage.state, 'not-requested');
+  assert.equal(setup.coverage.state, 'passed');
   assert.equal(setup.baseline.report.passed, NODE_WORKSPACE_EXPECTED.tests);
   const mutation = result.mutation;
   assert.ok(mutation, 'Seshat mutation result missing');
@@ -425,7 +425,8 @@ function assertSeshatReport(report, workers) {
   assert.equal(mutation.completed, 2);
   assert.equal(mutation.notRun, 0);
   assert.equal(mutation.unresolved, 0);
-  assert.equal(result.jobsAttempted, 2 + NODE_WORKSPACE_EXPECTED.mutants.length + workers - 1);
+  assert.equal(result.jobsAttempted, 3 + NODE_WORKSPACE_EXPECTED.mutants.length + workers - 1
+    + result.pseudoTesting.jobsAttempted + result.pseudoTesting.workerBaselineJobs);
   const normalized = (mutation.outcomes ?? []).map(({path, offset, original, replacement, verdict}) => ({
     path, offset, original, replacement, verdict,
   })).sort((left, right) => `${left.path}:${left.offset}:${left.replacement}`.localeCompare(`${right.path}:${right.offset}:${right.replacement}`));

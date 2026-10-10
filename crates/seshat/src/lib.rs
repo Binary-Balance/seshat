@@ -104,6 +104,9 @@ fn finish(mut value: Value) -> (Value, u8) {
             mutation["complete"] = json!(false);
             mutation["score"] = Value::Null;
         }
+        if let Some(pseudo_testing) = value.get_mut("pseudoTesting") {
+            pseudo_testing["complete"] = json!(false);
+        }
     }
     let status = if signal != 0 {
         #[cfg(unix)]

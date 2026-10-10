@@ -88,11 +88,12 @@ errors before capture. Help and version do not read configuration.
 | --- | --- | --- | --- |
 | `check` | Required typecheck and test baseline per setup | Fresh, required | All configured setups |
 | `crap` | Configured typecheck, test baseline per setup | Fresh, required | None |
-| `mutate` | Required typecheck and test baseline per setup | Not requested | All configured setups |
+| `mutate` | Required typecheck and test baseline per setup | Fresh, required for extreme mutation | All configured setups |
 
-Coverage configuration is still required for all commands, but `mutate` never
-executes the coverage command. It reports coverage as `not-requested` and omits
-function CRAP results. This does not permit skipping any mutation test setup.
+All commands collect fresh coverage. `mutate` uses statement coverage to skip
+zero-covered functions; its CRAP threshold remains not requested. `check` and
+`mutate` run extreme mutation before comparison mutation. Extreme bodies always
+use replacement, while the switching option applies to comparison mutants.
 `workers` remains a config setting; no command-line worker override is provided.
 
 Installed `check` and `mutate` accept `--experimental-switching`; `crap` rejects
@@ -103,6 +104,11 @@ process. The mutation report includes `preparedBaselines`,
 `preparedBaselineJobs`, `switchPreparationMs` and `preparedBaselineMs` so the
 extra work stays visible. The experiment does not typecheck transformed helpers;
 helper wrapping can affect TypeScript narrowing and runtime reflection.
+
+`node benchmarks/proofs/pseudo-tested.mjs` checks per-function flags, separate
+counts, empty and value-returning replacements, skipped functions, unknown
+coverage, original baseline failure and extreme timeouts or execution errors.
+The proof uses real Node tests and Istanbul collection in disposable copies.
 
 Preparation preserves leading hashbangs and directive prologues, including
 `"use strict"`. Both the CLI and proof `prepare` command restrict switching to
@@ -145,8 +151,8 @@ Original typecheck/baseline/coverage totals sum the sequential measured setup
 phases. Each setup also retains these three fields under `timings`. They include
 validation and receipt handling; coverage includes report reading and validation.
 Attribution includes producing the source-assessment rows. No attempted phase
-means null, including coverage/attribution in `mutate`. Failed or cancelled phases
-retain elapsed time, not a fabricated zero. Errors before runner-evidence
+means null. Failed or cancelled phases retain elapsed time, not a fabricated
+zero. Errors before runner-evidence
 preparation succeeds can still lack these phase measurements.
 
 Each attempted mutant gets `executionMs`, covering replacement, its setup jobs

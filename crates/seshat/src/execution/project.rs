@@ -911,7 +911,17 @@ mod tests {
                 "capture":["package.json","src","packages","tests","node_modules"],
                 "setups":[{"name":"unit","runner":"node","cwd":".",
                     "test":["node","-e","require('node:fs').writeFileSync('COMMAND-RAN', 'bad')"],
-                    "coverage":{"command":["node","coverage.mjs"],"report":"coverage/coverage-final.json"}}]
+                    "coverage":{"command":["node","-e",r#"
+                        const fs = require('fs'), path = require('path'), report = {};
+                        for (const file of ['src/calc.ts','src/nested/render.tsx','packages/rules/index.ts']) {
+                            const source = fs.readFileSync(file, 'utf8'), name = path.resolve(file);
+                            const start = source.indexOf('=>') + 3, end = source.indexOf(';', start);
+                            report[name] = {path:name,statementMap:{0:{start:{line:1,column:start},end:{line:1,column:end}}},s:{0:1},branchMap:{},b:{}};
+                        }
+                        fs.mkdirSync('coverage', {recursive:true});
+                        fs.writeFileSync(process.env.SESHAT_COVERAGE_REPORT, JSON.stringify(report));
+                        fs.writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({version:1,executionId:process.env.SESHAT_EXECUTION_ID,node:process.versions.node,complete:true,passed:1,failed:0,errors:0}));
+                    "#],"report":"coverage/coverage-final.json"}}]
             });
             Self {
                 _directory: directory,
@@ -1407,6 +1417,7 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn windows_capture_inherits_acl_and_respects_denied_creation() {
+        let _lock = super::super::platform::test_spawn_lock().lock().unwrap();
         let fixture = Fixture::new();
         let captured = fixture.capture().unwrap();
         let powershell = |path: &Path, script: &str| {
@@ -1617,6 +1628,8 @@ mod tests {
 
     #[test]
     fn copied_workspace_resolves_with_real_node() {
+        #[cfg(windows)]
+        let _lock = super::super::platform::test_spawn_lock().lock().unwrap();
         let fixture = Fixture::new();
         let captured = fixture.capture().unwrap();
         let child = std::process::Command::new("node")
