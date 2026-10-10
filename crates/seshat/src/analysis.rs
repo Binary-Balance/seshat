@@ -204,6 +204,7 @@ pub struct Analysis {
     cognitive_owner: Option<usize>,
     cognitive_depth: u32,
     cognitive_stack: Vec<(Option<usize>, u32)>,
+    cognitive_initializers: Vec<(Span, usize)>,
     cognitive_bodies: BTreeSet<(u32, u32)>,
     else_ifs: BTreeSet<u32>,
     logical_children: BTreeSet<u32>,
@@ -233,6 +234,14 @@ impl<'a> Visit<'a> for Analysis {
         self.cognitive_stack
             .push((self.cognitive_owner, self.cognitive_depth));
         let span = node.span();
+        if self
+            .cognitive_initializers
+            .last()
+            .is_some_and(|(initializer, _)| *initializer == span)
+        {
+            self.cognitive_owner = Some(self.cognitive_initializers.pop().unwrap().1);
+            self.cognitive_depth = 0;
+        }
         if self.cognitive_bodies.remove(&(span.start, span.end)) {
             self.cognitive_depth += 1;
         }
@@ -630,8 +639,14 @@ impl<'a> Visit<'a> for Analysis {
             _ => None,
         };
         if let Some(scope) = scope {
-            self.cognitive_owner = Some(self.scopes.len());
-            self.cognitive_depth = 0;
+            if matches!(node, AstKind::PropertyDefinition(_)) {
+                // Computed keys and decorators execute in the enclosing scope.
+                self.cognitive_initializers
+                    .push((scope.span, self.scopes.len()));
+            } else {
+                self.cognitive_owner = Some(self.scopes.len());
+                self.cognitive_depth = 0;
+            }
             self.scopes.push(scope);
         }
         self.cognitive_node(node);
@@ -840,6 +855,59 @@ fn cognitive_complexity_owns_nested_functions_separately() {
     );
     assert_eq!(unmeasured["functions"][0]["status"], "unknown");
     assert_eq!(unmeasured["functions"][0]["cognitiveComplexity"], 1);
+}
+
+#[test]
+fn cognitive_class_keys_stay_in_the_enclosing_scope() {
+    for (source, expected) in [
+        (
+            "function outer() { class C { [a ? b : c] = value; } }",
+            vec![1, 0],
+        ),
+        (
+            "function outer() { class C { static [a ? b : c] = value; } }",
+            vec![1, 0],
+        ),
+        (
+            "function outer() { if(a) { class C { [a ? b : c] = a ? b : c; } } }",
+            vec![3, 1],
+        ),
+        (
+            "function outer() { class C { @decorate(a ? b : c) field = a ? b : c; } }",
+            vec![1, 1],
+        ),
+        (
+            "function outer() { class C { [(function key() { if(a) return b; return c; })()] = a ? b : c; } }",
+            vec![0, 1, 1],
+        ),
+        (
+            "function outer() { class C { [a ? b : c]() { if(a) work(); } } }",
+            vec![1, 1],
+        ),
+        (
+            "function outer() { class C { field = class D { [a ? b : c] = a ? b : c; }; } }",
+            vec![0, 1, 1],
+        ),
+        (
+            "function outer() { class C { static { if(a) work(); } } }",
+            vec![0, 1],
+        ),
+        (
+            "function outer() { class C { [outer()] = value; } }",
+            vec![1, 0],
+        ),
+    ] {
+        let analysis = Analysis::inspect("fixture.ts", source).unwrap();
+        assert_eq!(
+            analysis
+                .scopes
+                .iter()
+                .map(|scope| scope.cognitive_complexity)
+                .collect::<Vec<_>>(),
+            expected,
+            "{source}"
+        );
+    }
 }
 
 #[test]

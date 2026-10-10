@@ -402,6 +402,15 @@ assert.equal(branchThreshold.quality.checks[0].actual, 2.5);
 assert.equal(branchThreshold.quality.checks[0].state, 'failed');
 configure({...config, thresholds: {maxCrap: 2.5}});
 assert.equal(json('branch-threshold-equality', 'crap').quality.checks[0].state, 'passed');
+// The computed key executes in adult, before the field initializer's scope.
+originals['subject.ts'] = `export function adult(age: number) {
+  class C {
+    // @ts-ignore
+    [(age >= 18 ? 'adult' : 'child')] = true;
+  }
+  return Object.keys(new C())[0] === 'adult';
+}\n`;
+writeFileSync(join(project, 'subject.ts'), originals['subject.ts']);
 for (const command of ['check','crap','mutate']) {
   configure({...config, thresholds:{maxCognitiveComplexity:1}});
   const equality = json(`cognitive-equality-${command}`, command);
@@ -410,7 +419,10 @@ for (const command of ['check','crap','mutate']) {
   const row = equality.result.sources[0].result.functions[0];
   assert.equal(row.cognitiveComplexity, 1);
   assert.equal(row.complexity, 2);
-  configure({...config, thresholds:{maxCognitiveComplexity:0.9999}});
+  const field = equality.result.sources[0].result.functions.find(row => row.status === 'complexity-only');
+  assert.equal(field.cognitiveComplexity, 0);
+  assert.equal(field.complexity, 1);
+  configure({...config, thresholds:{maxCognitiveComplexity:0}});
   assert.equal(json(`cognitive-failure-${command}`, command, 1).quality.checks[0].state, 'failed');
 }
 

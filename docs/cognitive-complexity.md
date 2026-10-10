@@ -51,7 +51,8 @@ JSX markup adds nothing. Expressions inside JSX use the same rules, so
 increments. Type annotations add nothing.
 
 Implicit class field initialisers and static blocks retain scores in their
-function rows but are excluded from the function threshold. Module-level flow
+function rows but are excluded from the function threshold. Computed field keys
+and decorator expressions belong to the enclosing function. Module-level flow
 does not increase function scores.
 
 ## Threshold
