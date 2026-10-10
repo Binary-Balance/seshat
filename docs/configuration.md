@@ -545,9 +545,10 @@ passes. They remain valid original typecheck commands.
 Seshat runs a bounded metadata helper in each setup's captured `cwd` with the
 same Node executable and installed TypeScript package. TypeScript parses the
 original compiler arguments, JSONC configuration, relative and package `extends`,
-multiple inheritance and command-line overrides. Capture the configuration and
-all inherited configuration inputs. Configuration outside the captured project
-or missing inputs reports `unknown` with a diagnostic.
+multiple inheritance and command-line overrides. Capture the configuration,
+inherited configuration inputs and any response files, including nested ones.
+Configuration or response files outside the captured project, or missing inputs,
+report `unknown` with a diagnostic.
 
 With explicit source arguments, strictness comes from command-line options and
 compiler defaults, rather than an unrelated `tsconfig.json`. TypeScript 6

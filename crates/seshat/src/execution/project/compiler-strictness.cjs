@@ -23,7 +23,8 @@ try {
     return relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
   };
   const fileExists = filename => captured(filename) && ts.sys.fileExists(filename);
-  const parsed = ts.parseCommandLine(context.args, ts.sys.readFile);
+  const readFile = filename => captured(filename) ? ts.sys.readFile(filename) : undefined;
+  const parsed = ts.parseCommandLine(context.args, readFile);
   diagnostics.push(...parsed.errors);
   if (parsed.options.watch || parsed.options.build) throw new Error('watch and build commands are not supported for strictness reporting');
   let config;
@@ -50,8 +51,7 @@ try {
     if (result.config.startsWith('../') || path.isAbsolute(result.config)) {
       throw new Error('configuration is outside the captured project');
     }
-    const host = { ...ts.sys, fileExists,
-      readFile: filename => captured(filename) ? ts.sys.readFile(filename) : undefined,
+    const host = { ...ts.sys, fileExists, readFile,
       onUnRecoverableConfigFileDiagnostic: diagnostic => diagnostics.push(diagnostic) };
     const configured = ts.getParsedCommandLineOfConfigFile(config, options, host);
     if (configured) {

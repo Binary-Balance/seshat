@@ -32,8 +32,9 @@ The proof dependencies are development tools, not proposed Seshat runtime
 dependencies. Do not run untrusted test suites with this experimental executor.
 
 The compiler strictness proof checks JSONC, relative and package inheritance,
-multiple `extends`, command-line overrides, omitted defaults, setup working
-directories and unavailable configuration. It uses installed TypeScript without
+multiple `extends`, command-line overrides, captured and nested response files,
+rejection of external response files, omitted defaults, setup working directories
+and unavailable configuration. It uses installed TypeScript without
 creating a type checker. Pass another installed `typescript/bin/tsc` as its first
 argument to check that compiler's defaults and supported options.
 

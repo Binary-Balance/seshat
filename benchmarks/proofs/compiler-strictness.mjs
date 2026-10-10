@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { resolve, join, dirname } from 'node:path';
+import { resolve, join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -11,6 +11,7 @@ const compiler = process.argv[2] || require.resolve('typescript/bin/tsc');
 const ts = require(join(dirname(dirname(compiler)), 'lib/typescript.js'));
 const helper = fileURLToPath(new URL('../../crates/seshat/src/execution/project/compiler-strictness.cjs', import.meta.url));
 const root = mkdtempSync(join(tmpdir(), 'seshat-strictness-'));
+const outside = `${root}-outside.args`;
 const write = (name, contents) => {
   const filename = join(root, name);
   mkdirSync(dirname(filename), { recursive: true });
@@ -51,6 +52,23 @@ try {
   const search = inspect([], cwd);
   assert.equal(search.configSource, 'search');
   assert.equal(search.config, inherited.config);
+
+  write('packages/rules/options.args', '--project . --strict --noImplicitAny true');
+  write('packages/rules/nested.args', '@options.args');
+  for (const response of ['options.args', 'nested.args']) {
+    const captured = inspect([`@${response}`], cwd);
+    assert.equal(captured.state, 'known', captured.error);
+    assert.equal(captured.config, inherited.config);
+    assert.equal(captured.options.strict, true);
+    assert.equal(captured.options.noImplicitAny, true);
+  }
+  writeFileSync(outside, '--project . --strict');
+  for (const response of [relative(cwd, outside), outside]) {
+    const uncaptured = inspect([`@${response}`], cwd);
+    assert.equal(uncaptured.state, 'unknown', `uncaptured response: ${response}`);
+    assert.equal(uncaptured.options, null);
+    assert.match(uncaptured.error, /read file/i);
+  }
 
   write('packages/rules/tsconfig.json', '{"files":["rule.ts"]}');
   const defaults = inspect(['-p', '.'], cwd);
@@ -110,4 +128,5 @@ try {
   console.log(`compiler strictness proof passed with TypeScript ${ts.version}, ${runs} cases`);
 } finally {
   rmSync(root, { recursive: true, force: true });
+  rmSync(outside, { force: true });
 }
