@@ -307,7 +307,8 @@ Each function row has a `typeSafety` object of non-negative integer counts:
 
 Escapes belong to the smallest enclosing function or implicit scope. Nested
 functions do not inflate their parent's counts. Functions assigned directly to
-variables or properties also own their leading suppressions, as do methods.
+variables or properties, methods and default-exported functions also own their
+leading suppressions, including parenthesized function expressions.
 Strings, templates, ordinary comments mentioning directives and `satisfies`
 expressions are not escapes.
 Counts describe syntax, including a suppression's existence; they do not prove
@@ -319,7 +320,9 @@ Each suppression has `kind`, byte offsets `start` and `end`, `owner`, the owning
 function row's start offset or `null`, and `fileLevel`. A leading `@ts-nocheck`
 before the first code token has `fileLevel: true` and stays unowned. It is never
 hidden in only the first function's counts. Counts do not resolve a later
-`@ts-check` override. Block comments do not count as `@ts-nocheck` pragmas.
+`@ts-check` override. Directive prefixes use JavaScript whitespace. `@ts-nocheck`
+accepts an empty suffix, whitespace or a colon separator, as TypeScript does.
+Block comments do not count as `@ts-nocheck` pragmas.
 
 Each setup has `compilerStrictness`:
 

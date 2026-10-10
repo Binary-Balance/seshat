@@ -71,6 +71,13 @@ fn initialized_function(expression: &Expression<'_>) -> Option<u32> {
     }
 }
 
+// TypeScript's directive regexes use JavaScript whitespace, not Rust's Unicode set.
+fn javascript_whitespace(character: char) -> bool {
+    matches!(character, '\u{0009}'..='\u{000d}' | ' ' | '\u{00a0}' | '\u{1680}'
+        | '\u{2000}'..='\u{200a}' | '\u{2028}' | '\u{2029}' | '\u{202f}'
+        | '\u{205f}' | '\u{3000}' | '\u{feff}')
+}
+
 #[derive(Debug)]
 pub struct Scope {
     pub name: String,
@@ -262,10 +269,7 @@ impl<'a> Visit<'a> for Analysis {
                 ExportDefaultDeclarationKind::FunctionDeclaration(function) => {
                     Some(function.span.start)
                 }
-                ExportDefaultDeclarationKind::ArrowFunctionExpression(function) => {
-                    Some(function.span.start)
-                }
-                _ => None,
+                expression => expression.as_expression().and_then(initialized_function),
             },
             AstKind::VariableDeclaration(declaration) => declaration
                 .declarations
@@ -725,16 +729,19 @@ impl Analysis {
             let content = &source[span.start as usize..span.end as usize];
             // TypeScript line directives start the comment; block directives use its last line.
             let line = if comment.is_line() {
-                content.strip_prefix('/').unwrap_or(content).trim_start()
+                content
+                    .strip_prefix('/')
+                    .unwrap_or(content)
+                    .trim_start_matches(javascript_whitespace)
             } else {
                 // Keep delimiters before whitespace to match TypeScript's directive prefix.
                 source[comment.span.start as usize..comment.span.end as usize]
                     .split(['\r', '\n', '\u{2028}', '\u{2029}'])
                     .next_back()
                     .unwrap_or("")
-                    .trim_start()
+                    .trim_start_matches(javascript_whitespace)
                     .trim_start_matches(['/', '*'])
-                    .trim_start()
+                    .trim_start_matches(javascript_whitespace)
             };
             let directive = [
                 ("@ts-ignore", Escape::Ignore),
@@ -749,7 +756,9 @@ impl Analysis {
                             .get(..name.len())
                             .is_some_and(|prefix| prefix.eq_ignore_ascii_case(name))
                         && line.get(name.len()..).is_some_and(|rest| {
-                            rest.is_empty() || rest.starts_with(char::is_whitespace)
+                            rest.is_empty()
+                                || rest.starts_with(':')
+                                || rest.starts_with(javascript_whitespace)
                         })
                 } else {
                     line.starts_with(name)
@@ -1206,6 +1215,138 @@ export const exported = (value: number = "wrong"): number => value;
     );
     assert_eq!(findings["unowned"]["tsIgnore"], 0);
     assert_eq!(findings["unowned"]["tsExpectError"], 0);
+}
+
+#[test]
+fn type_safety_assigns_leading_suppressions_to_default_export_functions() {
+    for expression in [
+        r#"(value: number = "wrong"): number => value"#,
+        r#"((value: number = "wrong"): number => value)"#,
+        r#"(((value: number = "wrong"): number => value))"#,
+        r#"(function(value: number = "wrong"): number { return value; })"#,
+        r#"function declared(value: number = "wrong"): number { return value; }"#,
+    ] {
+        for (kind, field) in [
+            ("@ts-ignore", "tsIgnore"),
+            ("@ts-expect-error", "tsExpectError"),
+        ] {
+            let source = format!("// {kind}\nexport default {expression};");
+            let analysis = Analysis::inspect("source.ts", &source).unwrap();
+            let findings = analysis.type_safety();
+            let scopes = analysis.json()["scopes"].as_array().unwrap().clone();
+            assert_eq!(scopes.len(), 1, "{source}");
+            assert_eq!(findings["suppressions"].as_array().unwrap().len(), 1);
+            assert_eq!(
+                findings["suppressions"][0]["owner"], scopes[0]["start"],
+                "{source}"
+            );
+            assert_eq!(findings["suppressions"][0]["fileLevel"], false);
+            assert_eq!(scopes[0]["typeSafety"][field], 1, "{source}");
+            assert_eq!(findings["unowned"][field], 0, "{source}");
+        }
+    }
+}
+
+#[test]
+fn type_safety_nocheck_uses_typescript_pragma_separators() {
+    for (suffix, count) in [
+        ("", 1),
+        (": temporary", 1),
+        ("::", 1),
+        (" temporary", 1),
+        ("\t", 1),
+        ("\u{feff}temporary", 1),
+        ("er", 0),
+        ("!", 0),
+        ("-temporary", 0),
+        ("/", 0),
+        ("\u{0085}temporary", 0),
+    ] {
+        let source = format!(
+            "// @ts-nocheck{suffix}\nfunction f(value: number = \"wrong\") {{ return value; }}"
+        );
+        let analysis = Analysis::inspect("source.ts", &source).unwrap();
+        let findings = analysis.type_safety();
+        assert_eq!(
+            findings["suppressions"].as_array().unwrap().len(),
+            count,
+            "{source}"
+        );
+        assert_eq!(findings["unowned"]["tsNocheck"], count, "{source}");
+        assert_eq!(analysis.json()["scopes"][0]["typeSafety"]["tsNocheck"], 0);
+        if count != 0 {
+            assert_eq!(findings["suppressions"][0]["fileLevel"], true);
+            assert_eq!(findings["suppressions"][0]["owner"], Value::Null);
+        }
+    }
+}
+
+#[test]
+fn type_safety_directives_use_javascript_whitespace() {
+    for (prefix, count) in [
+        ("\t", 1),
+        ("\u{000b}", 1),
+        ("\u{000c}", 1),
+        (" ", 1),
+        ("\u{00a0}", 1),
+        ("\u{1680}", 1),
+        ("\u{2000}", 1),
+        ("\u{2001}", 1),
+        ("\u{2002}", 1),
+        ("\u{2003}", 1),
+        ("\u{2004}", 1),
+        ("\u{2005}", 1),
+        ("\u{2006}", 1),
+        ("\u{2007}", 1),
+        ("\u{2008}", 1),
+        ("\u{2009}", 1),
+        ("\u{200a}", 1),
+        ("\u{202f}", 1),
+        ("\u{205f}", 1),
+        ("\u{3000}", 1),
+        ("\u{feff}", 1),
+        ("\u{0085}", 0),
+        ("\u{180e}", 0),
+        ("\u{200b}", 0),
+    ] {
+        for comment in [
+            format!("// {prefix}@ts-ignore"),
+            format!("/// {prefix}@ts-expect-error: reason"),
+            format!("/* {prefix}@ts-ignore */"),
+            format!("/* explanation\n{prefix}* @ts-expect-error */"),
+            format!("// {prefix}@ts-nocheck"),
+        ] {
+            let source =
+                format!("{comment}\nfunction f(value: number = \"wrong\") {{ return value; }}");
+            let analysis = Analysis::inspect("source.ts", &source).unwrap();
+            assert_eq!(
+                analysis.type_safety()["suppressions"]
+                    .as_array()
+                    .unwrap()
+                    .len(),
+                count,
+                "{comment:?}"
+            );
+        }
+    }
+    for comment in [
+        "// @ts-ignore!",
+        "// @ts-ignorex",
+        "// @ts-expect-error:",
+        "// @ts-expect-errorx",
+    ] {
+        let source =
+            format!("{comment}\nfunction f(value: number = \"wrong\") {{ return value; }}");
+        let analysis = Analysis::inspect("source.ts", &source).unwrap();
+        assert_eq!(
+            analysis.type_safety()["suppressions"]
+                .as_array()
+                .unwrap()
+                .len(),
+            1,
+            "{comment}"
+        );
+    }
 }
 
 #[test]
