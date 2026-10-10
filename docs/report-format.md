@@ -136,7 +136,7 @@ The string is diagnostic evidence. A source `result.complete: false` does not
 make a partial score complete, and report `complete` remains false when an
 in-scope source cannot be measured.
 
-Each `functions` row has these fields:
+Function rows produced by coverage attribution have these fields:
 
 | Field | Meaning |
 | --- | --- |
@@ -155,6 +155,7 @@ Each `functions` row has these fields:
 | `pseudoTested` | Additive boolean or `null` for `check`/`mutate`. True when an extreme replacement survives with reliable positive statement coverage; false when it is killed with that coverage; otherwise null. |
 | `pseudoTestStatus` | `pseudo-tested`, `checked`, `unknown` or `not-applicable`, for `check`/`mutate`. |
 | `pseudoTestReason` | Skip reason `empty`, `constructor`, `accessor`, `generator`, `implicit-scope` or `zero-coverage`; otherwise `null`, for `check`/`mutate`. |
+| `typeSafety` | Syntax escape counts described under [type-safety findings](#type-safety-findings). |
 
 `measured` means valid coverage supports CRAP for a non-empty ordinary function.
 `unknown` means required coverage is missing or unreliable. When only branch
@@ -283,6 +284,72 @@ zero-mutant complete result has `score: null`, meaning not applicable, not
 computed against `mutationWallMs`; `workerTimeMs` sums returned mutant attempt
 durations; `slowestExecutions` contains at most five `{id,path,executionMs,verdict}`
 rows. These measurements can overlap under parallel workers.
+
+## Type-safety findings
+
+These fields are additive under schema version 1. Syntax counts assess only the
+selected source, including test files only when explicitly selected. Counts are
+available wherever source parsing succeeded, even if coverage or an original
+job failed. All commands retain counts in their function measurement rows,
+including rows with unknown coverage.
+
+Each function row has a `typeSafety` object of non-negative integer counts:
+
+| Field | Meaning |
+| --- | --- |
+| `explicitAny` | `any` type keywords, including signatures and generic arguments. |
+| `typeAssertions` | Individual `as T` and `<T>x` assertions, excluding const assertions. |
+| `doubleAssertions` | Consecutive assertion pairs, such as `x as unknown as T`. These also contribute two individual assertions. A chain of three contributes two pairs. |
+| `nonNullAssertions` | Expression assertions such as `x!`, excluding definite assignment declarations. |
+| `tsIgnore` | Directive comments starting with `@ts-ignore`. |
+| `tsExpectError` | Directive comments starting with `@ts-expect-error`. |
+| `tsNocheck` | Directive comments starting with `@ts-nocheck`. |
+
+Escapes belong to the smallest enclosing function or implicit scope. Nested
+functions do not inflate their parent's counts. Functions assigned directly to
+variables or properties, methods and default-exported functions also own their
+leading suppressions, including parenthesized function expressions.
+Strings, templates, ordinary comments mentioning directives and `satisfies`
+expressions are not escapes.
+Counts describe syntax, including a suppression's existence; they do not prove
+that a directive suppressed an error or that a double assertion changed a type.
+
+Each `sources[].result.typeSafety` has `unowned`, the same count object for
+syntax outside function rows, and `suppressions`, an array of comment locations.
+Each suppression has `kind`, byte offsets `start` and `end`, `owner`, the owning
+function row's start offset or `null`, and `fileLevel`. A leading `@ts-nocheck`
+before the first code token has `fileLevel: true` and stays unowned. It is never
+hidden in only the first function's counts. Counts do not resolve a later
+`@ts-check` override. Directive prefixes use JavaScript whitespace. `@ts-nocheck`
+accepts an empty suffix, whitespace or a colon separator, as TypeScript does.
+Block comments do not count as `@ts-nocheck` pragmas.
+
+Each setup has `compilerStrictness`:
+
+| Field | Meaning |
+| --- | --- |
+| `state` | `known` or `unknown`. Unknown findings do not change run completeness. |
+| `compilerVersion` | Loaded TypeScript version, or `null` before it is available. |
+| `config` | Captured project-relative config path, or `null` for direct source arguments or unavailable configuration. |
+| `configSource` | `project`, `search`, `command-line`, or `null` when unavailable. |
+| `options` | Effective boolean options, or `null` when unknown. An unsupported option has a `null` value. |
+| `disabled` | Supported checking options that are false, or `null` when unknown. |
+| `unsupported` | Named options absent in this compiler, kept separate from disabled options. |
+| `enabledBypassOptions` | Enabled `noCheck` and `skipLibCheck` options, or `null` when unknown. |
+| `error` | Diagnostic text for unknown findings, otherwise `null`. |
+| `job` | Optional bounded execution evidence when the metadata helper ran. |
+
+`options` includes `strict`, every strict-mode member declared by the compiler,
+`alwaysStrict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`,
+`noImplicitOverride`, `noPropertyAccessFromIndexSignature`, `noCheck` and
+`skipLibCheck`. Defaults come from the installed compiler, including differences
+between TypeScript versions. The helper parses configuration without creating a
+type checker. It reports no inferred `any` or combined risk score.
+
+Attempted helper jobs contribute to `jobsAttempted`. Their elapsed time appears
+as `compilerStrictnessMs` in setup `timings` and aggregate `phaseTimings`; an
+unattempted helper has `null` timing. See the
+[configuration guide](configuration.md#type-safety-findings) for supported commands.
 
 ## Quality thresholds
 
