@@ -1417,6 +1417,7 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn windows_capture_inherits_acl_and_respects_denied_creation() {
+        let _lock = super::super::platform::test_spawn_lock().lock().unwrap();
         let fixture = Fixture::new();
         let captured = fixture.capture().unwrap();
         let powershell = |path: &Path, script: &str| {
@@ -1627,6 +1628,8 @@ mod tests {
 
     #[test]
     fn copied_workspace_resolves_with_real_node() {
+        #[cfg(windows)]
+        let _lock = super::super::platform::test_spawn_lock().lock().unwrap();
         let fixture = Fixture::new();
         let captured = fixture.capture().unwrap();
         let child = std::process::Command::new("node")
