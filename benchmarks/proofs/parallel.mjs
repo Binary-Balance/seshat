@@ -127,7 +127,7 @@ async function check(name,workers,mode='normal',signal){
       assert.deepEqual(result.mutation.outcomes.map(m=>m.verdict),['survived','killed','survived','killed']);
       assert.equal(result.mutation.score,50);assert.equal(result.mutation.jobsAttempted,8);
       assert.deepEqual(result.sources,[{path:'subject.ts',result:{complete:true,functions:[{
-        complexity:1,coverage:1,covered:1,crap:1,name:'adult',start:7,status:'measured',total:1,
+        complexity:1,cognitiveComplexity:0,coverage:1,covered:1,crap:1,name:'adult',start:7,status:'measured',total:1,
         branchCovered:0,branchTotal:0,branchCoverage:null,coverageBasis:'statement',
         pseudoTested:false,pseudoTestStatus:'checked',pseudoTestReason:null,
         typeSafety:{explicitAny:0,typeAssertions:0,doubleAssertions:0,nonNullAssertions:0,tsIgnore:0,tsExpectError:0,tsNocheck:0}
