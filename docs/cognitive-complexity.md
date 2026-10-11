@@ -52,8 +52,10 @@ increments. Type annotations add nothing.
 
 Implicit class field initialisers and static blocks retain scores in their
 function rows but are excluded from the function threshold. Computed field keys
-and decorator expressions belong to the enclosing function. Module-level flow
-does not increase function scores.
+and decorator expressions, including method and constructor parameter decorators,
+belong to the enclosing function. Parameter defaults and function bodies retain
+the function's own score and depth. Module-level flow does not increase function
+scores.
 
 ## Threshold
 

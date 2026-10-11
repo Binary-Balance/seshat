@@ -204,6 +204,7 @@ pub struct Analysis {
     cognitive_owner: Option<usize>,
     cognitive_depth: u32,
     cognitive_stack: Vec<(Option<usize>, u32)>,
+    cognitive_parameter_decorators: BTreeMap<u32, (Option<usize>, u32)>,
     cognitive_initializers: Vec<(Span, usize)>,
     cognitive_bodies: BTreeSet<(u32, u32)>,
     else_ifs: BTreeSet<u32>,
@@ -234,6 +235,13 @@ impl<'a> Visit<'a> for Analysis {
         self.cognitive_stack
             .push((self.cognitive_owner, self.cognitive_depth));
         let span = node.span();
+        if let AstKind::Decorator(decorator) = node
+            && let Some(context) = self
+                .cognitive_parameter_decorators
+                .remove(&decorator.span.start)
+        {
+            (self.cognitive_owner, self.cognitive_depth) = context;
+        }
         if self
             .cognitive_initializers
             .last()
@@ -250,6 +258,19 @@ impl<'a> Visit<'a> for Analysis {
                 *self.bindings.entry(id.name.to_string()).or_default() += 1;
             }
             AstKind::Function(f) if f.body.is_some() => {
+                // Parameter decorators execute when the enclosing scope defines the class.
+                for decorator in f
+                    .params
+                    .items
+                    .iter()
+                    .flat_map(|p| &p.decorators)
+                    .chain(f.params.rest.iter().flat_map(|p| &p.decorators))
+                {
+                    self.cognitive_parameter_decorators.insert(
+                        decorator.span.start,
+                        (self.cognitive_owner, self.cognitive_depth),
+                    );
+                }
                 if let Some(id) = &f.id {
                     let visibility = if f.r#type == FunctionType::FunctionDeclaration {
                         *self.lexical_scopes.last().unwrap()
@@ -895,6 +916,63 @@ fn cognitive_class_keys_stay_in_the_enclosing_scope() {
         (
             "function outer() { class C { [outer()] = value; } }",
             vec![1, 0],
+        ),
+    ] {
+        let analysis = Analysis::inspect("fixture.ts", source).unwrap();
+        assert_eq!(
+            analysis
+                .scopes
+                .iter()
+                .map(|scope| scope.cognitive_complexity)
+                .collect::<Vec<_>>(),
+            expected,
+            "{source}"
+        );
+    }
+}
+
+#[test]
+fn cognitive_parameter_decorators_stay_in_the_enclosing_scope() {
+    for (source, expected) in [
+        (
+            "function outer(flag: boolean) { if(flag) { class C { method(@decorate(flag ? 'yes' : 'no') value: number) { return value; } } } }",
+            vec![3, 0],
+        ),
+        (
+            "function outer(flag: boolean) { if(flag) { class C { constructor(@decorate(flag ? 'yes' : 'no') value: number) { void value; } } } }",
+            vec![3, 0],
+        ),
+        (
+            "function outer() { if(a) { class C { method(@decorate(a ? b : c) ...values: number[]) {} } } }",
+            vec![3, 0],
+        ),
+        (
+            "function outer() { while(a) { if(b) { class C { method(@decorate(a ? b : c) value) {} } } } }",
+            vec![6, 0],
+        ),
+        (
+            "function outer() { if(a) { class C { method(@decorate(a ? b : c) value = a ? b : c) { if(a) work(); } } } if(a) work(); }",
+            vec![4, 2],
+        ),
+        (
+            "function outer() { if(a) { class C { constructor(@decorate(a ? b : c) public value = a ? b : c) { if(a) work(); } } } if(a) work(); }",
+            vec![4, 2],
+        ),
+        (
+            "function outer() { class C { field = (() => { if(a) { class D { method(@decorate(a ? b : c) value = a ? b : c) { if(a) work(); } } } return a ? b : c; })() || fallback; } }",
+            vec![0, 1, 4, 2],
+        ),
+        (
+            "function outer() { if(a) { class C { method(@decorate(() => { if(a) work(); }) value = a ? b : c) { if(a) work(); } } } }",
+            vec![1, 2, 1],
+        ),
+        (
+            "function outer() { class C { method(@decorate(outer()) value) {} constructor(@decorate(outer()) value) {} } }",
+            vec![1, 0, 0],
+        ),
+        (
+            "class C { method(@decorate(a ? b : c) value = a ? b : c) { if(a) work(); } }",
+            vec![2],
         ),
     ] {
         let analysis = Analysis::inspect("fixture.ts", source).unwrap();
