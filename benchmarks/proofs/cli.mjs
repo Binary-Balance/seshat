@@ -426,6 +426,36 @@ for (const command of ['check','crap','mutate']) {
   assert.equal(json(`cognitive-failure-${command}`, command, 1).quality.checks[0].state, 'failed');
 }
 
+// Static-block bindings must not hide globals used in another static block.
+originals['subject.ts'] = `export class C {
+  static first: string;
+  static second: number;
+  static {
+    const Number = () => String();
+    C.first = Number();
+  }
+  static {
+    const String = () => Number();
+    C.second = String();
+  }
+}\n`;
+originals['test.mjs'] = "import {test} from 'node:test';import assert from 'node:assert/strict';import {C} from './subject.ts';test('static block globals',()=>{assert.equal(C.first,'');assert.equal(C.second,0);});";
+for (const name of ['subject.ts','test.mjs']) writeFileSync(join(project, name), originals[name]);
+const staticBlocks = structuredClone(config);
+staticBlocks.thresholds = {maxCognitiveComplexity:0};
+staticBlocks.setups[0].typecheck.push('--target','es2022');
+configure(staticBlocks);
+const blockThreshold = json('cognitive-static-block-bindings', 'crap');
+const blockResult = blockThreshold.result.sources[0].result;
+assert.deepEqual(blockResult.functions.map(row => row.cognitiveComplexity), [0,0,0,0]);
+assert.deepEqual(blockResult.functions.map(row => row.complexity), [1,1,1,1]);
+assert.deepEqual(blockResult.functions.map(row => row.status), ['complexity-only','measured','complexity-only','measured']);
+assert.deepEqual(blockResult.problems, []);
+assert.equal(blockThreshold.quality.checks[0].state, 'passed');
+assert.equal(blockThreshold.quality.checks[0].actual, 0);
+assert.equal(blockThreshold.result.setups[0].compilerStrictness.options.strict, true);
+for (const phase of ['typecheck','baseline','coverage']) assert.equal(blockThreshold.result.setups[0][phase].state, 'passed');
+
 const resultPath = process.env.SESHAT_PROOF_OUTPUT ? resolve(process.env.SESHAT_PROOF_OUTPUT) : join(work, 'result.json');
 mkdirSync(dirname(resultPath), {recursive: true});
 writeFileSync(resultPath, JSON.stringify(results, null, 2) + '\n');

@@ -325,7 +325,14 @@ impl<'a> Visit<'a> for Analysis {
             _ => {}
         }
         if lexical_boundary(node) {
-            self.lexical_scopes.push(span);
+            // Case bindings are not visible while evaluating the discriminant.
+            let visibility = match node {
+                AstKind::SwitchStatement(statement) => {
+                    Span::new(statement.discriminant.span().end, span.end)
+                }
+                _ => span,
+            };
+            self.lexical_scopes.push(visibility);
         }
         match node {
             AstKind::Function(function) => {
@@ -794,6 +801,7 @@ fn lexical_boundary(node: AstKind<'_>) -> bool {
         node,
         AstKind::Program(_)
             | AstKind::BlockStatement(_)
+            | AstKind::StaticBlock(_)
             | AstKind::FunctionBody(_)
             | AstKind::ForStatement(_)
             | AstKind::ForInStatement(_)
@@ -1067,6 +1075,75 @@ fn cognitive_parameter_decorators_stay_in_the_enclosing_scope() {
         (
             "class C { method(@decorate(a ? b : c) value = a ? b : c) { if(a) work(); } }",
             vec![2],
+        ),
+    ] {
+        let analysis = Analysis::inspect("fixture.ts", source).unwrap();
+        assert_eq!(
+            analysis
+                .scopes
+                .iter()
+                .map(|scope| scope.cognitive_complexity)
+                .collect::<Vec<_>>(),
+            expected,
+            "{source}"
+        );
+    }
+}
+
+#[test]
+fn cognitive_recursion_respects_lexical_boundaries() {
+    for (source, expected) in [
+        (
+            "class C { static { const Number = () => String(); Number(); } static { const String = () => Number(); String(); } }",
+            vec![0, 0, 0, 0],
+        ),
+        (
+            "class C { static { function Number() { return String(); } Number(); } static { function String() { return Number(); } String(); } }",
+            vec![0, 0, 0, 0],
+        ),
+        (
+            "class C { static { const first = () => second(); const second = () => first(); } }",
+            vec![0, 1, 1],
+        ),
+        (
+            "function outer() { outer(); class C { static { const inner = () => inner(); } } }",
+            vec![1, 0, 1],
+        ),
+        (
+            "function first() { second(); } function second() { first(); } class C { static { const inner = () => first(); } }",
+            vec![1, 1, 0, 0],
+        ),
+        (
+            "function Boolean() { switch(Symbol()) { default: const Symbol = () => Boolean(); } return 'ok'; }",
+            vec![1, 0],
+        ),
+        (
+            "function outer(value) { switch(value) { case 0: const first = () => second(); break; default: const second = () => first(); } }",
+            vec![1, 1, 1],
+        ),
+        (
+            "function Boolean() { for(let index = Number(); index < 1; index++) { const Number = () => Boolean(); } return true; }",
+            vec![1, 0],
+        ),
+        (
+            "function Boolean() { for(const item in {[Symbol()]: 0}) { const Symbol = () => Boolean(); } return true; }",
+            vec![1, 0],
+        ),
+        (
+            "function Boolean() { for(const item of [Symbol()]) { const Symbol = () => Boolean(); } return true; }",
+            vec![1, 0],
+        ),
+        (
+            "function outer() { for(;;) { const first = () => second(); const second = () => first(); } }",
+            vec![1, 1, 1],
+        ),
+        (
+            "function Boolean() { try { Number(); } catch(error) { const Number = () => Boolean(); } return true; }",
+            vec![1, 0],
+        ),
+        (
+            "function outer() { try {} catch(error) { const first = () => second(); const second = () => first(); } }",
+            vec![1, 1, 1],
         ),
     ] {
         let analysis = Analysis::inspect("fixture.ts", source).unwrap();
