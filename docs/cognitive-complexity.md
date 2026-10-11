@@ -50,12 +50,12 @@ JSX markup adds nothing. Expressions inside JSX use the same rules, so
 `{visible && <Panel />}` adds one and a ternary adds its structural and nesting
 increments. Type annotations add nothing.
 
-Implicit class field initialisers and static blocks retain scores in their
-function rows but are excluded from the function threshold. Computed field keys
-and decorator expressions, including method and constructor parameter decorators,
-belong to the enclosing function. Parameter defaults and function bodies retain
-the function's own score and depth. Module-level flow does not increase function
-scores.
+Class field and auto-accessor initialisers and static blocks retain scores in
+implicit function rows but are excluded from the function threshold. Computed
+class keys and decorator expressions belong to the enclosing function. This
+includes method and constructor parameter decorators. Parameter defaults and
+function bodies retain the function's own score and depth. Module-level flow
+does not increase function scores.
 
 ## Threshold
 

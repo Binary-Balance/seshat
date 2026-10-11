@@ -396,6 +396,9 @@ impl<'a> Visit<'a> for Analysis {
             AstKind::PropertyDefinition(property) => {
                 property.value.as_ref().and_then(initialized_function)
             }
+            AstKind::AccessorProperty(property) => {
+                property.value.as_ref().and_then(initialized_function)
+            }
             _ => None,
         };
         if let Some(target) = suppression_target {
@@ -597,6 +600,11 @@ impl<'a> Visit<'a> for Analysis {
         {
             self.caught_blocks.push(statement.block.span);
         }
+        let field = match node {
+            AstKind::PropertyDefinition(p) => p.value.as_ref().map(|value| (p.span, value)),
+            AstKind::AccessorProperty(p) => p.value.as_ref().map(|value| (p.span, value)),
+            _ => None,
+        };
         let scope = match node {
             AstKind::Function(f) => f.body.as_ref().map(|b| Scope {
                 name: f
@@ -633,18 +641,6 @@ impl<'a> Visit<'a> for Analysis {
                     && !self.void_functions.contains(&f.span.start)
                     && !f.body.as_expression().is_some_and(|expression| matches!(expression.without_parentheses(), Expression::UnaryExpression(unary) if unary.operator.as_str() == "void")),
             }),
-            AstKind::PropertyDefinition(p) => p.value.as_ref().map(|v| Scope {
-                name: format!("field@{}", p.span.start),
-                span: v.span(),
-                body: v.span(),
-                complexity: 1,
-                cognitive_complexity: 0,
-                implicit: true,
-                type_safety: TypeSafety::default(),
-                empty: false,
-                extreme_skip: Some("implicit-scope"),
-                returns_value: false,
-            }),
             AstKind::StaticBlock(b) => Some(Scope {
                 name: format!("static@{}", b.span.start),
                 span: b.span,
@@ -657,10 +653,21 @@ impl<'a> Visit<'a> for Analysis {
                 extreme_skip: Some("implicit-scope"),
                 returns_value: false,
             }),
-            _ => None,
+            _ => field.map(|(span, value)| Scope {
+                name: format!("field@{}", span.start),
+                span: value.span(),
+                body: value.span(),
+                complexity: 1,
+                cognitive_complexity: 0,
+                implicit: true,
+                type_safety: TypeSafety::default(),
+                empty: false,
+                extreme_skip: Some("implicit-scope"),
+                returns_value: false,
+            }),
         };
         if let Some(scope) = scope {
-            if matches!(node, AstKind::PropertyDefinition(_)) {
+            if field.is_some() {
                 // Computed keys and decorators execute in the enclosing scope.
                 self.cognitive_initializers
                     .push((scope.span, self.scopes.len()));
@@ -928,6 +935,93 @@ fn cognitive_class_keys_stay_in_the_enclosing_scope() {
             expected,
             "{source}"
         );
+    }
+}
+
+#[test]
+fn cognitive_accessors_use_implicit_initializer_scopes() {
+    for (source, expected) in [
+        (
+            "function outer(flag: boolean) { if(flag) { class C { accessor field = flag ? 1 : 2; } } }",
+            vec![(1, false), (1, true)],
+        ),
+        (
+            "class C { accessor field = flag ? 1 : 2; }",
+            vec![(1, true)],
+        ),
+        (
+            "function outer() { if(a) { class C { static accessor #field = a ? b : c; } } }",
+            vec![(1, false), (1, true)],
+        ),
+        (
+            "function outer() { if(a) { class C { @decorate(a ? b : c) accessor [a ? b : c] = a ? b : c; } } }",
+            vec![(5, false), (1, true)],
+        ),
+        (
+            "function outer() { if(a) { class C { @decorate(a ? b : c) accessor [a ? b : c]: number; } } if(a) work(); }",
+            vec![(6, false)],
+        ),
+        (
+            "function outer() { if(a) { class C { accessor field = (value: any) => { if(a) work(); }; } } if(a) work(); }",
+            vec![(2, false), (0, true), (1, false)],
+        ),
+        (
+            "function outer() { class C { accessor field = (() => { if(a) { class D { method(@decorate(a ? b : c) value = a ? b : c) { if(a) work(); } } } return a ? b : c; })() || fallback; } }",
+            vec![(0, false), (1, true), (4, false), (2, false)],
+        ),
+        (
+            "function outer() { class C { accessor [outer()] = outer(); } }",
+            vec![(1, false), (0, true)],
+        ),
+        (
+            "class C {\n// @ts-ignore\naccessor field = (value: any) => value; }",
+            vec![(0, true), (0, false)],
+        ),
+        (
+            "function outer() { if(a) { class C { accessor first = a ? b : c; field = a ? b : c; accessor second = a ? b : c; method() { if(a) work(); } } } }",
+            vec![(1, false), (1, true), (1, true), (1, true), (1, false)],
+        ),
+    ] {
+        let analysis = Analysis::inspect("fixture.ts", source).unwrap();
+        assert_eq!(
+            analysis
+                .scopes
+                .iter()
+                .map(|scope| (scope.cognitive_complexity, scope.implicit))
+                .collect::<Vec<_>>(),
+            expected,
+            "{source}"
+        );
+        let ordinary = Analysis::inspect("fixture.ts", &source.replace("accessor ", "")).unwrap();
+        assert_eq!(
+            analysis
+                .scopes
+                .iter()
+                .map(|scope| json!([scope.complexity, scope.type_safety]))
+                .collect::<Vec<_>>(),
+            ordinary
+                .scopes
+                .iter()
+                .map(|scope| json!([scope.complexity, scope.type_safety]))
+                .collect::<Vec<_>>(),
+            "{source}"
+        );
+        let unmeasured = crate::coverage::attribute(
+            &analysis,
+            "fixture.ts",
+            source,
+            std::iter::empty::<&Value>(),
+        );
+        for (scope, row) in analysis
+            .scopes
+            .iter()
+            .zip(unmeasured["functions"].as_array().unwrap())
+        {
+            if scope.implicit {
+                assert_eq!(row["status"], "complexity-only", "{source}");
+                assert_eq!(row["crap"], Value::Null, "{source}");
+            }
+        }
     }
 }
 
