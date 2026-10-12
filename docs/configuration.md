@@ -523,6 +523,44 @@ Job evidence retains execution, pipe and cleanup errors separately. A signal
 received after a job has completed still cancels the overall assessment without
 relabelling that completed job as cancelled.
 
+## Type-safety findings
+
+Syntax findings count type-safety escapes in the selected source automatically.
+No additional configuration or thresholds are required.
+
+Compiler strictness reporting recognizes direct commands in these forms:
+
+```json
+["node", "node_modules/typescript/bin/tsc", "--project", "tsconfig.json"]
+["node", "node_modules/typescript/lib/tsc.js", "-p", "packages/rules"]
+```
+
+The runtime may be `node`, `nodejs` or an explicit path with either name. Windows
+`.exe` names are accepted. The compiler script may use another path to the
+installed `typescript/bin/tsc` or `typescript/lib/tsc.js`. Bare `tsc`, package
+manager scripts, wrappers, Node runtime options before the script, watch mode
+and build mode report strictness as `unknown`, even when the original typecheck
+passes. They remain valid original typecheck commands.
+
+Seshat runs a bounded metadata helper in each setup's captured `cwd` with the
+same Node executable and installed TypeScript package. TypeScript parses the
+original compiler arguments, JSONC configuration, relative and package `extends`,
+multiple inheritance and command-line overrides. Capture the configuration,
+inherited configuration inputs and any response files, including nested ones.
+Configuration or response files outside the captured project, or missing inputs,
+report `unknown` with a diagnostic.
+
+With explicit source arguments, strictness comes from command-line options and
+compiler defaults, rather than an unrelated `tsconfig.json`. TypeScript 6
+requires `--ignoreConfig` for direct files when a config is present; Seshat
+reports that error rather than borrowing the ignored config's strictness.
+
+An unavailable compiler, unsupported metadata API, invalid configuration,
+timeout or other helper failure produces a visible `unknown` finding. It does
+not block an otherwise complete CRAP or mutation assessment. No settings are
+invented for unknown findings. Unsupported options remain separate from options
+that the compiler supports and disables.
+
 ## Quality thresholds
 
 Add optional thresholds at the top level of `seshat.json`:

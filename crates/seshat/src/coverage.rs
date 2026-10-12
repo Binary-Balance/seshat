@@ -441,13 +441,14 @@ pub fn attribute<'a>(
         let status = if s.implicit { "complexity-only" } else if s.empty { "not-applicable" }
             else if !statements_reliable || unreliable_branches.contains(&i) || total == 0 { complete = false; "unknown" } else { "measured" };
         json!({"name":s.name,"start":s.span.start,"complexity":s.complexity,"status":status,
+            "typeSafety":s.type_safety,
             "covered":covered,"total":total,"coverage":if statements_reliable && !s.implicit && !s.empty && total > 0 {Some(covered as f64/total as f64)}else{None},
             "branchCovered":branch_covered,"branchTotal":branch_total,
             "branchCoverage":if status=="measured" && branch_total > 0 {Some(branch_covered as f64/branch_total as f64)}else{None},
             "coverageBasis":if status=="measured" {Some(if branch_total > 0 {"branch"} else {"statement"})}else{None},
             "crap":if status=="measured" {if branch_total > 0 {assessment::score(s.complexity,branch_covered,branch_total)} else {assessment::score(s.complexity,covered,total)}}else{None}})
     }).collect();
-    json!({"complete":complete,"functions":rows,"problems":problems})
+    json!({"complete":complete,"functions":rows,"problems":problems,"typeSafety":analysis.type_safety()})
 }
 
 #[cfg(test)]

@@ -274,7 +274,7 @@ function assertNormal(result, workers, sourcePath = 'src/status.tsx') {
   assert.ok(result.mutation.workerBaselines.every(row => row.state === 'passed' && row.report.passed === 3));
   assert.equal(result.pseudoTesting.planned, 3);
   assert.equal(result.pseudoTesting.checked, 3);
-  assert.equal(result.jobsAttempted, 10 + 2 * (workers - 1));
+  assert.equal(result.jobsAttempted, 11 + 2 * (workers - 1));
 }
 
 function assertControl(result, expected) {

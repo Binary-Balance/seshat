@@ -303,6 +303,30 @@ fn readable(report: &Value) -> String {
                 text(&function["name"]),
                 function["complexity"]
             );
+            if let Some(escapes) = function.get("typeSafety") {
+                let _ = writeln!(
+                    output,
+                    "    Type safety: any {}, assertions {} (double {}), non-null {}, ts-ignore {}, ts-expect-error {}, ts-nocheck {}",
+                    escapes["explicitAny"],
+                    escapes["typeAssertions"],
+                    escapes["doubleAssertions"],
+                    escapes["nonNullAssertions"],
+                    escapes["tsIgnore"],
+                    escapes["tsExpectError"],
+                    escapes["tsNocheck"]
+                );
+            }
+        }
+        if let Some(unowned) = source["result"]["typeSafety"]["unowned"].as_object()
+            && unowned
+                .values()
+                .any(|count| count.as_u64().is_some_and(|count| count > 0))
+        {
+            let _ = writeln!(
+                output,
+                "  Type safety outside function rows: {}",
+                source["result"]["typeSafety"]["unowned"]
+            );
         }
         if let Some(error) = source.get("error").filter(|v| !v.is_null()) {
             let _ = writeln!(output, "  Error: {error}");
@@ -352,12 +376,38 @@ fn readable(report: &Value) -> String {
             text(&setup["baseline"]["state"]),
             text(&setup["coverage"]["state"])
         );
+        if let Some(strictness) = setup.get("compilerStrictness") {
+            let _ = writeln!(
+                output,
+                "  Compiler strictness: {}, TypeScript {}, config {}",
+                text(&strictness["state"]),
+                strictness["compilerVersion"],
+                strictness["config"]
+            );
+            if strictness["state"] == "known" {
+                let _ = writeln!(
+                    output,
+                    "  Disabled settings: {}; enabled bypasses: {}; unsupported settings: {}",
+                    strictness["disabled"],
+                    strictness["enabledBypassOptions"],
+                    strictness["unsupported"]
+                );
+            }
+            if let Some(error) = strictness["error"].as_str() {
+                let _ = writeln!(output, "  Compiler strictness error: {error:?}");
+            }
+        }
         for phase in ["baseline", "coverage"] {
             if let Some(error) = setup[phase]["evidenceError"].as_str() {
                 let _ = writeln!(output, "  {phase}: {error:?}");
             }
         }
-        for key in ["typecheckMs", "baselineMs", "coverageMs"] {
+        for key in [
+            "compilerStrictnessMs",
+            "typecheckMs",
+            "baselineMs",
+            "coverageMs",
+        ] {
             if let Some(ms) = setup["timings"][key].as_f64() {
                 let _ = writeln!(output, "  {key}: {ms:.1} ms");
             }
@@ -699,6 +749,25 @@ pub fn main() -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn readable_type_safety_keeps_static_findings_and_unknown_config_visible() {
+        let output = readable(
+            &json!({"command":"crap","complete":false,"timings":{"wallMs":1},"result":{
+                "sources":[{"path":"source.ts","result":{"functions":[{"name":"f","complexity":1,
+                    "status":"unknown","typeSafety":{"explicitAny":2,"typeAssertions":2,
+                    "doubleAssertions":1,"nonNullAssertions":1,"tsIgnore":0,"tsExpectError":1,"tsNocheck":0}}],
+                    "typeSafety":{"unowned":{"tsNocheck":1}}}}],
+                "setups":[{"name":"unit","compilerStrictness":{"state":"unknown",
+                    "compilerVersion":null,"config":null,"error":"missing config\u{001b}[2J"}}]
+            }}),
+        );
+        assert!(output.contains("any 2, assertions 2 (double 1), non-null 1"));
+        assert!(output.contains("Type safety outside function rows: {\"tsNocheck\":1}"));
+        assert!(output.contains("Compiler strictness: unknown"));
+        assert!(output.contains("missing config\\u{1b}[2J"));
+        assert!(!output.contains('\u{001b}'));
+    }
     #[test]
     fn threshold_boundaries_and_incomplete_precedence() {
         let result = json!({"complete":true,"sources":[

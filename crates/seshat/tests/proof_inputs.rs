@@ -4,11 +4,16 @@ use std::{
     fs, io,
     path::PathBuf,
     process::{Command, Output, Stdio},
-    sync::atomic::{AtomicUsize, Ordering},
+    sync::{
+        Mutex,
+        atomic::{AtomicUsize, Ordering},
+    },
 };
 
 const BINARY: &str = env!("CARGO_BIN_EXE_seshat-proofs");
 static NEXT: AtomicUsize = AtomicUsize::new(0);
+// macOS creates pipes before setting close-on-exec, so concurrent children can inherit the reader.
+static CHILD_PROCESS_LOCK: Mutex<()> = Mutex::new(());
 
 struct Fixture {
     root: PathBuf,
@@ -78,6 +83,7 @@ fn report(output: &Output, status: i32) -> Value {
 
 #[test]
 fn command_root_loads_captured_scripts() {
+    let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
     for strategy in ["replace", "switch"] {
         let mut fixture = Fixture::new();
         fs::write(
@@ -96,6 +102,7 @@ fn command_root_loads_captured_scripts() {
 
 #[test]
 fn invalid_configuration_never_starts_an_earlier_command() {
+    let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
     let mut fixture = Fixture::new();
     let marker = fixture.root.join("started");
     fixture.config["typecheck"] = node(&format!(
@@ -138,6 +145,7 @@ fn invalid_configuration_never_starts_an_earlier_command() {
 
 #[test]
 fn non_utf8_arguments_return_a_controlled_error() {
+    let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
     #[cfg(unix)]
     let argument = {
         use std::os::unix::ffi::OsStringExt;
@@ -156,6 +164,7 @@ fn non_utf8_arguments_return_a_controlled_error() {
 
 #[test]
 fn closed_stdout_returns_an_output_error_without_panicking() {
+    let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
     let fixture = Fixture::new();
     let (reader, writer) = io::pipe().unwrap();
     drop(reader);
@@ -174,6 +183,7 @@ fn closed_stdout_returns_an_output_error_without_panicking() {
 
 #[test]
 fn successful_transform_commands_need_no_complete_field() {
+    let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
     let fixture = Fixture::new();
     let source = fixture.root.join("input/subject.ts");
     for mode in ["inspect", "prepare", "replace"] {
@@ -192,6 +202,7 @@ fn successful_transform_commands_need_no_complete_field() {
 
 #[test]
 fn invalid_receipts_fail_closed_and_remove_scratch() {
+    let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
     let mut fixture = Fixture::new();
     assert_eq!(
         report(&fixture.execute("replace").output().unwrap(), 0)["complete"],
@@ -234,6 +245,7 @@ fn invalid_receipts_fail_closed_and_remove_scratch() {
 
 #[test]
 fn proof_commands_clear_ambient_node_options_and_use_private_scratch() {
+    let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
     let mut fixture = Fixture::new();
     let marker = fixture.root.join("preloaded");
     let preload = fixture.root.join("preload.cjs");
@@ -314,6 +326,7 @@ fn proof_commands_clear_ambient_node_options_and_use_private_scratch() {
 #[cfg(target_os = "linux")]
 #[test]
 fn wait_and_cleanup_errors_keep_partial_output() {
+    let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
     use std::os::unix::process::CommandExt;
     let mut fixture = Fixture::new();
     fixture.config["test"] = node(
@@ -343,6 +356,7 @@ fn wait_and_cleanup_errors_keep_partial_output() {
 
 #[test]
 fn consumed_legacy_evidence_is_released_between_jobs() {
+    let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
     for strategy in ["replace", "switch"] {
         let mut fixture = Fixture::new();
         fixture.config["runner"] = json!("node");
@@ -379,6 +393,7 @@ fn consumed_legacy_evidence_is_released_between_jobs() {
 
 #[test]
 fn legacy_artifact_cleanup_failure_stops_new_jobs_and_retains_scope() {
+    let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
     for phase in ["build", "test"] {
         let mut fixture = Fixture::new();
         fixture.config["limit"] = json!(3);
