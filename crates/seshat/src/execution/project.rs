@@ -229,6 +229,7 @@ struct Config {
 #[serde(deny_unknown_fields, rename_all = "camelCase")]
 pub struct Thresholds {
     pub max_crap: Option<f64>,
+    pub max_cognitive_complexity: Option<f64>,
     pub min_mutation_score: Option<f64>,
 }
 
@@ -338,6 +339,13 @@ impl Config {
             .is_some_and(|v| !v.is_finite() || v < 0.0)
         {
             return Err("thresholds.maxCrap must be a finite number >= 0".into());
+        }
+        if config
+            .thresholds
+            .max_cognitive_complexity
+            .is_some_and(|v| !v.is_finite() || v < 0.0)
+        {
+            return Err("thresholds.maxCognitiveComplexity must be a finite number >= 0".into());
         }
         if config
             .thresholds
@@ -1078,6 +1086,9 @@ mod tests {
             json!({}),
             json!({"maxCrap":0,"minMutationScore":100}),
             json!({"maxCrap":22.5,"minMutationScore":0}),
+            json!({"maxCognitiveComplexity":0}),
+            json!({"maxCognitiveComplexity":2.5}),
+            json!({"maxCognitiveComplexity":null}),
             json!({"maxCrap":null,"minMutationScore":null}),
         ] {
             let mut config = fixture.config.clone();
@@ -1088,6 +1099,10 @@ mod tests {
             Value::Null,
             json!([]),
             json!({"maxCrap":-1}),
+            json!({"maxCognitiveComplexity":-1}),
+            json!({"maxCognitiveComplexity":"3"}),
+            json!({"maxCognitiveComplexity":false}),
+            json!({"maxCognitiveComplexity":[]}),
             json!({"minMutationScore":-0.1}),
             json!({"minMutationScore":100.1}),
             json!({"maxCrap":"30"}),
@@ -1105,6 +1120,9 @@ mod tests {
         let raw = serde_json::to_string(&fixture.config).unwrap();
         for thresholds in [
             r#"{"maxCrap":1e999}"#,
+            r#"{"maxCognitiveComplexity":1e999}"#,
+            r#"{"maxCognitiveComplexity":NaN}"#,
+            r#"{"maxCognitiveComplexity":1,"maxCognitiveComplexity":2}"#,
             r#"{"maxCrap":NaN}"#,
             r#"{"maxCrap":20,"maxCrap":30}"#,
         ] {

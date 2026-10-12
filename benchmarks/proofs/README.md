@@ -84,6 +84,11 @@ controls verify inclusive boundaries, unchanged assessment results, exit 1,
 invalid limits, command-specific checks and incomplete/cancellation precedence. It retains
 results under `work/assurance-proofs/cli-*`, not the recorded benchmark outputs.
 Rust tests additionally check human formatting of unknown and unscored functions.
+Cognitive complexity checks cover flow nesting, logical sequences, conservative
+direct/indirect recursion, separate nested-function ownership and static scores
+when coverage is unknown. CLI controls exercise zero, equality, fractional
+limits, disabled and invalid limits across all commands. See the
+[definition and TypeScript choices](../../docs/cognitive-complexity.md).
 
 Use the [configuration guide](../../docs/configuration.md).
 The configuration directory is the project root; all commands use its source and
@@ -450,7 +455,7 @@ The standalone proof consumes the same npm `.tgz` bytes. It requires npm's
 runs the binary without npm, preserving the same archive and `BUILD.json`
 checks.
 
-The selected native CLI and runner proofs separately rerun the broad 51-scenario
+The selected native CLI and runner proofs separately rerun the broad 64-scenario
 CLI fixture, parallel controls, lifecycle checks and Jest/Expo/Vitest cases
 through the installed native executable. They reuse fixture compilers and
 coverage collectors from the source checkout; the package does not install or
@@ -463,7 +468,7 @@ documented in the [Windows package protocol](../../docs/windows-package.md).
 Its current native install proof covers the packaged executable and the same
 archive extracted with `tar.exe`; the entry launcher and Windows npm ownership
 proof are staged separately for the release package set. The workflow also runs the
-shared 51 CLI scenarios, 11 parallel controls and four installed Jest/Expo and
+shared 64 CLI scenarios, 11 parallel controls and four installed Jest/Expo and
 Vitest cases against that executable. The summary records missing or partial
 integration evidence as a gap.
 

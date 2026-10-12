@@ -13,6 +13,10 @@ coordinates and mutation edits, including the experimental switching transform.
 Nested functions have independent complexity counts. Class initialisers and
 static blocks receive complexity results but are outside CRAP scoring.
 
+Function rows also report [cognitive complexity](cognitive-complexity.md),
+calculated in the same syntax-tree traversal. It starts at zero, accounts for
+nesting and never replaces the cyclomatic input to CRAP.
+
 Each scope starts at complexity `1`. Each of these constructs adds `1` to its
 innermost containing scope:
 

@@ -114,6 +114,7 @@ assert.deepEqual(mutated.result.sources, checked.result.sources);
 assert.ok(mutated.result.phaseTimings.coverageMs >= 0);
 assert.ok(mutated.result.phaseTimings.attributionMs >= 0);
 assert.ok(mutated.result.setups[0].timings.coverageMs >= 0);
+assert.equal(mutated.result.sources[0].result.functions[0].cognitiveComplexity, 0);
 assert.equal(mutated.result.mutation.completed, 2);
 assert.equal(mutated.result.mutation.notRun, 0);
 assert.equal(mutated.result.mutation.unresolved, 0);
@@ -130,6 +131,7 @@ unchanged();
 const human = run('default-config-and-scratch', ['check', '--no-progress']);
 assert.equal(human.stderr, '');
 assert.match(human.stdout, /CRAP 1\.000/);
+assert.match(human.stdout, /cognitive complexity 0/);
 assert.match(human.stdout, /score 50\.00%/);
 assert.match(human.stdout, /Worker preparation: [\d.]+ ms/);
 assert.match(human.stdout, /Coverage attribution: [\d.]+ ms/);
@@ -177,7 +179,15 @@ const crapOnly = json('crap-ignores-mutation-threshold', 'crap');
 assert.equal(crapOnly.quality.checks[1].state, 'not-requested');
 limited.thresholds = {maxCrap:0, minMutationScore:50}; configure(limited);
 assert.equal(json('mutate-ignores-crap-threshold', 'mutate').quality.checks[0].state, 'not-requested');
-for (const thresholds of [{maxCrap:-1}, {minMutationScore:101}, {maxCrap:'30'}, {maxCRAP:30}, null]) {
+limited.thresholds = {maxCognitiveComplexity:0}; configure(limited);
+for (const command of ['check','crap','mutate']) {
+  const cognitive = json(`cognitive-zero-${command}`, command);
+  assert.equal(cognitive.quality.checks[0].state, 'passed');
+  assert.equal(cognitive.quality.checks[0].actual, 0);
+}
+limited.thresholds = {maxCognitiveComplexity:null}; configure(limited);
+assert.equal(json('cognitive-disabled', 'mutate').quality.state, 'not-configured');
+for (const thresholds of [{maxCrap:-1}, {minMutationScore:101}, {maxCrap:'30'}, {maxCRAP:30}, {maxCognitiveComplexity:-1}, {maxCognitiveComplexity:'3'}, null]) {
   limited.thresholds = thresholds; configure(limited);
   const invalid = json(`invalid-threshold-${JSON.stringify(thresholds)}`, 'check', 2);
   assert.equal(invalid.scope, null); assert.equal(invalid.quality, null);
@@ -186,10 +196,21 @@ for (const thresholds of [{maxCrap:-1}, {minMutationScore:101}, {maxCrap:'30'}, 
 
 const marker = join(work, 'coverage-called');
 const invalidCoverage = structuredClone(config);
-invalidCoverage.thresholds = {maxCrap:0, minMutationScore:50};
+invalidCoverage.thresholds = {maxCrap:0, maxCognitiveComplexity:0, minMutationScore:50};
 invalidCoverage.setups[0].coverage.command = [process.execPath, '-e', `require('fs').writeFileSync(${JSON.stringify(marker)},'called');process.exit(1)`];
 configure(invalidCoverage);
-assert.equal(json('mutation-needs-coverage', 'mutate', 2).result.mutation.score, null);
+const mutationCoverage = json('mutation-needs-coverage', 'mutate', 2);
+assert.equal(mutationCoverage.result.mutation.score, null);
+assert.deepEqual(mutationCoverage.quality.checks.map(({metric,state,actual}) => ({metric,state,actual})), [
+  {metric:'maxCrap',state:'not-requested',actual:null},
+  {metric:'maxCognitiveComplexity',state:'incomplete',actual:null},
+  {metric:'minMutationScore',state:'incomplete',actual:null},
+]);
+const staticFunction = mutationCoverage.result.sources[0].result.functions[0];
+assert.equal(staticFunction.cognitiveComplexity, 0);
+assert.equal(staticFunction.typeSafety.explicitAny, 0);
+assert.equal(staticFunction.status, 'unknown');
+assert.equal(mutationCoverage.result.setups[0].compilerStrictness.state, 'known');
 assert.equal(existsSync(marker), true);
 const incompleteCoverage = json('check-needs-coverage', 'check', 2);
 assert.equal(incompleteCoverage.result.mutation.score, null);
@@ -381,6 +402,59 @@ assert.equal(branchThreshold.quality.checks[0].actual, 2.5);
 assert.equal(branchThreshold.quality.checks[0].state, 'failed');
 configure({...config, thresholds: {maxCrap: 2.5}});
 assert.equal(json('branch-threshold-equality', 'crap').quality.checks[0].state, 'passed');
+// The computed key executes in adult, before the field initializer's scope.
+originals['subject.ts'] = `export function adult(age: number) {
+  class C {
+    // @ts-ignore
+    [(age >= 18 ? 'adult' : 'child')] = true;
+  }
+  return Object.keys(new C())[0] === 'adult';
+}\n`;
+writeFileSync(join(project, 'subject.ts'), originals['subject.ts']);
+for (const command of ['check','crap','mutate']) {
+  configure({...config, thresholds:{maxCognitiveComplexity:1}});
+  const equality = json(`cognitive-equality-${command}`, command);
+  assert.equal(equality.quality.checks[0].state, 'passed');
+  assert.equal(equality.quality.checks[0].actual, 1);
+  const row = equality.result.sources[0].result.functions[0];
+  assert.equal(row.cognitiveComplexity, 1);
+  assert.equal(row.complexity, 2);
+  const field = equality.result.sources[0].result.functions.find(row => row.status === 'complexity-only');
+  assert.equal(field.cognitiveComplexity, 0);
+  assert.equal(field.complexity, 1);
+  configure({...config, thresholds:{maxCognitiveComplexity:0}});
+  assert.equal(json(`cognitive-failure-${command}`, command, 1).quality.checks[0].state, 'failed');
+}
+
+// Static-block bindings must not hide globals used in another static block.
+originals['subject.ts'] = `export class C {
+  static first: string;
+  static second: number;
+  static {
+    const Number = () => String();
+    C.first = Number();
+  }
+  static {
+    const String = () => Number();
+    C.second = String();
+  }
+}\n`;
+originals['test.mjs'] = "import {test} from 'node:test';import assert from 'node:assert/strict';import {C} from './subject.ts';test('static block globals',()=>{assert.equal(C.first,'');assert.equal(C.second,0);});";
+for (const name of ['subject.ts','test.mjs']) writeFileSync(join(project, name), originals[name]);
+const staticBlocks = structuredClone(config);
+staticBlocks.thresholds = {maxCognitiveComplexity:0};
+staticBlocks.setups[0].typecheck.push('--target','es2022');
+configure(staticBlocks);
+const blockThreshold = json('cognitive-static-block-bindings', 'crap');
+const blockResult = blockThreshold.result.sources[0].result;
+assert.deepEqual(blockResult.functions.map(row => row.cognitiveComplexity), [0,0,0,0]);
+assert.deepEqual(blockResult.functions.map(row => row.complexity), [1,1,1,1]);
+assert.deepEqual(blockResult.functions.map(row => row.status), ['complexity-only','measured','complexity-only','measured']);
+assert.deepEqual(blockResult.problems, []);
+assert.equal(blockThreshold.quality.checks[0].state, 'passed');
+assert.equal(blockThreshold.quality.checks[0].actual, 0);
+assert.equal(blockThreshold.result.setups[0].compilerStrictness.options.strict, true);
+for (const phase of ['typecheck','baseline','coverage']) assert.equal(blockThreshold.result.setups[0][phase].state, 'passed');
 
 const resultPath = process.env.SESHAT_PROOF_OUTPUT ? resolve(process.env.SESHAT_PROOF_OUTPUT) : join(work, 'result.json');
 mkdirSync(dirname(resultPath), {recursive: true});
