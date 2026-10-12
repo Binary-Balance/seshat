@@ -409,7 +409,7 @@ mod windows {
     }
 
     #[cfg(test)]
-    pub(super) fn test_spawn_lock() -> &'static Mutex<()> {
+    pub(in crate::execution) fn test_spawn_lock() -> &'static Mutex<()> {
         TEST_SPAWN_LOCK.get_or_init(|| Mutex::new(()))
     }
 
@@ -1323,6 +1323,8 @@ setInterval(() => {}, 1000);
 use unix as native;
 #[cfg(windows)]
 use windows as native;
+#[cfg(all(test, windows))]
+pub(super) use windows::test_spawn_lock;
 
 #[cfg(all(test, unix))]
 mod unix_tests {
@@ -1619,6 +1621,8 @@ mod cleanup_tests {
 
     #[test]
     fn reap_deadline_preserves_uncertainty_and_is_not_restarted() {
+        #[cfg(windows)]
+        let _lock = test_spawn_lock().lock().unwrap();
         let mut command = Command::new("node");
         command.args(["-e", "setInterval(()=>{},1000)"]);
         let mut child = ManagedChild::spawn(&mut command).unwrap();

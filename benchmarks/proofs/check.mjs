@@ -45,7 +45,7 @@ function check(name, change = () => {}) {
 }
 const passed = check('complete');
 assert.equal(passed.complete, true, JSON.stringify(passed));
-assert.equal(passed.jobsAttempted, 16, 'two typechecks, two baselines, two coverage jobs, ten mutant jobs');
+assert.equal(passed.jobsAttempted, 20, 'six original jobs, four extreme jobs, ten comparison jobs');
 assert.equal(passed.mutation.score, 60);
 assert.deepEqual(passed.mutation.outcomes.map(m => [m.id,m.path,m.localId,m.verdict]), [
   [0,'src/age.ts',0,'survived'], [1,'src/age.ts',1,'killed'],

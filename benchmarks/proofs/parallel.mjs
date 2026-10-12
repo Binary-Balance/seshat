@@ -128,11 +128,12 @@ async function check(name,workers,mode='normal',signal){
       assert.equal(result.mutation.score,50);assert.equal(result.mutation.jobsAttempted,8);
       assert.deepEqual(result.sources,[{path:'subject.ts',result:{complete:true,functions:[{
         complexity:1,coverage:1,covered:1,crap:1,name:'adult',start:7,status:'measured',total:1,
-        branchCovered:0,branchTotal:0,branchCoverage:null,coverageBasis:'statement'
+        branchCovered:0,branchTotal:0,branchCoverage:null,coverageBasis:'statement',
+        pseudoTested:false,pseudoTestStatus:'checked',pseudoTestReason:null
       }],problems:[]}}]);
       const count=Math.min(workers??1,4);
       assert.equal(result.mutation.workersUsed,count);assert.equal(result.mutation.workerBaselineJobs,(count-1)*2);
-      assert.equal(result.jobsAttempted,6+8+(count-1)*2);
+      assert.equal(result.jobsAttempted,6+2+8+(count-1)*2);
       let active=0,peak=0;const activeRoots=new Set();
       for(const event of observed.sort((a,b)=>a.time-b.time||(a.kind==='end'?-1:1))){
         if(event.kind==='start'){assert.ok(!activeRoots.has(event.cwd),'workers shared writable files');activeRoots.add(event.cwd);peak=Math.max(peak,++active);}

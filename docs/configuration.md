@@ -334,8 +334,21 @@ are checked before Seshat walks or copies the configured inputs.
 
 `check` and `mutate` require a `typecheck` in every setup and passing original
 test baselines. `crap` runs a configured typecheck when present, followed by its
-baseline and fresh coverage. Coverage settings are required in the configuration
-even for `mutate`, which does not execute the coverage command.
+baseline and fresh coverage. All three commands collect fresh coverage.
+`mutate` needs statement coverage to skip unexecuted functions during extreme
+mutation; it still does not evaluate `maxCrap` thresholds.
+
+`check` and `mutate` replace each eligible function body once before comparison
+mutation. Functions explicitly returning `void`, using a `void` expression or
+without a return expression get an empty body; other functions get
+the undefined value with `return void 0`, avoiding a shadowed `undefined`.
+Nested functions' returns belong to their own
+bodies. These replacements are not typechecked. Empty functions, constructors,
+accessors, generators, implicit scopes and reliably zero-covered functions are
+skipped. A surviving replacement with reliable positive statement coverage
+marks the function `pseudoTested: true`. A killed replacement marks it false;
+unresolved executions or unknown coverage leave the flag null. Counts and
+execution evidence appear in `pseudoTesting`, separately from comparison scores.
 
 Every mutant runs all configured setups. No automatic test selection, persistent
 test-process reuse or cross-run verdict caching is performed. Each baseline and
@@ -352,8 +365,9 @@ an incomplete mutation-score threshold cannot pass.
 `check` and `mutate` use source replacement by default. Pass
 `--experimental-switching` to use the bounded helper-based switching experiment.
 The option is rejected by `crap`. Seshat completes the original typechecks and
-baselines first, plus fresh coverage for `check`, then prepares every selected
-source in the captured copy. It runs an inactive prepared baseline on the primary
+baselines and coverage first. Extreme mutations use source replacement, including
+when switching is requested. Seshat then prepares every selected source for
+comparison switching in the captured copy. It runs an inactive prepared baseline on the primary
 copy and each mutation worker before scheduling mutants. Prepared baseline rows,
 their job count and preparation timings are retained in the JSON mutation report.
 Switching does not typecheck transformed helpers. Helper wrapping can lose

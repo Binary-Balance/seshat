@@ -69,6 +69,14 @@ _Avoid_: percentage of bugs found
 **Comparison mutant**:
 A mutant that replaces a comparison operator in an executable expression.
 
+**Extreme mutant**:
+A mutant that removes one function's body behaviour.
+
+**Pseudo-tested function**:
+A function with reliable positive statement coverage whose extreme mutant
+survives all configured test setups. This does not prove that the function has
+no useful tests.
+
 **Boundary shift**:
 A comparison change that includes or excludes the equality case, such as
 `a < b` becoming `a <= b`.

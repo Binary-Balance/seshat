@@ -117,9 +117,14 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
     if super::cancellation_signal() != 0 {
         return Ok(json!({"cancelled":true,"exit":null,"ms":0}));
     }
+    // Standard test children can inherit the native launcher's temporary pipe writers.
+    #[cfg(all(test, windows))]
+    let spawn_lock = super::platform::test_spawn_lock().lock().unwrap();
     let start = Instant::now();
     let mut child =
         super::platform::ManagedChild::spawn(command).map_err(|e| format!("start command: {e}"))?;
+    #[cfg(all(test, windows))]
+    drop(spawn_lock);
     let mut stdout = Output::new(child.take_stdout().ok_or("child stdout was not piped")?)
         .map_err(|e| format!("prepare stdout pipe: {e}"))?;
     let mut stderr = Output::new(child.take_stderr().ok_or("child stderr was not piped")?)

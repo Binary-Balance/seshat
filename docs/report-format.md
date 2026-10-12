@@ -106,14 +106,16 @@ Once the structured assessment starts, `result` contains:
 | `diagnostics` | Runtime and worker diagnostics described below. |
 | `executionMs` | The assessment duration also exposed as top-level `timings.executionMs`. |
 | `mutation` | Present for `check` and `mutate`; omitted for `crap`. |
+| `pseudoTesting` | Extreme-mutation evidence and function counts for `check` and `mutate`; omitted for `crap`. |
 | `error` | A string for an error that prevents the structured result from being built. The exact text is diagnostic. |
 | `cleanupError` | An optional string when closing captured or evidence directories fails. Its presence makes the result incomplete. |
 
 `check` runs source coverage and CRAP plus mutation testing. `crap` runs
 coverage and CRAP and has no `result.mutation`. `mutate` requires the original
-typecheck and test baselines, skips coverage execution, sets each setup's
-coverage state to `not-requested`, and omits each source's measurement result.
-Thus `mutate` has mutation evidence without source CRAP rows. A missing
+typecheck, test baselines and fresh coverage to skip zero-covered functions in
+extreme mutation. It retains function measurement rows but does not evaluate
+`maxCrap` thresholds. Both mutation commands run extreme mutation before
+comparison mutation. A missing
 typecheck in a `check` or `mutate` setup is rejected before this structured
 result exists. In `crap`, the typecheck command is optional; when it is omitted,
 the setup keeps `typecheck.state: "not-run"` and `timings.typecheckMs: null`.
@@ -150,6 +152,9 @@ Each `functions` row has these fields:
 | `coverageBasis` | `"branch"` when CRAP uses `branchCoverage`, `"statement"` when the function has no recorded branches and CRAP uses `coverage`, or `null` when unscored. |
 | `crap` | `complexity² × (1 − input)³ + complexity`, using the coverage selected by `coverageBasis`, only for `measured` rows. |
 | `status` | `measured`, `unknown`, `not-applicable` or `complexity-only`. |
+| `pseudoTested` | Additive boolean or `null` for `check`/`mutate`. True when an extreme replacement survives with reliable positive statement coverage; false when it is killed with that coverage; otherwise null. |
+| `pseudoTestStatus` | `pseudo-tested`, `checked`, `unknown` or `not-applicable`, for `check`/`mutate`. |
+| `pseudoTestReason` | Skip reason `empty`, `constructor`, `accessor`, `generator`, `implicit-scope` or `zero-coverage`; otherwise `null`, for `check`/`mutate`. |
 
 `measured` means valid coverage supports CRAP for a non-empty ordinary function.
 `unknown` means required coverage is missing or unreliable. When only branch
@@ -191,7 +196,7 @@ Each `result.setups` row has `name`, `typecheck`, `baseline`, `coverage` and
 | `execution-error` | The command, receipt, coverage file, output pipe or other execution evidence was invalid or failed. |
 | `cancelled` | Cancellation stopped the command. |
 | `not-run` | The requested job was not reached. `crap` also uses this state for an intentionally omitted optional typecheck; a complete run keeps `typecheck.state: "not-run"` and `timings.typecheckMs: null` in that setup. |
-| `not-requested` | The command does not run this job. In the public commands this is the coverage job under `mutate`. |
+| `not-requested` | The command does not request this job. Retained for compatibility; all current public commands request coverage. |
 
 An attempted job can include `exit`, `ms`, `timedOut`, `cancelled`,
 `overflow`, `pipeError` and a runner `report`. Jobs stopped before they start
@@ -345,6 +350,43 @@ to those forms is parsed according to the ordinary argument rules. An invalid co
 includes `--json` emits the argument-error JSON envelope with `command: null`.
 
 ## Compatibility and evidence
+
+### Pseudo-testing
+
+`result.pseudoTesting` reuses the mutation scheduler's execution fields,
+including `strategy`, `complete`, `planned`, `killed`, `survived`, `outcomes`,
+worker/baseline counts, timing and diagnostics. It has no `score`.
+`pseudoTested` and `checked` count functions with true and false flags;
+`unknown` counts eligible functions whose flags remain null. Counts retain
+resolved evidence in incomplete runs. `complete` requires all extreme executions
+and coverage needed for those flags to resolve. `unresolved` remains an execution
+counter; `unknown` also includes functions whose coverage is unavailable.
+
+Each extreme outcome has `kind: "extreme"`, the owning function's `name` and
+`start`, and its `localId` index in that source's function rows. Its `offset`
+points to the replaced body; `original` and `replacement` contain body text.
+IDs are local to this separate section. Functions without a return expression
+or explicitly returning `void` get an empty body; other functions get
+the undefined value with `return void 0`, avoiding a shadowed `undefined`.
+A `void` expression also returns nothing. Nested returns do
+not change their enclosing function's replacement. Mutant bodies are not
+typechecked. Skipped functions create no extreme outcome.
+Each extreme outcome also retains the statement `coverage` fraction and the
+same nullable `pseudoTested` flag as its function row.
+
+Extreme mutations always use `strategy: "replace"`, including with
+`--experimental-switching`. Comparison mutants still use the requested strategy.
+The stable `result.mutation` counters, score, timings and diagnostics cover
+comparison mutants only. The aggregate `result.jobsAttempted` and execution
+time include both phases. `diagnostics.concurrency.seshat.effectiveWorkers`
+continues to describe the comparison scheduler; each phase reports its own
+`workersUsed`. An extreme execution error, timeout or cancellation prevents
+comparison scheduling. Unknown coverage can retain resolved extreme execution
+evidence while leaving function flags and overall completeness unknown.
+
+Pseudo-tested counts have no threshold and do not alter `minMutationScore`.
+They are evidence that tests failed to detect this particular body replacement,
+not proof that a function has no useful tests.
 
 Within schema version 1, Seshat preserves the documented field names, JSON
 types, nullability, score units, comparison rules and verdict meanings.

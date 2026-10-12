@@ -19,7 +19,7 @@ Usage: seshat <check|crap|mutate> [options]
        seshat <--help|-h|--version|-V>
   check           CRAP analysis and mutation testing
   crap            CRAP analysis with fresh coverage, no mutants
-  mutate          Mutation testing with original typechecks/baselines, no coverage
+  mutate          Mutation testing with typechecks, baselines and fresh coverage
 
 Options:
   --config PATH   Configuration file (default: ./seshat.json)
@@ -292,15 +292,55 @@ fn readable(report: &Value) -> String {
             } else {
                 String::new()
             };
+            let pseudo = function
+                .get("pseudoTestStatus")
+                .map_or(String::new(), |status| {
+                    format!(", pseudo-testing {}", text(status))
+                });
             let _ = writeln!(
                 output,
-                "  {:?}: complexity {}, statements {statements}{branches}, CRAP {crap}",
+                "  {:?}: complexity {}, statements {statements}{branches}, CRAP {crap}{pseudo}",
                 text(&function["name"]),
                 function["complexity"]
             );
         }
         if let Some(error) = source.get("error").filter(|v| !v.is_null()) {
             let _ = writeln!(output, "  Error: {error}");
+        }
+    }
+    if let Some(pseudo) = result.get("pseudoTesting") {
+        let _ = writeln!(
+            output,
+            "Pseudo-testing: {} pseudo-tested, {} checked, {} unknown, {} planned ({})",
+            pseudo["pseudoTested"],
+            pseudo["checked"],
+            pseudo["unknown"],
+            pseudo["planned"],
+            if pseudo["complete"] == true {
+                "complete"
+            } else {
+                "incomplete"
+            }
+        );
+        output.push_str(
+            "Extreme mutations use source replacement; comparison mutation scores are separate.\n",
+        );
+        for key in ["error", "restorationError"] {
+            if let Some(error) = pseudo.get(key).filter(|value| !value.is_null()) {
+                let _ = writeln!(output, "Extreme mutation {key}: {error}");
+            }
+        }
+        if pseudo["unresolved"].as_u64().is_some_and(|count| count > 0) {
+            let breakdown = &pseudo["diagnostics"]["unresolvedBreakdown"];
+            let _ = writeln!(
+                output,
+                "Unresolved extreme mutations: timed-out {}, execution-error {}, cancelled {}, not-run {}, unassessed {}",
+                breakdown["timedOut"],
+                breakdown["executionError"],
+                breakdown["cancelled"],
+                breakdown["notRun"],
+                breakdown["unassessed"]
+            );
         }
     }
     for setup in array(&result["setups"]) {

@@ -11,6 +11,7 @@ insufficiently tested code.
 
 - Calculates function complexity and CRAP scores from branch coverage.
 - Changes comparison operators one at a time and checks whether tests detect them.
+- Replaces function bodies to find covered functions whose removal tests miss.
 - Runs tests in isolated copies of the captured project.
 - Produces readable terminal output and versioned JSON, with optional CI thresholds.
 - Supports explicit source selection, multiple test setups and parallel mutation workers.
@@ -122,6 +123,12 @@ The mutation score is the percentage of mutants that made a test fail. A mutant
 is one changed comparison, such as `>` to `>=`. If tests catch two of three
 mutants, the score is `66.67%`. A timeout or execution error leaves the run
 incomplete and withholds the score. Neither score proves correctness.
+
+`check` and `mutate` also replace eligible function bodies to detect pseudo-tested
+functions, those whose body replacement tests miss despite positive coverage.
+These flags and counts are separate from the comparison mutation score. `mutate`
+collects fresh coverage to skip unexecuted functions; it does not apply CRAP
+thresholds. Extreme mutation uses replacement even with experimental switching.
 
 ## Use in CI
 
