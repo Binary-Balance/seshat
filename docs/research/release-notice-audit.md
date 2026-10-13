@@ -65,9 +65,20 @@ Rust toolchain: `rustc 1.98.1 (48a229cea 2026-09-01)` → `rustc 1.98.1 (48a229c
 
 Scenarios: `baseline`, `timeout`, `overflow`, `leaderExit`, `leaderExitRepeat`, `consoleCancellation`.
 
+## Preparation checks
+
+[Release local-install run 38351972414](https://github.com/Binary-Balance/seshat/actions/runs/38351972414)
+passed on all five targets at `9a671827e74c240200a22fe98ad1c0443d4a870b`,
+using Node 24.20.0 and npm 11.19.0. Installed native package identities, sizes
+and SHA-256 values match this audit.
+
+The read-only publisher dry run at that revision validates all six exact
+archives for version 0.4.0, registry `https://registry.npmjs.org/` and tag
+`latest`. It performs no npm writes. The audited source trees remain unchanged.
+
 ## Remaining checks
 
-- Run the release local install workflow on all five targets.
-- Run the read-only publisher dry run against the six staged archives and the reviewed revision.
+- Complete final review and merge the release preparation PR, then run the main-revision publisher dry run.
+- Approve the prepared release under the npm publication checkpoint before enabling publication.
 - After publication, verify the six registry versions, tarball bytes and provenance against this audit.
 - Create the GitHub release with the six audited archives.

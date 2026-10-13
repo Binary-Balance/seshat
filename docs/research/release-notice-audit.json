@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "kind": "seshat-release-notice-audit",
   "issue": 153,
-  "status": "native-audit-complete-pending-local-matrix-and-publication",
+  "status": "prepared-pending-final-review-and-publication",
   "capturedAt": "2026-10-13",
   "candidate": {
     "packageVersion": "0.4.0",
@@ -1071,8 +1071,8 @@
     "evidenceSha256": "426e995ed912f1cf32383126e888f30a1860aef09a7feed688f48629ea4c145b"
   },
   "remainingChecks": [
-    "Run the release local install workflow on all five targets.",
-    "Run the read-only publisher dry run against the six staged archives and the reviewed revision.",
+    "Complete final review and merge the release preparation PR, then run the main-revision publisher dry run.",
+    "Approve the prepared release under the npm publication checkpoint before enabling publication.",
     "After publication, verify the six registry versions, tarball bytes and provenance against this audit.",
     "Create the GitHub release with the six audited archives."
   ],
@@ -1099,5 +1099,33 @@
       "markdown": "docs/releases/0.1.0-rc.1-audit.md",
       "use": "Archived 0.1.0-rc.1 candidate."
     }
-  ]
+  ],
+  "releasePreparation": {
+    "localInstall": {
+      "runId": 38351972414,
+      "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/38351972414",
+      "revision": "9a671827e74c240200a22fe98ad1c0443d4a870b",
+      "node": "24.20.0",
+      "npm": "11.19.0",
+      "targets": [
+        "linux-x64",
+        "linux-arm64",
+        "darwin-x64",
+        "darwin-arm64",
+        "win32-x64"
+      ],
+      "validationPassed": true,
+      "installedNativeIdentitiesMatchAudit": true
+    },
+    "localPublisherDryRun": {
+      "mode": "dry-run",
+      "revision": "9a671827e74c240200a22fe98ad1c0443d4a870b",
+      "version": "0.4.0",
+      "registry": "https://registry.npmjs.org/",
+      "tag": "latest",
+      "archiveCount": 6,
+      "validationPassed": true,
+      "publicationEnabled": false
+    }
+  }
 }
