@@ -1,6 +1,7 @@
 # 0.4.0 release notice audit
 
-Captured 2026-10-13. Native audit complete; local install and publication checks remain.
+Captured 2026-10-13. Native audit and local installation checks are complete;
+final review, merge and the main-revision publisher dry run remain.
 
 Build source [0f30ffbb83b0721a3a75abf36b815510f12f2f58](https://github.com/Binary-Balance/seshat/commit/0f30ffbb83b0721a3a75abf36b815510f12f2f58), ref `refs/pull/154/merge`.
 
