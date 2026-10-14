@@ -52,8 +52,8 @@ operator's returned attempts and excludes shared preparation.
 
 | Family | Mutant test jobs per setup | Replacement, ms | Switching, ms |
 | --- | ---: | ---: | ---: |
-| logical | 3 | 774.7 (761.5 to 800.8) | 1103.2 (1000.5 to 1232.1) |
-| arithmetic | 5 | 1310.5 (1304.5 to 1420.8) | 1541.0 (1539.7 to 1974.2) |
+| logical | 3 | 482.1 (468.9 to 483.4) | 657.7 (637.2 to 711.4) |
+| arithmetic | 5 | 791.1 (790.8 to 793.8) | 958.3 (958.2 to 983.8) |
 
 Switching also runs one inactive prepared baseline. Every mutant starts a fresh
 test process. These measurements cover this small fixture only; they establish
@@ -61,11 +61,11 @@ neither a production runtime bound nor a general switching speed advantage.
 
 ## Semantic checks and limits
 
-Seventeen syntax/behaviour cases compare 31 active switching results with source
+Eighteen syntax/behaviour cases compare 32 active switching results with source
 replacement and fixed expected results where specified. They cover short-circuit
 side effects, operand values, logical-chain grouping, mixed operators, BigInt,
-coercion, Unicode trivia, adjacent unary signs, comments and regex literals,
-`await`, `yield` and direct `eval`. Separate runner
+coercion, Unicode trivia, adjacent unary signs, TypeScript non-null assertions,
+comments and regex literals, `await`, `yield` and direct `eval`. Separate runner
 checks exercise active logical/arithmetic switching in Node, Jest and Vitest.
 Real CLI runs also check operator selection, global IDs across two files and
 parallel workers using both strategies.

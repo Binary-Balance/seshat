@@ -1615,17 +1615,20 @@ impl Analysis {
                         &source[c.span.end as usize..]
                     ));
                 }
-                // Prevent unary signs, comments and regex literals merging with the new token.
-                let separator = if c.kind == MutationOperator::Arithmetic {
-                    " "
-                } else {
+                // Separate tokens, including TypeScript's postfix ! before equality operators.
+                let prefix = &source[..c.offset];
+                let suffix = &source[c.offset + c.original.len()..];
+                let before = if prefix.ends_with(javascript_whitespace) {
                     ""
+                } else {
+                    " "
                 };
-                return Ok(format!(
-                    "{}{separator}{op}{separator}{}",
-                    &source[..c.offset],
-                    &source[c.offset + c.original.len()..]
-                ));
+                let after = if suffix.starts_with(javascript_whitespace) {
+                    ""
+                } else {
+                    " "
+                };
+                return Ok(format!("{prefix}{before}{op}{after}{suffix}"));
             }
         }
         Err("unknown mutant".into())
@@ -1791,7 +1794,7 @@ fn operator_mutants_follow_ast_sites_and_selected_families() {
 }
 
 #[test]
-fn arithmetic_replacements_preserve_token_boundaries() {
+fn operator_replacements_preserve_token_boundaries() {
     for (source, expected) in [
         ("a+-b;", "a - -b;"),
         ("a-+b;", "a + +b;"),
@@ -1799,6 +1802,9 @@ fn arithmetic_replacements_preserve_token_boundaries() {
         ("8*/xx/.source.length;", "8 / /xx/.source.length;"),
         ("a/-b;", "a * -b;"),
         ("a+// comment\nb;", "a - // comment\nb;"),
+        ("a!!=b;", "a! == b;"),
+        ("a!!==b;", "a! === b;"),
+        ("a != b;", "a == b;"),
     ] {
         let analysis = Analysis::inspect("source.ts", source).unwrap();
         let mutant = analysis.replace(source, 0).unwrap();

@@ -42,6 +42,7 @@ async function evaluate(source, active) {
 }
 
 const cases = [
+  ['adjacent-non-null', 'const a: number | null = 1, b = 1; a!!=b;', false, [true]],
   ['adjacent-signs', 'const a = 8, b = 2; [a+-b, a-+b];', [6, 6], [[10, 6], [6, 10]]],
   ['adjacent-comment', '8*/*division*/2;', 16, [4]],
   ['adjacent-regex', '8*/xx/.source.length;', 16, [4]],
