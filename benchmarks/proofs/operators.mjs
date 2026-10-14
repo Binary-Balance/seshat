@@ -42,6 +42,9 @@ async function evaluate(source, active) {
 }
 
 const cases = [
+  ['adjacent-signs', 'const a = 8, b = 2; [a+-b, a-+b];', [6, 6], [[10, 6], [6, 10]]],
+  ['adjacent-comment', '8*/*division*/2;', 16, [4]],
+  ['adjacent-regex', '8*/xx/.source.length;', 16, [4]],
   ['unicode-trivia', '[4\uFEFF+\uFEFF2, false\uFEFF&&\uFEFFtrue];', [6, false], [[2, false], [6, true]]],
   ['and-short-circuit', "const log: string[] = []; function next(name: string, value: number) { log.push(name); return value; } const result = next('left', 0) && next('right', 7); [result, log];", [0, ['left']], [[7, ['left', 'right']]]],
   ['or-short-circuit', "const log: string[] = []; function next(name: string, value: string) { log.push(name); return value; } const result = next('left', 'yes') || next('right', 'right'); [result, log];", ['yes', ['left']], [['right', ['left', 'right']]]],

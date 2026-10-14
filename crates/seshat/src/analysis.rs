@@ -1615,10 +1615,15 @@ impl Analysis {
                         &source[c.span.end as usize..]
                     ));
                 }
+                // Prevent unary signs, comments and regex literals merging with the new token.
+                let separator = if c.kind == MutationOperator::Arithmetic {
+                    " "
+                } else {
+                    ""
+                };
                 return Ok(format!(
-                    "{}{}{}",
+                    "{}{separator}{op}{separator}{}",
                     &source[..c.offset],
-                    op,
                     &source[c.offset + c.original.len()..]
                 ));
             }
@@ -1783,6 +1788,23 @@ fn operator_mutants_follow_ast_sites_and_selected_families() {
             .unwrap()
             .contains("\u{2028}|| // || ignored")
     );
+}
+
+#[test]
+fn arithmetic_replacements_preserve_token_boundaries() {
+    for (source, expected) in [
+        ("a+-b;", "a - -b;"),
+        ("a-+b;", "a + +b;"),
+        ("a*/*comment*/b;", "a / /*comment*/b;"),
+        ("8*/xx/.source.length;", "8 / /xx/.source.length;"),
+        ("a/-b;", "a * -b;"),
+        ("a+// comment\nb;", "a - // comment\nb;"),
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        let mutant = analysis.replace(source, 0).unwrap();
+        assert_eq!(mutant, expected);
+        Analysis::inspect("mutant.ts", &mutant).unwrap();
+    }
 }
 
 #[test]
