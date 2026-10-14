@@ -338,7 +338,7 @@ baseline and fresh coverage. All three commands collect fresh coverage.
 `mutate` needs statement coverage to skip unexecuted functions during extreme
 mutation; it still does not evaluate `maxCrap` thresholds.
 
-`check` and `mutate` replace each eligible function body once before comparison
+`check` and `mutate` replace each eligible function body once before operator
 mutation. Functions explicitly returning `void`, using a `void` expression or
 without a return expression get an empty body; other functions get
 the undefined value with `return void 0`, avoiding a shadowed `undefined`.
@@ -348,7 +348,40 @@ accessors, generators, implicit scopes and reliably zero-covered functions are
 skipped. A surviving replacement with reliable positive statement coverage
 marks the function `pseudoTested: true`. A killed replacement marks it false;
 unresolved executions or unknown coverage leave the flag null. Counts and
-execution evidence appear in `pseudoTesting`, separately from comparison scores.
+execution evidence appear in `pseudoTesting`, separately from operator scores.
+
+### Mutation operators
+
+The optional top-level `mutationOperators` array selects operator families:
+
+```json
+"mutationOperators": ["comparison", "logical", "arithmetic"]
+```
+
+Omitting it enables all three families. Use `["comparison"]` to retain the
+comparison-only scope of 0.4.0, or `[]` to run extreme mutation without operator
+mutants. Unknown names, duplicate names and non-array values fail before capture.
+Selection does not change source coverage, complexity or extreme mutation.
+
+| Family | Replacements |
+| --- | --- |
+| `comparison` | `<` to `<=` or `>=`; `<=` to `<` or `>`; `>` to `>=` or `<=`; `>=` to `>` or `<`; `==`/`!=` and `===`/`!==` swaps. |
+| `logical` | `&&`/`||` swaps. Operand grouping is preserved with parentheses. |
+| `arithmetic` | Binary `+`/`-` and `*`/`/` swaps. |
+
+Unary signs, increments, assignments, `??` and operators in comments, strings
+or type syntax are excluded. Arithmetic preserves JavaScript's coercion and
+BigInt rules; a mutation can therefore change string concatenation or throw.
+Logical mutations preserve short-circuiting and return operand values.
+
+The mutation score includes all selected operator families. Adding families
+can change the score and adds one test job per setup per new mutant.
+JSON reports retain `enabledOperators`, each outcome's `kind`, and `perOperator`
+planned/completed counts, job counts and cumulative execution time. The terminal
+report prints each original operator's counts. Surviving mutants are not proof
+of equivalence. See the [operator fixture evidence](research/mutation-operators.md).
+
+### Mutation execution
 
 Every mutant runs all configured setups. No automatic test selection, persistent
 test-process reuse or cross-run verdict caching is performed. Each baseline and
@@ -367,12 +400,16 @@ an incomplete mutation-score threshold cannot pass.
 The option is rejected by `crap`. Seshat completes the original typechecks and
 baselines and coverage first. Extreme mutations use source replacement, including
 when switching is requested. Seshat then prepares every selected source for
-comparison switching in the captured copy. It runs an inactive prepared baseline on the primary
+operator switching in the captured copy. It runs an inactive prepared baseline on the primary
 copy and each mutation worker before scheduling mutants. Prepared baseline rows,
 their job count and preparation timings are retained in the JSON mutation report.
 Switching does not typecheck transformed helpers. Helper wrapping can lose
 TypeScript narrowing and can change reflection or source-text observations; verify
 the result against replacement for the project before relying on it.
+Logical switching uses inline conditional arms to retain lazy evaluation and
+the surrounding `await`, `yield` and direct `eval` context. Nested arms duplicate
+source text. If a rendered body exceeds 8 MiB, preparation fails explicitly
+and no complete mutation score is reported; use source replacement instead.
 
 `{seshatReporter}` is replaced with the private reporter for that runner.
 `{seshatReporter}` and `{seshatEnvironment}` are supported only in command

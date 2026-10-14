@@ -115,7 +115,7 @@ coverage and CRAP and has no `result.mutation`. `mutate` requires the original
 typecheck, test baselines and fresh coverage to skip zero-covered functions in
 extreme mutation. It retains function measurement rows but does not evaluate
 `maxCrap` thresholds. Both mutation commands run extreme mutation before
-comparison mutation. A missing
+operator mutation. A missing
 typecheck in a `check` or `mutate` setup is rejected before this structured
 result exists. In `crap`, the typecheck command is optional; when it is omitted,
 the setup keeps `typecheck.state: "not-run"` and `timings.typecheckMs: null`.
@@ -244,7 +244,9 @@ command text or free-form diagnostic nested under them remains evidence.
 | --- | --- |
 | `strategy` | `replace` by default, or `switch` when the experimental switching option was used. |
 | `complete` | Whether every planned mutant received a resolved verdict and mutation preparation, execution and cleanup succeeded. |
-| `planned` | Number of generated comparison replacements. |
+| `planned` | Number of generated replacements across all selected operator families. |
+| `enabledOperators` | Configured operator families, defaulting to `["comparison", "logical", "arithmetic"]`. An empty array disables operator mutants. |
+| `perOperator` | Rows sorted by original operator text. Each has `operator`, `kind`, `planned`, `completed`, `jobsAttempted` and `executionMs`. Planned counts include unstarted work; completed counts include returned attempts. Times sum those attempts and can overlap under parallelism. Operators without planned mutants have no row. |
 | `killed`, `survived` | Counts of outcomes with those resolved verdicts. |
 | `score` | `killed / (killed + survived) × 100` for a complete non-empty plan; otherwise `null`. The value is a percentage from `0` to `100`. |
 | `outcomes` | One row per planned mutant, in source and operator order. |
@@ -259,8 +261,10 @@ command text or free-form diagnostic nested under them remains evidence.
 | `error`, `restorationError` | Nullable diagnostic strings for mutation or source-restoration failures. Either failure makes mutation incomplete and withholds its score. |
 
 Every outcome has `id` (run-wide), `localId` (within its source), `path`,
-`offset`, `original`, `replacement`, `setups` and `verdict`. IDs and ordering
-follow resolved source order and comparison-operator order. Each outcome setup
+`offset`, `kind`, `original`, `replacement`, `setups` and `verdict`. `kind` is
+`comparison`, `logical` or `arithmetic`. IDs follow resolved source order,
+then AST site order by start offset, with enclosing sites before nested sites
+at the same start, then replacement order. Each outcome setup
 retains its job state and evidence. An unstarted setup remains `not-run`.
 
 Original baselines must all be `passed` before any mutant can be assessed. If
@@ -449,13 +453,13 @@ Each extreme outcome also retains the statement `coverage` fraction and the
 same nullable `pseudoTested` flag as its function row.
 
 Extreme mutations always use `strategy: "replace"`, including with
-`--experimental-switching`. Comparison mutants still use the requested strategy.
+`--experimental-switching`. Operator mutants still use the requested strategy.
 The stable `result.mutation` counters, score, timings and diagnostics cover
-comparison mutants only. The aggregate `result.jobsAttempted` and execution
+operator mutants only. The aggregate `result.jobsAttempted` and execution
 time include both phases. `diagnostics.concurrency.seshat.effectiveWorkers`
-continues to describe the comparison scheduler; each phase reports its own
+continues to describe the operator scheduler; each phase reports its own
 `workersUsed`. An extreme execution error, timeout or cancellation prevents
-comparison scheduling. Unknown coverage can retain resolved extreme execution
+operator scheduling. Unknown coverage can retain resolved extreme execution
 evidence while leaving function flags and overall completeness unknown.
 
 Pseudo-tested counts have no threshold and do not alter `minMutationScore`.

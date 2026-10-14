@@ -176,7 +176,7 @@ runner integrations before publishing setup examples.
 Mutation-only execution still requires original typechecks and passing test
 baselines and fresh coverage. Coverage identifies zero-covered functions to skip
 in extreme mutation. The command does not evaluate CRAP thresholds. Both `check`
-and `mutate` report pseudo-tested functions separately from comparison scores.
+and `mutate` report pseudo-tested functions separately from operator scores.
 
 All commands use the same configuration. Quality thresholds are opt-in:
 projects may configure maximum CRAP and minimum mutation scores. With no quality

@@ -8,7 +8,7 @@ remain under `benchmarks/proofs/`.
 ## Analysis
 
 `analysis.rs` parses captured TypeScript and TSX with Oxc. It identifies function
-scopes, calculates complexity and generates comparison mutants. It owns source
+scopes, calculates complexity and generates comparison, logical and arithmetic mutants. It owns source
 coordinates and mutation edits, including the experimental switching transform.
 Nested functions have independent complexity counts. Class initialisers and
 static blocks receive complexity results but are outside CRAP scoring.
@@ -30,7 +30,7 @@ innermost containing scope:
 Chained expressions can therefore add more than one decision. For example,
 `a?.b?.()` adds two, while an ordinary member access adds none. Decisions outside
 these scopes, such as a module-level `if`, do not create a module complexity
-score or increase a function's score. Module-level comparisons can still
+score or increase a function's score. Module-level operators can still
 generate mutants; complexity measurement does not limit mutation scope.
 Destructuring assignment defaults, such as `({x = 1} = value)`, do not add a
 decision.

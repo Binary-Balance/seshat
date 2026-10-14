@@ -23,7 +23,7 @@ pub(super) fn file_io_hook(path: &Path, opened: bool) {
     }
 }
 use super::files::{RegularFile, is_link};
-use crate::analysis::Analysis;
+use crate::analysis::{Analysis, MutationOperator, default_mutation_operators};
 use glob::{MatchOptions, Pattern};
 use serde::Deserialize;
 use serde_json::{Value, json};
@@ -223,6 +223,8 @@ struct Config {
     workers: usize,
     #[serde(default)]
     thresholds: Thresholds,
+    #[serde(default = "default_mutation_operators", rename = "mutationOperators")]
+    mutation_operators: Vec<MutationOperator>,
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize)]
@@ -333,6 +335,11 @@ impl Config {
     fn parse(bytes: &[u8]) -> Result<Self, String> {
         let config: Self =
             serde_json::from_slice(bytes).map_err(|e| format!("seshat.json: {e}"))?;
+        for (index, operator) in config.mutation_operators.iter().enumerate() {
+            if config.mutation_operators[..index].contains(operator) {
+                return Err("mutationOperators must not contain duplicates".into());
+            }
+        }
         if config
             .thresholds
             .max_crap
@@ -819,15 +826,19 @@ impl CapturedProject {
         let sources: Vec<_> = self
             .sources
             .iter()
-            .map(
-                |(path, source)| match Analysis::inspect(&stable_path(path), source) {
+            .map(|(path, source)| {
+                match Analysis::inspect_with_operators(
+                    &stable_path(path),
+                    source,
+                    &self.config.mutation_operators,
+                ) {
                     Ok(analysis) => json!({"path":stable_path(path),"analysis":analysis.json()}),
                     Err(error) => {
                         complete = false;
                         json!({"path":stable_path(path),"error":error})
                     }
-                },
-            )
+                }
+            })
             .collect();
         let setups: Vec<_> = self
             .config
@@ -1128,6 +1139,39 @@ mod tests {
         ] {
             let raw = format!("{{\"thresholds\":{thresholds},{}", &raw[1..]);
             assert!(Config::parse(raw.as_bytes()).is_err());
+        }
+    }
+
+    #[test]
+    fn mutation_operator_configuration_is_explicit_and_validated() {
+        let fixture = Fixture::new();
+        let parse = |selection: Value| {
+            let mut config = fixture.config.clone();
+            config["mutationOperators"] = selection;
+            Config::parse(&serde_json::to_vec(&config).unwrap())
+        };
+        assert_eq!(
+            Config::parse(&serde_json::to_vec(&fixture.config).unwrap())
+                .unwrap()
+                .mutation_operators,
+            default_mutation_operators()
+        );
+        for selection in [
+            json!([]),
+            json!(["comparison"]),
+            json!(["logical", "arithmetic"]),
+        ] {
+            assert!(parse(selection).is_ok());
+        }
+        for selection in [
+            Value::Null,
+            json!("logical"),
+            json!([true]),
+            json!(["Logical"]),
+            json!(["unknown"]),
+            json!(["logical", "logical"]),
+        ] {
+            assert!(parse(selection).is_err());
         }
     }
 

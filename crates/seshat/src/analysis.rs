@@ -72,7 +72,7 @@ fn initialized_function(expression: &Expression<'_>) -> Option<u32> {
     }
 }
 
-// TypeScript's directive regexes use JavaScript whitespace, not Rust's Unicode set.
+// JavaScript whitespace differs from Rust's Unicode set.
 fn javascript_whitespace(character: char) -> bool {
     matches!(character, '\u{0009}'..='\u{000d}' | ' ' | '\u{00a0}' | '\u{1680}'
         | '\u{2000}'..='\u{200a}' | '\u{2028}' | '\u{2029}' | '\u{202f}'
@@ -172,7 +172,24 @@ fn load_evidence_respects_catch_blocks_and_function_boundaries() {
     }
 }
 
-pub struct Comparison {
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum MutationOperator {
+    Comparison,
+    Logical,
+    Arithmetic,
+}
+
+pub fn default_mutation_operators() -> Vec<MutationOperator> {
+    vec![
+        MutationOperator::Comparison,
+        MutationOperator::Logical,
+        MutationOperator::Arithmetic,
+    ]
+}
+
+pub struct OperatorSite {
+    pub kind: MutationOperator,
     pub span: Span,
     pub left: Span,
     pub right: Span,
@@ -187,7 +204,7 @@ pub struct Analysis {
     pub scopes: Vec<Scope>,
     pub branches: Vec<BranchSite>,
     pub branch_end_ranges: Vec<Span>,
-    pub comparisons: Vec<Comparison>,
+    pub operators: Vec<OperatorSite>,
     decisions: Vec<Span>,
     pub parameter_values: Vec<Span>,
     pub statement_starts: std::collections::BTreeSet<u32>,
@@ -764,28 +781,46 @@ impl<'a> Visit<'a> for Analysis {
         if decision {
             self.decisions.push(node.span());
         }
-        if let AstKind::BinaryExpression(b) = node {
-            let replacements: &'static [&'static str] = match b.operator.as_str() {
-                "<" => &["<=", ">="],
-                "<=" => &["<", ">"],
-                ">" => &[">=", "<="],
-                ">=" => &[">", "<"],
-                "==" => &["!="],
-                "!=" => &["=="],
-                "===" => &["!=="],
-                "!==" => &["==="],
-                _ => return,
-            };
-            self.comparisons.push(Comparison {
-                span: b.span,
-                left: b.left.span(),
-                right: b.right.span(),
-                offset: 0,
-                original: b.operator.as_str(),
-                replacements,
-                first_id: 0,
-            });
-        }
+        let (span, left, right, original) = match node {
+            AstKind::BinaryExpression(b) => {
+                (b.span, b.left.span(), b.right.span(), b.operator.as_str())
+            }
+            AstKind::LogicalExpression(b) => {
+                (b.span, b.left.span(), b.right.span(), b.operator.as_str())
+            }
+            _ => return,
+        };
+        let replacements: &'static [&'static str] = match original {
+            "<" => &["<=", ">="],
+            "<=" => &["<", ">"],
+            ">" => &[">=", "<="],
+            ">=" => &[">", "<"],
+            "==" => &["!="],
+            "!=" => &["=="],
+            "===" => &["!=="],
+            "!==" => &["==="],
+            "&&" => &["||"],
+            "||" => &["&&"],
+            "+" => &["-"],
+            "-" => &["+"],
+            "*" => &["/"],
+            "/" => &["*"],
+            _ => return,
+        };
+        self.operators.push(OperatorSite {
+            kind: match original {
+                "&&" | "||" => MutationOperator::Logical,
+                "+" | "-" | "*" | "/" => MutationOperator::Arithmetic,
+                _ => MutationOperator::Comparison,
+            },
+            span,
+            left,
+            right,
+            offset: 0,
+            original,
+            replacements,
+            first_id: 0,
+        });
     }
 
     fn leave_node(&mut self, node: AstKind<'a>) {
@@ -1370,6 +1405,14 @@ impl Analysis {
     }
 
     pub fn inspect(path: &str, source: &str) -> Result<Self, String> {
+        Self::inspect_with_operators(path, source, &default_mutation_operators())
+    }
+
+    pub fn inspect_with_operators(
+        path: &str,
+        source: &str,
+        enabled: &[MutationOperator],
+    ) -> Result<Self, String> {
         let allocator = Allocator::default();
         let source_type = SourceType::from_path(path).map_err(|e| e.to_string())?;
         let parsed = Parser::new(&allocator, source, source_type).parse();
@@ -1479,15 +1522,16 @@ impl Analysis {
                 result.scopes[i].complexity += 1;
             }
         }
+        result.operators.retain(|site| enabled.contains(&site.kind));
         result
-            .comparisons
+            .operators
             .sort_by_key(|c| (c.span.start, std::cmp::Reverse(c.span.end)));
         let mut id = 0;
-        for c in &mut result.comparisons {
+        for c in &mut result.operators {
             let mut offset = c.left.end as usize;
             loop {
                 let gap = &source[offset..c.right.start as usize];
-                let trimmed = gap.trim_start();
+                let trimmed = gap.trim_start_matches(javascript_whitespace);
                 offset += gap.len() - trimmed.len();
                 if trimmed.starts_with("/*") {
                     offset += trimmed.find("*/").ok_or("unclosed comment")? + 2;
@@ -1532,7 +1576,7 @@ impl Analysis {
     }
 
     pub fn count(&self) -> usize {
-        self.comparisons.iter().map(|c| c.replacements.len()).sum()
+        self.operators.iter().map(|c| c.replacements.len()).sum()
     }
 
     pub fn statement_owner(&self, byte: u32) -> Option<usize> {
@@ -1553,17 +1597,38 @@ impl Analysis {
     }
 
     pub fn replace(&self, source: &str, id: usize) -> Result<String, String> {
-        for c in &self.comparisons {
+        for c in &self.operators {
             if let Some(op) = id
                 .checked_sub(c.first_id)
                 .and_then(|i| c.replacements.get(i))
             {
-                return Ok(format!(
-                    "{}{}{}",
-                    &source[..c.offset],
-                    op,
-                    &source[c.offset + c.original.len()..]
-                ));
+                if c.kind == MutationOperator::Logical {
+                    // Keep the AST's operand grouping when &&/|| precedence changes.
+                    return Ok(format!(
+                        "{}(({}){}{}{}({})){}",
+                        &source[..c.span.start as usize],
+                        &source[c.span.start as usize..c.left.end as usize],
+                        &source[c.left.end as usize..c.offset],
+                        op,
+                        &source[c.offset + c.original.len()..c.right.start as usize],
+                        &source[c.right.start as usize..c.span.end as usize],
+                        &source[c.span.end as usize..]
+                    ));
+                }
+                // Separate tokens, including TypeScript's postfix ! before equality operators.
+                let prefix = &source[..c.offset];
+                let suffix = &source[c.offset + c.original.len()..];
+                let before = if prefix.ends_with(javascript_whitespace) {
+                    ""
+                } else {
+                    " "
+                };
+                let after = if suffix.starts_with(javascript_whitespace) {
+                    ""
+                } else {
+                    " "
+                };
+                return Ok(format!("{prefix}{before}{op}{after}{suffix}"));
             }
         }
         Err("unknown mutant".into())
@@ -1602,28 +1667,52 @@ impl Analysis {
         if source.contains("__seshat_") {
             return Err("proof helper name collision".into());
         }
-        fn render(a: &Analysis, source: &str, start: u32, end: u32, id_offset: usize) -> String {
+        fn render(
+            a: &Analysis,
+            source: &str,
+            start: u32,
+            end: u32,
+            id_offset: usize,
+        ) -> Result<String, String> {
             let mut out = String::new();
             let mut cursor = start;
-            for c in &a.comparisons {
+            for c in &a.operators {
                 if c.span.start < cursor || c.span.end > end {
                     continue;
                 }
                 out.push_str(&source[cursor as usize..c.span.start as usize]);
-                let left = render(a, source, c.left.start, c.left.end, id_offset);
-                let right = render(a, source, c.right.start, c.right.end, id_offset);
-                out.push_str(&format!(
-                    "__seshat_compare({}, ({left}), ({right}), {:?})",
-                    c.first_id + id_offset,
-                    c.original
-                ));
+                let left = render(a, source, c.left.start, c.left.end, id_offset)?;
+                let right = render(a, source, c.right.start, c.right.end, id_offset)?;
+                if c.kind == MutationOperator::Logical {
+                    // Inline arms preserve short-circuiting, await/yield and direct eval scope.
+                    out.push_str(&format!("(__seshat_active === {} ? (({left}) {} ({right})) : (({left}) {} ({right})))",
+                        c.first_id + id_offset, c.replacements[0], c.original));
+                } else {
+                    out.push_str(&format!(
+                        "__seshat_compare({}, ({left}), ({right}), {:?})",
+                        c.first_id + id_offset,
+                        c.original
+                    ));
+                }
+                // Nested logical arms duplicate text; fail explicitly before growth is unbounded.
+                if out.len() > 8 * 1024 * 1024 {
+                    return Err(
+                        "experimental switching source exceeds 8 MiB; use source replacement"
+                            .into(),
+                    );
+                }
                 cursor = c.span.end;
             }
             out.push_str(&source[cursor as usize..end as usize]);
-            out
+            if out.len() > 8 * 1024 * 1024 {
+                return Err(
+                    "experimental switching source exceeds 8 MiB; use source replacement".into(),
+                );
+            }
+            Ok(out)
         }
         let mut alternatives = vec![Value::Null; id_offset];
-        alternatives.extend(self.comparisons.iter().flat_map(|c| {
+        alternatives.extend(self.operators.iter().flat_map(|c| {
             c.replacements
                 .iter()
                 .enumerate()
@@ -1635,18 +1724,106 @@ impl Analysis {
             "\nif (!(globalThis as any).process?.env) throw new Error('experimental switching requires globalThis.process.env');\nconst __seshat_active = Number((globalThis as any).process.env.SESHAT_MUTANT_ID ?? -1);\nconst __seshat_alternatives = {};\n",
             json!(alternatives)
         );
-        let helper = "function __seshat_compare(site: number, a: any, b: any, op: string) {\n  const alternative = __seshat_alternatives[__seshat_active];\n  if (alternative && alternative[1] === site) op = alternative[2] as string;\n  switch(op) { case '<': return a < b; case '<=': return a <= b; case '>': return a > b; case '>=': return a >= b; case '==': return a == b; case '!=': return a != b; case '===': return a === b; case '!==': return a !== b; default: throw Error('unknown comparison'); }\n}\n";
+        let helper = "function __seshat_compare(site: number, a: any, b: any, op: string) {\n  const alternative = __seshat_alternatives[__seshat_active];\n  if (alternative && alternative[1] === site) op = alternative[2] as string;\n  switch(op) { case '<': return a < b; case '<=': return a <= b; case '>': return a > b; case '>=': return a >= b; case '==': return a == b; case '!=': return a != b; case '===': return a === b; case '!==': return a !== b; case '+': return a + b; case '-': return a - b; case '*': return a * b; case '/': return a / b; default: throw Error('unknown operator'); }\n}\n";
         Ok(source[..start as usize].to_owned()
             + &prefix
             + helper
-            + &render(self, source, start, source.len() as u32, id_offset))
+            + &render(self, source, start, source.len() as u32, id_offset)?)
     }
 
     pub fn json(&self) -> Value {
         json!({"scopes": self.scopes.iter().map(|s| json!({"name":s.name,"start":s.span.start,"end":s.span.end,"complexity":s.complexity,"cognitiveComplexity":s.cognitive_complexity,"implicit":s.implicit,"empty":s.empty,"typeSafety":s.type_safety})).collect::<Vec<_>>(),
             "typeSafety":self.type_safety(),
-            "mutants": self.comparisons.iter().flat_map(|c| c.replacements.iter().enumerate().map(move |(i, op)| json!({"id":c.first_id+i,"offset":c.offset,"original":c.original,"replacement":op}))).collect::<Vec<_>>()})
+            "mutants": self.operators.iter().flat_map(|c| c.replacements.iter().enumerate().map(move |(i, op)| json!({"id":c.first_id+i,"kind":c.kind,"offset":c.offset,"original":c.original,"replacement":op}))).collect::<Vec<_>>()})
     }
+}
+
+#[test]
+fn operator_mutants_follow_ast_sites_and_selected_families() {
+    let source = "// 🎸 && + ignored\nconst text = '|| /'; function f(a: number, b: number) { return [a && b, a || b, a + b, a - b, a * b, a / b, a < b, a ?? b, +a]; }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let definitions = analysis.json();
+    let rows = definitions["mutants"].as_array().unwrap();
+    assert_eq!(rows.len(), 8);
+    assert_eq!(
+        rows.iter()
+            .map(|r| (
+                r["original"].as_str().unwrap(),
+                r["replacement"].as_str().unwrap()
+            ))
+            .collect::<Vec<_>>(),
+        vec![
+            ("&&", "||"),
+            ("||", "&&"),
+            ("+", "-"),
+            ("-", "+"),
+            ("*", "/"),
+            ("/", "*"),
+            ("<", "<="),
+            ("<", ">=")
+        ]
+    );
+    for (id, row) in rows.iter().enumerate() {
+        assert_eq!(row["id"], id);
+        let offset = row["offset"].as_u64().unwrap() as usize;
+        assert!(source[offset..].starts_with(row["original"].as_str().unwrap()));
+        Analysis::inspect("mutant.ts", &analysis.replace(source, id).unwrap()).unwrap();
+    }
+    let logical =
+        Analysis::inspect_with_operators("source.ts", source, &[MutationOperator::Logical])
+            .unwrap();
+    assert_eq!(logical.count(), 2);
+    assert_eq!(logical.json()["mutants"][1]["id"], 1);
+    assert_eq!(
+        Analysis::inspect_with_operators("source.ts", source, &[])
+            .unwrap()
+            .count(),
+        0
+    );
+    let chain = "a && b && c;";
+    let analysis = Analysis::inspect("source.ts", chain).unwrap();
+    assert_eq!(analysis.replace(chain, 1).unwrap(), "((a) || (b)) && c;");
+    let trivia = "a /* 🎸 && */ \u{feff}\u{2028}&& // || ignored\n b;";
+    let analysis = Analysis::inspect("source.ts", trivia).unwrap();
+    assert!(
+        analysis
+            .replace(trivia, 0)
+            .unwrap()
+            .contains("\u{2028}|| // || ignored")
+    );
+}
+
+#[test]
+fn operator_replacements_preserve_token_boundaries() {
+    for (source, expected) in [
+        ("a+-b;", "a - -b;"),
+        ("a-+b;", "a + +b;"),
+        ("a*/*comment*/b;", "a / /*comment*/b;"),
+        ("8*/xx/.source.length;", "8 / /xx/.source.length;"),
+        ("a/-b;", "a * -b;"),
+        ("a+// comment\nb;", "a - // comment\nb;"),
+        ("a!!=b;", "a! == b;"),
+        ("a!!==b;", "a! === b;"),
+        ("a != b;", "a == b;"),
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        let mutant = analysis.replace(source, 0).unwrap();
+        assert_eq!(mutant, expected);
+        Analysis::inspect("mutant.ts", &mutant).unwrap();
+    }
+}
+
+#[test]
+fn logical_switching_bounds_nested_expansion() {
+    let source = format!("{}true;", "true && ".repeat(30));
+    let analysis = Analysis::inspect("source.ts", &source).unwrap();
+    assert!(
+        analysis
+            .switched(&source)
+            .unwrap_err()
+            .contains("exceeds 8 MiB")
+    );
+    assert!(analysis.replace(&source, 0).is_ok());
 }
 
 #[test]

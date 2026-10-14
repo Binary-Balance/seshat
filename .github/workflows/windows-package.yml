@@ -17,6 +17,7 @@ on:
       - benchmarks/proofs/npm-package.mjs
       - benchmarks/proofs/release-consumer-summary.mjs
       - benchmarks/proofs/cli.mjs
+      - benchmarks/proofs/operators.mjs
       - benchmarks/proofs/parallel.mjs
       - benchmarks/proofs/process.mjs
       - benchmarks/proofs/liveness.mjs
@@ -51,6 +52,7 @@ on:
       - benchmarks/proofs/npm-package.mjs
       - benchmarks/proofs/release-consumer-summary.mjs
       - benchmarks/proofs/cli.mjs
+      - benchmarks/proofs/operators.mjs
       - benchmarks/proofs/parallel.mjs
       - benchmarks/proofs/process.mjs
       - benchmarks/proofs/liveness.mjs
@@ -261,6 +263,9 @@ jobs:
           $env:SESHAT_CONSOLE_HELPER_BINARY = $package.consoleHelper
           node benchmarks/proofs/cli.mjs 2>&1 | Tee-Object -FilePath work/windows/shared-cli.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $env:SESHAT_PROOF_OUTPUT = 'work/windows/operators.json'
+          node benchmarks/proofs/operators.mjs 2>&1 | Tee-Object -FilePath work/windows/operators.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Verify proof execute cancellation
         if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' && steps.payload.outcome == 'success' }}
         shell: pwsh
@@ -408,6 +413,8 @@ jobs:
             work/windows/windows-runtime-cli.log
             work/windows/shared-cli.json
             work/windows/shared-cli.log
+            work/windows/operators.json
+            work/windows/operators.log
             work/windows/shared-parallel.json
             work/windows/shared-parallel.log
           if-no-files-found: error

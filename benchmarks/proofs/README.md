@@ -671,6 +671,37 @@ are assertions, so a changed provider needs review rather than silent acceptance
 
 ## Mutation experiment
 
+### Logical and arithmetic operators
+
+After building the release binaries, run:
+
+```sh
+node benchmarks/proofs/operators.mjs
+```
+
+This checks AST-generated logical and arithmetic mutants, inactive and active
+switching, operand values and side effects, logical-chain grouping, BigInt,
+coercion, `await`, `yield` and direct `eval`. Node, Jest and Vitest also execute
+active logical/arithmetic helpers in `switching-syntax.mjs`.
+
+Real CLI assessments check the default families, individual families, parallel
+replacement and switching, a comparison-only scope and no operator mutants.
+Nine covered functions still receive extreme mutations when operator selection
+is empty. Source bytes and scratch cleanup are checked after every assessment.
+
+Set `SESHAT_OPERATOR_SAMPLES=3` for repeated cost measurements. Samples alternate
+replacement and switching order within each family. The default is one sample;
+`SESHAT_PROOF_OUTPUT` chooses the retained JSON path. The report normalises local
+paths and retains fixture/binary hashes, outcomes, per-operator counts and times.
+The [retained measurements](../../docs/research/mutation-operators.md) describe
+the exact fixture and hand-checked equivalent mutants. These rates and timings
+do not estimate performance or equivalence on other projects.
+
+Unix standalone package proofs run this script against the installed binary;
+the Windows package workflow runs it after the shared CLI proof.
+
+### Original comparison experiment
+
 Rust generates 20 comparison mutants from `mutation-subject.tsx`. For each of
 Node, Jest and Vitest, it compares isolated operator replacement with one prepared
 switching build. Every mutant gets a fresh test process with its ID set before
