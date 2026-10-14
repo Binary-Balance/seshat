@@ -104,7 +104,7 @@ struct MutantExecution {
 }
 
 enum MutationKind<'a> {
-    Comparisons { switching: bool },
+    Operators { switching: bool },
     Extreme { sources: &'a [Value] },
 }
 
@@ -1138,7 +1138,7 @@ impl CapturedProject {
     ) -> Value {
         let started = Instant::now();
         let (switching, extreme_sources) = match kind {
-            MutationKind::Comparisons { switching } => (switching, None),
+            MutationKind::Operators { switching } => (switching, None),
             MutationKind::Extreme { sources } => (false, Some(sources)),
         };
         let label = if extreme_sources.is_some() {
@@ -1166,11 +1166,11 @@ impl CapturedProject {
                     }
                     continue;
                 }
-                for comparison in &analysis.comparisons {
-                    for (alternative, replacement) in comparison.replacements.iter().enumerate() {
-                        let local_id = comparison.first_id + alternative;
+                for operator in &analysis.operators {
+                    for (alternative, replacement) in operator.replacements.iter().enumerate() {
+                        let local_id = operator.first_id + alternative;
                         let row = json!({"id":plan.len(),"localId":local_id,
-                            "offset":comparison.offset,"original":comparison.original,
+                            "kind":operator.kind,"offset":operator.offset,"original":operator.original,
                             "replacement":replacement,"path":stable_path(&self.sources[source_index].0),
                             "setups":self.config.setups.iter()
                                 .map(|setup| json!({"name":setup.name,"state":"not-run"}))
@@ -1473,6 +1473,32 @@ impl CapturedProject {
             result["switchPreparationMs"] = json!(switch_preparation_ms);
             result["preparedBaselineMs"] = json!(prepared_baseline_ms);
         }
+        if extreme_sources.is_none() {
+            result["enabledOperators"] = json!(self.config.mutation_operators);
+            let mut counts = BTreeMap::<String, Value>::new();
+            for row in result["outcomes"].as_array().unwrap() {
+                let operator = row["original"].as_str().unwrap();
+                let count = counts.entry(operator.into()).or_insert_with(|| {
+                    json!({
+                    "operator":operator,"kind":row["kind"],"planned":0,"completed":0,
+                    "jobsAttempted":0,"executionMs":0.0})
+                });
+                count["planned"] = json!(count["planned"].as_u64().unwrap() + 1);
+                if let Some(ms) = row["executionMs"].as_f64() {
+                    count["completed"] = json!(count["completed"].as_u64().unwrap() + 1);
+                    count["executionMs"] = json!(count["executionMs"].as_f64().unwrap() + ms);
+                }
+                let jobs = row["setups"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .filter(|setup| setup["state"] != "not-run")
+                    .count();
+                count["jobsAttempted"] =
+                    json!(count["jobsAttempted"].as_u64().unwrap() + jobs as u64);
+            }
+            result["perOperator"] = json!(counts.into_values().collect::<Vec<_>>());
+        }
         result
     }
 
@@ -1515,7 +1541,13 @@ impl CapturedProject {
         let facts: Vec<_> = self
             .sources
             .iter()
-            .map(|(path, source)| Analysis::inspect(&stable_path(path), source))
+            .map(|(path, source)| {
+                Analysis::inspect_with_operators(
+                    &stable_path(path),
+                    source,
+                    &self.config.mutation_operators,
+                )
+            })
             .collect();
         let mut timings = json!({"analysisMs":started.elapsed().as_secs_f64()*1000.0,
             "preparationMs":null,"compilerStrictnessMs":null,"typecheckMs":null,"baselineMs":null,"coverageMs":null,"attributionMs":null,"cleanupMs":null});
@@ -1688,7 +1720,7 @@ impl CapturedProject {
             .collect();
         timings["attributionMs"] = json!(attribution_started.elapsed().as_secs_f64() * 1000.0);
         let mut pseudo_testing = None;
-        let mut comparison_ready = mutation_ready;
+        let mut operator_ready = mutation_ready;
         if mutate {
             for (source, fact) in sources.iter_mut().zip(&facts) {
                 if let Ok(analysis) = fact {
@@ -1721,7 +1753,7 @@ impl CapturedProject {
                 &progress,
                 MutationKind::Extreme { sources: &sources },
             );
-            comparison_ready &= measured["complete"] == true;
+            operator_ready &= measured["complete"] == true;
             commands_run += measured["jobsAttempted"].as_u64().unwrap();
             commands_run += measured["workerBaselineJobs"].as_u64().unwrap();
             for outcome in measured["outcomes"].as_array().unwrap() {
@@ -1768,9 +1800,9 @@ impl CapturedProject {
                 &facts,
                 &baselines,
                 &evidence.0,
-                comparison_ready,
+                operator_ready,
                 &progress,
-                MutationKind::Comparisons { switching },
+                MutationKind::Operators { switching },
             );
             complete &= measured["complete"] == true;
             commands_run += measured["jobsAttempted"].as_u64().unwrap();
@@ -1929,7 +1961,7 @@ mod tests {
         captured.sources = vec![
             (
                 "src/first.ts".into(),
-                "export const first = (a: number, b: number) => (a < b) + (a === b);".into(),
+                "export const first = (a: number, b: number) => [(a < b), (a === b)];".into(),
             ),
             ("src/broken.ts".into(), "export const broken = ;".into()),
             (
@@ -1953,10 +1985,22 @@ mod tests {
             Path::new("unused"),
             false,
             &progress,
-            MutationKind::Comparisons { switching: false },
+            MutationKind::Operators { switching: false },
         );
         assert_eq!(result["planned"], 5);
         assert_eq!(result["jobsAttempted"], 0);
+        assert_eq!(
+            result["enabledOperators"],
+            json!(default_mutation_operators())
+        );
+        assert_eq!(
+            result["perOperator"],
+            json!([
+                {"operator":"<","kind":"comparison","planned":2,"completed":0,"jobsAttempted":0,"executionMs":0.0},
+                {"operator":"===","kind":"comparison","planned":1,"completed":0,"jobsAttempted":0,"executionMs":0.0},
+                {"operator":">","kind":"comparison","planned":2,"completed":0,"jobsAttempted":0,"executionMs":0.0}
+            ])
+        );
         let outcomes = result["outcomes"].as_array().unwrap();
         for (id, (source_index, local_id)) in [(0, 0), (0, 1), (0, 2), (2, 0), (2, 1)]
             .into_iter()
@@ -1967,7 +2011,7 @@ mod tests {
             assert_eq!(row["id"], id);
             assert_eq!(row["localId"], local_id);
             assert_eq!(row["path"], stable_path(&captured.sources[source_index].0));
-            for key in ["offset", "original", "replacement"] {
+            for key in ["kind", "offset", "original", "replacement"] {
                 assert_eq!(row[key], definition[key], "mutant {id}: {key}");
             }
             assert_eq!(row["setups"], json!([{"name":"unit","state":"not-run"}]));

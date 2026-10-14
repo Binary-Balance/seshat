@@ -380,7 +380,7 @@ fn readable(report: &Value) -> String {
             }
         );
         output.push_str(
-            "Extreme mutations use source replacement; comparison mutation scores are separate.\n",
+            "Extreme mutations use source replacement; operator mutation scores are separate.\n",
         );
         for key in ["error", "restorationError"] {
             if let Some(error) = pseudo.get(key).filter(|value| !value.is_null()) {
@@ -529,6 +529,16 @@ fn readable(report: &Value) -> String {
             "Mutation: {} planned, {} killed, {} survived; score {score}",
             mutation["planned"], mutation["killed"], mutation["survived"]
         );
+        for row in array(&mutation["perOperator"]) {
+            let _ = writeln!(
+                output,
+                "Operator {}: {} planned, {} completed, {} test job(s)",
+                text(&row["operator"]),
+                row["planned"],
+                row["completed"],
+                row["jobsAttempted"]
+            );
+        }
         let _ = writeln!(
             output,
             "Workers: {} requested, {} used; {} additional baseline job(s)",
