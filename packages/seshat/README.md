@@ -4,13 +4,14 @@
 
 A native code-assurance tool for TypeScript and TSX, written in Rust. Seshat
 combines function-level [CRAP](https://testing.googleblog.com/2011/02/this-code-is-crap.html)
-analysis with [comparison-operator mutation testing](https://en.wikipedia.org/wiki/Mutation_testing) to find complex and/or
+analysis with [operator mutation testing](https://en.wikipedia.org/wiki/Mutation_testing) to find complex and/or
 insufficiently tested code.
 
 ## What Seshat does
 
 - Calculates function complexity and CRAP scores from branch coverage.
-- Changes comparison operators one at a time and checks whether tests detect them.
+- Changes comparison, logical and arithmetic operators one at a time and checks
+  whether tests detect them.
 - Replaces function bodies to find covered functions whose removal tests miss.
 - Runs tests in isolated copies of the captured project.
 - Produces readable terminal output and versioned JSON, with optional CI thresholds.
@@ -83,6 +84,10 @@ The [examples](https://github.com/Binary-Balance/seshat/blob/main/examples/READM
 and Jest/Expo projects. The [configuration guide](https://github.com/Binary-Balance/seshat/blob/main/docs/configuration.md) covers
 every field, including `workers` for parallel mutation runs.
 
+Comparison, logical and arithmetic mutants are enabled by default. Set
+`"mutationOperators": ["comparison"]` to retain the operator scope of 0.4.0.
+The broader default can add test executions and change mutation scores.
+
 ## Use
 
 ```sh
@@ -120,13 +125,13 @@ leaving the non-member outcome untested. Its statement coverage is 100%,
 but its branch coverage is 50%. Both measurements appear in the report.
 
 The mutation score is the percentage of mutants that made a test fail. A mutant
-is one changed comparison, such as `>` to `>=`. If tests catch two of three
-mutants, the score is `66.67%`. A timeout or execution error leaves the run
+is one changed operator, such as `>` to `>=` or `&&` to `||`. If tests catch two
+of three mutants, the score is `66.67%`. A timeout or execution error leaves the run
 incomplete and withholds the score. Neither score proves correctness.
 
 `check` and `mutate` also replace eligible function bodies to detect pseudo-tested
 functions, those whose body replacement tests miss despite positive coverage.
-These flags and counts are separate from the comparison mutation score. `mutate`
+These flags and counts are separate from the operator mutation score. `mutate`
 collects fresh coverage to skip unexecuted functions; it does not apply CRAP
 thresholds. Extreme mutation uses replacement even with experimental switching.
 
