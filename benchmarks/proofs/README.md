@@ -1118,8 +1118,11 @@ All configured original checks, baselines and coverage collection must pass, and
 CRAP attribution must be complete, before any mutant starts. The proof uses source
 replacement by default, one worker by default, and fresh test processes. Every
 setup runs for each mutant even when another setup has already detected it. A
-setup timeout or execution
-error leaves that mutant unresolved and stops scheduling new mutants. Already
+setup job deadline timeout or execution
+error leaves that mutant unresolved and stops scheduling new mutants. A bounded
+runner-reported test timeout with otherwise valid evidence remains unresolved
+but allows later mutants to run, as described in the
+[configuration guide](../../docs/configuration.md#mutation-execution). Already
 running mutants finish their required setups unless cancelled. A test failure is a
 kill only when all required setup executions resolve without infrastructure errors.
 
@@ -1398,6 +1401,17 @@ SESHAT_VITEST_CHECK_CASES=stack,assertion,survived node benchmarks/proofs/vitest
 SESHAT_VITEST_CHECK_CASES=before-all,before-each,after-each,cleanup,mixed,clean-hooks,assertion-count node benchmarks/proofs/vitest-check.mjs
 SESHAT_VITEST_CHECK_CASES=timeout,hook-timeout,import-error,unhandled,around-each,missing-runner node benchmarks/proofs/vitest-check.mjs
 SESHAT_VITEST_CHECK_CASES=retry,repeat,expected-failure,concurrent node benchmarks/proofs/vitest-check.mjs
+```
+
+The `timeout-continues` case verifies that a runner-reported timeout in extreme
+mutation leaves later extreme and operator mutants runnable while withholding
+the final score. `operator-timeout-continues` checks the same queue behaviour
+with two setups and three operator mutants. Run these with one worker and with
+`SESHAT_CHECK_WORKERS=2` to cover serial and parallel scheduling:
+
+```sh
+SESHAT_VITEST_CHECK_CASES=timeout-continues,operator-timeout-continues node benchmarks/proofs/vitest-check.mjs
+SESHAT_CHECK_WORKERS=2 SESHAT_VITEST_CHECK_CASES=timeout-continues,operator-timeout-continues node benchmarks/proofs/vitest-check.mjs
 ```
 
 Results remain under ignored `work/assurance-proofs/vitest-check-*`. Wall times

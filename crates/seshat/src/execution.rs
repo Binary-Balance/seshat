@@ -243,6 +243,25 @@ fn observe_node_loads(
 }
 
 impl CommandEvidence {
+    fn test_timed_out(&self) -> bool {
+        self.state == TestState::TimedOut
+            && self.details["timedOut"] == false
+            && self.details["report"]["complete"] == true
+            && self.details["report"]["timeouts"]
+                .as_u64()
+                .is_some_and(|count| count > 0)
+    }
+
+    fn can_continue_mutation(&self) -> bool {
+        matches!(self.state, TestState::Passed | TestState::Failed)
+            || (self.test_timed_out()
+                && self.details["exit"] == 1
+                && self.details["report"]["errors"] == 0
+                && self.details["report"]["passed"].as_u64().is_some()
+                && self.details["report"]["failed"].as_u64().is_some()
+                && self.details["cleanupError"].is_null())
+    }
+
     fn clear_job_artifacts(&mut self, receipt: &Path, observer: Option<&[PathBuf; 2]>) {
         // Unconfirmed process cleanup means a reporter may still need these files.
         if !self.details["cleanupError"].is_null() {
@@ -285,6 +304,9 @@ impl CommandEvidence {
     }
 
     fn into_json(mut self) -> Value {
+        if self.test_timed_out() {
+            self.details["testTimedOut"] = json!(true);
+        }
         self.details["state"] = json!(self.state.label());
         self.details
     }
@@ -663,6 +685,50 @@ fn exit_code_is_not_a_verdict() {
         ),
         TestState::ExecutionError
     );
+}
+
+#[test]
+fn only_bounded_runner_timeouts_allow_more_mutants() {
+    let evidence = json!({"exit":1,"timedOut":false,
+        "report":{"complete":true,"passed":0,"failed":1,"errors":0,"timeouts":1}});
+    let outcome = CommandEvidence {
+        state: classify("observed", &evidence),
+        details: evidence.clone(),
+    };
+    assert!(outcome.can_continue_mutation());
+    assert_eq!(outcome.into_json()["testTimedOut"], true);
+    for (field, value) in [
+        ("errors", json!(1)),
+        ("passed", Value::Null),
+        ("failed", Value::Null),
+        ("complete", json!(false)),
+        ("timeouts", Value::Null),
+    ] {
+        let mut changed = evidence.clone();
+        changed["report"][field] = value;
+        let outcome = CommandEvidence {
+            state: classify("observed", &changed),
+            details: changed,
+        };
+        assert!(!outcome.can_continue_mutation(), "{field}");
+    }
+    for (field, value) in [
+        ("timedOut", json!(true)),
+        ("exit", json!(0)),
+        ("exit", json!(2)),
+        ("cancelled", json!(true)),
+        ("overflow", json!(true)),
+        ("pipeError", json!("read failed")),
+        ("cleanupError", json!("job artifacts could not be removed")),
+    ] {
+        let mut changed = evidence.clone();
+        changed[field] = value;
+        let outcome = CommandEvidence {
+            state: classify("observed", &changed),
+            details: changed,
+        };
+        assert!(!outcome.can_continue_mutation(), "{field}");
+    }
 }
 
 #[test]

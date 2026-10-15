@@ -387,13 +387,22 @@ Every mutant runs all configured setups. No automatic test selection, persistent
 test-process reuse or cross-run verdict caching is performed. Each baseline and
 mutant starts a fresh test process.
 
-A mutant timeout stops further scheduling. Results from work already in progress
-on other workers remain available. A timeout does not prove that tests detected
-the mutation, so it remains unresolved and the overall mutation score is
-withheld. Running the remaining mutants cannot produce a complete score. The
-terminal report gives the timed-out and unrun mutant counts; JSON retains the
-attempts, `complete: false` and `score: null`. An ordinary timeout exits `2`, and
-an incomplete mutation-score threshold cannot pass.
+A job that exceeds `timeoutMs` stops further mutation scheduling. Results from
+work already in progress on other workers remain available.
+
+A runner-reported test timeout can allow scheduling to continue when the command
+exits `1` within `timeoutMs`, its complete receipt has valid test counts and no
+execution errors, and cleanup succeeds. Later extreme and operator mutants still
+run. A receipt with additional errors, including hook failures, still stops
+scheduling. Original and worker baselines must pass before any mutants run.
+
+Both kinds of timeout remain unresolved. They do not prove that tests detected
+the mutation. The overall mutation score stays withheld, including when an
+extreme mutant times out and all operator mutants resolve. The terminal report
+shows runner-reported timeout and unrun counts; JSON retains the attempts,
+`complete: false` and `score: null`. A timeout exits `2`, and an incomplete
+mutation-score threshold cannot pass. See the
+[report fields](report-format.md#setup-jobs-and-evidence).
 
 `check` and `mutate` use source replacement by default. Pass
 `--experimental-switching` to use the bounded helper-based switching experiment.

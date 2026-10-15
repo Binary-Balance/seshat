@@ -101,6 +101,7 @@ struct MutantExecution {
     states: Vec<TestState>,
     jobs: usize,
     restoration_error: Option<String>,
+    can_continue: bool,
 }
 
 enum MutationKind<'a> {
@@ -292,13 +293,22 @@ fn per_second(count: usize, wall_ms: f64) -> Value {
 
 fn unresolved_breakdown(outcomes: &[Value]) -> Value {
     let mut timed_out = 0;
+    let mut test_timed_out = 0;
     let mut execution_errors = 0;
     let mut cancelled = 0;
     let mut not_run = 0;
     let mut unassessed = 0;
     for outcome in outcomes {
         match outcome["verdict"].as_str() {
-            Some("timed-out") => timed_out += 1,
+            Some("timed-out") => {
+                timed_out += 1;
+                if outcome["setups"].as_array().is_some_and(|setups| {
+                    setups.iter().any(|setup| setup["testTimedOut"] == true)
+                        && !setups.iter().any(|setup| setup["timedOut"] == true)
+                }) {
+                    test_timed_out += 1;
+                }
+            }
             Some("execution-error") => execution_errors += 1,
             Some("cancelled") => cancelled += 1,
             Some("not-run") => not_run += 1,
@@ -306,7 +316,7 @@ fn unresolved_breakdown(outcomes: &[Value]) -> Value {
             _ => {}
         }
     }
-    json!({"timedOut":timed_out,"executionError":execution_errors,
+    json!({"timedOut":timed_out,"testTimedOut":test_timed_out,"executionError":execution_errors,
         "cancelled":cancelled,"notRun":not_run,"unassessed":unassessed})
 }
 
@@ -1078,9 +1088,11 @@ impl CapturedProject {
                 states: vec![TestState::ExecutionError; self.config.setups.len()],
                 jobs: 0,
                 restoration_error: None,
+                can_continue: false,
             };
         }
         let mut states = Vec::new();
+        let mut can_continue = true;
         for (index, setup) in self.config.setups.iter().enumerate() {
             if stopped.load(Ordering::Relaxed) || cancellation_signal() != 0 {
                 break;
@@ -1099,6 +1111,7 @@ impl CapturedProject {
                 .run_job(setup, &setup.test, evidence, &id, JobKind::Test)
                 .unwrap_or_else(CommandEvidence::error);
             states.push(observed.state);
+            can_continue &= observed.can_continue_mutation();
             let cleanup_failed = !observed.details["cleanupError"].is_null();
             let mut setup_row = observed.into_json();
             setup_row["name"] = json!(setup.name);
@@ -1124,6 +1137,7 @@ impl CapturedProject {
             jobs: states.len(),
             states,
             restoration_error,
+            can_continue,
         }
     }
 
@@ -1135,7 +1149,7 @@ impl CapturedProject {
         ready: bool,
         progress: &Progress,
         kind: MutationKind<'_>,
-    ) -> Value {
+    ) -> (Value, bool) {
         let started = Instant::now();
         let (switching, extreme_sources) = match kind {
             MutationKind::Operators { switching } => (switching, None),
@@ -1368,12 +1382,7 @@ impl CapturedProject {
                             label,
                         );
                     }
-                    if result.restoration_error.is_some()
-                        || result
-                            .states
-                            .iter()
-                            .any(|state| !matches!(state, TestState::Passed | TestState::Failed))
-                    {
+                    if result.restoration_error.is_some() || !result.can_continue {
                         stopped.store(true, Ordering::Relaxed);
                     }
                     finished.push(result);
@@ -1499,7 +1508,11 @@ impl CapturedProject {
             }
             result["perOperator"] = json!(counts.into_values().collect::<Vec<_>>());
         }
-        result
+        let can_continue = worker_ready
+            && !stopped.load(Ordering::Relaxed)
+            && run_error.is_none()
+            && cancellation_signal() == 0;
+        (result, can_continue)
     }
 
     pub fn collect(self, mutate: bool) -> Result<Value, String> {
@@ -1721,6 +1734,7 @@ impl CapturedProject {
         timings["attributionMs"] = json!(attribution_started.elapsed().as_secs_f64() * 1000.0);
         let mut pseudo_testing = None;
         let mut operator_ready = mutation_ready;
+        let mut extreme_execution_complete = true;
         if mutate {
             for (source, fact) in sources.iter_mut().zip(&facts) {
                 if let Ok(analysis) = fact {
@@ -1745,7 +1759,7 @@ impl CapturedProject {
                 }
             }
             progress.phase(format_args!("extreme mutation using source replacement"));
-            let mut measured = self.mutate(
+            let (mut measured, can_continue) = self.mutate(
                 &facts,
                 &baselines,
                 &evidence.0,
@@ -1753,7 +1767,8 @@ impl CapturedProject {
                 &progress,
                 MutationKind::Extreme { sources: &sources },
             );
-            operator_ready &= measured["complete"] == true;
+            operator_ready &= can_continue;
+            extreme_execution_complete = measured["complete"] == true;
             commands_run += measured["jobsAttempted"].as_u64().unwrap();
             commands_run += measured["workerBaselineJobs"].as_u64().unwrap();
             for outcome in measured["outcomes"].as_array().unwrap() {
@@ -1796,7 +1811,7 @@ impl CapturedProject {
             pseudo_testing = Some(measured);
         }
         let mutation = if mutate {
-            let measured = self.mutate(
+            let (mut measured, _) = self.mutate(
                 &facts,
                 &baselines,
                 &evidence.0,
@@ -1804,6 +1819,10 @@ impl CapturedProject {
                 &progress,
                 MutationKind::Operators { switching },
             );
+            if !extreme_execution_complete {
+                measured["complete"] = json!(false);
+                measured["score"] = Value::Null;
+            }
             complete &= measured["complete"] == true;
             commands_run += measured["jobsAttempted"].as_u64().unwrap();
             commands_run += measured["workerBaselineJobs"].as_u64().unwrap();
@@ -1979,7 +1998,7 @@ mod tests {
             enabled: false,
             started: Instant::now(),
         };
-        let result = captured.mutate(
+        let (result, _) = captured.mutate(
             &facts,
             &[TestState::Passed],
             Path::new("unused"),
