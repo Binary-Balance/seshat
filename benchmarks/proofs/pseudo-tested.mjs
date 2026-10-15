@@ -54,7 +54,7 @@ const setup = {
   test:[process.execPath, '--test', '--test-reporter={seshatReporter}', 'test.mjs'],
   coverage:{command:[process.execPath, join(here, 'collect-node.mjs'), 'test.mjs'], report:'coverage/final.json'},
 };
-const config = {source:{include:['subject.ts']}, capture:['subject.ts','test.mjs','package.json'], setups:[setup]};
+const config = {mutationOperators:['comparison'], source:{include:['subject.ts']}, capture:['subject.ts','test.mjs','package.json'], setups:[setup]};
 const configPath = join(input, 'seshat.json');
 const results = {};
 function run(name, command = 'check', change = () => {}, flags = []) {

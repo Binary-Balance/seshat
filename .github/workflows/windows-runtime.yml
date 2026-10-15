@@ -193,10 +193,22 @@ jobs:
             --deps "$env:GITHUB_WORKSPACE\benchmarks\proofs" `
             --cases stack,assertion,survived,before-all 2>&1 | Tee-Object -FilePath work/windows/vitest-check.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify runner timeout continuation
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
+        shell: pwsh
+        env:
+          SESHAT_CHECK_WORKERS: '2'
+          SESHAT_PROOF_OUTPUT: ${{ github.workspace }}\work\windows\vitest-timeouts.json
+        run: |
+          node benchmarks/proofs/vitest-check.mjs `
+            --cli "$env:GITHUB_WORKSPACE\crates\seshat\target\release\seshat.exe" `
+            --deps "$env:GITHUB_WORKSPACE\benchmarks\proofs" `
+            --cases timeout-continues,operator-timeout-continues 2>&1 | Tee-Object -FilePath work/windows/vitest-timeouts.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Require shared fixture reports
         shell: pwsh
         run: |
-          foreach ($report in @('shared-cli.json', 'shared-parallel.json', 'jest-expo-check.json', 'vitest-check.json')) {
+          foreach ($report in @('shared-cli.json', 'shared-parallel.json', 'jest-expo-check.json', 'vitest-check.json', 'vitest-timeouts.json')) {
             if (-not (Test-Path -LiteralPath (Join-Path work/windows $report) -PathType Leaf)) {
               throw "expected fixture report is missing: $report"
             }
@@ -216,4 +228,6 @@ jobs:
             work/windows/jest-expo-check.log
             work/windows/vitest-check.json
             work/windows/vitest-check.log
+            work/windows/vitest-timeouts.json
+            work/windows/vitest-timeouts.log
           if-no-files-found: error

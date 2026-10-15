@@ -39,7 +39,7 @@ const defaultCases = [
   'assertion', 'survived', 'clean-hooks', 'assertion-count', 'before-all',
   'before-each', 'after-each', 'cleanup', 'mixed', 'timeout', 'hook-timeout',
   'import-error', 'unhandled', 'around-each', 'missing-runner', 'retry', 'repeat',
-  'expected-failure', 'concurrent',
+  'expected-failure', 'concurrent', 'timeout-continues', 'operator-timeout-continues',
 ];
 const casesArg = values.cases ?? process.env.SESHAT_VITEST_CHECK_CASES;
 const requestedCases = (casesArg ?? defaultCases.join(','))
@@ -193,9 +193,9 @@ async function check(name, input) {
   save();
   assert.equal(run.status,result.complete?0:2,run.stderr);
   assert.deepEqual(readdirSync(scratch),[],'Native session must clean up');
-  if (result.setups?.[0].coverage.state==='passed' && result.mutation?.planned > 0) {
+  if (result.setups?.[0].coverage.state==='passed' && result.mutation?.workersUsed > 0) {
     assert.equal(result.mutation.workersUsed,Math.min(workers,result.mutation.planned));
-    assert.equal(result.mutation.workerBaselineJobs,result.mutation.workersUsed-1);
+    assert.equal(result.mutation.workerBaselineJobs,(result.mutation.workersUsed-1)*input.setups.length);
     assert.ok(result.mutation.workerBaselines.every(b=>b.state==='passed'));
     const receipts=[...result.mutation.workerBaselines,...result.mutation.outcomes.flatMap(m=>m.setups)].filter(s=>s.report).map(s=>s.report.executionId);
     assert.equal(new Set(receipts).size,receipts.length,'Workers reused a receipt identity');
@@ -283,6 +283,61 @@ for (const [name,body,expected] of [
   assert.ok(result.mutation.outcomes.every(m=>m.verdict===expected),JSON.stringify(result));
   const complete = ['killed','survived'].includes(expected);
   assert.equal(result.complete,complete); assert.equal(result.mutation.score,complete?(expected==='killed'?100:0):null);
+}
+if (wanted('timeout-continues')) {
+  writeFileSync(join(project,'control.ts'), `export function complete(done: () => void) { done(); }
+export function checked(value: number) { return value === 1; }
+`);
+  writeFileSync(join(project,'control.test.ts'), `import {test,expect} from 'vitest';
+import {complete,checked} from './control.ts';
+test('completion',()=>new Promise<void>(complete),50);
+test('comparison',()=>expect(checked(1)).toBe(true));
+`);
+  writeFileSync(join(project,'vitest.config.mjs'), `export default {cacheDir:'.vite',test:{runner:process.env.SESHAT_VITEST_RUNNER,include:['control.test.ts'],coverage:{provider:'istanbul',include:['control.ts'],reporter:['json'],reportsDirectory:'coverage'}}};\n`);
+  const input = structuredClone(config);
+  input.source.include = ['control.ts'];
+  input.capture.push('control.ts','control.test.ts');
+  const result = await check('timeout-continues', input);
+  assert.deepEqual(result.pseudoTesting.outcomes.map(row=>row.verdict), ['timed-out','killed']);
+  assert.deepEqual(result.mutation.outcomes.map(row=>row.verdict), ['killed']);
+  assert.equal(result.complete, false);
+  assert.equal(result.mutation.score, null);
+  assert.equal(result.pseudoTesting.outcomes[0].setups[0].testTimedOut, true);
+  assert.equal(result.pseudoTesting.diagnostics.unresolvedBreakdown.testTimedOut, 1);
+  assert.equal(result.pseudoTesting.notRun, 0);
+  assert.equal(result.mutation.notRun, 0);
+}
+if (wanted('operator-timeout-continues')) {
+  writeFileSync(join(project,'control.ts'), `export const ready = 1 === 1;
+export const later = 2 === 2;
+export const last = 3 === 3;
+`);
+  writeFileSync(join(project,'control.test.ts'), `import {test,expect} from 'vitest';
+import {ready,later,last} from './control.ts';
+test('completion',()=>ready?Promise.resolve():new Promise(()=>{}),50);
+test('comparisons',()=>{expect(later).toBe(true);expect(last).toBe(true);});
+`);
+  writeFileSync(join(project,'vitest.config.mjs'), `export default {cacheDir:'.vite',test:{runner:process.env.SESHAT_VITEST_RUNNER,include:['control.test.ts'],coverage:{provider:'istanbul',include:['control.ts'],reporter:['json'],reportsDirectory:'coverage'}}};\n`);
+  const input = structuredClone(config);
+  input.source.include = ['control.ts'];
+  input.capture.push('control.ts','control.test.ts');
+  input.setups.push({...structuredClone(input.setups[0]), name:'second', coverage:{
+    command:[...input.setups[0].coverage.command,'--coverage.reportsDirectory=coverage-second'],
+    report:'coverage-second/coverage-final.json',
+  }});
+  input.thresholds = {minMutationScore:0};
+  const result = await check('operator-timeout-continues', input);
+  assert.deepEqual(result.mutation.outcomes.map(row=>row.verdict), ['timed-out','killed','killed']);
+  assert.ok(result.mutation.outcomes.every(row=>row.setups.every(setup=>setup.state !== 'not-run')));
+  assert.ok(result.mutation.outcomes[0].setups.every(setup=>setup.testTimedOut === true && setup.timedOut === false));
+  assert.equal(result.mutation.diagnostics.unresolvedBreakdown.testTimedOut, 1);
+  assert.equal(result.mutation.notRun, 0);
+  assert.equal(result.complete, false);
+  assert.equal(result.mutation.score, null);
+  if (installed) {
+    assert.equal(results.runs['operator-timeout-continues'].report.quality.state, 'incomplete');
+    assert.equal(results.runs['operator-timeout-continues'].report.quality.checks[0].actual, null);
+  }
 }
 if (wanted('missing-runner')) {
   writeFileSync(join(project,'vitest.config.mjs'), `export default {test:{include:['stack.test.tsx']}};\n`);

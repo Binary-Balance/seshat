@@ -196,7 +196,7 @@ Each `result.setups` row has `name`, `typecheck`, `baseline`, `coverage` and
 | --- | --- |
 | `passed` | The command produced valid passing evidence. |
 | `failed` | The test runner produced a test failure. A test failure can kill a mutant only when every required setup resolves without infrastructure errors. |
-| `timed-out` | The configured deadline stopped the command. |
+| `timed-out` | The configured deadline stopped the command, or the runner reported a test timeout. |
 | `execution-error` | The command, receipt, coverage file, output pipe or other execution evidence was invalid or failed. |
 | `cancelled` | Cancellation stopped the command. |
 | `not-run` | The requested job was not reached. `crap` also uses this state for an intentionally omitted optional typecheck; a complete run keeps `typecheck.state: "not-run"` and `timings.typecheckMs: null` in that setup. |
@@ -208,6 +208,13 @@ can contain only their state. `ms` is the child-process duration in
 milliseconds. Runner receipts, command diagnostics and stack traces are
 evidence with runner-specific shape and text. Do not parse them as a stable
 protocol. The job state, setup name and timing fields above are the contract.
+
+A runner-reported timeout retains `state: "timed-out"` and adds
+`testTimedOut: true`; `timedOut: false` means Seshat's job deadline was not
+reached. This timeout allows further mutation scheduling only when the command
+exited `1`, the complete receipt has valid counts and no execution errors, and
+cleanup succeeded. Additional receipt errors still stop scheduling. Neither
+kind of timeout counts as a kill.
 
 ### Runtime diagnostics
 
@@ -243,7 +250,7 @@ command text or free-form diagnostic nested under them remains evidence.
 | Field | Meaning |
 | --- | --- |
 | `strategy` | `replace` by default, or `switch` when the experimental switching option was used. |
-| `complete` | Whether every planned mutant received a resolved verdict and mutation preparation, execution and cleanup succeeded. |
+| `complete` | Whether every planned mutant received a resolved verdict and mutation preparation, execution and cleanup succeeded. An incomplete extreme-mutation execution also keeps this false, even when all operator mutants resolve. |
 | `planned` | Number of generated replacements across all selected operator families. |
 | `enabledOperators` | Configured operator families, defaulting to `["comparison", "logical", "arithmetic"]`. An empty array disables operator mutants. |
 | `perOperator` | Rows sorted by original operator text. Each has `operator`, `kind`, `planned`, `completed`, `jobsAttempted` and `executionMs`. Planned counts include unstarted work; completed counts include returned attempts. Times sum those attempts and can overlap under parallelism. Operators without planned mutants have no row. |
@@ -291,6 +298,11 @@ zero-mutant complete result has `score: null`, meaning not applicable, not
 computed against `mutationWallMs`; `workerTimeMs` sums returned mutant attempt
 durations; `slowestExecutions` contains at most five `{id,path,executionMs,verdict}`
 rows. These measurements can overlap under parallel workers.
+
+`unresolvedBreakdown.testTimedOut` is the subset of `timedOut` verdicts with a
+runner-reported test timeout and no job deadline timeout. It counts mutants,
+not individual tests or setups, and is not added to `timedOut`. The same field
+appears in extreme-mutation diagnostics.
 
 ## Type-safety findings
 
