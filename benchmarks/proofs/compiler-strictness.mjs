@@ -18,10 +18,10 @@ const write = (name, contents) => {
   writeFileSync(filename, contents);
 };
 let runs = 0;
-const inspect = (args, cwd = root, script = compiler) => {
+const inspect = (args, cwd = root, script = compiler, sources) => {
   const context = join(root, `context-${runs}.json`);
   const receipt = join(root, `receipt-${runs++}.json`);
-  writeFileSync(context, JSON.stringify({ compiler: script, args, root }));
+  writeFileSync(context, JSON.stringify({ compiler: script, args, root, sources }));
   const job = spawnSync(process.execPath, [helper, context, receipt], { cwd, timeout: 10000, encoding: 'utf8' });
   assert.equal(job.status, 0, job.stderr);
   return JSON.parse(readFileSync(receipt, 'utf8'));
@@ -125,6 +125,94 @@ try {
   assert.equal(unsupported.options.noUncheckedIndexedAccess, null);
   assert(unsupported.unsupported.includes('noUncheckedIndexedAccess'));
   assert(!unsupported.disabled.includes('noUncheckedIndexedAccess'));
+
+  write('tsconfig.json', JSON.stringify({ files: ['subject.ts', 'plain.js', 'ambient.d.ts', 'view.tsx'], compilerOptions: {
+    strict: true, noImplicitAny: false, noEmit: true, skipLibCheck: true, allowJs: true, esModuleInterop: true, jsx: 'preserve',
+  } }));
+  const subject = `\uFEFF// 🎸 non-ASCII offsets\r\nimport loose from 'untyped';
+export function parse(text: string) {
+  const value = JSON.parse(text);
+  const read = () => value.answer;
+  return read();
+}
+export function annotated(value: any) { return (value as any)!; }
+export function typed(value: unknown) { return value; }
+export const imported = loose();
+`;
+  write('subject.ts', subject);
+  write('ambient.d.ts', "declare module 'untyped';");
+  write('plain.js', 'export function plain(value) { return value; }');
+  const view = `declare global { namespace JSX { interface Element {} interface IntrinsicElements { div: {}; 'svg:path': {}; } } }
+declare const Component: any;
+declare const base: any;
+export function view(value: any) { const object = { value }; class Child extends base {} return <div><Component></Component><svg:path /></div>; }`;
+  write('view.tsx', view);
+  write('excluded.ts', 'export const excluded = JSON.parse("{}");');
+  write('node_modules/untyped/package.json', '{"name":"untyped","main":"index.js"}');
+  write('node_modules/untyped/index.js', 'module.exports = () => 1;');
+  const selected = ['subject.ts', 'plain.js', 'excluded.ts', 'view.tsx'];
+  const inferred = inspect(['-p', '.'], root, compiler, selected);
+  assert.equal(inferred.state, 'known', inferred.error);
+  assert.equal(inferred.inferredAny.state, 'known', inferred.inferredAny.error);
+  assert(inferred.inferredAny.ms >= 0);
+  const [values, plain, excluded] = inferred.inferredAny.sources;
+  const snippets = values.locations.map(({ start, end }) => Buffer.from(subject).subarray(start, end).toString());
+  assert.deepEqual(snippets, ['JSON.parse(text)', 'value.answer', 'value', 'read()', 'value', 'loose()', 'loose']);
+  assert.equal(plain.state, 'known');
+  assert.deepEqual(plain.locations.map(({ start, end }) => 'export function plain(value) { return value; }'.slice(start, end)), ['value']);
+  assert.equal(excluded.state, 'not-in-program');
+  assert.equal(excluded.locations, null);
+  assert.deepEqual(inferred.inferredAny.sources[3].locations.map(({ start, end }) => view.slice(start, end)), ['value', 'base', 'Component']);
+
+  write('subject.ts', 'export function broken() { return missing.value(); }');
+  const errors = inspect(['-p', '.'], root, compiler, selected);
+  assert.equal(errors.state, 'known', errors.error);
+  assert.equal(errors.inferredAny.state, 'unknown');
+  assert.equal(errors.inferredAny.sources, null);
+  assert.match(errors.inferredAny.error, /missing/);
+  write('subject.ts', '// @ts-ignore\nexport const broken = missing.value();');
+  const suppressed = inspect(['-p', '.'], root, compiler, selected);
+  assert.equal(suppressed.inferredAny.state, 'unknown');
+  assert.match(suppressed.inferredAny.error, /unresolved any/);
+
+  write('subject.ts', "import loose from 'untyped'; export const value = loose();");
+  write('ambient.d.ts', '');
+  const untyped = inspect(['-p', '.'], root, compiler, selected);
+  assert.equal(untyped.inferredAny.state, 'unknown');
+  assert.match(untyped.inferredAny.error, /unresolved any/);
+
+  write('subject.ts', 'export const value = 1;');
+  if (ts.optionDeclarations.some(option => option.name === 'noCheck')) {
+    const unchecked = inspect(['-p', '.', '--noCheck'], root, compiler, selected);
+    assert.equal(unchecked.state, 'known', unchecked.error);
+    assert.equal(unchecked.inferredAny.state, 'unknown');
+    assert.match(unchecked.inferredAny.error, /noCheck/);
+  }
+  write('node_modules/future-typescript/package.json', '{"name":"typescript"}');
+  write('node_modules/future-typescript/bin/tsc', '');
+  write('node_modules/future-typescript/lib/typescript.js', `
+    const ts = require(${JSON.stringify(join(dirname(dirname(compiler)), 'lib/typescript.js'))});
+    module.exports = { ...ts, versionMajorMinor: '7.0' };
+  `);
+  const future = inspect(['-p', '.'], root, join(root, 'node_modules/future-typescript/bin/tsc'), selected);
+  assert.equal(future.state, 'known', future.error);
+  assert.equal(future.inferredAny.state, 'unknown');
+  assert.match(future.inferredAny.error, /TypeScript >=5.0 <7.0/);
+
+  write('reference/tsconfig.json', JSON.stringify({ compilerOptions: { composite: true }, files: ['source.ts'] }));
+  write('reference/source.ts', 'export function parse(text: string) { return JSON.parse(text); }');
+  write('reference/source.d.ts', 'export declare function parse(text: string): any;');
+  write('reference-user.ts', "import { parse } from './reference/source'; export function user(text: string) { return parse(text); }");
+  write('references.json', JSON.stringify({ compilerOptions: { noEmit: true, skipLibCheck: true },
+    files: ['reference-user.ts'], references: [{ path: './reference' }] }));
+  const references = inspect(['-p', 'references.json'], root, compiler, ['reference-user.ts', 'reference/source.ts']);
+  assert.equal(references.inferredAny.state, 'known', references.inferredAny.error);
+  assert.equal(references.inferredAny.sources[0].locations.length, 1);
+  assert.equal(references.inferredAny.sources[1].state, 'not-in-program');
+  rmSync(join(root, 'reference/source.d.ts'));
+  const missingOutput = inspect(['-p', 'references.json'], root, compiler, ['reference-user.ts']);
+  assert.equal(missingOutput.inferredAny.state, 'unknown');
+  assert.match(missingOutput.inferredAny.error, /not been built/);
   console.log(`compiler strictness proof passed with TypeScript ${ts.version}, ${runs} cases`);
 } finally {
   rmSync(root, { recursive: true, force: true });

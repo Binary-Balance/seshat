@@ -348,6 +348,18 @@ fn readable(report: &Value) -> String {
                     escapes["tsExpectError"],
                     escapes["tsNocheck"]
                 );
+                for inferred in array(&escapes["inferredAny"]) {
+                    let count = if inferred["state"] == "known" {
+                        inferred["count"].to_string()
+                    } else {
+                        text(&inferred["state"]).to_owned()
+                    };
+                    let _ = writeln!(
+                        output,
+                        "    Inferred any, setup {:?}: {count}",
+                        text(&inferred["setup"])
+                    );
+                }
             }
         }
         if let Some(unowned) = source["result"]["typeSafety"]["unowned"].as_object()
@@ -360,6 +372,16 @@ fn readable(report: &Value) -> String {
                 "  Type safety outside function rows: {}",
                 source["result"]["typeSafety"]["unowned"]
             );
+        }
+        for inferred in array(&source["result"]["typeSafety"]["inferredAny"]) {
+            if inferred["count"].as_u64().is_some_and(|count| count > 0) {
+                let _ = writeln!(
+                    output,
+                    "  Inferred any outside function rows, setup {:?}: {}",
+                    text(&inferred["setup"]),
+                    inferred["count"]
+                );
+            }
         }
         if let Some(error) = source.get("error").filter(|v| !v.is_null()) {
             let _ = writeln!(output, "  Error: {error}");
@@ -435,6 +457,20 @@ fn readable(report: &Value) -> String {
             }
             if let Some(error) = strictness["error"].as_str() {
                 let _ = writeln!(output, "  Compiler strictness error: {error:?}");
+            }
+        }
+        if let Some(inferred) = setup.get("inferredAny") {
+            let timing = inferred["ms"]
+                .as_f64()
+                .map(|ms| format!(", checker time {ms:.1}ms"))
+                .unwrap_or_default();
+            let _ = writeln!(
+                output,
+                "  Inferred any: {}{timing}",
+                text(&inferred["state"]),
+            );
+            if let Some(error) = inferred["error"].as_str() {
+                let _ = writeln!(output, "  Inferred any error: {error:?}");
             }
         }
         for phase in ["baseline", "coverage"] {
@@ -821,16 +857,21 @@ mod tests {
             &json!({"command":"crap","complete":false,"timings":{"wallMs":1},"result":{
                 "sources":[{"path":"source.ts","result":{"functions":[{"name":"f","complexity":1,"cognitiveComplexity":3,
                     "status":"unknown","typeSafety":{"explicitAny":2,"typeAssertions":2,
-                    "doubleAssertions":1,"nonNullAssertions":1,"tsIgnore":0,"tsExpectError":1,"tsNocheck":0}}],
+                    "doubleAssertions":1,"nonNullAssertions":1,"tsIgnore":0,"tsExpectError":1,"tsNocheck":0,
+                    "inferredAny":[{"setup":"unit","state":"known","count":3}]}}],
                     "typeSafety":{"unowned":{"tsNocheck":1}}}}],
                 "setups":[{"name":"unit","compilerStrictness":{"state":"unknown",
-                    "compilerVersion":null,"config":null,"error":"missing config\u{001b}[2J"}}]
+                    "compilerVersion":null,"config":null,"error":"missing config\u{001b}[2J"},
+                    "inferredAny":{"state":"unknown","error":"unresolved type\u{001b}[2J","ms":null}}]
             }}),
         );
         assert!(output.contains("cognitive complexity 3"));
         assert!(output.contains("any 2, assertions 2 (double 1), non-null 1"));
         assert!(output.contains("Type safety outside function rows: {\"tsNocheck\":1}"));
         assert!(output.contains("Compiler strictness: unknown"));
+        assert!(output.contains("Inferred any, setup \"unit\": 3"));
+        assert!(output.contains("Inferred any: unknown"));
+        assert!(output.contains("unresolved type\\u{1b}[2J"));
         assert!(output.contains("missing config\\u{1b}[2J"));
         assert!(!output.contains('\u{001b}'));
     }

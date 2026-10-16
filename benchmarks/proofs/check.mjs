@@ -48,6 +48,9 @@ assert.equal(passed.complete, true, JSON.stringify(passed));
 assert.equal(passed.jobsAttempted, 22, 'two strictness helpers, six original jobs, four extreme jobs, ten comparison jobs');
 assert.ok(passed.setups.every(setup => setup.compilerStrictness.state === 'known'));
 assert.ok(passed.setups.every(setup => setup.compilerStrictness.options.strict === true));
+assert.ok(passed.setups.every(setup => setup.inferredAny.state === 'known'));
+assert.ok(passed.sources.every(source => source.result.functions.every(functionRow =>
+  functionRow.typeSafety.inferredAny.length === 2 && functionRow.typeSafety.inferredAny.every(finding => finding.state === 'known' && finding.count === 0))));
 assert.equal(passed.mutation.score, 60);
 assert.deepEqual(passed.mutation.outcomes.map(m => [m.id,m.path,m.localId,m.verdict]), [
   [0,'src/age.ts',0,'survived'], [1,'src/age.ts',1,'killed'],
@@ -124,6 +127,8 @@ const unknownStrictness = check('unknown-strictness', c => {
 assert.equal(unknownStrictness.complete, true);
 assert.ok(unknownStrictness.setups.every(setup => setup.compilerStrictness.state === 'unknown'));
 assert.ok(unknownStrictness.setups.every(setup => setup.compilerStrictness.options === null && setup.compilerStrictness.error));
+assert.ok(unknownStrictness.sources.every(source => source.result.functions.every(functionRow =>
+  functionRow.typeSafety.inferredAny.every(finding => finding.state === 'unknown' && finding.count === null))));
 const output = join(work, 'result.json');
 writeFileSync(output, JSON.stringify(results, null, 2) + '\n');
 console.log(`Combined check passed: ${Object.keys(results).length} scenarios. Results: ${output}`);

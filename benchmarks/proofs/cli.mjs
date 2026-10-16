@@ -456,6 +456,29 @@ assert.equal(blockThreshold.quality.checks[0].actual, 0);
 assert.equal(blockThreshold.result.setups[0].compilerStrictness.options.strict, true);
 for (const phase of ['typecheck','baseline','coverage']) assert.equal(blockThreshold.result.setups[0][phase].state, 'passed');
 
+originals['subject.ts'] = 'export function parse(text: string) { const value = JSON.parse(text); return value.field; }\n';
+originals['test.mjs'] = "import {test} from 'node:test';import assert from 'node:assert/strict';import {parse} from './subject.ts';test('parse',()=>assert.equal(parse('{\"field\":2}'),2));";
+for (const name of ['subject.ts','test.mjs']) writeFileSync(join(project, name), originals[name]);
+configure();
+for (const command of ['check', 'crap', 'mutate']) {
+  const inferred = json(`inferred-any-${command}`, command);
+  const finding = inferred.result.sources[0].result.functions[0].typeSafety.inferredAny[0];
+  assert.equal(finding.state, 'known');
+  assert.equal(finding.count, 3);
+  assert.deepEqual(finding.locations.map(({start,end}) => originals['subject.ts'].slice(start,end)),
+    ['JSON.parse(text)', 'value.field', 'value']);
+  assert.equal(inferred.result.setups[0].inferredAny.state, 'known');
+  assert(inferred.result.setups[0].inferredAny.ms > 0);
+}
+assert.match(run('inferred-any-readable', ['crap', '--config', configPath, '--scratch', scratch]).stdout,
+  /Inferred any, setup "node": 3/);
+const unchecked = structuredClone(config);
+unchecked.setups[0].typecheck.push('--noCheck');
+configure(unchecked);
+const unknownAny = json('inferred-any-noCheck', 'crap');
+assert.equal(unknownAny.result.setups[0].inferredAny.state, 'unknown');
+assert.equal(unknownAny.result.sources[0].result.functions[0].typeSafety.inferredAny[0].count, null);
+
 const resultPath = process.env.SESHAT_PROOF_OUTPUT ? resolve(process.env.SESHAT_PROOF_OUTPUT) : join(work, 'result.json');
 mkdirSync(dirname(resultPath), {recursive: true});
 writeFileSync(resultPath, JSON.stringify(results, null, 2) + '\n');

@@ -1,0 +1,144 @@
+{
+  "helperSha256": "a1e8556ffe687876b0615b7c9c25b40fd5c36eee235bf8ae0df7413caf8267eb",
+  "environment": {
+    "node": "v24.22.0",
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "AMD EPYC 7763 64-Core Processor"
+  },
+  "warmups": 1,
+  "samples": [
+    {
+      "files": 10,
+      "functions": 200,
+      "sourceBytes": 18700,
+      "sample": 0,
+      "mode": "metadata-only",
+      "wallMs": 233.99991799999998,
+      "checkerMs": null,
+      "maxRssBytes": 102072320,
+      "compilerVersion": "6.0.3"
+    },
+    {
+      "files": 10,
+      "functions": 200,
+      "sourceBytes": 18700,
+      "sample": 0,
+      "mode": "inferred-any",
+      "wallMs": 1079.5699539999998,
+      "checkerMs": 823.9685870000001,
+      "maxRssBytes": 225267712,
+      "compilerVersion": "6.0.3"
+    },
+    {
+      "files": 10,
+      "functions": 200,
+      "sourceBytes": 18700,
+      "sample": 1,
+      "mode": "inferred-any",
+      "wallMs": 1064.9771530000003,
+      "checkerMs": 824.6570619999999,
+      "maxRssBytes": 227758080,
+      "compilerVersion": "6.0.3"
+    },
+    {
+      "files": 10,
+      "functions": 200,
+      "sourceBytes": 18700,
+      "sample": 1,
+      "mode": "metadata-only",
+      "wallMs": 230.36540400000013,
+      "checkerMs": null,
+      "maxRssBytes": 102051840,
+      "compilerVersion": "6.0.3"
+    },
+    {
+      "files": 10,
+      "functions": 200,
+      "sourceBytes": 18700,
+      "sample": 2,
+      "mode": "metadata-only",
+      "wallMs": 220.43541000000005,
+      "checkerMs": null,
+      "maxRssBytes": 101789696,
+      "compilerVersion": "6.0.3"
+    },
+    {
+      "files": 10,
+      "functions": 200,
+      "sourceBytes": 18700,
+      "sample": 2,
+      "mode": "inferred-any",
+      "wallMs": 1086.7599690000006,
+      "checkerMs": 832.693929,
+      "maxRssBytes": 229548032,
+      "compilerVersion": "6.0.3"
+    },
+    {
+      "files": 500,
+      "functions": 10000,
+      "sourceBytes": 935000,
+      "sample": 0,
+      "mode": "metadata-only",
+      "wallMs": 239.26527299999998,
+      "checkerMs": null,
+      "maxRssBytes": 105197568,
+      "compilerVersion": "6.0.3"
+    },
+    {
+      "files": 500,
+      "functions": 10000,
+      "sourceBytes": 935000,
+      "sample": 0,
+      "mode": "inferred-any",
+      "wallMs": 2338.2636219999995,
+      "checkerMs": 2054.094923,
+      "maxRssBytes": 390725632,
+      "compilerVersion": "6.0.3"
+    },
+    {
+      "files": 500,
+      "functions": 10000,
+      "sourceBytes": 935000,
+      "sample": 1,
+      "mode": "inferred-any",
+      "wallMs": 2370.269461,
+      "checkerMs": 2100.422642,
+      "maxRssBytes": 408948736,
+      "compilerVersion": "6.0.3"
+    },
+    {
+      "files": 500,
+      "functions": 10000,
+      "sourceBytes": 935000,
+      "sample": 1,
+      "mode": "metadata-only",
+      "wallMs": 236.1123459999999,
+      "checkerMs": null,
+      "maxRssBytes": 105451520,
+      "compilerVersion": "6.0.3"
+    },
+    {
+      "files": 500,
+      "functions": 10000,
+      "sourceBytes": 935000,
+      "sample": 2,
+      "mode": "metadata-only",
+      "wallMs": 234.0698510000002,
+      "checkerMs": null,
+      "maxRssBytes": 104980480,
+      "compilerVersion": "6.0.3"
+    },
+    {
+      "files": 500,
+      "functions": 10000,
+      "sourceBytes": 935000,
+      "sample": 2,
+      "mode": "inferred-any",
+      "wallMs": 2358.3790310000004,
+      "checkerMs": 2069.696992,
+      "maxRssBytes": 392765440,
+      "compilerVersion": "6.0.3"
+    }
+  ]
+}

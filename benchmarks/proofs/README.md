@@ -22,6 +22,7 @@ npm ci --prefix benchmarks/proofs --ignore-scripts --no-audit --no-fund
 export CARGO_TARGET_DIR="$PWD/crates/seshat/target"
 cargo test --locked --manifest-path crates/seshat/Cargo.toml
 node benchmarks/proofs/compiler-strictness.mjs
+node benchmarks/proofs/inferred-any-performance.mjs
 cargo build --release --locked --manifest-path crates/seshat/Cargo.toml
 node benchmarks/proofs/run.mjs
 ```
@@ -31,12 +32,17 @@ toolchain variables shown in [the original benchmark instructions](../README.md)
 The proof dependencies are development tools, not proposed Seshat runtime
 dependencies. Do not run untrusted test suites with this experimental executor.
 
-The compiler strictness proof checks JSONC, relative and package inheritance,
+The compiler findings proof checks JSONC, relative and package inheritance,
 multiple `extends`, command-line overrides, captured and nested response files,
 rejection of external response files, omitted defaults, setup working directories
-and unavailable configuration. It uses installed TypeScript without
-creating a type checker. Pass another installed `typescript/bin/tsc` as its first
-argument to check that compiler's defaults and supported options.
+and unavailable configuration. Its inferred-`any` cases exercise the installed
+checker, recovery types, `noCheck`, excluded source, JSX, shorthand reads,
+runtime class bases and BOM/Unicode byte locations. Pass another installed
+`typescript/bin/tsc` as its first argument to check that compiler's defaults,
+supported options and expression findings. The separate synthetic cost probe
+records metadata-only and checker runs, with one warmup and three measured
+samples, in `work/issue134-validation/compiler-cost.json`. See the
+[inferred-any evidence](../../docs/research/inferred-any.md).
 
 The default is three samples per runner and strategy. For a shorter correctness
 run, use `SESHAT_PROOF_SAMPLES=1 node benchmarks/proofs/run.mjs`. Use

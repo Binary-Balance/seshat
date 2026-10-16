@@ -126,12 +126,13 @@ async function check(name,workers,mode='normal',signal){
       assert.equal(result.complete,true,stdout);
       assert.deepEqual(result.mutation.outcomes.map(m=>m.verdict),['survived','killed','survived','killed']);
       assert.equal(result.mutation.score,50);assert.equal(result.mutation.jobsAttempted,8);
+      const inferredAny=['high','low'].map(setup=>({setup,state:'known',count:0,locations:[]}));
       assert.deepEqual(result.sources,[{path:'subject.ts',result:{complete:true,functions:[{
         complexity:1,cognitiveComplexity:0,coverage:1,covered:1,crap:1,name:'adult',start:7,status:'measured',total:1,
         branchCovered:0,branchTotal:0,branchCoverage:null,coverageBasis:'statement',
         pseudoTested:false,pseudoTestStatus:'checked',pseudoTestReason:null,
-        typeSafety:{explicitAny:0,typeAssertions:0,doubleAssertions:0,nonNullAssertions:0,tsIgnore:0,tsExpectError:0,tsNocheck:0}
-      }],problems:[],typeSafety:{unowned:{explicitAny:0,typeAssertions:0,doubleAssertions:0,nonNullAssertions:0,tsIgnore:0,tsExpectError:0,tsNocheck:0},suppressions:[]}}}]);
+        typeSafety:{explicitAny:0,typeAssertions:0,doubleAssertions:0,nonNullAssertions:0,tsIgnore:0,tsExpectError:0,tsNocheck:0,inferredAny}
+      }],problems:[],typeSafety:{unowned:{explicitAny:0,typeAssertions:0,doubleAssertions:0,nonNullAssertions:0,tsIgnore:0,tsExpectError:0,tsNocheck:0},suppressions:[],inferredAny}}}]);
       const count=Math.min(workers??1,4);
       assert.equal(result.mutation.workersUsed,count);assert.equal(result.mutation.workerBaselineJobs,(count-1)*2);
       assert.equal(result.jobsAttempted,8+2+8+(count-1)*2);
