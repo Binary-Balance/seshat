@@ -303,8 +303,6 @@ jobs:
             work/x64/unix-supervision.log
             work/x64/debian11.json
             work/x64/debian11.log
-            work/debian11-*/checks.json
-            work/debian11-*/consumer/checks.json
             work/x64/rust-tests.log
             work/x64/repeat-pack.json
             work/x64/repeat-pack.log
@@ -312,3 +310,13 @@ jobs:
             work/x64/pack.log
             work/x64/summary.json
           if-no-files-found: error
+      # Separate roots keep release archives at the package artifact's top level.
+      - name: Upload Debian stage evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: linux-x64-debian-stage-evidence
+          path: |
+            work/debian11-*/checks.json
+            work/debian11-*/consumer/checks.json
+          if-no-files-found: ignore
