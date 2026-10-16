@@ -574,7 +574,8 @@ relabelling that completed job as cancelled.
 Syntax findings count type-safety escapes in the selected source automatically.
 No additional configuration or thresholds are required.
 
-Compiler strictness reporting recognizes direct commands in these forms:
+Compiler strictness and inferred-`any` reporting recognize direct commands in
+these forms:
 
 ```json
 ["node", "node_modules/typescript/bin/tsc", "--project", "tsconfig.json"]
@@ -585,8 +586,8 @@ The runtime may be `node`, `nodejs` or an explicit path with either name. Window
 `.exe` names are accepted. The compiler script may use another path to the
 installed `typescript/bin/tsc` or `typescript/lib/tsc.js`. Bare `tsc`, package
 manager scripts, wrappers, Node runtime options before the script, watch mode
-and build mode report strictness as `unknown`, even when the original typecheck
-passes. They remain valid original typecheck commands.
+and build mode report compiler findings as `unknown`, even when the original
+typecheck passes. They remain valid original typecheck commands.
 
 Seshat runs a bounded metadata helper in each setup's captured `cwd` with the
 same Node executable and installed TypeScript package. TypeScript parses the
@@ -595,6 +596,30 @@ multiple inheritance and command-line overrides. Capture the configuration,
 inherited configuration inputs and any response files, including nested ones.
 Configuration or response files outside the captured project, or missing inputs,
 report `unknown` with a diagnostic.
+
+The same helper creates one compiler program per setup, using that installed
+TypeScript and the parsed arguments. Inferred-`any` reporting supports
+TypeScript `>=5.0 <7.0`; other versions retain strictness reporting where its
+metadata API is available. The checker reads captured project inputs and the
+installed compiler's library files. Capture imported declarations and referenced
+project outputs as well as source. Build/watch commands remain unsupported;
+a referenced project's source is not inspected unless it belongs to the
+setup's program.
+
+Inferred findings count any-typed runtime expression sites per function and
+setup. They include `JSON.parse` calls and any-typed value uses, including uses
+flowing from explicit `any`. Counts are not distinct unsafe values or implicit
+parameter errors. Unknown and out-of-program findings stay separate from zero.
+No combined score or type-safety threshold is applied. See the
+[report fields](report-format.md#type-safety-findings).
+
+Checker diagnostics, suppressed recovery types and enabled `noCheck` produce
+unknown findings. Some untyped JavaScript imports also use recovery types and
+remain unknown. This does not block CRAP or mutation results. Checker work
+shares the helper's existing setup deadline and adds no per-mutant jobs.
+`inferredAny.ms` shows the added checker phase within `compilerStrictnessMs`.
+Compatibility and synthetic scaling measurements are recorded in the
+[inferred-any evidence](research/inferred-any.md).
 
 With explicit source arguments, strictness comes from command-line options and
 compiler defaults, rather than an unrelated `tsconfig.json`. TypeScript 6

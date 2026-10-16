@@ -312,7 +312,7 @@ available wherever source parsing succeeded, even if coverage or an original
 job failed. All commands retain counts in their function measurement rows,
 including rows with unknown coverage.
 
-Each function row has a `typeSafety` object of non-negative integer counts:
+Each function row has a `typeSafety` object with these non-negative syntax counts:
 
 | Field | Meaning |
 | --- | --- |
@@ -363,12 +363,50 @@ Each setup has `compilerStrictness`:
 `noImplicitOverride`, `noPropertyAccessFromIndexSignature`, `noCheck` and
 `skipLibCheck`. Defaults come from the installed compiler, including differences
 between TypeScript versions. The helper parses configuration without creating a
-type checker. It reports no inferred `any` or combined risk score.
+type checker. The same helper then collects the inferred-`any` findings below.
 
 Attempted helper jobs contribute to `jobsAttempted`. Their elapsed time appears
 as `compilerStrictnessMs` in setup `timings` and aggregate `phaseTimings`; an
-unattempted helper has `null` timing. See the
+unattempted helper has `null` timing. This timing includes checker work. See the
 [configuration guide](configuration.md#type-safety-findings) for supported commands.
+
+Each setup also has `inferredAny`, containing `state`, `error` and `ms`. `state`
+is `known` when its compiler program was inspected, otherwise `unknown` with a
+diagnostic. `ms` measures checker construction, diagnostics and expression
+inspection inside the helper, or is `null` if that work did not start. It is
+included in `compilerStrictnessMs`, so the two timings must not be added.
+
+Each function's `typeSafety.inferredAny` is an array with one entry per setup.
+Each entry contains `setup`, `state`, `count` and `locations`. `state` is `known`,
+`unknown` or `not-in-program`. A known entry has a non-negative count and
+`locations`, an array of `{start, end}` UTF-8 byte offsets into the original
+selected source. Other states have `null` counts and locations. A selected
+declaration file or source outside that setup's compiler program is
+`not-in-program`, never a measured zero. Setup counts stay separate because
+compiler versions and configurations can give different types to the same code.
+`sources[].result.typeSafety.inferredAny` has the same entries for expressions
+outside function rows. Nested functions own their findings separately.
+
+Counts describe runtime expression sites whose top-level type is `any`,
+including calls such as `JSON.parse(text)`, property/element accesses and reads
+of any-typed values. Uses of explicitly annotated `any` also count; these are
+not unique origins or TypeScript `noImplicitAny` diagnostics. A property chain
+can contribute several expression sites. The count excludes declaration names,
+type syntax, ambient declaration subtrees, noncomputed property-name tokens,
+intrinsic/closing JSX tags and transparent wrappers or assertions. Expressions
+inside wrappers and instantiation expressions still count. `any[]` and object
+types containing `any` are not themselves `any`, but their element/property
+reads may be. Evolving variables use their type at each expression site,
+including assignment targets. Internal namespace import aliases
+count when TypeScript would emit their value read; type-only and elided aliases
+do not count.
+
+Compiler errors, suppressed recovery types, `noCheck`, unsupported compilers
+and failed helper jobs produce unknown findings. Some untyped JavaScript
+imports use the compiler's recovery types even without diagnostics and are
+therefore unknown. Unknown findings do not change assessment completeness,
+thresholds or mutation scores. Static syntax counts remain available. See the
+[compatibility and cost evidence](research/inferred-any.md).
 
 ## Quality thresholds
 

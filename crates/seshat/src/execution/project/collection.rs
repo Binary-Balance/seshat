@@ -516,6 +516,77 @@ fn direct_typescript(args: &[String]) -> Option<(&str, &[String])> {
         .then_some((script, &args[2..]))
 }
 
+fn attribute_inferred_any(
+    analysis: &Analysis,
+    source: &str,
+    path: &str,
+    setups: &[Value],
+    findings: &[Value],
+    measured: &mut Value,
+) {
+    let mut rows = vec![Vec::new(); analysis.scopes.len() + 1];
+    for (setup, findings) in setups.iter().zip(findings) {
+        let finding = findings
+            .as_array()
+            .and_then(|sources| sources.iter().find(|source| source["path"] == path));
+        let mut state = if setup["inferredAny"]["state"] == "known" {
+            finding
+                .and_then(|source| source["state"].as_str())
+                .unwrap_or("unknown")
+        } else {
+            "unknown"
+        };
+        let mut locations = vec![Vec::new(); rows.len()];
+        if state == "known" {
+            let valid = finding
+                .and_then(|source| source["locations"].as_array())
+                .is_some_and(|found| {
+                    found.iter().all(|location| {
+                        let Some(start) = location["start"]
+                            .as_u64()
+                            .and_then(|value| u32::try_from(value).ok())
+                        else {
+                            return false;
+                        };
+                        let Some(end) = location["end"]
+                            .as_u64()
+                            .and_then(|value| usize::try_from(value).ok())
+                        else {
+                            return false;
+                        };
+                        if start as usize >= end
+                            || end > source.len()
+                            || !source.is_char_boundary(start as usize)
+                            || !source.is_char_boundary(end)
+                        {
+                            return false;
+                        }
+                        let owner = analysis.owner(start).unwrap_or(analysis.scopes.len());
+                        locations[owner].push(location.clone());
+                        true
+                    })
+                });
+            if !valid {
+                state = "unknown";
+            }
+        }
+        for (rows, locations) in rows.iter_mut().zip(locations) {
+            rows.push(json!({"setup":setup["name"],"state":state,
+                "count":(state == "known").then_some(locations.len()),
+                "locations":(state == "known").then_some(locations)}));
+        }
+    }
+    for (function, findings) in measured["functions"]
+        .as_array_mut()
+        .unwrap()
+        .iter_mut()
+        .zip(&rows)
+    {
+        function["typeSafety"]["inferredAny"] = json!(findings);
+    }
+    measured["typeSafety"]["inferredAny"] = json!(rows.last().unwrap());
+}
+
 fn direct_runner_args<'a>(runner: Runner, args: &'a [String]) -> Option<&'a [String]> {
     let program = args.first()?;
     let program_name = Path::new(program)
@@ -921,7 +992,7 @@ impl CapturedProject {
         let Some((compiler, args)) = setup.typecheck.as_deref().and_then(direct_typescript) else {
             return (
                 unknown(
-                    "strictness reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js",
+                    "compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js",
                 ),
                 false,
             );
@@ -939,7 +1010,8 @@ impl CapturedProject {
             fs::write(
                 &context,
                 serde_json::to_vec(&json!({"compiler":compiler,"args":args,
-                "root":module_path(&self.directory.0)?}))
+                "root":module_path(&self.directory.0)?,
+                "sources":self.sources.iter().map(|(path, _)| stable_path(path)).collect::<Vec<_>>()}))
                 .unwrap(),
             )
             .map_err(|error| error.to_string())?;
@@ -980,6 +1052,7 @@ impl CapturedProject {
             {
                 result["state"] = json!("unknown");
                 result["error"] = json!(format!("remove strictness evidence: {error}"));
+                result.as_object_mut().unwrap().remove("inferredAny");
             }
         }
         (result, attempted)
@@ -1575,10 +1648,27 @@ impl CapturedProject {
         }
         let mut baselines = vec![TestState::NotRun; setups.len()];
         let mut reports = Vec::new();
+        let mut inferred_sources = Vec::new();
         let mut commands_run = 0;
         for (index, setup) in self.config.setups.iter().enumerate() {
+            progress.phase(format_args!("compiler findings {:?}", setup.name));
             let phase_started = Instant::now();
-            let (strictness, attempted) = self.compiler_strictness(setup, &evidence.0, index);
+            let (mut strictness, attempted) = self.compiler_strictness(setup, &evidence.0, index);
+            let mut inferred = strictness
+                .as_object_mut()
+                .unwrap()
+                .remove("inferredAny")
+                .unwrap_or_else(
+                    || json!({"state":"unknown","error":strictness["error"],"ms":null}),
+                );
+            inferred_sources.push(
+                inferred
+                    .as_object_mut()
+                    .unwrap()
+                    .remove("sources")
+                    .unwrap_or(Value::Null),
+            );
+            setups[index]["inferredAny"] = inferred;
             setups[index]["compilerStrictness"] = strictness;
             if attempted {
                 commands_run += 1;
@@ -1721,8 +1811,16 @@ impl CapturedProject {
                         let applicable = reports
                             .iter()
                             .filter(|report| report.get(&stable_path(&path)).is_some());
-                        let measured =
+                        let mut measured =
                             coverage::attribute(analysis, &stable_path(&path), source, applicable);
+                        attribute_inferred_any(
+                            analysis,
+                            source,
+                            &stable_path(relative),
+                            &setups,
+                            &inferred_sources,
+                            &mut measured,
+                        );
                         if measured["complete"] != true {
                             complete = false;
                         }
@@ -1867,6 +1965,56 @@ impl CapturedProject {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn inferred_any_keeps_setup_counts_nested_owners_and_unknowns_separate() {
+        let source =
+            "// 🎸\nconst top = value; function outer() { value; function inner() { value; } }";
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        let mut measured = coverage::attribute(&analysis, "source.ts", source, std::iter::empty());
+        let locations: Vec<_> = source
+            .match_indices("value")
+            .map(|(start, value)| json!({"start":start,"end":start + value.len()}))
+            .collect();
+        let setups = vec![
+            json!({"name":"one","inferredAny":{"state":"known"}}),
+            json!({"name":"two","inferredAny":{"state":"known"}}),
+            json!({"name":"unknown","inferredAny":{"state":"unknown"}}),
+            json!({"name":"excluded","inferredAny":{"state":"known"}}),
+            json!({"name":"invalid","inferredAny":{"state":"known"}}),
+        ];
+        let findings = vec![
+            json!([{"path":"source.ts","state":"known","locations":locations}]),
+            json!([{"path":"source.ts","state":"known","locations":[]}]),
+            Value::Null,
+            json!([{"path":"source.ts","state":"not-in-program","locations":null}]),
+            json!([{"path":"source.ts","state":"known","locations":[{"start":4,"end":5}]}]),
+        ];
+        attribute_inferred_any(
+            &analysis,
+            source,
+            "source.ts",
+            &setups,
+            &findings,
+            &mut measured,
+        );
+        for findings in measured["functions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|function| &function["typeSafety"]["inferredAny"])
+            .chain(std::iter::once(&measured["typeSafety"]["inferredAny"]))
+        {
+            assert_eq!(findings[0]["count"], 1);
+            assert_eq!(findings[0]["locations"].as_array().unwrap().len(), 1);
+            assert_eq!(findings[1]["count"], 0);
+            assert_eq!(findings[2]["state"], "unknown");
+            assert_eq!(findings[2]["count"], Value::Null);
+            assert_eq!(findings[3]["state"], "not-in-program");
+            assert_eq!(findings[4]["state"], "unknown");
+            assert_eq!(findings[4]["locations"], Value::Null);
+        }
+    }
 
     #[test]
     fn compiler_strictness_recognition_is_explicit_and_failures_are_bounded() {
