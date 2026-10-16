@@ -34,13 +34,13 @@ const work = mkdtempSync(join(repo,'work/debian11-'));
 const rootfs = join(work,'rootfs'), node = join(work,'node'), consumer = join(work,'consumer');
 for (const directory of [rootfs,node,join(consumer,'assurance-proofs')]) mkdirSync(directory,{recursive:true});
 const checks = {};
-function run(name,command,args) {
+function run(name,command,args,timeout=600000) {
   console.log(name);
   const start = performance.now();
-  const child = spawnSync(command,args,{cwd:repo,encoding:'utf8',timeout:600000,maxBuffer:16*1024*1024});
+  const child = spawnSync(command,args,{cwd:repo,encoding:'utf8',timeout,maxBuffer:16*1024*1024});
   checks[name] = {status:child.status,ms:performance.now()-start,stdout:child.stdout,stderr:child.stderr};
   writeFileSync(join(work,'checks.json'),JSON.stringify(checks,null,2)+'\n');
-  assert.ifError(child.error); assert.equal(child.status,0,child.stdout+child.stderr);
+  assert.equal(child.error,undefined,child.stdout+child.stderr); assert.equal(child.status,0,child.stdout+child.stderr);
 }
 run('extract-debian','tar',['-xzf',join(archives,'rootfs.tar.gz'),'-C',rootfs,'--no-same-owner']);
 run('extract-node','tar',['-xJf',join(archives,'node.tar.xz'),'-C',node,'--strip-components=1','--no-same-owner']);
@@ -58,12 +58,12 @@ const kernel = release();
 const kernelVersion = kernel.match(/^(\d+)\.(\d+)/);
 assert.ok(kernelVersion && (Number(kernelVersion[1]) > 6 || Number(kernelVersion[1]) === 6 && Number(kernelVersion[2]) >= 8),
   'candidate kernel floor is Linux 6.8; got '+kernel);
-function run(name,command,args,env=process.env) {
+function run(name,command,args,env=process.env,timeout=300000) {
   const start=performance.now();
-  const child=spawnSync(command,args,{env,encoding:'utf8',timeout:300000,maxBuffer:16*1024*1024});
+  const child=spawnSync(command,args,{env,encoding:'utf8',timeout,maxBuffer:16*1024*1024});
   checks[name]={status:child.status,ms:performance.now()-start,stdout:child.stdout,stderr:child.stderr};
   writeFileSync('/seshat/work/checks.json',JSON.stringify(checks,null,2)+'\n');
-  assert.ifError(child.error); assert.equal(child.status,0,child.stdout+child.stderr);
+  assert.equal(child.error,undefined,child.stdout+child.stderr); assert.equal(child.status,0,child.stdout+child.stderr);
   console.log(name+': passed'); return child.stdout;
 }
 const os=readFileSync('/etc/os-release','utf8');
@@ -92,7 +92,7 @@ const parallelPath=parallel.match(/Parallel evidence: (.+)/)[1];
 assert.equal(Object.keys(read(parallelPath)).length,11);
 const standaloneOutput=run('installed-standalone',process.execPath,
   ['/seshat/benchmarks/proofs/standalone.mjs','/opt/standalone.tar.gz','/seshat/crates/seshat/target/release/seshat-proofs'],
-  {...process.env,SESHAT_STANDALONE_SHA256:'${standaloneSha256}',SESHAT_BINARY_SHA256:install.build.binarySha256});
+  {...process.env,SESHAT_STANDALONE_SHA256:'${standaloneSha256}',SESHAT_BINARY_SHA256:install.build.binarySha256},900000);
 const standalonePath=standaloneOutput.match(/Results: (.+)/)[1];
 const standalone=read(standalonePath);
 assert.equal(standalone.archiveSha256,'${standaloneSha256}');
@@ -114,6 +114,7 @@ const result={os,kernel,kernelFloor:'6.8',architecture:process.arch,glibc:'2.31'
   standaloneParallelChecks:standalone.parallelChecks};
 writeFileSync('/seshat/work/result.json',JSON.stringify(result,null,2)+'\n');
 `;
+// The combined proof repeats npm and standalone suites; its limit must cover their sum.
 // Keep the consumer filesystem read-only except disposable inputs, scratch and reports.
 run('debian-consumer','bwrap',['--unshare-all','--uid','0','--gid','0','--die-with-parent',
   '--ro-bind',rootfs,'/','--proc','/proc','--dev','/dev','--tmpfs','/tmp','--tmpfs','/root',
@@ -128,7 +129,7 @@ run('debian-consumer','bwrap',['--unshare-all','--uid','0','--gid','0','--die-wi
   '--bind',consumer,'/seshat/work','--chdir','/seshat','--clearenv',
   '--setenv','PATH','/opt/node/bin:/usr/bin:/bin','--setenv','LANG','C.UTF-8',
   '--setenv','SESHAT_EXAMPLES_NPM_CACHE','/seshat/examples-npm-cache',
-  '/opt/node/bin/node','--input-type=module','-e',script]);
+  '/opt/node/bin/node','--input-type=module','-e',script],1800000);
 const result = {inputs,tarballSha256,standaloneArchiveSha256:standaloneSha256,
   proofBinarySha256:hash(readFileSync(packed.proofBinary)),
   ...JSON.parse(readFileSync(join(consumer,'result.json'),'utf8')),

@@ -50,19 +50,20 @@ Verified on 2026-10-16 with Node 24.22.0 on Linux x64:
 
 | TypeScript | Passing cases |
 | --- | ---: |
-| 5.0.4 | 33 |
-| 5.9.3 | 34 |
-| 6.0.3 | 35 |
+| 5.0.4 | 37 |
+| 5.9.3 | 38 |
+| 6.0.3 | 39 |
 
 Cases include configuration inheritance and overrides, direct arguments,
 response files, real any values, declarations and assertions, nested functions,
 JavaScript, JSX, shorthand reads, class bases, BOM/astral Unicode/CRLF locations,
 compiler errors, suppressed recovery types, `noCheck`, unsupported versions,
-excluded sources, ambient classes, emitted/elided namespace aliases and project
-references with present or missing declaration outputs. Rust checks separately
-prove smallest-scope attribution, distinct setup counts, unknown values and
-rejection of malformed UTF-8 boundaries. The CLI
-proof checks positive findings through `check`, `crap`, `mutate` and text output.
+excluded sources, ambient classes, instantiation expressions, emitted/elided
+qualified and identifier namespace aliases, and project references with present
+or missing declaration outputs. Rust checks separately prove smallest-scope
+attribution, distinct setup counts, unknown values and rejection of malformed
+UTF-8 boundaries. The CLI proof checks positive findings through `check`, `crap`,
+`mutate` and text output.
 The local run passed 132 Rust tests, 69 CLI scenarios plus legacy parity, the
 12-scenario combined check and the parallel execution/cancellation suite.
 
@@ -86,12 +87,12 @@ AMD EPYC 7763 CPU. Medians from the
 
 | Source files | Functions | Mode | Wall time, ms | Peak RSS, MiB |
 | ---: | ---: | --- | ---: | ---: |
-| 10 | 200 | Metadata only | 229.1 | 97.5 |
-| 10 | 200 | Inferred any | 1,098.2 | 221.8 |
-| 500 | 10,000 | Metadata only | 243.7 | 100.6 |
-| 500 | 10,000 | Inferred any | 2,389.2 | 373.0 |
+| 10 | 200 | Metadata only | 234.6 | 97.3 |
+| 10 | 200 | Inferred any | 1,101.8 | 222.2 |
+| 500 | 10,000 | Metadata only | 237.6 | 100.1 |
+| 500 | 10,000 | Inferred any | 2,442.3 | 382.4 |
 
-The larger fixture adds about 2.15 seconds and 272 MiB over metadata alone in
+The larger fixture adds about 2.20 seconds and 282 MiB over metadata alone in
 this sample. This is a once-per-setup cost; there are no additional mutant jobs.
 
 Wall time covers child startup through process exit. RSS is that process's
@@ -102,3 +103,17 @@ They exclude Rust attribution, original typechecks, capture and mutation work.
 Projects with more declarations, different options or several setups can cost
 more. Helper work uses the existing setup deadline; expiry produces unknown
 findings. No arbitrary runtime cap or automatic type-safety threshold is added.
+
+## Debian package proof deadline
+
+The [x64 package proof on 233d5c1](https://github.com/Binary-Balance/seshat/actions/runs/38854624312/job/116823210455)
+passed its native checks but reached the Debian consumer's ten-minute outer
+deadline. That consumer repeats npm installation, CLI, parallel and standalone
+proofs. The successful native equivalents took 117.4, 107.5, 129.3 and 280.6
+seconds respectively: 634.8 seconds before Debian overhead, already beyond the
+600-second aggregate limit.
+
+The Debian consumer now has a 30-minute aggregate deadline, with 15 minutes for
+its nested standalone proof. Individual suite and product job deadlines remain
+unchanged. Failed commands retain partial output, and CI uploads the consumer's
+per-stage checks even when the combined proof fails.

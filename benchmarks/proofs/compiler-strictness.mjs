@@ -249,6 +249,26 @@ export function view(value: any) { const object = { value }; class Child extends
     assert.equal(preserved.inferredAny.state, 'known', preserved.inferredAny.error);
     assert.equal(preserved.inferredAny.sources[0].locations.length, 1);
   }
+
+  const instantiation = 'declare function factory(value: any): <T>(arg: T) => T; export function specialize(value: any) { return factory(value)<string>; }';
+  write('subject.ts', instantiation);
+  const specialized = inspect(['-p', '.'], root, compiler, ['subject.ts']);
+  assert.equal(specialized.inferredAny.state, 'known', specialized.inferredAny.error);
+  assert.deepEqual(specialized.inferredAny.sources[0].locations,
+    [{ start: instantiation.lastIndexOf('value'), end: instantiation.lastIndexOf('value') + 5 }]);
+
+  write('ambient.d.ts', "declare module 'untyped';");
+  write('tsconfig.json', JSON.stringify({ compilerOptions: { strict: true, noEmit: true, skipLibCheck: true, module: 'commonjs' }, files: ['subject.ts', 'ambient.d.ts'] }));
+  for (const [source, count] of [
+    ["import value = require('untyped'); export import alias = value;", 1],
+    ["import value = require('untyped'); import alias = value; export {};", 0],
+    ["import value = require('untyped'); import first = value; export import alias = first;", 2],
+  ]) {
+    write('subject.ts', source);
+    const result = inspect(['-p', '.'], root, compiler, ['subject.ts']);
+    assert.equal(result.inferredAny.state, 'known', result.inferredAny.error);
+    assert.equal(result.inferredAny.sources[0].locations.length, count, source);
+  }
   console.log(`compiler strictness proof passed with TypeScript ${ts.version}, ${runs} cases`);
 } finally {
   rmSync(root, { recursive: true, force: true });

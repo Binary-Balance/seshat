@@ -128,9 +128,10 @@ try {
         const visit = node => {
           if (node.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.DeclareKeyword)
             || (ts.isImportEqualsDeclaration(node) && node.isTypeOnly)) return;
-          if (ts.isExpressionWithTypeArguments(node) && ts.isHeritageClause(node.parent)
-            && node.parent.token === ts.SyntaxKind.ExtendsKeyword && ts.isClassLike(node.parent.parent)) {
-            visit(node.expression);
+          if (ts.isExpressionWithTypeArguments(node)) {
+            const classBase = ts.isHeritageClause(node.parent)
+              && node.parent.token === ts.SyntaxKind.ExtendsKeyword && ts.isClassLike(node.parent.parent);
+            if (classBase || ts.isExpressionNode(node)) visit(node.expression);
             return;
           }
           if (ts.isTypeNode(node) || ts.isJsxClosingElement(node) || node.kind === ts.SyntaxKind.JsxNamespacedName) return;
@@ -141,7 +142,8 @@ try {
           const propertyName = node.parent && ts.isPropertyAccessExpression(node.parent) && node.parent.name === node;
           const shorthand = node.parent && ts.isShorthandPropertyAssignment(node.parent) && node.parent.name === node;
           let importAlias = false;
-          if (ts.isQualifiedName(node) && ts.isImportEqualsDeclaration(node.parent) && node.parent.moduleReference === node) {
+          if ((ts.isQualifiedName(node) || ts.isIdentifier(node))
+            && ts.isImportEqualsDeclaration(node.parent) && node.parent.moduleReference === node) {
             const resolver = checker.getEmitResolver();
             // Match TypeScript's alias elision, including unused aliases in scripts.
             const retained = options.preserveValueImports ? resolver.isValueAliasDeclaration(node.parent)

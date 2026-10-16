@@ -394,10 +394,10 @@ not unique origins or TypeScript `noImplicitAny` diagnostics. A property chain
 can contribute several expression sites. The count excludes declaration names,
 type syntax, ambient declaration subtrees, noncomputed property-name tokens,
 intrinsic/closing JSX tags and transparent wrappers or assertions. Expressions
-inside wrappers still count. `any[]` and object types containing `any` are not
-themselves `any`, but
-their element/property reads may be. Evolving variables use their type at each
-expression site, including assignment targets. Internal namespace import aliases
+inside wrappers and instantiation expressions still count. `any[]` and object
+types containing `any` are not themselves `any`, but their element/property
+reads may be. Evolving variables use their type at each expression site,
+including assignment targets. Internal namespace import aliases
 count when TypeScript would emit their value read; type-only and elided aliases
 do not count.
 

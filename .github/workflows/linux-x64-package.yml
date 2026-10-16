@@ -303,6 +303,8 @@ jobs:
             work/x64/unix-supervision.log
             work/x64/debian11.json
             work/x64/debian11.log
+            work/debian11-*/checks.json
+            work/debian11-*/consumer/checks.json
             work/x64/rust-tests.log
             work/x64/repeat-pack.json
             work/x64/repeat-pack.log
