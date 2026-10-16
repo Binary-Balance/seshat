@@ -75,7 +75,7 @@ for (const command of ['cargo', 'rustc']) assert.equal(spawnSync(command, ['--ve
 
 const cli = run('installed-cli', process.execPath, [join(repo, 'benchmarks/proofs/cli.mjs')], env, 0);
 const cliSummary = cli.stdout.match(/CLI passed: (\d+) scenarios plus legacy parity/);
-assert.ok(cliSummary && Number(cliSummary[1]) === 64, cli.stdout);
+assert.ok(cliSummary && Number(cliSummary[1]) === 69, cli.stdout);
 const operatorsPath = join(work, 'operators.json');
 run('installed-operators', process.execPath, [join(repo, 'benchmarks/proofs/operators.mjs')],
   {...env, SESHAT_PROOF_OUTPUT: operatorsPath});

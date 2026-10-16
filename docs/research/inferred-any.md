@@ -25,14 +25,18 @@ and rejects any-flagged types whose internal intrinsic name is not `any`.
 Some ordinary untyped JavaScript imports also use recovery types, so their
 findings remain unknown. `noCheck` likewise produces unknown findings.
 
-Expression classification and intrinsic names use internal compiler APIs.
-The supported range is deliberately `>=5.0 <7.0`, with representative compiler
-checks below. The [compiler API guide](https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API)
+Expression classification, intrinsic names and alias-emission decisions use
+internal compiler APIs. The supported range is deliberately `>=5.0 <7.0`, with
+representative compiler checks below. The [compiler API guide](https://github.com/microsoft/TypeScript/wiki/Using-the-Compiler-API)
 warns that TypeScript 7.1 changes the API. The
 [expression-context rules](https://github.com/microsoft/TypeScript/blob/v6.0.3/src/compiler/utilities.ts)
 need explicit handling for shorthand reads, property-name tokens, runtime class
-bases and JSX. The helper preserves BOM bytes when converting the compiler's
-UTF-16 positions to original UTF-8 byte offsets.
+bases and JSX. Ambient declarations are skipped. Internal namespace import
+aliases follow the compiler's own [alias emission rules](https://github.com/microsoft/TypeScript/blob/v5.0.4/src/compiler/transformers/ts.ts),
+including elision of type-only or unused module aliases and the older
+`preserveValueImports` option. The helper preserves
+BOM bytes when converting the compiler's UTF-16 positions to original UTF-8
+byte offsets.
 
 ## Compatibility checks
 
@@ -46,17 +50,18 @@ Verified on 2026-10-16 with Node 24.22.0 on Linux x64:
 
 | TypeScript | Passing cases |
 | --- | ---: |
-| 5.0.4 | 24 |
-| 5.9.3 | 26 |
-| 6.0.3 | 27 |
+| 5.0.4 | 33 |
+| 5.9.3 | 34 |
+| 6.0.3 | 35 |
 
 Cases include configuration inheritance and overrides, direct arguments,
 response files, real any values, declarations and assertions, nested functions,
 JavaScript, JSX, shorthand reads, class bases, BOM/astral Unicode/CRLF locations,
 compiler errors, suppressed recovery types, `noCheck`, unsupported versions,
-excluded sources and project references with present or missing declaration
-outputs. Rust checks separately prove smallest-scope attribution, distinct setup
-counts, unknown values and rejection of malformed UTF-8 boundaries. The CLI
+excluded sources, ambient classes, emitted/elided namespace aliases and project
+references with present or missing declaration outputs. Rust checks separately
+prove smallest-scope attribution, distinct setup counts, unknown values and
+rejection of malformed UTF-8 boundaries. The CLI
 proof checks positive findings through `check`, `crap`, `mutate` and text output.
 The local run passed 132 Rust tests, 69 CLI scenarios plus legacy parity, the
 12-scenario combined check and the parallel execution/cancellation suite.
@@ -81,12 +86,12 @@ AMD EPYC 7763 CPU. Medians from the
 
 | Source files | Functions | Mode | Wall time, ms | Peak RSS, MiB |
 | ---: | ---: | --- | ---: | ---: |
-| 10 | 200 | Metadata only | 230.4 | 97.3 |
-| 10 | 200 | Inferred any | 1,079.6 | 217.2 |
-| 500 | 10,000 | Metadata only | 236.1 | 100.3 |
-| 500 | 10,000 | Inferred any | 2,358.4 | 374.6 |
+| 10 | 200 | Metadata only | 229.1 | 97.5 |
+| 10 | 200 | Inferred any | 1,098.2 | 221.8 |
+| 500 | 10,000 | Metadata only | 243.7 | 100.6 |
+| 500 | 10,000 | Inferred any | 2,389.2 | 373.0 |
 
-The larger fixture adds about 2.12 seconds and 274 MiB over metadata alone in
+The larger fixture adds about 2.15 seconds and 272 MiB over metadata alone in
 this sample. This is a once-per-setup cost; there are no additional mutant jobs.
 
 Wall time covers child startup through process exit. RSS is that process's

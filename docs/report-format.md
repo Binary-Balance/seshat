@@ -391,12 +391,15 @@ Counts describe runtime expression sites whose top-level type is `any`,
 including calls such as `JSON.parse(text)`, property/element accesses and reads
 of any-typed values. Uses of explicitly annotated `any` also count; these are
 not unique origins or TypeScript `noImplicitAny` diagnostics. A property chain
-can contribute several expression sites. Declaration names, type syntax,
-noncomputed property-name tokens, intrinsic/closing JSX tags and transparent
-wrappers or assertions are excluded. The expressions inside wrappers still
-count. `any[]` and object types containing `any` are not themselves `any`, but
+can contribute several expression sites. The count excludes declaration names,
+type syntax, ambient declaration subtrees, noncomputed property-name tokens,
+intrinsic/closing JSX tags and transparent wrappers or assertions. Expressions
+inside wrappers still count. `any[]` and object types containing `any` are not
+themselves `any`, but
 their element/property reads may be. Evolving variables use their type at each
-expression site, including assignment targets.
+expression site, including assignment targets. Internal namespace import aliases
+count when TypeScript would emit their value read; type-only and elided aliases
+do not count.
 
 Compiler errors, suppressed recovery types, `noCheck`, unsupported compilers
 and failed helper jobs produce unknown findings. Some untyped JavaScript

@@ -126,6 +126,8 @@ try {
         if (original !== source.text && !strippedBom) throw new Error(`compiler source differs from captured UTF-8 in ${filename}`);
         const locations = [];
         const visit = node => {
+          if (node.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.DeclareKeyword)
+            || (ts.isImportEqualsDeclaration(node) && node.isTypeOnly)) return;
           if (ts.isExpressionWithTypeArguments(node) && ts.isHeritageClause(node.parent)
             && node.parent.token === ts.SyntaxKind.ExtendsKeyword && ts.isClassLike(node.parent.parent)) {
             visit(node.expression);
@@ -138,7 +140,16 @@ try {
             || ts.isSatisfiesExpression(node);
           const propertyName = node.parent && ts.isPropertyAccessExpression(node.parent) && node.parent.name === node;
           const shorthand = node.parent && ts.isShorthandPropertyAssignment(node.parent) && node.parent.name === node;
-          if (!wrapper && !propertyName && (ts.isExpressionNode(node) || shorthand)) {
+          let importAlias = false;
+          if (ts.isQualifiedName(node) && ts.isImportEqualsDeclaration(node.parent) && node.parent.moduleReference === node) {
+            const resolver = checker.getEmitResolver();
+            // Match TypeScript's alias elision, including unused aliases in scripts.
+            const retained = options.preserveValueImports ? resolver.isValueAliasDeclaration(node.parent)
+              : resolver.isReferencedAliasDeclaration(node.parent);
+            importAlias = options.verbatimModuleSyntax || retained
+              || (!ts.isExternalModule(source) && resolver.isTopLevelValueImportEqualsWithEntityName(node.parent));
+          }
+          if (!wrapper && !propertyName && (ts.isExpressionNode(node) || shorthand || importAlias)) {
             const type = checker.getTypeAtLocation(node);
             if (type.flags & ts.TypeFlags.Any) {
               // TypeScript also uses Any for suppressed errors and unresolved types.

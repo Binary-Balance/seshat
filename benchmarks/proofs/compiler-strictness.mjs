@@ -213,6 +213,42 @@ export function view(value: any) { const object = { value }; class Child extends
   const missingOutput = inspect(['-p', 'references.json'], root, compiler, ['reference-user.ts']);
   assert.equal(missingOutput.inferredAny.state, 'unknown');
   assert.match(missingOutput.inferredAny.error, /not been built/);
+
+  write('tsconfig.json', JSON.stringify({ compilerOptions: { strict: true, noEmit: true, skipLibCheck: true, module: 'commonjs' }, files: ['subject.ts'] }));
+  const ambient = 'declare const base: any; export declare class External extends base {} export class Concrete extends base {}';
+  write('subject.ts', ambient);
+  const ambientResult = inspect(['-p', '.'], root, compiler, ['subject.ts']);
+  assert.equal(ambientResult.inferredAny.state, 'known', ambientResult.inferredAny.error);
+  assert.deepEqual(ambientResult.inferredAny.sources[0].locations,
+    [{ start: ambient.lastIndexOf('base'), end: ambient.lastIndexOf('base') + 4 }]);
+
+  const alias = 'namespace N { export const value: any = 1; } export import value = N.value;';
+  write('subject.ts', alias);
+  const aliasResult = inspect(['-p', '.'], root, compiler, ['subject.ts']);
+  assert.equal(aliasResult.inferredAny.state, 'known', aliasResult.inferredAny.error);
+  assert.deepEqual(aliasResult.inferredAny.sources[0].locations,
+    [{ start: alias.indexOf('N.value'), end: alias.indexOf('N.value') + 7 }]);
+  write('node_modules/untyped/index.d.ts', 'declare const value: any; export = value;');
+  for (const [source, count] of [
+    ['namespace N { export const value: any = 1; } import value = N.value; export {};', 0],
+    ['namespace N { export const value: any = 1; } import value = N.value; export const result = value;', 2],
+    ['namespace N { export const value: any = 1; } import value = N.value;', 1],
+    ['namespace N { export const value: any = 1; } declare namespace AmbientAliases { import value = N.value; class Child extends value {} }', 0],
+    ['namespace N { export interface Value {} } export import Value = N.Value;', 0],
+    ["import type value = require('untyped'); export {};", 0],
+  ]) {
+    write('subject.ts', source);
+    const result = inspect(['-p', '.'], root, compiler, ['subject.ts']);
+    assert.equal(result.inferredAny.state, 'known', result.inferredAny.error);
+    assert.equal(result.inferredAny.sources[0].locations.length, count, source);
+  }
+  const [compilerMajor, compilerMinor] = ts.versionMajorMinor.split('.').map(Number);
+  if (compilerMajor === 5 && compilerMinor < 5) {
+    write('subject.ts', 'namespace N { export const value: any = 1; } import value = N.value; export {};');
+    const preserved = inspect(['-p', '.', '--module', 'es2015', '--preserveValueImports', '--ignoreDeprecations', '5.0'], root, compiler, ['subject.ts']);
+    assert.equal(preserved.inferredAny.state, 'known', preserved.inferredAny.error);
+    assert.equal(preserved.inferredAny.sources[0].locations.length, 1);
+  }
   console.log(`compiler strictness proof passed with TypeScript ${ts.version}, ${runs} cases`);
 } finally {
   rmSync(root, { recursive: true, force: true });
