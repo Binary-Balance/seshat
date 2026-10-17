@@ -231,8 +231,8 @@ function validate({preflight, packed, repeat, install, runtime, releaseNpm, publ
   validateReleaseNpm(releaseNpm, packed, artifacts, publicExamples, artifactDirectory, fail);
 
   const integrationGaps = [];
-  if (!sharedCli) integrationGaps.push('shared 69-scenario CLI fixture evidence was not retained');
-  else if (Object.keys(sharedCli).length !== 69) fail('shared CLI fixture evidence did not retain 69 scenarios');
+  if (!sharedCli) integrationGaps.push('shared 82-scenario CLI fixture evidence was not retained');
+  else if (Object.keys(sharedCli).length !== 82) fail('shared CLI fixture evidence did not retain 82 scenarios');
   if (!sharedParallel) integrationGaps.push('shared 11-case parallel fixture evidence was not retained');
   else if (Object.keys(sharedParallel).length !== 11) fail('shared parallel fixture evidence did not retain 11 cases');
   if (!jestExpo) integrationGaps.push('installed Jest/Expo four-case evidence was not retained');
@@ -288,10 +288,10 @@ function selfCheck() {
       runnerImage:{label:'windows-2022', os:'Windows'}, toolchain:{rust:{rustc:{available:true, version:'rustc 1.98.1'}, cargo:{available:true, version:'cargo 1.98.1'}, host:'x86_64-pc-windows-msvc'}, msvc:{available:true, version:'cl'}, linker:{available:true, version:'link'}, sdk:{version:'sdk'}, visualStudio:{available:true, edition:'Enterprise', productVersion:'17.14.20', toolset:'14.44.35207'}}, shell:{systemRoot:'C:', comspec:'C:'}},
     }, packed:{...packed, files:packageFiles.map(path => ({path}))}, repeat, install, runtime, releaseNpm, publicExamples};
   assert.deepEqual(validate(base).failures, []);
-  const sharedCli = Object.fromEntries(Array.from({length: 69}, (_, index) => [`scenario-${index}`, {}]));
+  const sharedCli = Object.fromEntries(Array.from({length: 82}, (_, index) => [`scenario-${index}`, {}]));
   assert.deepEqual(validate({...base, sharedCli}).failures, []);
-  delete sharedCli['scenario-68'];
-  assert.match(validate({...base, sharedCli}).failures.join('\n'), /shared CLI fixture evidence did not retain 69 scenarios/);
+  delete sharedCli['scenario-81'];
+  assert.match(validate({...base, sharedCli}).failures.join('\n'), /shared CLI fixture evidence did not retain 82 scenarios/);
   const changedStandalone = structuredClone(base);
   changedStandalone.install.standaloneArchive.sha256 = '0'.repeat(64);
   assert.match(validate(changedStandalone).failures.join('\n'), /installed standalone archive hash differs/);
