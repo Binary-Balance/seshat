@@ -33,7 +33,7 @@ Every JSON report has these fields. A valid run can still have `complete: false`
 | `schemaVersion` | integer, required | Always `1` for this contract. |
 | `toolVersion` | string, required | Seshat executable version. |
 | `command` | `"check"`, `"crap"`, `"mutate"`, or `null` | The requested command. It is `null` when argument parsing fails before a command is accepted. |
-| `complete` | boolean, required | Whether all required assessment work and cleanup completed. It is independent of threshold quality. |
+| `complete` | boolean, required | Whether all required assessment work, evidence and cleanup completed. A failed threshold with complete evidence does not make it false. |
 | `cancelled` | boolean, required | Whether Seshat handled cancellation during this run. |
 | `signal` | integer or `null`, required | The handled cancellation marker, or `null`. Unix uses the signal number. Windows uses `2` for either `CTRL_C_EVENT` or `CTRL_BREAK_EVENT`; this is not a POSIX signal claim. |
 | `scope` | object or `null`, required | Captured source and setup scope. It is `null` until capture succeeds. |
@@ -404,24 +404,32 @@ do not count.
 Compiler errors, suppressed recovery types, `noCheck`, unsupported compilers
 and failed helper jobs produce unknown findings. Some untyped JavaScript
 imports use the compiler's recovery types even without diagnostics and are
-therefore unknown. Unknown findings do not change assessment completeness,
-thresholds or mutation scores. Static syntax counts remain available. See the
+therefore unknown. Without `maxInferredAny`, unknown findings do not change
+assessment completeness, thresholds or mutation scores. When that limit is
+configured, missing required inferred evidence makes the report incomplete while retaining
+collected assessment evidence. Static syntax counts remain available. See the
 [compatibility and cost evidence](research/inferred-any.md).
 
 ## Quality thresholds
 
 When capture succeeds, `quality` is an object even when no thresholds are
-configured. Its `checks` array contains one entry for each configured
-`thresholds.maxCrap`, `thresholds.maxCognitiveComplexity` or
-`thresholds.minMutationScore`, in that order.
+configured. Its `checks` array contains entries for configured thresholds in
+this order:
+`maxCrap`, `maxCognitiveComplexity`, `minMutationScore`, `maxInferredAny`,
+`maxTypeEscapes`. `maxInferredAny` has one entry per setup in configuration order;
+each other metric has one entry.
 
-Each check has `metric`, `limit`, `actual` and `state`:
+Each check has `metric`, `limit`, `actual` and `state`. Inferred-any checks also
+have `setup`, the setup name. Type-safety checks can have an `error` diagnostic
+when required evidence is missing or invalid:
 
 | Metric | Requested by | Actual and pass rule |
 | --- | --- | --- |
 | `maxCrap` | `check` and `crap` | The maximum CRAP among measured functions. It passes when the unrounded value is less than or equal to `limit`. |
 | `maxCognitiveComplexity` | `check`, `crap` and `mutate` | The maximum cognitive complexity among ordinary functions, including empty functions and regardless of coverage status. Implicit class scopes are excluded. It passes when the value is less than or equal to `limit`. |
 | `minMutationScore` | `check` and `mutate` | The complete mutation percentage. It passes when the unrounded value is greater than or equal to `limit`. |
+| `maxInferredAny` | `check`, `crap` and `mutate` | Total inferred-any sites in the named setup's selected source, including function, implicit-scope and unowned findings. It passes when the count is less than or equal to `limit`. |
+| `maxTypeEscapes` | `check`, `crap` and `mutate` | Total explicit `any` and `@ts-ignore`, `@ts-expect-error`, `@ts-nocheck` counts across selected source, counted once. It passes when the count is less than or equal to `limit`. |
 
 Per-check states are `not-requested`, `incomplete`, `failed`, `passed` and
 `not-applicable`. `actual` is non-null only for `passed` and `failed`; it is
@@ -432,6 +440,17 @@ measured function whose CRAP value is missing or non-numeric makes the report
 incomplete, preserves the source rows and returns exit status `2`.
 A requested cognitive check similarly rejects missing or invalid nonnegative
 integer scores in ordinary-function rows.
+
+An inferred check skips `not-in-program` files for that setup. Every selected
+source must have known findings in at least one setup; a file outside every
+program makes the requested inferred check incomplete. A setup with no
+applicable selected source is not applicable. Unknown or missing required
+inferred counts, or missing syntax counts for an escape check, mark the report
+incomplete and return exit 2. Incomplete execution or required evidence takes
+precedence over threshold failures: all requested checks then have state
+`incomplete` and null `actual`. Source rows and valid CRAP/mutation evidence
+remain available. Unknown compiler findings alone do not block syntax-only
+escape checks, and disabled type-safety limits do not change completeness.
 
 The aggregate `quality.state` is one of:
 

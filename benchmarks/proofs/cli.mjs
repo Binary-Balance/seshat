@@ -479,6 +479,68 @@ const unknownAny = json('inferred-any-noCheck', 'crap');
 assert.equal(unknownAny.result.setups[0].inferredAny.state, 'unknown');
 assert.equal(unknownAny.result.sources[0].result.functions[0].typeSafety.inferredAny[0].count, null);
 
+for (const command of ['check', 'crap', 'mutate']) {
+  configure({...config, thresholds:{maxInferredAny:3, maxTypeEscapes:0}});
+  const equal = json(`type-threshold-equality-${command}`, command);
+  assert.deepEqual(equal.quality.checks.map(({metric,setup,actual,state}) => ({metric,setup,actual,state})), [
+    {metric:'maxInferredAny', setup:'node', actual:3, state:'passed'},
+    {metric:'maxTypeEscapes', setup:undefined, actual:0, state:'passed'},
+  ]);
+  configure({...config, thresholds:{maxInferredAny:2}});
+  const failed = json(`type-threshold-failure-${command}`, command, 1);
+  assert.equal(failed.quality.checks[0].actual, 3);
+  assert.deepEqual(failed.result.sources, equal.result.sources);
+}
+unchecked.thresholds = {maxInferredAny:3};
+configure(unchecked);
+const incompleteAny = json('type-threshold-unknown', 'crap', 2);
+assert.equal(incompleteAny.quality.state, 'incomplete');
+assert.equal(incompleteAny.quality.checks[0].actual, null);
+assert.match(incompleteAny.result.error, /inferred any unavailable/);
+
+originals['subject.ts'] = '// @ts-nocheck\nexport function parse(text: string) { const value: any = JSON.parse(text); return value.field; }\n';
+writeFileSync(join(project, 'subject.ts'), originals['subject.ts']);
+unchecked.thresholds = {maxTypeEscapes:2};
+configure(unchecked);
+const escapeEquality = json('syntax-threshold-with-unknown-compiler', 'crap');
+assert.equal(escapeEquality.result.setups[0].inferredAny.state, 'unknown');
+assert.equal(escapeEquality.quality.checks[0].actual, 2);
+unchecked.thresholds.maxTypeEscapes = 1;
+configure(unchecked);
+assert.equal(json('syntax-threshold-failure', 'crap', 1).quality.checks[0].actual, 2);
+
+originals['subject.ts'] = 'export function parse(text: string) { const value = JSON.parse(text); return value.field; }\n';
+originals['extra.ts'] = 'export const extra = JSON.parse(\'{"field":2}\').field;\n';
+originals['test.mjs'] += "\nimport {extra} from './extra.ts';test('extra',()=>assert.equal(extra,2));";
+for (const name of ['subject.ts','extra.ts','test.mjs']) writeFileSync(join(project, name), originals[name]);
+const split = structuredClone(config);
+split.source.include.push('extra.ts');
+split.capture.push('extra.ts');
+const extraSetup = structuredClone(split.setups[0]);
+extraSetup.name = 'extra';
+extraSetup.coverage.report = 'coverage-extra/final.json';
+extraSetup.typecheck[extraSetup.typecheck.length - 1] = 'extra.ts';
+split.setups.push(extraSetup);
+split.thresholds = {maxInferredAny:3};
+configure(split);
+const splitReport = json('type-threshold-split-programs', 'crap');
+assert.deepEqual(splitReport.quality.checks.map(({setup,actual,state}) => ({setup,actual,state})), [
+  {setup:'node', actual:3, state:'passed'}, {setup:'extra', actual:2, state:'passed'},
+]);
+assert.match(run('type-threshold-readable', ['crap', '--config', configPath, '--scratch', scratch]).stdout,
+  /maxInferredAny, setup "extra": passed, limit 3, actual 2/);
+split.thresholds.maxInferredAny = 2;
+configure(split);
+const splitFailed = json('type-threshold-identifies-setup', 'crap', 1);
+assert.equal(splitFailed.quality.checks[0].state, 'failed');
+assert.equal(splitFailed.quality.checks[1].state, 'passed');
+split.setups[1].typecheck = structuredClone(split.setups[0].typecheck);
+configure(split);
+const excludedAny = json('type-threshold-unmeasured-source', 'crap', 2);
+assert.equal(excludedAny.quality.state, 'incomplete');
+assert.match(excludedAny.result.error, /extra\.ts.*no known inferred-any findings/);
+assert(excludedAny.quality.checks.every(check => check.state === 'incomplete' && check.actual === null));
+
 const resultPath = process.env.SESHAT_PROOF_OUTPUT ? resolve(process.env.SESHAT_PROOF_OUTPUT) : join(work, 'result.json');
 mkdirSync(dirname(resultPath), {recursive: true});
 writeFileSync(resultPath, JSON.stringify(results, null, 2) + '\n');

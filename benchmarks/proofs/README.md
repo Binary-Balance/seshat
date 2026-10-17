@@ -401,9 +401,12 @@ broad ranges provide no dependable speedup claim.
 
 Exit 0 means complete execution with no failed applicable threshold. Without
 configured thresholds, surviving mutants and high CRAP do not fail the command.
-Exit 1 means a complete run exceeded `thresholds.maxCrap` for a measured function
-or fell below `thresholds.minMutationScore`; equality passes and valid scores
-remain available. Thresholds never change which tests or sources are assessed.
+Exit 1 means a complete run failed a configured quality threshold; equality
+passes and valid scores remain available. Type-safety limits apply in all three
+commands. The CLI proof covers independent inferred-any totals for multiple
+compiler programs, syntax-only limits with unavailable compiler findings,
+unknown or unmeasured source, JSON states and readable setup names.
+Thresholds never change which tests or sources are assessed.
 Exit 2 means invalid input, execution failure, incomplete assurance or output
 write failure. Handled cancellation exits 130 for SIGINT or 143 for SIGTERM,
 retains available evidence and withholds the mutation score. Zero planned mutants
