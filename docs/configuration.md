@@ -380,6 +380,7 @@ Removing `!` also removes its boolean conversion, so `!7` becomes `(7)`.
 Nested negations have one candidate per prefix. Type-level boolean literals,
 non-runtime property keys and TypeScript postfix non-null assertions are excluded.
 JSX expression values are eligible; bare JSX attributes have no literal to flip.
+Generated parentheses preserve statement boundaries when semicolons are omitted.
 
 The mutation score includes all selected operator families. Adding families
 can change the score and adds one test job per setup per new mutant.

@@ -10,6 +10,8 @@ Changes after the published [0.6.0 release](0.6.0.md).
   switching preserve operand evaluation; switching explicitly rejects contexts
   where removing `!` exposes a reference it cannot preserve. See the
   [semantic checks and matched cost](../research/boolean-mutations.md).
+- Preserve semicolon-free statement boundaries when rendering boolean and
+  logical mutations, preventing generated parentheses from joining statements.
 - [#174](https://github.com/Binary-Balance/seshat/issues/174): optional
   `maxInferredAny` and `maxTypeEscapes` thresholds in all three commands.
   Inferred limits apply separately to each setup; syntax escapes count once

@@ -1,5 +1,5 @@
 // Bounded experiment, not a production analyser.
-use oxc_allocator::Allocator;
+use oxc_allocator::{Allocator, Vec as ArenaVec};
 use oxc_ast::{
     AstKind,
     ast::{
@@ -214,6 +214,7 @@ pub struct Analysis {
     pub branch_end_ranges: Vec<Span>,
     pub operators: Vec<OperatorSite>,
     non_runtime: Vec<Span>,
+    expression_statements: BTreeSet<u32>,
     switching_reference_sites: BTreeSet<u32>,
     decisions: Vec<Span>,
     pub parameter_values: Vec<Span>,
@@ -258,6 +259,15 @@ fn plain_parameters(params: &FormalParameters<'_>) -> bool {
 }
 
 impl<'a> Visit<'a> for Analysis {
+    fn visit_statements(&mut self, statements: &ArenaVec<'a, Statement<'a>>) {
+        for statement in statements {
+            if let Statement::ExpressionStatement(statement) = statement {
+                self.expression_statements.insert(statement.span.start);
+            }
+        }
+        walk::walk_statements(self, statements);
+    }
+
     fn visit_expression(&mut self, expression: &Expression<'a>) {
         let boolean = match expression {
             Expression::BooleanLiteral(literal) => Some((
@@ -1695,6 +1705,15 @@ impl Analysis {
             .map(|(i, _)| i)
     }
 
+    fn statement_separator(&self, site: u32, rendered_start: u32) -> &'static str {
+        // Parentheses must not join preceding statements or split recursive operands.
+        if site > rendered_start && self.expression_statements.contains(&site) {
+            ";"
+        } else {
+            ""
+        }
+    }
+
     pub fn replace(&self, source: &str, id: usize) -> Result<String, String> {
         for c in &self.operators {
             if let Some(op) = id
@@ -1704,8 +1723,9 @@ impl Analysis {
                 if let OperatorExpression::LogicalNot = c.expression {
                     // Parentheses preserve the operand's grouping without converting its value.
                     return Ok(format!(
-                        "{}({}){}",
+                        "{}{}({}){}",
                         &source[..c.offset],
+                        self.statement_separator(c.span.start, 0),
                         &source[c.offset + 1..c.span.end as usize],
                         &source[c.span.end as usize..]
                     ));
@@ -1722,8 +1742,9 @@ impl Analysis {
                 {
                     // Keep the AST's operand grouping when &&/|| precedence changes.
                     return Ok(format!(
-                        "{}(({}){}{}{}({})){}",
+                        "{}{}(({}){}{}{}({})){}",
                         &source[..c.span.start as usize],
+                        self.statement_separator(c.span.start, 0),
                         &source[c.span.start as usize..left.end as usize],
                         &source[left.end as usize..c.offset],
                         op,
@@ -1805,6 +1826,14 @@ impl Analysis {
                     continue;
                 }
                 out.push_str(&source[cursor as usize..c.span.start as usize]);
+                if c.kind == MutationOperator::Logical
+                    || matches!(
+                        c.expression,
+                        OperatorExpression::BooleanLiteral | OperatorExpression::LogicalNot
+                    )
+                {
+                    out.push_str(a.statement_separator(c.span.start, start));
+                }
                 match c.expression {
                     OperatorExpression::BooleanLiteral => {
                         out.push_str(&format!(
@@ -2003,6 +2032,31 @@ fn boolean_replacements_preserve_grouping_trivia_and_exactly_one_site() {
             .unwrap(),
         "!(value);"
     );
+}
+
+#[test]
+fn operator_rendering_preserves_statement_boundaries() {
+    for (source, expected) in [
+        ("a.x = 1\n!a.y;", "a.x = 1\n;(a.y);"),
+        ("a.x = 1\nx && y;", "a.x = 1\n;((x) || (y));"),
+        ("if (ready) !value;", "if (ready) (value);"),
+        ("label: !value;", "label: (value);"),
+        ("do !value; while (ready);", "do (value); while (ready);"),
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        assert_eq!(analysis.replace(source, 0).unwrap(), expected, "{source}");
+    }
+    for source in ["a.x = 1\n!a.y;", "a.x = 1\ntrue;", "a.x = 1\n!x && y;"] {
+        let switched = Analysis::inspect("source.ts", source)
+            .unwrap()
+            .switched(source)
+            .unwrap();
+        assert!(
+            switched.contains("a.x = 1\n;(__seshat_active"),
+            "{switched}"
+        );
+        Analysis::inspect("switched.ts", &switched).unwrap();
+    }
 }
 
 #[test]

@@ -26,14 +26,15 @@ Boolean conversion does not call an object's `valueOf` method.
 
 ## Semantic and execution checks
 
-The proof compares fixed expected results with source replacement, inactive
-switching and each active boolean mutant. It covers literals, primitive and
-object truthiness, nested negation, conditions, conditional grouping, single
-evaluation,
-evaluation order, nested functions, parameter defaults, class fields, getters,
+The proof compares 33 fixed cases and 38 active boolean mutants with source
+replacement and inactive/active switching. It covers literals, primitive and
+object truthiness, nested negation, conditions, conditional grouping, evaluation
+count and order, nested functions, parameter defaults, class fields, getters,
 receiver binding, direct `eval`, `await`, `yield`, short-circuit effects,
 Unicode/comments, type literals, non-null assertions and TSX. Serialization
-keeps undefined, NaN, negative zero, BigInt and Symbol distinct.
+keeps undefined, NaN, negative zero, BigInt and Symbol distinct. Semicolon-free
+statements, nested arms, directives, switch cases and single-statement control
+bodies check that generated parentheses preserve statement boundaries.
 
 Real CLI assessments use two selected source files, five covered functions and
 one Node setup. Default selection adds four boolean mutants to two comparisons.
@@ -95,13 +96,14 @@ test jobs per setup under both strategies. Each mutant uses a fresh process.
 
 The recorded host is Linux x64 with Node 24.22.0 and TypeScript 6.0.3.
 Three sequential samples ran without another proof suite or build running.
+OS caches were not flushed and unrelated host load was not controlled.
 
 | Selection | Mutant test jobs per setup | Replacement, ms | Switching, ms |
 | --- | ---: | ---: | ---: |
-| Original three families | 2 | 315.2 [312.3 to 330.5] | 473.6 [472.4 to 483.0] |
-| Four-family default | 6 | 940.4 [940.3 to 945.2] | 1104.0 [1088.7 to 1113.8] |
+| Original three families | 2 | 1316.9 [908.4 to 1408.6] | 2042.8 [1742.2 to 2875.1] |
+| Four-family default | 6 | 3460.0 [2772.7 to 3792.0] | 4496.0 [4004.7 to 4636.2] |
 
-The median paired increase is 628.1 ms for replacement and 631.6 ms for
+The median paired increase is 2051.4 ms for replacement and 2453.2 ms for
 switching. Both strategies add exactly four test jobs in every matched pair.
 
 Values are median operator-phase `executionMs`, with minimum and maximum in

@@ -699,10 +699,12 @@ Nine covered functions still receive extreme mutations when operator selection
 is empty. Source bytes and scratch cleanup are checked after every assessment.
 
 The script also runs `boolean-operators.mjs`, which can run independently. Its
-25 fixed semantic cases check 29 boolean replacement/switching pairs, and six
+33 fixed semantic cases check 38 boolean replacement/switching pairs, and six
 reference-sensitive contexts explicitly reject switching. Its separate CLI
 fixture checks four boolean mutants alongside two comparisons, parallel workers,
 stable IDs, source restoration, cleanup, job timeout and withheld scores.
+Semicolon-free statements, nested inline arms, directives and single-statement
+control-flow bodies check that generated parentheses retain statement boundaries.
 Disabling operator families leaves its five extreme candidates intact.
 
 Set `SESHAT_OPERATOR_SAMPLES=3` for repeated cost measurements. Samples alternate

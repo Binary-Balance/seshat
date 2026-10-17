@@ -60,6 +60,8 @@ const cases = [
   ['mixed', 'function f(a: number, b: number) { return (a + b > 0) && a / b; } [f(8, 2), f(-8, 2)];', [4, false]],
   ['equivalent-addition', '4 + 0;', 4, [4]],
   ['equivalent-logical', 'false && false;', false, [false, false, false]],
+  ['statement-logical', 'const a = {x:0}; a.x = 1\n0 && 7;', 0, [7]],
+  ['if-body-logical', 'if (0) 1 && missing; 7;', 7, [7]],
 ];
 let semanticMutants = 0;
 for (const [name, source, expected, mutants] of cases) {
@@ -176,8 +178,9 @@ for (let sample = 0; sample < samples; sample++) {
 }
 // Keep the installed-package route responsible for every default operator family.
 const booleanOutput = join(work, 'boolean.json');
+// Repeated samples must not share a single-run deadline.
 const booleanRun = spawnSync(process.execPath, [join(here, 'boolean-operators.mjs')], {
-  encoding: 'utf8', timeout: 120000,
+  encoding: 'utf8', timeout: 300000 * samples,
   env: {...process.env, SESHAT_CLI_BINARY: binary, SESHAT_PROOF_BINARY: proof, SESHAT_PROOF_OUTPUT: booleanOutput},
 });
 assert.ifError(booleanRun.error);
