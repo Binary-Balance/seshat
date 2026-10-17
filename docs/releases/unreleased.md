@@ -2,7 +2,7 @@
 
 Changes after the published [0.6.0 release](0.6.0.md).
 
-## Planned for 0.7.0
+## Prepared for 0.7.0
 
 - [#163](https://github.com/Binary-Balance/seshat/issues/163): default-on boolean
   literal flips and prefix-negation removal. The existing `mutationOperators`
@@ -18,5 +18,6 @@ Changes after the published [0.6.0 release](0.6.0.md).
   across selected source. Missing required evidence makes the report incomplete
   and exits 2. Existing findings remain non-blocking when these limits are off.
 
+Preparation is tracked in [#177](https://github.com/Binary-Balance/seshat/issues/177).
 The [release plan](https://github.com/Binary-Balance/seshat/issues/136) tracks
 release preparation. These changes do not publish packages to npm.
