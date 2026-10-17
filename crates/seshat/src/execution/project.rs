@@ -1197,6 +1197,8 @@ mod tests {
             json!([]),
             json!(["comparison"]),
             json!(["logical", "arithmetic"]),
+            json!(["boolean"]),
+            json!(["comparison", "logical", "arithmetic", "boolean"]),
         ] {
             assert!(parse(selection).is_ok());
         }
@@ -1207,6 +1209,7 @@ mod tests {
             json!(["Logical"]),
             json!(["unknown"]),
             json!(["logical", "logical"]),
+            json!(["boolean", "boolean"]),
         ] {
             assert!(parse(selection).is_err());
         }

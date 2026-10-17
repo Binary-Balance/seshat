@@ -128,7 +128,7 @@ assert.equal(results.switchedTypecheck.status,2);
 assert.match(results.switchedTypecheck.diagnostic,/TS18048/);
 
 if (!process.argv.includes('--coverage-only')) {
-  const expected = Array.from({length:20}, (_, id) => [id, [12,17].includes(id) ? 'survived' : 'killed']);
+  const expected = Array.from({length:21}, (_, id) => [id, [12,18].includes(id) ? 'survived' : 'killed']);
   for (let sample=0;sample<samples;sample++) for (const runner of ['node','jest','vitest']) {
     for (const strategy of sample%2 ? ['switch','replace'] : ['replace','switch']) {
       const configPath = join(work,`execution-${runner}.json`);
@@ -157,5 +157,5 @@ if (!process.argv.includes('--coverage-only')) {
 }
 assert.equal(createHash('sha256').update(readFileSync(join(mutationProject,'subject.tsx'))).digest('hex'),originalMutationHash);
 results.negativeChecks.sourcePreserved=true;
-const destination=join(repo,'outputs/bounded-proofs.json'); json(destination,results);
+const destination=resolve(process.env.SESHAT_PROOF_OUTPUT ?? join(repo,'outputs/bounded-proofs.json')); json(destination,results);
 console.log(`Results: ${destination}`);

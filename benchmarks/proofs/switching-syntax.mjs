@@ -83,11 +83,13 @@ try {
   console.log('Unsupported process environments and source types fail clearly');
 
   const modules = fileURLToPath(new URL('node_modules/', import.meta.url));
-  const subject = compile(prepare('runner.ts', 'function compare(value: number) { return value < 2; } function sum(a: number, b: number) { return a + b; } function and(a: boolean, b: boolean) { return a && b; }'));
+  const subject = compile(prepare('runner.ts', 'function compare(value: number) { return value < 2; } function sum(a: number, b: number) { return a + b; } function and(a: boolean, b: boolean) { return a && b; } function flag() { return true; } function negate(value: unknown) { return !value; }'));
   const check = `test('switching helper', () => {
     assert.deepEqual([compare(1), compare(2)], process.env.SESHAT_MUTANT_ID === '1' ? [false, true] : [true, false]);
     assert.equal(sum(8, 2), process.env.SESHAT_MUTANT_ID === '2' ? 6 : 10);
     assert.equal(and(true, false), process.env.SESHAT_MUTANT_ID === '3');
+    assert.equal(flag(), process.env.SESHAT_MUTANT_ID !== '4');
+    assert.equal(negate(7), process.env.SESHAT_MUTANT_ID === '5' ? 7 : false);
   });`;
   writeFileSync(join(work, 'node.test.cjs'), `const {test} = require('node:test');\nconst assert = require('node:assert/strict');\n${subject}\n${check}`);
   writeFileSync(join(work, 'jest.test.cjs'), `const assert = require('node:assert/strict');\n${subject}\n${check}`);
@@ -98,7 +100,7 @@ try {
     ['jest', [join(modules, 'jest/bin/jest.js'), '--runInBand', '--config', JSON.stringify({rootDir: work, testMatch: ['**/jest.test.cjs'], testEnvironment: 'node', transform: {}})]],
     ['vitest', [join(modules, 'vitest/vitest.mjs'), 'run', '--config', 'vitest.config.mjs']],
   ]) {
-    for (const active of [undefined, '1', '2', '3']) {
+    for (const active of [undefined, '1', '2', '3', '4', '5']) {
       const env = {...process.env};
       delete env.SESHAT_MUTANT_ID;
       if (active !== undefined) env.SESHAT_MUTANT_ID = active;
