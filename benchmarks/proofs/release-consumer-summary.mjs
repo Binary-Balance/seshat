@@ -21,7 +21,7 @@ export function validatePublicExamples(value, expectedCliKind, fail) {
         !example.normal?.scope?.files || !example.normal?.result?.sources || !example.normal?.result?.mutation) {
       fail(`public consumer example evidence is incomplete: ${name}`);
     }
-    if (example.workers?.one !== 1 || example.workers?.two !== 2 || example.workers?.parity !== true) {
+    if (example?.workers?.one !== 1 || example?.workers?.two !== 2 || example?.workers?.parity !== true) {
       fail(`public consumer example worker parity is incomplete: ${name}`);
     }
   }

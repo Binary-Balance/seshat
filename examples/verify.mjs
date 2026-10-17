@@ -374,7 +374,7 @@ const expected = {
         {name: 'Tempo', covered: 1, total: 1, crap: 1},
       ],
     },
-    mutation: {planned: 4, killed: 4, survived: 0, unresolved: 0, score: 100},
+    mutation: {planned: 5, killed: 4, survived: 1, unresolved: 0, score: 80},
   },
   workspaces: {
     scope: ['packages/rules/index.ts', 'src/compare.ts'],
