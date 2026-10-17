@@ -252,7 +252,7 @@ command text or free-form diagnostic nested under them remains evidence.
 | `strategy` | `replace` by default, or `switch` when the experimental switching option was used. |
 | `complete` | Whether every planned mutant received a resolved verdict and mutation preparation, execution and cleanup succeeded. An incomplete extreme-mutation execution also keeps this false, even when all operator mutants resolve. |
 | `planned` | Number of generated replacements across all selected operator families. |
-| `enabledOperators` | Configured operator families, defaulting to `["comparison", "logical", "arithmetic"]`. An empty array disables operator mutants. |
+| `enabledOperators` | Configured operator families, defaulting to `["comparison", "logical", "arithmetic", "boolean"]`. An empty array disables operator mutants. |
 | `perOperator` | Rows sorted by original operator text. Each has `operator`, `kind`, `planned`, `completed`, `jobsAttempted` and `executionMs`. Planned counts include unstarted work; completed counts include returned attempts. Times sum those attempts and can overlap under parallelism. Operators without planned mutants have no row. |
 | `killed`, `survived` | Counts of outcomes with those resolved verdicts. |
 | `score` | `killed / (killed + survived) × 100` for a complete non-empty plan; otherwise `null`. The value is a percentage from `0` to `100`. |
@@ -269,7 +269,10 @@ command text or free-form diagnostic nested under them remains evidence.
 
 Every outcome has `id` (run-wide), `localId` (within its source), `path`,
 `offset`, `kind`, `original`, `replacement`, `setups` and `verdict`. `kind` is
-`comparison`, `logical` or `arithmetic`. IDs follow resolved source order,
+`comparison`, `logical`, `arithmetic` or `boolean`. Boolean outcomes use `true`,
+`false` or `!` as `original`. Literal replacements are `false` or `true`;
+removing `!` uses an empty `replacement` string and parenthesises the operand.
+IDs follow resolved source order,
 then AST site order by start offset, with enclosing sites before nested sites
 at the same start, then replacement order. Each outcome setup
 retains its job state and evidence. An unstarted setup remains `not-run`.

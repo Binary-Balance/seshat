@@ -111,7 +111,7 @@ assert.match(linked.mutation.outcomes[1].setups[1].sourceError, /unsafe path/);
 assert.match(linked.mutation.restorationError, /age\.ts/);
 assert.equal(linked.mutation.score, null);
 
-originals['src/age.ts'] = 'export function adult(age: number) { return Boolean(age); }\nexport const initial = true;\n';
+originals['src/age.ts'] = 'export function adult(age: number) { return Boolean(age); }\nexport const initial = Boolean(1);\n';
 originals['src/label.ts'] = 'export function label(value: string | null) { return String(value); }\n';
 originals['tests/high.mjs'] = "import {test} from 'node:test';import assert from 'node:assert/strict';import {adult,initial} from '../src/age.ts';import {label} from '../src/label.ts';test('plain',()=>{assert.equal(adult(20),true);assert.equal(initial,true);assert.equal(label('ok'),'ok');});";
 originals['tests/low.mjs'] = originals['tests/high.mjs'];

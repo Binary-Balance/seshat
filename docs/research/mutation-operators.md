@@ -2,11 +2,14 @@
 
 The [retained JSON](mutation-operators.json) records the exact fixture and binary
 hashes, outcomes, operator counts and timings for the logical/arithmetic part of
-[#133](https://github.com/Binary-Balance/seshat/issues/133).
+[#133](https://github.com/Binary-Balance/seshat/issues/133) in 0.5.0. These
+historical measurements retain that release's three-family default. Current
+proofs also check the [boolean family](boolean-mutations.md) added for 0.7.0.
 
 ## Reproduce
 
-Build the release binaries, then run:
+To reproduce these historical counts, use the 0.5.0 source and build its release
+binaries, then run:
 
 ```sh
 SESHAT_OPERATOR_SAMPLES=3 SESHAT_PROOF_OUTPUT=work/operators.json node benchmarks/proofs/operators.mjs

@@ -355,24 +355,32 @@ execution evidence appear in `pseudoTesting`, separately from operator scores.
 The optional top-level `mutationOperators` array selects operator families:
 
 ```json
-"mutationOperators": ["comparison", "logical", "arithmetic"]
+"mutationOperators": ["comparison", "logical", "arithmetic", "boolean"]
 ```
 
-Omitting it enables all three families. Use `["comparison"]` to retain the
+Omitting it enables all four families. Use `["comparison"]` to retain the
 comparison-only scope of 0.4.0, or `[]` to run extreme mutation without operator
 mutants. Unknown names, duplicate names and non-array values fail before capture.
 Selection does not change source coverage, complexity or extreme mutation.
+Use `["comparison", "logical", "arithmetic"]` to retain the scope of 0.5.0
+and 0.6.0.
 
 | Family | Replacements |
 | --- | --- |
 | `comparison` | `<` to `<=` or `>=`; `<=` to `<` or `>`; `>` to `>=` or `<=`; `>=` to `>` or `<`; `==`/`!=` and `===`/`!==` swaps. |
 | `logical` | `&&`/`||` swaps. Operand grouping is preserved with parentheses. |
 | `arithmetic` | Binary `+`/`-` and `*`/`/` swaps. |
+| `boolean` | Runtime `true`/`false` swaps and prefix `!expression` to `(expression)`. |
 
 Unary signs, increments, assignments, `??` and operators in comments, strings
 or type syntax are excluded. Arithmetic preserves JavaScript's coercion and
 BigInt rules; a mutation can therefore change string concatenation or throw.
 Logical mutations preserve short-circuiting and return operand values.
+Removing `!` also removes its boolean conversion, so `!7` becomes `(7)`.
+Nested negations have one candidate per prefix. Type-level boolean literals,
+non-runtime property keys and TypeScript postfix non-null assertions are excluded.
+JSX expression values are eligible; bare JSX attributes have no literal to flip.
+Generated parentheses preserve statement boundaries when semicolons are omitted.
 
 The mutation score includes all selected operator families. Adding families
 can change the score and adds one test job per setup per new mutant.
@@ -415,10 +423,17 @@ their job count and preparation timings are retained in the JSON mutation report
 Switching does not typecheck transformed helpers. Helper wrapping can lose
 TypeScript narrowing and can change reflection or source-text observations; verify
 the result against replacement for the project before relying on it.
-Logical switching uses inline conditional arms to retain lazy evaluation and
-the surrounding `await`, `yield` and direct `eval` context. Nested arms duplicate
+Logical and boolean switching use inline conditional arms to retain lazy
+evaluation and the surrounding `await`, `yield` and direct `eval` context. Nested arms duplicate
 source text. If a rendered body exceeds 8 MiB, preparation fails explicitly
 and no complete mutation score is reported; use source replacement instead.
+Removing `!` can expose an operand reference that an inline arm cannot preserve.
+Switching rejects selected negations in call, optional-call or tagged-template
+targets and `typeof`/`delete` operands when they expose references, including
+through erased TypeScript wrappers. Use source replacement for these forms.
+Preparation fails with an incomplete report and withheld score; it does not
+silently omit mutants. Ordinary `!object.method()` and `!eval(...)` remain
+supported because the call stays inside the operand.
 
 `{seshatReporter}` is replaced with the private reporter for that runner.
 `{seshatReporter}` and `{seshatEnvironment}` are supported only in command

@@ -342,6 +342,8 @@ function vitestConfig(project, workers) {
     '--maxWorkers=1', '--no-file-parallelism', '--maxConcurrency=1', '--reporter=default', '--reporter={seshatReporter}'];
   return {
     workers,
+    // Keep the matched historical workload at its four comparison mutants.
+    mutationOperators: ['comparison'],
     source: {include: ['tempo.ts', 'view.tsx', 'server.ts']},
     capture: ['package.json', 'tsconfig.json', 'tempo.ts', 'view.tsx', 'server.ts', 'stack.test.tsx', 'vitest.config.mjs', 'node_modules'],
     setups: [{

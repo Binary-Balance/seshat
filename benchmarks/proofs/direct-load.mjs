@@ -20,7 +20,7 @@ assert.ok(Number.isInteger(samples) && samples >= 1 && samples <= 7);
 const json = (path, data) => writeFileSync(path, JSON.stringify(data, null, 2) + '\n');
 const hash = path => createHash('sha256').update(readFileSync(path)).digest('hex');
 const originalHash = hash(join(here, 'mutation-subject.tsx'));
-const expected = Array.from({length:20}, (_, id) => [id, [12,17].includes(id) ? 'survived' : 'killed']);
+const expected = Array.from({length:21}, (_, id) => [id, [12,18].includes(id) ? 'survived' : 'killed']);
 const setups = {};
 
 for (const runner of ['node','jest','vitest']) {
@@ -78,7 +78,7 @@ for (let sample=0; sample<samples; sample++) {
       if (strategy==='switch') assert.equal(result.preparedBaseline.state,'passed');
       assert.deepEqual(result.outcomes.map(({id,verdict})=>[id,verdict]),expected);
       results.mutation.push({sample,...result});
-      console.log(`${runner}/${strategy} sample ${sample+1}: ${Math.round(result.wallMs)}ms, typecheck ${Math.round(result.typecheck.ms)}ms, 18 killed, 2 survived, zero builds`);
+      console.log(`${runner}/${strategy} sample ${sample+1}: ${Math.round(result.wallMs)}ms, typecheck ${Math.round(result.typecheck.ms)}ms, 19 killed, 2 survived, zero builds`);
     }
   }
 }

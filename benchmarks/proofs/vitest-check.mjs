@@ -213,9 +213,15 @@ for (const name of ['stack','stack-repeat']) {
   assert.equal(result.complete,true,JSON.stringify(result));
   assert.equal(result.setups[0].baseline.report.passed,3);
   assert.equal(result.setups[0].coverage.report.passed,3);
-  assert.equal(result.mutation.planned,4);
+  assert.equal(result.mutation.planned,5);
   assert.equal(result.mutation.killed,4);
-  assert.equal(result.mutation.score,100);
+  assert.equal(result.mutation.survived,1);
+  assert.equal(result.mutation.score,80);
+  assert.deepEqual(result.mutation.outcomes.filter(row=>row.kind==='comparison').map(row=>row.verdict),
+    ['killed','killed','killed','killed']);
+  assert.deepEqual(result.mutation.outcomes.filter(row=>row.kind==='boolean')
+    .map(({path,original,replacement,verdict})=>({path,original,replacement,verdict})),
+    [{path:'server.ts',original:'false',replacement:'true',verdict:'survived'}]);
   for (const source of result.sources) assert.deepEqual(source.result.functions.map(f=>[f.complexity,f.covered,f.total,f.crap]), expectedScores[source.path]);
   assert.ok(result.mutation.workerBaselines.every(b=>b.report.passed===3));
   if (name==='stack-repeat' && results.runs.stack) {
@@ -255,6 +261,7 @@ if (wanted('worker-project-override')) {
   ]);
 }
 // Two independent changes make the existing failure controls exercise two workers.
+// Verdict controls keep fixed comparison sites; stack covers the default families.
 writeFileSync(join(project,'control.ts'),`export const ready = 1 === 1${workers>1?' && 2 === 2':''};\n`);
 for (const [name,body,expected] of [
   ['assertion', "test('assertion',()=>expect(ready).toBe(true));", 'killed'],
@@ -275,7 +282,7 @@ for (const [name,body,expected] of [
   if (!wanted(name)) continue;
   writeFileSync(join(project,'control.test.ts'),`import {test,expect,beforeAll,beforeEach,afterEach,aroundEach} from 'vitest';import {ready} from './control.ts';\n${body}\n`);
   writeFileSync(join(project,'vitest.config.mjs'),`export default {cacheDir:'.vite',test:{runner:process.env.SESHAT_VITEST_RUNNER,include:['control.test.ts'],coverage:{provider:'istanbul',include:['control.ts'],reporter:['json'],reportsDirectory:'coverage'}}};\n`);
-  const input = structuredClone(config); input.source.include=['control.ts']; input.capture.push('control.ts','control.test.ts');
+  const input = structuredClone(config); input.mutationOperators=['comparison']; input.source.include=['control.ts']; input.capture.push('control.ts','control.test.ts');
   const result = await check(name,input);
   assert.equal(result.setups[0].baseline.state,'passed',JSON.stringify(result.setups));
   assert.equal(result.setups[0].coverage.state,'passed',JSON.stringify(result.setups));

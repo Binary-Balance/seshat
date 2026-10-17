@@ -1,14 +1,15 @@
 // Bounded experiment, not a production analyser.
-use oxc_allocator::Allocator;
+use oxc_allocator::{Allocator, Vec as ArenaVec};
 use oxc_ast::{
     AstKind,
     ast::{
-        ArrowFunctionBody, Declaration, ExportDefaultDeclarationKind, Expression, FormalParameters,
-        FunctionType, JSXAttributeItem, JSXAttributeValue, JSXChild, MethodDefinitionKind,
-        PropertyKind, Statement, TSType, TSTypeName, VariableDeclarationKind,
+        AccessorPropertyType, ArrowFunctionBody, Declaration, ExportDefaultDeclarationKind,
+        Expression, FormalParameters, FunctionType, JSXAttributeItem, JSXAttributeValue, JSXChild,
+        MethodDefinitionKind, PropertyDefinitionType, PropertyKind, Statement, TSType, TSTypeName,
+        VariableDeclarationKind,
     },
 };
-use oxc_ast_visit::Visit;
+use oxc_ast_visit::{Visit, walk};
 use oxc_parser::Parser;
 use oxc_span::{GetSpan, SourceType, Span};
 use serde_json::{Value, json};
@@ -178,6 +179,7 @@ pub enum MutationOperator {
     Comparison,
     Logical,
     Arithmetic,
+    Boolean,
 }
 
 pub fn default_mutation_operators() -> Vec<MutationOperator> {
@@ -185,14 +187,20 @@ pub fn default_mutation_operators() -> Vec<MutationOperator> {
         MutationOperator::Comparison,
         MutationOperator::Logical,
         MutationOperator::Arithmetic,
+        MutationOperator::Boolean,
     ]
+}
+
+enum OperatorExpression {
+    Binary { left: Span, right: Span },
+    BooleanLiteral,
+    LogicalNot,
 }
 
 pub struct OperatorSite {
     pub kind: MutationOperator,
     pub span: Span,
-    pub left: Span,
-    pub right: Span,
+    expression: OperatorExpression,
     pub offset: usize,
     pub original: &'static str,
     pub replacements: &'static [&'static str],
@@ -205,6 +213,9 @@ pub struct Analysis {
     pub branches: Vec<BranchSite>,
     pub branch_end_ranges: Vec<Span>,
     pub operators: Vec<OperatorSite>,
+    non_runtime: Vec<Span>,
+    expression_statements: BTreeSet<u32>,
+    switching_reference_sites: BTreeSet<u32>,
     decisions: Vec<Span>,
     pub parameter_values: Vec<Span>,
     pub statement_starts: std::collections::BTreeSet<u32>,
@@ -248,10 +259,99 @@ fn plain_parameters(params: &FormalParameters<'_>) -> bool {
 }
 
 impl<'a> Visit<'a> for Analysis {
+    fn visit_statements(&mut self, statements: &ArenaVec<'a, Statement<'a>>) {
+        for statement in statements {
+            if let Statement::ExpressionStatement(statement) = statement {
+                self.expression_statements.insert(statement.span.start);
+            }
+        }
+        walk::walk_statements(self, statements);
+    }
+
+    fn visit_expression(&mut self, expression: &Expression<'a>) {
+        let boolean = match expression {
+            Expression::BooleanLiteral(literal) => Some((
+                OperatorExpression::BooleanLiteral,
+                if literal.value { "true" } else { "false" },
+                if literal.value {
+                    &["false"][..]
+                } else {
+                    &["true"][..]
+                },
+            )),
+            Expression::UnaryExpression(unary) if unary.operator.as_str() == "!" => {
+                Some((OperatorExpression::LogicalNot, "!", &[""][..]))
+            }
+            _ => None,
+        };
+        if let Some((shape, original, replacements)) = boolean {
+            self.operators.push(OperatorSite {
+                kind: MutationOperator::Boolean,
+                span: expression.span(),
+                expression: shape,
+                offset: expression.span().start as usize,
+                original,
+                replacements,
+                first_id: 0,
+            });
+        }
+        walk::walk_expression(self, expression);
+    }
+
+    fn visit_ts_type(&mut self, annotation: &TSType<'a>) {
+        self.non_runtime.push(annotation.span());
+        walk::walk_ts_type(self, annotation);
+    }
+
     fn enter_node(&mut self, node: AstKind<'a>) {
         self.cognitive_stack
             .push((self.cognitive_owner, self.cognitive_depth));
         let span = node.span();
+        let declaration_only = match node {
+            AstKind::VariableDeclaration(declaration) => declaration.declare,
+            AstKind::Class(class) => class.declare,
+            AstKind::Function(function) => function.body.is_none(),
+            AstKind::PropertyDefinition(property) => {
+                property.declare
+                    || property.r#type == PropertyDefinitionType::TSAbstractPropertyDefinition
+            }
+            AstKind::AccessorProperty(property) => {
+                property.r#type == AccessorPropertyType::TSAbstractAccessorProperty
+            }
+            AstKind::MethodDefinition(method) => method.value.body.is_none(),
+            AstKind::TSEnumDeclaration(declaration) => declaration.declare,
+            AstKind::TSNamespaceDeclaration(declaration) => declaration.declare,
+            AstKind::TSExternalModuleDeclaration(_)
+            | AstKind::TSGlobalDeclaration(_)
+            | AstKind::TSInterfaceDeclaration(_)
+            | AstKind::TSTypeAliasDeclaration(_) => true,
+            _ => false,
+        };
+        if declaration_only {
+            self.non_runtime.push(span);
+        }
+        let reference_context = match node {
+            AstKind::CallExpression(call) => Some(&call.callee),
+            AstKind::TaggedTemplateExpression(template) => Some(&template.tag),
+            AstKind::UnaryExpression(unary)
+                if matches!(unary.operator.as_str(), "delete" | "typeof") =>
+            {
+                Some(&unary.argument)
+            }
+            _ => None,
+        };
+        if let Some(expression) = reference_context
+            && let Expression::UnaryExpression(unary) = expression.get_inner_expression()
+            && unary.operator.as_str() == "!"
+        {
+            let argument = unary.argument.get_inner_expression();
+            if argument.is_identifier_reference()
+                || argument.is_member_expression()
+                || matches!(argument, Expression::ChainExpression(_))
+            {
+                self.switching_reference_sites.insert(unary.span.start);
+            }
+        }
         if let AstKind::Decorator(decorator) = node
             && let Some(context) = self
                 .cognitive_parameter_decorators
@@ -814,8 +914,7 @@ impl<'a> Visit<'a> for Analysis {
                 _ => MutationOperator::Comparison,
             },
             span,
-            left,
-            right,
+            expression: OperatorExpression::Binary { left, right },
             offset: 0,
             original,
             replacements,
@@ -1522,25 +1621,35 @@ impl Analysis {
                 result.scopes[i].complexity += 1;
             }
         }
-        result.operators.retain(|site| enabled.contains(&site.kind));
+        result.operators.retain(|site| {
+            enabled.contains(&site.kind)
+                && (site.kind != MutationOperator::Boolean
+                    || (!source_type.is_typescript_definition()
+                        && !result.non_runtime.iter().any(|range| {
+                            range.start <= site.span.start && site.span.end <= range.end
+                        })))
+        });
         result
             .operators
             .sort_by_key(|c| (c.span.start, std::cmp::Reverse(c.span.end)));
         let mut id = 0;
         for c in &mut result.operators {
-            let mut offset = c.left.end as usize;
-            loop {
-                let gap = &source[offset..c.right.start as usize];
-                let trimmed = gap.trim_start_matches(javascript_whitespace);
-                offset += gap.len() - trimmed.len();
-                if trimmed.starts_with("/*") {
-                    offset += trimmed.find("*/").ok_or("unclosed comment")? + 2;
-                } else if trimmed.starts_with("//") {
-                    offset += trimmed
-                        .find(['\r', '\n', '\u{2028}', '\u{2029}'])
-                        .ok_or("missing comment end")?;
-                } else {
-                    break;
+            let mut offset = c.offset;
+            if let OperatorExpression::Binary { left, right } = c.expression {
+                offset = left.end as usize;
+                loop {
+                    let gap = &source[offset..right.start as usize];
+                    let trimmed = gap.trim_start_matches(javascript_whitespace);
+                    offset += gap.len() - trimmed.len();
+                    if trimmed.starts_with("/*") {
+                        offset += trimmed.find("*/").ok_or("unclosed comment")? + 2;
+                    } else if trimmed.starts_with("//") {
+                        offset += trimmed
+                            .find(['\r', '\n', '\u{2028}', '\u{2029}'])
+                            .ok_or("missing comment end")?;
+                    } else {
+                        break;
+                    }
                 }
             }
             if !source[offset..].starts_with(c.original) {
@@ -1596,22 +1705,51 @@ impl Analysis {
             .map(|(i, _)| i)
     }
 
+    fn statement_separator(&self, site: u32, rendered_start: u32) -> &'static str {
+        // Parentheses must not join preceding statements or split recursive operands.
+        if site > rendered_start && self.expression_statements.contains(&site) {
+            ";"
+        } else {
+            ""
+        }
+    }
+
     pub fn replace(&self, source: &str, id: usize) -> Result<String, String> {
         for c in &self.operators {
             if let Some(op) = id
                 .checked_sub(c.first_id)
                 .and_then(|i| c.replacements.get(i))
             {
-                if c.kind == MutationOperator::Logical {
+                if let OperatorExpression::LogicalNot = c.expression {
+                    // Parentheses preserve the operand's grouping without converting its value.
+                    return Ok(format!(
+                        "{}{}({}){}",
+                        &source[..c.offset],
+                        self.statement_separator(c.span.start, 0),
+                        &source[c.offset + 1..c.span.end as usize],
+                        &source[c.span.end as usize..]
+                    ));
+                }
+                if let OperatorExpression::BooleanLiteral = c.expression {
+                    return Ok(format!(
+                        "{}{op}{}",
+                        &source[..c.offset],
+                        &source[c.offset + c.original.len()..]
+                    ));
+                }
+                if c.kind == MutationOperator::Logical
+                    && let OperatorExpression::Binary { left, right } = c.expression
+                {
                     // Keep the AST's operand grouping when &&/|| precedence changes.
                     return Ok(format!(
-                        "{}(({}){}{}{}({})){}",
+                        "{}{}(({}){}{}{}({})){}",
                         &source[..c.span.start as usize],
-                        &source[c.span.start as usize..c.left.end as usize],
-                        &source[c.left.end as usize..c.offset],
+                        self.statement_separator(c.span.start, 0),
+                        &source[c.span.start as usize..left.end as usize],
+                        &source[left.end as usize..c.offset],
                         op,
-                        &source[c.offset + c.original.len()..c.right.start as usize],
-                        &source[c.right.start as usize..c.span.end as usize],
+                        &source[c.offset + c.original.len()..right.start as usize],
+                        &source[right.start as usize..c.span.end as usize],
                         &source[c.span.end as usize..]
                     ));
                 }
@@ -1667,6 +1805,13 @@ impl Analysis {
         if source.contains("__seshat_") {
             return Err("proof helper name collision".into());
         }
+        // Conditional arms produce values, so they cannot expose an operand's reference.
+        if self.operators.iter().any(|site| {
+            site.kind == MutationOperator::Boolean
+                && self.switching_reference_sites.contains(&site.span.start)
+        }) {
+            return Err("experimental switching cannot remove ! in call/tag targets or delete/typeof operands that expose references; use source replacement".into());
+        }
         fn render(
             a: &Analysis,
             source: &str,
@@ -1681,20 +1826,47 @@ impl Analysis {
                     continue;
                 }
                 out.push_str(&source[cursor as usize..c.span.start as usize]);
-                let left = render(a, source, c.left.start, c.left.end, id_offset)?;
-                let right = render(a, source, c.right.start, c.right.end, id_offset)?;
-                if c.kind == MutationOperator::Logical {
-                    // Inline arms preserve short-circuiting, await/yield and direct eval scope.
-                    out.push_str(&format!("(__seshat_active === {} ? (({left}) {} ({right})) : (({left}) {} ({right})))",
-                        c.first_id + id_offset, c.replacements[0], c.original));
-                } else {
-                    out.push_str(&format!(
-                        "__seshat_compare({}, ({left}), ({right}), {:?})",
-                        c.first_id + id_offset,
-                        c.original
-                    ));
+                if c.kind == MutationOperator::Logical
+                    || matches!(
+                        c.expression,
+                        OperatorExpression::BooleanLiteral | OperatorExpression::LogicalNot
+                    )
+                {
+                    out.push_str(a.statement_separator(c.span.start, start));
                 }
-                // Nested logical arms duplicate text; fail explicitly before growth is unbounded.
+                match c.expression {
+                    OperatorExpression::BooleanLiteral => {
+                        out.push_str(&format!(
+                            "(__seshat_active === {} ? {} : {})",
+                            c.first_id + id_offset,
+                            c.replacements[0],
+                            c.original
+                        ));
+                    }
+                    OperatorExpression::LogicalNot => {
+                        let argument = render(a, source, c.span.start + 1, c.span.end, id_offset)?;
+                        out.push_str(&format!(
+                            "(__seshat_active === {} ? ({argument}) : !({argument}))",
+                            c.first_id + id_offset
+                        ));
+                    }
+                    OperatorExpression::Binary { left, right } => {
+                        let left = render(a, source, left.start, left.end, id_offset)?;
+                        let right = render(a, source, right.start, right.end, id_offset)?;
+                        if c.kind == MutationOperator::Logical {
+                            // Inline arms preserve short-circuiting, await/yield and direct eval scope.
+                            out.push_str(&format!("(__seshat_active === {} ? (({left}) {} ({right})) : (({left}) {} ({right})))",
+                        c.first_id + id_offset, c.replacements[0], c.original));
+                        } else {
+                            out.push_str(&format!(
+                                "__seshat_compare({}, ({left}), ({right}), {:?})",
+                                c.first_id + id_offset,
+                                c.original
+                            ));
+                        }
+                    }
+                }
+                // Nested inline arms duplicate text; fail explicitly before growth is unbounded.
                 if out.len() > 8 * 1024 * 1024 {
                     return Err(
                         "experimental switching source exceeds 8 MiB; use source replacement"
@@ -1735,6 +1907,247 @@ impl Analysis {
         json!({"scopes": self.scopes.iter().map(|s| json!({"name":s.name,"start":s.span.start,"end":s.span.end,"complexity":s.complexity,"cognitiveComplexity":s.cognitive_complexity,"implicit":s.implicit,"empty":s.empty,"typeSafety":s.type_safety})).collect::<Vec<_>>(),
             "typeSafety":self.type_safety(),
             "mutants": self.operators.iter().flat_map(|c| c.replacements.iter().enumerate().map(move |(i, op)| json!({"id":c.first_id+i,"kind":c.kind,"offset":c.offset,"original":c.original,"replacement":op}))).collect::<Vec<_>>()})
+    }
+}
+
+#[test]
+fn boolean_mutants_follow_runtime_expressions_and_selected_families() {
+    let source = "// true false !\nconst text = 'true false !'; type Flag = true | false; interface Flags { yes: true; false: false; } declare const fixed = true; declare namespace Ambient { const fixed = false; } declare class Declared { readonly yes = true; } const obj = {true: false, false: true}; function f(value: unknown) { return [true, false, !!value, value!]; }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let definitions = analysis.json();
+    let rows = definitions["mutants"].as_array().unwrap();
+    assert_eq!(rows.len(), 6);
+    assert_eq!(
+        rows.iter()
+            .map(|row| (
+                row["original"].as_str().unwrap(),
+                row["replacement"].as_str().unwrap()
+            ))
+            .collect::<Vec<_>>(),
+        [
+            ("false", "true"),
+            ("true", "false"),
+            ("true", "false"),
+            ("false", "true"),
+            ("!", ""),
+            ("!", "")
+        ]
+    );
+    for (id, row) in rows.iter().enumerate() {
+        assert_eq!(row["id"], id);
+        assert_eq!(row["kind"], "boolean");
+        let offset = row["offset"].as_u64().unwrap() as usize;
+        assert!(source[offset..].starts_with(row["original"].as_str().unwrap()));
+        let mutant = analysis.replace(source, id).unwrap();
+        assert_ne!(mutant, source);
+        Analysis::inspect("mutant.ts", &mutant).unwrap();
+    }
+    assert_eq!(
+        Analysis::inspect("source.ts", source).unwrap().json(),
+        definitions
+    );
+    assert_eq!(
+        Analysis::inspect_with_operators("source.ts", source, &[MutationOperator::Boolean])
+            .unwrap()
+            .json(),
+        definitions
+    );
+    assert_eq!(
+        Analysis::inspect_with_operators(
+            "source.ts",
+            source,
+            &[
+                MutationOperator::Comparison,
+                MutationOperator::Logical,
+                MutationOperator::Arithmetic
+            ]
+        )
+        .unwrap()
+        .count(),
+        0
+    );
+    for path in ["source.d.ts", "source.d.mts", "source.d.cts"] {
+        assert_eq!(
+            Analysis::inspect(path, "declare const fixed = true;")
+                .unwrap()
+                .count(),
+            0
+        );
+    }
+    let jsx = "const element = <div ready={true}>{false}{!value!}true false !</div>;";
+    assert_eq!(Analysis::inspect("source.tsx", jsx).unwrap().count(), 3);
+    let computed = "const obj = {[true as any]: false};";
+    assert_eq!(Analysis::inspect("source.ts", computed).unwrap().count(), 2);
+    for source in [
+        "interface Flag { [!true]: false; }",
+        "type Flag = { [!true]: false };",
+        "class C { declare [!true]: boolean; }",
+        "abstract class C { abstract [!true]: boolean; }",
+        "abstract class C { abstract accessor [!true]: boolean; }",
+        "abstract class C { abstract [!true](): boolean; }",
+    ] {
+        assert_eq!(
+            Analysis::inspect("source.ts", source).unwrap().count(),
+            0,
+            "{source}"
+        );
+    }
+}
+
+#[test]
+fn boolean_replacements_preserve_grouping_trivia_and_exactly_one_site() {
+    for (source, expected) in [
+        ("true;", "false;"),
+        ("false.toString();", "true.toString();"),
+        ("const value=!input;", "const value=(input);"),
+        ("!!value;", "(!value);"),
+        ("!(left && right);", "((left && right));"),
+        ("!/* 🎸 ! */value!;", "(/* 🎸 ! */value!);"),
+        ("!// ! retained\nvalue;", "(// ! retained\nvalue);"),
+        (
+            "function f(){return!value;}",
+            "function f(){return(value);}",
+        ),
+        (
+            "async function f(){return !await value;}",
+            "async function f(){return (await value);}",
+        ),
+        (
+            "function* f(){return !(yield value);}",
+            "function* f(){return ((yield value));}",
+        ),
+        ("!eval('value');", "(eval('value'));"),
+        ("!object.method();", "(object.method());"),
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        let mutant = analysis.replace(source, 0).unwrap();
+        assert_eq!(mutant, expected, "{source}");
+        Analysis::inspect("mutant.ts", &mutant).unwrap();
+    }
+    let nested = "!!value;";
+    assert_eq!(
+        Analysis::inspect("source.ts", nested)
+            .unwrap()
+            .replace(nested, 1)
+            .unwrap(),
+        "!(value);"
+    );
+}
+
+#[test]
+fn operator_rendering_preserves_statement_boundaries() {
+    for (source, expected) in [
+        ("a.x = 1\n!a.y;", "a.x = 1\n;(a.y);"),
+        ("a.x = 1\nx && y;", "a.x = 1\n;((x) || (y));"),
+        ("if (ready) !value;", "if (ready) (value);"),
+        ("label: !value;", "label: (value);"),
+        ("do !value; while (ready);", "do (value); while (ready);"),
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        assert_eq!(analysis.replace(source, 0).unwrap(), expected, "{source}");
+    }
+    for source in ["a.x = 1\n!a.y;", "a.x = 1\ntrue;", "a.x = 1\n!x && y;"] {
+        let switched = Analysis::inspect("source.ts", source)
+            .unwrap()
+            .switched(source)
+            .unwrap();
+        assert!(
+            switched.contains("a.x = 1\n;(__seshat_active"),
+            "{switched}"
+        );
+        Analysis::inspect("switched.ts", &switched).unwrap();
+    }
+}
+
+#[test]
+fn boolean_switching_uses_inline_arms_and_global_ids() {
+    for (path, source) in [
+        ("source.ts", "!!true;"),
+        (
+            "source.tsx",
+            "const element = <div ready={!true}>{false}</div>;",
+        ),
+        (
+            "source.ts",
+            "async function f(){return !await value;} function* g(){return !(yield value);}",
+        ),
+    ] {
+        let analysis = Analysis::inspect(path, source).unwrap();
+        let switched = analysis.switched_with_offset(source, 7).unwrap();
+        assert!(switched.contains("__seshat_active === 7 ?"));
+        assert!(!switched.contains("Boolean("));
+        Analysis::inspect(path, &switched).unwrap();
+    }
+    let switched = Analysis::inspect("source.ts", "!!true;")
+        .unwrap()
+        .switched_with_offset("!!true;", 7)
+        .unwrap();
+    assert!(switched.contains("__seshat_active === 8 ?"));
+    assert!(switched.contains("__seshat_active === 9 ? false : true"));
+    let mixed = Analysis::inspect("source.ts", "!true && false;")
+        .unwrap()
+        .json();
+    assert_eq!(
+        mixed["mutants"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|row| row["original"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        ["&&", "!", "true", "false"]
+    );
+    let nested = format!("{}value;", "!".repeat(25));
+    assert!(
+        Analysis::inspect("source.ts", &nested)
+            .unwrap()
+            .switched(&nested)
+            .unwrap_err()
+            .contains("exceeds 8 MiB")
+    );
+}
+
+#[test]
+fn switching_rejects_negation_removal_that_exposes_references() {
+    for source in [
+        "(!object.method)();",
+        "(!object.method)?.();",
+        "(!object?.method)();",
+        "((!object.method) as any)();",
+        "((!object.method) satisfies any)();",
+        "(<any>!object.method)();",
+        "((!object.method)<unknown>)();",
+        "(!object.method)!();",
+        "(!object.method)`tag`;",
+        "(!eval)('value');",
+        "delete (!object.field);",
+        "typeof (!unbound);",
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        assert!(analysis.replace(source, 0).is_ok());
+        assert!(
+            analysis
+                .switched(source)
+                .unwrap_err()
+                .contains("expose references"),
+            "{source}"
+        );
+        let binary_only =
+            Analysis::inspect_with_operators("source.ts", source, &[MutationOperator::Comparison])
+                .unwrap();
+        assert!(binary_only.switched(source).is_ok());
+    }
+    for source in [
+        "!object.method();",
+        "!eval('value');",
+        "typeof (!call());",
+        "delete (!call());",
+    ] {
+        assert!(
+            Analysis::inspect("source.ts", source)
+                .unwrap()
+                .switched(source)
+                .is_ok()
+        );
     }
 }
 

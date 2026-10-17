@@ -263,6 +263,11 @@ function selfCheckSummary() {
   assert.deepEqual(validate({...base, repeat}, {}, null, artifacts), []);
   assert.match(validate({...base, standalone: {...base.standalone, cliScenarios: 81}}).join('\n'), /standalone proof did not retain 82 CLI scenarios/);
   assert.match(validate({...base, npm: null}).join('\n'), /npm result missing/);
+  for (const name of Object.keys(base.publicExamples.examples)) {
+    const missingExample = structuredClone(base);
+    delete missingExample.publicExamples.examples[name];
+    assert.match(validate(missingExample).join('\n'), /public consumer examples are incomplete/);
+  }
   assert.match(validate({...base, vitest: null}).join('\n'), /Vitest result missing/);
   const partial = structuredClone(base);
   delete partial.jestExpo.runs['before-all'];
