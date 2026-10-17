@@ -680,7 +680,7 @@ are assertions, so a changed provider needs review rather than silent acceptance
 
 ## Mutation experiment
 
-### Logical and arithmetic operators
+### Logical, arithmetic and boolean operators
 
 After building the release binaries, run:
 
@@ -688,23 +688,32 @@ After building the release binaries, run:
 node benchmarks/proofs/operators.mjs
 ```
 
-This checks AST-generated logical and arithmetic mutants, inactive and active
-switching, operand values and side effects, logical-chain grouping, BigInt,
-coercion, `await`, `yield` and direct `eval`. Node, Jest and Vitest also execute
-active logical/arithmetic helpers in `switching-syntax.mjs`.
+This checks AST-generated logical, arithmetic and boolean mutants, inactive and
+active switching, operand values and side effects, logical-chain grouping,
+BigInt, coercion, `await`, `yield` and direct `eval`. Node, Jest and Vitest also
+execute active switching mutations from these families in `switching-syntax.mjs`.
 
 Real CLI assessments check the default families, individual families, parallel
 replacement and switching, a comparison-only scope and no operator mutants.
 Nine covered functions still receive extreme mutations when operator selection
 is empty. Source bytes and scratch cleanup are checked after every assessment.
 
+The script also runs `boolean-operators.mjs`, which can run independently. Its
+25 fixed semantic cases check 29 boolean replacement/switching pairs, and six
+reference-sensitive contexts explicitly reject switching. Its separate CLI
+fixture checks four boolean mutants alongside two comparisons, parallel workers,
+stable IDs, source restoration, cleanup, job timeout and withheld scores.
+Disabling operator families leaves its five extreme candidates intact.
+
 Set `SESHAT_OPERATOR_SAMPLES=3` for repeated cost measurements. Samples alternate
 replacement and switching order within each family. The default is one sample;
 `SESHAT_PROOF_OUTPUT` chooses the retained JSON path. The report normalises local
 paths and retains fixture/binary hashes, outcomes, per-operator counts and times.
-The [retained measurements](../../docs/research/mutation-operators.md) describe
-the exact fixture and hand-checked equivalent mutants. These rates and timings
-do not estimate performance or equivalence on other projects.
+The [historical logical/arithmetic measurements](../../docs/research/mutation-operators.md)
+and [boolean measurements](../../docs/research/boolean-mutations.md) describe
+the fixtures and hand-checked equivalent mutants. Boolean cost samples compare
+the original three families with the four-family default on the same source.
+These rates and timings do not estimate performance or equivalence on other projects.
 
 Unix standalone package proofs run this script against the installed binary;
 the Windows package workflow runs it after the shared CLI proof.

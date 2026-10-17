@@ -18,6 +18,7 @@ on:
       - benchmarks/proofs/release-consumer-summary.mjs
       - benchmarks/proofs/cli.mjs
       - benchmarks/proofs/operators.mjs
+      - benchmarks/proofs/boolean-operators.mjs
       - benchmarks/proofs/parallel.mjs
       - benchmarks/proofs/process.mjs
       - benchmarks/proofs/liveness.mjs
@@ -53,6 +54,7 @@ on:
       - benchmarks/proofs/release-consumer-summary.mjs
       - benchmarks/proofs/cli.mjs
       - benchmarks/proofs/operators.mjs
+      - benchmarks/proofs/boolean-operators.mjs
       - benchmarks/proofs/parallel.mjs
       - benchmarks/proofs/process.mjs
       - benchmarks/proofs/liveness.mjs

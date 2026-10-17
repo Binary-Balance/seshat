@@ -8,7 +8,7 @@ remain under `benchmarks/proofs/`.
 ## Analysis
 
 `analysis.rs` parses captured TypeScript and TSX with Oxc. It identifies function
-scopes, calculates complexity and generates comparison, logical and arithmetic mutants. It owns source
+scopes, calculates complexity and generates comparison, logical, arithmetic and boolean mutants. It owns source
 coordinates and mutation edits, including the experimental switching transform.
 Nested functions have independent complexity counts. Class initialisers and
 static blocks receive complexity results but are outside CRAP scoring.

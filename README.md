@@ -10,7 +10,7 @@ insufficiently tested code.
 ## What Seshat does
 
 - Calculates function complexity and CRAP scores from branch coverage.
-- Changes comparison, logical and arithmetic operators one at a time and checks whether tests detect them.
+- Changes comparison, logical, arithmetic and boolean expressions one at a time and checks whether tests detect them.
 - Replaces function bodies to find covered functions whose removal tests miss.
 - Runs tests in isolated copies of the captured project.
 - Produces readable terminal output and versioned JSON, with optional CI thresholds.

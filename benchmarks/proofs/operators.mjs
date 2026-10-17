@@ -174,6 +174,16 @@ for (let sample = 0; sample < samples; sample++) {
     }
   }
 }
+// Keep the installed-package route responsible for every default operator family.
+const booleanOutput = join(work, 'boolean.json');
+const booleanRun = spawnSync(process.execPath, [join(here, 'boolean-operators.mjs')], {
+  encoding: 'utf8', timeout: 120000,
+  env: {...process.env, SESHAT_CLI_BINARY: binary, SESHAT_PROOF_BINARY: proof, SESHAT_PROOF_OUTPUT: booleanOutput},
+});
+assert.ifError(booleanRun.error);
+assert.equal(booleanRun.status, 0, booleanRun.stdout + booleanRun.stderr);
+process.stdout.write(booleanRun.stdout);
+const booleanProof = JSON.parse(readFileSync(booleanOutput, 'utf8'));
 const output = resolve(process.env.SESHAT_PROOF_OUTPUT ?? join(work, 'operators.json'));
 // Source identities and all execution paths in retained evidence must be portable.
 const portable = JSON.stringify({environment: {node: process.version, platform: process.platform, arch: process.arch},
@@ -184,7 +194,7 @@ const portable = JSON.stringify({environment: {node: process.version, platform: 
   fixtureHashes: Object.fromEntries(Object.entries(originals).map(([path, source]) => [path, createHash('sha256').update(source).digest('hex')])),
   equivalentMutants: {logical: {count: 1, planned: 3}, arithmetic: {count: 1, planned: 5}, boolean: {count: 2, planned: 2},
     basis: 'Hand-checked constant expressions false && false and 4 + 0. These are fixture rates, not automatic equivalence detection or a population estimate.'},
-  samples, reports}, (_, value) => typeof value === 'string'
+  samples, reports, booleanProof}, (_, value) => typeof value === 'string'
     ? value.replaceAll(work, '<work>').replaceAll(repo, '<repo>')
       .replaceAll(work.replaceAll('\\', '/'), '<work>').replaceAll(repo.replaceAll('\\', '/'), '<repo>')
     : value, 2);
