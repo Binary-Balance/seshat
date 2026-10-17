@@ -120,8 +120,8 @@ leaving the non-member outcome untested. Its statement coverage is 100%,
 but its branch coverage is 50%. Both measurements appear in the report.
 
 The mutation score is the percentage of mutants that made a test fail. A mutant
-is one changed operator, such as `>` to `>=` or `&&` to `||`. If tests catch two of three
-mutants, the score is `66.67%`. A timeout or execution error leaves the run
+makes one deliberate code change, such as `>` to `>=` or `true` to `false`.
+If tests catch two of three mutants, the score is `66.67%`. A timeout or execution error leaves the run
 incomplete and withholds the score. Neither score proves correctness.
 
 `check` and `mutate` also replace eligible function bodies to detect pseudo-tested
