@@ -1,5 +1,6 @@
 // Packaging and detailed live progress are separate from the CLI entry point.
 use crate::execution::{self, AssessmentMode, CapturedProject, Thresholds};
+mod type_safety;
 use crate::write_output;
 use serde_json::{Value, json};
 use std::{
@@ -35,7 +36,8 @@ Path options take a separate, non-empty argument. For names beginning with --,
 use ./--name or an absolute path. --flag=value and the -- separator are unsupported.
 
 Use the same explicit source, capture and setup configuration for all commands.
-Optional config thresholds: maxCrap, maxCognitiveComplexity and minMutationScore under thresholds.
+Optional config thresholds: maxCrap, maxCognitiveComplexity, minMutationScore,
+maxInferredAny and maxTypeEscapes under thresholds.
 Threshold failures exit 1; incomplete runs exit 2; cancellation uses the host's console/signal status.
 ";
 
@@ -158,8 +160,22 @@ fn report(
         result["complete"] = json!(false);
         result["error"] = json!("function has a missing or invalid cognitive complexity value");
     }
-    let (result, mut status) = crate::finish(result);
+    let (mut result, mut status) = crate::finish(result);
     let quality = thresholds.map(|limits| quality(command, &result, limits));
+    if result["complete"] == true
+        && let Some(quality) = &quality
+        && quality["state"] == "incomplete"
+    {
+        result["complete"] = json!(false);
+        result["error"] = json!(
+            array(&quality["checks"])
+                .iter()
+                .filter_map(|check| check["error"].as_str())
+                .collect::<Vec<_>>()
+                .join("; ")
+        );
+        status = 2;
+    }
     if status == 0 && quality.as_ref().is_some_and(|q| q["state"] == "failed") {
         status = 1;
     }
@@ -239,7 +255,20 @@ fn quality(command: Option<&str>, result: &Value, limits: Thresholds) -> Value {
         };
         checks.push(json!({"metric":metric,"limit":limit,"actual":actual,"state":state}));
     }
-    let state = if result["complete"] != true {
+    if command.is_some() {
+        checks.extend(type_safety::checks(result, limits));
+    }
+    let incomplete =
+        result["complete"] != true || checks.iter().any(|check| check["state"] == "incomplete");
+    if incomplete {
+        for check in &mut checks {
+            if check["state"] != "not-requested" {
+                check["state"] = json!("incomplete");
+                check["actual"] = Value::Null;
+            }
+        }
+    }
+    let state = if incomplete {
         "incomplete"
     } else if checks.is_empty() {
         "not-configured"
@@ -277,10 +306,14 @@ fn readable(report: &Value) -> String {
             text(&report["quality"]["state"])
         );
         for check in array(&report["quality"]["checks"]) {
+            let setup = check
+                .get("setup")
+                .map_or(String::new(), |setup| format!(", setup {setup}"));
             let _ = writeln!(
                 output,
-                "  {}: {}, limit {}, actual {}",
+                "  {}{}: {}, limit {}, actual {}",
                 text(&check["metric"]),
+                setup,
                 text(&check["state"]),
                 check["limit"],
                 check
@@ -288,6 +321,9 @@ fn readable(report: &Value) -> String {
                     .filter(|v| !v.is_null())
                     .map_or("not evaluated".into(), Value::to_string)
             );
+            if let Some(error) = check.get("error") {
+                let _ = writeln!(output, "    {error}");
+            }
         }
     }
     if !report["scope"].is_null() {
@@ -966,7 +1002,7 @@ mod tests {
             let limits = Thresholds {
                 max_crap: Some(max_crap),
                 min_mutation_score: Some(min_mutation_score),
-                max_cognitive_complexity: None,
+                ..Thresholds::default()
             };
             let (report, code) = report(
                 Some("check"),
@@ -992,7 +1028,7 @@ mod tests {
         let limits = Thresholds {
             max_crap: Some(0.0),
             min_mutation_score: Some(100.0),
-            max_cognitive_complexity: None,
+            ..Thresholds::default()
         };
         let mut incomplete = result.clone();
         incomplete["complete"] = json!(false);
@@ -1022,7 +1058,7 @@ mod tests {
         let limits = Thresholds {
             max_crap: Some(10.0),
             min_mutation_score: Some(50.0),
-            max_cognitive_complexity: None,
+            ..Thresholds::default()
         };
         for malformed in [
             json!({"status":"measured"}),
@@ -1081,7 +1117,7 @@ mod tests {
         let limits = Thresholds {
             max_crap: Some(0.0),
             min_mutation_score: Some(100.0),
-            max_cognitive_complexity: None,
+            ..Thresholds::default()
         };
         let empty = json!({"complete":true,"sources":[{"result":{"functions":[{"status":"complexity-only","crap":null}]}}],"mutation":{"planned":0,"score":null}});
         for command in ["check", "crap", "mutate"] {
@@ -1304,7 +1340,7 @@ mod tests {
                 Some(Thresholds {
                     max_crap: None,
                     min_mutation_score: Some(0.0),
-                    max_cognitive_complexity: None,
+                    ..Thresholds::default()
                 }),
             );
             assert_eq!(status, 2);

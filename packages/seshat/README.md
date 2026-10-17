@@ -142,7 +142,9 @@ Add optional thresholds to `seshat.json`:
 ```json
 "thresholds": {
   "maxCrap": 30,
-  "minMutationScore": 80
+  "minMutationScore": 80,
+  "maxInferredAny": 10,
+  "maxTypeEscapes": 0
 }
 ```
 
@@ -152,6 +154,10 @@ Add optional thresholds to `seshat.json`:
 | `1` | Complete run, a threshold was not met. |
 | `2` | Invalid input, failed baseline or incomplete run. |
 | `130` / `143` | Cancelled by `SIGINT` / `SIGTERM` on Unix. |
+
+`maxInferredAny` limits any-typed runtime expression sites separately in each
+setup. `maxTypeEscapes` limits explicit `any` and TypeScript suppression
+comments across selected source. Both apply in all three commands.
 
 See [quality thresholds](https://github.com/Binary-Balance/seshat/blob/main/docs/configuration.md#quality-thresholds) for the full
 rules.

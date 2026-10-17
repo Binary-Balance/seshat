@@ -233,6 +233,8 @@ pub struct Thresholds {
     pub max_crap: Option<f64>,
     pub max_cognitive_complexity: Option<f64>,
     pub min_mutation_score: Option<f64>,
+    pub max_inferred_any: Option<u64>,
+    pub max_type_escapes: Option<u64>,
 }
 
 fn default_workers() -> usize {
@@ -1101,6 +1103,8 @@ mod tests {
             json!({"maxCognitiveComplexity":2.5}),
             json!({"maxCognitiveComplexity":null}),
             json!({"maxCrap":null,"minMutationScore":null}),
+            json!({"maxInferredAny":0,"maxTypeEscapes":12}),
+            json!({"maxInferredAny":null,"maxTypeEscapes":null}),
         ] {
             let mut config = fixture.config.clone();
             config["thresholds"] = thresholds;
@@ -1120,6 +1124,13 @@ mod tests {
             json!({"minMutationScore":false}),
             json!({"maxCrap":[]}),
             json!({"maxCRAP":30}),
+            json!({"maxInferredAny":-1}),
+            json!({"maxInferredAny":1.5}),
+            json!({"maxInferredAny":"3"}),
+            json!({"maxTypeEscapes":-1}),
+            json!({"maxTypeEscapes":1.0}),
+            json!({"maxTypeEscapes":false}),
+            json!({"maxTypeEscapes":[]}),
         ] {
             let mut config = fixture.config.clone();
             config["thresholds"] = thresholds;
@@ -1136,10 +1147,36 @@ mod tests {
             r#"{"maxCognitiveComplexity":1,"maxCognitiveComplexity":2}"#,
             r#"{"maxCrap":NaN}"#,
             r#"{"maxCrap":20,"maxCrap":30}"#,
+            r#"{"maxInferredAny":1e999}"#,
+            r#"{"maxInferredAny":1,"maxInferredAny":2}"#,
+            r#"{"maxTypeEscapes":18446744073709551616}"#,
         ] {
             let raw = format!("{{\"thresholds\":{thresholds},{}", &raw[1..]);
             assert!(Config::parse(raw.as_bytes()).is_err());
         }
+    }
+
+    #[test]
+    fn type_safety_limits_keep_declarations_out_of_assessment_source() {
+        let fixture = Fixture::new();
+        for name in ["types.d.ts", "types.d.mts", "types.d.cts"] {
+            fs::write(
+                fixture.project.join("src").join(name),
+                "declare const value: any;\n",
+            )
+            .unwrap();
+            let mut config = fixture.config.clone();
+            config["source"]["include"] = json!([format!("src/{name}")]);
+            config["thresholds"] = json!({"maxInferredAny":0,"maxTypeEscapes":0});
+            let path = fixture.project.join("seshat.json");
+            fs::write(&path, serde_json::to_vec(&config).unwrap()).unwrap();
+            let error =
+                CapturedProject::capture(&path, &fixture.scratch, Some(AssessmentMode::Crap))
+                    .err()
+                    .unwrap();
+            assert!(error.contains("exclude declaration-only source"), "{error}");
+        }
+        fixture.assert_clean();
     }
 
     #[test]

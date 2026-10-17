@@ -610,13 +610,14 @@ Inferred findings count any-typed runtime expression sites per function and
 setup. They include `JSON.parse` calls and any-typed value uses, including uses
 flowing from explicit `any`. Counts are not distinct unsafe values or implicit
 parameter errors. Unknown and out-of-program findings stay separate from zero.
-No combined score or type-safety threshold is applied. See the
-[report fields](report-format.md#type-safety-findings).
+No combined type-safety score is applied. Optional type-safety thresholds are
+described below. See the [report fields](report-format.md#type-safety-findings).
 
 Checker diagnostics, suppressed recovery types and enabled `noCheck` produce
 unknown findings. Some untyped JavaScript imports also use recovery types and
-remain unknown. This does not block CRAP or mutation results. Checker work
-shares the helper's existing setup deadline and adds no per-mutant jobs.
+remain unknown. Without `maxInferredAny`, this does not block CRAP or mutation
+results. Checker work shares the helper's existing setup deadline and adds no
+per-mutant jobs.
 `inferredAny.ms` shows the added checker phase within `compilerStrictnessMs`.
 Compatibility and synthetic scaling measurements are recorded in the
 [inferred-any evidence](research/inferred-any.md).
@@ -627,9 +628,9 @@ requires `--ignoreConfig` for direct files when a config is present; Seshat
 reports that error rather than borrowing the ignored config's strictness.
 
 An unavailable compiler, unsupported metadata API, invalid configuration,
-timeout or other helper failure produces a visible `unknown` finding. It does
-not block an otherwise complete CRAP or mutation assessment. No settings are
-invented for unknown findings. Unsupported options remain separate from options
+timeout or other helper failure produces a visible `unknown` finding. Without
+`maxInferredAny`, it does not block an otherwise complete CRAP or mutation
+assessment. No settings are invented for unknown findings. Unsupported options remain separate from options
 that the compiler supports and disables.
 
 ## Quality thresholds
@@ -640,7 +641,9 @@ Add optional thresholds at the top level of `seshat.json`:
 "thresholds": {
   "maxCrap": 30,
   "maxCognitiveComplexity": 15,
-  "minMutationScore": 80
+  "minMutationScore": 80,
+  "maxInferredAny": 10,
+  "maxTypeEscapes": 0
 }
 ```
 
@@ -653,6 +656,37 @@ coverage status. Implicit class scopes are excluded. See the
 passes and comparisons use unrounded values, so a measured value exactly equal
 to its limit passes. Omit a field or set it to null to disable it. Unknown
 fields, invalid types and out-of-range values are errors.
+
+`maxInferredAny` and `maxTypeEscapes` accept non-negative integers and apply in
+`crap`, `check` and `mutate`:
+
+- `maxInferredAny` limits the total any-typed runtime expression sites in each
+  setup's selected source. Include all function and implicit-scope rows and
+  expressions outside them. Each setup must meet the same configured limit;
+  counts are never added across setups. A setup with no selected source in its
+  compiler program has a not-applicable check.
+- `maxTypeEscapes` limits the total `explicitAny`, `tsIgnore`, `tsExpectError`
+  and `tsNocheck` syntax counts across selected source, including syntax outside
+  functions. Count each site once, independently of the number of setups.
+  Type assertions, double assertions and non-null assertions do not contribute.
+
+A selected file may be outside one setup's compiler program, but every selected
+source file must have known inferred findings in at least one setup. Missing or
+unknown required findings make a configured `maxInferredAny` check incomplete,
+mark the report incomplete and exit 2. Valid CRAP and mutation evidence remains
+in the report. Compiler failures alone do not block `maxTypeEscapes`, which uses
+independent syntax counts. With these limits disabled, compiler findings retain
+their existing non-blocking behavior. Declaration-only files must still be
+excluded from assessment source; capture them as compiler inputs instead.
+
+For consistent inferred counts, use the same compiler version and inputs on
+local and CI machines. Every declaration file in the compiler program can affect
+these counts. Generate required declaration files before Seshat runs, or commit
+them, and include them in `capture`.
+
+These are fixed count limits. Start at the current count and lower the limit as
+sites are removed. Seshat does not store a baseline or lower limits automatically;
+a new site offset by a removed site can still pass.
 
 Each command evaluates only its requested assessments. Incomplete execution
 takes precedence over threshold failure. No applicable functions or mutants is
