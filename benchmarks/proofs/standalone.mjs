@@ -23,7 +23,8 @@ mkdirSync(consumer);
 const checks = {};
 function run(name, command, args, env = process.env, status = 0) {
   const started = performance.now();
-  const child = spawnSync(command, args, {cwd: repo, env, encoding: 'utf8', timeout: 300000, maxBuffer: 16 * 1024 * 1024});
+  // Full installed suites exceeded five minutes on Intel macOS.
+  const child = spawnSync(command, args, {cwd: repo, env, encoding: 'utf8', timeout: 600000, maxBuffer: 16 * 1024 * 1024});
   checks[name] = {status: child.status, ms: performance.now() - started, stdout: child.stdout, stderr: child.stderr};
   writeFileSync(join(work, 'checks.json'), JSON.stringify(checks, null, 2) + '\n');
   assert.ifError(child.error);
