@@ -355,15 +355,17 @@ execution evidence appear in `pseudoTesting`, separately from operator scores.
 The optional top-level `mutationOperators` array selects operator families:
 
 ```json
-"mutationOperators": ["comparison", "logical", "arithmetic", "boolean"]
+"mutationOperators": ["comparison", "logical", "arithmetic", "boolean", "statement"]
 ```
 
-Omitting it enables all four families. Use `["comparison"]` to retain the
+Omitting it enables all five families. Use `["comparison"]` to retain the
 comparison-only scope of 0.4.0, or `[]` to run extreme mutation without operator
 mutants. Unknown names, duplicate names and non-array values fail before capture.
 Selection does not change source coverage, complexity or extreme mutation.
 Use `["comparison", "logical", "arithmetic"]` to retain the scope of 0.5.0
 and 0.6.0.
+Use `["comparison", "logical", "arithmetic", "boolean"]` to retain the scope
+of 0.7.0.
 
 | Family | Replacements |
 | --- | --- |
@@ -371,9 +373,10 @@ and 0.6.0.
 | `logical` | `&&`/`||` swaps. Operand grouping is preserved with parentheses. |
 | `arithmetic` | Binary `+`/`-` and `*`/`/` swaps. |
 | `boolean` | Runtime `true`/`false` swaps and prefix `!expression` to `(expression)`. |
+| `statement` | Expression statements and bare `return` statements to `;` in eligible functions. |
 
-Unary signs, increments, assignments, `??` and operators in comments, strings
-or type syntax are excluded. Arithmetic preserves JavaScript's coercion and
+Expression rewrites exclude unary signs, increments, assignments, `??` and
+operators in comments, strings or type syntax. Arithmetic preserves JavaScript's coercion and
 BigInt rules; a mutation can therefore change string concatenation or throw.
 Logical mutations preserve short-circuiting and return operand values.
 Removing `!` also removes its boolean conversion, so `!7` becomes `(7)`.
@@ -381,6 +384,23 @@ Nested negations have one candidate per prefix. Type-level boolean literals,
 non-runtime property keys and TypeScript postfix non-null assertions are excluded.
 JSX expression values are eligible; bare JSX attributes have no literal to flip.
 Generated parentheses preserve statement boundaries when semicolons are omitted.
+
+Statement removal selects whole expression statements, including assignments,
+updates and calls, and bare returns in explicit synchronous, non-generator
+functions. It removes the expression's evaluation or the return's early exit.
+Replacing the complete AST statement with `;` preserves unbraced control-flow
+bodies, labels, adjacent statements and barriers before later string literals.
+Directives, declarations, blocks, control-flow targets and `return value` are
+excluded. This also excludes `return void work()`, preserving its operand.
+
+Module-level and static-block statements, constructors, async and generator
+function bodies are excluded. Nested functions qualify independently, so a
+synchronous function inside an async function can still have candidates.
+Any candidate containing a `super()` call is excluded, including calls inside
+nested arrows. Ordinary `super.method()` calls in eligible methods remain
+eligible. Removing an ordinary call can still remove asynchronous work it starts.
+See the [statement evidence](research/statement-mutations.md) for fixed examples,
+exclusions and added test-job cost.
 
 The mutation score includes all selected operator families. Adding families
 can change the score and adds one test job per setup per new mutant.
@@ -427,6 +447,9 @@ Logical and boolean switching use inline conditional arms to retain lazy
 evaluation and the surrounding `await`, `yield` and direct `eval` context. Nested arms duplicate
 source text. If a rendered body exceeds 8 MiB, preparation fails explicitly
 and no complete mutation score is reported; use source replacement instead.
+Statement switching guards the original statement inside a block. The block
+preserves dangling `else` binding and labels; nested candidates retain their
+own IDs and execute in the existing function scope.
 Removing `!` can expose an operand reference that an inline arm cannot preserve.
 Switching rejects selected negations in call, optional-call or tagged-template
 targets and `typeof`/`delete` operands when they expose references, including

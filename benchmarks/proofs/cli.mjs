@@ -89,7 +89,7 @@ const checked = json('check', 'check');
 assert.equal(checked.quality.state, 'not-configured');
 assert.match(results.check.stderr, /capturing configured inputs/);
 assert.equal(checked.result.mutation.score, 50);
-assert.deepEqual(checked.result.mutation.enabledOperators, ['comparison','logical','arithmetic','boolean']);
+assert.deepEqual(checked.result.mutation.enabledOperators, ['comparison','logical','arithmetic','boolean','statement']);
 assert.deepEqual(checked.scope.files, ['subject.ts']);
 assert.equal(checked.result.jobsAttempted, 7);
 assert.equal(checked.result.setups[0].compilerStrictness.state, 'known');

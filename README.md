@@ -11,6 +11,7 @@ insufficiently tested code.
 
 - Calculates function complexity and CRAP scores from branch coverage.
 - Changes comparison, logical, arithmetic and boolean expressions one at a time and checks whether tests detect them.
+- Removes expression statements and bare returns from eligible functions.
 - Replaces function bodies to find covered functions whose removal tests miss.
 - Runs tests in isolated copies of the captured project.
 - Produces readable terminal output and versioned JSON, with optional CI thresholds.

@@ -180,6 +180,7 @@ pub enum MutationOperator {
     Logical,
     Arithmetic,
     Boolean,
+    Statement,
 }
 
 pub fn default_mutation_operators() -> Vec<MutationOperator> {
@@ -188,6 +189,7 @@ pub fn default_mutation_operators() -> Vec<MutationOperator> {
         MutationOperator::Logical,
         MutationOperator::Arithmetic,
         MutationOperator::Boolean,
+        MutationOperator::Statement,
     ]
 }
 
@@ -195,6 +197,7 @@ enum OperatorExpression {
     Binary { left: Span, right: Span },
     BooleanLiteral,
     LogicalNot,
+    Statement,
 }
 
 pub struct OperatorSite {
@@ -216,6 +219,8 @@ pub struct Analysis {
     non_runtime: Vec<Span>,
     expression_statements: BTreeSet<u32>,
     switching_reference_sites: BTreeSet<u32>,
+    statement_excluded_functions: BTreeSet<u32>,
+    super_calls: Vec<Span>,
     decisions: Vec<Span>,
     pub parameter_values: Vec<Span>,
     pub statement_starts: std::collections::BTreeSet<u32>,
@@ -329,6 +334,40 @@ impl<'a> Visit<'a> for Analysis {
         };
         if declaration_only {
             self.non_runtime.push(span);
+        }
+        let removable = match node {
+            AstKind::ExpressionStatement(_) => Some("expression-statement"),
+            AstKind::ReturnStatement(statement) if statement.argument.is_none() => Some("return"),
+            _ => None,
+        };
+        if let Some(original) = removable {
+            self.operators.push(OperatorSite {
+                kind: MutationOperator::Statement,
+                span,
+                expression: OperatorExpression::Statement,
+                offset: span.start as usize,
+                original,
+                replacements: &[";"],
+                first_id: 0,
+            });
+        }
+        match node {
+            AstKind::Function(function) if function.r#async || function.generator => {
+                self.statement_excluded_functions.insert(span.start);
+            }
+            AstKind::ArrowFunctionExpression(function) if function.r#async => {
+                self.statement_excluded_functions.insert(span.start);
+            }
+            AstKind::MethodDefinition(method)
+                if method.kind == MethodDefinitionKind::Constructor =>
+            {
+                self.statement_excluded_functions
+                    .insert(method.value.span.start);
+            }
+            AstKind::CallExpression(call) if matches!(call.callee, Expression::Super(_)) => {
+                self.super_calls.push(call.span);
+            }
+            _ => {}
         }
         let reference_context = match node {
             AstKind::CallExpression(call) => Some(&call.callee),
@@ -1621,17 +1660,39 @@ impl Analysis {
                 result.scopes[i].complexity += 1;
             }
         }
-        result.operators.retain(|site| {
+        let mut operators = std::mem::take(&mut result.operators);
+        operators.retain(|site| {
             enabled.contains(&site.kind)
-                && (site.kind != MutationOperator::Boolean
-                    || (!source_type.is_typescript_definition()
-                        && !result.non_runtime.iter().any(|range| {
-                            range.start <= site.span.start && site.span.end <= range.end
+                && (!matches!(
+                    site.kind,
+                    MutationOperator::Boolean | MutationOperator::Statement
+                ) || (!source_type.is_typescript_definition()
+                    && !result
+                        .non_runtime
+                        .iter()
+                        .any(|range| range.start <= site.span.start && site.span.end <= range.end)))
+                && (site.kind != MutationOperator::Statement
+                    || (result
+                        .statement_owner(site.span.start)
+                        .is_some_and(|owner| {
+                            let scope = &result.scopes[owner];
+                            !scope.implicit
+                                && !result
+                                    .statement_excluded_functions
+                                    .contains(&scope.span.start)
+                        })
+                        && !result.super_calls.iter().any(|call| {
+                            site.span.start <= call.start && call.end <= site.span.end
                         })))
         });
-        result
-            .operators
-            .sort_by_key(|c| (c.span.start, std::cmp::Reverse(c.span.end)));
+        result.operators = operators;
+        result.operators.sort_by_key(|c| {
+            (
+                c.span.start,
+                std::cmp::Reverse(c.span.end),
+                c.kind != MutationOperator::Statement,
+            )
+        });
         let mut id = 0;
         for c in &mut result.operators {
             let mut offset = c.offset;
@@ -1652,7 +1713,7 @@ impl Analysis {
                     }
                 }
             }
-            if !source[offset..].starts_with(c.original) {
+            if c.kind != MutationOperator::Statement && !source[offset..].starts_with(c.original) {
                 return Err(format!("operator mismatch at {offset}"));
             }
             c.offset = offset;
@@ -1720,6 +1781,14 @@ impl Analysis {
                 .checked_sub(c.first_id)
                 .and_then(|i| c.replacements.get(i))
             {
+                if let OperatorExpression::Statement = c.expression {
+                    // An empty statement preserves bodies, labels and directive barriers.
+                    return Ok(format!(
+                        "{};{}",
+                        &source[..c.span.start as usize],
+                        &source[c.span.end as usize..]
+                    ));
+                }
                 if let OperatorExpression::LogicalNot = c.expression {
                     // Parentheses preserve the operand's grouping without converting its value.
                     return Ok(format!(
@@ -1818,10 +1887,11 @@ impl Analysis {
             start: u32,
             end: u32,
             id_offset: usize,
+            first_site: usize,
         ) -> Result<String, String> {
             let mut out = String::new();
             let mut cursor = start;
-            for c in &a.operators {
+            for (index, c) in a.operators.iter().enumerate().skip(first_site) {
                 if c.span.start < cursor || c.span.end > end {
                     continue;
                 }
@@ -1835,6 +1905,15 @@ impl Analysis {
                     out.push_str(a.statement_separator(c.span.start, start));
                 }
                 match c.expression {
+                    OperatorExpression::Statement => {
+                        let statement =
+                            render(a, source, c.span.start, c.span.end, id_offset, index + 1)?;
+                        // A block prevents a generated if from capturing an existing else.
+                        out.push_str(&format!(
+                            "{{ if (__seshat_active !== {}) {{\n{statement}\n;}} }}",
+                            c.first_id + id_offset
+                        ));
+                    }
                     OperatorExpression::BooleanLiteral => {
                         out.push_str(&format!(
                             "(__seshat_active === {} ? {} : {})",
@@ -1844,15 +1923,23 @@ impl Analysis {
                         ));
                     }
                     OperatorExpression::LogicalNot => {
-                        let argument = render(a, source, c.span.start + 1, c.span.end, id_offset)?;
+                        let argument = render(
+                            a,
+                            source,
+                            c.span.start + 1,
+                            c.span.end,
+                            id_offset,
+                            index + 1,
+                        )?;
                         out.push_str(&format!(
                             "(__seshat_active === {} ? ({argument}) : !({argument}))",
                             c.first_id + id_offset
                         ));
                     }
                     OperatorExpression::Binary { left, right } => {
-                        let left = render(a, source, left.start, left.end, id_offset)?;
-                        let right = render(a, source, right.start, right.end, id_offset)?;
+                        let left = render(a, source, left.start, left.end, id_offset, index + 1)?;
+                        let right =
+                            render(a, source, right.start, right.end, id_offset, index + 1)?;
                         if c.kind == MutationOperator::Logical {
                             // Inline arms preserve short-circuiting, await/yield and direct eval scope.
                             out.push_str(&format!("(__seshat_active === {} ? (({left}) {} ({right})) : (({left}) {} ({right})))",
@@ -1900,13 +1987,133 @@ impl Analysis {
         Ok(source[..start as usize].to_owned()
             + &prefix
             + helper
-            + &render(self, source, start, source.len() as u32, id_offset)?)
+            + &render(self, source, start, source.len() as u32, id_offset, 0)?)
     }
 
     pub fn json(&self) -> Value {
         json!({"scopes": self.scopes.iter().map(|s| json!({"name":s.name,"start":s.span.start,"end":s.span.end,"complexity":s.complexity,"cognitiveComplexity":s.cognitive_complexity,"implicit":s.implicit,"empty":s.empty,"typeSafety":s.type_safety})).collect::<Vec<_>>(),
             "typeSafety":self.type_safety(),
             "mutants": self.operators.iter().flat_map(|c| c.replacements.iter().enumerate().map(move |(i, op)| json!({"id":c.first_id+i,"kind":c.kind,"offset":c.offset,"original":c.original,"replacement":op}))).collect::<Vec<_>>()})
+    }
+}
+
+#[test]
+fn statement_candidates_use_function_statements_and_bare_returns() {
+    let source = "boot(); function f(flag: boolean) { 'use strict'; work(); if (flag) return; else other(); for (;;) { tick(); break; } label: last(); function nested() { inner(); } return value; }";
+    let analysis =
+        Analysis::inspect_with_operators("source.ts", source, &[MutationOperator::Statement])
+            .unwrap();
+    let facts = analysis.json();
+    let rows = facts["mutants"].as_array().unwrap();
+    assert_eq!(rows.len(), 6);
+    assert_eq!(
+        rows.iter()
+            .map(|row| row["original"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        [
+            "expression-statement",
+            "return",
+            "expression-statement",
+            "expression-statement",
+            "expression-statement",
+            "expression-statement"
+        ]
+    );
+    for (id, row) in rows.iter().enumerate() {
+        assert_eq!(row["id"], id);
+        assert_eq!(row["kind"], "statement");
+        assert_eq!(row["replacement"], ";");
+        let mutant = analysis.replace(source, id).unwrap();
+        assert_ne!(mutant, source);
+        Analysis::inspect("mutant.ts", &mutant).unwrap();
+    }
+    assert_eq!(
+        analysis.json(),
+        Analysis::inspect_with_operators("source.ts", source, &[MutationOperator::Statement])
+            .unwrap()
+            .json()
+    );
+    assert!(default_mutation_operators().contains(&MutationOperator::Statement));
+}
+
+#[test]
+fn statement_candidates_exclude_structural_and_suspending_code() {
+    for source in [
+        "boot(); class C { static { boot(); } }",
+        "function f() { 'use strict'; const value = 1; function nested() {} return value; }",
+        "function f() { return void work(); }",
+        "async function f() { work(); return; }",
+        "const f = async () => { work(); return; };",
+        "function* f() { yield 1; return; }",
+        "async function* f() { await work(); yield 1; return; }",
+        "class C { constructor() { work(); return; } }",
+        "class C extends B { constructor() { (() => { consume(super()); })(); } }",
+        "declare namespace Ambient { function f(): void; }",
+    ] {
+        assert_eq!(
+            Analysis::inspect_with_operators("source.ts", source, &[MutationOperator::Statement])
+                .unwrap()
+                .count(),
+            0,
+            "{source}"
+        );
+    }
+    for source in [
+        "async function outer() { function inner() { work(); } }",
+        "function* outer() { const inner = () => { work(); }; }",
+        "class C { constructor() { const inner = () => { work(); }; } }",
+        "class C extends B { method() { super.work(); } }",
+    ] {
+        assert_eq!(
+            Analysis::inspect_with_operators("source.ts", source, &[MutationOperator::Statement])
+                .unwrap()
+                .count(),
+            1,
+            "{source}"
+        );
+    }
+}
+
+#[test]
+fn statement_removal_preserves_syntax_and_statement_boundaries() {
+    for (source, expected) in [
+        (
+            "function f(){if(a)work();else other();}",
+            "function f(){if(a);else other();}",
+        ),
+        ("function f(){label: work();}", "function f(){label: ;}"),
+        (
+            "function f(){do work();while(a);}",
+            "function f(){do ;while(a);}",
+        ),
+        ("function f(){return\nwork();}", "function f(){;\nwork();}"),
+        (
+            "function f(){work()\n'use strict';}",
+            "function f(){;\n'use strict';}",
+        ),
+        (
+            "function f(){/* 🎸 */ work(/* retained outside */); next();}",
+            "function f(){/* 🎸 */ ; next();}",
+        ),
+    ] {
+        let analysis =
+            Analysis::inspect_with_operators("source.ts", source, &[MutationOperator::Statement])
+                .unwrap();
+        assert_eq!(analysis.replace(source, 0).unwrap(), expected, "{source}");
+        Analysis::inspect("mutant.ts", expected).unwrap();
+        Analysis::inspect("switched.ts", &analysis.switched(source).unwrap()).unwrap();
+    }
+    for source in [
+        "function f(){true}",
+        "function f(){if(a)true;else false;}",
+        "function f(){(()=>{!value;})();}",
+        "function f(){try{throw error;}finally{return;}}",
+        "function f(){switch(value){case 1: work(); break; default: other();}}",
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        let switched = analysis.switched_with_offset(source, 7).unwrap();
+        assert!(switched.contains("__seshat_active !== 7"), "{switched}");
+        Analysis::inspect("switched.ts", &switched).unwrap();
     }
 }
 

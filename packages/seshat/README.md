@@ -13,6 +13,7 @@ insufficiently tested code.
 - Changes comparison, logical, arithmetic and boolean expressions one at a time
   and checks whether tests detect them.
 - Replaces function bodies to find covered functions whose removal tests miss.
+- Removes expression statements and bare returns from eligible functions.
 - Runs tests in isolated copies of the captured project.
 - Produces readable terminal output and versioned JSON, with optional CI thresholds.
 - Supports explicit source selection, multiple test setups and parallel mutation workers.
