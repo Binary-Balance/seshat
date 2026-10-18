@@ -374,7 +374,7 @@ const expected = {
         {name: 'Tempo', covered: 1, total: 1, crap: 1},
       ],
     },
-    mutation: {planned: 5, killed: 4, survived: 1, unresolved: 0, score: 80},
+    mutation: {planned: 6, killed: 5, survived: 1, unresolved: 0, score: 5 / 6 * 100},
   },
   workspaces: {
     scope: ['packages/rules/index.ts', 'src/compare.ts'],
@@ -428,6 +428,11 @@ function assertExpected(name, report, workers) {
     `${name}: killed outcome count differs`);
   assert.equal(mutation.outcomes.filter(outcome => outcome.verdict === 'survived').length, mutation.survived,
     `${name}: survived outcome count differs`);
+  if (name === 'vitest') {
+    assert.deepEqual(mutation.outcomes.filter(outcome => outcome.kind === 'statement')
+      .map(({path, original, replacement, verdict}) => ({path: normalizedPath(path), original, replacement, verdict})),
+    [{path: 'src/server.ts', original: 'expression-statement', replacement: ';', verdict: 'killed'}]);
+  }
 }
 
 function stable(report) {

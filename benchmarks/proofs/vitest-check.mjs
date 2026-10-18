@@ -213,15 +213,18 @@ for (const name of ['stack','stack-repeat']) {
   assert.equal(result.complete,true,JSON.stringify(result));
   assert.equal(result.setups[0].baseline.report.passed,3);
   assert.equal(result.setups[0].coverage.report.passed,3);
-  assert.equal(result.mutation.planned,5);
-  assert.equal(result.mutation.killed,4);
+  assert.equal(result.mutation.planned,6);
+  assert.equal(result.mutation.killed,5);
   assert.equal(result.mutation.survived,1);
-  assert.equal(result.mutation.score,80);
+  assert.equal(result.mutation.score,5 / 6 * 100);
   assert.deepEqual(result.mutation.outcomes.filter(row=>row.kind==='comparison').map(row=>row.verdict),
     ['killed','killed','killed','killed']);
   assert.deepEqual(result.mutation.outcomes.filter(row=>row.kind==='boolean')
     .map(({path,original,replacement,verdict})=>({path,original,replacement,verdict})),
     [{path:'server.ts',original:'false',replacement:'true',verdict:'survived'}]);
+  assert.deepEqual(result.mutation.outcomes.filter(row=>row.kind==='statement')
+    .map(({path,original,replacement,verdict})=>({path,original,replacement,verdict})),
+    [{path:'server.ts',original:'expression-statement',replacement:';',verdict:'killed'}]);
   for (const source of result.sources) assert.deepEqual(source.result.functions.map(f=>[f.complexity,f.covered,f.total,f.crap]), expectedScores[source.path]);
   assert.ok(result.mutation.workerBaselines.every(b=>b.report.passed===3));
   if (name==='stack-repeat' && results.runs.stack) {
@@ -306,11 +309,14 @@ test('comparison',()=>expect(checked(1)).toBe(true));
   input.capture.push('control.ts','control.test.ts');
   const result = await check('timeout-continues', input);
   assert.deepEqual(result.pseudoTesting.outcomes.map(row=>row.verdict), ['timed-out','killed']);
-  assert.deepEqual(result.mutation.outcomes.map(row=>row.verdict), ['killed']);
+  assert.deepEqual(result.mutation.outcomes.map(row=>[row.kind,row.verdict]),
+    [['statement','timed-out'],['comparison','killed']]);
   assert.equal(result.complete, false);
   assert.equal(result.mutation.score, null);
   assert.equal(result.pseudoTesting.outcomes[0].setups[0].testTimedOut, true);
   assert.equal(result.pseudoTesting.diagnostics.unresolvedBreakdown.testTimedOut, 1);
+  assert.equal(result.mutation.outcomes[0].setups[0].testTimedOut, true);
+  assert.equal(result.mutation.diagnostics.unresolvedBreakdown.testTimedOut, 1);
   assert.equal(result.pseudoTesting.notRun, 0);
   assert.equal(result.mutation.notRun, 0);
 }

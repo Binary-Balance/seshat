@@ -63,6 +63,12 @@ candidates remain a separate phase when statement mutations or all operator
 mutations are disabled. A job deadline leaves the first statement mutant timed
 out, the remaining four not run and the mutation score withheld.
 
+The Vitest stack and public consumer examples additionally require the Fastify
+route-registration statement to be killed, alongside the existing expression
+mutants. The Vitest timeout-continuation control removes `done()`, requires a
+bounded runner-reported statement timeout, and still runs the later comparison.
+Both the extreme and statement timeout remain unresolved and withhold the score.
+
 ## Switching
 
 Experimental switching wraps each eligible statement in a block containing
