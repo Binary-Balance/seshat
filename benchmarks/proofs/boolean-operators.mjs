@@ -176,7 +176,8 @@ const originals = {
 };
 for (const [path,source] of Object.entries(originals)) writeFileSync(join(project,path),source);
 const oldFamilies = ['comparison','logical','arithmetic'];
-const allFamilies = [...oldFamilies,'boolean'];
+const booleanFamilies = [...oldFamilies,'boolean'];
+const allFamilies = [...booleanFamilies,'statement'];
 const config = {source:{include:['*.ts']},capture:Object.keys(originals),setups:[{
   name:'node',runner:'node',cwd:'.',timeoutMs:10000,
   typecheck:[process.execPath,join(repo,'benchmarks/node_modules/typescript/bin/tsc'),'--ignoreConfig','--strict','--noEmit','--skipLibCheck','boolean.ts','comparison.ts'],
@@ -196,12 +197,12 @@ function assess(name, operators, switching = false, workers = 1, status = 0) {
   assert.equal(report.complete,status === 0,JSON.stringify(report));
   assert.deepEqual(result.enabledOperators,operators ?? allFamilies);
   const enabled = operators ?? allFamilies;
-  const planned = (enabled.includes('boolean') ? 4 : 0) + (enabled.includes('comparison') ? 2 : 0);
+  const planned = (enabled.includes('boolean') ? 4 : 0) + (enabled.includes('comparison') ? 2 : 0) + (enabled.includes('statement') ? 1 : 0);
   assert.equal(result.planned,planned);
   assert.equal(result.completed,status === 0 ? planned : 1);
   assert.equal(result.notRun,status === 0 ? 0 : planned - 1);
   assert.equal(result.jobsAttempted,status === 0 ? planned : 1);
-  assert.equal(result.survived,status === 0 && enabled.includes('boolean') ? 1 : 0);
+  assert.equal(result.survived,status === 0 ? Number(enabled.includes('boolean')) + Number(enabled.includes('statement')) : 0);
   assert.equal(report.result.pseudoTesting.planned,5);
   for (const key of ['planned','completed','jobsAttempted']) {
     assert.equal(result.perOperator.reduce((sum,row) => sum + row[key],0),result[key]);
@@ -227,8 +228,10 @@ const stable = result => result.outcomes.map(({id,localId,path,offset,kind,origi
 const replacement = assess('default-replacement');
 assert.deepEqual(stable(assess('default-switching',undefined,true)),stable(replacement));
 const booleanRows = stable(replacement).filter(row => row.kind === 'boolean');
-assert.deepEqual(stable(assess('boolean-only-parallel',['boolean'],false,2)),booleanRows);
-assert.deepEqual(stable(assess('boolean-switching-parallel',['boolean'],true,2)),booleanRows);
+const isolated = assess('boolean-only-parallel',['boolean'],false,2);
+const coordinates = rows => rows.map(({id,localId,...row}) => row);
+assert.deepEqual(coordinates(stable(isolated)),coordinates(booleanRows));
+assert.deepEqual(stable(assess('boolean-switching-parallel',['boolean'],true,2)),stable(isolated));
 assess('no-operators',[]);
 const samples = Number(process.env.SESHAT_OPERATOR_SAMPLES ?? 1);
 assert(Number.isInteger(samples) && samples >= 1 && samples <= 7);
@@ -236,7 +239,7 @@ for (let sample = 0; sample < samples; sample++) {
   for (const switching of sample % 2 === 0 ? [false,true] : [true,false]) {
     for (const enabled of sample % 2 === 0 ? [false,true] : [true,false]) {
       assess('cost-' + (enabled ? 'on' : 'off') + '-' + (switching ? 'switch' : 'replace') + '-' + sample,
-        enabled ? undefined : oldFamilies,switching);
+        enabled ? booleanFamilies : oldFamilies,switching);
     }
   }
 }

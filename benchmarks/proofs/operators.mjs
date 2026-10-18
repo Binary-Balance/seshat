@@ -70,15 +70,16 @@ for (const [name, source, expected, mutants] of cases) {
   const replacement = join(work, `${name}-replacement.ts`);
   writeFileSync(input, source);
   const facts = invoke(proof, ['inspect', input]);
+  const sites = facts.mutants.filter(row => row.kind !== 'statement');
   invoke(proof, ['prepare', input, prepared]);
   const switched = readFileSync(prepared, 'utf8');
   assert.deepEqual(await evaluate(source), {value: JSON.stringify(expected)}, `${name}: original`);
   assert.deepEqual(await evaluate(switched), await evaluate(source), `${name}: inactive`);
-  if (mutants) assert.equal(facts.mutants.length, mutants.length, name);
-  for (const row of facts.mutants) {
+  if (mutants) assert.equal(sites.length, mutants.length, name);
+  for (const [index, row] of sites.entries()) {
     invoke(proof, ['replace', input, replacement, String(row.id)]);
     const result = await evaluate(readFileSync(replacement, 'utf8'));
-    if (mutants) assert.deepEqual(result, {value: JSON.stringify(mutants[row.id])}, `${name}: mutant ${row.id}`);
+    if (mutants) assert.deepEqual(result, {value: JSON.stringify(mutants[index])}, `${name}: mutant ${row.id}`);
     assert.deepEqual(await evaluate(switched, row.id), result, `${name}: switching ${row.id}`);
     semanticMutants++;
   }
@@ -131,9 +132,9 @@ function assess(name, operators, switching = false, workers = 1) {
   assert.equal(report.complete, true, JSON.stringify(report));
   assert.equal(report.schemaVersion, 1);
   const result = report.result.mutation;
-  const enabled = operators ?? ['comparison', 'logical', 'arithmetic', 'boolean'];
+  const enabled = operators ?? ['comparison', 'logical', 'arithmetic', 'boolean', 'statement'];
   assert.deepEqual(result.enabledOperators, enabled);
-  const counts = {comparison: 2, logical: 3, arithmetic: 5, boolean: 2};
+  const counts = {comparison: 2, logical: 3, arithmetic: 5, boolean: 2, statement: 0};
   const planned = enabled.reduce((sum, family) => sum + counts[family], 0);
   assert.equal(result.planned, planned);
   assert.equal(result.completed, planned);
@@ -142,7 +143,7 @@ function assess(name, operators, switching = false, workers = 1) {
   assert.equal(result.jobsAttempted, planned);
   assert.equal(result.workersUsed, Math.min(workers, planned));
   const equivalent = result.outcomes.filter(row => row.verdict === 'survived');
-  assert.equal(equivalent.length, enabled.reduce((sum, family) => sum + ({comparison: 0, logical: 1, arithmetic: 1, boolean: 2})[family], 0));
+  assert.equal(equivalent.length, enabled.reduce((sum, family) => sum + ({comparison: 0, logical: 1, arithmetic: 1, boolean: 2, statement: 0})[family], 0));
   assert.ok(equivalent.every(row => originals[row.path].slice(0, row.offset).split('function ').at(-1).startsWith('equivalent')));
   assert.equal(result.score, planned === 0 ? null : (planned - equivalent.length) / planned * 100);
   for (const key of ['planned', 'completed', 'jobsAttempted']) {
@@ -187,6 +188,15 @@ assert.ifError(booleanRun.error);
 assert.equal(booleanRun.status, 0, booleanRun.stdout + booleanRun.stderr);
 process.stdout.write(booleanRun.stdout);
 const booleanProof = JSON.parse(readFileSync(booleanOutput, 'utf8'));
+const statementOutput = join(work, 'statement.json');
+const statementRun = spawnSync(process.execPath, [join(here, 'statement-operators.mjs')], {
+  encoding: 'utf8', timeout: 300000 * samples,
+  env: {...process.env, SESHAT_CLI_BINARY: binary, SESHAT_PROOF_BINARY: proof, SESHAT_PROOF_OUTPUT: statementOutput},
+});
+assert.ifError(statementRun.error);
+assert.equal(statementRun.status, 0, statementRun.stdout + statementRun.stderr);
+process.stdout.write(statementRun.stdout);
+const statementProof = JSON.parse(readFileSync(statementOutput, 'utf8'));
 const output = resolve(process.env.SESHAT_PROOF_OUTPUT ?? join(work, 'operators.json'));
 // Source identities and all execution paths in retained evidence must be portable.
 const portable = JSON.stringify({environment: {node: process.version, platform: process.platform, arch: process.arch},
@@ -197,7 +207,7 @@ const portable = JSON.stringify({environment: {node: process.version, platform: 
   fixtureHashes: Object.fromEntries(Object.entries(originals).map(([path, source]) => [path, createHash('sha256').update(source).digest('hex')])),
   equivalentMutants: {logical: {count: 1, planned: 3}, arithmetic: {count: 1, planned: 5}, boolean: {count: 2, planned: 2},
     basis: 'Hand-checked constant expressions false && false and 4 + 0. These are fixture rates, not automatic equivalence detection or a population estimate.'},
-  samples, reports, booleanProof}, (_, value) => typeof value === 'string'
+  samples, reports, booleanProof, statementProof}, (_, value) => typeof value === 'string'
     ? value.replaceAll(work, '<work>').replaceAll(repo, '<repo>')
       .replaceAll(work.replaceAll('\\', '/'), '<work>').replaceAll(repo.replaceAll('\\', '/'), '<repo>')
     : value, 2);
