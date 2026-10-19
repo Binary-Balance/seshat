@@ -21,10 +21,10 @@
   "cli": {
     "source": "executable",
     "version": "seshat 0.7.0",
-    "binarySha256": "396bbda4aec8b0f8df1bc2716422d1bd94ccf5079815b48953403f2c7de724b7"
+    "binarySha256": "b3c133c84ed05459a646f4a421011f3be88285ebb3d5db2955e6b5c8b72b1781"
   },
   "snapshotVerification": {
-    "binarySha256": "396bbda4aec8b0f8df1bc2716422d1bd94ccf5079815b48953403f2c7de724b7",
+    "binarySha256": "b3c133c84ed05459a646f4a421011f3be88285ebb3d5db2955e6b5c8b72b1781",
     "embeddedAdapters": [
       {
         "path": "benchmarks/proofs/jest-expo-environment.cjs",
@@ -38,7 +38,7 @@
     "rustHookKillRuleVerified": true,
     "aggregateErrorGuardVerified": true,
     "ownRustRegressionPassed": true,
-    "selectionStringPresent": false
+    "selectionStringPresent": true
   },
   "reproduce": "node benchmarks/proofs/jest-expo-check.mjs --cli <built-seshat> --deps <prepared-fixture>",
   "validation": {
@@ -82,7 +82,7 @@
     "benchmarks/proofs/fixtures/jest-expo/package-lock.json": "faa1afe1d3451f4051f25137794a88ed9f1d5fac0408dd7aea03c0aad334fa72"
   },
   "additionalChecks": {
-    "rustTests": 146,
+    "rustTests": 148,
     "adapterGuards": "passed",
     "reporterIdentity": "passed",
     "cli": {
@@ -94,9 +94,7 @@
         "from": 3000,
         "to": 10000
       },
-      "originalLimit": "The stock 3000 ms fixture deadline expired during coverage before mutation. A focused 10000 ms control completed coverage in 3056 ms and returned timed-out, not-run.",
-      "reusedFrom": "ffb8e06983dc8c84bdcfd817e43e2c76b07ca2a1",
-      "reuseReason": "The review fixes change only the Jest adapters and checks; the CLI scenarios use the Node runner."
+      "originalLimit": "The stock 3000 ms fixture deadline expired during coverage before mutation. A focused 10000 ms control completed coverage in 3056 ms and returned timed-out, not-run."
     }
   },
   "before": {
@@ -2184,7 +2182,7 @@
   },
   "limits": [
     "Local Linux x64 source executable; native package/platform CI and fresh review are separate.",
-    "No whole-file test selection changes from issue #181."
+    "Built with #181's whole-file Vitest selection; every Jest mutant job used the full test command."
   ],
   "reviewFix": [
     {
@@ -2729,5 +2727,17 @@
         }
       }
     }
-  ]
+  ],
+  "rebase": {
+    "onto": "0c7af07fbf07cad3a190aa98b0f8b34fcaa9e27d",
+    "note": "Rebased onto #183. The Rust tests, every Jest case and the CLI scenarios were rerun on the rebased binary. Every Jest outcome summary matches the pre-rebase evidence.",
+    "previousBinarySha256": "396bbda4aec8b0f8df1bc2716422d1bd94ccf5079815b48953403f2c7de724b7",
+    "jestSelection": [
+      {
+        "mode": "full",
+        "reason": "unsupported-runner",
+        "setups": 37
+      }
+    ]
+  }
 }
