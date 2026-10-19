@@ -215,9 +215,12 @@ A complete, valid Jest receipt with exit `1` and failed tests can produce
 come from a failed test's `beforeEach` or `afterEach` hook. This includes
 Testing Library's automatic unmount cleanup. The adapter matches hook error
 objects to that test's final errors before serialization and reconciles the
-observed passed and failed test counts with Jest's results. Suite hooks such as
-`beforeAll` and `afterAll`, file-load failures, unhandled errors, retries and
-missing or inconsistent observations remain execution errors.
+observed passed and failed test counts with Jest's results. Errors that Jest
+adds to a test without a failure event, such as an `expect.assertions` count or
+an uncaught error during the test, join a failure that test already has; on
+their own they remain execution errors. Suite hooks such as `beforeAll` and
+`afterAll`, file-load failures, errors outside any test, retries and missing or
+inconsistent observations remain execution errors.
 
 The private Jest receipt retains aggregate `errors` and adds `testHookErrors`,
 a non-negative integer counting only those matched hook errors. Rust accepts

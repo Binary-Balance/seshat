@@ -36,8 +36,7 @@ try {
     for (const {kind, hook = 'afterEach', attached = true, observed = true} of failures) {
       const error = new Error(kind);
       if (attached) test.errors.push([error, new Error('registration')]);
-      if (kind === 'unhandled') state.unhandledErrors.push(error);
-      else if (observed) await environment.handleTestEvent(kind === 'assertion'
+      if (observed) await environment.handleTestEvent(kind === 'assertion'
         ? {name:'test_fn_failure', test, error}
         : {name:'hook_failure', hook:{type:hook}, test:hook.endsWith('Each') ? test : undefined, error}, state);
     }
@@ -63,6 +62,12 @@ try {
   assert.equal(mixed.failed, 1, 'count failed tests, not failure events');
   assert.equal(mixed.errors, 2);
   assert.equal(mixed.testHookErrors, 2);
+  // Errors Jest adds at test_done, such as expect.assertions counts, join the test's own failure.
+  const assertionCount = await receipt([{kind:'assertion'}, {kind:'unknown', observed:false}]);
+  assert.equal(assertionCount.errors, 0, JSON.stringify(assertionCount));
+  const cleanupCount = await receipt([{kind:'assertion'}, {kind:'cleanup'}, {kind:'unknown', observed:false}]);
+  assert.equal(cleanupCount.errors, 1, JSON.stringify(cleanupCount));
+  assert.equal(cleanupCount.testHookErrors, 1);
   for (const hook of ['beforeEach', 'afterEach']) {
     const report = await receipt([{kind:'hook', hook}]);
     assert.equal(report.failed, 1);
@@ -73,8 +78,8 @@ try {
     [{kind:'suite', hook:'beforeAll'}],
     [{kind:'suite', hook:'afterAll', attached:false}],
     [{kind:'cleanup', attached:false}],
-    [{kind:'assertion'}, {kind:'cleanup'}, {kind:'unknown', observed:false}],
-    [{kind:'assertion'}, {kind:'cleanup'}, {kind:'unhandled', attached:false}],
+    [{kind:'unknown', observed:false}],
+    [{kind:'assertion'}, {kind:'cleanup'}, {kind:'suite', hook:'afterAll', attached:false}],
   ]) {
     const report = await receipt(failures);
     assert.ok(report.errors > report.testHookErrors, JSON.stringify(report));

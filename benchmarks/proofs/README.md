@@ -1310,6 +1310,8 @@ count is `classify` CRAP 2, `isPositive` CRAP 1 and `statusCard` CRAP 1. Four
 comparison mutants produce three kills and one intentional boundary survivor,
 for a 75% score, with the same result for one and two workers and on repeat.
 The assertion-kill and survivor controls produce 100% and 0% respectively.
+`expect-assertions` is also killed: its early assertion failure gains Jest's
+assertion-count error, which joins that test's own failure.
 Per-test `beforeEach` and `afterEach` failures, including mixed assertion and
 cleanup failures, count as kills when all errors are attributable to the failed
 tests. Suite hooks, import failures, mixed test-hook and suite/load failures,
@@ -1332,8 +1334,9 @@ hook errors, so it must stop scheduling and leave the next mutant `not-run`.
 
 The private environment sidecar uses version 2. It counts passed and failed
 `test_done` events and matches error objects to `beforeEach`/`afterEach` failure
-events for the same test. Unmatched test errors, unhandled errors and retries
-remain separate evidence. The reporter checks each file's counts against Jest,
+events for the same test. Unmatched errors join a failure their test already
+owns; otherwise they, errors outside any test and retries remain separate
+evidence. The reporter checks each file's counts against Jest,
 then the run totals. The main version-1 receipt adds `testHookErrors` without
 subtracting anything from aggregate `errors`. Rust requires equality of those
 counts before it permits a failed Jest job with errors. Other runner receipts

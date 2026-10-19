@@ -32,7 +32,7 @@ for (const [name, args] of [
   ['node-load-failure', []],
   ['jest-hook-errors', []],
   ['jest-expo-check', ['--tarball', payload.tarball, '--deps', jestDeps,
-    '--cases', 'normal-1,assertion-kill,survivor,before-all,automatic-cleanup,mixed-load-hook,import-failure,test-timeout,hook-timeout']],
+    '--cases', 'normal-1,assertion-kill,expect-assertions,survivor,before-all,automatic-cleanup,mixed-load-hook,import-failure,test-timeout,hook-timeout']],
   ['vitest-check', ['--tarball', payload.tarball, '--deps', join(repo, 'benchmarks/proofs'),
     '--cases', 'stack,assertion,survived,before-all,import-error,timeout,hook-timeout']],
 ]) {

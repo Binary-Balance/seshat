@@ -58,6 +58,7 @@ const defaultCases = [
   'normal-2',
   'nested-root',
   'assertion-kill',
+  'expect-assertions',
   'survivor',
   'before-all',
   'after-all',
@@ -456,6 +457,8 @@ if (shouldRun('nested-root')) {
 
 const controls = [
   ['assertion-kill', "test('assertion',()=>expect(ready).toBe(true));", 'killed'],
+  // Jest adds the assertion-count error at test_done, without a failure event.
+  ['expect-assertions', "test('assertions',()=>{expect.assertions(2);expect(ready).toBe(true);expect(1).toBe(1);});", 'killed'],
   ['survivor', "test('survivor',()=>expect(typeof ready).toBe('boolean'));", 'survived'],
   ['before-all', "beforeAll(()=>{if(!ready)throw Error('setup');});test('blocked',()=>{});", 'execution-error'],
   ['after-all', "afterAll(()=>{if(!ready)throw Error('cleanup');});test('passes',()=>{});", 'execution-error'],

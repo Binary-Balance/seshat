@@ -38,18 +38,23 @@ module.exports = class EvidenceEnvironment extends Base {
       const test = event.test;
       this.evidence[test.errors.length ? 'failed' : 'passed']++;
       const failures = this.failures.get(test) ?? [];
+      let matched = 0, unmatched = 0;
       // Match error objects before serialization; totals or stack text cannot prove attribution.
       for (const entry of test.errors) {
         const error = Array.isArray(entry) ? entry[0] : entry;
         const index = failures.findIndex(failure => failure.error === error);
-        if (index < 0) this.evidence.unattributedErrors++;
-        else if (failures.splice(index, 1)[0].testHook) this.evidence.testHookErrors++;
+        if (index < 0) { unmatched++; continue; }
+        matched++;
+        if (failures.splice(index, 1)[0].testHook) this.evidence.testHookErrors++;
       }
+      // Jest adds expect.assertions, suppressed and uncaught errors to the running
+      // test without a failure event. They join a failure the test already owns,
+      // as before #182; on their own they prove nothing.
+      if (!matched) this.evidence.unattributedErrors += unmatched;
       this.evidence.unattributedErrors += failures.length;
       this.failures.delete(test);
     }
     if (event.name === 'run_finish') {
-      this.evidence.unattributedErrors += state.unhandledErrors.length;
       const key = createHash('sha256').update(this.evidence.file).digest('hex');
       writeFileSync(`${process.env.SESHAT_RECEIPT}.events-${key}`, JSON.stringify(this.evidence), {flag:'wx'});
     }
