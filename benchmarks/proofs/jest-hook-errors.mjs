@@ -68,6 +68,10 @@ try {
   const cleanupCount = await receipt([{kind:'assertion'}, {kind:'cleanup'}, {kind:'unknown', observed:false}]);
   assert.equal(cleanupCount.errors, 1, JSON.stringify(cleanupCount));
   assert.equal(cleanupCount.testHookErrors, 1);
+  // Jest copies a beforeAll timeout onto each test below it; it stays one timeout.
+  const suiteTimeout = await receipt([{kind:'Exceeded timeout of 25 ms for a hook', hook:'beforeAll'}]);
+  assert.equal(suiteTimeout.errors, 0, JSON.stringify(suiteTimeout));
+  assert.equal(suiteTimeout.timeouts, 1);
   for (const hook of ['beforeEach', 'afterEach']) {
     const report = await receipt([{kind:'hook', hook}]);
     assert.equal(report.failed, 1);

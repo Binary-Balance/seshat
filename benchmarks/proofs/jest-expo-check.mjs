@@ -72,6 +72,7 @@ const defaultCases = [
   'import-failure',
   'test-timeout',
   'hook-timeout',
+  'before-all-timeout',
   'missing-events',
   'missing-receipt',
   'retry-eventually-passes',
@@ -514,6 +515,21 @@ if (shouldRun('mixed-load-hook')) {
     source:'export const ready = 1 === 1;\nexport const later = 2 === 2;\n',
     body:"afterEach(()=>{if(!ready)throw Error('cleanup');});test('assertion',()=>expect(ready).toBe(true));",
     extraFiles:{'tests/load-failure.test.tsx':"import {ready} from '../src/control';\nif(!ready)throw Error('file load failed');test('loaded',()=>{});\n"},
+  });
+}
+if (shouldRun('before-all-timeout')) {
+  const config = configFor({source:'src/control.ts', test:'tests/control.test.tsx'});
+  await check('before-all-timeout', config, {assert:value => {
+    // Jest copies the timeout onto each test without an event; the next mutant must still run.
+    assert.deepEqual(value.mutation.outcomes.map(row => row.verdict), ['timed-out', 'survived']);
+    const job = value.mutation.outcomes[0].setups[0];
+    assert.equal(job.exit, 1);
+    assert.equal(job.report.failed, 2);
+    assert.equal(job.report.errors, 0);
+    assert.equal(job.report.timeouts, 1);
+  }}, {
+    source:'export const ready = 1 === 1;\nexport const later = 2 === 2;\n',
+    body:"beforeAll(()=>ready?Promise.resolve():new Promise(()=>{}),25);test('blocked',()=>{});test('also blocked',()=>{});",
   });
 }
 for (const [name, body, verdict] of controls) {

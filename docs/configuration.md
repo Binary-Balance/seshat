@@ -460,10 +460,10 @@ execution errors, and cleanup succeeds. Later extreme and operator mutants still
 run. A timeout receipt with additional errors still stops scheduling.
 
 A complete Jest receipt with exit `1`, valid counts, failed tests and no test
-timeouts can count as a kill when every reported error is matched to a failing
-test's `beforeEach` or `afterEach` hook. Testing Library's automatic cleanup is
-covered. Suite-hook, file-load, unhandled and infrastructure errors remain
-execution errors and stop scheduling. See the
+timeouts can count as a kill when every reported error is attributed to a
+failing test's `beforeEach` or `afterEach` hook. Testing Library's automatic
+cleanup is covered. Suite-hook, file-load and infrastructure errors, and errors
+outside any test, remain execution errors and stop scheduling. See the
 [receipt and verdict rules](report-format.md#setup-jobs-and-evidence).
 Original and worker baselines must pass before any mutants run.
 
