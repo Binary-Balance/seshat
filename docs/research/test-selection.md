@@ -30,9 +30,15 @@ then run:
 
 ```sh
 node --test benchmarks/proofs/vitest-file-coverage.test.mjs
-SESHAT_PROOF_OUTPUT=outputs/test-selection.json \
+SESHAT_PROOF_OUTPUT=work/test-selection.json \
   node benchmarks/proofs/test-selection.mjs
 ```
+
+The committed [evidence](../../outputs/test-selection.json) merges two runs of
+this command, before and after the raw-identity guard. Instead of the script's
+single `binarySha256`, it records each case's binary hash, plus
+`samplesPerCase`, `validation`, `queryBeforeFix`, `selectionModes` and
+`fallbackReasons`. A rerun writes a fresh single-run report without them.
 
 The portable report retains matched outcomes, actual job counts and the existing
 phase and mutation timing fields. Raw receipts remain in the ignored proof work
