@@ -32,6 +32,8 @@ const baseFiles = [
   'jest.config.cjs',
   'src/status.tsx',
   'tests/status.test.tsx',
+  'src/session.ts',
+  'tests/automatic-cleanup.test.tsx',
 ];
 const fixtureBytes = Object.fromEntries(baseFiles.map(path => [path, readFileSync(join(fixture, path))]));
 
@@ -58,9 +60,13 @@ const defaultCases = [
   'assertion-kill',
   'survivor',
   'before-all',
+  'after-all',
   'before-each',
   'after-each',
   'mixed-assertion-hook',
+  'automatic-cleanup',
+  'mixed-load-hook',
+  'mixed-suite-hook',
   'import-failure',
   'test-timeout',
   'hook-timeout',
@@ -128,6 +134,7 @@ function resetProject(dependencyRoot) {
   removeIfPresent(join(project, 'src/control.ts'));
   removeIfPresent(join(project, 'tests/control.test.tsx'));
   removeIfPresent(join(project, 'conditional-environment.cjs'));
+  removeIfPresent(join(project, 'tests/load-failure.test.tsx'));
   copyBaseProject(dependencyRoot);
 }
 
@@ -140,6 +147,8 @@ function fixtureVersions(root) {
     '@react-native/jest-preset',
     'babel-preset-expo',
     'react',
+    'react-test-renderer',
+    '@testing-library/react-native',
     'typescript',
   ];
   return Object.fromEntries(names.map(name => [
@@ -208,8 +217,7 @@ function configFor({source, test, workers = 1, testArgs = jestArgs(test), timeou
   };
 }
 
-function writeControl(body, extraFiles = {}) {
-  const source = 'export const ready = 1 === 1;\n';
+function writeControl(body, extraFiles = {}, source = 'export const ready = 1 === 1;\n') {
   const test = `import {ready} from '../src/control';\n${body}\n`;
   writeFileSync(join(project, 'src/control.ts'), source);
   writeFileSync(join(project, 'tests/control.test.tsx'), test);
@@ -318,6 +326,8 @@ assert.deepEqual(environment.tools, {
   '@react-native/jest-preset': '0.86.3',
   'babel-preset-expo': '57.0.10',
   react: '19.2.3',
+  'react-test-renderer': '19.2.3',
+  '@testing-library/react-native': '13.3.3',
   typescript: '6.0.3',
 });
 
@@ -375,7 +385,7 @@ const shouldRun = name => wanted.has(name);
 
 async function check(name, config, expected, control = null) {
   resetProject(dependencyRoot);
-  const expectedControl = control ? writeControl(control.body, control.extraFiles ?? {}) : null;
+  const expectedControl = control ? writeControl(control.body, control.extraFiles ?? {}, control.source) : null;
   writeJson(configPath, config);
   const execution = await runProcess(cli, [
     'check', '--config', configPath, '--scratch', scratch, '--json', '--no-progress',
@@ -448,13 +458,58 @@ const controls = [
   ['assertion-kill', "test('assertion',()=>expect(ready).toBe(true));", 'killed'],
   ['survivor', "test('survivor',()=>expect(typeof ready).toBe('boolean'));", 'survived'],
   ['before-all', "beforeAll(()=>{if(!ready)throw Error('setup');});test('blocked',()=>{});", 'execution-error'],
-  ['before-each', "beforeEach(()=>{if(!ready)throw Error('setup');});test('blocked',()=>{});", 'execution-error'],
-  ['after-each', "afterEach(()=>{if(!ready)throw Error('cleanup');});test('passes',()=>{});", 'execution-error'],
-  ['mixed-assertion-hook', "afterEach(()=>{if(!ready)throw Error('cleanup');});test('assertion',()=>expect(ready).toBe(true));", 'execution-error'],
+  ['after-all', "afterAll(()=>{if(!ready)throw Error('cleanup');});test('passes',()=>{});", 'execution-error'],
+  ['before-each', "beforeEach(()=>{if(!ready)throw Error('setup');});test('blocked',()=>{});", 'killed'],
+  ['after-each', "afterEach(()=>{if(!ready)throw Error('cleanup');});test('passes',()=>{});", 'killed'],
+  ['mixed-assertion-hook', "afterEach(()=>{if(!ready)throw Error('cleanup');});test('assertion',()=>expect(ready).toBe(true));", 'killed'],
+  ['mixed-suite-hook', "afterEach(()=>{if(!ready)throw Error('cleanup');});afterAll(()=>{if(!ready)throw Error('suite cleanup');});test('assertion',()=>expect(ready).toBe(true));", 'execution-error'],
   ['import-failure', "if(!ready)throw Error('load');test('blocked',()=>{});", 'execution-error'],
   ['test-timeout', "test('timeout',()=>ready?Promise.resolve():new Promise(()=>{}),25);", 'timed-out'],
   ['hook-timeout', "beforeEach(()=>ready?Promise.resolve():new Promise(()=>{}),25);test('blocked',()=>{});", 'timed-out'],
 ];
+
+if (shouldRun('automatic-cleanup')) {
+  const config = configFor({source: 'src/session.ts', test: 'tests/automatic-cleanup.test.tsx'});
+  await check('automatic-cleanup', config, {assert: value => {
+    const extreme = value.pseudoTesting.outcomes.find(row => row.name === 'start');
+    assert.ok(extreme, JSON.stringify(value.pseudoTesting));
+    assert.equal(extreme.verdict, 'killed');
+    const job = extreme.setups[0];
+    assert.equal(job.exit, 1);
+    assert.equal(job.report.complete, true);
+    assert.equal(job.report.failed, 1);
+    assert.equal(job.report.errors, 1);
+    assert.equal(job.report.testHookErrors, 1);
+    assert.equal(value.complete, true);
+    assert.equal(value.pseudoTesting.complete, true);
+    assert.equal(value.pseudoTesting.outcomes.find(row => row.name === 'isPositive').verdict, 'killed');
+    assert.equal(value.mutation.complete, true);
+    assert.ok(value.mutation.outcomes.length > 0);
+    assert.ok(value.mutation.outcomes.every(row => ['killed', 'survived'].includes(row.verdict)));
+    assert.equal(value.mutation.diagnostics.unresolvedBreakdown.notRun, 0);
+  }});
+}
+
+if (shouldRun('mixed-load-hook')) {
+  const config = configFor({source:'src/control.ts', test:'tests/control.test.tsx',
+    testArgs:[...jestArgs('tests/control.test.tsx'), 'tests/load-failure.test.tsx']});
+  await check('mixed-load-hook', config, {assert:value => {
+    assert.equal(value.setups[0].baseline.state, 'passed');
+    assert.equal(value.setups[0].baseline.report.passed, 2);
+    assert.equal(value.complete, false);
+    assert.equal(value.mutation.score, null);
+    assert.deepEqual(value.mutation.outcomes.map(row => row.verdict), ['execution-error', 'not-run']);
+    const job = value.mutation.outcomes[0].setups[0];
+    assert.equal(job.exit, 1);
+    assert.equal(job.report.failed, 1);
+    assert.equal(job.report.testHookErrors, 1);
+    assert.ok(job.report.errors > job.report.testHookErrors);
+  }}, {
+    source:'export const ready = 1 === 1;\nexport const later = 2 === 2;\n',
+    body:"afterEach(()=>{if(!ready)throw Error('cleanup');});test('assertion',()=>expect(ready).toBe(true));",
+    extraFiles:{'tests/load-failure.test.tsx':"import {ready} from '../src/control';\nif(!ready)throw Error('file load failed');test('loaded',()=>{});\n"},
+  });
+}
 for (const [name, body, verdict] of controls) {
   if (!shouldRun(name)) continue;
   const config = configFor({source: 'src/control.ts', test: 'tests/control.test.tsx', workers: 1});
@@ -462,7 +517,7 @@ for (const [name, body, verdict] of controls) {
     assert: value => assertControl(value, {
       baseline: 'passed',
       verdict,
-      mutantState: name === 'assertion-kill' ? 'failed' : name === 'survivor' ? 'passed'
+      mutantState: verdict === 'killed' ? 'failed' : name === 'survivor' ? 'passed'
         : verdict === 'timed-out' ? 'timed-out' : 'execution-error',
     }),
   }, {body});
@@ -483,8 +538,8 @@ const {createHash}=require('node:crypto');
 const projectRequire=createRequire(join(process.cwd(),'package.json'));
 const Base=projectRequire(projectRequire('jest-expo/jest-preset').testEnvironment);
 module.exports=class ConditionalEnvironment extends Base {
-  constructor(config,context){super(config,context);this.file=context.testPath;this.omit=process.env.SESHAT_EXECUTION_ID.includes('-mutant-');this.evidence={version:1,executionId:process.env.SESHAT_EXECUTION_ID,file:this.file,hookFailures:0,testFailures:0,timeouts:0,retries:0};}
-  async handleTestEvent(event,state){await super.handleTestEvent?.(event,state);if(event.name==='test_retry')this.evidence.retries++;if(event.name==='hook_failure'||event.name==='test_fn_failure'){const message=typeof event.error==='string'?event.error:event.error?.message;if(message?.startsWith('Exceeded timeout of'))this.evidence.timeouts++;else if(event.name==='hook_failure')this.evidence.hookFailures++;else this.evidence.testFailures++;}if(event.name==='run_finish'&&!this.omit){const key=createHash('sha256').update(this.file).digest('hex');writeFileSync(process.env.SESHAT_RECEIPT+'.events-'+key,JSON.stringify(this.evidence),{flag:'wx'});}}
+  constructor(config,context){super(config,context);this.file=context.testPath;this.omit=process.env.SESHAT_EXECUTION_ID.includes('-mutant-');this.evidence={version:2,executionId:process.env.SESHAT_EXECUTION_ID,file:this.file,hookFailures:0,testHookErrors:0,passed:0,failed:0,unattributedErrors:0,timeouts:0,retries:0};}
+  async handleTestEvent(event,state){await super.handleTestEvent?.(event,state);if(event.name==='test_done')this.evidence[event.test.errors.length?'failed':'passed']++;if(event.name==='run_finish'&&!this.omit){const key=createHash('sha256').update(this.file).digest('hex');writeFileSync(process.env.SESHAT_RECEIPT+'.events-'+key,JSON.stringify(this.evidence),{flag:'wx'});}}
 };\n`;
 if (shouldRun('missing-events')) {
   await check('missing-events', missingEvents, {
@@ -512,7 +567,7 @@ if (shouldRun('retry-eventually-passes')) {
     assert: value => assertControl(value, {baseline: 'passed', verdict: 'execution-error', mutantState: 'execution-error'}),
   }, {body: "jest.retryTimes(1);let attempts=0;test('retry',()=>{attempts++;if(!ready&&attempts===1)throw Error('retry once');expect(true).toBe(true);});"});
   assert.equal(report.result.mutation.outcomes[0].setups[0].report.passed, 1);
-  assert.equal(report.result.mutation.outcomes[0].setups[0].report.errors, 2);
+  assert.ok(report.result.mutation.outcomes[0].setups[0].report.errors > 0);
 }
 
 if (shouldRun('retry-baseline')) {

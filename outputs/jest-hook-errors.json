@@ -1,0 +1,1983 @@
+{
+  "version": 1,
+  "issue": 182,
+  "platform": "linux",
+  "architecture": "x64",
+  "environment": {
+    "node": "v24.22.0",
+    "tools": {
+      "jest": "29.7.0",
+      "jest-expo": "57.0.5",
+      "expo": "57.0.20",
+      "react-native": "0.86.3",
+      "@react-native/jest-preset": "0.86.3",
+      "babel-preset-expo": "57.0.10",
+      "react": "19.2.3",
+      "react-test-renderer": "19.2.3",
+      "@testing-library/react-native": "13.3.3",
+      "typescript": "6.0.3"
+    }
+  },
+  "cli": {
+    "source": "executable",
+    "version": "seshat 0.7.0",
+    "binarySha256": "f8d25f1e1cc17effb46d50aa67453052b263ed63bec7cbeb8337a29c53db315b"
+  },
+  "snapshotVerification": {
+    "binarySha256": "f8d25f1e1cc17effb46d50aa67453052b263ed63bec7cbeb8337a29c53db315b",
+    "embeddedAdapters": [
+      {
+        "path": "benchmarks/proofs/jest-expo-environment.cjs",
+        "matches": true
+      },
+      {
+        "path": "benchmarks/proofs/jest-reporter.cjs",
+        "matches": true
+      }
+    ],
+    "rustHookKillRuleVerified": true,
+    "aggregateErrorGuardVerified": true,
+    "ownRustRegressionPassed": true,
+    "selectionStringPresent": false
+  },
+  "reproduce": "node benchmarks/proofs/jest-expo-check.mjs --cli <built-seshat> --deps <prepared-fixture>",
+  "validation": {
+    "reusedPassingCases": [
+      "normal-1",
+      "normal-repeat",
+      "normal-2",
+      "nested-root"
+    ],
+    "focusedCases": [
+      "automatic-cleanup",
+      "mixed-load-hook",
+      "assertion-kill",
+      "survivor",
+      "before-all",
+      "after-all",
+      "before-each",
+      "after-each",
+      "mixed-assertion-hook",
+      "mixed-suite-hook",
+      "import-failure",
+      "test-timeout",
+      "hook-timeout",
+      "missing-events",
+      "missing-receipt",
+      "retry-eventually-passes",
+      "retry-baseline"
+    ]
+  },
+  "scope": "Jest Circus, one Jest project with the default Expo environment, --runInBand, Seshat workers 1 and 2",
+  "sourceSha256": {
+    "crates/seshat/src/execution.rs": "1a4a43885c885433184f27df644f86b6492e002178fad30c4ace6680c6faa150",
+    "benchmarks/proofs/jest-expo-environment.cjs": "65d2fe4973236c7062599fcf90d8330e26b72226fdcfaa022749692803c2c3ad",
+    "benchmarks/proofs/jest-reporter.cjs": "9247b4e5efff3cfdd3e61cba40554c4789b41f11d603ce8b05dd556cfb2a5405",
+    "benchmarks/proofs/jest-expo-check.mjs": "b871568dcd5a38f7e2e473abdf9b67e19fa8f1d235c2105a1c68e010103df090",
+    "benchmarks/proofs/jest-hook-errors.mjs": "dd25e8bf21809d4a6c479ba6d7bde01b139823f55f66eb7c6b0e3a0c5caf6a80",
+    "benchmarks/proofs/fixtures/jest-expo/src/session.ts": "204aec3bded777ed0a1df1167f8fe115d117acc9adf5908d09f230e0a2d1e94f",
+    "benchmarks/proofs/fixtures/jest-expo/tests/automatic-cleanup.test.tsx": "a3a7365d71110d41d1b1c09bc29e508481e5a4460d8ea35cf274bc241fb08c7c",
+    "benchmarks/proofs/fixtures/jest-expo/package-lock.json": "faa1afe1d3451f4051f25137794a88ed9f1d5fac0408dd7aea03c0aad334fa72"
+  },
+  "additionalChecks": {
+    "rustTests": 146,
+    "adapterGuards": "passed",
+    "reporterIdentity": "passed",
+    "cli": {
+      "scenarios": 82,
+      "legacyParity": "passed",
+      "fixtureOverride": {
+        "source": "benchmarks/proofs/cli.mjs",
+        "setting": "mutantTimeout.setups[0].timeoutMs",
+        "from": 3000,
+        "to": 10000
+      },
+      "originalLimit": "The stock 3000 ms fixture deadline expired during coverage before mutation. A focused 10000 ms control completed coverage in 3056 ms and returned timed-out, not-run."
+    }
+  },
+  "before": {
+    "cli": {
+      "source": "executable",
+      "version": "seshat 0.7.0",
+      "binarySha256": "062873614ba4d8b0d35955f202c53e3f570188f3282b3a419849d0412ab99695"
+    },
+    "automaticCleanup": {
+      "exit": 2,
+      "complete": false,
+      "baseline": {
+        "state": "passed",
+        "exit": 0,
+        "report": {
+          "complete": true,
+          "passed": 2,
+          "failed": 0,
+          "errors": 0,
+          "timeouts": 0
+        }
+      },
+      "coverage": {
+        "state": "passed",
+        "exit": 0,
+        "report": {
+          "complete": true,
+          "passed": 2,
+          "failed": 0,
+          "errors": 0,
+          "timeouts": 0
+        }
+      },
+      "extremes": {
+        "complete": false,
+        "outcomes": [
+          {
+            "name": "start",
+            "verdict": "execution-error",
+            "setups": [
+              {
+                "state": "execution-error",
+                "exit": 1,
+                "report": {
+                  "complete": true,
+                  "passed": 1,
+                  "failed": 1,
+                  "errors": 1,
+                  "timeouts": 0
+                }
+              }
+            ]
+          },
+          {
+            "name": "isPositive",
+            "verdict": "not-run",
+            "setups": [
+              {
+                "state": "not-run"
+              }
+            ]
+          }
+        ]
+      },
+      "mutation": {
+        "complete": false,
+        "score": null,
+        "planned": 2,
+        "completed": 0,
+        "verdicts": [
+          "not-run",
+          "not-run"
+        ],
+        "jobs": [
+          {
+            "state": "not-run"
+          },
+          {
+            "state": "not-run"
+          }
+        ],
+        "unresolvedBreakdown": {
+          "cancelled": 0,
+          "executionError": 0,
+          "notRun": 2,
+          "testTimedOut": 0,
+          "timedOut": 0,
+          "unassessed": 0
+        }
+      }
+    }
+  },
+  "receiptExamples": {
+    "beforeAutomaticCleanup": {
+      "actual": {
+        "jest": "29.7.0",
+        "jest-expo": "57.0.5"
+      },
+      "complete": true,
+      "errors": 1,
+      "executionId": "capture-3327226-1792369876620153577-extreme-0-0",
+      "expo": "57.0.5",
+      "failed": 1,
+      "jest": "29.7.0",
+      "node": "24.22.0",
+      "passed": 1,
+      "runner": "jest",
+      "timeouts": 0,
+      "version": 1
+    },
+    "afterAutomaticCleanup": {
+      "actual": {
+        "jest": "29.7.0",
+        "jest-expo": "57.0.5"
+      },
+      "complete": true,
+      "errors": 1,
+      "executionId": "capture-3351221-1792370851433887640-extreme-0-0",
+      "expo": "57.0.5",
+      "failed": 1,
+      "jest": "29.7.0",
+      "node": "24.22.0",
+      "passed": 1,
+      "runner": "jest",
+      "testHookErrors": 1,
+      "timeouts": 0,
+      "version": 1
+    },
+    "mixedLoadHook": {
+      "actual": {
+        "jest": "29.7.0",
+        "jest-expo": "57.0.5"
+      },
+      "complete": true,
+      "errors": 3,
+      "executionId": "capture-3353665-1792370927288819684-mutant-0-0",
+      "expo": "57.0.5",
+      "failed": 1,
+      "jest": "29.7.0",
+      "node": "24.22.0",
+      "passed": 0,
+      "runner": "jest",
+      "testHookErrors": 1,
+      "timeouts": 0,
+      "version": 1
+    }
+  },
+  "after": {
+    "checks": {
+      "requested": 21,
+      "completed": 21
+    },
+    "originalsPreserved": true,
+    "runs": {
+      "normal-1": {
+        "exit": 0,
+        "complete": true,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": [
+            {
+              "name": "classify",
+              "verdict": "killed",
+              "setups": [
+                {
+                  "state": "failed",
+                  "exit": 1,
+                  "report": {
+                    "complete": true,
+                    "passed": 1,
+                    "failed": 2,
+                    "errors": 0,
+                    "testHookErrors": 0,
+                    "timeouts": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "isPositive",
+              "verdict": "killed",
+              "setups": [
+                {
+                  "state": "failed",
+                  "exit": 1,
+                  "report": {
+                    "complete": true,
+                    "passed": 2,
+                    "failed": 1,
+                    "errors": 0,
+                    "testHookErrors": 0,
+                    "timeouts": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "statusCard",
+              "verdict": "killed",
+              "setups": [
+                {
+                  "state": "failed",
+                  "exit": 1,
+                  "report": {
+                    "complete": true,
+                    "passed": 2,
+                    "failed": 1,
+                    "errors": 0,
+                    "testHookErrors": 0,
+                    "timeouts": 0
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "mutation": {
+          "complete": true,
+          "score": 75,
+          "planned": 4,
+          "completed": 4,
+          "verdicts": [
+            "killed",
+            "killed",
+            "survived",
+            "killed"
+          ],
+          "jobs": [
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 1,
+                "failed": 2,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            },
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 1,
+                "failed": 2,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            },
+            {
+              "state": "passed",
+              "exit": 0,
+              "report": {
+                "complete": true,
+                "passed": 3,
+                "failed": 0,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            },
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 2,
+                "failed": 1,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "normal-repeat": {
+        "exit": 0,
+        "complete": true,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": [
+            {
+              "name": "classify",
+              "verdict": "killed",
+              "setups": [
+                {
+                  "state": "failed",
+                  "exit": 1,
+                  "report": {
+                    "complete": true,
+                    "passed": 1,
+                    "failed": 2,
+                    "errors": 0,
+                    "testHookErrors": 0,
+                    "timeouts": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "isPositive",
+              "verdict": "killed",
+              "setups": [
+                {
+                  "state": "failed",
+                  "exit": 1,
+                  "report": {
+                    "complete": true,
+                    "passed": 2,
+                    "failed": 1,
+                    "errors": 0,
+                    "testHookErrors": 0,
+                    "timeouts": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "statusCard",
+              "verdict": "killed",
+              "setups": [
+                {
+                  "state": "failed",
+                  "exit": 1,
+                  "report": {
+                    "complete": true,
+                    "passed": 2,
+                    "failed": 1,
+                    "errors": 0,
+                    "testHookErrors": 0,
+                    "timeouts": 0
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "mutation": {
+          "complete": true,
+          "score": 75,
+          "planned": 4,
+          "completed": 4,
+          "verdicts": [
+            "killed",
+            "killed",
+            "survived",
+            "killed"
+          ],
+          "jobs": [
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 1,
+                "failed": 2,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            },
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 1,
+                "failed": 2,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            },
+            {
+              "state": "passed",
+              "exit": 0,
+              "report": {
+                "complete": true,
+                "passed": 3,
+                "failed": 0,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            },
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 2,
+                "failed": 1,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "normal-2": {
+        "exit": 0,
+        "complete": true,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": [
+            {
+              "name": "classify",
+              "verdict": "killed",
+              "setups": [
+                {
+                  "state": "failed",
+                  "exit": 1,
+                  "report": {
+                    "complete": true,
+                    "passed": 1,
+                    "failed": 2,
+                    "errors": 0,
+                    "testHookErrors": 0,
+                    "timeouts": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "isPositive",
+              "verdict": "killed",
+              "setups": [
+                {
+                  "state": "failed",
+                  "exit": 1,
+                  "report": {
+                    "complete": true,
+                    "passed": 2,
+                    "failed": 1,
+                    "errors": 0,
+                    "testHookErrors": 0,
+                    "timeouts": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "statusCard",
+              "verdict": "killed",
+              "setups": [
+                {
+                  "state": "failed",
+                  "exit": 1,
+                  "report": {
+                    "complete": true,
+                    "passed": 2,
+                    "failed": 1,
+                    "errors": 0,
+                    "testHookErrors": 0,
+                    "timeouts": 0
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "mutation": {
+          "complete": true,
+          "score": 75,
+          "planned": 4,
+          "completed": 4,
+          "verdicts": [
+            "killed",
+            "killed",
+            "survived",
+            "killed"
+          ],
+          "jobs": [
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 1,
+                "failed": 2,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            },
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 1,
+                "failed": 2,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            },
+            {
+              "state": "passed",
+              "exit": 0,
+              "report": {
+                "complete": true,
+                "passed": 3,
+                "failed": 0,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            },
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 2,
+                "failed": 1,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "nested-root": {
+        "exit": 0,
+        "complete": true,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 3,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": [
+            {
+              "name": "classify",
+              "verdict": "killed",
+              "setups": [
+                {
+                  "state": "failed",
+                  "exit": 1,
+                  "report": {
+                    "complete": true,
+                    "passed": 1,
+                    "failed": 2,
+                    "errors": 0,
+                    "testHookErrors": 0,
+                    "timeouts": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "isPositive",
+              "verdict": "killed",
+              "setups": [
+                {
+                  "state": "failed",
+                  "exit": 1,
+                  "report": {
+                    "complete": true,
+                    "passed": 2,
+                    "failed": 1,
+                    "errors": 0,
+                    "testHookErrors": 0,
+                    "timeouts": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "statusCard",
+              "verdict": "killed",
+              "setups": [
+                {
+                  "state": "failed",
+                  "exit": 1,
+                  "report": {
+                    "complete": true,
+                    "passed": 2,
+                    "failed": 1,
+                    "errors": 0,
+                    "testHookErrors": 0,
+                    "timeouts": 0
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "mutation": {
+          "complete": true,
+          "score": 75,
+          "planned": 4,
+          "completed": 4,
+          "verdicts": [
+            "killed",
+            "killed",
+            "survived",
+            "killed"
+          ],
+          "jobs": [
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 1,
+                "failed": 2,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            },
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 1,
+                "failed": 2,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            },
+            {
+              "state": "passed",
+              "exit": 0,
+              "report": {
+                "complete": true,
+                "passed": 3,
+                "failed": 0,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            },
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 2,
+                "failed": 1,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "automatic-cleanup": {
+        "exit": 0,
+        "complete": true,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": [
+            {
+              "name": "start",
+              "verdict": "killed",
+              "setups": [
+                {
+                  "state": "failed",
+                  "exit": 1,
+                  "report": {
+                    "complete": true,
+                    "passed": 1,
+                    "failed": 1,
+                    "errors": 1,
+                    "testHookErrors": 1,
+                    "timeouts": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "isPositive",
+              "verdict": "killed",
+              "setups": [
+                {
+                  "state": "failed",
+                  "exit": 1,
+                  "report": {
+                    "complete": true,
+                    "passed": 1,
+                    "failed": 1,
+                    "errors": 0,
+                    "testHookErrors": 0,
+                    "timeouts": 0
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "mutation": {
+          "complete": true,
+          "score": 50,
+          "planned": 2,
+          "completed": 2,
+          "verdicts": [
+            "survived",
+            "killed"
+          ],
+          "jobs": [
+            {
+              "state": "passed",
+              "exit": 0,
+              "report": {
+                "complete": true,
+                "passed": 2,
+                "failed": 0,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            },
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 1,
+                "failed": 1,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "mixed-load-hook": {
+        "exit": 2,
+        "complete": false,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 2,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": false,
+          "score": null,
+          "planned": 2,
+          "completed": 1,
+          "verdicts": [
+            "execution-error",
+            "not-run"
+          ],
+          "jobs": [
+            {
+              "state": "execution-error",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 0,
+                "failed": 1,
+                "errors": 3,
+                "testHookErrors": 1,
+                "timeouts": 0
+              }
+            },
+            {
+              "state": "not-run"
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 1,
+            "notRun": 1,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "assertion-kill": {
+        "exit": 0,
+        "complete": true,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": true,
+          "score": 100,
+          "planned": 1,
+          "completed": 1,
+          "verdicts": [
+            "killed"
+          ],
+          "jobs": [
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 0,
+                "failed": 1,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "survivor": {
+        "exit": 0,
+        "complete": true,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": true,
+          "score": 0,
+          "planned": 1,
+          "completed": 1,
+          "verdicts": [
+            "survived"
+          ],
+          "jobs": [
+            {
+              "state": "passed",
+              "exit": 0,
+              "report": {
+                "complete": true,
+                "passed": 1,
+                "failed": 0,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "before-all": {
+        "exit": 2,
+        "complete": false,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": false,
+          "score": null,
+          "planned": 1,
+          "completed": 1,
+          "verdicts": [
+            "execution-error"
+          ],
+          "jobs": [
+            {
+              "state": "execution-error",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 0,
+                "failed": 1,
+                "errors": 2,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 1,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "after-all": {
+        "exit": 2,
+        "complete": false,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": false,
+          "score": null,
+          "planned": 1,
+          "completed": 1,
+          "verdicts": [
+            "execution-error"
+          ],
+          "jobs": [
+            {
+              "state": "execution-error",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 1,
+                "failed": 0,
+                "errors": 4,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 1,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "before-each": {
+        "exit": 0,
+        "complete": true,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": true,
+          "score": 100,
+          "planned": 1,
+          "completed": 1,
+          "verdicts": [
+            "killed"
+          ],
+          "jobs": [
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 0,
+                "failed": 1,
+                "errors": 1,
+                "testHookErrors": 1,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "after-each": {
+        "exit": 0,
+        "complete": true,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": true,
+          "score": 100,
+          "planned": 1,
+          "completed": 1,
+          "verdicts": [
+            "killed"
+          ],
+          "jobs": [
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 0,
+                "failed": 1,
+                "errors": 1,
+                "testHookErrors": 1,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "mixed-assertion-hook": {
+        "exit": 0,
+        "complete": true,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": true,
+          "score": 100,
+          "planned": 1,
+          "completed": 1,
+          "verdicts": [
+            "killed"
+          ],
+          "jobs": [
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 0,
+                "failed": 1,
+                "errors": 1,
+                "testHookErrors": 1,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "mixed-suite-hook": {
+        "exit": 2,
+        "complete": false,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": false,
+          "score": null,
+          "planned": 1,
+          "completed": 1,
+          "verdicts": [
+            "execution-error"
+          ],
+          "jobs": [
+            {
+              "state": "execution-error",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 0,
+                "failed": 1,
+                "errors": 5,
+                "testHookErrors": 1,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 1,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "import-failure": {
+        "exit": 2,
+        "complete": false,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": false,
+          "score": null,
+          "planned": 1,
+          "completed": 1,
+          "verdicts": [
+            "execution-error"
+          ],
+          "jobs": [
+            {
+              "state": "execution-error",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 0,
+                "failed": 0,
+                "errors": 2,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 1,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "test-timeout": {
+        "exit": 2,
+        "complete": false,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": false,
+          "score": null,
+          "planned": 1,
+          "completed": 1,
+          "verdicts": [
+            "timed-out"
+          ],
+          "jobs": [
+            {
+              "state": "timed-out",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 0,
+                "failed": 1,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 1
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "testTimedOut": 1,
+            "timedOut": 1,
+            "unassessed": 0
+          }
+        }
+      },
+      "hook-timeout": {
+        "exit": 2,
+        "complete": false,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": false,
+          "score": null,
+          "planned": 1,
+          "completed": 1,
+          "verdicts": [
+            "timed-out"
+          ],
+          "jobs": [
+            {
+              "state": "timed-out",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 0,
+                "failed": 1,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 1
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "testTimedOut": 1,
+            "timedOut": 1,
+            "unassessed": 0
+          }
+        }
+      },
+      "missing-events": {
+        "exit": 2,
+        "complete": false,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": false,
+          "score": null,
+          "planned": 1,
+          "completed": 1,
+          "verdicts": [
+            "execution-error"
+          ],
+          "jobs": [
+            {
+              "state": "execution-error",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 0,
+                "failed": 0,
+                "errors": 2,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 1,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "missing-receipt": {
+        "exit": 2,
+        "complete": false,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": false,
+          "score": null,
+          "planned": 1,
+          "completed": 1,
+          "verdicts": [
+            "execution-error"
+          ],
+          "jobs": [
+            {
+              "state": "execution-error",
+              "exit": 0
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 1,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "retry-eventually-passes": {
+        "exit": 2,
+        "complete": false,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": false,
+          "score": null,
+          "planned": 1,
+          "completed": 1,
+          "verdicts": [
+            "execution-error"
+          ],
+          "jobs": [
+            {
+              "state": "execution-error",
+              "exit": 0,
+              "report": {
+                "complete": true,
+                "passed": 1,
+                "failed": 1,
+                "errors": 3,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 1,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
+      "retry-baseline": {
+        "exit": 2,
+        "complete": false,
+        "baseline": {
+          "state": "execution-error",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 1,
+            "errors": 3,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "not-run"
+        },
+        "extremes": {
+          "complete": false,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": false,
+          "score": null,
+          "planned": 1,
+          "completed": 0,
+          "verdicts": [
+            "unassessed"
+          ],
+          "jobs": [
+            {
+              "state": "not-run"
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 1
+          }
+        }
+      }
+    }
+  },
+  "limits": [
+    "Local Linux x64 source executable; native package/platform CI and fresh review are separate.",
+    "No whole-file test selection changes from issue #181."
+  ]
+}

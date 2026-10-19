@@ -608,13 +608,6 @@ fn classify(runner: &str, evidence: &Value) -> TestState {
         if report["complete"] != true {
             return TestState::ExecutionError;
         }
-        if runner == "observed" {
-            match report["timeouts"].as_u64() {
-                Some(0) => {}
-                Some(_) => return TestState::TimedOut,
-                None => return TestState::ExecutionError,
-            }
-        }
         (
             report["passed"].as_u64(),
             report["failed"].as_u64(),
@@ -629,9 +622,27 @@ fn classify(runner: &str, evidence: &Value) -> TestState {
             suites.map(|n| if failed == Some(0) { n } else { 0 }),
         )
     };
+    let (Some(passed), Some(failed), Some(errors)) = (passed, failed, errors) else {
+        return TestState::ExecutionError;
+    };
+    let test_hook_errors = match report.get("testHookErrors") {
+        None => 0,
+        Some(value) if runner == "observed" && report["runner"] == "jest" => match value.as_u64() {
+            Some(count) if count <= errors => count,
+            _ => return TestState::ExecutionError,
+        },
+        Some(_) => return TestState::ExecutionError,
+    };
+    if runner == "observed" {
+        match report["timeouts"].as_u64() {
+            Some(0) => {}
+            Some(_) => return TestState::TimedOut,
+            None => return TestState::ExecutionError,
+        }
+    }
     match (passed, failed, errors, evidence["exit"].as_i64()) {
-        (Some(p), Some(0), Some(0), Some(0)) if p > 0 => TestState::Passed,
-        (Some(_), Some(f), Some(0), Some(1)) if f > 0 => TestState::Failed,
+        (p, 0, 0, Some(0)) if p > 0 => TestState::Passed,
+        (_, f, e, Some(1)) if f > 0 && e == test_hook_errors => TestState::Failed,
         _ => TestState::ExecutionError,
     }
 }
@@ -746,6 +757,74 @@ fn observed_failures_require_complete_hook_evidence() {
         changed["report"][field] = value;
         assert_eq!(classify("observed", &changed), expected);
     }
+}
+
+#[test]
+fn jest_hook_kills_require_all_errors_to_be_attributed() {
+    let evidence = json!({"exit":1,"timedOut":false,"report":{"runner":"jest",
+        "complete":true,"passed":2,"failed":1,"errors":2,"testHookErrors":2,"timeouts":0}});
+    let outcome = CommandEvidence {
+        state: classify("observed", &evidence),
+        details: evidence.clone(),
+    };
+    assert_eq!(outcome.state, TestState::Failed);
+    assert!(outcome.can_continue_mutation());
+    for (field, value) in [
+        ("runner", json!("vitest")),
+        ("runner", Value::Null),
+        ("complete", json!(false)),
+        ("passed", json!(-1)),
+        ("passed", Value::Null),
+        ("failed", json!(0)),
+        ("failed", json!(1.5)),
+        ("errors", json!(3)),
+        ("errors", Value::Null),
+        ("testHookErrors", Value::Null),
+        ("testHookErrors", json!(true)),
+        ("testHookErrors", json!("2")),
+        ("testHookErrors", json!(-1)),
+        ("testHookErrors", json!(1.5)),
+        ("testHookErrors", json!(1)),
+        ("testHookErrors", json!(3)),
+        ("timeouts", Value::Null),
+    ] {
+        let mut changed = evidence.clone();
+        changed["report"][field] = value;
+        let outcome = CommandEvidence {
+            state: classify("observed", &changed),
+            details: changed,
+        };
+        assert_eq!(outcome.state, TestState::ExecutionError, "{field}");
+        assert!(!outcome.can_continue_mutation(), "{field}");
+    }
+    for (field, value) in [
+        ("exit", Value::Null),
+        ("exit", json!(0)),
+        ("exit", json!(2)),
+        ("overflow", json!(true)),
+        ("pipeError", json!("read failed")),
+        ("error", json!("wait failed")),
+        ("cleanupError", json!("child may remain")),
+    ] {
+        let mut changed = evidence.clone();
+        changed[field] = value;
+        assert_eq!(classify("observed", &changed), TestState::ExecutionError);
+    }
+    let mut missing = evidence.clone();
+    missing["report"]
+        .as_object_mut()
+        .unwrap()
+        .remove("testHookErrors");
+    assert_eq!(classify("observed", &missing), TestState::ExecutionError);
+    assert_eq!(classify("node", &evidence), TestState::ExecutionError);
+    let mut timeout = evidence.clone();
+    timeout["report"]["timeouts"] = json!(1);
+    let outcome = CommandEvidence {
+        state: classify("observed", &timeout),
+        details: timeout,
+    };
+    assert_eq!(outcome.state, TestState::TimedOut);
+    assert!(!outcome.can_continue_mutation());
 }
 
 #[test]

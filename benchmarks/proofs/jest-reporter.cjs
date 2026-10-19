@@ -58,7 +58,7 @@ module.exports = class EvidenceReporter {
     // Keep cwd-resolved fields for the existing assessment contract; diagnostics use actual.
     const actual = executingVersions(process.argv[1], contexts);
     let errors = results.numRuntimeErrorTestSuites + Number(results.wasInterrupted);
-    let failed = 0, timeouts = 0;
+    let passed = 0, failed = 0, timeouts = 0, testHookErrors = 0;
     const files = new Set();
     for (const result of results.testResults) {
       if (files.has(result.testFilePath)) errors++;
@@ -69,20 +69,26 @@ module.exports = class EvidenceReporter {
         const info = lstatSync(path);
         if (!info.isFile() || info.nlink !== 1 || info.size > 16384) throw Error('unsafe event receipt');
         const event = JSON.parse(readFileSync(path, 'utf8'));
-        if (event.version !== 1 || event.executionId !== process.env.SESHAT_EXECUTION_ID
+        if (event.version !== 2 || event.executionId !== process.env.SESHAT_EXECUTION_ID
           || event.file !== result.testFilePath
-          || !['hookFailures','testFailures','timeouts','retries'].every(k => Number.isSafeInteger(event[k]) && event[k] >= 0)) throw Error('invalid event receipt');
-        errors += event.hookFailures + event.retries + Number(Boolean(result.testExecError));
-        failed += event.testFailures;
+          || !['hookFailures','testHookErrors','passed','failed','unattributedErrors','timeouts','retries']
+            .every(k => Number.isSafeInteger(event[k]) && event[k] >= 0)
+          || event.testHookErrors > event.hookFailures
+          || (event.testHookErrors > 0 && event.failed === 0)) throw Error('invalid event receipt');
+        errors += event.hookFailures + event.retries + event.unattributedErrors + Number(Boolean(result.testExecError));
+        testHookErrors += event.testHookErrors;
+        passed += event.passed;
+        failed += event.failed;
         timeouts += event.timeouts;
+        if (event.passed !== result.numPassingTests || event.failed !== result.numFailingTests) errors++;
       } catch { errors++; }
     }
-    // Hook failures can appear as failed tests. Do not infer their origin from totals.
-    if (!timeouts && failed !== results.numFailedTests) errors++;
-    const complete = contexts.size === 1 && files.size === results.numTotalTestSuites && files.size > 0;
+    if (passed !== results.numPassedTests || failed !== results.numFailedTests) errors++;
+    const complete = contexts.size === 1 && files.size === results.numTotalTestSuites && files.size > 0
+      && [passed, failed, errors, testHookErrors, timeouts].every(Number.isSafeInteger);
     writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({version:1,
       executionId:process.env.SESHAT_EXECUTION_ID, runner:'jest', node:process.versions.node,
-      jest, expo, actual, complete, passed:results.numPassedTests, failed, errors, timeouts}), {flag:'wx'});
+      jest, expo, actual, complete, passed, failed, errors, testHookErrors, timeouts}), {flag:'wx'});
   }
 };
 
