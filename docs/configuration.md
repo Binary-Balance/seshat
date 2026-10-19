@@ -428,6 +428,8 @@ Node and Jest setups, command wrappers and unverified Vitest configurations
 automatically retain full test commands.
 Raw coverage identities must match assessed sources exactly. Additional
 instrumented sources, query imports and other unverified remapping use full runs.
+If every mutant's `selection.reason` is `attribution-unavailable`, check that
+Vitest's `coverage.include` instruments only the sources Seshat assesses.
 
 Selection requires matching baseline and coverage test identities, complete
 file attribution and supported command arguments. Module-level mutants and
