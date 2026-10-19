@@ -212,7 +212,7 @@
       },
       "complete": true,
       "errors": 1,
-      "executionId": "capture-3468577-1792390088508088108-extreme-0-0",
+      "executionId": "capture-3615696-1792452744270320626-extreme-0-0",
       "expo": "57.0.5",
       "failed": 1,
       "jest": "29.7.0",
@@ -230,7 +230,7 @@
       },
       "complete": true,
       "errors": 3,
-      "executionId": "capture-3468760-1792390111069923689-mutant-0-0",
+      "executionId": "capture-3615948-1792452768346745503-mutant-0-0",
       "expo": "57.0.5",
       "failed": 1,
       "jest": "29.7.0",
@@ -2730,7 +2730,7 @@
   ],
   "rebase": {
     "onto": "0c7af07fbf07cad3a190aa98b0f8b34fcaa9e27d",
-    "note": "Rebased onto #183. The Rust tests, every Jest case and the CLI scenarios were rerun on the rebased binary. Every Jest outcome summary matches the pre-rebase evidence.",
+    "note": "Rebased onto #183. The Rust tests, every Jest case and the CLI scenarios were rerun on the rebased binary. Every Jest outcome summary matches the pre-rebase evidence. The receipt examples come from the rerun; reviewFix entries keep the receipts from their own rounds.",
     "previousBinarySha256": "396bbda4aec8b0f8df1bc2716422d1bd94ccf5079815b48953403f2c7de724b7",
     "jestSelection": [
       {
