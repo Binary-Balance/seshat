@@ -2730,7 +2730,7 @@
   ],
   "rebase": {
     "onto": "0c7af07fbf07cad3a190aa98b0f8b34fcaa9e27d",
-    "note": "Rebased onto #183. The Rust tests, every Jest case and the CLI scenarios were rerun on the rebased binary. Every Jest outcome summary matches the pre-rebase evidence. The receipt examples come from the rerun; reviewFix entries keep the receipts from their own rounds.",
+    "note": "Rebased onto #183. The Rust tests, every Jest case and the CLI scenarios were rerun on the rebased binary. Every Jest outcome summary matches the pre-rebase evidence. The after-change receipt examples come from the rerun. The before-change example and the reviewFix entries keep the receipts from their own runs.",
     "previousBinarySha256": "396bbda4aec8b0f8df1bc2716422d1bd94ccf5079815b48953403f2c7de724b7",
     "jestSelection": [
       {
