@@ -122,7 +122,7 @@ fn independent_file(path: &Path) -> Result<bool, String> {
         .map_err(|e| e.to_string())
 }
 
-fn regular_path(root: &Path, path: &Path, missing_ok: bool) -> Result<(), String> {
+pub(super) fn regular_path(root: &Path, path: &Path, missing_ok: bool) -> Result<(), String> {
     validate_path(root)?;
     validate_path(path)?;
     let root_type = fs::symlink_metadata(root)
@@ -874,6 +874,10 @@ impl CapturedProject {
             .env_remove("SESHAT_COVERAGE_REPORT")
             .env("SESHAT_EXECUTION_ID", id)
             .env("SESHAT_RECEIPT", &receipt)
+            .env(
+                "SESHAT_TEST_SELECTION",
+                if self.config.test_selection { "1" } else { "0" },
+            )
             .env("SESHAT_NODE_REPORTER", &reporter)
             .env("SESHAT_VITEST_RUNNER", &vitest_runner)
             .env("SESHAT_SOURCES", evidence.join("sources.json"));
@@ -1130,6 +1134,39 @@ impl CapturedProject {
         stopped: &AtomicBool,
     ) -> MutantExecution {
         let started = Instant::now();
+        let offset = row["offset"].as_u64().unwrap_or(u64::MAX);
+        let runtime = analysis.scopes.iter().any(|scope| {
+            !scope.implicit
+                && u64::from(scope.body.start) <= offset
+                && offset < u64::from(scope.body.end)
+        });
+        let selections: Vec<_> = self
+            .test_selection
+            .iter()
+            .map(|evidence| match evidence {
+                Ok(evidence) => evidence.select(&self.directory.0, source_index, runtime),
+                Err(reason) => selection::Selection::Full(reason.clone()),
+            })
+            .collect();
+        if !selections.is_empty()
+            && selections
+                .iter()
+                .all(|choice| matches!(choice, selection::Selection::NoCoverage))
+        {
+            for (index, selection) in selections.iter().enumerate() {
+                row["setups"][index]["state"] = json!("no-coverage");
+                row["setups"][index]["jobsAttempted"] = json!(0);
+                row["setups"][index]["selection"] = selection.json();
+            }
+            row["executionMs"] = json!(started.elapsed().as_secs_f64() * 1000.0);
+            return MutantExecution {
+                row,
+                states: vec![TestState::Passed; self.config.setups.len()],
+                jobs: 0,
+                restoration_error: None,
+                can_continue: true,
+            };
+        }
         let prepared = if switching {
             self.unchanged().and_then(|()| {
                 let id = row["id"]
@@ -1165,6 +1202,7 @@ impl CapturedProject {
             };
         }
         let mut states = Vec::new();
+        let mut jobs = 0;
         let mut can_continue = true;
         for (index, setup) in self.config.setups.iter().enumerate() {
             if stopped.load(Ordering::Relaxed) || cancellation_signal() != 0 {
@@ -1180,14 +1218,50 @@ impl CapturedProject {
                 },
                 row["id"]
             );
-            let observed = self
-                .run_job(setup, &setup.test, evidence, &id, JobKind::Test)
+            let mut selection = selections[index].json();
+            let args = match &selections[index] {
+                selection::Selection::Files { command, .. } => command,
+                selection::Selection::NoCoverage => {
+                    selection =
+                        selection::Selection::Full("other-setup-needs-execution".into()).json();
+                    &setup.test
+                }
+                selection::Selection::Full(_) => &setup.test,
+            };
+            let jobs_before = jobs;
+            let mut observed = self
+                .run_job(setup, args, evidence, &id, JobKind::Test)
                 .unwrap_or_else(CommandEvidence::error);
+            jobs += 1;
+            if let selection::Selection::Files { files, .. } = &selections[index]
+                && observed.can_continue_mutation()
+                && !self.test_selection[index].as_ref().unwrap().verifies(
+                    &self.directory.0,
+                    &observed.details["report"],
+                    files,
+                )
+            {
+                // Never accept a filtered verdict unless the runner confirms the same tests.
+                selection = json!({"mode":"full","reason":"selection-not-confirmed",
+                    "requestedFiles":files,"selectedAttempt":observed.into_json()});
+                observed = self
+                    .run_job(
+                        setup,
+                        &setup.test,
+                        evidence,
+                        &format!("{id}-full"),
+                        JobKind::Test,
+                    )
+                    .unwrap_or_else(CommandEvidence::error);
+                jobs += 1;
+            }
             states.push(observed.state);
             can_continue &= observed.can_continue_mutation();
             let cleanup_failed = !observed.details["cleanupError"].is_null();
             let mut setup_row = observed.into_json();
             setup_row["name"] = json!(setup.name);
+            setup_row["selection"] = selection;
+            setup_row["jobsAttempted"] = json!(jobs - jobs_before);
             row["setups"][index] = setup_row;
             if cleanup_failed {
                 // Preserve pending setup rows and prevent other workers starting more jobs.
@@ -1207,7 +1281,7 @@ impl CapturedProject {
         row["executionMs"] = json!(started.elapsed().as_secs_f64() * 1000.0);
         MutantExecution {
             row,
-            jobs: states.len(),
+            jobs,
             states,
             restoration_error,
             can_continue,
@@ -1574,10 +1648,9 @@ impl CapturedProject {
                     .as_array()
                     .unwrap()
                     .iter()
-                    .filter(|setup| setup["state"] != "not-run")
-                    .count();
-                count["jobsAttempted"] =
-                    json!(count["jobsAttempted"].as_u64().unwrap() + jobs as u64);
+                    .filter_map(|setup| setup["jobsAttempted"].as_u64())
+                    .sum::<u64>();
+                count["jobsAttempted"] = json!(count["jobsAttempted"].as_u64().unwrap() + jobs);
             }
             result["perOperator"] = json!(counts.into_values().collect::<Vec<_>>());
         }
@@ -1615,6 +1688,7 @@ impl CapturedProject {
     ) -> Result<Value, String> {
         let mutate = mode != AssessmentMode::Crap;
         self.config.validate_mode(mode)?;
+        self.test_selection = vec![Err("attribution-unavailable".into()); self.config.setups.len()];
         let started = Instant::now();
         let progress = Progress {
             enabled: show_progress,
@@ -1767,6 +1841,15 @@ impl CapturedProject {
             match collect() {
                 Ok((result, report)) => {
                     complete = result["state"] == "passed";
+                    if complete {
+                        self.test_selection[index] = selection::SetupEvidence::collect(
+                            &self,
+                            setup,
+                            &setups[index]["baseline"]["report"],
+                            &result["report"],
+                            &report,
+                        );
+                    }
                     setups[index]["coverage"] = result;
                     if complete {
                         reports.push(report);

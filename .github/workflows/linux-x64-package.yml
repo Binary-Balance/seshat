@@ -77,6 +77,10 @@ jobs:
         run: |
           set -euo pipefail
           cargo test --locked --offline --manifest-path crates/seshat/Cargo.toml 2>&1 | tee work/x64/rust-tests.log
+      - name: Verify whole-file selection
+        run: |
+          node --test benchmarks/proofs/vitest-file-coverage.test.mjs
+          node benchmarks/proofs/test-selection.mjs --cli crates/seshat/target/debug/seshat --cases normal,query,cleanup,assertion-cleanup
       - name: Fetch pinned Debian 11 proof inputs
         id: debian_inputs
         run: |

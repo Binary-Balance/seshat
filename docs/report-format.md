@@ -201,6 +201,7 @@ Each `result.setups` row has `name`, `typecheck`, `baseline`, `coverage` and
 | `cancelled` | Cancellation stopped the command. |
 | `not-run` | The requested job was not reached. `crap` also uses this state for an intentionally omitted optional typecheck; a complete run keeps `typecheck.state: "not-run"` and `timings.typecheckMs: null` in that setup. |
 | `not-requested` | The command does not request this job. Retained for compatibility; all current public commands request coverage. |
+| `no-coverage` | Mutant setup only. Complete coverage across every setup proved that the operator mutant's source was unexecuted, so no test command was needed. |
 
 An attempted job can include `exit`, `ms`, `timedOut`, `cancelled`,
 `overflow`, `pipeError` and a runner `report`. Jobs stopped before they start
@@ -257,7 +258,7 @@ command text or free-form diagnostic nested under them remains evidence.
 | `killed`, `survived` | Counts of outcomes with those resolved verdicts. |
 | `score` | `killed / (killed + survived) × 100` for a complete non-empty plan; otherwise `null`. The value is a percentage from `0` to `100`. |
 | `outcomes` | One row per planned mutant, in source and operator order. |
-| `completed` | Planned mutants with a returned attempt, including failed, timed-out or cancelled attempts. It does not mean successfully assessed. |
+| `completed` | Planned mutants with a returned attempt or a proved zero-coverage decision. Attempts include failed, timed-out and cancelled jobs. It does not mean successfully assessed. |
 | `notRun` | Planned mutants with no returned attempt. It is not the count of `not-run` verdicts. |
 | `unresolved` | `planned - killed - survived`, including incomplete attempts and unstarted work. |
 | `jobsAttempted` | Mutant test jobs only. Top-level `result.jobsAttempted` also includes original and worker baseline jobs. |
@@ -279,6 +280,33 @@ IDs follow resolved source order,
 then AST site order by start offset, with enclosing sites before nested sites
 at the same start, then replacement order. Each outcome setup
 retains its job state and evidence. An unstarted setup remains `not-run`.
+
+Attempted or zero-covered mutant setup rows also retain `selection`:
+
+| Field | Meaning |
+| --- | --- |
+| `mode` | `selected`, `full` or `no-coverage`. |
+| `basis`, `files` | Selected mode uses `source-file` attribution and lists project-relative test files. All tests in each file run. |
+| `reason` | Why the full command was used, or `verified-zero-coverage` when no job was needed. |
+| `requestedFiles`, `selectedAttempt` | When a selected run's executed test identities did not match the baseline, retain the requested files and first attempt before rerunning the full command. |
+
+Vitest receipts include `testFiles` and executed `tests` with file/name identities.
+The baseline and coverage workloads must match before selection is available.
+Coverage receipts also retain versioned `fileCoverage` evidence for each test file
+and selected source. Selection currently supports isolated Vitest Node workers
+with Istanbul coverage; unsupported or ambiguous setups use full commands.
+Raw coverage IDs outside the assessed source identities, including query-suffixed
+imports, also force full commands because their remapping is unverified.
+The selected set covers any executed code in the source file, rather than only
+the exact mutant. Module-level and module-load coverage use full commands.
+
+Setup `jobsAttempted` counts actual mutant job attempts, including a full rerun
+after an unconfirmed selection. A setup with proved zero source coverage has
+`state: "no-coverage"`, selection mode `no-coverage` and `jobsAttempted: 0`.
+Only unanimous, reliable zero-coverage evidence across all setups permits this
+skip. Such an operator mutant is survived without running a test job. It remains
+in the score denominator. Existing extreme-mutation zero-coverage skips remain
+separate. Missing evidence never counts as zero coverage.
 
 Original baselines must all be `passed` before any mutant can be assessed. If
 they are missing or fail, every mutant is `unassessed`. With passing baselines,

@@ -156,7 +156,10 @@ release.
 Support multiple named test setups in that file. Each identifies its runner,
 working directory, test and coverage commands, and coverage-report location. A
 single-package project can use one entry; a mixed-runner project can declare
-several. Run all configured setups for each mutant.
+several. Assess every mutant across all configured setups. Verified whole-file
+selection may reduce each mutant's test workload; unsupported or ambiguous
+setups retain the full command. Only proved zero coverage across every setup
+permits skipping an operator mutant's jobs. Baselines remain full runs.
 
 Combine statement hits when source and statement mappings agree. Combine branch
 hits for matching source outcomes independently of statement merging. Conflicting

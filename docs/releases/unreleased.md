@@ -2,6 +2,13 @@
 
 Changes after the published [0.7.0 release](0.7.0.md).
 
+- [#181](https://github.com/Binary-Balance/seshat/issues/181): select whole test
+  files for verified Vitest Istanbul setups by default. Full baselines remain,
+  unsupported or ambiguous setups use full mutant commands, and
+  `"testSelection": false` disables selection. Reports retain selected files,
+  executed-test identities and fallback reasons. See the
+  [selection proofs and limits](../research/test-selection.md).
+
 - [#164](https://github.com/Binary-Balance/seshat/issues/164): the default-on
   `statement` mutation family removes expression statements and bare returns
   from explicit synchronous, non-generator functions. Constructors, module-level

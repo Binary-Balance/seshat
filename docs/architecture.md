@@ -65,7 +65,10 @@ and rewrites internal workspace links.
 The `collection` module runs original checks, fresh coverage and mutation jobs;
 `job` bounds process output, deadlines and cleanup.
 
-Every mutant runs all configured test setups in fresh processes. Replacement is
+Every mutant is assessed across all configured setups. Verified Vitest Istanbul
+attribution selects whole test files by default; other setups and ambiguous
+evidence retain full commands. Original and worker baselines remain full runs,
+and every executed job starts a fresh process. Replacement is
 the CLI default. `check` and `mutate` expose experimental switching through
 `--experimental-switching`; the proof command also supports switching.
 Parallel workers have independent writable copies and receipts, with one worker
