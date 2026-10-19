@@ -13,7 +13,8 @@ Changes after the published [0.7.0 release](0.7.0.md).
   or `afterEach` hooks now count as killed and allow scheduling to continue.
   This covers Testing Library's automatic unmount cleanup. Invalid or incomplete
   receipts, suite hooks, load failures and infrastructure errors still stop
-  scheduling. See the
+  scheduling. A Jest timeout no longer hides unattributed errors in the same
+  run; they now stop scheduling too. See the
   [verdict rules](../report-format.md#setup-jobs-and-evidence).
 - [#164](https://github.com/Binary-Balance/seshat/issues/164): the default-on
   `statement` mutation family removes expression statements and bare returns
