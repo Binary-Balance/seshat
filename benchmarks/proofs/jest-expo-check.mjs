@@ -59,6 +59,7 @@ const defaultCases = [
   'nested-root',
   'assertion-kill',
   'expect-assertions',
+  'assertion-error',
   'survivor',
   'before-all',
   'after-all',
@@ -459,6 +460,8 @@ const controls = [
   ['assertion-kill', "test('assertion',()=>expect(ready).toBe(true));", 'killed'],
   // Jest adds the assertion-count error at test_done, without a failure event.
   ['expect-assertions', "test('assertions',()=>{expect.assertions(2);expect(ready).toBe(true);expect(1).toBe(1);});", 'killed'],
+  // Jest replaces errors named AssertionError (node:assert, chai) at test_done.
+  ['assertion-error', "test('assertion error',()=>{if(!ready)throw Object.assign(Error('not ready'),{name:'AssertionError'});});", 'killed'],
   ['survivor', "test('survivor',()=>expect(typeof ready).toBe('boolean'));", 'survived'],
   ['before-all', "beforeAll(()=>{if(!ready)throw Error('setup');});test('blocked',()=>{});", 'execution-error'],
   ['after-all', "afterAll(()=>{if(!ready)throw Error('cleanup');});test('passes',()=>{});", 'execution-error'],
@@ -570,7 +573,8 @@ if (shouldRun('retry-eventually-passes')) {
     assert: value => assertControl(value, {baseline: 'passed', verdict: 'execution-error', mutantState: 'execution-error'}),
   }, {body: "jest.retryTimes(1);let attempts=0;test('retry',()=>{attempts++;if(!ready&&attempts===1)throw Error('retry once');expect(true).toBe(true);});"});
   assert.equal(report.result.mutation.outcomes[0].setups[0].report.passed, 1);
-  assert.ok(report.result.mutation.outcomes[0].setups[0].report.errors > 0);
+  // The retry, plus the file and run count mismatches from its extra failed attempt.
+  assert.equal(report.result.mutation.outcomes[0].setups[0].report.errors, 3);
 }
 
 if (shouldRun('retry-baseline')) {

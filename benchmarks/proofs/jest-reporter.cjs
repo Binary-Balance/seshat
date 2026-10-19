@@ -84,8 +84,7 @@ module.exports = class EvidenceReporter {
       } catch { errors++; }
     }
     if (passed !== results.numPassedTests || failed !== results.numFailedTests) errors++;
-    const complete = contexts.size === 1 && files.size === results.numTotalTestSuites && files.size > 0
-      && [passed, failed, errors, testHookErrors, timeouts].every(Number.isSafeInteger);
+    const complete = contexts.size === 1 && files.size === results.numTotalTestSuites && files.size > 0;
     writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({version:1,
       executionId:process.env.SESHAT_EXECUTION_ID, runner:'jest', node:process.versions.node,
       jest, expo, actual, complete, passed, failed, errors, testHookErrors, timeouts}), {flag:'wx'});

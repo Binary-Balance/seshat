@@ -30,28 +30,22 @@ module.exports = class EvidenceEnvironment extends Base {
         && ['beforeEach', 'afterEach'].includes(event.hook.type);
       if (event.test && (testHook || event.name === 'test_fn_failure')) {
         const failures = this.failures.get(event.test) ?? [];
-        failures.push({error:event.error, testHook:testHook && !timeout});
+        failures.push({testHook:testHook && !timeout});
         this.failures.set(event.test, failures);
       }
     }
     if (event.name === 'test_done') {
       const test = event.test;
       this.evidence[test.errors.length ? 'failed' : 'passed']++;
+      // Circus adds each failure event's error to this test before we see the event,
+      // and only a retry clears them, so counting events attributes them. Matching
+      // error objects fails: Jest replaces node:assert and chai errors at test_done.
       const failures = this.failures.get(test) ?? [];
-      let matched = 0, unmatched = 0;
-      // Match error objects before serialization; totals or stack text cannot prove attribution.
-      for (const entry of test.errors) {
-        const error = Array.isArray(entry) ? entry[0] : entry;
-        const index = failures.findIndex(failure => failure.error === error);
-        if (index < 0) { unmatched++; continue; }
-        matched++;
-        if (failures.splice(index, 1)[0].testHook) this.evidence.testHookErrors++;
-      }
+      this.evidence.testHookErrors += failures.filter(failure => failure.testHook).length;
       // Jest adds expect.assertions, suppressed and uncaught errors to the running
       // test without a failure event. They join a failure the test already owns,
       // as before #182; on their own they prove nothing.
-      if (!matched) this.evidence.unattributedErrors += unmatched;
-      this.evidence.unattributedErrors += failures.length;
+      if (!failures.length) this.evidence.unattributedErrors += test.errors.length;
       this.failures.delete(test);
     }
     if (event.name === 'run_finish') {

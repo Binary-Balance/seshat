@@ -213,17 +213,17 @@ protocol. The job state, setup name and timing fields above are the contract.
 A complete, valid Jest receipt with exit `1` and failed tests can produce
 `state: "failed"` even when it reports errors. Every error must be proven to
 come from a failed test's `beforeEach` or `afterEach` hook. This includes
-Testing Library's automatic unmount cleanup. The adapter matches hook error
-objects to that test's final errors before serialization and reconciles the
-observed passed and failed test counts with Jest's results. Errors that Jest
-adds to a test without a failure event, such as an `expect.assertions` count or
-an uncaught error during the test, join a failure that test already has; on
-their own they remain execution errors. Suite hooks such as `beforeAll` and
+Testing Library's automatic unmount cleanup. The adapter counts the failure
+events Jest reports for each test and reconciles the observed passed and
+failed test counts with Jest's results. Errors that Jest adds to a test
+without a failure event, such as an `expect.assertions` count or an uncaught
+error during the test, join a failure that test already has; on their own they
+remain execution errors. Suite hooks such as `beforeAll` and
 `afterAll`, file-load failures, errors outside any test, retries and missing or
 inconsistent observations remain execution errors.
 
 The private Jest receipt retains aggregate `errors` and adds `testHookErrors`,
-a non-negative integer counting only those matched hook errors. Rust accepts
+a non-negative integer counting only those hook errors. Rust accepts
 errors with failed tests only when `testHookErrors` equals the entire `errors`
 count. Missing, malformed or contradictory attribution cannot excuse an error.
 Other runners cannot use this exception. The receipt must still be complete,

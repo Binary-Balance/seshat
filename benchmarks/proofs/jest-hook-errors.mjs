@@ -1,4 +1,4 @@
-// Exercise the private adapters with real error identities and malformed sidecars.
+// Exercise the private adapters with simulated Jest events and malformed sidecars.
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
@@ -113,7 +113,7 @@ try {
     const report = await receipt([{kind:'cleanup'}], {modifyResult});
     assert.ok(report.errors > report.testHookErrors, JSON.stringify(report));
   }
-  console.log('Jest hook evidence checks passed: only matched per-test hook errors are attributable.');
+  console.log('Jest hook evidence checks passed: only per-test hook errors are attributable.');
 } finally {
   process.chdir(previousCwd);
   if (previousReceipt === undefined) delete process.env.SESHAT_RECEIPT;

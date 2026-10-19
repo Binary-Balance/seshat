@@ -1333,10 +1333,10 @@ a failed test and its cleanup error. Its aggregate errors exceed the attributed
 hook errors, so it must stop scheduling and leave the next mutant `not-run`.
 
 The private environment sidecar uses version 2. It counts passed and failed
-`test_done` events and matches error objects to `beforeEach`/`afterEach` failure
-events for the same test. Unmatched errors join a failure their test already
-owns; otherwise they, errors outside any test and retries remain separate
-evidence. The reporter checks each file's counts against Jest,
+`test_done` events, and each test's test-function and `beforeEach`/`afterEach`
+failure events. Errors Jest adds without an event join a failure their test
+already owns; otherwise they, errors outside any test and retries remain
+separate evidence. The reporter checks each file's counts against Jest,
 then the run totals. The main version-1 receipt adds `testHookErrors` without
 subtracting anything from aggregate `errors`. Rust requires equality of those
 counts before it permits a failed Jest job with errors. Other runner receipts

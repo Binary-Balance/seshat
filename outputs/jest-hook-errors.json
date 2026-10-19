@@ -21,10 +21,10 @@
   "cli": {
     "source": "executable",
     "version": "seshat 0.7.0",
-    "binarySha256": "04073c8f50477bf7094b6a5c9991dc6e83d61007de828c95a20c0fb0798ed81b"
+    "binarySha256": "65460085e472198a61374e7c9b041102bcdea3cc0ef8ac1e3bad8b8aa1d18445"
   },
   "snapshotVerification": {
-    "binarySha256": "04073c8f50477bf7094b6a5c9991dc6e83d61007de828c95a20c0fb0798ed81b",
+    "binarySha256": "65460085e472198a61374e7c9b041102bcdea3cc0ef8ac1e3bad8b8aa1d18445",
     "embeddedAdapters": [
       {
         "path": "benchmarks/proofs/jest-expo-environment.cjs",
@@ -50,6 +50,7 @@
       "nested-root",
       "assertion-kill",
       "expect-assertions",
+      "assertion-error",
       "survivor",
       "before-all",
       "after-all",
@@ -71,10 +72,10 @@
   "scope": "Jest Circus, one Jest project with the default Expo environment, --runInBand, Seshat workers 1 and 2",
   "sourceSha256": {
     "crates/seshat/src/execution.rs": "1a4a43885c885433184f27df644f86b6492e002178fad30c4ace6680c6faa150",
-    "benchmarks/proofs/jest-expo-environment.cjs": "58869ac411e1fa3ba89a474c5db684eaedd329df26437c04df1e8e6fa4ed21c2",
-    "benchmarks/proofs/jest-reporter.cjs": "9247b4e5efff3cfdd3e61cba40554c4789b41f11d603ce8b05dd556cfb2a5405",
-    "benchmarks/proofs/jest-expo-check.mjs": "4b3e1e04c077584371806c4916a8c0e35fcf7088ac53d720f887acc4c1ea5319",
-    "benchmarks/proofs/jest-hook-errors.mjs": "b0447e37c88fa08201d71313437308c3068889e6d36e55686c699746f1c2433b",
+    "benchmarks/proofs/jest-expo-environment.cjs": "ef974c6d8d39cd9dcb25ab5a430b2dc1c329c60e192a166aff49d1a0c4f03d82",
+    "benchmarks/proofs/jest-reporter.cjs": "d69e9cf7f43033b82e4847695ade59f5b18f7a30d4b53ec4b795bfa822c4ecd7",
+    "benchmarks/proofs/jest-expo-check.mjs": "8061c299bd27dad82d7d6acfd6e1ebd17580dabad41ff35104743d0d0fac1e0c",
+    "benchmarks/proofs/jest-hook-errors.mjs": "0b4d6382ac29e9506f66713cd519e9cb5f64a3f5d8ee8441e3bfc318d3cb88a6",
     "benchmarks/proofs/fixtures/jest-expo/src/session.ts": "204aec3bded777ed0a1df1167f8fe115d117acc9adf5908d09f230e0a2d1e94f",
     "benchmarks/proofs/fixtures/jest-expo/tests/automatic-cleanup.test.tsx": "a3a7365d71110d41d1b1c09bc29e508481e5a4460d8ea35cf274bc241fb08c7c",
     "benchmarks/proofs/fixtures/jest-expo/package-lock.json": "faa1afe1d3451f4051f25137794a88ed9f1d5fac0408dd7aea03c0aad334fa72"
@@ -94,7 +95,7 @@
       },
       "originalLimit": "The stock 3000 ms fixture deadline expired during coverage before mutation. A focused 10000 ms control completed coverage in 3056 ms and returned timed-out, not-run.",
       "reusedFrom": "ffb8e06983dc8c84bdcfd817e43e2c76b07ca2a1",
-      "reuseReason": "The review fix changes only the Jest environment adapter; the CLI scenarios use the Node runner."
+      "reuseReason": "The review fixes change only the Jest adapters and checks; the CLI scenarios use the Node runner."
     }
   },
   "before": {
@@ -212,7 +213,7 @@
       },
       "complete": true,
       "errors": 1,
-      "executionId": "capture-3411935-1792374173978911887-extreme-0-0",
+      "executionId": "capture-3459974-1792388900568419029-extreme-0-0",
       "expo": "57.0.5",
       "failed": 1,
       "jest": "29.7.0",
@@ -230,7 +231,7 @@
       },
       "complete": true,
       "errors": 3,
-      "executionId": "capture-3412686-1792374217687452913-mutant-0-0",
+      "executionId": "capture-3460130-1792388924608498617-mutant-0-0",
       "expo": "57.0.5",
       "failed": 1,
       "jest": "29.7.0",
@@ -244,8 +245,8 @@
   },
   "after": {
     "checks": {
-      "requested": 22,
-      "completed": 22
+      "requested": 23,
+      "completed": 23
     },
     "originalsPreserved": true,
     "runs": {
@@ -1183,6 +1184,69 @@
           }
         }
       },
+      "assertion-error": {
+        "exit": 0,
+        "complete": true,
+        "baseline": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "coverage": {
+          "state": "passed",
+          "exit": 0,
+          "report": {
+            "complete": true,
+            "passed": 1,
+            "failed": 0,
+            "errors": 0,
+            "testHookErrors": 0,
+            "timeouts": 0
+          }
+        },
+        "extremes": {
+          "complete": true,
+          "outcomes": []
+        },
+        "mutation": {
+          "complete": true,
+          "score": 100,
+          "planned": 1,
+          "completed": 1,
+          "verdicts": [
+            "killed"
+          ],
+          "jobs": [
+            {
+              "state": "failed",
+              "exit": 1,
+              "report": {
+                "complete": true,
+                "passed": 0,
+                "failed": 1,
+                "errors": 0,
+                "testHookErrors": 0,
+                "timeouts": 0
+              }
+            }
+          ],
+          "unresolvedBreakdown": {
+            "cancelled": 0,
+            "executionError": 0,
+            "notRun": 0,
+            "testTimedOut": 0,
+            "timedOut": 0,
+            "unassessed": 0
+          }
+        }
+      },
       "survivor": {
         "exit": 0,
         "complete": true,
@@ -2045,179 +2109,356 @@
     "Local Linux x64 source executable; native package/platform CI and fresh review are separate.",
     "No whole-file test selection changes from issue #181."
   ],
-  "reviewFix": {
-    "reviewedCommit": "ffb8e06983dc8c84bdcfd817e43e2c76b07ca2a1",
-    "finding": "Errors Jest adds at test_done, such as expect.assertions counts, were counted as unattributed on a test that had already failed, giving execution-error where main gave killed.",
-    "reviewedCli": {
-      "source": "executable",
-      "version": "seshat 0.7.0",
-      "binarySha256": "f8d25f1e1cc17effb46d50aa67453052b263ed63bec7cbeb8337a29c53db315b"
-    },
-    "before": {
-      "expectAssertions": {
-        "exit": 2,
-        "complete": false,
-        "baseline": {
-          "state": "passed",
-          "exit": 0,
-          "report": {
-            "complete": true,
-            "passed": 1,
-            "failed": 0,
-            "errors": 0,
-            "testHookErrors": 0,
-            "timeouts": 0
-          }
-        },
-        "coverage": {
-          "state": "passed",
-          "exit": 0,
-          "report": {
-            "complete": true,
-            "passed": 1,
-            "failed": 0,
-            "errors": 0,
-            "testHookErrors": 0,
-            "timeouts": 0
-          }
-        },
-        "extremes": {
-          "complete": true,
-          "outcomes": []
-        },
-        "mutation": {
+  "reviewFix": [
+    {
+      "reviewedCommit": "ffb8e06983dc8c84bdcfd817e43e2c76b07ca2a1",
+      "finding": "Errors Jest adds at test_done, such as expect.assertions counts, were counted as unattributed on a test that had already failed, giving execution-error where main gave killed.",
+      "reviewedCli": {
+        "source": "executable",
+        "version": "seshat 0.7.0",
+        "binarySha256": "f8d25f1e1cc17effb46d50aa67453052b263ed63bec7cbeb8337a29c53db315b"
+      },
+      "before": {
+        "expectAssertions": {
+          "exit": 2,
           "complete": false,
-          "score": null,
-          "planned": 1,
-          "completed": 1,
-          "verdicts": [
-            "execution-error"
-          ],
-          "jobs": [
-            {
-              "state": "execution-error",
-              "exit": 1,
-              "report": {
-                "complete": true,
-                "passed": 0,
-                "failed": 1,
-                "errors": 1,
-                "testHookErrors": 0,
-                "timeouts": 0
-              }
+          "baseline": {
+            "state": "passed",
+            "exit": 0,
+            "report": {
+              "complete": true,
+              "passed": 1,
+              "failed": 0,
+              "errors": 0,
+              "testHookErrors": 0,
+              "timeouts": 0
             }
-          ],
-          "unresolvedBreakdown": {
-            "cancelled": 0,
-            "executionError": 1,
-            "notRun": 0,
-            "testTimedOut": 0,
-            "timedOut": 0,
-            "unassessed": 0
+          },
+          "coverage": {
+            "state": "passed",
+            "exit": 0,
+            "report": {
+              "complete": true,
+              "passed": 1,
+              "failed": 0,
+              "errors": 0,
+              "testHookErrors": 0,
+              "timeouts": 0
+            }
+          },
+          "extremes": {
+            "complete": true,
+            "outcomes": []
+          },
+          "mutation": {
+            "complete": false,
+            "score": null,
+            "planned": 1,
+            "completed": 1,
+            "verdicts": [
+              "execution-error"
+            ],
+            "jobs": [
+              {
+                "state": "execution-error",
+                "exit": 1,
+                "report": {
+                  "complete": true,
+                  "passed": 0,
+                  "failed": 1,
+                  "errors": 1,
+                  "testHookErrors": 0,
+                  "timeouts": 0
+                }
+              }
+            ],
+            "unresolvedBreakdown": {
+              "cancelled": 0,
+              "executionError": 1,
+              "notRun": 0,
+              "testTimedOut": 0,
+              "timedOut": 0,
+              "unassessed": 0
+            }
           }
+        },
+        "receipt": {
+          "actual": {
+            "jest": "29.7.0",
+            "jest-expo": "57.0.5"
+          },
+          "complete": true,
+          "errors": 1,
+          "executionId": "capture-3415111-1792374542607805356-mutant-0-0",
+          "expo": "57.0.5",
+          "failed": 1,
+          "jest": "29.7.0",
+          "node": "24.22.0",
+          "passed": 0,
+          "runner": "jest",
+          "testHookErrors": 0,
+          "timeouts": 0,
+          "version": 1
         }
       },
-      "receipt": {
-        "actual": {
-          "jest": "29.7.0",
-          "jest-expo": "57.0.5"
+      "after": {
+        "expectAssertions": {
+          "exit": 0,
+          "complete": true,
+          "baseline": {
+            "state": "passed",
+            "exit": 0,
+            "report": {
+              "complete": true,
+              "passed": 1,
+              "failed": 0,
+              "errors": 0,
+              "testHookErrors": 0,
+              "timeouts": 0
+            }
+          },
+          "coverage": {
+            "state": "passed",
+            "exit": 0,
+            "report": {
+              "complete": true,
+              "passed": 1,
+              "failed": 0,
+              "errors": 0,
+              "testHookErrors": 0,
+              "timeouts": 0
+            }
+          },
+          "extremes": {
+            "complete": true,
+            "outcomes": []
+          },
+          "mutation": {
+            "complete": true,
+            "score": 100,
+            "planned": 1,
+            "completed": 1,
+            "verdicts": [
+              "killed"
+            ],
+            "jobs": [
+              {
+                "state": "failed",
+                "exit": 1,
+                "report": {
+                  "complete": true,
+                  "passed": 0,
+                  "failed": 1,
+                  "errors": 0,
+                  "testHookErrors": 0,
+                  "timeouts": 0
+                }
+              }
+            ],
+            "unresolvedBreakdown": {
+              "cancelled": 0,
+              "executionError": 0,
+              "notRun": 0,
+              "testTimedOut": 0,
+              "timedOut": 0,
+              "unassessed": 0
+            }
+          }
         },
-        "complete": true,
-        "errors": 1,
-        "executionId": "capture-3415111-1792374542607805356-mutant-0-0",
-        "expo": "57.0.5",
-        "failed": 1,
-        "jest": "29.7.0",
-        "node": "24.22.0",
-        "passed": 0,
-        "runner": "jest",
-        "testHookErrors": 0,
-        "timeouts": 0,
-        "version": 1
+        "receipt": {
+          "actual": {
+            "jest": "29.7.0",
+            "jest-expo": "57.0.5"
+          },
+          "complete": true,
+          "errors": 0,
+          "executionId": "capture-3412864-1792374248662182423-mutant-0-0",
+          "expo": "57.0.5",
+          "failed": 1,
+          "jest": "29.7.0",
+          "node": "24.22.0",
+          "passed": 0,
+          "runner": "jest",
+          "testHookErrors": 0,
+          "timeouts": 0,
+          "version": 1
+        }
       }
     },
-    "after": {
-      "expectAssertions": {
-        "exit": 0,
-        "complete": true,
-        "baseline": {
-          "state": "passed",
-          "exit": 0,
-          "report": {
-            "complete": true,
-            "passed": 1,
-            "failed": 0,
-            "errors": 0,
-            "testHookErrors": 0,
-            "timeouts": 0
-          }
-        },
-        "coverage": {
-          "state": "passed",
-          "exit": 0,
-          "report": {
-            "complete": true,
-            "passed": 1,
-            "failed": 0,
-            "errors": 0,
-            "testHookErrors": 0,
-            "timeouts": 0
-          }
-        },
-        "extremes": {
-          "complete": true,
-          "outcomes": []
-        },
-        "mutation": {
-          "complete": true,
-          "score": 100,
-          "planned": 1,
-          "completed": 1,
-          "verdicts": [
-            "killed"
-          ],
-          "jobs": [
-            {
-              "state": "failed",
-              "exit": 1,
-              "report": {
-                "complete": true,
-                "passed": 0,
-                "failed": 1,
-                "errors": 0,
-                "testHookErrors": 0,
-                "timeouts": 0
-              }
+    {
+      "reviewedCommit": "f29ca63d01662dafdf9873f9d3bfebb33fc900e4",
+      "finding": "Jest replaces errors named AssertionError (node:assert, chai) at test_done, so matching error objects missed them and gave execution-error where main gave killed.",
+      "reviewedCli": {
+        "source": "executable",
+        "version": "seshat 0.7.0",
+        "binarySha256": "04073c8f50477bf7094b6a5c9991dc6e83d61007de828c95a20c0fb0798ed81b"
+      },
+      "before": {
+        "assertionError": {
+          "exit": 2,
+          "complete": false,
+          "baseline": {
+            "state": "passed",
+            "exit": 0,
+            "report": {
+              "complete": true,
+              "passed": 1,
+              "failed": 0,
+              "errors": 0,
+              "testHookErrors": 0,
+              "timeouts": 0
             }
-          ],
-          "unresolvedBreakdown": {
-            "cancelled": 0,
-            "executionError": 0,
-            "notRun": 0,
-            "testTimedOut": 0,
-            "timedOut": 0,
-            "unassessed": 0
+          },
+          "coverage": {
+            "state": "passed",
+            "exit": 0,
+            "report": {
+              "complete": true,
+              "passed": 1,
+              "failed": 0,
+              "errors": 0,
+              "testHookErrors": 0,
+              "timeouts": 0
+            }
+          },
+          "extremes": {
+            "complete": true,
+            "outcomes": []
+          },
+          "mutation": {
+            "complete": false,
+            "score": null,
+            "planned": 1,
+            "completed": 1,
+            "verdicts": [
+              "execution-error"
+            ],
+            "jobs": [
+              {
+                "state": "execution-error",
+                "exit": 1,
+                "report": {
+                  "complete": true,
+                  "passed": 0,
+                  "failed": 1,
+                  "errors": 2,
+                  "testHookErrors": 0,
+                  "timeouts": 0
+                }
+              }
+            ],
+            "unresolvedBreakdown": {
+              "cancelled": 0,
+              "executionError": 1,
+              "notRun": 0,
+              "testTimedOut": 0,
+              "timedOut": 0,
+              "unassessed": 0
+            }
           }
+        },
+        "receipt": {
+          "actual": {
+            "jest": "29.7.0",
+            "jest-expo": "57.0.5"
+          },
+          "complete": true,
+          "errors": 2,
+          "executionId": "capture-3458570-1792388713125256707-mutant-0-0",
+          "expo": "57.0.5",
+          "failed": 1,
+          "jest": "29.7.0",
+          "node": "24.22.0",
+          "passed": 0,
+          "runner": "jest",
+          "testHookErrors": 0,
+          "timeouts": 0,
+          "version": 1
         }
       },
-      "receipt": {
-        "actual": {
-          "jest": "29.7.0",
-          "jest-expo": "57.0.5"
+      "after": {
+        "assertionError": {
+          "exit": 0,
+          "complete": true,
+          "baseline": {
+            "state": "passed",
+            "exit": 0,
+            "report": {
+              "complete": true,
+              "passed": 1,
+              "failed": 0,
+              "errors": 0,
+              "testHookErrors": 0,
+              "timeouts": 0
+            }
+          },
+          "coverage": {
+            "state": "passed",
+            "exit": 0,
+            "report": {
+              "complete": true,
+              "passed": 1,
+              "failed": 0,
+              "errors": 0,
+              "testHookErrors": 0,
+              "timeouts": 0
+            }
+          },
+          "extremes": {
+            "complete": true,
+            "outcomes": []
+          },
+          "mutation": {
+            "complete": true,
+            "score": 100,
+            "planned": 1,
+            "completed": 1,
+            "verdicts": [
+              "killed"
+            ],
+            "jobs": [
+              {
+                "state": "failed",
+                "exit": 1,
+                "report": {
+                  "complete": true,
+                  "passed": 0,
+                  "failed": 1,
+                  "errors": 0,
+                  "testHookErrors": 0,
+                  "timeouts": 0
+                }
+              }
+            ],
+            "unresolvedBreakdown": {
+              "cancelled": 0,
+              "executionError": 0,
+              "notRun": 0,
+              "testTimedOut": 0,
+              "timedOut": 0,
+              "unassessed": 0
+            }
+          }
         },
-        "complete": true,
-        "errors": 0,
-        "executionId": "capture-3412864-1792374248662182423-mutant-0-0",
-        "expo": "57.0.5",
-        "failed": 1,
-        "jest": "29.7.0",
-        "node": "24.22.0",
-        "passed": 0,
-        "runner": "jest",
-        "testHookErrors": 0,
-        "timeouts": 0,
-        "version": 1
+        "receipt": {
+          "actual": {
+            "jest": "29.7.0",
+            "jest-expo": "57.0.5"
+          },
+          "complete": true,
+          "errors": 0,
+          "executionId": "capture-3460342-1792388970344702321-mutant-0-0",
+          "expo": "57.0.5",
+          "failed": 1,
+          "jest": "29.7.0",
+          "node": "24.22.0",
+          "passed": 0,
+          "runner": "jest",
+          "testHookErrors": 0,
+          "timeouts": 0,
+          "version": 1
+        }
       }
     }
-  }
+  ]
 }
