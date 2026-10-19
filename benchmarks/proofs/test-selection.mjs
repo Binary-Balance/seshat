@@ -83,9 +83,9 @@ async function pair(name, config=base, switching=false) {
   return {full,selected};
 }
 const rows = report => ['pseudoTesting','mutation'].flatMap(key => report.result[key]?.outcomes ?? []);
-const choices = report => rows(report).flatMap(row => row.setups.map(setup => setup.selection));
-const requested = new Set((values.cases ?? 'normal,parallel,switching,module,hooks,concurrent,missing,filter,timeout').split(','));
-const valid = ['normal','parallel','switching','module','hooks','concurrent','missing','filter','timeout'];
+const choices = report => rows(report).flatMap(row => row.setups.map(setup => setup.selection)).filter(Boolean);
+const valid = ['normal','parallel','switching','module','hooks','concurrent','missing','filter','timeout','query','cleanup','assertion-cleanup'];
+const requested = new Set((values.cases ?? valid.join(',')).split(','));
 assert.ok([...requested].every(name => valid.includes(name)), 'unknown proof case');
 
 for (const name of requested) {
@@ -122,12 +122,24 @@ for (const name of requested) {
       test:"import {test} from 'vitest';import {decision} from './target.ts';test('bounded timeout',()=>decision()?Promise.resolve():new Promise(()=>{}),50);\n"});
     config.mutationOperators=['boolean'];
   }
+  if (name === 'query') {
+    write('b.test.ts', "import {expect,test} from 'vitest';import {decision} from './target.ts?variant';test('boundary via query',()=>expect(decision(0)).toBe(false));\n");
+  }
+  if (name === 'cleanup' || name === 'assertion-cleanup') {
+    reset({body:'export function decision(): boolean { return true; }\n',
+      test:`import {afterEach,expect,test} from 'vitest';import {decision} from './target.ts';
+        afterEach(()=>{if(!decision())throw Error('cleanup marker');});
+        test('cleanup after callback',()=>{${name === 'assertion-cleanup' ? 'expect(decision()).toBe(true);' : ''}});\n`});
+    config.mutationOperators=['boolean'];
+    config.setups[0].test = [...args,'--reporter=default'];
+    config.setups[0].coverage.command = [...config.setups[0].test,'--coverage'];
+  }
   const result = await pair(name, config, switching);
   const targetRows = rows(result.selected).filter(row => row.path === 'target.ts');
-  const modes = targetRows.flatMap(row => row.setups.map(setup => setup.selection));
+  const modes = targetRows.flatMap(row => row.setups.map(setup => setup.selection)).filter(Boolean);
   if (name === 'module') {
     assert.ok(modes.length && modes.every(choice => choice.mode === 'full'), 'module-load coverage must fall back');
-  } else if (name === 'missing') {
+  } else if (name === 'missing' || name === 'query') {
     assert.ok(choices(result.selected).every(choice => choice.mode === 'full'), 'missing attribution must fall back');
   } else if (name === 'filter') {
     assert.ok(modes.some(choice => choice.reason === 'selection-not-confirmed'), 'expanded substring filter must fall back');
@@ -142,6 +154,14 @@ for (const name of requested) {
     assert.ok(result.selected.result.mutation.jobsAttempted < result.full.result.mutation.jobsAttempted);
   }
   if (name === 'timeout') assert.ok(targetRows.some(row => row.verdict === 'timed-out'));
+  if (name === 'cleanup' || name === 'assertion-cleanup') {
+    assert.equal(result.selected.complete, false);
+    assert.equal(result.selected.result.mutation.score, null);
+    const failed = targetRows.find(row => row.verdict === 'execution-error');
+    assert.ok(failed && failed.setups[0].report.errors > 0, 'cleanup must retain execution-error evidence');
+    assert.match(failed.setups[0].diagnostic, /cleanup marker/);
+    if (name === 'assertion-cleanup') assert.match(failed.setups[0].diagnostic, /AssertionError/);
+  }
 }
 const summary = {node:process.version,platform:process.platform,arch:process.arch,
   vitest:JSON.parse(readFileSync(join(project,'node_modules/vitest/package.json'),'utf8')).version,

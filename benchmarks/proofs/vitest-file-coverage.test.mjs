@@ -37,6 +37,7 @@ checkCounters((_, source) => { source.fnMap[1] = {}; }, false);
 checkCounters((_, source) => { source.f[0] = NaN; }, false);
 checkCounters((coverage, source) => { coverage[absent] = {...source, path:absent}; }, false);
 checkCounters((coverage, source) => { coverage[absent] = {...source}; }, false);
+checkCounters((coverage, source) => { coverage[`${path}?variant`] = {...source, path:`${path}?variant`}; }, false);
 const incomplete = entry(); delete incomplete.s[0];
 checkCounters(() => {}, false, incomplete);
 assert.equal(beginFileCoverage([path], undefined).finish(undefined).complete, false);
@@ -140,6 +141,12 @@ test('duplicate', () => value());\ntest('duplicate', () => value());\n`);
   assert.equal(duplicate.passed, 2);
   assert.equal(duplicate.fileCoverage.complete, true);
   assert.deepEqual(duplicate.tests, Array.from({length:2}, () => ({file:stable(join(work, 'duplicate.test.js')), id:'duplicate'})));
+
+  writeFileSync(join(work, 'query.test.js'), `import {test, expect} from 'vitest';
+import {value} from './body.js?variant';test('query import', () => expect(value()).toBe(1));\n`);
+  const query = run({files:['duplicate.test.js','query.test.js']});
+  assert.equal(query.passed, 3);
+  assert.deepEqual(query.fileCoverage, {version:1, complete:false, files:[]});
 
   writeFileSync(join(work, 'reset.test.js'), `import {test} from 'vitest';
 import {value} from './body.js';

@@ -295,6 +295,8 @@ The baseline and coverage workloads must match before selection is available.
 Coverage receipts also retain versioned `fileCoverage` evidence for each test file
 and selected source. Selection currently supports isolated Vitest Node workers
 with Istanbul coverage; unsupported or ambiguous setups use full commands.
+Raw coverage IDs outside the assessed source identities, including query-suffixed
+imports, also force full commands because their remapping is unverified.
 The selected set covers any executed code in the source file, rather than only
 the exact mutant. Module-level and module-load coverage use full commands.
 

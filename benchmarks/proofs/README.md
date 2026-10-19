@@ -60,7 +60,8 @@ project or writes mutants into the source fixture.
 full mutant jobs using the built release CLI. It covers killed and equivalent
 mutants, genuine zero coverage, module loading, file hooks, concurrent file
 workers, missing attribution, expanded substring filters, runner timeouts,
-parallel Seshat workers and experimental switching. Pass `--cli PATH` for a
+parallel Seshat workers, query imports, mutant-induced cleanup failures and
+experimental switching. Pass `--cli PATH` for a
 different executable or `--cases normal,module` for a focused run. Portable
 reports and matched timing fields remain in `work/assurance-proofs/test-selection-*`.
 

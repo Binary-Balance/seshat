@@ -25,7 +25,8 @@ export function beginFileCoverage(paths, coverage = globalThis.__VITEST_COVERAGE
   try {
     if (!complete) throw new Error('Coverage is unavailable');
     for (const [path, entry] of Object.entries(coverage ?? {})) {
-      if (!isAbsolute(path) || !record(entry) || entry.path !== path) throw new Error('Coverage identity conflict');
+      // Other raw IDs, including ?query imports, can map back to a selected source.
+      if (!paths.includes(path) || !isAbsolute(path) || !record(entry) || entry.path !== path) throw new Error('Coverage identity conflict');
     }
     for (const path of paths) {
       // Omission is unknown, never a zero. The merged report must resolve it.
@@ -69,7 +70,7 @@ export function beginFileCoverage(paths, coverage = globalThis.__VITEST_COVERAGE
       try {
         if (current !== coverage) complete = false;
         for (const [path, entry] of Object.entries(current ?? {})) {
-          if (!isAbsolute(path) || !record(entry) || entry.path !== path) complete = false;
+          if (!paths.includes(path) || !isAbsolute(path) || !record(entry) || entry.path !== path) complete = false;
         }
         for (const path of paths) {
           const snapshot = snapshots.get(path), entry = current?.[path];

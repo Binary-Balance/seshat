@@ -1,0 +1,1004 @@
+{
+  "node": "v24.22.0",
+  "platform": "linux",
+  "arch": "x64",
+  "vitest": "5.0.0",
+  "samplesPerCase": 1,
+  "checks": [
+    "parallel",
+    "switching",
+    "module",
+    "hooks",
+    "concurrent",
+    "missing",
+    "filter",
+    "timeout",
+    "normal",
+    "query",
+    "cleanup",
+    "assertion-cleanup"
+  ],
+  "validation": "The eight unchanged controls reuse the initial binary snapshot. Normal, query and cleanup cases ran after the raw-identity guard. Each comparison retains its binary hash.",
+  "queryBeforeFix": {
+    "fullScore": 40,
+    "selectedScore": 20,
+    "binarySha256": "b9c53224770cc783d62fec1c3cbe842bacd5511aebeab7a265d907f04edc0703"
+  },
+  "comparisons": [
+    {
+      "name": "parallel",
+      "verdictsMatch": true,
+      "outcomes": [
+        [
+          "pseudoTesting",
+          "target.ts",
+          0,
+          "killed"
+        ],
+        [
+          "pseudoTesting",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          2,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          1,
+          "survived"
+        ]
+      ],
+      "full": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 0.7209869999999999,
+          "attributionMs": 0.097762,
+          "baselineMs": 4412.245231,
+          "cleanupMs": 734.553535,
+          "compilerStrictnessMs": 4630.562011,
+          "coverageMs": 5536.932068,
+          "preparationMs": 0.365493,
+          "typecheckMs": 3143.8128650000003
+        },
+        "mutationWallMs": 10544.234964,
+        "jobsAttempted": 5,
+        "perOperatorJobs": 5
+      },
+      "selected": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 1.752515,
+          "attributionMs": 0.080541,
+          "baselineMs": 2092.070247,
+          "cleanupMs": 770.546887,
+          "compilerStrictnessMs": 3504.260814,
+          "coverageMs": 4770.753786,
+          "preparationMs": 0.7299439999999999,
+          "typecheckMs": 2654.0509979999997
+        },
+        "mutationWallMs": 4781.783349,
+        "jobsAttempted": 3,
+        "perOperatorJobs": 3
+      },
+      "binarySha256": "b9c53224770cc783d62fec1c3cbe842bacd5511aebeab7a265d907f04edc0703",
+      "selectionModes": {
+        "selected": 5,
+        "no-coverage": 2
+      },
+      "fallbackReasons": {
+        "verified-zero-coverage": 2
+      }
+    },
+    {
+      "name": "switching",
+      "verdictsMatch": true,
+      "outcomes": [
+        [
+          "pseudoTesting",
+          "target.ts",
+          0,
+          "killed"
+        ],
+        [
+          "pseudoTesting",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          2,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          1,
+          "survived"
+        ]
+      ],
+      "full": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 0.564705,
+          "attributionMs": 0.09403600000000001,
+          "baselineMs": 1795.9404430000002,
+          "cleanupMs": 1001.463057,
+          "compilerStrictnessMs": 2527.8663859999997,
+          "coverageMs": 3553.4009929999997,
+          "preparationMs": 0.31441800000000003,
+          "typecheckMs": 2644.386476
+        },
+        "mutationWallMs": 9608.718988,
+        "jobsAttempted": 5,
+        "perOperatorJobs": 5
+      },
+      "selected": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 0.6949289999999999,
+          "attributionMs": 0.084027,
+          "baselineMs": 3020.58317,
+          "cleanupMs": 2434.163665,
+          "compilerStrictnessMs": 2927.127977,
+          "coverageMs": 5837.894878,
+          "preparationMs": 2.894317,
+          "typecheckMs": 1515.9898429999998
+        },
+        "mutationWallMs": 7820.385463,
+        "jobsAttempted": 3,
+        "perOperatorJobs": 3
+      },
+      "binarySha256": "b9c53224770cc783d62fec1c3cbe842bacd5511aebeab7a265d907f04edc0703",
+      "selectionModes": {
+        "selected": 5,
+        "no-coverage": 2
+      },
+      "fallbackReasons": {
+        "verified-zero-coverage": 2
+      }
+    },
+    {
+      "name": "module",
+      "verdictsMatch": true,
+      "outcomes": [
+        [
+          "pseudoTesting",
+          "target.ts",
+          0,
+          "killed"
+        ],
+        [
+          "pseudoTesting",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          2,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          1,
+          "survived"
+        ]
+      ],
+      "full": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 0.692514,
+          "attributionMs": 0.10715999999999999,
+          "baselineMs": 3097.8827810000003,
+          "cleanupMs": 1324.1598649999999,
+          "compilerStrictnessMs": 4707.527109,
+          "coverageMs": 5100.126154,
+          "preparationMs": 6.487921,
+          "typecheckMs": 3021.622868
+        },
+        "mutationWallMs": 14794.915565,
+        "jobsAttempted": 5,
+        "perOperatorJobs": 5
+      },
+      "selected": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 5.764479000000001,
+          "attributionMs": 0.090639,
+          "baselineMs": 4104.551203999999,
+          "cleanupMs": 1291.505387,
+          "compilerStrictnessMs": 4279.6819160000005,
+          "coverageMs": 7022.6689049999995,
+          "preparationMs": 0.879262,
+          "typecheckMs": 3520.83541
+        },
+        "mutationWallMs": 8853.519224,
+        "jobsAttempted": 3,
+        "perOperatorJobs": 3
+      },
+      "binarySha256": "b9c53224770cc783d62fec1c3cbe842bacd5511aebeab7a265d907f04edc0703",
+      "selectionModes": {
+        "full": 5,
+        "no-coverage": 2
+      },
+      "fallbackReasons": {
+        "module-load-coverage": 5,
+        "verified-zero-coverage": 2
+      }
+    },
+    {
+      "name": "hooks",
+      "verdictsMatch": true,
+      "outcomes": [
+        [
+          "pseudoTesting",
+          "target.ts",
+          0,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          2,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          1,
+          "survived"
+        ]
+      ],
+      "full": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 1.8460189999999999,
+          "attributionMs": 0.095018,
+          "baselineMs": 3922.085337,
+          "cleanupMs": 1733.481974,
+          "compilerStrictnessMs": 4122.854098999999,
+          "coverageMs": 4242.16844,
+          "preparationMs": 0.359592,
+          "typecheckMs": 2885.335682
+        },
+        "mutationWallMs": 21553.492785,
+        "jobsAttempted": 5,
+        "perOperatorJobs": 5
+      },
+      "selected": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 0.385931,
+          "attributionMs": 0.09605899999999999,
+          "baselineMs": 3336.226422,
+          "cleanupMs": 853.42007,
+          "compilerStrictnessMs": 6508.999193000001,
+          "coverageMs": 5994.793946,
+          "preparationMs": 0.43879999999999997,
+          "typecheckMs": 4119.256353
+        },
+        "mutationWallMs": 8353.302379,
+        "jobsAttempted": 3,
+        "perOperatorJobs": 3
+      },
+      "binarySha256": "b9c53224770cc783d62fec1c3cbe842bacd5511aebeab7a265d907f04edc0703",
+      "selectionModes": {
+        "selected": 4,
+        "no-coverage": 2
+      },
+      "fallbackReasons": {
+        "verified-zero-coverage": 2
+      }
+    },
+    {
+      "name": "concurrent",
+      "verdictsMatch": true,
+      "outcomes": [
+        [
+          "pseudoTesting",
+          "target.ts",
+          0,
+          "killed"
+        ],
+        [
+          "pseudoTesting",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          2,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          1,
+          "survived"
+        ]
+      ],
+      "full": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 0.6624270000000001,
+          "attributionMs": 0.09136000000000001,
+          "baselineMs": 2019.8740700000003,
+          "cleanupMs": 1854.6114380000001,
+          "compilerStrictnessMs": 2648.135891,
+          "coverageMs": 5336.596672,
+          "preparationMs": 0.762365,
+          "typecheckMs": 2480.961819
+        },
+        "mutationWallMs": 16323.160087000002,
+        "jobsAttempted": 5,
+        "perOperatorJobs": 5
+      },
+      "selected": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 0.634014,
+          "attributionMs": 0.089267,
+          "baselineMs": 2127.450629,
+          "cleanupMs": 562.203915,
+          "compilerStrictnessMs": 3323.971743,
+          "coverageMs": 2801.8828190000004,
+          "preparationMs": 0.379439,
+          "typecheckMs": 2274.600665
+        },
+        "mutationWallMs": 5354.113901,
+        "jobsAttempted": 3,
+        "perOperatorJobs": 3
+      },
+      "binarySha256": "b9c53224770cc783d62fec1c3cbe842bacd5511aebeab7a265d907f04edc0703",
+      "selectionModes": {
+        "selected": 5,
+        "no-coverage": 2
+      },
+      "fallbackReasons": {
+        "verified-zero-coverage": 2
+      }
+    },
+    {
+      "name": "missing",
+      "verdictsMatch": true,
+      "outcomes": [
+        [
+          "pseudoTesting",
+          "target.ts",
+          0,
+          "killed"
+        ],
+        [
+          "pseudoTesting",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          2,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          1,
+          "survived"
+        ]
+      ],
+      "full": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 0.596675,
+          "attributionMs": 0.109114,
+          "baselineMs": 2747.8742540000003,
+          "cleanupMs": 1355.4657539999998,
+          "compilerStrictnessMs": 4534.543616999999,
+          "coverageMs": 4738.478027,
+          "preparationMs": 0.362286,
+          "typecheckMs": 3149.9719370000003
+        },
+        "mutationWallMs": 26249.181636,
+        "jobsAttempted": 5,
+        "perOperatorJobs": 5
+      },
+      "selected": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 0.624237,
+          "attributionMs": 0.102842,
+          "baselineMs": 3318.7846790000003,
+          "cleanupMs": 1283.771301,
+          "compilerStrictnessMs": 7674.730966,
+          "coverageMs": 5596.941737,
+          "preparationMs": 0.799103,
+          "typecheckMs": 5317.085391
+        },
+        "mutationWallMs": 16821.83542,
+        "jobsAttempted": 5,
+        "perOperatorJobs": 5
+      },
+      "binarySha256": "b9c53224770cc783d62fec1c3cbe842bacd5511aebeab7a265d907f04edc0703",
+      "selectionModes": {
+        "full": 7
+      },
+      "fallbackReasons": {
+        "attribution-unavailable": 7
+      }
+    },
+    {
+      "name": "filter",
+      "verdictsMatch": true,
+      "outcomes": [
+        [
+          "pseudoTesting",
+          "target.ts",
+          0,
+          "killed"
+        ],
+        [
+          "pseudoTesting",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          2,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          1,
+          "survived"
+        ]
+      ],
+      "full": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 0.669511,
+          "attributionMs": 0.128029,
+          "baselineMs": 4617.463097,
+          "cleanupMs": 1177.812778,
+          "compilerStrictnessMs": 4047.8853839999997,
+          "coverageMs": 6073.769923999999,
+          "preparationMs": 0.33965500000000004,
+          "typecheckMs": 3247.237316
+        },
+        "mutationWallMs": 28854.853377000003,
+        "jobsAttempted": 5,
+        "perOperatorJobs": 5
+      },
+      "selected": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 1.6323990000000002,
+          "attributionMs": 0.09334400000000001,
+          "baselineMs": 3782.90133,
+          "cleanupMs": 1573.3733060000002,
+          "compilerStrictnessMs": 3524.953292,
+          "coverageMs": 7172.875762000001,
+          "preparationMs": 0.318104,
+          "typecheckMs": 1786.1138489999998
+        },
+        "mutationWallMs": 35492.715227,
+        "jobsAttempted": 6,
+        "perOperatorJobs": 6
+      },
+      "binarySha256": "b9c53224770cc783d62fec1c3cbe842bacd5511aebeab7a265d907f04edc0703",
+      "selectionModes": {
+        "full": 5,
+        "no-coverage": 2
+      },
+      "fallbackReasons": {
+        "selection-not-confirmed": 5,
+        "verified-zero-coverage": 2
+      }
+    },
+    {
+      "name": "timeout",
+      "verdictsMatch": true,
+      "outcomes": [
+        [
+          "pseudoTesting",
+          "target.ts",
+          0,
+          "timed-out"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          0,
+          "timed-out"
+        ]
+      ],
+      "full": {
+        "complete": false,
+        "score": null,
+        "phases": {
+          "analysisMs": 6.837613999999999,
+          "attributionMs": 0.08588,
+          "baselineMs": 3572.002362,
+          "cleanupMs": 915.530217,
+          "compilerStrictnessMs": 5058.11908,
+          "coverageMs": 5123.471446,
+          "preparationMs": 0.346517,
+          "typecheckMs": 2366.2860929999997
+        },
+        "mutationWallMs": 3355.456377,
+        "jobsAttempted": 1,
+        "perOperatorJobs": 1
+      },
+      "selected": {
+        "complete": false,
+        "score": null,
+        "phases": {
+          "analysisMs": 0.658981,
+          "attributionMs": 0.07449,
+          "baselineMs": 1898.855007,
+          "cleanupMs": 1086.799856,
+          "compilerStrictnessMs": 3934.064587,
+          "coverageMs": 5201.789484,
+          "preparationMs": 0.329025,
+          "typecheckMs": 1883.9106129999998
+        },
+        "mutationWallMs": 2215.3533890000003,
+        "jobsAttempted": 1,
+        "perOperatorJobs": 1
+      },
+      "binarySha256": "b9c53224770cc783d62fec1c3cbe842bacd5511aebeab7a265d907f04edc0703",
+      "selectionModes": {
+        "selected": 2
+      },
+      "fallbackReasons": {}
+    },
+    {
+      "name": "normal",
+      "verdictsMatch": true,
+      "outcomes": [
+        [
+          "pseudoTesting",
+          "target.ts",
+          0,
+          "killed"
+        ],
+        [
+          "pseudoTesting",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          2,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          1,
+          "survived"
+        ]
+      ],
+      "full": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 0.436416,
+          "attributionMs": 0.102542,
+          "baselineMs": 3710.361619,
+          "cleanupMs": 2733.1964329999996,
+          "compilerStrictnessMs": 6683.652939,
+          "coverageMs": 5535.842833000001,
+          "preparationMs": 0.353851,
+          "typecheckMs": 4464.131692
+        },
+        "mutationWallMs": 26001.982889,
+        "jobsAttempted": 5,
+        "perOperatorJobs": 5
+      },
+      "selected": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 0.686673,
+          "attributionMs": 0.082725,
+          "baselineMs": 4054.649451,
+          "cleanupMs": 681.8958510000001,
+          "compilerStrictnessMs": 4209.9900689999995,
+          "coverageMs": 4194.571621,
+          "preparationMs": 2.081761,
+          "typecheckMs": 2758.754128
+        },
+        "mutationWallMs": 6375.938009,
+        "jobsAttempted": 3,
+        "perOperatorJobs": 3
+      },
+      "binarySha256": "f3c48d104afb7893798a4b57edb928137fa28366e0d7df4469edbd5b4e49ffae",
+      "selectionModes": {
+        "selected": 5,
+        "no-coverage": 2
+      },
+      "fallbackReasons": {
+        "verified-zero-coverage": 2
+      }
+    },
+    {
+      "name": "query",
+      "verdictsMatch": true,
+      "outcomes": [
+        [
+          "pseudoTesting",
+          "target.ts",
+          0,
+          "killed"
+        ],
+        [
+          "pseudoTesting",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          0,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          2,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          1,
+          "survived"
+        ]
+      ],
+      "full": {
+        "complete": true,
+        "score": 40,
+        "phases": {
+          "analysisMs": 0.369921,
+          "attributionMs": 0.093645,
+          "baselineMs": 2831.719626,
+          "cleanupMs": 766.524777,
+          "compilerStrictnessMs": 2912.0153589999995,
+          "coverageMs": 4301.028779,
+          "preparationMs": 0.326641,
+          "typecheckMs": 2499.607008
+        },
+        "mutationWallMs": 12261.733529000001,
+        "jobsAttempted": 5,
+        "perOperatorJobs": 5
+      },
+      "selected": {
+        "complete": true,
+        "score": 40,
+        "phases": {
+          "analysisMs": 0.639284,
+          "attributionMs": 0.097151,
+          "baselineMs": 1980.2393459999998,
+          "cleanupMs": 333.85440300000005,
+          "compilerStrictnessMs": 3182.6096900000002,
+          "coverageMs": 3401.922886,
+          "preparationMs": 1.017531,
+          "typecheckMs": 1883.209662
+        },
+        "mutationWallMs": 7005.282558,
+        "jobsAttempted": 5,
+        "perOperatorJobs": 5
+      },
+      "binarySha256": "f3c48d104afb7893798a4b57edb928137fa28366e0d7df4469edbd5b4e49ffae",
+      "selectionModes": {
+        "full": 7
+      },
+      "fallbackReasons": {
+        "attribution-unavailable": 7
+      }
+    },
+    {
+      "name": "cleanup",
+      "verdictsMatch": true,
+      "outcomes": [
+        [
+          "pseudoTesting",
+          "target.ts",
+          0,
+          "execution-error"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          0,
+          "not-run"
+        ]
+      ],
+      "full": {
+        "complete": false,
+        "score": null,
+        "phases": {
+          "analysisMs": 0.415687,
+          "attributionMs": 0.08106100000000001,
+          "baselineMs": 1327.315899,
+          "cleanupMs": 416.312977,
+          "compilerStrictnessMs": 1291.198902,
+          "coverageMs": 2082.396294,
+          "preparationMs": 0.457254,
+          "typecheckMs": 1246.128641
+        },
+        "mutationWallMs": 7.1e-05,
+        "jobsAttempted": 0,
+        "perOperatorJobs": 0
+      },
+      "selected": {
+        "complete": false,
+        "score": null,
+        "phases": {
+          "analysisMs": 0.51891,
+          "attributionMs": 0.07363800000000001,
+          "baselineMs": 1155.8907869999998,
+          "cleanupMs": 307.510634,
+          "compilerStrictnessMs": 1671.415233,
+          "coverageMs": 1787.0448290000002,
+          "preparationMs": 0.395209,
+          "typecheckMs": 1028.301686
+        },
+        "mutationWallMs": 5.9999999999999995e-05,
+        "jobsAttempted": 0,
+        "perOperatorJobs": 0
+      },
+      "binarySha256": "f3c48d104afb7893798a4b57edb928137fa28366e0d7df4469edbd5b4e49ffae",
+      "selectionModes": {
+        "selected": 1
+      },
+      "fallbackReasons": {}
+    },
+    {
+      "name": "assertion-cleanup",
+      "verdictsMatch": true,
+      "outcomes": [
+        [
+          "pseudoTesting",
+          "target.ts",
+          0,
+          "execution-error"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          0,
+          "not-run"
+        ]
+      ],
+      "full": {
+        "complete": false,
+        "score": null,
+        "phases": {
+          "analysisMs": 3.895689,
+          "attributionMs": 0.086532,
+          "baselineMs": 1348.57374,
+          "cleanupMs": 416.34286199999997,
+          "compilerStrictnessMs": 2088.750466,
+          "coverageMs": 1946.68691,
+          "preparationMs": 0.48521600000000004,
+          "typecheckMs": 1417.621281
+        },
+        "mutationWallMs": 5.9999999999999995e-05,
+        "jobsAttempted": 0,
+        "perOperatorJobs": 0
+      },
+      "selected": {
+        "complete": false,
+        "score": null,
+        "phases": {
+          "analysisMs": 0.635107,
+          "attributionMs": 0.113192,
+          "baselineMs": 1418.761548,
+          "cleanupMs": 293.20994099999996,
+          "compilerStrictnessMs": 2026.081188,
+          "coverageMs": 1864.9802829999999,
+          "preparationMs": 0.44830800000000004,
+          "typecheckMs": 1271.0809709999999
+        },
+        "mutationWallMs": 0.00011999999999999999,
+        "jobsAttempted": 0,
+        "perOperatorJobs": 0
+      },
+      "binarySha256": "f3c48d104afb7893798a4b57edb928137fa28366e0d7df4469edbd5b4e49ffae",
+      "selectionModes": {
+        "selected": 1
+      },
+      "fallbackReasons": {}
+    }
+  ]
+}

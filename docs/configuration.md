@@ -426,6 +426,8 @@ hooks. This is a conservative superset of the files covering the exact mutant.
 It preserves each chosen file's tests, hooks and configured test order.
 Node and Jest setups, command wrappers and unverified Vitest configurations
 automatically retain full test commands.
+Raw coverage identities must match assessed sources exactly. Additional
+instrumented sources, query imports and other unverified remapping use full runs.
 
 Selection requires matching baseline and coverage test identities, complete
 file attribution and supported command arguments. Module-level mutants and
