@@ -56,6 +56,14 @@ and remove those copies on normal completion. The script checks source hashes
 and checks that no session directories remain. It never changes either consuming
 project or writes mutants into the source fixture.
 
+`node benchmarks/proofs/test-selection.mjs` compares whole-file selection with
+full mutant jobs using the built release CLI. It covers killed and equivalent
+mutants, genuine zero coverage, module loading, file hooks, concurrent file
+workers, missing attribution, expanded substring filters, runner timeouts,
+parallel Seshat workers and experimental switching. Pass `--cli PATH` for a
+different executable or `--cases normal,module` for a focused run. Portable
+reports and matched timing fields remain in `work/assurance-proofs/test-selection-*`.
+
 ## CLI
 
 The `seshat` and `seshat-proofs` binaries share the existing private Rust modules.

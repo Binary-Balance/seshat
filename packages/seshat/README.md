@@ -10,6 +10,7 @@ insufficiently tested code.
 ## What Seshat does
 
 - Calculates function complexity and CRAP scores from branch coverage.
+- Selects whole test files for verified Vitest Istanbul setups, with full-run fallbacks and an opt-out.
 - Changes comparison, logical, arithmetic and boolean expressions one at a time
   and checks whether tests detect them.
 - Replaces function bodies to find covered functions whose removal tests miss.

@@ -1,5 +1,6 @@
 // Trusted, quiescent local projects only. This is source isolation, not a sandbox.
 mod collection;
+mod selection;
 
 #[cfg(test)]
 thread_local! {
@@ -225,6 +226,12 @@ struct Config {
     thresholds: Thresholds,
     #[serde(default = "default_mutation_operators", rename = "mutationOperators")]
     mutation_operators: Vec<MutationOperator>,
+    #[serde(default = "default_test_selection", rename = "testSelection")]
+    test_selection: bool,
+}
+
+fn default_test_selection() -> bool {
+    true
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize)]
@@ -667,6 +674,7 @@ pub struct CapturedProject {
     // Switching keeps every selected source prepared and selects only the active mutant in env.
     prepared_sources: Option<Vec<String>>,
     active_mutant: Option<usize>,
+    test_selection: Vec<Result<selection::SetupEvidence, String>>,
     files: usize,
     bytes: u64,
     links: usize,
@@ -695,7 +703,7 @@ impl CapturedProject {
         let mut entries = BTreeMap::new();
         walk(&self.directory.0, Path::new(""), false, &mut entries)?;
         let directory = OwnedDirectory::create(self.directory.0.parent().unwrap())?;
-        let copy = Self::populate(
+        let mut copy = Self::populate(
             &self.directory.0,
             directory,
             self.config.clone(),
@@ -705,6 +713,7 @@ impl CapturedProject {
         if copy.sources != self.sources {
             return Err("worker copy differs from analysed source".into());
         }
+        copy.test_selection = self.test_selection.clone();
         Ok(copy)
     }
 
@@ -812,6 +821,7 @@ impl CapturedProject {
             .collect::<Result<_, String>>()?;
         Ok(Self {
             directory,
+            test_selection: vec![Err("attribution-unavailable".into()); config.setups.len()],
             config,
             sources,
             active_edit: None,

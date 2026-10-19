@@ -411,9 +411,41 @@ of equivalence. See the [operator fixture evidence](research/mutation-operators.
 
 ### Mutation execution
 
-Every mutant runs all configured setups. No automatic test selection, persistent
-test-process reuse or cross-run verdict caching is performed. Each baseline and
-mutant starts a fresh test process.
+Every mutant is assessed across all configured setups. Each baseline and mutant
+job starts a fresh test process. There is no persistent test-process reuse or
+cross-run verdict caching.
+
+Whole-test-file selection is enabled by default. Set top-level
+`"testSelection": false` to restore the full test command for every mutant.
+Original, worker and inactive switching baselines always run the full command.
+
+The initial selection route supports direct Vitest 5 `run` commands with the
+Seshat runner, isolated Node workers and Istanbul coverage. It selects every
+test file that executes any code in the mutated source file, including file
+hooks. This is a conservative superset of the files covering the exact mutant.
+It preserves each chosen file's tests, hooks and configured test order.
+Node and Jest setups, command wrappers and unverified Vitest configurations
+automatically retain full test commands.
+
+Selection requires matching baseline and coverage test identities, complete
+file attribution and supported command arguments. Module-level mutants and
+sources whose functions execute during module loading use full commands.
+Missing or ambiguous attribution also uses full commands. After a selected job,
+Seshat verifies the executed test identities against the baseline. If a completed
+test run executed a different workload, it reruns the full command and retains
+the first attempt. Empty selected runs and infrastructure failures never become
+passing evidence.
+
+An operator mutant can skip execution only when all setups prove complete,
+reliable zero coverage of its source. It is reported as survived without coverage.
+Unknown coverage cannot justify skipping. The existing zero-coverage skip rule
+for extreme mutations remains in effect.
+
+Tests must run independently across files. State or ordering dependencies between
+files can change verdicts when other files are omitted. Disable selection for
+such suites. Matched proof fixtures cannot establish independence for every
+consumer project. Reports retain the selection, executed-test evidence and
+fallback reasons; see the [report format](report-format.md#mutation-assessment).
 
 A job that exceeds `timeoutMs` stops further mutation scheduling. Results from
 work already in progress on other workers remain available.
