@@ -6,13 +6,49 @@ use std::os::fd::AsRawFd as PipeHandle;
 use std::os::windows::io::AsRawHandle as PipeHandle;
 use std::{
     io::{self, Read},
-    process::Command,
+    process::{Command, ExitStatus},
     thread,
     time::{Duration, Instant},
 };
 
 const STREAM_LIMIT: usize = 2 * 1024 * 1024;
 const DRAIN_TIMEOUT: Duration = Duration::from_millis(500);
+const CANCELLATION_OBSERVATION_TIMEOUT: Duration = Duration::from_millis(100);
+
+fn interruption_signal(status: &ExitStatus) -> Option<usize> {
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::Foundation::STATUS_CONTROL_C_EXIT;
+        (status.code() == Some(STATUS_CONTROL_C_EXIT)).then_some(2)
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::ExitStatusExt;
+        status
+            .signal()
+            .filter(|signal| matches!(*signal, libc::SIGINT | libc::SIGTERM))
+            .map(|signal| signal as usize)
+    }
+}
+
+fn cancelled_exit(status: &ExitStatus, cancellation_signal: &mut impl FnMut() -> usize) -> bool {
+    let Some(signal) = interruption_signal(status) else {
+        return false;
+    };
+    // Console handlers run independently in each process, so the child's status
+    // can precede the host's flag. Never infer cancellation from an exit alone.
+    let deadline = Instant::now() + CANCELLATION_OBSERVATION_TIMEOUT;
+    loop {
+        let observed = cancellation_signal();
+        if observed != 0 {
+            return observed == signal;
+        }
+        if Instant::now() >= deadline {
+            return false;
+        }
+        thread::sleep(Duration::from_millis(2));
+    }
+}
 
 // One reader owns each pipe. Polling keeps partial output available and lets us close
 // our read handles even when a detached descendant retains a write handle.
@@ -121,10 +157,19 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
     #[cfg(all(test, windows))]
     let spawn_lock = super::platform::test_spawn_lock().lock().unwrap();
     let start = Instant::now();
-    let mut child =
+    let child =
         super::platform::ManagedChild::spawn(command).map_err(|e| format!("start command: {e}"))?;
     #[cfg(all(test, windows))]
     drop(spawn_lock);
+    collect_output(child, start, timeout, super::cancellation_signal)
+}
+
+fn collect_output(
+    mut child: super::platform::ManagedChild,
+    start: Instant,
+    timeout: Duration,
+    mut cancellation_signal: impl FnMut() -> usize,
+) -> Result<Value, String> {
     let mut stdout = Output::new(child.take_stdout().ok_or("child stdout was not piped")?)
         .map_err(|e| format!("prepare stdout pipe: {e}"))?;
     let mut stderr = Output::new(child.take_stderr().ok_or("child stderr was not piped")?)
@@ -135,14 +180,17 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
     let status = loop {
         stdout.drain();
         stderr.drain();
-        // Attribute cancellation only to a job still running. The enclosing assessment
-        // still gives an overall cancellation precedence over any completed job results.
+        // Preserve completed results unless the native status confirms interruption
+        // by the same signal handled by the host.
         match child.try_wait() {
-            Ok(Some(status)) => break Ok(status),
+            Ok(Some(status)) => {
+                cancelled = cancelled_exit(&status, &mut cancellation_signal);
+                break Ok(status);
+            }
             Err(error) => break Err(error.to_string()),
             Ok(None) => {}
         }
-        cancelled = super::cancellation_signal() != 0;
+        cancelled = cancellation_signal() != 0;
         if cancelled
             || start.elapsed() >= timeout
             || stdout.overflow
@@ -198,6 +246,106 @@ pub(super) fn run(command: &mut Command, timeout: Duration) -> Result<Value, Str
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn completed_job(script: &str, signal: impl FnMut() -> usize) -> Value {
+        let mut command = Command::new("node");
+        command.args(["-e", script]);
+        #[cfg(windows)]
+        let spawn_lock = super::super::platform::test_spawn_lock().lock().unwrap();
+        let mut child = super::super::platform::ManagedChild::spawn(&mut command).unwrap();
+        #[cfg(windows)]
+        drop(spawn_lock);
+        let start = Instant::now();
+        while child.try_wait().unwrap().is_none() {
+            assert!(
+                start.elapsed() < Duration::from_secs(5),
+                "child did not exit"
+            );
+            thread::sleep(Duration::from_millis(2));
+        }
+        collect_output(child, start, Duration::from_secs(5), signal).unwrap()
+    }
+
+    fn interrupt_script() -> &'static str {
+        #[cfg(windows)]
+        {
+            "process.exit(0xC000013A | 0)"
+        }
+        #[cfg(unix)]
+        {
+            "process.kill(process.pid, 'SIGINT')"
+        }
+    }
+
+    #[test]
+    fn interrupted_exit_before_host_cancellation_is_cancelled() {
+        // The real child has exited before the job loop can see the host's handler.
+        let mut observations = 0;
+        let result = completed_job(interrupt_script(), || {
+            observations += 1;
+            if observations < 3 { 0 } else { 2 }
+        });
+        assert_eq!(result["cancelled"], true, "{result}");
+        assert_eq!(
+            super::super::classify("node", &result),
+            crate::assessment::TestState::Cancelled
+        );
+        assert!(result["error"].is_null(), "{result}");
+        assert!(result["cleanupError"].is_null(), "{result}");
+    }
+
+    #[test]
+    fn completed_jobs_keep_their_verdicts_after_host_cancellation() {
+        for (exit, passed, failed, expected) in [
+            (0, 1, 0, crate::assessment::TestState::Passed),
+            (1, 0, 1, crate::assessment::TestState::Failed),
+        ] {
+            let mut result = completed_job(&format!("process.exit({exit})"), || 2);
+            assert_eq!(result["cancelled"], false, "{result}");
+            result["report"] = json!({"complete":true,"passed":passed,"failed":failed,"errors":0});
+            assert_eq!(super::super::classify("node", &result), expected);
+        }
+        let result = completed_job("process.exit(2)", || 2);
+        assert_eq!(result["cancelled"], false, "{result}");
+        assert_eq!(
+            super::super::classify("node", &result),
+            crate::assessment::TestState::ExecutionError
+        );
+    }
+
+    #[test]
+    fn interrupted_exit_without_host_cancellation_stays_an_error() {
+        let result = completed_job(interrupt_script(), || 0);
+        assert_eq!(result["cancelled"], false, "{result}");
+        assert_eq!(
+            super::super::classify("node", &result),
+            crate::assessment::TestState::ExecutionError
+        );
+    }
+
+    #[test]
+    fn unrelated_failures_after_host_cancellation_stay_errors() {
+        for script in [
+            "process.exit(130)",
+            "process.exit(143)",
+            #[cfg(windows)]
+            "process.exit(0xC0000005 | 0)",
+            #[cfg(unix)]
+            "process.kill(process.pid, 'SIGKILL')",
+        ] {
+            let result = completed_job(script, || 2);
+            assert_eq!(result["cancelled"], false, "{result}");
+            assert_eq!(
+                super::super::classify("node", &result),
+                crate::assessment::TestState::ExecutionError
+            );
+        }
+        #[cfg(unix)]
+        {
+            let result = completed_job(interrupt_script(), || libc::SIGTERM as usize);
+            assert_eq!(result["cancelled"], false, "{result}");
+        }
+    }
 
     #[test]
     fn held_open_pipe_retains_partial_output() {

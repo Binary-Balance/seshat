@@ -1575,6 +1575,11 @@ Eleven scenarios check identical CRAP/verdicts at one, two and four workers,
 repeatability, clamping a limit of twenty to four mutants, overlapping execution,
 independent writable files/receipts, failed baselines, missing receipts, changed
 source, timeouts and cancellation of two active job groups with descendants.
+On Windows, each cancellation scenario runs ten times, alternating Ctrl+Break
+and Ctrl+C, to catch console-event ordering races.
+`SESHAT_PARALLEL_CANCEL_REPEATS` sets a positive repeat count on any platform.
+Each attempt retains its console event, host exit and mutant verdicts in
+`cancellation.runs`, while the report keeps the same eleven scenario keys.
 The overlap fixture deliberately waits 400 ms in each mutant job; its timings
 are not a consuming-project performance claim. Rust tests also check independent
 worker files and rewritten workspace links.
@@ -1644,6 +1649,14 @@ cancels the second setup of the second mutant: the earlier survivor remains,
 the first setup's assertion failure stays visible, cancellation prevents a kill
 verdict, and the third setup and later mutants never run. Before all baselines
 pass, mutant verdicts remain `unassessed` as before.
+
+A child can receive a Windows console event before the host's handler records
+it. A completed job is attributed to cancellation only for
+`STATUS_CONTROL_C_EXIT` on Windows or a matching native SIGINT/SIGTERM exit on
+Unix, with the same signal observed by the host within 100 ms. Normal exits,
+other failures and interrupt exits without matching host cancellation keep
+their results. Rust job regressions force this ordering with real exited
+children and a delayed cancellation observation, independently of signal timing.
 
 The original failure was default signal termination bypassing Rust cleanup.
 `signal-hook` now records the signal in an atomic flag; the existing executor
