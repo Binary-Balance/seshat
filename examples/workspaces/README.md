@@ -28,6 +28,9 @@ SESHAT=/absolute/path/to/seshat
 "$SESHAT" check --config ./seshat.json --json --no-progress > seshat-report.json
 ```
 
-The workspace uses the same bounded Node Istanbul adapter as the single-package
-example. It covers UTF-8 TypeScript ESM files with Node `>=24.20.0 <25`; it does not
-convert V8 coverage or support arbitrary CommonJS loaders.
+The workspace uses the same bounded Node Istanbul adapter as the
+[single-package example](../node/README.md). It instruments original UTF-8
+TypeScript ESM sources with Istanbul and lets Node `>=24.20.0 <25` strip types.
+Multiline branch positions and unloaded files' zero coverage are preserved.
+The same erasable-syntax and loader limits apply. TypeScript remains installed
+for typechecking.

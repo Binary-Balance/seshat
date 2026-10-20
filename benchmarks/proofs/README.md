@@ -1091,8 +1091,29 @@ and coverage jobs receive Seshat's own `NODE_OPTIONS` preload for load-failure
 observation. Other environment variables are inherited. Test identities are not
 compared between commands.
 The supplied `collect-node.mjs` is a fixture collector using already-installed
-TypeScript/Istanbul libraries, not a distributed adapter. It instruments all
+Istanbul libraries, not a distributed adapter. It instruments all original
 selected sources, including unloaded files, then merges actual test counters.
+Node strips types through the `module-typescript` load hook. This requires Node
+`>=24.20.0 <25` and erasable TypeScript ESM, with the same
+[limits as the public adapter](../../examples/node/README.md).
+
+The focused regression exercises all three Node collectors through actual
+Seshat CRAP assessment:
+
+```sh
+node benchmarks/proofs/node-coverage-locations.mjs --cli /absolute/path/to/seshat
+```
+
+It reuses `examples/node/node_modules`, or an installed dependency directory
+passed with `--dependencies DIR`. It checks exact multiline binary and
+conditional operand positions, statement positions, nested function attribution,
+unimported zero coverage, expected CRAP scores, unchanged sources and scratch
+cleanup. Its disposable dependency copy is removed on completion.
+
+The standalone `coverage-routes.mjs`, `coverage-branches.mjs` and
+`coverage-compatibility.mjs` proofs intentionally retain transpilation and source
+maps to check separate CommonJS, TSX and decorator routes. Their source-map
+dependencies remain required.
 
 The configured report is removed inside the copy before collection. A fresh
 regular report and a current runner receipt are required; exit 0 alone is not
