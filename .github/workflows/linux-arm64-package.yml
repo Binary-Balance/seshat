@@ -61,6 +61,7 @@ jobs:
         run: |
           node benchmarks/proofs/linux-arm64-summary.mjs --self-check
           node packaging/repeat-pack-failure-check.mjs
+          node benchmarks/proofs/npm-package-readiness-check.mjs
       - name: Fetch locked dependencies
         id: dependencies
         run: |

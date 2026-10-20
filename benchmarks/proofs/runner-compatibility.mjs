@@ -37,10 +37,12 @@ for (const [name, args] of [
     '--cases', 'stack,assertion,survived,before-all,import-error,timeout,hook-timeout']],
 ]) {
   console.log(`Node ${process.versions.node}: ${name}`);
+  // The twelve-case Jest suite exceeds ten minutes on hosted Intel macOS.
+  const timeoutMs = name === 'jest-expo-check' ? 1_800_000 : 600_000;
   const child = spawnSync(process.execPath, [join(repo, 'benchmarks/proofs', `${name}.mjs`), ...args], {
     cwd: repo, env: {...env, SESHAT_CLI_BINARY: args.includes('--tarball') ? '' : payload.binaryPath,
       SESHAT_PROOF_OUTPUT: join(output, `${name}.json`)},
-    encoding: 'utf8', timeout: 600000, maxBuffer: 16 * 1024 * 1024,
+    encoding: 'utf8', timeout: timeoutMs, maxBuffer: 16 * 1024 * 1024,
   });
   writeFileSync(join(output, `${name}.log`), (child.stdout + child.stderr).replaceAll(repo, '<repo>'));
   evidence.checks.push({name, passed: !child.error && child.status === 0});

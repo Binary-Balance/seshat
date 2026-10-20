@@ -48,7 +48,8 @@ jobs:
             target: aarch64-apple-darwin
     runs-on: ${{ matrix.runner }}
     # Intel needs room for the installed suites and both Node runtimes.
-    timeout-minutes: 90
+    # Includes the expanded Jest compatibility suite on slower Intel hosts.
+    timeout-minutes: 120
     env:
       MACOSX_DEPLOYMENT_TARGET: '15.0'
       SESHAT_CPU: ${{ matrix.cpu }}
