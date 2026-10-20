@@ -327,10 +327,17 @@ the project's commands. See the [capture boundaries](#source-and-capture),
 and [Windows process ownership](windows-package.md#primary-thread-ownership).
 
 `test` and `coverage.command` must contain the program followed by its argument
-array. `coverage.report` is a project-relative path, and each setup must use a
-different report path. `typecheck` is an optional argument array for `crap` but
-is required in every setup for `check` and `mutate`. These mode requirements
-are checked before Seshat walks or copies the configured inputs.
+array. `coverage.report` resolves from the setup's `cwd`, where the coverage
+command runs. For example, `"cwd": "packages/app"` with
+`"report": "coverage/coverage-final.json"` reads
+`packages/app/coverage/coverage-final.json` relative to the project root.
+Report paths cannot contain `..`; configure the coverage command to write
+inside its setup directory. Each setup must resolve to a different report
+destination.
+
+`typecheck` is an optional argument array for `crap` but is required in every
+setup for `check` and `mutate`. These mode requirements are checked before
+Seshat walks or copies the configured inputs.
 
 `check` and `mutate` require a `typecheck` in every setup and passing original
 test baselines. `crap` runs a configured typecheck when present, followed by its
