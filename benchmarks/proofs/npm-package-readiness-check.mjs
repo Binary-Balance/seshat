@@ -5,6 +5,7 @@ import {existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node
 import {tmpdir} from 'node:os';
 import {dirname, join} from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
+import {alive} from './liveness.mjs';
 
 const directory = mkdtempSync(join(tmpdir(), 'seshat-readiness-'));
 const signalReady = join(directory, 'ready.json');
@@ -61,5 +62,9 @@ try {
   writeFileSync(releaseWrite, 'continue');
   writeFileSync(signalStop, 'stop');
   await closed;
+  if (existsSync(signalReady)) {
+    const ready = JSON.parse(readFileSync(signalReady, 'utf8'));
+    await waitFor(() => !alive(ready.descendant));
+  }
   rmSync(directory, {recursive: true, force: true});
 }
