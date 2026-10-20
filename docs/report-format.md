@@ -210,12 +210,34 @@ milliseconds. Runner receipts, command diagnostics and stack traces are
 evidence with runner-specific shape and text. Do not parse them as a stable
 protocol. The job state, setup name and timing fields above are the contract.
 
+A complete, valid Jest receipt with exit `1` and failed tests can produce
+`state: "failed"` even when it reports errors. Every error must be proven to
+come from a failed test's `beforeEach` or `afterEach` hook. This includes
+Testing Library's automatic unmount cleanup. The adapter counts the failure
+events Jest reports for each test and reconciles the observed passed and
+failed test counts with Jest's results. Errors that Jest adds to a test
+without a failure event, such as an `expect.assertions` count or an uncaught
+error during the test, join a failure that test already has; on their own they
+remain execution errors. Suite hooks such as `beforeAll` and
+`afterAll`, file-load failures, errors outside any test, retries and missing or
+inconsistent observations remain execution errors.
+
+The private Jest receipt retains aggregate `errors` and adds `testHookErrors`,
+a non-negative integer counting only those hook errors. Rust accepts
+errors with failed tests only when `testHookErrors` equals the entire `errors`
+count. Missing, malformed or contradictory attribution cannot excuse an error.
+Other runners cannot use this exception. The receipt must still be complete,
+its counts valid, the exit exactly `1`, and `timeouts` zero. Command, output-pipe,
+coverage and Seshat cleanup failures still prevent a kill. With all required
+setups resolved, the mutant is killed and scheduling continues.
+
 A runner-reported timeout retains `state: "timed-out"` and adds
 `testTimedOut: true`; `timedOut: false` means Seshat's job deadline was not
 reached. This timeout allows further mutation scheduling only when the command
 exited `1`, the complete receipt has valid counts and no execution errors, and
-cleanup succeeded. Additional receipt errors still stop scheduling. Neither
-kind of timeout counts as a kill.
+cleanup succeeded. Additional receipt errors, including attributed hook errors
+alongside a timeout, still stop scheduling. Neither kind of timeout counts as a
+kill.
 
 ### Runtime diagnostics
 

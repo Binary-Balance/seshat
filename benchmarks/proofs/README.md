@@ -1268,18 +1268,19 @@ Do not replace missing evidence with stack-text matching or a generic exit-1 kil
 ## Jest/Expo combined workflow
 
 The checked-in fixture at `fixtures/jest-expo` is a small Expo TSX project with
-no application checkout or private input. It was tested with Node 24.20.0; its
-lockfile pins Jest 29.7.0, jest-expo 57.0.5, Expo 57.0.20, React Native 0.86.3,
-`@react-native/jest-preset` 0.86.3, `babel-preset-expo` 57.0.10, React 19.2.3
-and TypeScript 6.0.3. Jest runs with its `jest-expo` preset and `--runInBand`;
+no application checkout or private input. Its lockfile pins Jest 29.7.0,
+jest-expo 57.0.5, Expo 57.0.20, React Native 0.86.3,
+`@react-native/jest-preset` 0.86.3, `babel-preset-expo` 57.0.10, React and
+React Test Renderer 19.2.3, React Native Testing Library 13.3.3 and TypeScript
+6.0.3. Jest runs with its `jest-expo` preset and `--runInBand`;
 coverage uses Babel instrumentation and writes full Istanbul JSON.
 
 Run the reusable installed-command driver from the repository root after building
-or obtaining a local Seshat package:
+a local Seshat candidate from this revision:
 
 ```sh
 node benchmarks/proofs/jest-expo-check.mjs \
-  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.2.0.tgz
+  --tarball /absolute/path/to/seshat-candidate.tgz
 ```
 
 The driver installs the fixture's pinned lockfile into a fresh ignored proof
@@ -1292,7 +1293,7 @@ cp benchmarks/proofs/fixtures/jest-expo/package.json \
   benchmarks/proofs/fixtures/jest-expo/package-lock.json work/jest-expo-fixture/
 npm ci --prefix work/jest-expo-fixture --ignore-scripts --no-audit --no-fund
 node benchmarks/proofs/jest-expo-check.mjs \
-  --tarball /absolute/path/to/binary-balance-seshat-linux-x64-0.2.0.tgz \
+  --tarball /absolute/path/to/seshat-candidate.tgz \
   --deps work/jest-expo-fixture
 ```
 
@@ -1309,12 +1310,53 @@ count is `classify` CRAP 2, `isPositive` CRAP 1 and `statusCard` CRAP 1. Four
 comparison mutants produce three kills and one intentional boundary survivor,
 for a 75% score, with the same result for one and two workers and on repeat.
 The assertion-kill and survivor controls produce 100% and 0% respectively.
-Setup and cleanup failures (`beforeAll`, `beforeEach`, `afterEach` and mixed
-assertion plus cleanup), import failure, test and hook timeouts, missing event
-observations, missing receipts and retry controls all produce the expected
-unresolved verdict or baseline failure. Those runs exit 2 and withhold the
-mutation score. The eventually-passing retry is retained as an execution error
-because its receipt does not prove the complete retry sequence.
+`expect-assertions` is also killed: its early assertion failure gains Jest's
+assertion-count error, which joins that test's own failure.
+Per-test `beforeEach` and `afterEach` failures, including mixed assertion and
+cleanup failures, count as kills when all errors are attributable to the failed
+tests. Suite hooks, import failures, mixed test-hook and suite/load failures,
+missing event observations, missing receipts and retry controls remain
+execution errors. Test and hook timeouts remain unresolved. These incomplete
+runs exit 2 and withhold the mutation score. The eventually-passing retry is
+retained as an execution error because its receipt does not prove the complete
+retry sequence.
+
+The `automatic-cleanup` case renders a component through
+`@testing-library/react-native`. Its effect calls `start()` and returns a cleanup
+callback that calls `session.stop()`. Replacing `start()` with an empty function makes
+the assertion fail and Testing Library's automatic `afterEach` unmount throw.
+There is no explicit unmount or cleanup call in the test. The proof requires
+the complete exit-1 receipt to retain one failed test, one error and one
+`testHookErrors`, classify the extreme mutant as killed, and execute the later
+extreme and operator mutants. `mixed-load-hook` adds a file-load error alongside
+a failed test and its cleanup error. Its aggregate errors exceed the attributed
+hook errors, so it must stop scheduling and leave the next mutant `not-run`.
+
+The private environment sidecar uses version 2. It counts passed and failed
+`test_done` events, and each test's test-function and `beforeEach`/`afterEach`
+failure events. Errors Jest adds without an event join a failure their test
+already owns; otherwise they, errors outside any test and retries remain
+separate evidence. Jest copies a `beforeAll` error onto each test below it;
+the sidecar counts it once, as a hook failure or timeout, so
+`before-all-timeout` stays `timed-out` and the next mutant still runs. The
+reporter checks each file's counts against Jest, then the run totals. The main version-1 receipt adds `testHookErrors` without
+subtracting anything from aggregate `errors`. Rust requires equality of those
+counts before it permits a failed Jest job with errors. Other runner receipts
+cannot opt into this exception.
+
+Run the adapter's malformed-evidence controls without installing Jest:
+
+```sh
+node benchmarks/proofs/jest-hook-errors.mjs
+```
+
+The installed-command controls can be focused with
+`--cases automatic-cleanup,mixed-load-hook,before-each,after-each,mixed-assertion-hook,mixed-suite-hook`.
+
+The [hook-error evidence](../../outputs/jest-hook-errors.json) retains portable
+before/after receipts and the full case summaries from Linux x64 with Node
+24.22.0, including binary and source hashes. Native package and platform checks
+remain separate.
 
 Every case snapshots the checked-in fixture and generated control inputs before
 execution, verifies their bytes afterward and requires an empty Seshat scratch

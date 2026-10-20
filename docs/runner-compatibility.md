@@ -98,6 +98,9 @@ evidence artifact. It covers:
   coordinates and mixed application/setup failures.
 - Installed Jest/Expo and Vitest coverage, assertion kills, survivors, setup
   hooks, import failures, test timeouts and hook timeouts.
+- Jest/Expo automatic Testing Library cleanup counts as a kill when every error
+  belongs to a failed test's hook. A mixed hook and file-load failure still
+  stops scheduling.
 
 Synthetic version controls exercise the disabled-observer fallback on every run.
 They are guard regressions, not execution evidence for an unreleased Node version.

@@ -457,8 +457,15 @@ work already in progress on other workers remain available.
 A runner-reported test timeout can allow scheduling to continue when the command
 exits `1` within `timeoutMs`, its complete receipt has valid test counts and no
 execution errors, and cleanup succeeds. Later extreme and operator mutants still
-run. A receipt with additional errors, including hook failures, still stops
-scheduling. Original and worker baselines must pass before any mutants run.
+run. A timeout receipt with additional errors still stops scheduling.
+
+A complete Jest receipt with exit `1`, valid counts, failed tests and no test
+timeouts can count as a kill when every reported error is attributed to a
+failing test's `beforeEach` or `afterEach` hook. Testing Library's automatic
+cleanup is covered. Suite-hook, file-load and infrastructure errors, and errors
+outside any test, remain execution errors and stop scheduling. See the
+[receipt and verdict rules](report-format.md#setup-jobs-and-evidence).
+Original and worker baselines must pass before any mutants run.
 
 Both kinds of timeout remain unresolved. They do not prove that tests detected
 the mutation. The overall mutation score stays withheld, including when an

@@ -8,7 +8,14 @@ Changes after the published [0.7.0 release](0.7.0.md).
   `"testSelection": false` disables selection. Reports retain selected files,
   executed-test identities and fallback reasons. See the
   [selection proofs and limits](../research/test-selection.md).
-
+- [#182](https://github.com/Binary-Balance/seshat/issues/182): Jest mutants with
+  failed tests and errors proven to come only from those tests' `beforeEach`
+  or `afterEach` hooks now count as killed and allow scheduling to continue.
+  This covers Testing Library's automatic unmount cleanup. Invalid or incomplete
+  receipts, suite hooks, load failures and infrastructure errors still stop
+  scheduling. A Jest timeout no longer hides unattributed errors in the same
+  run; they now stop scheduling too. See the
+  [verdict rules](../report-format.md#setup-jobs-and-evidence).
 - [#164](https://github.com/Binary-Balance/seshat/issues/164): the default-on
   `statement` mutation family removes expression statements and bare returns
   from explicit synchronous, non-generator functions. Constructors, module-level
