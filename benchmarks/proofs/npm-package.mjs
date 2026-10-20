@@ -585,10 +585,16 @@ const fixtureCleanup = `setInterval(() => { if (existsSync(${JSON.stringify(sign
 writeFileSync(join(signalProject, 'hang.mjs'), [
   "import {test} from 'node:test';",
   "import {spawn} from 'node:child_process';",
-  "import {existsSync, writeFileSync} from 'node:fs';",
+  "import {existsSync, renameSync, writeFileSync} from 'node:fs';",
   fixtureCleanup,
   `const descendant = spawn(process.execPath, ['-e', ${JSON.stringify("const {existsSync} = require('node:fs');" + fixtureCleanup)}], {stdio: 'ignore'});`,
-  `test('launcher cancellation', async () => { writeFileSync(${JSON.stringify(signalReady)}, JSON.stringify({cwd: process.cwd(), pid: process.pid, descendant: descendant.pid})); if (process.env.SESHAT_CONSOLE_READY) writeFileSync(process.env.SESHAT_CONSOLE_READY, 'ready\\n'); await new Promise(() => {}); });`,
+  // The reader polls for existence, so publish only the complete JSON receipt.
+  "test('launcher cancellation', async () => {",
+  `  writeFileSync(${JSON.stringify(signalReady + '.tmp')}, JSON.stringify({cwd: process.cwd(), pid: process.pid, descendant: descendant.pid}));`,
+  `  renameSync(${JSON.stringify(signalReady + '.tmp')}, ${JSON.stringify(signalReady)});`,
+  "  if (process.env.SESHAT_CONSOLE_READY) writeFileSync(process.env.SESHAT_CONSOLE_READY, 'ready\\n');",
+  "  await new Promise(() => {});",
+  "});",
 ].join('\n'));
 const signalConfig = {
   source: {include: ['subject.ts']},
