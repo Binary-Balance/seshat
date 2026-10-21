@@ -275,4 +275,3 @@ jobs:
         with:
           name: linux-arm64-latest-node
           path: work/arm64/node-*/**
-          if-no-files-found: error

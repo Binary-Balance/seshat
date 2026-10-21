@@ -365,4 +365,3 @@ jobs:
         with:
           name: linux-x64-latest-node
           path: work/x64/node-*/**
-          if-no-files-found: error

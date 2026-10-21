@@ -299,4 +299,3 @@ jobs:
         with:
           name: macos-${{ matrix.cpu }}-latest-node
           path: work/macos/${{ matrix.cpu }}/node-*/**
-          if-no-files-found: error

@@ -472,4 +472,3 @@ jobs:
         with:
           name: windows-x64-latest-node
           path: work/windows/node-*/**
-          if-no-files-found: error
