@@ -203,6 +203,18 @@ jobs:
         run: |
           PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/macos/${SESHAT_CPU}/package-result.json")"
           SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/execute-cancellation.mjs 2>&1 | tee "work/macos/${SESHAT_CPU}/execute-cancellation.log"
+      # Intel runs this pass in the latest-node job. Arm64 still finishes before
+      # Intel with it here, which saves one of the five concurrent macOS runners.
+      - name: Set up latest supported Node runtime
+        id: latest_node
+        if: ${{ !cancelled() && matrix.cpu == 'arm64' && steps.build.outcome == 'success' && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.x
+          check-latest: true
+      - name: Verify latest Node 24 compatibility
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.latest_node.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
+        run: node benchmarks/proofs/runner-compatibility.mjs "work/macos/${SESHAT_CPU}/package-result.json"
       - name: Write portable summary
         if: always()
         run: |
@@ -236,6 +248,7 @@ jobs:
             work/macos/${{ matrix.cpu }}/repeat-pack.log
             work/macos/${{ matrix.cpu }}/repeat-pack-attempts/**
             work/macos/${{ matrix.cpu }}/pack.log
+            work/macos/${{ matrix.cpu }}/node-*/**
             work/macos/${{ matrix.cpu }}/summary.json
             work/macos/${{ matrix.cpu }}/seshat-darwin-${{ matrix.cpu }}-release.tgz
             work/macos/${{ matrix.cpu }}/seshat-macos-${{ matrix.cpu }}.tgz
@@ -249,15 +262,7 @@ jobs:
   # Runs beside the package job to keep it off the critical path. It rebuilds
   # the same commit with the pinned toolchain; the evidence records the hashes.
   latest-node:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - cpu: x64
-            runner: macos-15-intel
-          - cpu: arm64
-            runner: macos-15
-    runs-on: ${{ matrix.runner }}
+    runs-on: macos-15-intel
     # Includes the expanded Jest compatibility suite on slower Intel hosts.
     timeout-minutes: 90
     steps:
@@ -280,9 +285,9 @@ jobs:
           cargo fetch --locked --manifest-path crates/seshat/Cargo.toml
       - name: Build native macOS package
         env:
-          SESHAT_PACK_RESULT: work/macos/${{ matrix.cpu }}/package-result.json
+          SESHAT_PACK_RESULT: work/macos/x64/package-result.json
         run: |
-          mkdir -p "work/macos/${{ matrix.cpu }}"
+          mkdir -p work/macos/x64
           node packaging/pack.mjs --native-macos
       - name: Install locked Jest/Expo fixture dependencies
         run: npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
@@ -292,10 +297,10 @@ jobs:
           node-version: 24.x
           check-latest: true
       - name: Verify latest Node 24 compatibility
-        run: node benchmarks/proofs/runner-compatibility.mjs "work/macos/${{ matrix.cpu }}/package-result.json"
+        run: node benchmarks/proofs/runner-compatibility.mjs work/macos/x64/package-result.json
       - name: Upload latest Node evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: macos-${{ matrix.cpu }}-latest-node
-          path: work/macos/${{ matrix.cpu }}/node-*/**
+          name: macos-x64-latest-node
+          path: work/macos/x64/node-*/**

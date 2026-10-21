@@ -96,18 +96,25 @@ mutant jobs also validate their own receipts.
 ## Retained checks
 
 The native package workflows keep Node 24.20.0 pinned for reproducible builds
-and baseline checks. A `latest-node` job runs beside each package job on Linux
-x64/ARM64, macOS x64/ARM64 and Windows x64. It builds the same commit with the
-same pinned toolchain, selects the latest Node 24 release and runs that package
-through [`runner-compatibility.mjs`](../benchmarks/proofs/runner-compatibility.mjs).
-Running beside the package job keeps this pass off the workflow's critical path.
+and baseline checks. They then select the latest Node 24 release and run a
+package through [`runner-compatibility.mjs`](../benchmarks/proofs/runner-compatibility.mjs)
+on Linux x64/ARM64, macOS x64/ARM64 and Windows x64.
+
+On Linux x64/ARM64, macOS x64 and Windows x64, a `latest-node` job runs this
+pass beside the package job, keeping it off the workflow's critical path. It
+builds the same commit with the same pinned toolchain. macOS ARM64 runs the pass
+at the end of its package job instead, reusing that job's package. It still
+finishes before macOS x64, and it saves one of the five concurrent macOS runners
+on GitHub's Free plan.
 
 Each pass records the resolved runtime, platform, architecture, native and
-archive hashes, per-check success and logs under `node-VERSION` in the job's
-`*-latest-node` artifact. Its `summary.json` `binarySha256` matches `binary` in
-the package job's `package-result.json` when both jobs built the same binary.
-`tarballSha256` can differ on macOS and Windows even then, because their
-`BUILD.json` records runner image and toolchain details. It covers:
+archive hashes, per-check success and logs under `node-VERSION`. The
+`latest-node` jobs upload them as `*-latest-node` artifacts; macOS ARM64 keeps
+them in its package evidence artifact. A `latest-node` job's `summary.json`
+`binarySha256` matches `binary` in the package job's `package-result.json` when
+both jobs built the same binary. `tarballSha256` can differ on macOS and Windows
+even then, because their `BUILD.json` records runner image and toolchain
+details. It covers:
 
 - CLI baseline and coverage, assertion kills, survivors, malformed/replayed
   receipts, unsupported versions, timeout, cancellation and source preservation.

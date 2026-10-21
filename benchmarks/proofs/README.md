@@ -1414,9 +1414,10 @@ contains the exact runner reports and configuration scope used for that route.
 The original linked reports retain their recorded 24.20.0 environment.
 The [compatibility matrix](../../docs/runner-compatibility.md) records the
 Node `>=24.20.0 <25` support range. Native package builds remain pinned to
-24.20.0; a parallel `latest-node` job in each package workflow builds the same
-commit and checks that payload on the latest Node 24 release with
-`runner-compatibility.mjs`, recording its resolved version and payload hashes. The
+24.20.0; each target then checks a payload on the latest Node 24 release with
+`runner-compatibility.mjs`, recording its resolved version and payload hashes.
+Most targets run it in a parallel `latest-node` job that builds the same commit;
+macOS ARM64 runs it at the end of its package job. The
 observer remains restricted to 24.20.0/24.21.0. On other versions, the load-failure
 proof requires ambiguous import crashes to stay unresolved and ordinary test
 failures to remain kills. Synthetic version controls exercise that fallback even
