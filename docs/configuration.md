@@ -516,8 +516,10 @@ commands use `--test-reporter={seshatReporter}`. The bounded Node coverage
 collectors in [examples/node/collect-node.mjs](../examples/node/collect-node.mjs)
 and [examples/workspaces/collect-node.mjs](../examples/workspaces/collect-node.mjs)
 are checked-in example adapters, not general collectors shipped in the npm
-package. They instrument TypeScript ESM with Istanbul and run Node's built-in
-test runner.
+package. They instrument original TypeScript ESM sources with Istanbul and let
+Node's built-in test runner strip types, preserving multiline branch positions.
+They require Node `>=24.20.0 <25` and erasable TypeScript syntax. See the
+[Node example](../examples/node/README.md) for compatibility limits.
 
 The experimental Jest integration uses `{seshatReporter}` plus
 `--env={seshatEnvironment}`. Its environment extends the default `jest-expo`

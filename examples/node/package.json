@@ -13,7 +13,6 @@
   "devDependencies": {
     "istanbul-lib-coverage": "3.2.2",
     "istanbul-lib-instrument": "6.0.3",
-    "istanbul-lib-source-maps": "5.0.6",
     "typescript": "6.0.3"
   }
 }

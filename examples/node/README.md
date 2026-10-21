@@ -23,7 +23,14 @@ SESHAT=/absolute/path/to/seshat
 "$SESHAT" check --config ./seshat.json --json --no-progress > seshat-report.json
 ```
 
-`collect-node.mjs` is intentionally small. It transpiles the selected UTF-8
-TypeScript ESM files with TypeScript, instruments them with Istanbul, and runs
-Node's built-in tests. It does not convert V8 coverage or support arbitrary
-CommonJS loaders.
+`collect-node.mjs` instruments the selected UTF-8 TypeScript ESM sources directly
+with Istanbul, then lets Node strip types while running the built-in tests.
+This preserves original statement and branch positions, including multiline
+operands. Instrumented files that tests never import retain zero coverage.
+TypeScript remains a dependency for typechecking.
+
+The adapter requires erasable TypeScript syntax supported by Node. It does not
+support TSX, decorators, enums, parameter properties, runtime namespaces,
+TypeScript import aliases, `tsconfig` path aliases or arbitrary CommonJS loaders.
+Use explicit `import type` for type imports. See
+[Node's TypeScript support](https://nodejs.org/docs/latest-v24.x/api/typescript.html).
