@@ -114,7 +114,7 @@ them in its package evidence artifact. A `latest-node` job's `summary.json`
 `binarySha256` matches `binary` in the package job's `package-result.json` when
 both jobs built the same binary. `tarballSha256` can differ on macOS and Windows
 even then, because their `BUILD.json` records runner image and toolchain
-details. It covers:
+details. Each pass covers:
 
 - CLI baseline and coverage, assertion kills, survivors, malformed/replayed
   receipts, unsupported versions, timeout, cancellation and source preservation.
