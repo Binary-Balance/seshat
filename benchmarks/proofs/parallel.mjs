@@ -12,6 +12,9 @@ const here=dirname(fileURLToPath(import.meta.url)),repo=resolve(here,'../..');
 mkdirSync(join(repo,'work/assurance-proofs'),{recursive:true});
 const work=mkdtempSync(join(repo,'work/assurance-proofs/parallel-'));
 const candidate = process.env.SESHAT_PARALLEL_CLI === '1';
+const cancellationRepeats = Number(process.env.SESHAT_PARALLEL_CANCEL_REPEATS ?? (process.platform === 'win32' ? '10' : '1'));
+assert.ok(Number.isSafeInteger(cancellationRepeats) && cancellationRepeats > 0,
+  'SESHAT_PARALLEL_CANCEL_REPEATS must be a positive safe integer');
 const executableSuffix = process.platform === 'win32' ? '.exe' : '';
 const binary = candidate && process.env.SESHAT_CLI_BINARY
   ? resolve(process.env.SESHAT_CLI_BINARY)
@@ -56,7 +59,7 @@ const read=path=>JSON.parse(readFileSync(path,'utf8'));
 const events=path=>readdirSync(path).filter(name=>name.endsWith('.json')).map(name=>read(join(path,name)));
 async function until(predicate,timeout=30000){const end=performance.now()+timeout;while(performance.now()<end){if(predicate())return;await delay(10);}throw Error('Timed out waiting for proof processes');}
 const results={};
-function launch(args, directory, signal) {
+function launch(args, directory, signal, attempt) {
   const expectedStatus = process.platform === 'win32' ? 2 : signal === 'SIGINT' ? 130 : 143;
   if (process.platform !== 'win32' || !signal) {
     return {
@@ -66,17 +69,18 @@ function launch(args, directory, signal) {
     };
   }
   const ready = join(directory, 'console-ready');
+  const ctrlC = attempt % 2 === 0;
   return {
-    child: spawn(consoleHelper, [ready, join(directory, 'console.stdout'), join(directory, 'console.stderr'), binary, ...args], {
+    child: spawn(consoleHelper, [...(ctrlC ? ['--ctrl-c'] : []), ready, join(directory, 'console.stdout'), join(directory, 'console.stderr'), binary, ...args], {
       stdio: ['ignore', 'pipe', 'pipe'],
     }),
-    mechanism: 'CTRL_BREAK_EVENT',
+    mechanism: ctrlC ? 'CTRL_C_EVENT' : 'CTRL_BREAK_EVENT',
     expectedStatus,
     ready,
   };
 }
-async function check(name,workers,mode='normal',signal){
-  const directory=join(work,name);mkdirSync(directory);
+async function check(name,workers,mode='normal',signal,attempt=1){
+  const directory=join(work,attempt===1?name:`${name}-${attempt}`);mkdirSync(directory);
   const scratch=join(directory,'scratch'),journal=join(directory,'events');mkdirSync(scratch);mkdirSync(journal);
   // Setup and coverage must finish before the mutant-timeout check can run.
   const setups=['high','low'].map((test,index)=>({name:test,runner:'node',cwd:'.',timeoutMs:30000,
@@ -87,7 +91,7 @@ async function check(name,workers,mode='normal',signal){
   if(workers!==undefined)config.workers=workers;
   const path=join(input,'seshat.json');writeFileSync(path,JSON.stringify(config));
   const start=performance.now();
-  const launched=launch(candidate?['check','--config',path,'--scratch',scratch,'--json']:['check',path,scratch],directory,signal);
+  const launched=launch(candidate?['check','--config',path,'--scratch',scratch,'--json']:['check',path,scratch],directory,signal,attempt);
   const child=launched.child;
   let stdout='',stderr='',exit;
   child.stdout.on('data',d=>stdout+=d);child.stderr.on('data',d=>stderr+=d);
@@ -101,7 +105,9 @@ async function check(name,workers,mode='normal',signal){
     await until(()=>exit,90000);await done;
     const report=JSON.parse(stdout),result=candidate?report.result:report,observed=events(journal),ms=performance.now()-start;
     results[name]={ms,result,progress:stderr,events:observed,
-      cancellation:signal?{mechanism:launched.mechanism,expectedHostStatus:launched.expectedStatus}:undefined};
+      cancellation:signal?{mechanism:launched.mechanism,expectedHostStatus:launched.expectedStatus,
+        runs:[...(results[name]?.cancellation.runs??[]),
+          {attempt,mechanism:launched.mechanism,exit,verdicts:result.mutation.outcomes.map(m=>m.verdict)}]}:undefined};
     writeFileSync(join(work,'result.json'),JSON.stringify(results,null,2)+'\n');
     try {
       if(candidate){
@@ -162,7 +168,7 @@ async function check(name,workers,mode='normal',signal){
       console.error(`[parallel-failure-report] ${name}\nstdout:\n${stdout}\nstderr:\n${stderr}`);
       throw error;
     }
-    console.log(name+': '+JSON.stringify({complete:result.complete,ms,workers:result.mutation.workersUsed,preparationMs:result.mutation.workerPreparationMs,mutationMs:result.mutation.mutationWallMs}));
+    console.log(name+(signal?` ${attempt}/${cancellationRepeats}`:'')+': '+JSON.stringify({complete:result.complete,ms,workers:result.mutation.workersUsed,preparationMs:result.mutation.workerPreparationMs,mutationMs:result.mutation.mutationWallMs}));
     return result;
   } finally {
     if(!exit){const forceKill=()=>process.platform==='win32'?killTree(child.pid):child.kill('SIGKILL');forceKill();try{await until(()=>exit,5000);}catch{forceKill();}}
@@ -180,7 +186,11 @@ const cases={serial:[undefined],parallel:[2],repeat:[2],four:[4],capped:[20],
   'worker-baseline-error':[2,'worker-baseline-error'],'receipt-error':[2,'receipt-error'],
   'source-error':[2,'source-error'],timeout:[2,'timeout'],SIGINT:[2,'cancel','SIGINT'],SIGTERM:[2,'cancel','SIGTERM']};
 for(const name of (process.env.SESHAT_PARALLEL_CASES??Object.keys(cases).join(',')).split(',')){
-  assert.ok(Object.hasOwn(cases,name));await check(name,...cases[name]);
+  assert.ok(Object.hasOwn(cases,name));
+  const [workers,mode,signal]=cases[name];
+  for(let attempt=1;attempt<=(signal?cancellationRepeats:1);attempt++){
+    await check(name,workers,mode,signal,attempt);
+  }
 }
 const resultPath = process.env.SESHAT_PROOF_OUTPUT ? resolve(process.env.SESHAT_PROOF_OUTPUT) : join(work, 'result.json');
 mkdirSync(dirname(resultPath), {recursive: true});
