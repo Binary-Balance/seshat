@@ -272,9 +272,13 @@ fn validate_runner_receipt(report: &Value, runner: &Runner, id: &str) -> Result<
         Runner::Jest => {
             // cwd-resolved versions alone do not establish which runner executed.
             version(&report["actual"]["jest"], "Jest", &["29.7.0"])?;
-            version(&report["actual"]["jest-expo"], "jest-expo", &["57.0.5"])?;
+            version(
+                &report["actual"]["jest-expo"],
+                "jest-expo",
+                &["57.0.5", "57.0.6"],
+            )?;
             version(&report["jest"], "cwd Jest", &["29.7.0"])?;
-            version(&report["expo"], "cwd jest-expo", &["57.0.5"])
+            version(&report["expo"], "cwd jest-expo", &["57.0.5", "57.0.6"])
         }
         Runner::Vitest => {
             vitest(&report["actual"]["vitest"], "Vitest")?;
@@ -2811,6 +2815,64 @@ mod tests {
                 .contains("duplicate normalized")
         );
         directory.close().unwrap();
+    }
+
+    #[test]
+    fn jest_expo_receipts_accept_only_verified_versions() {
+        let base = json!({"version":1,"executionId":"current","node":"24.20.0",
+            "runner":"jest","jest":"29.7.0","expo":"57.0.5",
+            "actual":{"jest":"29.7.0","jest-expo":"57.0.5"}});
+        for version in ["57.0.5", "57.0.6"] {
+            let mut receipt = base.clone();
+            receipt["actual"]["jest-expo"] = json!(version);
+            receipt["expo"] = json!(version);
+            assert_eq!(
+                validate_runner_receipt(&receipt, &Runner::Jest, "current"),
+                Ok(())
+            );
+        }
+        for version in [
+            "57.0.4",
+            "57.0.7",
+            "57.1.0",
+            "58.0.0",
+            "57.0.6-rc.1",
+            "57.0.6+build",
+            "057.0.6",
+            "57.0",
+            "",
+        ] {
+            for actual in [true, false] {
+                let mut receipt = base.clone();
+                let component = if actual {
+                    receipt["actual"]["jest-expo"] = json!(version);
+                    "jest-expo"
+                } else {
+                    receipt["expo"] = json!(version);
+                    "cwd jest-expo"
+                };
+                assert_eq!(
+                    validate_runner_receipt(&receipt, &Runner::Jest, "current").unwrap_err(),
+                    format!(
+                        "unsupported {component} version {version:?}; supported: 57.0.5, 57.0.6"
+                    )
+                );
+            }
+        }
+        for actual in [true, false] {
+            let mut receipt = base.clone();
+            let component = if actual {
+                receipt["actual"]["jest-expo"] = Value::Null;
+                "jest-expo"
+            } else {
+                receipt["expo"] = Value::Null;
+                "cwd jest-expo"
+            };
+            assert_eq!(
+                validate_runner_receipt(&receipt, &Runner::Jest, "current").unwrap_err(),
+                format!("runner receipt has missing or invalid {component} version")
+            );
+        }
     }
 
     #[test]

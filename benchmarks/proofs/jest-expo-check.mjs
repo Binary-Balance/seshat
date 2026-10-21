@@ -36,6 +36,7 @@ const baseFiles = [
   'tests/automatic-cleanup.test.tsx',
 ];
 const fixtureBytes = Object.fromEntries(baseFiles.map(path => [path, readFileSync(join(fixture, path))]));
+const projectBytes = {...fixtureBytes};
 
 const {values} = parseArgs({
   args: process.argv.slice(2),
@@ -120,7 +121,7 @@ function sanitize(value) {
 function copyBaseProject(dependencyRoot) {
   mkdirSync(join(project, 'src'), {recursive: true});
   mkdirSync(join(project, 'tests'), {recursive: true});
-  for (const path of baseFiles) writeFileSync(join(project, path), fixtureBytes[path]);
+  for (const path of baseFiles) writeFileSync(join(project, path), projectBytes[path]);
   if (!existsSync(join(project, 'node_modules'))) {
     cpSync(join(dependencyRoot, 'node_modules'), join(project, 'node_modules'), {
       recursive: true,
@@ -232,7 +233,7 @@ function assertUnchanged(expectedControl = null) {
   for (const [path, bytes] of Object.entries(fixtureBytes)) {
     assert.deepEqual(readFileSync(join(fixture, path)), bytes, `fixture changed: ${path}`);
   }
-  for (const [path, bytes] of Object.entries(fixtureBytes)) {
+  for (const [path, bytes] of Object.entries(projectBytes)) {
     assert.deepEqual(readFileSync(join(project, path)), bytes, `project changed: ${path}`);
   }
   if (expectedControl) {
@@ -321,9 +322,11 @@ if (!values.deps) {
 }
 assert.ok(statSync(join(dependencyRoot, 'node_modules')).isDirectory(), 'fixture dependencies are missing');
 const environment = {node: process.version, tools: fixtureVersions(dependencyRoot)};
+assert.ok(['57.0.5', '57.0.6'].includes(environment.tools['jest-expo']),
+  'Jest/Expo proof requires jest-expo 57.0.5 or 57.0.6');
 assert.deepEqual(environment.tools, {
   jest: '29.7.0',
-  'jest-expo': '57.0.5',
+  'jest-expo': environment.tools['jest-expo'],
   expo: '57.0.20',
   'react-native': '0.86.3',
   '@react-native/jest-preset': '0.86.3',
@@ -333,6 +336,10 @@ assert.deepEqual(environment.tools, {
   '@testing-library/react-native': '13.3.3',
   typescript: '6.0.3',
 });
+// Preserve the selected dependency versions in declarations and lock diagnostics.
+for (const path of ['package.json', 'package-lock.json']) {
+  projectBytes[path] = readFileSync(join(dependencyRoot, path));
+}
 
 let cli;
 let cliEvidence;
@@ -432,7 +439,7 @@ if (shouldRun('nested-root')) {
   mkdirSync(join(project, 'runner/src'), {recursive: true});
   mkdirSync(join(project, 'runner/tests'), {recursive: true});
   for (const path of ['package.json', 'package-lock.json', 'tsconfig.json', 'babel.config.cjs']) {
-    writeFileSync(join(project, 'runner', path), fixtureBytes[path]);
+    writeFileSync(join(project, 'runner', path), projectBytes[path]);
   }
   writeFileSync(join(project, 'runner/src/status.tsx'), fixtureBytes['src/status.tsx']);
   writeFileSync(join(project, 'runner/tests/status.test.tsx'), fixtureBytes['tests/status.test.tsx']);

@@ -97,8 +97,8 @@ Seshat rewrites those internal links in its execution copy.
 ## Jest/Expo example
 
 This example follows the [public Jest/Expo example](../examples/jest-expo/README.md).
-The verified route uses Node `>=24.20.0 <25`, Jest 29.7.0, jest-expo 57.0.5, Expo
-57.0.20, React Native 0.86.3, `@react-native/jest-preset` 0.86.3,
+The verified route uses Node `>=24.20.0 <25`, Jest 29.7.0, jest-expo 57.0.5 or
+57.0.6, Expo 57.0.20, React Native 0.86.3, `@react-native/jest-preset` 0.86.3,
 `babel-preset-expo` 57.0.10, React 19.2.3 and TypeScript 6.0.3. The fixture
 uses Jest Circus with Babel coverage and a fresh Istanbul JSON report.
 

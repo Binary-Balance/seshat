@@ -4,10 +4,13 @@ See the [shared consumer guidance](../README.md) for native and Node launcher
 commands, PowerShell equivalents, workers, thresholds, reports and exit codes.
 
 This project follows the verified Jest/Expo setup with Node `>=24.20.0 <25`, Jest
-29.7.0, jest-expo 57.0.5, Expo 57.0.20, React Native 0.86.3,
+29.7.0, jest-expo 57.0.6, Expo 57.0.20, React Native 0.86.3,
 `@react-native/jest-preset` 0.86.3, `babel-preset-expo` 57.0.10, React 19.2.3
 and TypeScript 6.0.3. The configuration captures the source, tests, Babel and
 Jest settings, package lockfile and installed dependencies.
+
+Seshat also accepts the previously verified jest-expo 57.0.5. Other jest-expo
+patches and SDK versions require separate verification.
 
 Install and run the consumer project:
 
