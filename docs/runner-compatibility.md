@@ -96,14 +96,16 @@ mutant jobs also validate their own receipts.
 ## Retained checks
 
 The native package workflows keep Node 24.20.0 pinned for reproducible builds
-and baseline checks. They then select the latest Node 24 release and run the same
-package through [`runner-compatibility.mjs`](../benchmarks/proofs/runner-compatibility.mjs)
-on Linux x64/ARM64, macOS x64/ARM64 and Windows x64. The second pass reuses the
-package bytes rather than repeating the native build.
+and baseline checks. A `latest-node` job runs beside each package job on Linux
+x64/ARM64, macOS x64/ARM64 and Windows x64. It builds the same commit with the
+same pinned toolchain, selects the latest Node 24 release and runs that package
+through [`runner-compatibility.mjs`](../benchmarks/proofs/runner-compatibility.mjs).
+Running beside the package job keeps this pass off the workflow's critical path.
 
 Each pass records the resolved runtime, platform, architecture, native and
-archive hashes, per-check success and logs under `node-VERSION` in the package
-evidence artifact. It covers:
+archive hashes, per-check success and logs under `node-VERSION` in the job's
+`*-latest-node` artifact. Comparing those hashes with the package job's
+`package-result.json` confirms both jobs built the same bytes. It covers:
 
 - CLI baseline and coverage, assertion kills, survivors, malformed/replayed
   receipts, unsupported versions, timeout, cancellation and source preservation.
