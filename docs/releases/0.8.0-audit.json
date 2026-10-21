@@ -1,0 +1,1123 @@
+{
+  "schemaVersion": 1,
+  "kind": "seshat-release-notice-audit",
+  "issue": 187,
+  "status": "native-audit-complete-pending-local-matrix-and-publication",
+  "capturedAt": "2026-10-20",
+  "candidate": {
+    "packageVersion": "0.8.0",
+    "sourceCommit": "2881ca7f8d510a9e9d80721ea884b0edee54f051",
+    "sourceTrees": {
+      "crates": "18a76b2832d2bc3104f2acbbe7b4ead88d0d9332",
+      "packages": "0a87d73cfda810ee3a51bc7e17ba4e4df88d6a03",
+      "packaging": "8ed01dede64ac467d45cf1241b6f903e0df73f26"
+    },
+    "sourceRef": "refs/pull/189/merge",
+    "sourceCommitUrl": "https://github.com/Binary-Balance/seshat/commit/2881ca7f8d510a9e9d80721ea884b0edee54f051",
+    "directHead": "acbcb8bfdbdd2854ad92d7d5842364cb7fa1369d",
+    "directHeadUrl": "https://github.com/Binary-Balance/seshat/commit/acbcb8bfdbdd2854ad92d7d5842364cb7fa1369d",
+    "pullRequestUrl": "https://github.com/Binary-Balance/seshat/pull/189",
+    "rust": {
+      "version": "1.98.1",
+      "commit": "48a229ceaefd4985c50990b14116b6d856af0985"
+    },
+    "node": "24.20.0"
+  },
+  "coordinates": [
+    {
+      "id": "native-linux-x64",
+      "role": "native-release",
+      "canonical": true,
+      "package": "@binary-balance/seshat-linux-x64",
+      "version": "0.8.0",
+      "target": "linux-x64",
+      "targetTriple": "x86_64-unknown-linux-gnu",
+      "runId": 39375098631,
+      "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098631",
+      "jobId": 118471365428,
+      "jobUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098631/job/118471365428",
+      "artifactId": 12244073703,
+      "artifactName": "linux-x64-package-proof",
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098631/artifacts/12244073703",
+      "artifactApiUrl": "https://api.github.com/repos/Binary-Balance/seshat/actions/artifacts/12244073703",
+      "artifactSizeBytes": 3589171,
+      "artifactDigest": "sha256:ff79d369684f2dc91e52539ba20607e50d5f12b551ed8ba2862216f366da5cb8",
+      "createdAt": "2026-10-20T06:08:23Z",
+      "expiresAt": "2027-01-18T05:28:41Z",
+      "expired": false,
+      "archivePath": "seshat-linux-x64-release.tgz",
+      "archiveFile": "seshat-linux-x64-release.tgz",
+      "archiveClass": "native-release",
+      "archiveBytes": 1092296,
+      "archiveSha256": "d5b374a126755dcc9a57e7e70f08e0970d1d1e3c38a414810247f5db6ce652d5",
+      "buildProvenance": {
+        "sourceCommit": "2881ca7f8d510a9e9d80721ea884b0edee54f051",
+        "sourceRef": "refs/pull/189/merge",
+        "workflow": "Linux x64 package proof",
+        "workflowRef": "Binary-Balance/seshat/.github/workflows/linux-x64-package.yml@refs/pull/189/merge",
+        "job": "package",
+        "buildRecord": {
+          "path": "package/BUILD.json",
+          "bytes": 9952,
+          "sha256": "f94977360efd99e5291383adc17341a4b31b5d89da3cdfce8c6a56bcf101235a",
+          "mode": "0644"
+        },
+        "packageManifest": {
+          "path": "package/package.json",
+          "bytes": 497,
+          "sha256": "9dcfeae392b0f65cab1ced0c7f08015f10f4874bae0e88e527c21e4a73d31cd3",
+          "mode": "0644"
+        },
+        "binary": {
+          "path": "package/bin/seshat",
+          "bytes": 2365552,
+          "sha256": "4fee7e17e91c7eb111fd285b303aa72d433b84fe4cc8a15bfbc083620e27d224",
+          "mode": "0755"
+        },
+        "notice": {
+          "path": "package/THIRD_PARTY_NOTICES.txt",
+          "bytes": 2057917,
+          "sha256": "890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8",
+          "mode": "0644"
+        },
+        "dependencyInventory": {
+          "count": 65,
+          "sha256": "1c900df6b67ba2d918dc6e80a429c3f4b30d233b6766d0546f5634ba3224cd1b"
+        },
+        "cargoLockSha256": "fb84c2d0294ea970bd672d91c8a017b037457cb0bcd958fe44338c588123a225"
+      }
+    },
+    {
+      "id": "native-linux-arm64",
+      "role": "native-release",
+      "canonical": true,
+      "package": "@binary-balance/seshat-linux-arm64",
+      "version": "0.8.0",
+      "target": "linux-arm64",
+      "targetTriple": "aarch64-unknown-linux-gnu",
+      "runId": 39375098519,
+      "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098519",
+      "jobId": 118471365273,
+      "jobUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098519/job/118471365273",
+      "artifactId": 12243905857,
+      "artifactName": "linux-arm64-package-proof",
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098519/artifacts/12243905857",
+      "artifactApiUrl": "https://api.github.com/repos/Binary-Balance/seshat/actions/artifacts/12243905857",
+      "artifactSizeBytes": 3367328,
+      "artifactDigest": "sha256:2681494c17effcfdcf6ea5e6b50e64ec18f891f5d0f57493b7365a258377c09a",
+      "createdAt": "2026-10-20T05:49:17Z",
+      "expiresAt": "2027-01-18T05:28:41Z",
+      "expired": false,
+      "archivePath": "seshat-linux-arm64-release.tgz",
+      "archiveFile": "seshat-linux-arm64-release.tgz",
+      "archiveClass": "native-release",
+      "archiveBytes": 1028976,
+      "archiveSha256": "1322e2bd1a82da4488dd6ff257ff69a5e68f500993c4c34dfe09ac46a1279c5f",
+      "buildProvenance": {
+        "sourceCommit": "2881ca7f8d510a9e9d80721ea884b0edee54f051",
+        "sourceRef": "refs/pull/189/merge",
+        "workflow": "Linux ARM64 package proof",
+        "workflowRef": "Binary-Balance/seshat/.github/workflows/linux-arm64-package.yml@refs/pull/189/merge",
+        "job": "package",
+        "buildRecord": {
+          "path": "package/BUILD.json",
+          "bytes": 9427,
+          "sha256": "870f026ee16d81fd2440b62ea6e26beeb56e2309ce4fcadd15debfdbe0cd4986",
+          "mode": "0644"
+        },
+        "packageManifest": {
+          "path": "package/package.json",
+          "bytes": 503,
+          "sha256": "ded9705b6a473a33d91bdd79166f18a5b7472169737446a0c15ecf2a4ee00b68",
+          "mode": "0644"
+        },
+        "binary": {
+          "path": "package/bin/seshat",
+          "bytes": 2097872,
+          "sha256": "4ecc618185f5707e43946e520d643da8dcf874e0cd0b5fa9d8b66ef2e7ad5335",
+          "mode": "0755"
+        },
+        "notice": {
+          "path": "package/THIRD_PARTY_NOTICES.txt",
+          "bytes": 2057917,
+          "sha256": "890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8",
+          "mode": "0644"
+        },
+        "dependencyInventory": {
+          "count": 65,
+          "sha256": "1c900df6b67ba2d918dc6e80a429c3f4b30d233b6766d0546f5634ba3224cd1b"
+        },
+        "cargoLockSha256": "fb84c2d0294ea970bd672d91c8a017b037457cb0bcd958fe44338c588123a225"
+      }
+    },
+    {
+      "id": "native-darwin-x64",
+      "role": "native-release",
+      "canonical": true,
+      "package": "@binary-balance/seshat-darwin-x64",
+      "version": "0.8.0",
+      "target": "darwin-x64",
+      "targetTriple": "x86_64-apple-darwin",
+      "runId": 39375098515,
+      "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098515",
+      "jobId": 118471364834,
+      "jobUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098515/job/118471364834",
+      "artifactId": 12244761757,
+      "artifactName": "macos-x64-package-proof",
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098515/artifacts/12244761757",
+      "artifactApiUrl": "https://api.github.com/repos/Binary-Balance/seshat/actions/artifacts/12244761757",
+      "artifactSizeBytes": 3391145,
+      "artifactDigest": "sha256:283b1858bc8bc4918d24a5fb8d6fa05172b91eb1fce6d16fe05247ac87df3787",
+      "createdAt": "2026-10-20T06:21:24Z",
+      "expiresAt": "2027-01-18T05:28:41Z",
+      "expired": false,
+      "archivePath": "seshat-darwin-x64-release.tgz",
+      "archiveFile": "seshat-darwin-x64-release.tgz",
+      "archiveClass": "native-release",
+      "archiveBytes": 1032555,
+      "archiveSha256": "97d0ae8031c7254584ca2c357ce39a00d475870980b38d64a4dec4062d94b117",
+      "buildProvenance": {
+        "sourceCommit": "2881ca7f8d510a9e9d80721ea884b0edee54f051",
+        "sourceRef": "refs/pull/189/merge",
+        "workflow": "macOS package proof",
+        "workflowRef": "Binary-Balance/seshat/.github/workflows/macos-package.yml@refs/pull/189/merge",
+        "job": "package",
+        "buildRecord": {
+          "path": "package/BUILD.json",
+          "bytes": 9385,
+          "sha256": "ba7e72ada551576fc0a217cc744d0f301e4a9862c203189382356abb56a272fb",
+          "mode": "0644"
+        },
+        "packageManifest": {
+          "path": "package/package.json",
+          "bytes": 471,
+          "sha256": "7a05838338ef79bd1182a2cb771b435a545c4ab605502f6f541d2827d36b88af",
+          "mode": "0644"
+        },
+        "binary": {
+          "path": "package/bin/seshat",
+          "bytes": 2186040,
+          "sha256": "cc7b8a465ccb936e1fdf4fefe603cc5165ce57c0da0ef04767ffbef2e078611c",
+          "mode": "0755"
+        },
+        "notice": {
+          "path": "package/THIRD_PARTY_NOTICES.txt",
+          "bytes": 2057917,
+          "sha256": "890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8",
+          "mode": "0644"
+        },
+        "dependencyInventory": {
+          "count": 65,
+          "sha256": "1c900df6b67ba2d918dc6e80a429c3f4b30d233b6766d0546f5634ba3224cd1b"
+        },
+        "cargoLockSha256": "fb84c2d0294ea970bd672d91c8a017b037457cb0bcd958fe44338c588123a225"
+      }
+    },
+    {
+      "id": "native-darwin-arm64",
+      "role": "native-release",
+      "canonical": true,
+      "package": "@binary-balance/seshat-darwin-arm64",
+      "version": "0.8.0",
+      "target": "darwin-arm64",
+      "targetTriple": "aarch64-apple-darwin",
+      "runId": 39375098515,
+      "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098515",
+      "jobId": 118471365107,
+      "jobUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098515/job/118471365107",
+      "artifactId": 12243917199,
+      "artifactName": "macos-arm64-package-proof",
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098515/artifacts/12243917199",
+      "artifactApiUrl": "https://api.github.com/repos/Binary-Balance/seshat/actions/artifacts/12243917199",
+      "artifactSizeBytes": 3280887,
+      "artifactDigest": "sha256:78f3ffaa516ad25b868fdd651ec1c3cf6108a7ea8d13166c0ebc49f214347643",
+      "createdAt": "2026-10-20T05:57:49Z",
+      "expiresAt": "2027-01-18T05:28:41Z",
+      "expired": false,
+      "archivePath": "seshat-darwin-arm64-release.tgz",
+      "archiveFile": "seshat-darwin-arm64-release.tgz",
+      "archiveClass": "native-release",
+      "archiveBytes": 997638,
+      "archiveSha256": "a5410979d9e40ff39d927e31e9a7ca71e30f51ad37d756e032fc5eaba6c37d0a",
+      "buildProvenance": {
+        "sourceCommit": "2881ca7f8d510a9e9d80721ea884b0edee54f051",
+        "sourceRef": "refs/pull/189/merge",
+        "workflow": "macOS package proof",
+        "workflowRef": "Binary-Balance/seshat/.github/workflows/macos-package.yml@refs/pull/189/merge",
+        "job": "package",
+        "buildRecord": {
+          "path": "package/BUILD.json",
+          "bytes": 9389,
+          "sha256": "a713f5a526fa9cab655a21f438659e733b56b2b65851e2484357d732594ea852",
+          "mode": "0644"
+        },
+        "packageManifest": {
+          "path": "package/package.json",
+          "bytes": 477,
+          "sha256": "014a58ebb237c5ab1060fe225bea52899307eb75af10a1d081de8aeac034ecfc",
+          "mode": "0644"
+        },
+        "binary": {
+          "path": "package/bin/seshat",
+          "bytes": 2074416,
+          "sha256": "9a7c5f0ff90ae09148b9a25107fce4f89b2e35f66068e5ddd26eafd3ee806eaf",
+          "mode": "0755"
+        },
+        "notice": {
+          "path": "package/THIRD_PARTY_NOTICES.txt",
+          "bytes": 2057917,
+          "sha256": "890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8",
+          "mode": "0644"
+        },
+        "dependencyInventory": {
+          "count": 65,
+          "sha256": "1c900df6b67ba2d918dc6e80a429c3f4b30d233b6766d0546f5634ba3224cd1b"
+        },
+        "cargoLockSha256": "fb84c2d0294ea970bd672d91c8a017b037457cb0bcd958fe44338c588123a225"
+      }
+    },
+    {
+      "id": "native-win32-x64",
+      "role": "native-release",
+      "canonical": true,
+      "package": "@binary-balance/seshat-win32-x64",
+      "version": "0.8.0",
+      "target": "win32-x64",
+      "targetTriple": "x86_64-pc-windows-msvc",
+      "runId": 39375098542,
+      "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098542",
+      "jobId": 118471365118,
+      "jobUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098542/job/118471365118",
+      "artifactId": 12244507930,
+      "artifactName": "windows-x64-package-proof",
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098542/artifacts/12244507930",
+      "artifactApiUrl": "https://api.github.com/repos/Binary-Balance/seshat/actions/artifacts/12244507930",
+      "artifactSizeBytes": 4480412,
+      "artifactDigest": "sha256:2ccaeb7e8006746e8b73dbc1b57f3232326075ff8e2bb8405b4274d144b74efb",
+      "createdAt": "2026-10-20T06:09:51Z",
+      "expiresAt": "2027-01-18T05:28:41Z",
+      "expired": false,
+      "archivePath": "seshat-win32-x64-release.tgz",
+      "archiveFile": "seshat-win32-x64-release.tgz",
+      "archiveClass": "native-release",
+      "archiveBytes": 1054892,
+      "archiveSha256": "4271b444b2889f29a55827738626e52fa3a630b769d6cb40f6091a1338878702",
+      "buildProvenance": {
+        "sourceCommit": "2881ca7f8d510a9e9d80721ea884b0edee54f051",
+        "sourceRef": "refs/pull/189/merge",
+        "workflow": "Windows x64 package proof",
+        "workflowRef": "Binary-Balance/seshat/.github/workflows/windows-package.yml@refs/pull/189/merge",
+        "job": "package",
+        "buildRecord": {
+          "path": "package/BUILD.json",
+          "bytes": 10224,
+          "sha256": "5e87731a657f27710d6e9c6ea76ac989dbd0d4f9a5d786dece40b9e4ba2fd4f7",
+          "mode": "0644"
+        },
+        "packageManifest": {
+          "path": "package/package.json",
+          "bytes": 472,
+          "sha256": "a76fa7e0ad5a88723270e86b4ecc8edc0647f39917706accbafea43be902934f",
+          "mode": "0644"
+        },
+        "binary": {
+          "path": "package/bin/seshat.exe",
+          "bytes": 2469376,
+          "sha256": "4a3093d0675d733bd12a377ece36f8dffb7fe67d5e925637614e6ee8d49b6ba8",
+          "mode": "0644"
+        },
+        "notice": {
+          "path": "package/THIRD_PARTY_NOTICES.txt",
+          "bytes": 2057917,
+          "sha256": "890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8",
+          "mode": "0644"
+        },
+        "dependencyInventory": {
+          "count": 65,
+          "sha256": "1c900df6b67ba2d918dc6e80a429c3f4b30d233b6766d0546f5634ba3224cd1b"
+        },
+        "cargoLockSha256": "fb84c2d0294ea970bd672d91c8a017b037457cb0bcd958fe44338c588123a225"
+      }
+    },
+    {
+      "id": "entry-unix-canonical",
+      "role": "entry",
+      "canonical": true,
+      "package": "@binary-balance/seshat",
+      "version": "0.8.0",
+      "target": "universal",
+      "targetTriple": null,
+      "runId": 39375098631,
+      "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098631",
+      "jobId": 118471365428,
+      "jobUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098631/job/118471365428",
+      "artifactId": 12244073703,
+      "artifactName": "linux-x64-package-proof",
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098631/artifacts/12244073703",
+      "artifactApiUrl": "https://api.github.com/repos/Binary-Balance/seshat/actions/artifacts/12244073703",
+      "artifactSizeBytes": 3589171,
+      "artifactDigest": "sha256:ff79d369684f2dc91e52539ba20607e50d5f12b551ed8ba2862216f366da5cb8",
+      "createdAt": "2026-10-20T06:08:23Z",
+      "expiresAt": "2027-01-18T05:28:41Z",
+      "expired": false,
+      "archivePath": "seshat-entry.tgz",
+      "archiveFile": "seshat-entry.tgz",
+      "archiveClass": "canonical-entry",
+      "archiveBytes": 5970,
+      "archiveSha256": "b9273e94111b8fab547b0be609f8d520c1fdc7ba05b2e99a0c335de33c63f467",
+      "buildProvenance": {
+        "sourceCommit": "2881ca7f8d510a9e9d80721ea884b0edee54f051",
+        "sourceRef": "refs/pull/189/merge",
+        "workflow": "Linux x64 package proof",
+        "workflowRef": "Binary-Balance/seshat/.github/workflows/linux-x64-package.yml@refs/pull/189/merge",
+        "job": "package",
+        "packageManifest": {
+          "path": "package/package.json",
+          "bytes": 752,
+          "sha256": "03953e05d844c5cb3935d898fa3454b23f988914afd583499466e5333b780d7e",
+          "mode": "0644"
+        },
+        "launcher": {
+          "path": "package/bin/seshat.mjs",
+          "bytes": 5036,
+          "sha256": "a8042d06d93200c3c98cc1c22da7e8bb100c5f5a5cf03075c820209a801a6426",
+          "mode": "0755"
+        },
+        "readme": {
+          "path": "package/README.md",
+          "bytes": 7543,
+          "sha256": "ab9ee26a2cd9d0fd1d7a828122425c57893fc01227269c4772be974f863283d6",
+          "mode": "0644"
+        },
+        "license": {
+          "path": "package/LICENSE",
+          "bytes": 1074,
+          "sha256": "d2895ef18f0ba19d7c3e0b8c08a087554bddfb2f3cacb22343b412f3b32cbd91",
+          "mode": "0644"
+        }
+      }
+    }
+  ],
+  "entry": {
+    "archive": {
+      "file": "seshat-entry.tgz",
+      "canonicalSourceTarget": "linux-x64",
+      "bytes": 5970,
+      "sha256": "b9273e94111b8fab547b0be609f8d520c1fdc7ba05b2e99a0c335de33c63f467"
+    },
+    "members": [
+      {
+        "path": "package/bin/seshat.mjs",
+        "bytes": 5036,
+        "sha256": "a8042d06d93200c3c98cc1c22da7e8bb100c5f5a5cf03075c820209a801a6426",
+        "mode": "0755"
+      },
+      {
+        "path": "package/LICENSE",
+        "bytes": 1074,
+        "sha256": "d2895ef18f0ba19d7c3e0b8c08a087554bddfb2f3cacb22343b412f3b32cbd91",
+        "mode": "0644"
+      },
+      {
+        "path": "package/package.json",
+        "bytes": 752,
+        "sha256": "03953e05d844c5cb3935d898fa3454b23f988914afd583499466e5333b780d7e",
+        "mode": "0644"
+      },
+      {
+        "path": "package/README.md",
+        "bytes": 7543,
+        "sha256": "ab9ee26a2cd9d0fd1d7a828122425c57893fc01227269c4772be974f863283d6",
+        "mode": "0644"
+      }
+    ],
+    "packageMetadata": {
+      "name": "@binary-balance/seshat",
+      "version": "0.8.0",
+      "description": "A native CLI for TypeScript and TSX complexity analysis and mutation testing.",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Binary-Balance/seshat.git"
+      },
+      "type": "module",
+      "engines": {
+        "node": ">=24.20.0 <25"
+      },
+      "bin": {
+        "seshat": "bin/seshat.mjs"
+      },
+      "files": [
+        "bin/seshat.mjs",
+        "README.md",
+        "LICENSE"
+      ],
+      "optionalDependencies": {
+        "@binary-balance/seshat-linux-x64": "0.8.0",
+        "@binary-balance/seshat-linux-arm64": "0.8.0",
+        "@binary-balance/seshat-darwin-x64": "0.8.0",
+        "@binary-balance/seshat-darwin-arm64": "0.8.0",
+        "@binary-balance/seshat-win32-x64": "0.8.0"
+      }
+    },
+    "hostVariants": [
+      {
+        "host": "linux-x64",
+        "runId": 39375098631,
+        "artifactName": "linux-x64-package-proof",
+        "bytes": 5970,
+        "sha256": "b9273e94111b8fab547b0be609f8d520c1fdc7ba05b2e99a0c335de33c63f467",
+        "launcherMode": "0755"
+      },
+      {
+        "host": "linux-arm64",
+        "runId": 39375098519,
+        "artifactName": "linux-arm64-package-proof",
+        "bytes": 5970,
+        "sha256": "b9273e94111b8fab547b0be609f8d520c1fdc7ba05b2e99a0c335de33c63f467",
+        "launcherMode": "0755"
+      },
+      {
+        "host": "darwin-x64",
+        "runId": 39375098515,
+        "artifactName": "macos-x64-package-proof",
+        "bytes": 5970,
+        "sha256": "b9273e94111b8fab547b0be609f8d520c1fdc7ba05b2e99a0c335de33c63f467",
+        "launcherMode": "0755"
+      },
+      {
+        "host": "darwin-arm64",
+        "runId": 39375098515,
+        "artifactName": "macos-arm64-package-proof",
+        "bytes": 5970,
+        "sha256": "b9273e94111b8fab547b0be609f8d520c1fdc7ba05b2e99a0c335de33c63f467",
+        "launcherMode": "0755"
+      },
+      {
+        "host": "win32-x64",
+        "runId": 39375098542,
+        "artifactName": "windows-x64-package-proof",
+        "bytes": 5972,
+        "sha256": "2cff76ce8c60957572d945896dba518d48d39ce52cbb95b8354a5da86aabd820",
+        "launcherMode": "0755"
+      }
+    ]
+  },
+  "targets": [
+    {
+      "target": "linux-x64",
+      "package": "@binary-balance/seshat-linux-x64",
+      "version": "0.8.0",
+      "targetTriple": "x86_64-unknown-linux-gnu",
+      "packageMetadata": {
+        "name": "@binary-balance/seshat-linux-x64",
+        "version": "0.8.0",
+        "description": "Native Seshat payload for linux-x64",
+        "license": "MIT",
+        "repository": {
+          "type": "git",
+          "url": "git+https://github.com/Binary-Balance/seshat.git"
+        },
+        "engines": {
+          "node": ">=24.20.0 <25"
+        },
+        "os": [
+          "linux"
+        ],
+        "cpu": [
+          "x64"
+        ],
+        "libc": [
+          "glibc"
+        ],
+        "files": [
+          "bin/seshat",
+          "README.md",
+          "LICENSE",
+          "BUILD.json",
+          "THIRD_PARTY_NOTICES.txt"
+        ]
+      },
+      "archive": {
+        "file": "seshat-linux-x64-release.tgz",
+        "bytes": 1092296,
+        "sha256": "d5b374a126755dcc9a57e7e70f08e0970d1d1e3c38a414810247f5db6ce652d5"
+      },
+      "members": [
+        {
+          "path": "package/bin/seshat",
+          "bytes": 2365552,
+          "sha256": "4fee7e17e91c7eb111fd285b303aa72d433b84fe4cc8a15bfbc083620e27d224",
+          "mode": "0755"
+        },
+        {
+          "path": "package/BUILD.json",
+          "bytes": 9952,
+          "sha256": "f94977360efd99e5291383adc17341a4b31b5d89da3cdfce8c6a56bcf101235a",
+          "mode": "0644"
+        },
+        {
+          "path": "package/LICENSE",
+          "bytes": 1074,
+          "sha256": "d2895ef18f0ba19d7c3e0b8c08a087554bddfb2f3cacb22343b412f3b32cbd91",
+          "mode": "0644"
+        },
+        {
+          "path": "package/package.json",
+          "bytes": 497,
+          "sha256": "9dcfeae392b0f65cab1ced0c7f08015f10f4874bae0e88e527c21e4a73d31cd3",
+          "mode": "0644"
+        },
+        {
+          "path": "package/README.md",
+          "bytes": 144,
+          "sha256": "209e4fd0564a09c6cbb0c67a93d32f72cd1e5c87a8129a05dc579b21861f96ed",
+          "mode": "0644"
+        },
+        {
+          "path": "package/THIRD_PARTY_NOTICES.txt",
+          "bytes": 2057917,
+          "sha256": "890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8",
+          "mode": "0644"
+        }
+      ],
+      "build": {
+        "rust": "rustc 1.98.1 (48a229cea 2026-09-01)",
+        "rustCommit": "48a229ceaefd4985c50990b14116b6d856af0985",
+        "cargoLockSha256": "fb84c2d0294ea970bd672d91c8a017b037457cb0bcd958fe44338c588123a225",
+        "dependencyCount": 65,
+        "nativeLibraries": [
+          "libgcc_s.so.1",
+          "libpthread.so.0",
+          "libm.so.6",
+          "libdl.so.2",
+          "libc.so.6",
+          "ld-linux-x86-64.so.2"
+        ]
+      },
+      "proof": {
+        "kind": "seshat-linux-x64-package-proof",
+        "runner": "ubuntu-22.04",
+        "node": "24.20.0",
+        "validationPassed": true,
+        "summaryFile": "native-evidence/linux-x64/summary.json",
+        "summarySha256": "a93922f4846f973957fb93536b5c14eb173c599f0ed1ff625babf6cd6ff3a18e"
+      }
+    },
+    {
+      "target": "linux-arm64",
+      "package": "@binary-balance/seshat-linux-arm64",
+      "version": "0.8.0",
+      "targetTriple": "aarch64-unknown-linux-gnu",
+      "packageMetadata": {
+        "name": "@binary-balance/seshat-linux-arm64",
+        "version": "0.8.0",
+        "description": "Native Seshat payload for linux-arm64",
+        "license": "MIT",
+        "repository": {
+          "type": "git",
+          "url": "git+https://github.com/Binary-Balance/seshat.git"
+        },
+        "engines": {
+          "node": ">=24.20.0 <25"
+        },
+        "os": [
+          "linux"
+        ],
+        "cpu": [
+          "arm64"
+        ],
+        "libc": [
+          "glibc"
+        ],
+        "files": [
+          "bin/seshat",
+          "README.md",
+          "LICENSE",
+          "BUILD.json",
+          "THIRD_PARTY_NOTICES.txt"
+        ]
+      },
+      "archive": {
+        "file": "seshat-linux-arm64-release.tgz",
+        "bytes": 1028976,
+        "sha256": "1322e2bd1a82da4488dd6ff257ff69a5e68f500993c4c34dfe09ac46a1279c5f"
+      },
+      "members": [
+        {
+          "path": "package/bin/seshat",
+          "bytes": 2097872,
+          "sha256": "4ecc618185f5707e43946e520d643da8dcf874e0cd0b5fa9d8b66ef2e7ad5335",
+          "mode": "0755"
+        },
+        {
+          "path": "package/BUILD.json",
+          "bytes": 9427,
+          "sha256": "870f026ee16d81fd2440b62ea6e26beeb56e2309ce4fcadd15debfdbe0cd4986",
+          "mode": "0644"
+        },
+        {
+          "path": "package/LICENSE",
+          "bytes": 1074,
+          "sha256": "d2895ef18f0ba19d7c3e0b8c08a087554bddfb2f3cacb22343b412f3b32cbd91",
+          "mode": "0644"
+        },
+        {
+          "path": "package/package.json",
+          "bytes": 503,
+          "sha256": "ded9705b6a473a33d91bdd79166f18a5b7472169737446a0c15ecf2a4ee00b68",
+          "mode": "0644"
+        },
+        {
+          "path": "package/README.md",
+          "bytes": 146,
+          "sha256": "cd3609cef8f447be21219d27fc540694cf4d27583baae56e5ce9bfe6e9c28af8",
+          "mode": "0644"
+        },
+        {
+          "path": "package/THIRD_PARTY_NOTICES.txt",
+          "bytes": 2057917,
+          "sha256": "890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8",
+          "mode": "0644"
+        }
+      ],
+      "build": {
+        "rust": "rustc 1.98.1 (48a229cea 2026-09-01)",
+        "rustCommit": "48a229ceaefd4985c50990b14116b6d856af0985",
+        "cargoLockSha256": "fb84c2d0294ea970bd672d91c8a017b037457cb0bcd958fe44338c588123a225",
+        "dependencyCount": 65,
+        "nativeLibraries": [
+          "libgcc_s.so.1",
+          "libm.so.6",
+          "libc.so.6"
+        ]
+      },
+      "proof": {
+        "kind": "seshat-linux-arm64-package-proof",
+        "runner": "ubuntu-22.04-arm",
+        "node": "24.20.0",
+        "validationPassed": true,
+        "summaryFile": "native-evidence/linux-arm64/summary.json",
+        "summarySha256": "3be11fb3c1d2a4da8d7aa8f5727b76b5eb015e98ed1df4d0744fd5beff739586"
+      }
+    },
+    {
+      "target": "darwin-x64",
+      "package": "@binary-balance/seshat-darwin-x64",
+      "version": "0.8.0",
+      "targetTriple": "x86_64-apple-darwin",
+      "packageMetadata": {
+        "name": "@binary-balance/seshat-darwin-x64",
+        "version": "0.8.0",
+        "description": "Native Seshat payload for darwin-x64",
+        "license": "MIT",
+        "repository": {
+          "type": "git",
+          "url": "git+https://github.com/Binary-Balance/seshat.git"
+        },
+        "engines": {
+          "node": ">=24.20.0 <25"
+        },
+        "os": [
+          "darwin"
+        ],
+        "cpu": [
+          "x64"
+        ],
+        "files": [
+          "bin/seshat",
+          "README.md",
+          "LICENSE",
+          "BUILD.json",
+          "THIRD_PARTY_NOTICES.txt"
+        ]
+      },
+      "archive": {
+        "file": "seshat-darwin-x64-release.tgz",
+        "bytes": 1032555,
+        "sha256": "97d0ae8031c7254584ca2c357ce39a00d475870980b38d64a4dec4062d94b117"
+      },
+      "members": [
+        {
+          "path": "package/bin/seshat",
+          "bytes": 2186040,
+          "sha256": "cc7b8a465ccb936e1fdf4fefe603cc5165ce57c0da0ef04767ffbef2e078611c",
+          "mode": "0755"
+        },
+        {
+          "path": "package/BUILD.json",
+          "bytes": 9385,
+          "sha256": "ba7e72ada551576fc0a217cc744d0f301e4a9862c203189382356abb56a272fb",
+          "mode": "0644"
+        },
+        {
+          "path": "package/LICENSE",
+          "bytes": 1074,
+          "sha256": "d2895ef18f0ba19d7c3e0b8c08a087554bddfb2f3cacb22343b412f3b32cbd91",
+          "mode": "0644"
+        },
+        {
+          "path": "package/package.json",
+          "bytes": 471,
+          "sha256": "7a05838338ef79bd1182a2cb771b435a545c4ab605502f6f541d2827d36b88af",
+          "mode": "0644"
+        },
+        {
+          "path": "package/README.md",
+          "bytes": 145,
+          "sha256": "aaad95b6b8374aa9b330b2f5d165bc1909719d4df04961fa1dc5cc5f91dd15d8",
+          "mode": "0644"
+        },
+        {
+          "path": "package/THIRD_PARTY_NOTICES.txt",
+          "bytes": 2057917,
+          "sha256": "890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8",
+          "mode": "0644"
+        }
+      ],
+      "build": {
+        "rust": "rustc 1.98.1 (48a229cea 2026-09-01)",
+        "rustCommit": "48a229ceaefd4985c50990b14116b6d856af0985",
+        "cargoLockSha256": "fb84c2d0294ea970bd672d91c8a017b037457cb0bcd958fe44338c588123a225",
+        "dependencyCount": 65,
+        "nativeLibraries": [
+          "/usr/lib/libiconv.2.dylib",
+          "/usr/lib/libSystem.B.dylib"
+        ]
+      },
+      "proof": {
+        "kind": "seshat-macos-x64-package-proof",
+        "runner": "macos-15-intel",
+        "node": "24.20.0",
+        "validationPassed": true,
+        "summaryFile": "native-evidence/darwin-x64/summary.json",
+        "summarySha256": "87edebdeea0eaf202a8d5da4d0361a6bfcbba00ff57c30762d24ce831bc2429b"
+      }
+    },
+    {
+      "target": "darwin-arm64",
+      "package": "@binary-balance/seshat-darwin-arm64",
+      "version": "0.8.0",
+      "targetTriple": "aarch64-apple-darwin",
+      "packageMetadata": {
+        "name": "@binary-balance/seshat-darwin-arm64",
+        "version": "0.8.0",
+        "description": "Native Seshat payload for darwin-arm64",
+        "license": "MIT",
+        "repository": {
+          "type": "git",
+          "url": "git+https://github.com/Binary-Balance/seshat.git"
+        },
+        "engines": {
+          "node": ">=24.20.0 <25"
+        },
+        "os": [
+          "darwin"
+        ],
+        "cpu": [
+          "arm64"
+        ],
+        "files": [
+          "bin/seshat",
+          "README.md",
+          "LICENSE",
+          "BUILD.json",
+          "THIRD_PARTY_NOTICES.txt"
+        ]
+      },
+      "archive": {
+        "file": "seshat-darwin-arm64-release.tgz",
+        "bytes": 997638,
+        "sha256": "a5410979d9e40ff39d927e31e9a7ca71e30f51ad37d756e032fc5eaba6c37d0a"
+      },
+      "members": [
+        {
+          "path": "package/bin/seshat",
+          "bytes": 2074416,
+          "sha256": "9a7c5f0ff90ae09148b9a25107fce4f89b2e35f66068e5ddd26eafd3ee806eaf",
+          "mode": "0755"
+        },
+        {
+          "path": "package/BUILD.json",
+          "bytes": 9389,
+          "sha256": "a713f5a526fa9cab655a21f438659e733b56b2b65851e2484357d732594ea852",
+          "mode": "0644"
+        },
+        {
+          "path": "package/LICENSE",
+          "bytes": 1074,
+          "sha256": "d2895ef18f0ba19d7c3e0b8c08a087554bddfb2f3cacb22343b412f3b32cbd91",
+          "mode": "0644"
+        },
+        {
+          "path": "package/package.json",
+          "bytes": 477,
+          "sha256": "014a58ebb237c5ab1060fe225bea52899307eb75af10a1d081de8aeac034ecfc",
+          "mode": "0644"
+        },
+        {
+          "path": "package/README.md",
+          "bytes": 147,
+          "sha256": "b88e82affa32d7107dcbafc759ea56b307fe2183793781e25c8ff63f6f61e0e0",
+          "mode": "0644"
+        },
+        {
+          "path": "package/THIRD_PARTY_NOTICES.txt",
+          "bytes": 2057917,
+          "sha256": "890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8",
+          "mode": "0644"
+        }
+      ],
+      "build": {
+        "rust": "rustc 1.98.1 (48a229cea 2026-09-01)",
+        "rustCommit": "48a229ceaefd4985c50990b14116b6d856af0985",
+        "cargoLockSha256": "fb84c2d0294ea970bd672d91c8a017b037457cb0bcd958fe44338c588123a225",
+        "dependencyCount": 65,
+        "nativeLibraries": [
+          "/usr/lib/libiconv.2.dylib",
+          "/usr/lib/libSystem.B.dylib"
+        ]
+      },
+      "proof": {
+        "kind": "seshat-macos-arm64-package-proof",
+        "runner": "macos-15",
+        "node": "24.20.0",
+        "validationPassed": true,
+        "summaryFile": "native-evidence/darwin-arm64/summary.json",
+        "summarySha256": "97b587a7bcd946179ab7e60c7ae953573a90c6875e3571d8b723640bf8ba685b"
+      }
+    },
+    {
+      "target": "win32-x64",
+      "package": "@binary-balance/seshat-win32-x64",
+      "version": "0.8.0",
+      "targetTriple": "x86_64-pc-windows-msvc",
+      "packageMetadata": {
+        "name": "@binary-balance/seshat-win32-x64",
+        "version": "0.8.0",
+        "description": "Native Seshat payload for win32-x64",
+        "license": "MIT",
+        "repository": {
+          "type": "git",
+          "url": "git+https://github.com/Binary-Balance/seshat.git"
+        },
+        "engines": {
+          "node": ">=24.20.0 <25"
+        },
+        "os": [
+          "win32"
+        ],
+        "cpu": [
+          "x64"
+        ],
+        "files": [
+          "bin/seshat.exe",
+          "README.md",
+          "LICENSE",
+          "BUILD.json",
+          "THIRD_PARTY_NOTICES.txt"
+        ]
+      },
+      "archive": {
+        "file": "seshat-win32-x64-release.tgz",
+        "bytes": 1054892,
+        "sha256": "4271b444b2889f29a55827738626e52fa3a630b769d6cb40f6091a1338878702"
+      },
+      "members": [
+        {
+          "path": "package/bin/seshat.exe",
+          "bytes": 2469376,
+          "sha256": "4a3093d0675d733bd12a377ece36f8dffb7fe67d5e925637614e6ee8d49b6ba8",
+          "mode": "0644"
+        },
+        {
+          "path": "package/BUILD.json",
+          "bytes": 10224,
+          "sha256": "5e87731a657f27710d6e9c6ea76ac989dbd0d4f9a5d786dece40b9e4ba2fd4f7",
+          "mode": "0644"
+        },
+        {
+          "path": "package/LICENSE",
+          "bytes": 1074,
+          "sha256": "d2895ef18f0ba19d7c3e0b8c08a087554bddfb2f3cacb22343b412f3b32cbd91",
+          "mode": "0644"
+        },
+        {
+          "path": "package/package.json",
+          "bytes": 472,
+          "sha256": "a76fa7e0ad5a88723270e86b4ecc8edc0647f39917706accbafea43be902934f",
+          "mode": "0644"
+        },
+        {
+          "path": "package/README.md",
+          "bytes": 144,
+          "sha256": "de83b9d3175643138b5cb0e73e7832d2d8696d93706646745696c7196feb773b",
+          "mode": "0644"
+        },
+        {
+          "path": "package/THIRD_PARTY_NOTICES.txt",
+          "bytes": 2057917,
+          "sha256": "890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8",
+          "mode": "0644"
+        }
+      ],
+      "build": {
+        "rust": "rustc 1.98.1 (48a229cea 2026-09-01)",
+        "rustCommit": "48a229ceaefd4985c50990b14116b6d856af0985",
+        "cargoLockSha256": "fb84c2d0294ea970bd672d91c8a017b037457cb0bcd958fe44338c588123a225",
+        "dependencyCount": 65,
+        "nativeLibraries": [
+          "KERNEL32.dll",
+          "api-ms-win-core-synch-l1-2-0.dll",
+          "kernel32.dll",
+          "ntdll.dll"
+        ]
+      },
+      "proof": {
+        "kind": "seshat-windows-x64-package-proof",
+        "runner": "windows-2022",
+        "node": "24.20.0",
+        "validationPassed": true,
+        "summaryFile": "native-evidence/win32-x64/summary.json",
+        "summarySha256": "c0b0e1f7810328a7a5bc2c57615845179449f4065c6f1097b8886cb8eb8a01dd"
+      }
+    }
+  ],
+  "dependencyReview": {
+    "baseline": "0.7.0",
+    "baselineAudit": "docs/releases/0.7.0-audit.json",
+    "baselineArchive": "work/0.7.0-publishing/archives/linux-x64.tgz",
+    "lockedDependencyCount": 65,
+    "dependenciesMatchBaseline": true,
+    "runtimeNoticeAssetsMatchBaseline": true,
+    "rustToolchainMatchesBaseline": true,
+    "notice": {
+      "bytes": 2057917,
+      "sha256": "890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8",
+      "identicalOnAllTargets": true,
+      "changeFromBaseline": "Notice bytes and SHA-256 match the previous release."
+    },
+    "differences": {
+      "dependencies": {
+        "previousSha256": "1c900df6b67ba2d918dc6e80a429c3f4b30d233b6766d0546f5634ba3224cd1b",
+        "currentSha256": "1c900df6b67ba2d918dc6e80a429c3f4b30d233b6766d0546f5634ba3224cd1b",
+        "currentCanonicalSha256": "cf6bb036d02042dc3e4bf1909d2c9923b62a5d1f11db889107232a181d41e1d9",
+        "entries": {
+          "added": [],
+          "removed": [],
+          "changed": []
+        }
+      },
+      "runtimeNoticeAssets": {
+        "added": [],
+        "removed": [],
+        "changed": []
+      },
+      "rust": {
+        "previous": "rustc 1.98.1 (48a229cea 2026-09-01)",
+        "current": "rustc 1.98.1 (48a229cea 2026-09-01)"
+      },
+      "notice": {
+        "previous": {
+          "bytes": 2057917,
+          "sha256": "890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8"
+        },
+        "current": {
+          "bytes": 2057917,
+          "sha256": "890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8"
+        }
+      }
+    }
+  },
+  "windowsRuntime": {
+    "runId": 39375098711,
+    "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/39375098711",
+    "artifacts": [
+      {
+        "id": 12243198949,
+        "name": "windows-shared-fixture-evidence",
+        "sizeBytes": 100816,
+        "digest": "sha256:d6b8e76e8eaa42420186bbe45b7d19806c69b500051eba76bb2cfd937bac2922",
+        "expiresAt": "2027-01-18T05:28:41Z"
+      },
+      {
+        "id": 12243027898,
+        "name": "windows-runtime-cli-evidence",
+        "sizeBytes": 4275,
+        "digest": "sha256:2218814e171261e47b4e58325a3510bb3ae4acf0d60b892ae7b3faf890518ece",
+        "expiresAt": "2027-01-18T05:28:41Z"
+      },
+      {
+        "id": 12242024855,
+        "name": "windows-runtime-preflight",
+        "sizeBytes": 1029,
+        "digest": "sha256:c788a9b7c1be1caa3dd92f166ce44ce05dc98c4f594e4ca2ea075a1ebd4c2837",
+        "expiresAt": "2027-01-18T05:28:41Z"
+      }
+    ],
+    "binary": {
+      "bytes": 2359296,
+      "sha256": "0c97f4e2eb895924ec0f3ef5ecb988644be63546d8c29e7f77c436b2dcc6c950"
+    },
+    "scenarios": [
+      "baseline",
+      "timeout",
+      "overflow",
+      "leaderExit",
+      "leaderExitRepeat",
+      "consoleCancellation"
+    ],
+    "validationPassed": true,
+    "evidenceSha256": "eb3f87f79abef56e0f71bd82a0329d01f58d70d589da35053a08f51f37a60f46"
+  },
+  "remainingChecks": [
+    "Run the release local install workflow on all five targets.",
+    "Run the read-only publisher dry run against the six staged archives and the reviewed revision.",
+    "After publication, verify the six registry versions, tarball bytes and provenance against this audit.",
+    "Create the GitHub release with the six audited archives."
+  ],
+  "historicalEvidence": [
+    {
+      "record": "docs/releases/0.7.0-audit.json",
+      "use": "Previous 0.7.0 release audit."
+    },
+    {
+      "record": "docs/releases/0.6.0-audit.json",
+      "use": "Previous 0.6.0 release audit."
+    },
+    {
+      "record": "docs/releases/0.5.1-audit.json",
+      "use": "Previous 0.5.1 release audit."
+    },
+    {
+      "record": "docs/releases/0.5.0-audit.json",
+      "use": "Previous 0.5.0 release audit."
+    },
+    {
+      "record": "docs/releases/0.4.0-audit.json",
+      "use": "Previous 0.4.0 release audit."
+    },
+    {
+      "record": "docs/releases/0.3.1-audit.json",
+      "use": "Previous 0.3.1 release audit."
+    },
+    {
+      "record": "docs/releases/0.3.0-audit.json",
+      "use": "Previous 0.3.0 release audit."
+    },
+    {
+      "record": "docs/releases/0.2.0-audit.json",
+      "use": "Previous 0.2.0 release audit."
+    },
+    {
+      "record": "docs/releases/0.1.0-audit.json",
+      "markdown": "docs/releases/0.1.0-audit.md",
+      "use": "Published 0.1.0 archives and the full Rust runtime notice review."
+    },
+    {
+      "record": "docs/releases/0.1.0-rc.1-audit.json",
+      "markdown": "docs/releases/0.1.0-rc.1-audit.md",
+      "use": "Archived 0.1.0-rc.1 candidate."
+    }
+  ]
+}
