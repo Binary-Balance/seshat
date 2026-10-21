@@ -104,8 +104,9 @@ Running beside the package job keeps this pass off the workflow's critical path.
 
 Each pass records the resolved runtime, platform, architecture, native and
 archive hashes, per-check success and logs under `node-VERSION` in the job's
-`*-latest-node` artifact. Comparing those hashes with the package job's
-`package-result.json` confirms both jobs built the same bytes. It covers:
+`*-latest-node` artifact. Its `summary.json` `binarySha256` and `tarballSha256`
+match `binary` and `tarballSha256` in the package job's `package-result.json`
+when both jobs built the same bytes. It covers:
 
 - CLI baseline and coverage, assertion kills, survivors, malformed/replayed
   receipts, unsupported versions, timeout, cancellation and source preservation.
