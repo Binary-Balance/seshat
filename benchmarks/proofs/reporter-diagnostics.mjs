@@ -31,10 +31,13 @@ const previousCwd = process.cwd();
 process.chdir(join(work, 'cwd'));
 try {
   const selectedContext = [{config:{setupFiles:[join(selectedExpo, 'src/preset/setup.js')]}}];
-  assert.deepEqual(Reporter.executingVersions(executable, selectedContext), {
-    jest: '30.5.1',
-    'jest-expo': '57.0.5',
-  });
+  for (const version of ['57.0.5', '57.0.6']) {
+    install(cwdRoot, 'jest-expo', version);
+    assert.deepEqual(Reporter.executingVersions(executable, selectedContext), {
+      jest: '30.5.1',
+      'jest-expo': version,
+    });
+  }
   assert.deepEqual(Reporter.executingVersions(executable), {jest: '30.5.1'});
   assert.deepEqual(Reporter.executingVersions(executable, [{config:{preset:'jest-expo'}}]), {
     jest: '30.5.1',

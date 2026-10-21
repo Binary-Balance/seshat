@@ -12,13 +12,28 @@ some locked runner dependencies require at least 24.11.0.
 | Runner | Supported Node range | Runner and coverage dependencies |
 | --- | --- | --- |
 | Node test runner | >=24.20.0 <25 | Checked-in TypeScript/Istanbul collector |
-| Jest/Expo | >=24.20.0 <25 | Jest 29.7.0, jest-expo 57.0.5, Expo 57.0.20, Jest Circus and Babel coverage |
+| Jest/Expo | >=24.20.0 <25 | Jest 29.7.0, jest-expo 57.0.5 or 57.0.6, Expo 57.0.20, Jest Circus and Babel coverage |
 | Vitest | >=24.20.0 <25 | Vitest >=5.0.0 <6 and the matching @vitest/coverage-istanbul |
 
-The Jest and Expo dependencies remain locked. This policy does not expand Jest
-or Expo versions, CPU targets or OS support. Node 24.20.0 and 24.21.0 have passed
-the native compatibility matrix; that tested set is distinct from the supported
-Node range.
+The Jest and Expo dependencies remain locked to the versions listed above.
+This policy does not expand CPU targets or OS support. Node 24.20.0 and
+24.21.0 have passed the native compatibility matrix; that tested set is distinct
+from the supported Node range.
+
+## Jest/Expo versions
+
+Seshat accepts exactly jest-expo 57.0.5 and 57.0.6 with Jest 29.7.0 and the
+Expo dependencies listed above. Other patches, SDK versions and prereleases
+remain rejected. Both the executing preset and the working-directory package
+must report an accepted version.
+
+The checked-in proof fixture and public example pin 57.0.6. Both accepted
+versions passed all 24 cases in
+[`jest-expo-check.mjs`](../benchmarks/proofs/jest-expo-check.mjs) on Linux x64
+with Node 24.22.0. The [verification report](../outputs/jest-expo-57.0.6.md)
+records the commands, receipts and controls. To rerun either version, pass its
+installed dependency directory with `--deps`. The driver accepts only these two
+jest-expo versions and keeps the other dependencies pinned.
 
 ## Vitest range
 

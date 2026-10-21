@@ -1066,7 +1066,7 @@ crates/seshat/target/release/seshat-proofs collect /path/to/project/seshat.json 
 ```
 
 This Linux proof supports **Node 24.20.0**, with its built-in runner,
-**Jest 29.7.0 / jest-expo 57.0.5**, or **Vitest 5** with Istanbul coverage.
+**Jest 29.7.0 / jest-expo 57.0.5 or 57.0.6**, or **Vitest 5** with Istanbul coverage.
 Unsupported versions in receipts prevent assessment. Each setup
 runs its baseline, then coverage, sequentially in the
 copy. A configured typecheck runs before the setup's baseline. After a failed job,
@@ -1290,11 +1290,18 @@ Do not replace missing evidence with stack-text matching or a generic exit-1 kil
 
 The checked-in fixture at `fixtures/jest-expo` is a small Expo TSX project with
 no application checkout or private input. Its lockfile pins Jest 29.7.0,
-jest-expo 57.0.5, Expo 57.0.20, React Native 0.86.3,
+jest-expo 57.0.6, Expo 57.0.20, React Native 0.86.3,
 `@react-native/jest-preset` 0.86.3, `babel-preset-expo` 57.0.10, React and
 React Test Renderer 19.2.3, React Native Testing Library 13.3.3 and TypeScript
 6.0.3. Jest runs with its `jest-expo` preset and `--runInBand`;
 coverage uses Babel instrumentation and writes full Istanbul JSON.
+
+Seshat accepts exactly jest-expo 57.0.5 and 57.0.6. Both versions passed the
+24-case driver on Linux x64 with Node 24.22.0. See the
+[version verification report](../../outputs/jest-expo-57.0.6.md). Reuse a
+dependency directory with `--deps` to check either accepted version; all other
+fixture dependencies remain pinned. Future patches and SDK versions need
+separate verification.
 
 Run the reusable installed-command driver from the repository root after building
 a local Seshat candidate from this revision:
@@ -1401,6 +1408,7 @@ contains the exact runner reports and configuration scope used for that route.
 | --- | --- | --- | --- |
 | Node | Node 24.20.0 or 24.21.0 | Built-in test runner with the verified Istanbul statement collector | [`linux-debian11.json`](../../outputs/linux-debian11.json) (installed candidate); [`bounded-proofs.json`](../../outputs/bounded-proofs.json) (fixture) |
 | Jest/Expo | Node 24.20.0 or 24.21.0, Jest 29.7.0, jest-expo 57.0.5, Expo 57.0.20 | Jest Circus, `jest-expo` preset, Babel coverage, `--runInBand`, Seshat workers 1 and 2 | [`jest-expo-check.json`](../../outputs/jest-expo-check.json) |
+| Jest/Expo | Node 24.22.0 on Linux x64, Jest 29.7.0, jest-expo 57.0.5 and 57.0.6, Expo 57.0.20 | The same 24 cases, including Seshat workers 1 and 2 | [version verification](../../outputs/jest-expo-57.0.6.md) |
 | Vitest | Node 24.20.0 or 24.21.0, Vitest 5.0.0, `@vitest/coverage-istanbul` 5.0.0 | Private `TestRunner` and reporter, Node environment, fork pool, Istanbul coverage and sequential runner tests | [`vitest-check.json`](../../outputs/vitest-check.json) (worker 1); [`vitest-installed-check.json`](../../outputs/vitest-installed-check.json) (installed CLI, worker 2) |
 
 The original linked reports retain their recorded 24.20.0 environment.
