@@ -12,6 +12,7 @@ on:
       - benchmarks/proofs/node-load-observer.mjs
       - benchmarks/proofs/execute-cancellation.mjs
       - benchmarks/proofs/node-load-failure.mjs
+      - benchmarks/proofs/node-reporter.mjs
       - packages/**
       - examples/**
       - benchmarks/proofs/npm-package.mjs
@@ -26,6 +27,7 @@ on:
       - benchmarks/proofs/collect-node.mjs
       - benchmarks/proofs/repeat-proof.mjs
       - benchmarks/proofs/jest-expo-check.mjs
+      - benchmarks/proofs/jest-hook-errors.mjs
       - benchmarks/proofs/jest-*.cjs
       - benchmarks/proofs/vitest-*.mjs
       - benchmarks/proofs/fixtures/**
@@ -49,6 +51,7 @@ on:
       - benchmarks/proofs/node-load-observer.mjs
       - benchmarks/proofs/execute-cancellation.mjs
       - benchmarks/proofs/node-load-failure.mjs
+      - benchmarks/proofs/node-reporter.mjs
       - packages/**
       - examples/**
       - benchmarks/proofs/npm-package.mjs
@@ -63,6 +66,7 @@ on:
       - benchmarks/proofs/collect-node.mjs
       - benchmarks/proofs/repeat-proof.mjs
       - benchmarks/proofs/jest-expo-check.mjs
+      - benchmarks/proofs/jest-hook-errors.mjs
       - benchmarks/proofs/jest-*.cjs
       - benchmarks/proofs/vitest-*.mjs
       - benchmarks/proofs/fixtures/**
