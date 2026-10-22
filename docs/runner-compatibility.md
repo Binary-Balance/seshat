@@ -101,7 +101,7 @@ package through [`runner-compatibility.mjs`](../benchmarks/proofs/runner-compati
 on Linux x64/ARM64, macOS x64/ARM64 and Windows x64.
 
 On Linux x64/ARM64, macOS x64 and Windows x64, a `latest-node` job runs this
-pass beside the package job, keeping it off the workflow's critical path. It
+pass beside the package job, so the package job no longer waits for it. It
 builds the same commit with the same pinned toolchain. macOS ARM64 runs the pass
 at the end of its package job instead, reusing that job's package. It still
 finishes before macOS x64, and it saves one of the five concurrent macOS runners
