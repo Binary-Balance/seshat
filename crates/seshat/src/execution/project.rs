@@ -32,6 +32,7 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     fs,
     path::{Path, PathBuf},
+    sync::atomic::{AtomicUsize, Ordering},
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -441,6 +442,7 @@ struct OwnedDirectory(PathBuf);
 
 impl OwnedDirectory {
     fn create(parent: &Path) -> Result<Self, String> {
+        static NEXT_ID: AtomicUsize = AtomicUsize::new(0);
         validate_path(parent)?;
         let stamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -450,7 +452,9 @@ impl OwnedDirectory {
         // Keep Windows spelling: verbatim prefixes change PathBuf join semantics.
         #[cfg(unix)]
         let parent = fs::canonicalize(parent).map_err(|e| e.to_string())?;
-        let path = parent.join(format!("capture-{}-{stamp}", std::process::id()));
+        // Concurrent calls can observe the same clock value, especially on Windows.
+        let id = NEXT_ID.fetch_add(1, Ordering::Relaxed);
+        let path = parent.join(format!("capture-{}-{stamp}-{id}", std::process::id()));
         Self::create_path(path)
     }
 
@@ -873,6 +877,32 @@ impl CapturedProject {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn concurrent_capture_directories_have_distinct_paths() {
+        let parent = OwnedDirectory::create(&std::env::temp_dir()).unwrap();
+        let barrier = std::sync::Barrier::new(8);
+        let directories: Vec<_> = std::thread::scope(|scope| {
+            let threads: Vec<_> = (0..8)
+                .map(|_| {
+                    scope.spawn(|| {
+                        barrier.wait();
+                        (0..16)
+                            .map(|_| OwnedDirectory::create(&parent.0).unwrap())
+                            .collect::<Vec<_>>()
+                    })
+                })
+                .collect();
+            threads
+                .into_iter()
+                .flat_map(|thread| thread.join().unwrap())
+                .collect()
+        });
+        let paths: BTreeSet<_> = directories.iter().map(|directory| &directory.0).collect();
+        assert_eq!(paths.len(), 128);
+        drop(directories);
+        assert_eq!(fs::read_dir(&parent.0).unwrap().count(), 0);
+    }
 
     pub(super) struct Fixture {
         pub(super) _directory: OwnedDirectory,
