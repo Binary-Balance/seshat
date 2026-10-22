@@ -258,16 +258,6 @@ jobs:
         run: |
           PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/x64/package-result.json")"
           SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/execute-cancellation.mjs 2>&1 | tee "work/x64/execute-cancellation.log"
-      - name: Set up latest supported Node runtime
-        id: latest_node
-        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 24.x
-          check-latest: true
-      - name: Verify latest Node 24 compatibility
-        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.latest_node.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
-        run: node benchmarks/proofs/runner-compatibility.mjs "work/x64/package-result.json"
       - name: Write portable summary
         if: always()
         run: |
@@ -283,7 +273,6 @@ jobs:
             work/x64/preflight.json
             work/x64/package-result.json
             work/x64/package-result.json.work.json
-            work/x64/node-*
             work/x64/release.json
             work/x64/release.log
             work/x64/seshat-entry.tgz
@@ -324,3 +313,55 @@ jobs:
             work/debian11-*/checks.json
             work/debian11-*/consumer/checks.json
           if-no-files-found: ignore
+
+  # Runs beside the package job to keep it off the critical path. It rebuilds
+  # the same commit with the pinned toolchain; the evidence records the hashes.
+  latest-node:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.20.0
+      - name: Set up Rust
+        run: |
+          rustup toolchain install 1.98.1 --profile minimal --no-self-update
+          rustup default 1.98.1
+      - name: Fetch locked dependencies
+        run: |
+          npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund
+          npm ci --prefix benchmarks/proofs --ignore-scripts --no-audit --no-fund
+          cargo fetch --locked --manifest-path crates/seshat/Cargo.toml
+      - name: Fetch pinned Debian 11 build libraries
+        run: |
+          mkdir -p work/x64/debian11-inputs
+          curl --max-time 60 -fSL https://deb.debian.org/debian/pool/main/g/glibc/libc6_2.31-13+deb11u11_amd64.deb \
+            -o work/x64/debian11-inputs/libc6.deb
+          curl --max-time 60 -fSL https://deb.debian.org/debian/pool/main/g/glibc/libc6-dev_2.31-13+deb11u11_amd64.deb \
+            -o work/x64/debian11-inputs/libc6-dev.deb
+          curl --max-time 60 -fSL https://deb.debian.org/debian/pool/main/g/gcc-10/libgcc-s1_10.2.1-6_amd64.deb \
+            -o work/x64/debian11-inputs/libgcc-s1.deb
+      - name: Build x64 package against Debian 11 libraries
+        env:
+          SESHAT_PACK_RESULT: work/x64/package-result.json
+        run: node packaging/pack.mjs work/x64/debian11-inputs
+      - name: Install locked Jest/Expo fixture dependencies
+        run: npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
+      - name: Set up latest supported Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.x
+          check-latest: true
+      - name: Verify latest Node 24 compatibility
+        run: node benchmarks/proofs/runner-compatibility.mjs work/x64/package-result.json
+      - name: Upload latest Node evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: linux-x64-latest-node
+          path: work/x64/node-*/**

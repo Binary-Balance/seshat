@@ -186,16 +186,6 @@ jobs:
         run: |
           PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/arm64/package-result.json")"
           SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/execute-cancellation.mjs 2>&1 | tee "work/arm64/execute-cancellation.log"
-      - name: Set up latest supported Node runtime
-        id: latest_node
-        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 24.x
-          check-latest: true
-      - name: Verify latest Node 24 compatibility
-        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.latest_node.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
-        run: node benchmarks/proofs/runner-compatibility.mjs "work/arm64/package-result.json"
       - name: Write portable summary
         if: always()
         run: |
@@ -229,7 +219,6 @@ jobs:
             work/arm64/repeat-pack.log
             work/arm64/repeat-pack-attempts/**
             work/arm64/pack.log
-            work/arm64/node-*/**
             work/arm64/summary.json
             work/arm64/seshat-linux-arm64-release.tgz
             work/arm64/seshat-linux-arm64.tgz
@@ -241,3 +230,48 @@ jobs:
             work/arm64/unix-supervision.json
             work/arm64/unix-supervision.log
           if-no-files-found: error
+
+  # Runs beside the package job to keep it off the critical path. It rebuilds
+  # the same commit with the pinned toolchain; the evidence records the hashes.
+  latest-node:
+    runs-on: ubuntu-22.04-arm
+    timeout-minutes: 60
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.20.0
+      - name: Set up Rust
+        run: |
+          rustup toolchain install 1.98.1 --profile minimal --no-self-update
+          rustup default 1.98.1
+      - name: Fetch locked dependencies
+        run: |
+          npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund
+          npm ci --prefix benchmarks/proofs --ignore-scripts --no-audit --no-fund
+          cargo fetch --locked --manifest-path crates/seshat/Cargo.toml
+      - name: Build native ARM64 package
+        env:
+          SESHAT_PACK_RESULT: work/arm64/package-result.json
+        run: |
+          mkdir -p work/arm64
+          node packaging/pack.mjs --native-arm64
+      - name: Install locked Jest/Expo fixture dependencies
+        run: npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
+      - name: Set up latest supported Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.x
+          check-latest: true
+      - name: Verify latest Node 24 compatibility
+        run: node benchmarks/proofs/runner-compatibility.mjs work/arm64/package-result.json
+      - name: Upload latest Node evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: linux-arm64-latest-node
+          path: work/arm64/node-*/**

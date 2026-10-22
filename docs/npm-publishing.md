@@ -52,7 +52,9 @@ release PR head, generate the audit and its Markdown note. The read-only
 [audit generator](../benchmarks/proofs/release-audit.mjs) finds the matching
 successful runs and downloads their artifacts. It checks source trees,
 provenance, package identities, member modes, and archive, binary and notice
-hashes before writing either output.
+hashes before writing either output. If a workflow job fails, use "Re-run all
+jobs": the audit requires each package job's evidence to come from the run's
+latest attempt.
 
 First archive the previous version's audit JSON and Markdown under
 `docs/releases/<previous-version>-audit.json` and `.md`.

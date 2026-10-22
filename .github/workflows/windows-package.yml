@@ -350,19 +350,6 @@ jobs:
           $env:SESHAT_CONSOLE_HELPER_BINARY = $package.consoleHelper
           node benchmarks/proofs/npm-package.mjs work/windows/seshat-entry.tgz work/windows/seshat-win32-x64-release.tgz 2>&1 | Tee-Object -FilePath work/windows/npm-package.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Set up latest supported Node runtime
-        id: latest_node
-        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 24.x
-          check-latest: true
-      - name: Verify latest Node 24 compatibility
-        if: ${{ !cancelled() && steps.build.outcome == 'success' && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.latest_node.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
-        shell: pwsh
-        run: |
-          node benchmarks/proofs/runner-compatibility.mjs work/windows/package-result.json
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Require shared fixture reports
         shell: pwsh
         run: |
@@ -405,7 +392,6 @@ jobs:
             work/windows/repeat-pack.log
             work/windows/repeat-pack-attempts/**
             work/windows/pack.log
-            work/windows/node-*/**
             work/windows/summary.json
             work/windows/seshat-win32-x64-release.tgz
             work/windows/seshat-windows-x64.tgz
@@ -422,3 +408,67 @@ jobs:
             work/windows/shared-parallel.json
             work/windows/shared-parallel.log
           if-no-files-found: error
+
+  # Runs beside the package job to keep it off the critical path. It rebuilds
+  # the same commit with the pinned toolchain; the evidence records the hashes.
+  latest-node:
+    runs-on: windows-2022
+    timeout-minutes: 60
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.20.0
+      - name: Set up x64 MSVC and Windows SDK
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+        with:
+          arch: x64
+      - name: Set up Rust 1.98.1
+        shell: pwsh
+        run: |
+          rustup toolchain install 1.98.1-x86_64-pc-windows-msvc --profile minimal --no-self-update
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          rustup default 1.98.1-x86_64-pc-windows-msvc
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Fetch locked dependencies
+        shell: pwsh
+        run: |
+          npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm ci --prefix benchmarks/proofs --ignore-scripts --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo fetch --locked --manifest-path crates/seshat/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build native Windows package
+        shell: pwsh
+        env:
+          SESHAT_PACK_RESULT: work/windows/package-result.json
+        run: |
+          New-Item -ItemType Directory -Force work/windows | Out-Null
+          node packaging/pack.mjs --native-windows
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Install locked Jest/Expo fixture dependencies
+        shell: pwsh
+        run: |
+          npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Set up latest supported Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.x
+          check-latest: true
+      - name: Verify latest Node 24 compatibility
+        shell: pwsh
+        run: |
+          node benchmarks/proofs/runner-compatibility.mjs work/windows/package-result.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload latest Node evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-x64-latest-node
+          path: work/windows/node-*/**
