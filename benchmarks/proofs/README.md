@@ -693,7 +693,7 @@ are assertions, so a changed provider needs review rather than silent acceptance
 
 ## Mutation experiment
 
-### Logical, arithmetic, boolean and statement mutations
+### Logical, arithmetic, boolean, statement and optional mutations
 
 After building the release binaries, run:
 
@@ -701,15 +701,36 @@ After building the release binaries, run:
 node benchmarks/proofs/operators.mjs
 ```
 
-This checks AST-generated logical, arithmetic, boolean and statement mutants, inactive and
+This checks AST-generated logical, arithmetic, boolean, statement and optional mutants, inactive and
 active switching, operand values and side effects, logical-chain grouping,
 BigInt, coercion, `await`, `yield` and direct `eval`. Node, Jest and Vitest also
-execute active switching mutations from these families in `switching-syntax.mjs`.
+execute active switching mutations from these families in `switching-syntax.mjs`,
+including nullish defaults, optional member/call segments and receiver binding.
 
 Real CLI assessments check the default families, individual families, parallel
 replacement and switching, a comparison-only scope and no operator mutants.
 Nine covered functions still receive extreme mutations when operator selection
 is empty. Source bytes and scratch cleanup are checked after every assessment.
+
+
+The script also runs `optional-operators.mjs`, which can run independently. It checks static/computed
+members, optional calls, continuous and nested chains, receiver binding,
+short-circuit effects, evaluation order, generic calls, TypeScript wrappers,
+TSX, async/generator expressions and nullish values against hand-written
+expected results. Reference-sensitive call/tag/delete chains explicitly reject
+switching. Its CLI fixture compares replacement and switching, family selection,
+parallel workers, identities, source restoration, cleanup, unresolved outcomes
+and matched on/off test-job cost through the native binary and an installed npm
+launcher layout. Run with the release binaries:
+
+```sh
+SESHAT_OPERATOR_SAMPLES=3 node benchmarks/proofs/optional-operators.mjs
+```
+
+It accepts `SESHAT_CLI_BINARY`, `SESHAT_PROOF_BINARY` and `SESHAT_PROOF_OUTPUT`.
+The [contract and retained measurements](../../docs/research/optional-mutations.md)
+state fixture limits. This proof uses a fixed Node fixture and does not claim
+runner-wide performance or population-wide equivalence rates.
 
 The script also runs `boolean-operators.mjs`, which can run independently. Its
 33 fixed semantic cases check 38 boolean replacement/switching pairs, and six
@@ -740,7 +761,7 @@ and [boolean measurements](../../docs/research/boolean-mutations.md) describe
 the fixtures and hand-checked equivalent mutants. Boolean cost samples compare
 the original three families with an explicit four-family selection on the same
 source. The [statement measurements](../../docs/research/statement-mutations.md)
-compare that selection with the five-family default.
+compare that selection with the five-family default from 0.8.0.
 These rates and timings do not estimate performance or equivalence on other projects.
 
 Unix standalone package proofs run this script against the installed binary;

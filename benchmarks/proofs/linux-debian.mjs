@@ -123,6 +123,10 @@ run('debian-consumer','bwrap',['--unshare-all','--uid','0','--gid','0','--die-wi
   '--ro-bind',standaloneArchive,'/opt/standalone.tar.gz',
   '--tmpfs','/seshat','--ro-bind',join(repo,'benchmarks/proofs'),'/seshat/benchmarks/proofs',
   '--ro-bind',join(repo,'benchmarks/node_modules'),'/seshat/benchmarks/node_modules',
+  // The optional-family proof builds a launcher fixture from these source inputs.
+  '--ro-bind',join(repo,'packaging/metadata.mjs'),'/seshat/packaging/metadata.mjs',
+  '--ro-bind',join(repo,'crates/seshat/Cargo.toml'),'/seshat/crates/seshat/Cargo.toml',
+  '--ro-bind',join(repo,'packages/seshat/bin/seshat.mjs'),'/seshat/packages/seshat/bin/seshat.mjs',
   '--ro-bind',examples,'/seshat/examples',
   '--ro-bind',examplesCache,'/seshat/examples-npm-cache',
   '--ro-bind',packed.proofBinary,'/seshat/crates/seshat/target/release/seshat-proofs',

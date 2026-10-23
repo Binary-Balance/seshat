@@ -21,6 +21,7 @@ on:
       - benchmarks/proofs/operators.mjs
       - benchmarks/proofs/boolean-operators.mjs
       - benchmarks/proofs/statement-operators.mjs
+      - benchmarks/proofs/optional-operators.mjs
       - benchmarks/proofs/parallel.mjs
       - benchmarks/proofs/process.mjs
       - benchmarks/proofs/liveness.mjs
@@ -60,6 +61,7 @@ on:
       - benchmarks/proofs/operators.mjs
       - benchmarks/proofs/boolean-operators.mjs
       - benchmarks/proofs/statement-operators.mjs
+      - benchmarks/proofs/optional-operators.mjs
       - benchmarks/proofs/parallel.mjs
       - benchmarks/proofs/process.mjs
       - benchmarks/proofs/liveness.mjs

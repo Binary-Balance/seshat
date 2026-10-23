@@ -177,7 +177,7 @@ const originals = {
 for (const [path,source] of Object.entries(originals)) writeFileSync(join(project,path),source);
 const oldFamilies = ['comparison','logical','arithmetic'];
 const booleanFamilies = [...oldFamilies,'boolean'];
-const allFamilies = [...booleanFamilies,'statement'];
+const allFamilies = [...booleanFamilies,'statement','optional'];
 const config = {source:{include:['*.ts']},capture:Object.keys(originals),setups:[{
   name:'node',runner:'node',cwd:'.',timeoutMs:10000,
   typecheck:[process.execPath,join(repo,'benchmarks/node_modules/typescript/bin/tsc'),'--ignoreConfig','--strict','--noEmit','--skipLibCheck','boolean.ts','comparison.ts'],

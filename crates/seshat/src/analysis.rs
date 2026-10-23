@@ -181,6 +181,7 @@ pub enum MutationOperator {
     Arithmetic,
     Boolean,
     Statement,
+    Optional,
 }
 
 pub fn default_mutation_operators() -> Vec<MutationOperator> {
@@ -190,6 +191,7 @@ pub fn default_mutation_operators() -> Vec<MutationOperator> {
         MutationOperator::Arithmetic,
         MutationOperator::Boolean,
         MutationOperator::Statement,
+        MutationOperator::Optional,
     ]
 }
 
@@ -197,6 +199,7 @@ enum OperatorExpression {
     Binary { left: Span, right: Span },
     BooleanLiteral,
     LogicalNot,
+    Optional { after: u32 },
     Statement,
 }
 
@@ -219,6 +222,8 @@ pub struct Analysis {
     non_runtime: Vec<Span>,
     expression_statements: BTreeSet<u32>,
     switching_reference_sites: BTreeSet<u32>,
+    switching_chain_references: BTreeSet<u32>,
+    chains: Vec<Span>,
     statement_excluded_functions: BTreeSet<u32>,
     super_calls: Vec<Span>,
     decisions: Vec<Span>,
@@ -368,6 +373,47 @@ impl<'a> Visit<'a> for Analysis {
                 self.super_calls.push(call.span);
             }
             _ => {}
+        }
+        if let AstKind::ChainExpression(chain) = node {
+            self.chains.push(chain.span);
+        }
+        let optional = match node {
+            AstKind::StaticMemberExpression(member) if member.optional => {
+                Some((member.object.span().end, "."))
+            }
+            AstKind::ComputedMemberExpression(member) if member.optional => {
+                Some((member.object.span().end, ""))
+            }
+            AstKind::CallExpression(call) if call.optional => Some((call.callee.span().end, "")),
+            _ => None,
+        };
+        if let Some((after, replacement)) = optional {
+            self.operators.push(OperatorSite {
+                kind: MutationOperator::Optional,
+                // Wrapping a chain prefix would end its short-circuit boundary early.
+                span: *self
+                    .chains
+                    .last()
+                    .expect("optional segment belongs to a chain"),
+                expression: OperatorExpression::Optional { after },
+                offset: 0,
+                original: "?.",
+                replacements: if replacement == "." { &["."] } else { &[""] },
+                first_id: 0,
+            });
+        }
+        let chain_reference = match node {
+            AstKind::CallExpression(call) => Some(&call.callee),
+            AstKind::TaggedTemplateExpression(template) => Some(&template.tag),
+            AstKind::UnaryExpression(unary) if unary.operator.as_str() == "delete" => {
+                Some(&unary.argument)
+            }
+            _ => None,
+        };
+        if let Some(expression) = chain_reference
+            && let Expression::ChainExpression(chain) = expression.get_inner_expression()
+        {
+            self.switching_chain_references.insert(chain.span.start);
         }
         let reference_context = match node {
             AstKind::CallExpression(call) => Some(&call.callee),
@@ -940,6 +986,7 @@ impl<'a> Visit<'a> for Analysis {
             "!==" => &["==="],
             "&&" => &["||"],
             "||" => &["&&"],
+            "??" => &["||"],
             "+" => &["-"],
             "-" => &["+"],
             "*" => &["/"],
@@ -949,6 +996,7 @@ impl<'a> Visit<'a> for Analysis {
         self.operators.push(OperatorSite {
             kind: match original {
                 "&&" | "||" => MutationOperator::Logical,
+                "??" => MutationOperator::Optional,
                 "+" | "-" | "*" | "/" => MutationOperator::Arithmetic,
                 _ => MutationOperator::Comparison,
             },
@@ -1665,7 +1713,9 @@ impl Analysis {
             enabled.contains(&site.kind)
                 && (!matches!(
                     site.kind,
-                    MutationOperator::Boolean | MutationOperator::Statement
+                    MutationOperator::Boolean
+                        | MutationOperator::Statement
+                        | MutationOperator::Optional
                 ) || (!source_type.is_typescript_definition()
                     && !result
                         .non_runtime
@@ -1691,15 +1741,24 @@ impl Analysis {
                 c.span.start,
                 std::cmp::Reverse(c.span.end),
                 c.kind != MutationOperator::Statement,
+                match c.expression {
+                    OperatorExpression::Optional { after } => after,
+                    _ => 0,
+                },
             )
         });
         let mut id = 0;
         for c in &mut result.operators {
             let mut offset = c.offset;
-            if let OperatorExpression::Binary { left, right } = c.expression {
-                offset = left.end as usize;
+            let after = match c.expression {
+                OperatorExpression::Binary { left, .. } => Some(left.end),
+                OperatorExpression::Optional { after } => Some(after),
+                _ => None,
+            };
+            if let Some(after) = after {
+                offset = after as usize;
                 loop {
-                    let gap = &source[offset..right.start as usize];
+                    let gap = &source[offset..];
                     let trimmed = gap.trim_start_matches(javascript_whitespace);
                     offset += gap.len() - trimmed.len();
                     if trimmed.starts_with("/*") {
@@ -1789,6 +1848,14 @@ impl Analysis {
                         &source[c.span.end as usize..]
                     ));
                 }
+                if let OperatorExpression::Optional { .. } = c.expression {
+                    return Ok(format!(
+                        "{}{:>2}{}",
+                        &source[..c.offset],
+                        op,
+                        &source[c.offset + 2..]
+                    ));
+                }
                 if let OperatorExpression::LogicalNot = c.expression {
                     // Parentheses preserve the operand's grouping without converting its value.
                     return Ok(format!(
@@ -1806,8 +1873,10 @@ impl Analysis {
                         &source[c.offset + c.original.len()..]
                     ));
                 }
-                if c.kind == MutationOperator::Logical
-                    && let OperatorExpression::Binary { left, right } = c.expression
+                if matches!(
+                    c.kind,
+                    MutationOperator::Logical | MutationOperator::Optional
+                ) && let OperatorExpression::Binary { left, right } = c.expression
                 {
                     // Keep the AST's operand grouping when &&/|| precedence changes.
                     return Ok(format!(
@@ -1881,6 +1950,12 @@ impl Analysis {
         }) {
             return Err("experimental switching cannot remove ! in call/tag targets or delete/typeof operands that expose references; use source replacement".into());
         }
+        if self.operators.iter().any(|site| {
+            matches!(site.expression, OperatorExpression::Optional { .. })
+                && self.switching_chain_references.contains(&site.span.start)
+        }) {
+            return Err("experimental switching cannot wrap optional chains in call/tag targets or delete operands; use source replacement".into());
+        }
         fn render(
             a: &Analysis,
             source: &str,
@@ -1896,12 +1971,13 @@ impl Analysis {
                     continue;
                 }
                 out.push_str(&source[cursor as usize..c.span.start as usize]);
-                if c.kind == MutationOperator::Logical
-                    || matches!(
-                        c.expression,
-                        OperatorExpression::BooleanLiteral | OperatorExpression::LogicalNot
-                    )
-                {
+                if matches!(
+                    c.kind,
+                    MutationOperator::Logical | MutationOperator::Optional
+                ) || matches!(
+                    c.expression,
+                    OperatorExpression::BooleanLiteral | OperatorExpression::LogicalNot
+                ) {
                     out.push_str(a.statement_separator(c.span.start, start));
                 }
                 match c.expression {
@@ -1922,6 +1998,45 @@ impl Analysis {
                             c.original
                         ));
                     }
+                    OperatorExpression::Optional { .. } => {
+                        let next = a
+                            .operators
+                            .iter()
+                            .enumerate()
+                            .skip(index + 1)
+                            .find(|(_, site)| {
+                                site.span != c.span
+                                    || !matches!(
+                                        site.expression,
+                                        OperatorExpression::Optional { .. }
+                                    )
+                            })
+                            .map_or(a.operators.len(), |(index, _)| index);
+                        let mut chain =
+                            render(a, source, c.span.start, c.span.end, id_offset, next)?;
+                        for site in a.operators[index..next].iter().rev() {
+                            // Keep offsets valid for nested operators while rendering each arm.
+                            let mut changed = source.to_owned();
+                            changed.replace_range(
+                                site.offset..site.offset + 2,
+                                if site.replacements[0] == "." {
+                                    " ."
+                                } else {
+                                    "  "
+                                },
+                            );
+                            let alternative =
+                                render(a, &changed, c.span.start, c.span.end, id_offset, next)?;
+                            chain = format!(
+                                "(__seshat_active === {} ? ({alternative}) : ({chain}))",
+                                site.first_id + id_offset
+                            );
+                            if chain.len() > 8 * 1024 * 1024 {
+                                return Err("experimental switching source exceeds 8 MiB; use source replacement".into());
+                            }
+                        }
+                        out.push_str(&chain);
+                    }
                     OperatorExpression::LogicalNot => {
                         let argument = render(
                             a,
@@ -1940,7 +2055,10 @@ impl Analysis {
                         let left = render(a, source, left.start, left.end, id_offset, index + 1)?;
                         let right =
                             render(a, source, right.start, right.end, id_offset, index + 1)?;
-                        if c.kind == MutationOperator::Logical {
+                        if matches!(
+                            c.kind,
+                            MutationOperator::Logical | MutationOperator::Optional
+                        ) {
                             // Inline arms preserve short-circuiting, await/yield and direct eval scope.
                             out.push_str(&format!("(__seshat_active === {} ? (({left}) {} ({right})) : (({left}) {} ({right})))",
                         c.first_id + id_offset, c.replacements[0], c.original));
@@ -2364,7 +2482,7 @@ fn operator_mutants_follow_ast_sites_and_selected_families() {
     let analysis = Analysis::inspect("source.ts", source).unwrap();
     let definitions = analysis.json();
     let rows = definitions["mutants"].as_array().unwrap();
-    assert_eq!(rows.len(), 8);
+    assert_eq!(rows.len(), 9);
     assert_eq!(
         rows.iter()
             .map(|r| (
@@ -2380,7 +2498,8 @@ fn operator_mutants_follow_ast_sites_and_selected_families() {
             ("*", "/"),
             ("/", "*"),
             ("<", "<="),
-            ("<", ">=")
+            ("<", ">="),
+            ("??", "||")
         ]
     );
     for (id, row) in rows.iter().enumerate() {
@@ -2889,4 +3008,90 @@ fn switched_sources_can_use_run_wide_ids_and_reject_helper_collisions() {
         analysis.switched(collision),
         Err(error) if error == "proof helper name collision"
     ));
+}
+
+#[test]
+fn optional_candidates_preserve_tokens_and_stable_ids() {
+    let source = "/* 🎸 */ const value = object /* ?. */ ?.method?.<number>(key?.[next()])?.field ?? fallback;";
+    let inspect = || {
+        Analysis::inspect_with_operators("source.ts", source, &[MutationOperator::Optional])
+            .unwrap()
+    };
+    let analysis = inspect();
+    assert!(default_mutation_operators().contains(&MutationOperator::Optional));
+    assert_eq!(analysis.count(), 5);
+    assert_eq!(analysis.json(), inspect().json());
+    for (id, row) in analysis.json()["mutants"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .enumerate()
+    {
+        assert_eq!(row["id"], id);
+        assert_eq!(row["kind"], "optional");
+        let offset = row["offset"].as_u64().unwrap() as usize;
+        assert_eq!(
+            &source[offset..offset + 2],
+            row["original"].as_str().unwrap()
+        );
+        let changed = analysis.replace(source, id).unwrap();
+        assert!(changed.starts_with("/* 🎸 */"));
+        Analysis::inspect("mutant.ts", &changed).unwrap();
+    }
+    Analysis::inspect_with_operators("prepared.ts", &analysis.switched(source).unwrap(), &[])
+        .unwrap();
+    assert_eq!(
+        Analysis::inspect_with_operators("source.ts", source, &[])
+            .unwrap()
+            .count(),
+        0
+    );
+}
+
+#[test]
+fn optional_candidates_exclude_non_runtime_syntax() {
+    for (path, source) in [
+        (
+            "source.ts",
+            "type T = { property?: string; method?(): void }; interface I { p?: number } let value; value ??= 7; function f(value = 7) {}",
+        ),
+        (
+            "source.ts",
+            "declare namespace N { const value = object?.field ?? fallback; }",
+        ),
+        ("source.d.ts", "declare const value: { field?: number };"),
+    ] {
+        assert_eq!(
+            Analysis::inspect_with_operators(path, source, &[MutationOperator::Optional])
+                .unwrap()
+                .count(),
+            0
+        );
+    }
+}
+
+#[test]
+fn optional_switching_rejects_reference_contexts() {
+    for source in [
+        "(object?.method)();",
+        "(object?.method)?.();",
+        "(object?.tag)`text`;",
+        "delete object?.field;",
+        "(object?.method as any)();",
+        "delete (object?.field!);",
+    ] {
+        let analysis =
+            Analysis::inspect_with_operators("source.ts", source, &[MutationOperator::Optional])
+                .unwrap();
+        assert!(
+            analysis
+                .switched(source)
+                .unwrap_err()
+                .contains("optional chains"),
+            "{source}"
+        );
+        for id in 0..analysis.count() {
+            Analysis::inspect("mutant.ts", &analysis.replace(source, id).unwrap()).unwrap();
+        }
+    }
 }
