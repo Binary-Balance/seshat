@@ -505,7 +505,9 @@ Seshat continues through later setups and mutants when the managed command has
 ended, cleanup succeeded and captured inputs are unchanged. The execution error
 remains unresolved. It does not trigger a full-command retry of a selected run.
 Command-start or supervision failures, output overflow, pipe errors, cleanup
-failures and source preparation or restoration failures still stop new jobs.
+failures and source preparation or restoration failures still stop later mutants.
+Other setups for the current mutant can still run. Failed cleanup and
+cancellation stop its remaining setups immediately.
 
 Both kinds of timeout remain unresolved. They do not prove that tests detected
 the mutation. The overall mutation score stays withheld, including when an

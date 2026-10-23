@@ -257,7 +257,9 @@ or a pipe/supervision error, cleanup succeeded and captured inputs are unchanged
 This includes runner crashes and missing or invalid receipts. The error stays
 unresolved, keeps the run incomplete and withholds the score. A selected run's
 execution error is retained without a full-command retry. Command-start,
-preparation, restoration and cleanup failures still stop new jobs.
+preparation, restoration and cleanup failures still stop later mutants.
+Other setups for the current mutant can still run, except after failed cleanup
+or cancellation.
 
 ### Runtime diagnostics
 

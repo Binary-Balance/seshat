@@ -11,5 +11,6 @@ attempt remains `execution-error`, the run remains incomplete and the mutation
 score stays withheld.
 
 Cancellation, job deadlines, supervision/output failures and unsafe cleanup or
-source changes still stop new jobs. Test-selection retries and timeout scoring
-rules are unchanged. This resolves [#168](https://github.com/Binary-Balance/seshat/issues/168).
+source changes still stop later mutants. Test-selection retries and timeout
+scoring rules are unchanged. This resolves
+[#168](https://github.com/Binary-Balance/seshat/issues/168).
