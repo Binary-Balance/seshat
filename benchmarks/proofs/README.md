@@ -1554,6 +1554,18 @@ SESHAT_VITEST_CHECK_CASES=timeout-continues,operator-timeout-continues node benc
 SESHAT_CHECK_WORKERS=2 SESHAT_VITEST_CHECK_CASES=timeout-continues,operator-timeout-continues node benchmarks/proofs/vitest-check.mjs
 ```
 
+The `crash-continues` case uses an implicit `TypeError` during module loading
+to verify that an unresolved extreme mutant does not prevent later extreme or
+operator jobs. `operator-crash-continues` verifies an unresolved operator crash
+with two setups and later killed mutants. Against `--cli` or `--tarball`, it
+checks both replacement and experimental operator switching. Both cases retain
+exit `2`, incomplete results, withheld scores and cleaned scratch directories.
+
+```sh
+node benchmarks/proofs/vitest-check.mjs --cli crates/seshat/target/debug/seshat --cases crash-continues,operator-crash-continues
+SESHAT_CHECK_WORKERS=2 node benchmarks/proofs/vitest-check.mjs --cli crates/seshat/target/debug/seshat --cases crash-continues,operator-crash-continues
+```
+
 Results remain under ignored `work/assurance-proofs/vitest-check-*`. Wall times
 include native capture, validation, baseline, coverage, mutations and cleanup,
 but exclude preliminary fixture staging. These correctness runs are not repeated

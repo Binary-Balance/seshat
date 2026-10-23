@@ -1238,6 +1238,7 @@ impl CapturedProject {
                 .unwrap_or_else(CommandEvidence::error);
             jobs += 1;
             if let selection::Selection::Files { files, .. } = &selections[index]
+                && observed.state != TestState::ExecutionError
                 && observed.can_continue_mutation()
                 && !self.test_selection[index].as_ref().unwrap().verifies(
                     &self.directory.0,
@@ -2392,6 +2393,83 @@ mod tests {
                 );
             }
             fixture.assert_clean();
+        }
+    }
+
+    #[test]
+    fn unresolved_receipts_allow_later_setups_and_mutants() {
+        for (switching, workers) in [(false, 1), (false, 2), (true, 1), (true, 2)] {
+            for fault in ["missing", "invalid", "replayed", "runner-error"] {
+                let fixture = super::super::tests::Fixture::new();
+                let mut captured = fixture.capture().unwrap();
+                captured
+                    .sources
+                    .retain(|(path, _)| path == Path::new("src/calc.ts"));
+                captured.config.workers = workers;
+                let mut first = captured.config.setups[0].clone();
+                first.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
+                let receipt = r#"
+                    const fs = require('fs'), path = process.env.SESHAT_RECEIPT;
+                    const id = process.env.SESHAT_EXECUTION_ID;
+                    const mutant = id.includes('-mutant-0-');
+                    const report = {version:1, executionId:id, node:process.versions.node,
+                        complete:true, passed:1, failed:0, errors:0};
+                "#;
+                first.test = vec![
+                    "node".into(),
+                    "-e".into(),
+                    format!(
+                        r#"{receipt}
+                    if (mutant) {{
+                        if ('{fault}' === 'missing') process.exit(1);
+                        if ('{fault}' === 'invalid') {{ fs.writeFileSync(path, '{{'); process.exit(1); }}
+                        if ('{fault}' === 'replayed') report.executionId = 'old-execution';
+                        if ('{fault}' === 'runner-error') report.errors = 1;
+                    }}
+                    fs.writeFileSync(path, JSON.stringify(report));
+                    process.exitCode = mutant ? 1 : 0;
+                    "#
+                    ),
+                ];
+                let mut second = first.clone();
+                second.name = "second".into();
+                second.coverage.report = "second-coverage.json".into();
+                second.test = vec![
+                    "node".into(),
+                    "-e".into(),
+                    format!(
+                        r#"{receipt}
+                    if (mutant) {{ report.passed = 0; report.failed = 1; }}
+                    fs.writeFileSync(path, JSON.stringify(report));
+                    process.exitCode = mutant ? 1 : 0;
+                    "#
+                    ),
+                ];
+                captured.config.setups = vec![first, second];
+                let result = captured
+                    .assess_with_strategy(AssessmentMode::Mutate, false, switching)
+                    .unwrap();
+                let mutation = &result["mutation"];
+                assert_eq!(mutation["planned"], 2);
+                assert_eq!(mutation["completed"], 2, "{fault}: {result}");
+                assert_eq!(mutation["notRun"], 0);
+                assert_eq!(mutation["jobsAttempted"], 4);
+                assert_eq!(mutation["outcomes"][0]["verdict"], "execution-error");
+                assert_eq!(
+                    mutation["outcomes"][0]["setups"][0]["state"],
+                    "execution-error"
+                );
+                assert_eq!(mutation["outcomes"][0]["setups"][1]["state"], "failed");
+                assert_eq!(mutation["outcomes"][1]["verdict"], "survived");
+                assert_eq!(
+                    mutation["diagnostics"]["unresolvedBreakdown"]["executionError"],
+                    1
+                );
+                assert_eq!(mutation["complete"], false);
+                assert!(mutation["score"].is_null());
+                assert_eq!(result["complete"], false);
+                fixture.assert_clean();
+            }
         }
     }
 

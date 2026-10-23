@@ -496,9 +496,16 @@ A complete Jest receipt with exit `1`, valid counts, failed tests and no test
 timeouts can count as a kill when every reported error is attributed to a
 failing test's `beforeEach` or `afterEach` hook. Testing Library's automatic
 cleanup is covered. Suite-hook, file-load and infrastructure errors, and errors
-outside any test, remain execution errors and stop scheduling. See the
+outside any test, remain execution errors. See the
 [receipt and verdict rules](report-format.md#setup-jobs-and-evidence).
 Original and worker baselines must pass before any mutants run.
+
+After a mutant's runner crash or missing, invalid or unattributed receipt,
+Seshat continues through later setups and mutants when the managed command has
+ended, cleanup succeeded and captured inputs are unchanged. The execution error
+remains unresolved. It does not trigger a full-command retry of a selected run.
+Command-start or supervision failures, output overflow, pipe errors, cleanup
+failures and source preparation or restoration failures still stop new jobs.
 
 Both kinds of timeout remain unresolved. They do not prove that tests detected
 the mutation. The overall mutation score stays withheld, including when an
