@@ -190,7 +190,19 @@ mutations. A complete mutation result does not make incomplete CRAP complete.
 ### Setup jobs and evidence
 
 Each `result.setups` row has `name`, `typecheck`, `baseline`, `coverage` and
-`timings`. Setup order follows configuration order. Job `state` values are:
+`timings`. Setup order follows configuration order.
+
+Setup-level `selection` records whether test-file selection is available after
+the original checks. Its `state` is `available`, `unavailable`, `not-run` when
+those checks did not reach the selection decision, or `not-requested` for
+`crap`. `unavailable` adds a `reason`, using the same fallback reasons as mutant
+rows, and an `option` when a rejected or malformed command option was identified.
+For example, `{"state":"unavailable","reason":"unsupported-test-command","option":"--changed"}`.
+The human report prints each unavailable setup's reason and option once.
+An `available` setup can still use the full command for individual sources or
+mutants, such as module-load coverage or unconfirmed file filtering.
+
+Job `state` values are:
 
 | State | Meaning |
 | --- | --- |

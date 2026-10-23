@@ -1149,7 +1149,7 @@ impl CapturedProject {
             .iter()
             .map(|evidence| match evidence {
                 Ok(evidence) => evidence.select(&self.directory.0, source_index, runtime),
-                Err(reason) => selection::Selection::Full(reason.clone()),
+                Err(fallback) => selection::Selection::Full(fallback.reason.clone()),
             })
             .collect();
         if !selections.is_empty()
@@ -1723,6 +1723,7 @@ impl CapturedProject {
         let mut setups: Vec<_> = self.config.setups.iter().map(|setup| json!({"name":setup.name,"typecheck":{"state":"not-run"},"baseline":{"state":"not-run"},"coverage":{"state":"not-run"}})).collect();
         for setup in &mut setups {
             setup["timings"] = json!({"compilerStrictnessMs":null,"typecheckMs":null,"baselineMs":null,"coverageMs":null});
+            setup["selection"] = json!({"state":if mutate { "not-run" } else { "not-requested" }});
         }
         let mut baselines = vec![TestState::NotRun; setups.len()];
         let mut reports = Vec::new();
@@ -1845,7 +1846,7 @@ impl CapturedProject {
             match collect() {
                 Ok((result, report)) => {
                     complete = result["state"] == "passed";
-                    if complete {
+                    if complete && mutate {
                         self.test_selection[index] = selection::SetupEvidence::collect(
                             &self,
                             setup,
@@ -1853,6 +1854,10 @@ impl CapturedProject {
                             &result["report"],
                             &report,
                         );
+                        setups[index]["selection"] = match &self.test_selection[index] {
+                            Ok(_) => json!({"state":"available"}),
+                            Err(fallback) => fallback.json(),
+                        };
                     }
                     setups[index]["coverage"] = result;
                     if complete {

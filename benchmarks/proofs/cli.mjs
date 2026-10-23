@@ -94,6 +94,7 @@ assert.deepEqual(checked.scope.files, ['subject.ts']);
 assert.equal(checked.result.jobsAttempted, 7);
 assert.equal(checked.result.setups[0].compilerStrictness.state, 'known');
 assert.equal(checked.result.setups[0].compilerStrictness.options.strict, true);
+assert.deepEqual(checked.result.setups[0].selection, {state:'unavailable',reason:'unsupported-runner'});
 for (const ms of Object.values(checked.result.phaseTimings)) assert.ok(Number.isFinite(ms) && ms >= 0);
 for (const [phase,key] of [['typecheck','typecheckMs'],['baseline','baselineMs'],['coverage','coverageMs']]) {
   const setup = checked.result.setups[0];
@@ -105,12 +106,14 @@ assert.match(results.check.stderr, /baseline "node"/);
 assert.match(results.check.stderr, /coverage "node"/);
 assert.match(results.check.stderr, /mutation finished: completed 2\/2, running 0, not run 0, resolved 2, unresolved 0/);
 const crap = json('crap', 'crap');
+assert.deepEqual(crap.result.setups[0].selection, {state:'not-requested'});
 assert.equal(crap.result.mutation, undefined);
 assert.equal(crap.result.jobsAttempted, 4);
 assert.deepEqual(crap.result.sources, checked.result.sources.map(source => ({...source,result:{...source.result,functions:source.result.functions.map(({pseudoTested,pseudoTestStatus,pseudoTestReason,...row}) => row)}})));
 const mutated = json('mutate', 'mutate');
 assert.equal(mutated.result.jobsAttempted, 7);
 assert.equal(mutated.result.setups[0].coverage.state, 'passed');
+assert.deepEqual(mutated.result.setups[0].selection, checked.result.setups[0].selection);
 assert.deepEqual(mutated.result.sources, checked.result.sources);
 assert.ok(mutated.result.phaseTimings.coverageMs >= 0);
 assert.ok(mutated.result.phaseTimings.attributionMs >= 0);
@@ -223,7 +226,9 @@ configure(missingTypecheck);
 assert.match(json('mutate-needs-typecheck', 'mutate', 2).result.error, /typecheck/);
 const failedBaseline = structuredClone(config); failedBaseline.setups[0].test = [process.execPath, '-e', 'process.exit(1)'];
 configure(failedBaseline);
-assert.equal(json('baseline-failure', 'mutate', 2).result.mutation.score, null);
+const baselineFailure = json('baseline-failure', 'mutate', 2);
+assert.equal(baselineFailure.result.mutation.score, null);
+assert.deepEqual(baselineFailure.result.setups[0].selection, {state:'not-run'});
 for (const [name, fields, message] of [
   ['unsupported-node', {node:'25.0.0'}, 'unsupported Node.js version "25.0.0"; supported: >=24.20.0 <25'],
   ['malformed-version', {node:null}, 'runner receipt has missing or invalid Node.js version'],

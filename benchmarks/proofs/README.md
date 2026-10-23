@@ -64,6 +64,10 @@ parallel Seshat workers, query imports, mutant-induced cleanup failures and
 experimental switching. Pass `--cli PATH` for a
 different executable or `--cases normal,module` for a focused run. Portable
 reports and matched timing fields remain in `work/assurance-proofs/test-selection-*`.
+The `exclude` and `exclude-equals` cases retain both forms of Vitest's exclusion
+option while preventing a failing, substring-matched database test from running.
+The `unsupported` and `extra-coverage` cases check setup-level JSON fallback
+reasons and the single human notice, including the rejected command option.
 
 ## CLI
 
