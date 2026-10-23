@@ -11,8 +11,8 @@ insufficiently tested code.
 
 - Calculates function complexity and CRAP scores from branch coverage.
 - Selects whole test files for verified Vitest Istanbul setups, with full-run fallbacks and an opt-out.
-- Changes comparison, logical, arithmetic and boolean expressions one at a time
-  and checks whether tests detect them.
+- Changes comparison, logical, arithmetic, boolean, optional and nullish
+  expressions one at a time and checks whether tests detect them.
 - Replaces function bodies to find covered functions whose removal tests miss.
 - Removes expression statements and bare returns from eligible functions.
 - Runs tests in isolated copies of the captured project.
@@ -86,11 +86,15 @@ The [examples](https://github.com/Binary-Balance/seshat/blob/main/examples/READM
 and Jest/Expo projects. The [configuration guide](https://github.com/Binary-Balance/seshat/blob/main/docs/configuration.md) covers
 every field, including `workers` for parallel mutation runs.
 
-Comparison, logical, arithmetic and boolean mutants are enabled by default. Set
+Comparison, logical, arithmetic, boolean, statement and optional mutants are
+enabled by default. Set
 `"mutationOperators": ["comparison"]` to retain the operator scope of 0.4.0.
 Use `["comparison", "logical", "arithmetic"]` to retain the scope of 0.5.0 and
 0.6.0. The `boolean` family flips runtime `true`/`false` literals and removes
-prefix `!`, including its boolean conversion.
+prefix `!`, including its boolean conversion. The `optional` family removes one
+`?.`
+segment or changes `??` to `||`. Omit `optional` from `mutationOperators` to
+retain the 0.8.x scope. See the [exact forms and limits](https://github.com/Binary-Balance/seshat/blob/main/docs/research/optional-mutations.md).
 The broader default can add test executions and change mutation scores.
 
 ## Use

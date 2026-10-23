@@ -83,13 +83,21 @@ try {
   console.log('Unsupported process environments and source types fail clearly');
 
   const modules = fileURLToPath(new URL('node_modules/', import.meta.url));
-  const subject = compile(prepare('runner.ts', 'function compare(value: number) { return value < 2; } function sum(a: number, b: number) { return a + b; } function and(a: boolean, b: boolean) { return a && b; } function flag() { return true; } function negate(value: unknown) { return !value; }'));
+  const subject = compile(prepare('runner.ts', 'function compare(value: number) { return value < 2; } function sum(a: number, b: number) { return a + b; } function and(a: boolean, b: boolean) { return a && b; } function flag() { return true; } function negate(value: unknown) { return !value; } function optional(value: {field:number} | null) { return value?.field ?? 7; } function receiver(value: any) { return value?.method?.(); }'));
   const check = `test('switching helper', () => {
     assert.deepEqual([compare(1), compare(2)], process.env.SESHAT_MUTANT_ID === '1' ? [false, true] : [true, false]);
     assert.equal(sum(8, 2), process.env.SESHAT_MUTANT_ID === '2' ? 6 : 10);
     assert.equal(and(true, false), process.env.SESHAT_MUTANT_ID === '3');
     assert.equal(flag(), process.env.SESHAT_MUTANT_ID !== '4');
     assert.equal(negate(7), process.env.SESHAT_MUTANT_ID === '5' ? 7 : false);
+    assert.equal(optional({field:0}), process.env.SESHAT_MUTANT_ID === '6' ? 7 : 0);
+    if (process.env.SESHAT_MUTANT_ID === '7') assert.throws(() => optional(null), TypeError);
+    else assert.equal(optional(null),7);
+    assert.equal(receiver({value:7,method() { return this.value; }}),7);
+    if (process.env.SESHAT_MUTANT_ID === '8') assert.throws(() => receiver(null), TypeError);
+    else assert.equal(receiver(null),undefined);
+    if (process.env.SESHAT_MUTANT_ID === '9') assert.throws(() => receiver({}), TypeError);
+    else assert.equal(receiver({}),undefined);
   });`;
   writeFileSync(join(work, 'node.test.cjs'), `const {test} = require('node:test');\nconst assert = require('node:assert/strict');\n${subject}\n${check}`);
   writeFileSync(join(work, 'jest.test.cjs'), `const assert = require('node:assert/strict');\n${subject}\n${check}`);
@@ -100,7 +108,7 @@ try {
     ['jest', [join(modules, 'jest/bin/jest.js'), '--runInBand', '--config', JSON.stringify({rootDir: work, testMatch: ['**/jest.test.cjs'], testEnvironment: 'node', transform: {}})]],
     ['vitest', [join(modules, 'vitest/vitest.mjs'), 'run', '--config', 'vitest.config.mjs']],
   ]) {
-    for (const active of [undefined, '1', '2', '3', '4', '5']) {
+    for (const active of [undefined, '1', '2', '3', '4', '5', '6', '7', '8', '9']) {
       const env = {...process.env};
       delete env.SESHAT_MUTANT_ID;
       if (active !== undefined) env.SESHAT_MUTANT_ID = active;

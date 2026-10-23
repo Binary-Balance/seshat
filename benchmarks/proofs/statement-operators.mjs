@@ -147,7 +147,7 @@ const originals = {
 };
 for (const [path,source] of Object.entries(originals)) writeFileSync(join(project,path),source);
 const oldFamilies = ['comparison','logical','arithmetic','boolean'];
-const allFamilies = [...oldFamilies,'statement'];
+const allFamilies = [...oldFamilies,'statement','optional'];
 const config = {source:{include:['*.ts']},capture:Object.keys(originals),setups:[{
   name:'node',runner:'node',cwd:'.',timeoutMs:10000,
   typecheck:[process.execPath,join(repo,'benchmarks/node_modules/typescript/bin/tsc'),'--ignoreConfig','--strict','--noEmit','--skipLibCheck','statements.ts','comparison.ts'],

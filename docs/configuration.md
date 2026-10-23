@@ -362,17 +362,18 @@ execution evidence appear in `pseudoTesting`, separately from operator scores.
 The optional top-level `mutationOperators` array selects operator families:
 
 ```json
-"mutationOperators": ["comparison", "logical", "arithmetic", "boolean", "statement"]
+"mutationOperators": ["comparison", "logical", "arithmetic", "boolean", "statement", "optional"]
 ```
 
-Omitting it enables all five families. Use `["comparison"]` to retain the
+Omitting it enables all six families. Use `["comparison"]` to retain the
 comparison-only scope of 0.4.0, or `[]` to run extreme mutation without operator
 mutants. Unknown names, duplicate names and non-array values fail before capture.
 Selection does not change source coverage, complexity or extreme mutation.
 Use `["comparison", "logical", "arithmetic"]` to retain the scope of 0.5.0
 and 0.6.0.
 Use `["comparison", "logical", "arithmetic", "boolean"]` to retain the scope
-of 0.7.0.
+of 0.7.0. Use `["comparison", "logical", "arithmetic", "boolean", "statement"]`
+to retain the scope of 0.8.x.
 
 | Family | Replacements |
 | --- | --- |
@@ -381,16 +382,31 @@ of 0.7.0.
 | `arithmetic` | Binary `+`/`-` and `*`/`/` swaps. |
 | `boolean` | Runtime `true`/`false` swaps and prefix `!expression` to `(expression)`. |
 | `statement` | Expression statements and bare `return` statements to `;` in eligible functions. |
+| `optional` | Remove one runtime `?.` segment, or replace `left ?? right` with `(left) \|\| (right)`. |
 
-Expression rewrites exclude unary signs, increments, assignments, `??` and
-operators in comments, strings or type syntax. Arithmetic preserves JavaScript's coercion and
-BigInt rules; a mutation can therefore change string concatenation or throw.
+Expression rewrites exclude unary signs, increments, assignments and
+operators in comments, strings or type syntax. Arithmetic preserves JavaScript's
+coercion and BigInt rules; a mutation can therefore change string concatenation or throw.
 Logical mutations preserve short-circuiting and return operand values.
 Removing `!` also removes its boolean conversion, so `!7` becomes `(7)`.
 Nested negations have one candidate per prefix. Type-level boolean literals,
 non-runtime property keys and TypeScript postfix non-null assertions are excluded.
 JSX expression values are eligible; bare JSX attributes have no literal to flip.
 Generated parentheses preserve statement boundaries when semicolons are omitted.
+
+Optional mutations remove one optional member or call segment at a time. Static
+members replace `?.` with ` .`, separating numeric literals; computed members
+and calls replace it with two spaces. Remaining chain segments keep their
+short-circuit behavior and method calls retain their receiver. Nullish defaults
+become logical OR, with operands and the whole expression grouped. This makes
+`0`, `false`, `""`, `NaN` and `0n` select the default as well as nullish values.
+Neither transformation repeats evaluation of a receiver, key, callee or operand.
+Removing `eval?.()` makes the call direct, which can change its scope.
+Nested chains, generic calls, defaults containing `??`, class fields and TSX
+expressions qualify. Optional type members, optional private fields rejected by
+TypeScript, declaration-only syntax, `??=` and defaults without `??` are excluded.
+See the [optional/nullish evidence](research/optional-mutations.md) for the exact
+forms, switching exclusions, hand-checked examples and added test-job cost.
 
 Statement removal selects whole expression statements, including assignments,
 updates and calls, and bare returns in explicit synchronous, non-generator
@@ -493,10 +509,17 @@ their job count and preparation timings are retained in the JSON mutation report
 Switching does not typecheck transformed helpers. Helper wrapping can lose
 TypeScript narrowing and can change reflection or source-text observations; verify
 the result against replacement for the project before relying on it.
-Logical and boolean switching use inline conditional arms to retain lazy
+Logical, boolean and nullish switching use inline conditional arms to retain lazy
 evaluation and the surrounding `await`, `yield` and direct `eval` context. Nested arms duplicate
 source text. If a rendered body exceeds 8 MiB, preparation fails explicitly
 and no complete mutation score is reported; use source replacement instead.
+Optional-chain switching selects complete chain alternatives so a conditional
+wrapper does not end short-circuiting partway through a chain. Preparation
+rejects a selected chain used directly as an outer call or tagged-template
+target, or a `delete` operand, including through erased TypeScript wrappers.
+Conditional arms cannot retain the reference those contexts require. Use
+replacement for these forms. The whole run remains incomplete with no score;
+candidates are never silently dropped.
 Statement switching guards the original statement inside a block. The block
 preserves dangling `else` binding and labels; nested candidates retain their
 own IDs and execute in the existing function scope.
