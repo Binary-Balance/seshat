@@ -433,9 +433,19 @@ hooks. This is a conservative superset of the files covering the exact mutant.
 It preserves each chosen file's tests, hooks and configured test order.
 Node and Jest setups, command wrappers and unverified Vitest configurations
 automatically retain full test commands.
+
+Selected commands accept `--config`, `--reporter`, `--exclude`, `--maxWorkers`,
+`--maxConcurrency`, `--pool`, `--testTimeout` and `--hookTimeout`, with a separate
+value or `=value`. They also accept the flags `--no-file-parallelism`,
+`--no-color` and `--isolate`. Existing positional file filters are replaced by
+the selected files; the accepted options and their values are preserved.
+Other options use the full command. Seshat reports a setup-wide fallback once
+in human output, with its reason and any rejected option. JSON records the same
+status in `result.setups[].selection`.
+
 Raw coverage identities must match assessed sources exactly. Additional
 instrumented sources, query imports and other unverified remapping use full runs.
-If every mutant's `selection.reason` is `attribution-unavailable`, check that
+If a setup reports `attribution-unavailable`, check that
 Vitest's `coverage.include` instruments only the sources Seshat assesses.
 
 Selection requires matching baseline and coverage test identities, complete

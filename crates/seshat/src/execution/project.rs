@@ -678,7 +678,7 @@ pub struct CapturedProject {
     // Switching keeps every selected source prepared and selects only the active mutant in env.
     prepared_sources: Option<Vec<String>>,
     active_mutant: Option<usize>,
-    test_selection: Vec<Result<selection::SetupEvidence, String>>,
+    test_selection: Vec<Result<selection::SetupEvidence, selection::Unavailable>>,
     files: usize,
     bytes: u64,
     links: usize,

@@ -38,13 +38,13 @@ const base = {source:{include:['target.ts','uncovered.ts']}, capture:['package.j
   mutationOperators:['comparison','arithmetic'], setups:[{name:'unit',runner:'vitest',cwd:'.',timeoutMs:15000,
     typecheck:[nodeCommand,'node_modules/typescript/bin/tsc','--project','tsconfig.json'],
     test:args,coverage:{command:[...args,'--coverage'],report:'coverage/coverage-final.json'}}]};
-function reset({body=source, test=tests, extra='', isolated=true} = {}) {
+function reset({body=source, test=tests, extra='', isolated=true, coverageSources=['target.ts','uncovered.ts']} = {}) {
   write('target.ts', body);
   write('uncovered.ts', 'export function unused(value: number): boolean { return value > 10; }\n');
   write('a.test.ts', test); write('b.test.ts', unrelated);
   write('vitest.config.mjs', `export default {test:{runner:process.env.SESHAT_VITEST_RUNNER,
     isolate:${isolated},include:['a.test.ts','b.test.ts'${extra}],coverage:{provider:'istanbul',
-    include:['target.ts','uncovered.ts'],reporter:['json'],reportsDirectory:'coverage'}}};\n`);
+    include:${JSON.stringify(coverageSources)},reporter:['json'],reportsDirectory:'coverage'}}};\n`);
 }
 const runs = [];
 const comparisons = [];
@@ -84,7 +84,8 @@ async function pair(name, config=base, switching=false) {
 }
 const rows = report => ['pseudoTesting','mutation'].flatMap(key => report.result[key]?.outcomes ?? []);
 const choices = report => rows(report).flatMap(row => row.setups.map(setup => setup.selection)).filter(Boolean);
-const valid = ['normal','parallel','switching','module','hooks','concurrent','missing','filter','timeout','query','cleanup','assertion-cleanup'];
+const valid = ['normal','parallel','switching','module','hooks','concurrent','missing','filter','timeout','query','cleanup','assertion-cleanup',
+  'exclude','exclude-equals','unsupported','extra-coverage'];
 const requested = new Set((values.cases ?? valid.join(',')).split(','));
 assert.ok([...requested].every(name => valid.includes(name)), 'unknown proof case');
 
@@ -117,6 +118,24 @@ for (const name of requested) {
     reset({extra:",'a.test.ts.extra.test.ts'"});
     config.capture.push('a.test.ts.extra.test.ts');
   }
+  if (name === 'exclude' || name === 'exclude-equals') {
+    reset({extra:",'a.test.ts.db.test.ts'"});
+    write('a.test.ts.db.test.ts', "import {test} from 'vitest';test('excluded database test',()=>{throw Error('excluded test ran');});\n");
+    config.capture.push('a.test.ts.db.test.ts');
+    const exclude = name === 'exclude' ? ['--exclude','**/*.db.test.ts'] : ['--exclude=**/*.db.test.ts'];
+    config.setups[0].test = [...args,...exclude];
+    config.setups[0].coverage.command = [...config.setups[0].test,'--coverage'];
+  }
+  if (name === 'unsupported') {
+    config.setups[0].test = [...args,'--passWithNoTests'];
+    config.setups[0].coverage.command = [...config.setups[0].test,'--coverage'];
+  }
+  if (name === 'extra-coverage') {
+    reset({coverageSources:['target.ts','uncovered.ts','extra-source.ts']});
+    write('extra-source.ts', 'export const extra = 1;\n');
+    write('b.test.ts', "import {expect,test} from 'vitest';import {extra} from './extra-source.ts';test('extra source',()=>expect(extra).toBe(1));\n");
+    config.capture.push('extra-source.ts');
+  }
   if (name === 'timeout') {
     reset({body:'export function decision(): boolean { return true; }\n',
       test:"import {test} from 'vitest';import {decision} from './target.ts';test('bounded timeout',()=>decision()?Promise.resolve():new Promise(()=>{}),50);\n"});
@@ -135,17 +154,32 @@ for (const name of requested) {
     config.setups[0].coverage.command = [...config.setups[0].test,'--coverage'];
   }
   const result = await pair(name, config, switching);
+  assert.deepEqual(result.full.result.setups[0].selection, {state:'unavailable',reason:'disabled'});
   const targetRows = rows(result.selected).filter(row => row.path === 'target.ts');
   const modes = targetRows.flatMap(row => row.setups.map(setup => setup.selection)).filter(Boolean);
   if (name === 'module') {
     assert.ok(modes.length && modes.every(choice => choice.mode === 'full'), 'module-load coverage must fall back');
-  } else if (name === 'missing' || name === 'query') {
+  } else if (['missing','query','unsupported','extra-coverage'].includes(name)) {
     assert.ok(choices(result.selected).every(choice => choice.mode === 'full'), 'missing attribution must fall back');
   } else if (name === 'filter') {
     assert.ok(modes.some(choice => choice.reason === 'selection-not-confirmed'), 'expanded substring filter must fall back');
   } else {
     assert.ok(modes.some(choice => choice.mode === 'selected'), `${name}: no verified file selection`);
     for (const choice of modes.filter(choice => choice.mode === 'selected')) assert.deepEqual(choice.files, ['a.test.ts']);
+  }
+  const unavailable = ['missing','query','unsupported','extra-coverage'].includes(name);
+  const status = result.selected.result.setups[0].selection;
+  if (unavailable) {
+    const reason = name === 'unsupported' ? 'unsupported-test-command' : 'attribution-unavailable';
+    assert.deepEqual(status, {state:'unavailable',reason,...(name === 'unsupported' ? {option:'--passWithNoTests'} : {})});
+    const human = await runProcess(cli, ['check','--config',join(project,'seshat.json'),
+      '--scratch',scratch,'--no-progress'], repo, {}, 180000);
+    assert.equal(human.status, 0, `${name}: human output assessment failed`);
+    assert.equal(human.stdout.split('Test selection unavailable:').length - 1, 1, `${name}: fallback must appear once`);
+    assert.ok(human.stdout.includes(reason), `${name}: missing fallback reason`);
+    if (name === 'unsupported') assert.ok(human.stdout.includes('--passWithNoTests'));
+  } else {
+    assert.deepEqual(status, {state:'available'});
   }
   if (name === 'normal') {
     assert.ok(rows(result.selected).some(row => row.verdict === 'killed'));

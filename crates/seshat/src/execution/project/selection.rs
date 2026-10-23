@@ -16,6 +16,44 @@ struct SourceEvidence {
     zero: bool,
 }
 
+#[derive(Clone, Debug)]
+pub(super) struct Unavailable {
+    pub(super) reason: String,
+    option: Option<String>,
+}
+
+impl From<String> for Unavailable {
+    fn from(reason: String) -> Self {
+        Self {
+            reason,
+            option: None,
+        }
+    }
+}
+
+impl From<&str> for Unavailable {
+    fn from(reason: &str) -> Self {
+        reason.to_owned().into()
+    }
+}
+
+impl Unavailable {
+    fn command(option: Option<&str>) -> Self {
+        Self {
+            reason: "unsupported-test-command".into(),
+            option: option.map(str::to_owned),
+        }
+    }
+
+    pub(super) fn json(&self) -> Value {
+        let mut status = json!({"state":"unavailable","reason":self.reason});
+        if let Some(option) = &self.option {
+            status["option"] = json!(option);
+        }
+        status
+    }
+}
+
 pub(super) enum Selection {
     Full(String),
     Files {
@@ -92,7 +130,7 @@ fn tests(root: &Path, report: &Value) -> Result<BTreeMap<String, Vec<String>>, S
     Ok(result)
 }
 
-fn vitest_command(args: &[String]) -> Option<Vec<String>> {
+fn vitest_entrypoint(args: &[String]) -> Option<usize> {
     let program = Path::new(args.first()?)
         .file_name()?
         .to_str()?
@@ -113,6 +151,11 @@ fn vitest_command(args: &[String]) -> Option<Vec<String>> {
     if args.get(offset)? != "run" {
         return None;
     }
+    Some(offset)
+}
+
+fn vitest_command(args: &[String]) -> Result<Vec<String>, Unavailable> {
+    let offset = vitest_entrypoint(args).ok_or_else(|| Unavailable::command(None))?;
     let mut command = args[..=offset].to_vec();
     let mut arguments = args[offset + 1..].iter();
     while let Some(arg) = arguments.next() {
@@ -126,6 +169,7 @@ fn vitest_command(args: &[String]) -> Option<Vec<String>> {
         if matches!(
             flag,
             "--config"
+                | "--exclude"
                 | "--reporter"
                 | "--maxWorkers"
                 | "--maxConcurrency"
@@ -135,7 +179,10 @@ fn vitest_command(args: &[String]) -> Option<Vec<String>> {
         ) {
             command.push(arg.clone());
             if value.is_none() {
-                let value = arguments.next().filter(|value| !value.starts_with('-'))?;
+                let value = arguments
+                    .next()
+                    .filter(|value| !value.starts_with('-'))
+                    .ok_or_else(|| Unavailable::command(Some(flag)))?;
                 command.push(value.clone());
             }
         } else if value.is_none()
@@ -144,10 +191,10 @@ fn vitest_command(args: &[String]) -> Option<Vec<String>> {
             command.push(arg.clone());
         } else {
             // Unknown options can consume a following file name or alter the test workload.
-            return None;
+            return Err(Unavailable::command(Some(flag)));
         }
     }
-    Some(command)
+    Ok(command)
 }
 
 impl SetupEvidence {
@@ -157,14 +204,14 @@ impl SetupEvidence {
         baseline: &Value,
         receipt: &Value,
         coverage: &Value,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, Unavailable> {
         if !project.config.test_selection {
             return Err("disabled".into());
         }
         if !matches!(setup.runner, Runner::Vitest) {
             return Err("unsupported-runner".into());
         }
-        let command = vitest_command(&setup.test).ok_or("unsupported-test-command")?;
+        let command = vitest_command(&setup.test)?;
         // Positional filters must not widen the baseline workload through substring matching.
         let root = &project.directory.0;
         let baseline_tests = tests(root, baseline)?;
@@ -300,25 +347,50 @@ mod tests {
                 "--config",
                 "vitest.config.mjs",
                 "--maxWorkers=1"
-            ])),
-            Some(args(&[
+            ]))
+            .unwrap(),
+            args(&[
                 "node",
                 "node_modules/vitest/vitest.mjs",
                 "run",
                 "--config",
                 "vitest.config.mjs",
                 "--maxWorkers=1"
-            ]))
+            ])
         );
+        for exclude in [
+            vec!["--exclude", "**/*.db.test.ts"],
+            vec!["--exclude=**/*.db.test.ts"],
+        ] {
+            let mut command = args(&["vitest", "run"]);
+            command.extend(args(&exclude));
+            let mut filtered = command.clone();
+            filtered.push("tests".into());
+            assert_eq!(vitest_command(&filtered).unwrap(), command);
+        }
         for command in [
             vec!["npm", "test"],
             vec!["vitest", "run", "--changed"],
             vec!["vitest", "run", "--config"],
+            vec!["vitest", "run", "--exclude"],
+            vec!["vitest", "run", "--exclude", "--changed"],
             vec!["vitest", "run", "--reporter", "--changed"],
             vec!["vitest", "run", "--shard=1/2"],
             vec!["vitest", "watch"],
         ] {
-            assert!(vitest_command(&args(&command)).is_none(), "{command:?}");
+            let unavailable = vitest_command(&args(&command)).unwrap_err();
+            assert_eq!(
+                unavailable.reason, "unsupported-test-command",
+                "{command:?}"
+            );
+            assert_eq!(
+                unavailable.option.as_deref(),
+                command
+                    .iter()
+                    .find(|arg| arg.starts_with('-'))
+                    .map(|arg| arg.split('=').next().unwrap()),
+                "{command:?}"
+            );
         }
     }
 

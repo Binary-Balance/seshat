@@ -474,6 +474,17 @@ fn readable(report: &Value) -> String {
             text(&setup["baseline"]["state"]),
             text(&setup["coverage"]["state"])
         );
+        if setup["selection"]["state"] == "unavailable" {
+            let option = setup["selection"]["option"]
+                .as_str()
+                .map(|option| format!(", option {option:?}"))
+                .unwrap_or_default();
+            let _ = writeln!(
+                output,
+                "  Test selection unavailable: {}{option}; using the full test command.",
+                text(&setup["selection"]["reason"])
+            );
+        }
         if let Some(strictness) = setup.get("compilerStrictness") {
             let _ = writeln!(
                 output,
@@ -886,6 +897,30 @@ pub fn main() -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn selection_fallback_is_reported_once_per_setup() {
+        let report = json!({"timings":{"wallMs":1},"result":{"setups":[
+            {"name":"unit","selection":{"state":"unavailable","reason":"unsupported-test-command","option":"--changed"}},
+            {"name":"coverage","selection":{"state":"unavailable","reason":"attribution-unavailable"}},
+            {"name":"selected","selection":{"state":"available"}},
+            {"name":"unreached","selection":{"state":"not-run"}}
+        ]}});
+        let output = readable(&report);
+        assert_eq!(output.matches("Test selection unavailable:").count(), 2);
+        assert_eq!(
+            output
+                .matches("unsupported-test-command, option \"--changed\"")
+                .count(),
+            1
+        );
+        assert_eq!(
+            output
+                .matches("attribution-unavailable; using the full test command.")
+                .count(),
+            1
+        );
+    }
 
     #[test]
     fn readable_type_safety_keeps_static_findings_and_unknown_config_visible() {
