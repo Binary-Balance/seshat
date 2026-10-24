@@ -38,7 +38,7 @@ if(!mutant&&mode==='worker-baseline-error'&&execution.includes('-worker-'))proce
 async function main(){
   if(mutant){
     fs.writeFileSync('worker-state.txt',String(process.pid));
-    if(mode==='cancel'||mode==='timeout'){
+    if(mode==='cancel'||mode==='timeout'&&mutant[1]==='0'&&test==='high'){
       const child=spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{stdio:'inherit'});
       record('start',{descendant:child.pid});setInterval(()=>{},1000);return;
     }
@@ -164,9 +164,13 @@ async function check(name,workers,mode='normal',signal,attempt=1){
         assert.equal(result.mutation.completed,4);
         assert.equal(result.mutation.notRun,0);
         assert.equal(result.mutation.jobsAttempted,8);
+      } else if(mode==='timeout'){
+        assert.deepEqual(result.mutation.outcomes.map(m=>m.verdict),['timed-out','killed','survived','killed']);
+        assert.equal(result.mutation.notRun,0);
+        assert.equal(result.mutation.jobsAttempted,8);
       } else {
         assert.ok(result.mutation.outcomes.some(m=>m.verdict==='not-run'));
-        assert.ok(result.mutation.outcomes.some(m=>m.verdict===(mode==='timeout'?'timed-out':'execution-error')));
+        assert.ok(result.mutation.outcomes.some(m=>m.verdict==='execution-error'));
       }
       }
     } catch (error) {

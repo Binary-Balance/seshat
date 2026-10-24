@@ -278,14 +278,14 @@ configure(mutantTimeout);
 const stopped = json('mutant-timeout-with-threshold', 'mutate', 2);
 assert.equal(stopped.result.mutation.complete, false);
 assert.equal(stopped.result.mutation.score, null);
-assert.equal(stopped.result.mutation.notRun, 1);
-assert.deepEqual(stopped.result.mutation.outcomes.map(row=>row.verdict), ['timed-out','not-run']);
+assert.equal(stopped.result.mutation.notRun, 0);
+assert.deepEqual(stopped.result.mutation.outcomes.map(row=>row.verdict), ['timed-out','killed']);
 assert.equal(stopped.quality.state, 'incomplete');
 assert.equal(stopped.quality.checks[0].actual, null);
 const stoppedHuman = run('mutant-timeout-human', ['mutate','--config',configPath,'--scratch',scratch], 2);
 assert.match(stoppedHuman.stdout, /stopped with 1 timed-out mutant\./);
 assert.match(stoppedHuman.stdout, /Timeouts remain unresolved, so the overall mutation score is withheld\./);
-assert.match(stoppedHuman.stdout, /1 mutant was not run\./);
+assert.doesNotMatch(stoppedHuman.stdout, /mutant was not run\./);
 assert.match(stoppedHuman.stdout, /score withheld \(incomplete\)/);
 
 writeFileSync(configPath, 'broken JSON');

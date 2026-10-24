@@ -484,8 +484,11 @@ such suites. Matched proof fixtures cannot establish independence for every
 consumer project. Reports retain the selection, executed-test evidence and
 fallback reasons; see the [report format](report-format.md#mutation-assessment).
 
-A job that exceeds `timeoutMs` stops further mutation scheduling. Results from
-work already in progress on other workers remain available.
+A mutant job that exceeds `timeoutMs` allows later setups and mutants to run
+when its process tree was stopped, cleanup succeeded and captured inputs are
+unchanged. The timeout stays unresolved. Failed termination, pipe errors or
+unsafe cleanup still stop later mutants. Original and worker baselines must
+pass, so a deadline there prevents mutation work.
 
 A runner-reported test timeout can allow scheduling to continue when the command
 exits `1` within `timeoutMs`, its complete receipt has valid test counts and no
