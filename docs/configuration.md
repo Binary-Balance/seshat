@@ -504,8 +504,8 @@ After a mutant's runner crash or missing, invalid or unattributed receipt,
 Seshat continues through later setups and mutants when the managed command has
 ended, cleanup succeeded and captured inputs are unchanged. The execution error
 remains unresolved. It does not trigger a full-command retry of a selected run.
-Command-start or supervision failures, output overflow, pipe errors, cleanup
-failures and source preparation or restoration failures still stop later mutants.
+Command-start or supervision failures, pipe errors, cleanup failures and source
+preparation or restoration failures still stop later mutants.
 Other setups for the current mutant can still run. Failed cleanup and
 cancellation stop its remaining setups immediately.
 
@@ -665,11 +665,15 @@ files for the existing final cleanup attempt. Temporary evidence therefore does
 not accumulate with completed jobs. Final results still grow with the assessed
 scope, and an active job can produce sidecars for each test file.
 
-Output reads retain up to 2 MiB per stream. Reports include up to 1,000 diagnostic
-characters from each stream, even if a writer never closes the pipe. After
-process cleanup, Seshat allows 500 ms for both pipes to close, then closes its
-read handles and records a pipe error. A timeout remains `timed-out` even when
-its runner receipt is missing; a missing receipt cannot turn it into a kill.
+Output reads retain up to 2 MiB per stream, then keep draining and discard excess
+bytes. Jobs report `outputTruncated: true` when either stream exceeds that limit.
+Truncation does not change the receipt-based verdict or stop later mutants. Job
+deadlines and cancellation still bound commands that keep writing. Reports
+include up to 1,000 diagnostic characters from each stream, even if a writer
+never closes the pipe. After process cleanup, Seshat allows 500 ms for both pipes
+to close, then closes its read handles and records a pipe error. A timeout
+remains `timed-out` even when its runner receipt is missing; a missing receipt
+cannot turn it into a kill.
 
 On Unix, Seshat sends SIGKILL to the owned process group, including ordinary
 descendants that stay in it. A child can escape by starting another group or

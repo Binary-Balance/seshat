@@ -1160,21 +1160,27 @@ scores 2 with full branch coverage, 2.5 with 1/2 branch coverage; its untested
 complexity-1 function scores 2. See the root README for interpretation. Failed runs
 can retain earlier measurements, but stay incomplete and exit 2.
 
-Output is capped at 2 MiB per stream, with at most 1,000 diagnostic characters
-from each stream, including partial output when a pipe stays open. Both pipes
+Retained output is capped at 2 MiB per stream. Seshat keeps draining and
+discarding excess bytes and reports `outputTruncated: true` without changing
+the receipt-based verdict. Diagnostics retain at most 1,000 characters from
+each stream, including partial output when a pipe stays open. Both pipes
 share a 500 ms drain deadline after process cleanup. Process-exit polling shares
 one five-second cleanup budget across retries and drop; expired waits report
 uncertainty rather than successful cleanup. Rust controls cover held-open pipes,
 deadline reuse, retained wait/cleanup errors and Windows query/termination errors.
-Each receipt/report is limited to 32 MiB. Timeout or overflow stops the owned Linux
-process group, not children that deliberately detach. Normal and checked failure
-paths remove the copy and receipts; cleanup errors make the run incomplete.
+Each receipt/report is limited to 32 MiB. Timeout stops the owned Linux process
+group, not children that deliberately detach. Output truncation does not stop
+the command. Normal and checked failure paths remove the copy and receipts;
+cleanup errors make the run incomplete.
 SIGINT/SIGTERM cancellation is covered by the lifecycle proof below; SIGKILL
 cannot run cleanup.
 
 The checks cover real coverage, merged setups, CRAP, missing/stale/malformed/unsafe
-reports, replayed receipts, changed sources, failed tests, timeout, overflow and
-cleanup. Evidence stays under ignored `work/assurance-proofs/collection-check-*`.
+reports, replayed receipts, changed sources, failed tests, timeout, output
+truncation and cleanup. A real Node test emits 5 MiB with a failing assertion;
+both operator mutants remain killed and scheduling completes with a score of
+100. Noisy passing baseline and coverage jobs also retain their receipts.
+Evidence stays under ignored `work/assurance-proofs/collection-check-*`.
 No consuming-project checkout is used and this step adds no dependencies.
 
 ## Captured-project check
@@ -1703,8 +1709,12 @@ baseline tests, coverage collection and mutation execution. Each hanging job has
 a descendant, both deliberately ignoring those signals. Seshat stops their owned
 process group with SIGKILL, waits for its direct child, and removes the captured
 copy and receipts. An unrelated process and the original source remain unchanged.
-Three further controls exercise deadline expiry, output overflow and a leader
-that exits while its descendant still holds the output pipe open.
+Three further controls exercise deadline expiry, continuous output truncated
+until deadline expiry and a leader that exits while its descendant still holds
+the output pipe open. The `overflow` evidence key retains its historical name;
+it now checks `outputTruncated: true` with a `timed-out` state. The Windows
+`overflow` control completes successfully with truncated output and cleans up
+its descendant.
 
 On Unix, exit polling uses `waitid` with `WNOWAIT` to retain the leader's PID
 until process-group signalling finishes. If failed-stop settlement reaps the
@@ -1747,7 +1757,8 @@ process. Cancelling mutant 1 preserves mutant 0 and leaves later mutants `not-ru
 Both execution paths use the same bounded, cancellable process runner, while
 their command builders set up runner-specific environments. Both remove inherited
 `NODE_OPTIONS` and `NODE_PATH` before adding Seshat's own load observer. Proof commands
-share its 2 MiB per-stream output cap and 2,000-character diagnostic limit.
+share its 2 MiB per-stream retention cap, continued draining after truncation
+and 2,000-character diagnostic limit.
 
 Capture checks cancellation between filesystem entries; an in-progress file
 copy, source analysis or filesystem cleanup can delay its response. The process
