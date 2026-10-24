@@ -657,12 +657,15 @@ SIGTERM cancellation removes owned execution copies and stops owned child
 processes. Windows console cancellation is handled separately and reports
 `signal: 2`. A forced kill such as SIGKILL cannot perform cleanup.
 
-Estimate scratch space as the total size of the configured `capture` inputs,
-including dependencies, multiplied by effective workers, plus generated files.
-The JSON report gives effective workers at
-`result.diagnostics.concurrency.seshat.effectiveWorkers`; it does not currently
-expose the captured byte count. File sizes are a planning estimate, not a bound
-on physical storage or test-generated output.
+Budget scratch space as the total size of the configured `capture` inputs,
+including dependencies, multiplied by configured `workers`, which defaults to
+one, plus generated files. Every run needs the initial capture, even when no
+mutants run. For a completed run, actual copy counts can be estimated from the
+larger of `result.pseudoTesting.workersUsed` and `result.mutation.workersUsed`,
+with a minimum of one. The diagnostic `effectiveWorkers` field covers only the
+operator phase. The CLI does not currently expose the captured byte count.
+File sizes are a planning estimate, not a bound on physical storage or
+test-generated output.
 
 On Linux, `/tmp` may use tmpfs, which stores files in memory and may use swap.
 Copying a large dependency tree there can exhaust memory or the filesystem's
