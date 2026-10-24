@@ -29,7 +29,7 @@ fs.writeFileSync(out+'.'+role+'.tmp',JSON.stringify({pid:process.pid,group,cwd:p
 fs.renameSync(out+'.'+role+'.tmp',out+'.'+role);
 setInterval(()=>{if(role==='leader'&&fs.existsSync(out+'.descendant')){
   if(mode==='leader-exit')process.exit(0);
-  if(mode==='overflow')process.stdout.write('x'.repeat(5*1024*1024));
+  if(mode==='overflow'&&!process.stdout.writableNeedDrain)process.stdout.write('x'.repeat(5*1024*1024));
 }},10);\n`);
 async function until(predicate,label,timeout=5000) {
   const deadline=performance.now()+timeout;
@@ -47,7 +47,7 @@ for(const {name,phase,signal} of cases) {
   const marker=join(work,name),scratch=join(work,name+'-scratch');mkdirSync(scratch);
   const command=[process.execPath,'job.cjs','leader',marker,name];
   const setups=['high','low','low'].map((test,index)=>({
-    name:'setup-'+index,runner:'node',cwd:'.',timeoutMs:name==='timeout'?1000:30000,
+    name:'setup-'+index,runner:'node',cwd:'.',timeoutMs:['timeout','overflow'].includes(name)?1000:30000,
     typecheck:[process.execPath,join(repo,'benchmarks/node_modules/typescript/bin/tsc'),'--ignoreConfig','--strict','--noEmit','--skipLibCheck','subject.ts'],
     test:[process.execPath,'--test','--test-reporter={seshatReporter}',test+'.mjs'],
     coverage:{command:[process.execPath,join(repo,'benchmarks/proofs/collect-node.mjs'),test+'.mjs'],report:'coverage-'+index+'/final.json'}
@@ -104,8 +104,8 @@ for(const {name,phase,signal} of cases) {
         }
       } else {
         assert.equal(exit.code,2);
-        assert.equal(report.setups[0].baseline.state,name==='timeout'?'timed-out':'execution-error');
-        if(name==='overflow')assert.equal(report.setups[0].baseline.overflow,true);
+        assert.equal(report.setups[0].baseline.state,name==='leader-exit'?'execution-error':'timed-out');
+        if(name==='overflow')assert.equal(report.setups[0].baseline.outputTruncated,true);
       }
     } else {
       assert.equal(exit.signal,'SIGKILL');

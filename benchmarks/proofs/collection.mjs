@@ -7,6 +7,7 @@ import {spawnSync} from 'node:child_process';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
+const binary = process.env.SESHAT_PROOF_BINARY ?? join(repo, 'crates/seshat/target/release/seshat-proofs');
 const work = mkdtempSync(join(repo, 'work/assurance-proofs/collection-check-'));
 const project = join(work, 'input project 🎸');
 const scratch = join(work, 'scratch');
@@ -20,7 +21,7 @@ const originals = {
   'tests/high.mjs':"import {test} from 'node:test';import assert from 'node:assert/strict';import {adult} from '../src/rules.ts';test('high',()=>assert.equal(adult(20),true));",
   'tests/low.mjs':"import {test} from 'node:test';import assert from 'node:assert/strict';import {adult} from '../src/rules.ts';test('low',()=>assert.equal(adult(10),false));",
   'tests/fail.mjs':"import {test} from 'node:test';test('fails',()=>{throw Error('expected failure');});",
-  'tests/noisy.mjs':"import {test} from 'node:test';test('noisy',()=>console.log('x'.repeat(5*1024*1024)));",
+  'tests/noisy.mjs':"import {test} from 'node:test';import assert from 'node:assert/strict';import {adult} from '../src/rules.ts';test('noisy',()=>{console.log('x'.repeat(5*1024*1024));assert.equal(adult(18),true);assert.equal(adult(17),false);});",
   'stale.json':'{"stale":true}',
 };
 for (const [path, source] of Object.entries(originals)) writeFileSync(join(project, path), source);
@@ -29,12 +30,12 @@ const setup = name => ({name, runner:'node', cwd:'.', timeoutMs:10000,
   coverage:{command:[process.execPath, join(here, 'collect-node.mjs'), `tests/${name}.mjs`], report:`coverage-${name}/final.json`}});
 const config = {source:{include:['src/**/*.ts']}, capture:['package.json', 'src', 'tests', 'stale.json'], setups:[setup('high'), setup('low')]};
 const results = {};
-function collect(name, change = () => {}) {
+function collect(name, change = () => {}, command = 'collect') {
   const input = structuredClone(config);
   change(input);
   const configPath = join(project, 'seshat.json');
   writeFileSync(configPath, JSON.stringify(input));
-  const child = spawnSync(join(repo, 'crates/seshat/target/release/seshat-proofs'), ['collect', configPath, scratch], {encoding:'utf8', timeout:30000});
+  const child = spawnSync(binary, [command, configPath, scratch], {encoding:'utf8', timeout:30000});
   assert.ifError(child.error);
   const result = JSON.parse(child.stdout);
   assert.equal(child.status, result.complete === true ? 0 : 2, child.stderr + child.stdout);
@@ -64,7 +65,6 @@ for (const [name, change, phase, expected] of [
   ['replayed-receipt', c => c.setups[0].test = node("require('fs').writeFileSync(process.env.SESHAT_RECEIPT,JSON.stringify({version:1,executionId:'old',node:process.versions.node,complete:true,passed:1,failed:0,errors:0}))"), 'baseline', 'execution-error'],
   ['timeout', c => {c.setups[0].timeoutMs = 100; c.setups[0].test = node('setInterval(()=>{},1000)');}, 'baseline', 'timed-out'],
   ['overflow', c => c.setups[0].test = node("process.stdout.write('x'.repeat(5*1024*1024))"), 'baseline', 'execution-error'],
-  ['test-log-overflow', c => c.setups[0].test = [process.execPath, '--test', '--test-reporter={seshatReporter}', 'tests/noisy.mjs'], 'baseline', 'execution-error'],
   ['malformed-report', c => c.setups[0].coverage.command = afterCoverage("fs.writeFileSync(path,'{')"), 'coverage', 'execution-error'],
   ['outside-identity', c => c.setups[0].coverage.command = afterCoverage("fs.writeFileSync(path,JSON.stringify({'/outside.ts':{path:'/outside.ts'}}))"), 'coverage', 'execution-error'],
   ['linked-report', c => c.setups[0].coverage.command = afterCoverage("fs.unlinkSync(path);fs.symlinkSync('../stale.json',path)"), 'coverage', 'execution-error'],
@@ -77,8 +77,25 @@ for (const [name, change, phase, expected] of [
 }
 assert.match(results['changed-source'].setups[0].baseline.sourceError, /source changed/);
 assert.equal(results.timeout.setups[0].baseline.timedOut, true);
-assert.equal(results.overflow.setups[0].baseline.overflow, true);
-assert.equal(results['test-log-overflow'].setups[0].baseline.overflow, true);
+// Output alone cannot replace a receipt, but truncation must not invalidate one.
+assert.equal(results.overflow.setups[0].baseline.outputTruncated, true);
+const noisy = collect('truncated-test-output', c => {
+  c.source.include = ['src/rules.ts'];
+  c.setups = [{...setup('noisy'), typecheck:[process.execPath,
+    join(repo, 'benchmarks/node_modules/typescript/bin/tsc'),
+    '--ignoreConfig', '--strict', '--noEmit', '--skipLibCheck', 'src/rules.ts']}];
+}, 'check');
+assert.equal(noisy.complete, true, JSON.stringify(noisy));
+assert.equal(noisy.setups[0].baseline.state, 'passed');
+assert.equal(noisy.setups[0].baseline.outputTruncated, true);
+assert.equal(noisy.setups[0].coverage.outputTruncated, true);
+assert.equal(noisy.mutation.score, 100);
+assert.deepEqual(noisy.mutation.outcomes.map(m => m.verdict), ['killed', 'killed']);
+for (const mutant of noisy.mutation.outcomes) {
+  assert.equal(mutant.setups[0].outputTruncated, true);
+  assert.equal(mutant.setups[0].report.complete, true);
+  assert.ok(mutant.setups[0].diagnostic.length <= 2000);
+}
 assert.match(results['replayed-receipt'].setups[0].baseline.evidenceError, /execution identity/);
 assert.match(results['stale-report'].setups[0].coverage.coverageError, /stale\.json/);
 assert.equal(results['malformed-report'].setups[0].coverage.report.complete, true);

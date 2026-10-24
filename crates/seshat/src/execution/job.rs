@@ -55,7 +55,7 @@ fn cancelled_exit(status: &ExitStatus, cancellation_signal: &mut impl FnMut() ->
 struct Output<P> {
     pipe: Option<P>,
     bytes: Vec<u8>,
-    overflow: bool,
+    truncated: bool,
     error: Option<String>,
 }
 
@@ -75,26 +75,26 @@ impl<P: Read + PipeHandle> Output<P> {
         Ok(Self {
             pipe: Some(pipe),
             bytes: Vec::new(),
-            overflow: false,
+            truncated: false,
             error: None,
         })
     }
 
     fn drain(&mut self) {
         let mut buffer = [0; 16384];
-        while let Some(pipe) = self.pipe.as_mut() {
-            let limit = buffer.len().min(STREAM_LIMIT + 1 - self.bytes.len());
-            match read_available(pipe, &mut buffer[..limit]) {
+        // Busy writers must yield to deadline and cancellation checks between batches.
+        for _ in 0..16 {
+            let Some(pipe) = self.pipe.as_mut() else {
+                break;
+            };
+            match read_available(pipe, &mut buffer) {
                 Ok(0) => {
                     self.pipe = None;
                 }
                 Ok(count) => {
-                    self.bytes.extend_from_slice(&buffer[..count]);
-                    if self.bytes.len() > STREAM_LIMIT {
-                        self.bytes.truncate(STREAM_LIMIT);
-                        self.overflow = true;
-                        self.pipe = None;
-                    }
+                    let retained = count.min(STREAM_LIMIT - self.bytes.len());
+                    self.bytes.extend_from_slice(&buffer[..retained]);
+                    self.truncated |= retained < count;
                 }
                 Err(error) if error.kind() == io::ErrorKind::WouldBlock => break,
                 Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
@@ -193,8 +193,6 @@ fn collect_output(
         cancelled = cancellation_signal() != 0;
         if cancelled
             || start.elapsed() >= timeout
-            || stdout.overflow
-            || stderr.overflow
             || stdout.error.is_some()
             || stderr.error.is_some()
         {
@@ -238,7 +236,7 @@ fn collect_output(
     Ok(
         json!({"exit":status.as_ref().ok().and_then(|status| status.code()),
         "error":status.err(),"cleanupError":cleanup.err(),"cancelled":cancelled,"timedOut":timed_out,
-        "overflow":stdout.overflow || stderr.overflow,"pipeError":pipe_error,
+        "outputTruncated":stdout.truncated || stderr.truncated,"pipeError":pipe_error,
         "ms":start.elapsed().as_secs_f64()*1000.0,"diagnostic":diagnostic}),
     )
 }
@@ -364,6 +362,26 @@ mod tests {
         assert_eq!(output.bytes, b"diagnostic before exit");
     }
 
+    #[test]
+    fn retained_output_stays_bounded_while_draining_to_eof() {
+        use std::io::Write;
+        for size in [STREAM_LIMIT, STREAM_LIMIT + 1] {
+            let (reader, mut writer) = std::io::pipe().unwrap();
+            let writing = thread::spawn(move || writer.write_all(&vec![b'x'; size]).unwrap());
+            let mut output = Output::new(reader).unwrap();
+            let deadline = Instant::now() + Duration::from_secs(5);
+            while output.pipe.is_some() {
+                output.drain();
+                assert!(Instant::now() < deadline, "output did not drain to EOF");
+                thread::sleep(Duration::from_millis(2));
+            }
+            writing.join().unwrap();
+            assert_eq!(output.bytes.len(), STREAM_LIMIT);
+            assert_eq!(output.truncated, size > STREAM_LIMIT);
+            assert!(output.error.is_none());
+        }
+    }
+
     #[cfg(unix)]
     #[test]
     fn exited_child_group_is_reaped_before_cleanup_retry() {
@@ -377,18 +395,31 @@ mod tests {
 
     #[test]
     fn output_and_deadline_are_bounded_without_redundant_cleanup() {
-        let mut command = Command::new("node");
-        command.args(["-e", "setInterval(()=>{},1000)"]);
-        let result = run(&mut command, Duration::from_millis(100)).unwrap();
-        assert_eq!(result["timedOut"], true);
-        // Overflow termination already stops and waits for the owned tree; repeat it to catch
-        // platform races that a second post-status signal would expose.
+        // Repeat deadline cleanup with busy pipes to catch redundant post-status signals.
         for _ in 0..8 {
             let mut command = Command::new("node");
-            command.args(["-e", "process.stdout.write('x'.repeat(5*1024*1024))"]);
+            command.args(["-e", "const fs=require('fs'),chunk=Buffer.alloc(16384,120);while(true){fs.writeSync(1,chunk);fs.writeSync(2,chunk);}"]);
+            let result = run(&mut command, Duration::from_millis(500)).unwrap();
+            assert_eq!(result["timedOut"], true);
+            assert_eq!(result["outputTruncated"], true);
+            assert!(result["cleanupError"].is_null(), "{result}");
+            assert!(result["pipeError"].is_null(), "{result}");
+            assert!(result["ms"].as_f64().unwrap() < 5000.0);
+            assert!(result["diagnostic"].as_str().unwrap().chars().count() <= 2000);
+        }
+        for stream in ["stdout", "stderr"] {
+            let mut command = Command::new("node");
+            command.args([
+                "-e",
+                &format!("process.{stream}.write('x'.repeat(5*1024*1024))"),
+            ]);
             let result = run(&mut command, Duration::from_secs(5)).unwrap();
-            assert_eq!(result["overflow"], true);
-            assert!(result["diagnostic"].as_str().unwrap().len() <= 2000);
+            assert_eq!(result["exit"], 0, "{result}");
+            assert_eq!(result["timedOut"], false);
+            assert_eq!(result["outputTruncated"], true);
+            assert!(result["cleanupError"].is_null());
+            assert!(result["pipeError"].is_null());
+            assert_eq!(result["diagnostic"].as_str().unwrap(), "x".repeat(1000));
         }
     }
 }

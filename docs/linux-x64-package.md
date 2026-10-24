@@ -51,7 +51,7 @@ The native checks are:
   locked proof dependencies, with `stack,assertion,survived,before-all`.
 - The native lifecycle proof using the matching packaged proof binary. It runs
   all four cancellation phases for SIGINT and SIGTERM, plus timeout, output
-  overflow and leader-exit handling, and retains cleanup and scratch results.
+  truncation and leader-exit handling, and retains cleanup and scratch results.
 
 The installed runner reports explicitly record that Cargo and Rustc are absent,
 the Rust environment settings and ambient `NODE_OPTIONS`/`SESHAT_MUTANT_ID` are

@@ -925,7 +925,6 @@ impl CapturedProject {
             } else if result["timedOut"] == true {
                 TestState::TimedOut
             } else if result["exit"] == 0
-                && result["overflow"] == false
                 && result["pipeError"].is_null()
                 && result["error"].is_null()
                 && result["cleanupError"].is_null()
@@ -943,8 +942,7 @@ impl CapturedProject {
                     result["report"] = report;
                     if result["cancelled"] == true {
                         TestState::Cancelled
-                    } else if result["overflow"] == true
-                        || !result["pipeError"].is_null()
+                    } else if !result["pipeError"].is_null()
                         || !result["error"].is_null()
                         || !result["cleanupError"].is_null()
                     {
@@ -1040,7 +1038,6 @@ impl CapturedProject {
             let mut result = if job["exit"] == 0
                 && job["cancelled"] == false
                 && job["timedOut"] == false
-                && job["overflow"] == false
                 && job["error"].is_null()
                 && job["cleanupError"].is_null()
                 && job["pipeError"].is_null()

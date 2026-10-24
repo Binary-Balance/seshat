@@ -130,7 +130,7 @@ const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {
 fs.writeFileSync(process.env.SESHAT_WINDOWS_MARKER, String(child.pid), {flag: 'w'});
 if (ready) fs.writeFileSync(ready, 'ready\\n', {flag: 'w'});
 if (${JSON.stringify(scenario)}.startsWith('leader-exit')) process.exit(0);
-if (${JSON.stringify(scenario)} === 'overflow') process.stdout.write('x'.repeat(5 * 1024 * 1024));
+if (${JSON.stringify(scenario)} === 'overflow') process.stdout.write('x'.repeat(5 * 1024 * 1024), () => process.exit(0));
 setInterval(() => {}, 1000);
 `;
 }
@@ -182,7 +182,7 @@ function runCleanupScenario(name, timeoutMs, expectedState) {
     assert.ok(processAlive(sentinel.pid), `${name} sentinel is no longer alive`);
     assert.equal(report.result.setups[0].baseline.state, expectedState);
     if (name === 'timeout') assert.equal(report.result.setups[0].baseline.timedOut, true);
-    if (name === 'overflow') assert.equal(report.result.setups[0].baseline.overflow, true);
+    if (name === 'overflow') assert.equal(report.result.setups[0].baseline.outputTruncated, true);
     return report;
   } finally {
     stopSentinel(sentinel);
@@ -255,12 +255,12 @@ try {
   assert.ok(existsSync(workspaceLink), 'original workspace junction must survive');
   evidence.scenarios.baseline = report;
   evidence.scenarios.timeout = runCleanupScenario('timeout', 2_000, 'timed-out');
-  evidence.scenarios.overflow = runCleanupScenario('overflow', 30_000, 'execution-error');
+  evidence.scenarios.overflow = runCleanupScenario('overflow', 30_000, 'passed');
   evidence.scenarios.leaderExit = runCleanupScenario('leader-exit', 30_000, 'passed');
   evidence.scenarios.leaderExitRepeat = runCleanupScenario('leader-exit-repeat', 30_000, 'passed');
   evidence.scenarios.consoleCancellation = runConsoleCancellation();
   evidence.validation = {passed: true};
-  console.log('Windows native lifecycle proof passed: timeout, overflow, leader exit, repeated spawn, console cancellation, descendant cleanup and sentinel survival');
+  console.log('Windows native lifecycle proof passed: timeout, output truncation, leader exit, repeated spawn, console cancellation, descendant cleanup and sentinel survival');
   console.log('Windows native CLI proof passed: junction capture, Unicode/space paths, Node/TypeScript jobs, coverage and cleanup');
 } catch (error) {
   evidence.validation = {passed: false, error: String(error)};
