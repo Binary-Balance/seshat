@@ -512,7 +512,9 @@ if (shouldRun('mixed-load-hook')) {
     assert.equal(value.setups[0].baseline.report.passed, 2);
     assert.equal(value.complete, false);
     assert.equal(value.mutation.score, null);
-    assert.deepEqual(value.mutation.outcomes.map(row => row.verdict), ['execution-error', 'not-run']);
+    assert.deepEqual(value.mutation.outcomes.map(row => row.verdict), ['execution-error', 'survived']);
+    assert.equal(value.mutation.notRun, 0);
+    assert.equal(value.mutation.diagnostics.unresolvedBreakdown.executionError, 1);
     const job = value.mutation.outcomes[0].setups[0];
     assert.equal(job.exit, 1);
     assert.equal(job.report.failed, 1);

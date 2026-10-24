@@ -7,6 +7,7 @@ import {spawnSync} from 'node:child_process';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
+const binary = process.env.SESHAT_PROOF_BINARY ?? join(repo, 'crates/seshat/target/release/seshat-proofs');
 const work = mkdtempSync(join(repo, 'work/assurance-proofs/check-'));
 const project = join(work, 'input 🎸');
 const scratch = join(work, 'scratch');
@@ -33,7 +34,7 @@ function check(name, change = () => {}) {
   change(input);
   const configPath = join(project, 'seshat.json');
   writeFileSync(configPath, JSON.stringify(input));
-  const child = spawnSync(join(repo, 'crates/seshat/target/release/seshat-proofs'), ['check', configPath, scratch], {encoding:'utf8', timeout:60000});
+  const child = spawnSync(binary, ['check', configPath, scratch], {encoding:'utf8', timeout:60000});
   assert.ifError(child.error);
   const result = JSON.parse(child.stdout);
   assert.equal(child.status, result.complete === true ? 0 : 2, child.stdout + child.stderr);
@@ -90,7 +91,12 @@ for (const [name, action, expected] of [
   assert.equal(failed.mutation.outcomes[1].setups[0].state, 'failed');
   assert.equal(failed.mutation.outcomes[1].setups[1].state, expected);
   assert.equal(failed.mutation.outcomes[1].verdict, expected);
-  assert.ok(failed.mutation.outcomes.slice(2).every(m => m.verdict === 'not-run'));
+  if (name === 'mixed-error') {
+    assert.deepEqual(failed.mutation.outcomes.slice(2).map(m => m.verdict), ['survived','killed','killed']);
+    assert.equal(failed.mutation.notRun, 0);
+  } else {
+    assert.ok(failed.mutation.outcomes.slice(2).every(m => m.verdict === 'not-run'));
+  }
 }
 const baseline = check('failed-baseline', c => c.setups[0].test = node('process.exit(1)'));
 assert.equal(baseline.mutation.jobsAttempted, 0);

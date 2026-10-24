@@ -193,7 +193,7 @@ jobs:
             --deps "$env:GITHUB_WORKSPACE\benchmarks\proofs" `
             --cases stack,assertion,survived,before-all 2>&1 | Tee-Object -FilePath work/windows/vitest-check.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Verify runner timeout continuation
+      - name: Verify runner crash and timeout continuation
         if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         shell: pwsh
         env:
@@ -203,7 +203,7 @@ jobs:
           node benchmarks/proofs/vitest-check.mjs `
             --cli "$env:GITHUB_WORKSPACE\crates\seshat\target\release\seshat.exe" `
             --deps "$env:GITHUB_WORKSPACE\benchmarks\proofs" `
-            --cases timeout-continues,operator-timeout-continues 2>&1 | Tee-Object -FilePath work/windows/vitest-timeouts.log
+            --cases timeout-continues,operator-timeout-continues,crash-continues,operator-crash-continues 2>&1 | Tee-Object -FilePath work/windows/vitest-timeouts.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Require shared fixture reports
         shell: pwsh

@@ -251,6 +251,16 @@ cleanup succeeded. Additional receipt errors, including attributed hook errors
 alongside a timeout, still stop scheduling. Neither kind of timeout counts as a
 kill.
 
+A mutant's `execution-error` does not stop later setups or mutants when the
+managed command has ended without cancellation, a job deadline, output overflow
+or a pipe/supervision error, cleanup succeeded and captured inputs are unchanged.
+This includes runner crashes and missing or invalid receipts. The error stays
+unresolved, keeps the run incomplete and withholds the score. A selected run's
+execution error is retained without a full-command retry. Command-start,
+preparation, restoration and cleanup failures still stop later mutants.
+Other setups for the current mutant can still run, except after failed cleanup
+or cancellation.
+
 ### Runtime diagnostics
 
 Structured assessment results include `diagnostics` with runtime identity and
@@ -601,9 +611,12 @@ The stable `result.mutation` counters, score, timings and diagnostics cover
 operator mutants only. The aggregate `result.jobsAttempted` and execution
 time include both phases. `diagnostics.concurrency.seshat.effectiveWorkers`
 continues to describe the operator scheduler; each phase reports its own
-`workersUsed`. An extreme execution error, timeout or cancellation prevents
-operator scheduling. Unknown coverage can retain resolved extreme execution
-evidence while leaving function flags and overall completeness unknown.
+`workersUsed`. Safely cleaned-up extreme execution errors and eligible
+runner-reported timeouts allow operator scheduling, while the incomplete extreme
+phase still withholds the final score. Job deadlines, cancellation and unsafe
+execution or cleanup failures prevent operator scheduling. Unknown coverage can
+retain resolved extreme execution evidence while leaving function flags and
+overall completeness unknown.
 
 Pseudo-tested counts have no threshold and do not alter `minMutationScore`.
 They are evidence that tests failed to detect this particular body replacement,

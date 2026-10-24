@@ -254,6 +254,15 @@ impl CommandEvidence {
 
     fn can_continue_mutation(&self) -> bool {
         matches!(self.state, TestState::Passed | TestState::Failed)
+            // An unresolved receipt does not prevent another fresh, safely isolated job.
+            || (self.state == TestState::ExecutionError
+                && self.details["timedOut"] == false
+                && self.details["cancelled"] == false
+                && self.details["overflow"] == false
+                && self.details["error"].is_null()
+                && self.details["pipeError"].is_null()
+                && self.details["cleanupError"].is_null()
+                && self.details["sourceError"].is_null())
             || (self.test_timed_out()
                 && self.details["exit"] == 1
                 && self.details["report"]["errors"] == 0
@@ -696,6 +705,48 @@ fn exit_code_is_not_a_verdict() {
         ),
         TestState::ExecutionError
     );
+}
+
+#[test]
+fn only_cleaned_up_execution_errors_allow_more_mutants() {
+    let evidence = json!({"exit":1,"timedOut":false,"cancelled":false,"overflow":false,
+        "report":{"complete":true,"passed":0,"failed":0,"errors":1,"timeouts":0}});
+    for report in [
+        evidence["report"].clone(),
+        Value::Null,
+        json!({"complete":false}),
+        json!({"complete":true,"passed":"invalid","failed":0,"errors":0}),
+    ] {
+        let mut changed = evidence.clone();
+        changed["report"] = report;
+        let outcome = CommandEvidence {
+            state: classify("observed", &changed),
+            details: changed,
+        };
+        assert_eq!(outcome.state, TestState::ExecutionError);
+        assert!(outcome.can_continue_mutation(), "{}", outcome.details);
+    }
+    for (field, value) in [
+        ("timedOut", json!(true)),
+        ("timedOut", Value::Null),
+        ("cancelled", json!(true)),
+        ("cancelled", Value::Null),
+        ("overflow", json!(true)),
+        ("overflow", Value::Null),
+        ("error", json!("wait failed")),
+        ("pipeError", json!("read failed")),
+        ("cleanupError", json!("child or job artifacts may remain")),
+        ("sourceError", json!("captured source changed")),
+    ] {
+        let mut changed = evidence.clone();
+        changed[field] = value;
+        let outcome = CommandEvidence {
+            state: TestState::ExecutionError,
+            details: changed,
+        };
+        assert!(!outcome.can_continue_mutation(), "{field}");
+    }
+    assert!(!CommandEvidence::error("could not start job".into()).can_continue_mutation());
 }
 
 #[test]

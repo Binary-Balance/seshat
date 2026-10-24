@@ -159,6 +159,11 @@ async function check(name,workers,mode='normal',signal,attempt=1){
         assert.equal(result.signal,process.platform==='win32'?2:signal==='SIGINT'?2:15);
         assert.deepEqual(result.mutation.outcomes.map(m=>m.verdict),['cancelled','cancelled','not-run','not-run']);
         assert.equal(result.mutation.jobsAttempted,2);
+      } else if(mode==='receipt-error'){
+        assert.ok(result.mutation.outcomes.every(m=>m.verdict==='execution-error'));
+        assert.equal(result.mutation.completed,4);
+        assert.equal(result.mutation.notRun,0);
+        assert.equal(result.mutation.jobsAttempted,8);
       } else {
         assert.ok(result.mutation.outcomes.some(m=>m.verdict==='not-run'));
         assert.ok(result.mutation.outcomes.some(m=>m.verdict===(mode==='timeout'?'timed-out':'execution-error')));

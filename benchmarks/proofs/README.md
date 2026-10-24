@@ -1206,13 +1206,14 @@ All configured original checks, baselines and coverage collection must pass, and
 CRAP attribution must be complete, before any mutant starts. The proof uses source
 replacement by default, one worker by default, and fresh test processes. Every
 setup runs for each mutant even when another setup has already detected it. A
-setup job deadline timeout or execution
-error leaves that mutant unresolved and stops scheduling new mutants. A bounded
-runner-reported test timeout with otherwise valid evidence remains unresolved
-but allows later mutants to run, as described in the
-[configuration guide](../../docs/configuration.md#mutation-execution). Already
-running mutants finish their required setups unless cancelled. A test failure is a
-kill only when all required setup executions resolve without infrastructure errors.
+setup job deadline leaves that mutant unresolved and stops scheduling new mutants.
+A safely cleaned-up runner crash or receipt error remains unresolved but allows
+later mutants to run. A bounded runner-reported test timeout with otherwise
+valid evidence does the same. See the
+[configuration guide](../../docs/configuration.md#mutation-execution).
+Already running mutants finish their required setups unless cancelled or cleanup
+fails. A test failure is a kill only when all required setup executions resolve
+without infrastructure errors.
 
 Pass `--experimental-switching` to prepare every selected source after those
 original checks. The primary copy and each additional worker run an inactive
@@ -1383,7 +1384,8 @@ the complete exit-1 receipt to retain one failed test, one error and one
 `testHookErrors`, classify the extreme mutant as killed, and execute the later
 extreme and operator mutants. `mixed-load-hook` adds a file-load error alongside
 a failed test and its cleanup error. Its aggregate errors exceed the attributed
-hook errors, so it must stop scheduling and leave the next mutant `not-run`.
+hook errors, so that mutant stays unresolved while the next mutant runs and
+survives. The score remains withheld.
 
 The private environment sidecar uses version 2. It counts passed and failed
 `test_done` events, and each test's test-function and `beforeEach`/`afterEach`
@@ -1554,6 +1556,18 @@ SESHAT_VITEST_CHECK_CASES=timeout-continues,operator-timeout-continues node benc
 SESHAT_CHECK_WORKERS=2 SESHAT_VITEST_CHECK_CASES=timeout-continues,operator-timeout-continues node benchmarks/proofs/vitest-check.mjs
 ```
 
+The `crash-continues` case uses an implicit `TypeError` during module loading
+to verify that an unresolved extreme mutant does not prevent later extreme or
+operator jobs. `operator-crash-continues` verifies an unresolved operator crash
+with two setups and later killed mutants. Against `--cli` or `--tarball`, it
+checks both replacement and experimental operator switching. Both cases retain
+exit `2`, incomplete results, withheld scores and cleaned scratch directories.
+
+```sh
+node benchmarks/proofs/vitest-check.mjs --cli crates/seshat/target/debug/seshat --cases crash-continues,operator-crash-continues
+SESHAT_CHECK_WORKERS=2 node benchmarks/proofs/vitest-check.mjs --cli crates/seshat/target/debug/seshat --cases crash-continues,operator-crash-continues
+```
+
 Results remain under ignored `work/assurance-proofs/vitest-check-*`. Wall times
 include native capture, validation, baseline, coverage, mutations and cleanup,
 but exclude preliminary fixture staging. These correctness runs are not repeated
@@ -1586,8 +1600,10 @@ baselines. Their receipts are independent and included in the result. Original
 typechecking and coverage still run once per setup. Failed worker preparation or
 baselines prevent mutation execution; failed restoration or cleanup withholds the
 score. SIGINT/SIGTERM stop active owned job groups across workers and retain
-partial results. A worker error stops new scheduling while other active mutants
-finish; an assertion failure alone does not stop scheduling.
+partial results. Unsafe execution, deadline, restoration or cleanup failures
+stop later mutant scheduling. Safely cleaned-up runner and receipt errors stay
+unresolved while later mutants run; an assertion failure alone does not stop
+scheduling.
 
 With `--experimental-switching`, each additional copy receives every prepared
 source before its baseline. The primary copy runs the same inactive prepared

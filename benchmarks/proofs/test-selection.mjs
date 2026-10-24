@@ -193,6 +193,8 @@ for (const name of requested) {
     assert.equal(result.selected.result.mutation.score, null);
     const failed = targetRows.find(row => row.verdict === 'execution-error');
     assert.ok(failed && failed.setups[0].report.errors > 0, 'cleanup must retain execution-error evidence');
+    assert.equal(failed.setups[0].selection.mode, 'selected');
+    assert.equal(failed.setups[0].jobsAttempted, 1, 'unresolved evidence must not trigger a full-command retry');
     assert.match(failed.setups[0].diagnostic, /cleanup marker/);
     if (name === 'assertion-cleanup') assert.match(failed.setups[0].diagnostic, /AssertionError/);
   }
