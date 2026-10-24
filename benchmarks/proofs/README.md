@@ -6,6 +6,13 @@ The earlier benchmark under `benchmarks/rust/` is unchanged.
 
 ## Run
 
+`node benchmarks/proofs/job-deadlines.mjs --cli PATH` verifies that real
+`node:test` hangs under extreme mutants reach the job deadline, remain
+unresolved and allow later extreme and operator mutants to finish. It checks
+serial and two-worker runs with replacement and experimental switching,
+retaining source integrity and empty scratch directories. Linux x64 package
+and Windows runtime CI run this proof.
+
 Requirements: Linux x64 or Windows x64, Node 24, npm and Rust 1.98.1. Linux
 requires a `kill` executable that supports process-group IDs; Windows runtime
 proofs require the checked native symlink and junction capabilities on the
@@ -1206,7 +1213,8 @@ All configured original checks, baselines and coverage collection must pass, and
 CRAP attribution must be complete, before any mutant starts. The proof uses source
 replacement by default, one worker by default, and fresh test processes. Every
 setup runs for each mutant even when another setup has already detected it. A
-setup job deadline leaves that mutant unresolved and stops scheduling new mutants.
+setup job deadline leaves that mutant unresolved, but permits later mutants
+after confirmed process-tree termination, cleanup and source integrity checks.
 A safely cleaned-up runner crash or receipt error remains unresolved but allows
 later mutants to run. A bounded runner-reported test timeout with otherwise
 valid evidence does the same. See the
@@ -1600,9 +1608,10 @@ baselines. Their receipts are independent and included in the result. Original
 typechecking and coverage still run once per setup. Failed worker preparation or
 baselines prevent mutation execution; failed restoration or cleanup withholds the
 score. SIGINT/SIGTERM stop active owned job groups across workers and retain
-partial results. Unsafe execution, deadline, restoration or cleanup failures
+partial results. Unsafe execution, restoration or cleanup failures
 stop later mutant scheduling. Safely cleaned-up runner and receipt errors stay
-unresolved while later mutants run; an assertion failure alone does not stop
+unresolved while later mutants run, as do safely terminated job deadlines;
+an assertion failure alone does not stop
 scheduling.
 
 With `--experimental-switching`, each additional copy receives every prepared

@@ -205,6 +205,12 @@ jobs:
             --deps "$env:GITHUB_WORKSPACE\benchmarks\proofs" `
             --cases timeout-continues,operator-timeout-continues,crash-continues,operator-crash-continues 2>&1 | Tee-Object -FilePath work/windows/vitest-timeouts.log
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify job deadline continuation
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          node benchmarks/proofs/job-deadlines.mjs --cli crates/seshat/target/release/seshat.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Require shared fixture reports
         shell: pwsh
         run: |

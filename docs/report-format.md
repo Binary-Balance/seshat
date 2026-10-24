@@ -251,11 +251,11 @@ cleanup succeeded. Additional receipt errors, including attributed hook errors
 alongside a timeout, still stop scheduling. Neither kind of timeout counts as a
 kill.
 
-A mutant's `execution-error` does not stop later setups or mutants when the
-managed command has ended without cancellation, a job deadline, output overflow
+A mutant's `execution-error` or job deadline does not stop later setups or mutants
+when the managed process tree has ended without cancellation, output overflow
 or a pipe/supervision error, cleanup succeeded and captured inputs are unchanged.
-This includes runner crashes and missing or invalid receipts. The error stays
-unresolved, keeps the run incomplete and withholds the score. A selected run's
+This includes runner crashes and missing or invalid receipts. The error or timeout
+stays unresolved, keeps the run incomplete and withholds the score. A selected run's
 execution error is retained without a full-command retry. Command-start,
 preparation, restoration and cleanup failures still stop later mutants.
 Other setups for the current mutant can still run, except after failed cleanup

@@ -89,6 +89,8 @@ jobs:
             --cli crates/seshat/target/debug/seshat \
             --cases crash-continues,operator-crash-continues \
             2>&1 | tee work/x64/crash-continuation.log
+      - name: Verify job deadline continuation
+        run: node benchmarks/proofs/job-deadlines.mjs --cli crates/seshat/target/debug/seshat
       - name: Fetch pinned Debian 11 proof inputs
         id: debian_inputs
         run: |
