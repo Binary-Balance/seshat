@@ -220,8 +220,10 @@ mutant definitions within the same Seshat version and supported environment.
 Identical test outcomes produce identical verdicts, with stable mutant identities
 and report ordering. Timings are outside this guarantee.
 
-Report detected test instability explicitly. Do not retry until a preferred
-outcome appears, or imply that Seshat can make arbitrary tests deterministic.
+Seshat currently assumes deterministic tests. It does not repeat baselines or
+recheck killed mutants to detect test instability. A flaky failure can therefore
+change a verdict and score. Do not retry until a preferred outcome appears, or
+imply that Seshat can make arbitrary tests deterministic.
 
 <a id="runtime-diagnostics-to-develop"></a>
 ## Runtime diagnostics
