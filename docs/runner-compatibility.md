@@ -71,6 +71,20 @@ observer to prove it came from the mutated application is reported as an
 execution error, leaving that mutation unresolved and the overall score
 incomplete. It is never silently counted as a kill. Setup errors remain errors.
 
+Each `diagnostics.runnerVersions` setup row includes `importFailureObserver`.
+For Node, `state` is `active` with `reason: null` on the two verified versions,
+or `inactive` with `reason: "node-version"` on another or unavailable observed
+version. Jest and Vitest report `inactive` with `reason: "runner"`; this Node
+observer does not describe those adapters' own failure reporting. The observed
+version comes from a validated baseline receipt, or coverage when no baseline
+receipt is available. Readable output explains inactive entries.
+
+This state describes the runtime gate. The verified route uses Node's default
+process isolation and loader configuration; an active entry does not guarantee
+that a crash meets the observer's attribution checks. The activation pin remains
+unchanged. Widening it is tracked separately in
+[#228](https://github.com/Binary-Balance/seshat/issues/228).
+
 ## Version checks
 
 The native CLI validates the receipt format, execution identity and runner
@@ -130,6 +144,9 @@ details. Each pass covers:
 
 Synthetic version controls exercise the disabled-observer fallback on every run.
 They are guard regressions, not execution evidence for an unreleased Node version.
+CLI checks match the reported observer state to the actual import-crash verdict
+and check the readable inactive notice. Jest and Vitest checks retain the
+`runner` reason.
 
 Run a pass from the repository root after the normal package build and fixture
 installation, selecting the Node executable and its directory on `PATH`:
