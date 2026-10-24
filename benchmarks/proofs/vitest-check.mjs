@@ -211,6 +211,8 @@ async function check(name, input, flags = []) {
 for (const name of ['stack','stack-repeat']) {
   if (!wanted(name)) continue;
   const result = await check(name,config);
+  assert.deepEqual(result.diagnostics.runnerVersions[0].importFailureObserver,
+    {state:'inactive',reason:'runner'});
   assert.equal(result.complete,true,JSON.stringify(result));
   assert.equal(result.setups[0].baseline.report.passed,3);
   assert.equal(result.setups[0].coverage.report.passed,3);
