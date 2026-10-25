@@ -763,7 +763,7 @@ fn only_cleaned_up_execution_errors_allow_more_mutants() {
 
 #[test]
 fn only_cleaned_up_job_deadlines_allow_more_mutants() {
-    let evidence = json!({"exit":null,"timedOut":true,"cancelled":false,"overflow":false});
+    let evidence = json!({"exit":null,"timedOut":true,"cancelled":false,"outputTruncated":true});
     let outcome = CommandEvidence {
         state: classify("observed", &evidence),
         details: evidence.clone(),
@@ -775,8 +775,6 @@ fn only_cleaned_up_job_deadlines_allow_more_mutants() {
         ("timedOut", Value::Null),
         ("cancelled", json!(true)),
         ("cancelled", Value::Null),
-        ("overflow", json!(true)),
-        ("overflow", Value::Null),
         ("error", json!("termination failed")),
         ("pipeError", json!("read failed")),
         ("cleanupError", json!("child or job artifacts may remain")),
