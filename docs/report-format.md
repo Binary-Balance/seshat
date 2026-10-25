@@ -377,6 +377,12 @@ complete mutation result contains only `killed` and `survived` outcomes. A
 zero-mutant complete result has `score: null`, meaning not applicable, not
 `100`.
 
+Only original source is typechecked. Operator and extreme mutants run without
+a separate typecheck, so even a mutation TypeScript would reject can receive a
+runtime verdict. Type-invalid operator mutants remain in the score denominator
+when they are killed or survive. There is no `compile-error` verdict or option
+to exclude them in this release.
+
 `mutation.diagnostics.unresolvedBreakdown` counts `timedOut`, `executionError`,
 `cancelled`, `notRun` and `unassessed` verdicts. Its `throughput` values are
 computed against `mutationWallMs`; `workerTimeMs` sums returned mutant attempt

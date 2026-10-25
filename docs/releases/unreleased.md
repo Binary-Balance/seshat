@@ -14,3 +14,15 @@ Cancellation, job deadlines, supervision/output failures and unsafe cleanup or
 source changes still stop later mutants. Test-selection retries and timeout
 scoring rules are unchanged. This resolves
 [#168](https://github.com/Binary-Balance/seshat/issues/168).
+
+## Document execution limits
+
+The README and configuration guide now explain scratch-space estimates,
+memory-backed temporary directories and platform-specific copy costs, resolving
+[#223](https://github.com/Binary-Balance/seshat/issues/223).
+They also explain that Seshat assumes deterministic tests and does not check
+for flakiness by repeating baselines or killed mutants, resolving the
+documentation scope of [#225](https://github.com/Binary-Balance/seshat/issues/225).
+The README and report guide clarify that mutants are not typechecked and
+type-invalid operator mutants remain in the mutation score, addressing the
+documentation part of [#217](https://github.com/Binary-Balance/seshat/issues/217).
