@@ -153,7 +153,7 @@ Function rows produced by coverage attribution have these fields:
 | `coverageBasis` | `"branch"` when CRAP uses `branchCoverage`, `"statement"` when the function has no recorded branches and CRAP uses `coverage`, or `null` when unscored. |
 | `crap` | `complexity² × (1 − input)³ + complexity`, using the coverage selected by `coverageBasis`, only for `measured` rows. |
 | `status` | `measured`, `unknown`, `not-applicable` or `complexity-only`. |
-| `pseudoTested` | Additive boolean or `null` for `check`/`mutate`. True when an extreme replacement survives with reliable positive statement coverage; false when it is killed with that coverage; otherwise null. |
+| `pseudoTested` | Additive boolean or `null` for `check`/`mutate`. True when an extreme replacement survives with reliable positive statement coverage; false when it is killed or its timeout counts as killed with that coverage; otherwise null. |
 | `pseudoTestStatus` | `pseudo-tested`, `checked`, `unknown` or `not-applicable`, for `check`/`mutate`. |
 | `pseudoTestReason` | Skip reason `empty`, `constructor`, `accessor`, `generator`, `implicit-scope` or `zero-coverage`; otherwise `null`, for `check`/`mutate`. |
 | `typeSafety` | Syntax escape counts described under [type-safety findings](#type-safety-findings). |
@@ -248,8 +248,10 @@ A runner-reported timeout retains `state: "timed-out"` and adds
 reached. This timeout allows further mutation scheduling only when the command
 exited `1`, the complete receipt has valid counts and no execution errors, and
 cleanup succeeded. Additional receipt errors, including attributed hook errors
-alongside a timeout, still stop scheduling. Neither kind of timeout counts as a
-kill.
+alongside a timeout, still stop scheduling. By default neither kind counts as
+a detected mutant. With `countTimeoutsAsKilled: true`, only a clean
+runner-reported timeout can count. Job deadlines never qualify. Baseline
+failures, cancellation and infrastructure errors never become detected mutants.
 
 A mutant's `execution-error` does not stop later setups or mutants when the
 managed command has ended without cancellation, a job deadline, output overflow
@@ -300,11 +302,12 @@ command text or free-form diagnostic nested under them remains evidence.
 | `enabledOperators` | Configured operator families, defaulting to `["comparison", "logical", "arithmetic", "boolean", "statement", "optional"]`. An empty array disables operator mutants. |
 | `perOperator` | Rows sorted by original operator text. Each has `operator`, `kind`, `planned`, `completed`, `jobsAttempted` and `executionMs`. Planned counts include unstarted work; completed counts include returned attempts. Times sum those attempts and can overlap under parallelism. Operators without planned mutants have no row. |
 | `killed`, `survived` | Counts of outcomes with those resolved verdicts. |
-| `score` | `killed / (killed + survived) × 100` for a complete non-empty plan; otherwise `null`. The value is a percentage from `0` to `100`. |
+| `countedTimeouts` | Number of `timed-out` outcomes counted as detected by the opt-in policy. They are excluded from `killed`. Defaults to zero. |
+| `score` | `(killed + countedTimeouts) / (killed + countedTimeouts + survived) × 100` for a complete non-empty plan; otherwise `null`. The value is a percentage from `0` to `100`. |
 | `outcomes` | One row per planned mutant, in source and operator order. |
 | `completed` | Planned mutants with a returned attempt or a proved zero-coverage decision. Attempts include failed, timed-out and cancelled jobs. It does not mean successfully assessed. |
 | `notRun` | Planned mutants with no returned attempt. It is not the count of `not-run` verdicts. |
-| `unresolved` | `planned - killed - survived`, including incomplete attempts and unstarted work. |
+| `unresolved` | `planned - killed - countedTimeouts - survived`, including incomplete attempts and unstarted work. |
 | `jobsAttempted` | Mutant test jobs only. Top-level `result.jobsAttempted` also includes original and worker baseline jobs. |
 | `workersRequested`, `workersUsed` | `workersRequested` is the configured Seshat worker limit. `workersUsed` is `min(workersRequested, planned)` when preparation succeeds and no cancellation was observed before scheduling, otherwise `0`. It is scheduler capacity, not observed worker activity, and is not reduced after scheduling starts for worker-start failure, cancellation or early stopping. |
 | `workerBaselineJobs`, `workerBaselines` | Additional worker baseline jobs and their evidence. |
@@ -330,6 +333,14 @@ IDs follow resolved source order, then AST site order by start offset, with encl
 at the same start, then replacement order. Optional segments sharing a complete
 chain range follow their token order. Each outcome setup
 retains its job state and evidence. An unstarted setup remains `not-run`.
+
+Each outcome also has `countedAsKilled`, a boolean. It is true only for a
+`timed-out` verdict counted under `countTimeoutsAsKilled: true`. All setups must
+have passed, failed or had a qualifying runner timeout, and at least one must
+have had that timeout. A timeout alongside an execution error, cancellation,
+job deadline, ineligible timeout or missing setup never counts. The original
+setup states and timeout evidence are preserved. A qualifying timeout takes
+precedence over an ordinary test failure for the raw verdict.
 
 Attempted or zero-covered mutant setup rows also retain `selection`:
 
@@ -366,16 +377,17 @@ the verdict rules are applied in this order:
 | --- | --- |
 | `execution-error` | A setup has an execution error, or the returned setup vector is longer than the baseline vector. |
 | `cancelled` | No higher-priority execution error exists and a setup was cancelled. |
-| `timed-out` | No higher-priority error exists and a setup timed out. |
+| `timed-out` | A setup timed out. It counts only when opted in, every timeout qualifies and every configured setup resolved. |
 | `not-run` | A setup result is missing or explicitly not run. |
 | `killed` | All configured setups returned only passed or failed states, and at least one returned failed. |
 | `survived` | Every configured setup returned passed. |
 
-The precedence means an infrastructure error, cancellation, timeout or missing
-setup never becomes a kill merely because another setup failed its test. A
-complete mutation result contains only `killed` and `survived` outcomes. A
-zero-mutant complete result has `score: null`, meaning not applicable, not
-`100`.
+The precedence means an infrastructure error, cancellation, ineligible timeout
+or missing setup never becomes detected merely because another setup failed.
+A complete mutation result contains `killed`, `survived` and, when opted in,
+`timed-out` outcomes with `countedAsKilled: true`. A timeout alongside a missing
+setup retains the `timed-out` verdict but does not count. A zero-mutant complete
+result has `score: null`, meaning not applicable, not `100`.
 
 `mutation.diagnostics.unresolvedBreakdown` counts `timedOut`, `executionError`,
 `cancelled`, `notRun` and `unassessed` verdicts. Its `throughput` values are
@@ -387,6 +399,13 @@ rows. These measurements can overlap under parallel workers.
 runner-reported test timeout and no job deadline timeout. It counts mutants,
 not individual tests or setups, and is not added to `timedOut`. The same field
 appears in extreme-mutation diagnostics.
+
+These two timeout counters retain all raw `timed-out` verdicts, including counted
+timeouts. The additive `unresolvedBreakdown.countedTimeouts` is their counted
+subset and equals the phase's `countedTimeouts`. Subtract it from `timedOut` or
+`testTimedOut` to obtain unresolved timeout counts. The readable report makes
+that subtraction and displays counted timeouts separately. Other breakdown
+counters keep their existing meaning.
 
 ## Type-safety findings
 
@@ -585,8 +604,9 @@ includes `--json` emits the argument-error JSON envelope with `command: null`.
 ### Pseudo-testing
 
 `result.pseudoTesting` reuses the mutation scheduler's execution fields,
-including `strategy`, `complete`, `planned`, `killed`, `survived`, `outcomes`,
-worker/baseline counts, timing and diagnostics. It has no `score`.
+including `strategy`, `complete`, `planned`, `killed`, `countedTimeouts`,
+`survived`, `outcomes`, worker/baseline counts, timing and diagnostics. It has no
+`score`.
 `pseudoTested` and `checked` count functions with true and false flags;
 `unknown` counts eligible functions whose flags remain null. Counts retain
 resolved evidence in incomplete runs. `complete` requires all extreme executions
@@ -612,10 +632,11 @@ operator mutants only. The aggregate `result.jobsAttempted` and execution
 time include both phases. `diagnostics.concurrency.seshat.effectiveWorkers`
 continues to describe the operator scheduler; each phase reports its own
 `workersUsed`. Safely cleaned-up extreme execution errors and eligible
-runner-reported timeouts allow operator scheduling, while the incomplete extreme
-phase still withholds the final score. Job deadlines, cancellation and unsafe
-execution or cleanup failures prevent operator scheduling. Unknown coverage can
-retain resolved extreme execution evidence while leaving function flags and
+runner-reported timeouts allow operator scheduling. Unresolved extreme execution
+outcomes still withhold the final score. Counted extreme timeouts resolve as
+checked when coverage is reliable and positive. Job deadlines, cancellation and
+unsafe execution or cleanup failures prevent operator scheduling. Unknown
+coverage can retain resolved extreme execution evidence while leaving function flags and
 overall completeness unknown.
 
 Pseudo-tested counts have no threshold and do not alter `minMutationScore`.

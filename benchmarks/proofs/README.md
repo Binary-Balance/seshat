@@ -1545,6 +1545,24 @@ SESHAT_VITEST_CHECK_CASES=timeout,hook-timeout,import-error,unhandled,around-eac
 SESHAT_VITEST_CHECK_CASES=retry,repeat,expected-failure,concurrent node benchmarks/proofs/vitest-check.mjs
 ```
 
+The opt-in timeout-scoring proof uses real Vitest and Jest/Expo fixtures whose
+awaited work never settles. It checks omitted, false and true policies,
+replacement and switching, ordinary and extreme mutants, raw timeout evidence,
+score thresholds, multiple setups, receipt errors and job-deadline exclusion.
+It also verifies baseline timeouts never count, source restoration, scratch
+cleanup and one attempt per mutant/setup. With the existing proof dependencies
+and Jest/Expo fixture dependencies available, run:
+
+```sh
+SESHAT_CLI_BINARY=/path/to/seshat node benchmarks/proofs/timeout-scoring.mjs
+# Add --runner vitest or --runner jest to run one runner.
+```
+
+The proof links installed dependencies above its disposable input and scratch
+roots instead of copying them into every capture. Reports and phase timings stay
+in `work/assurance-proofs/timeout-scoring-*/result.json` with portable paths.
+It does not test the separately implemented job-deadline continuation policy.
+
 The `timeout-continues` case verifies that a runner-reported timeout in extreme
 mutation leaves later extreme and operator mutants runnable while withholding
 the final score. `operator-timeout-continues` checks the same queue behaviour

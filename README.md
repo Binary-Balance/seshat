@@ -124,8 +124,13 @@ but its branch coverage is 50%. Both measurements appear in the report.
 
 The mutation score is the percentage of mutants that made a test fail. A mutant
 makes one deliberate code change, such as `>` to `>=` or `true` to `false`.
-If tests catch two of three mutants, the score is `66.67%`. A timeout or execution error leaves the run
-incomplete and withholds the score. Neither score proves correctness.
+If tests catch two of three mutants, the score is `66.67%`. Timeouts remain
+unresolved by default. Opt in with `"countTimeoutsAsKilled": true` to count clean
+runner-reported test timeouts as detected, with separate timeout counts. Job
+deadlines and execution errors remain unresolved and withhold the score. Prefer
+tests that fail explicitly when awaited work never settles. See the
+[timeout policy](docs/configuration.md#count-runner-reported-timeouts-as-detected).
+Neither score proves correctness.
 
 `check` and `mutate` also replace eligible function bodies to detect pseudo-tested
 functions, those whose body replacement tests miss despite positive coverage.

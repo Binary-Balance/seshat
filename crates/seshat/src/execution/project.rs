@@ -229,6 +229,8 @@ struct Config {
     mutation_operators: Vec<MutationOperator>,
     #[serde(default = "default_test_selection", rename = "testSelection")]
     test_selection: bool,
+    #[serde(default, rename = "countTimeoutsAsKilled")]
+    count_timeouts_as_killed: bool,
 }
 
 fn default_test_selection() -> bool {
@@ -1217,6 +1219,30 @@ mod tests {
             assert!(error.contains("exclude declaration-only source"), "{error}");
         }
         fixture.assert_clean();
+    }
+
+    #[test]
+    fn timeout_scoring_is_opt_in_and_boolean() {
+        let fixture = Fixture::new();
+        let parse = |config: &Value| Config::parse(&serde_json::to_vec(config).unwrap());
+        assert!(!parse(&fixture.config).unwrap().count_timeouts_as_killed);
+        for enabled in [false, true] {
+            let mut config = fixture.config.clone();
+            config["countTimeoutsAsKilled"] = json!(enabled);
+            assert_eq!(parse(&config).unwrap().count_timeouts_as_killed, enabled);
+        }
+        for invalid in [
+            Value::Null,
+            json!(0),
+            json!(1),
+            json!("true"),
+            json!([]),
+            json!({}),
+        ] {
+            let mut config = fixture.config.clone();
+            config["countTimeoutsAsKilled"] = invalid;
+            assert!(parse(&config).unwrap_err().contains("boolean"));
+        }
     }
 
     #[test]

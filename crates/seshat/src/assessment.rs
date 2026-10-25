@@ -4,6 +4,8 @@ pub enum TestState {
     Passed,
     Failed,
     TimedOut,
+    // Opted-in, clean runner timeout. The caller retains the raw timeout evidence.
+    CountedTimeout,
     ExecutionError,
     Cancelled,
     NotRun,
@@ -14,7 +16,7 @@ impl TestState {
         match self {
             Self::Passed => "passed",
             Self::Failed => "failed",
-            Self::TimedOut => "timed-out",
+            Self::TimedOut | Self::CountedTimeout => "timed-out",
             Self::ExecutionError => "execution-error",
             Self::Cancelled => "cancelled",
             Self::NotRun => "not-run",
@@ -27,6 +29,7 @@ pub enum Verdict {
     Killed,
     Survived,
     TimedOut,
+    CountedTimeout,
     ExecutionError,
     Cancelled,
     NotRun,
@@ -38,7 +41,7 @@ impl Verdict {
         match self {
             Self::Killed => "killed",
             Self::Survived => "survived",
-            Self::TimedOut => "timed-out",
+            Self::TimedOut | Self::CountedTimeout => "timed-out",
             Self::ExecutionError => "execution-error",
             Self::Cancelled => "cancelled",
             Self::NotRun => "not-run",
@@ -50,6 +53,7 @@ impl Verdict {
 pub struct MutationAssessment {
     pub complete: bool,
     pub killed: usize,
+    pub counted_timeouts: usize,
     pub survived: usize,
     pub score: Option<f64>,
     pub outcomes: Vec<Verdict>,
@@ -62,7 +66,7 @@ pub fn pseudo_tested(coverage: Option<f64>, verdict: Verdict) -> Option<bool> {
     }
     match verdict {
         Verdict::Survived => Some(true),
-        Verdict::Killed => Some(false),
+        Verdict::Killed | Verdict::CountedTimeout => Some(false),
         _ => None,
     }
 }
@@ -101,8 +105,17 @@ pub fn mutation(
                 Verdict::ExecutionError
             } else if states.contains(&TestState::Cancelled) {
                 Verdict::Cancelled
-            } else if states.contains(&TestState::TimedOut) {
-                Verdict::TimedOut
+            } else if states.contains(&TestState::TimedOut)
+                || states.contains(&TestState::CountedTimeout)
+            {
+                if !states.contains(&TestState::TimedOut)
+                    && states.len() == baselines.len()
+                    && !states.contains(&TestState::NotRun)
+                {
+                    Verdict::CountedTimeout
+                } else {
+                    Verdict::TimedOut
+                }
             } else if states.len() < baselines.len() || states.contains(&TestState::NotRun) {
                 Verdict::NotRun
             } else if states.contains(&TestState::Failed) {
@@ -114,17 +127,22 @@ pub fn mutation(
         .collect();
     let killed = outcomes.iter().filter(|v| **v == Verdict::Killed).count();
     let survived = outcomes.iter().filter(|v| **v == Verdict::Survived).count();
+    let counted_timeouts = outcomes
+        .iter()
+        .filter(|v| **v == Verdict::CountedTimeout)
+        .count();
     let complete = baseline_passed
         && executions.len() == expected_mutants
-        && killed + survived == expected_mutants;
+        && killed + survived + counted_timeouts == expected_mutants;
     let score = if complete && expected_mutants > 0 {
-        Some(killed as f64 / expected_mutants as f64 * 100.0)
+        Some((killed + counted_timeouts) as f64 / expected_mutants as f64 * 100.0)
     } else {
         None
     };
     MutationAssessment {
         complete,
         killed,
+        counted_timeouts,
         survived,
         score,
         outcomes,
@@ -196,11 +214,65 @@ mod tests {
     }
 
     #[test]
+    fn counted_timeouts_require_every_setup_to_resolve() {
+        let cases = [
+            (vec![CountedTimeout, Passed], Verdict::CountedTimeout),
+            (vec![CountedTimeout, Failed], Verdict::CountedTimeout),
+            (
+                vec![CountedTimeout, CountedTimeout],
+                Verdict::CountedTimeout,
+            ),
+            (vec![CountedTimeout, TimedOut], Verdict::TimedOut),
+            (
+                vec![CountedTimeout, ExecutionError],
+                Verdict::ExecutionError,
+            ),
+            (vec![CountedTimeout, Cancelled], Verdict::Cancelled),
+            (vec![CountedTimeout, NotRun], Verdict::TimedOut),
+            (vec![CountedTimeout], Verdict::TimedOut),
+            (
+                vec![CountedTimeout, Passed, Passed],
+                Verdict::ExecutionError,
+            ),
+        ];
+        for (states, verdict) in cases {
+            for states in [states.clone(), states.into_iter().rev().collect()] {
+                let result = mutation(&[Passed, Passed], 1, &[states]);
+                assert_eq!(result.outcomes, [verdict]);
+                let counted = verdict == Verdict::CountedTimeout;
+                assert_eq!(result.complete, counted);
+                assert_eq!(result.counted_timeouts, usize::from(counted));
+                assert_eq!(result.killed, 0);
+                assert_eq!(result.score, counted.then_some(100.0));
+                assert_eq!(pseudo_tested(Some(1.0), verdict), counted.then_some(false));
+            }
+        }
+        let result = mutation(
+            &[Passed],
+            3,
+            &[vec![Failed], vec![CountedTimeout], vec![Passed]],
+        );
+        assert!(result.complete);
+        assert_eq!(
+            (result.killed, result.counted_timeouts, result.survived),
+            (1, 1, 1)
+        );
+        assert_eq!(result.score, Some(2.0 / 3.0 * 100.0));
+        assert_eq!(Verdict::CountedTimeout.label(), "timed-out");
+        let partial = mutation(&[Passed], 2, &[vec![CountedTimeout]]);
+        assert_eq!(partial.outcomes, [Verdict::CountedTimeout, Verdict::NotRun]);
+        assert_eq!(partial.counted_timeouts, 1);
+        assert!(!partial.complete);
+        assert_eq!(partial.score, None);
+    }
+
+    #[test]
     fn failed_or_missing_baselines_never_produce_a_mutation_score() {
         for baselines in [
             vec![],
             vec![Failed],
             vec![TimedOut],
+            vec![CountedTimeout],
             vec![ExecutionError],
             vec![Cancelled],
             vec![NotRun],
@@ -212,6 +284,10 @@ mod tests {
             assert_eq!(result.killed, 0);
             assert_eq!(result.outcomes, [Verdict::Unassessed]);
             assert!(!mutation(&baselines, 0, &[]).complete);
+            let result = mutation(&baselines, 1, &[vec![CountedTimeout; baselines.len()]]);
+            assert!(!result.complete);
+            assert_eq!(result.counted_timeouts, 0);
+            assert_eq!(result.outcomes, [Verdict::Unassessed]);
         }
     }
 

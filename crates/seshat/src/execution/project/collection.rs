@@ -41,6 +41,7 @@ struct MutationProgress {
     completed: usize,
     last_output: Option<Instant>,
     timed_out: usize,
+    counted_timeouts: usize,
     execution_errors: usize,
     cancelled: usize,
     not_run: usize,
@@ -58,6 +59,7 @@ impl MutationProgress {
     ) {
         if finished {
             self.completed += 1;
+            let missing_setup = states.len() < setup_count || states.contains(&TestState::NotRun);
             if states
                 .iter()
                 .any(|state| *state == TestState::ExecutionError)
@@ -65,12 +67,14 @@ impl MutationProgress {
                 self.execution_errors += 1;
             } else if states.iter().any(|state| *state == TestState::Cancelled) {
                 self.cancelled += 1;
-            } else if states.iter().any(|state| *state == TestState::TimedOut) {
-                self.timed_out += 1;
-            } else if states.len() < setup_count
-                || states.iter().any(|state| *state == TestState::NotRun)
+            } else if states.contains(&TestState::TimedOut)
+                || states.contains(&TestState::CountedTimeout) && missing_setup
             {
+                self.timed_out += 1;
+            } else if missing_setup {
                 self.not_run += 1;
+            } else if states.contains(&TestState::CountedTimeout) {
+                self.counted_timeouts += 1;
             }
         } else {
             self.started += 1;
@@ -91,6 +95,12 @@ impl MutationProgress {
                 self.cancelled,
                 self.not_run
             ));
+            if self.counted_timeouts > 0 {
+                progress.phase(format_args!(
+                    "{label}: {} runner-reported timeouts counted as killed",
+                    self.counted_timeouts
+                ));
+            }
             self.last_output = Some(Instant::now());
         }
     }
@@ -295,9 +305,11 @@ fn per_second(count: usize, wall_ms: f64) -> Value {
     }
 }
 
+// Keep raw timeout verdict totals; the counted subset is reported separately.
 fn unresolved_breakdown(outcomes: &[Value]) -> Value {
     let mut timed_out = 0;
     let mut test_timed_out = 0;
+    let mut counted_timeouts = 0;
     let mut execution_errors = 0;
     let mut cancelled = 0;
     let mut not_run = 0;
@@ -306,6 +318,7 @@ fn unresolved_breakdown(outcomes: &[Value]) -> Value {
         match outcome["verdict"].as_str() {
             Some("timed-out") => {
                 timed_out += 1;
+                counted_timeouts += usize::from(outcome["countedAsKilled"] == true);
                 if outcome["setups"].as_array().is_some_and(|setups| {
                     setups.iter().any(|setup| setup["testTimedOut"] == true)
                         && !setups.iter().any(|setup| setup["timedOut"] == true)
@@ -320,7 +333,7 @@ fn unresolved_breakdown(outcomes: &[Value]) -> Value {
             _ => {}
         }
     }
-    json!({"timedOut":timed_out,"testTimedOut":test_timed_out,"executionError":execution_errors,
+    json!({"timedOut":timed_out,"testTimedOut":test_timed_out,"countedTimeouts":counted_timeouts,"executionError":execution_errors,
         "cancelled":cancelled,"notRun":not_run,"unassessed":unassessed})
 }
 
@@ -1260,7 +1273,7 @@ impl CapturedProject {
                     .unwrap_or_else(CommandEvidence::error);
                 jobs += 1;
             }
-            states.push(observed.state);
+            states.push(observed.assessment_state(self.config.count_timeouts_as_killed));
             can_continue &= observed.can_continue_mutation();
             let cleanup_failed = !observed.details["cleanupError"].is_null();
             let mut setup_row = observed.into_json();
@@ -1591,6 +1604,7 @@ impl CapturedProject {
         let assessed = assessment::mutation(baselines, plan.len(), &executions);
         for (row, verdict) in outcomes.iter_mut().zip(assessed.outcomes) {
             row["verdict"] = json!(verdict.label());
+            row["countedAsKilled"] = json!(verdict == assessment::Verdict::CountedTimeout);
             if row["kind"] == "extreme" {
                 row["pseudoTested"] =
                     json!(assessment::pseudo_tested(row["coverage"].as_f64(), verdict));
@@ -1603,7 +1617,7 @@ impl CapturedProject {
             .iter()
             .filter(|row| row.get("executionMs").is_some())
             .count();
-        let resolved = assessed.killed + assessed.survived;
+        let resolved = assessed.killed + assessed.survived + assessed.counted_timeouts;
         let diagnostics = mutation_diagnostics(&outcomes, completed, jobs_attempted, scheduling_ms);
         progress.phase(format_args!(
             "{label} finished: completed {}/{}, running 0, not run {}, resolved {}, unresolved {} (timed-out {}, execution-error {}, cancelled {}, not-run {}, unassessed {})",
@@ -1612,14 +1626,21 @@ impl CapturedProject {
             plan.len() - completed,
             resolved,
             plan.len() - resolved,
-            diagnostics["unresolvedBreakdown"]["timedOut"],
+            diagnostics["unresolvedBreakdown"]["timedOut"].as_u64().unwrap()
+                - assessed.counted_timeouts as u64,
             diagnostics["unresolvedBreakdown"]["executionError"],
             diagnostics["unresolvedBreakdown"]["cancelled"],
             diagnostics["unresolvedBreakdown"]["notRun"],
             diagnostics["unresolvedBreakdown"]["unassessed"]
         ));
+        if assessed.counted_timeouts > 0 {
+            progress.phase(format_args!(
+                "{label}: {} runner-reported timeouts counted as killed",
+                assessed.counted_timeouts
+            ));
+        }
         let mut result = json!({"strategy":if switching {"switch"} else {"replace"},"complete":complete,"planned":plan.len(),
-            "killed":assessed.killed,"survived":assessed.survived,
+            "killed":assessed.killed,"survived":assessed.survived,"countedTimeouts":assessed.counted_timeouts,
             "score":if complete {assessed.score} else {None},"outcomes":outcomes,
             "jobsAttempted":jobs_attempted,"executionMs":started.elapsed().as_secs_f64()*1000.0,
             "workersRequested":self.config.workers,"workersUsed":workers_used,
@@ -3088,6 +3109,44 @@ mod tests {
                 Err(expected.into())
             );
         }
+    }
+
+    #[test]
+    fn live_timeout_counts_require_every_setup_to_resolve() {
+        let progress = Progress {
+            enabled: false,
+            started: Instant::now(),
+        };
+        for (states, timed_out, counted) in [
+            (vec![TestState::CountedTimeout, TestState::Passed], 0, 1),
+            (vec![TestState::CountedTimeout, TestState::NotRun], 1, 0),
+            (vec![TestState::CountedTimeout], 1, 0),
+        ] {
+            let mut live = MutationProgress {
+                started: 1,
+                ..MutationProgress::default()
+            };
+            live.update(&progress, 1, true, &states, 2, "mutation");
+            assert_eq!(
+                (live.timed_out, live.counted_timeouts, live.not_run),
+                (timed_out, counted, 0)
+            );
+        }
+    }
+
+    #[test]
+    fn timeout_diagnostics_retain_raw_and_counted_totals() {
+        let outcomes = json!([
+            {"verdict":"timed-out","countedAsKilled":true,"setups":[{"testTimedOut":true,"timedOut":false}]},
+            {"verdict":"timed-out","countedAsKilled":false,"setups":[{"testTimedOut":true,"timedOut":false}]},
+            {"verdict":"timed-out","countedAsKilled":false,"setups":[{"timedOut":true}]},
+            {"verdict":"execution-error","countedAsKilled":false,"setups":[{"testTimedOut":true}]}
+        ]);
+        let breakdown = unresolved_breakdown(outcomes.as_array().unwrap());
+        assert_eq!(breakdown["timedOut"], 3);
+        assert_eq!(breakdown["testTimedOut"], 2);
+        assert_eq!(breakdown["countedTimeouts"], 1);
+        assert_eq!(breakdown["executionError"], 1);
     }
 
     #[test]
