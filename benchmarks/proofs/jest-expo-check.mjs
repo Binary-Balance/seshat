@@ -253,6 +253,8 @@ function stableMutation(result) {
 }
 
 function assertNormal(result, workers, sourcePath = 'src/status.tsx') {
+  assert.deepEqual(result.diagnostics.runnerVersions[0].importFailureObserver,
+    {state: 'inactive', reason: 'runner'});
   assert.equal(result.complete, true, JSON.stringify(result));
   const setup = result.setups[0];
   assert.equal(setup.typecheck.state, 'passed');

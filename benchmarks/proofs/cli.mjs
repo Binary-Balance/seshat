@@ -86,6 +86,11 @@ function cancellationRun(signal, args, ready, label) {
 const stableMutation = mutation => mutation.outcomes.map(({id,path,localId,offset,original,replacement,verdict}) =>
   ({id,path,localId,offset,original,replacement,verdict}));
 const checked = json('check', 'check');
+const observerAvailable = ['24.20.0', '24.21.0'].includes(process.versions.node);
+const observerState = observerAvailable
+  ? {state:'active',reason:null} : {state:'inactive',reason:'node-version'};
+assert.deepEqual(checked.result.diagnostics.runnerVersions[0].importFailureObserver, observerState);
+assert.equal(checked.result.diagnostics.runnerVersions[0].runtime.node, process.versions.node);
 assert.equal(checked.quality.state, 'not-configured');
 assert.match(results.check.stderr, /capturing configured inputs/);
 assert.equal(checked.result.mutation.score, 50);
@@ -129,6 +134,7 @@ const proofBinary = process.env.SESHAT_PROOF_BINARY
 const legacy = spawnSync(proofBinary, ['check', configPath, scratch], {encoding:'utf8', timeout:60000});
 assert.ifError(legacy.error); assert.equal(legacy.status, 0, legacy.stderr);
 const proof = JSON.parse(legacy.stdout);
+assert.deepEqual(proof.diagnostics.runnerVersions[0].importFailureObserver, observerState);
 assert.deepEqual(proof.sources, checked.result.sources);
 assert.deepEqual(stableMutation(proof.mutation), stableMutation(checked.result.mutation));
 unchanged();
@@ -141,8 +147,39 @@ assert.match(human.stdout, /Worker preparation: [\d.]+ ms/);
 assert.match(human.stdout, /Coverage attribution: [\d.]+ ms/);
 assert.match(human.stdout, /baselineMs: [\d.]+ ms/);
 assert.match(human.stdout, /Mutation work: 2 completed, 0 not run, 0 unresolved/);
+assert.equal(human.stdout.includes('Import-failure observer inactive for setup "node" (node-version)'), !observerAvailable);
 const quiet = run('json-no-progress', ['mutate', '--scratch', scratch, '--json', '--no-progress']);
 assert.equal(quiet.stderr, ''); assert.equal(JSON.parse(quiet.stdout).complete, true);
+
+// Keep the diagnostic state tied to actual import-crash verdicts on this runtime.
+const beforeGuard = {...originals};
+originals['subject.ts'] = "export const ready = 1 === 1; if (!ready) throw new Error('application guard');\n";
+originals['test.mjs'] = "import {test} from 'node:test';import {ready} from './subject.ts';test('ready',()=>{if(!ready)throw Error('not ready')});\n";
+for (const [path, source] of Object.entries(originals)) writeFileSync(join(project, path), source);
+const guardConfig = {...config, mutationOperators:['comparison']};
+configure(guardConfig);
+const guard = json('import-observer', 'mutate', observerAvailable ? 0 : 2);
+assert.deepEqual(guard.result.diagnostics.runnerVersions[0].importFailureObserver, observerState);
+assert.equal(guard.result.mutation.outcomes[0].verdict, observerAvailable ? 'killed' : 'execution-error');
+assert.equal(guard.result.mutation.outcomes[0].setups[0].report.moduleFailures.length, observerAvailable ? 1 : 0);
+// A synthetic version exercises the unchanged pin even on a verified Node version.
+writeFileSync(join(project, 'runtime.cjs'), "Object.defineProperty(process.versions, 'node', {value:'24.22.0'});\n");
+const fallbackConfig = structuredClone(guardConfig);
+fallbackConfig.capture.push('runtime.cjs');
+fallbackConfig.setups[0].test.splice(1, 0, '--require', './runtime.cjs');
+configure(fallbackConfig);
+const fallback = json('import-observer-unverified', 'mutate', 2);
+assert.equal(fallback.result.diagnostics.runnerVersions[0].runtime.node, '24.22.0');
+assert.deepEqual(fallback.result.diagnostics.runnerVersions[0].importFailureObserver,
+  {state:'inactive',reason:'node-version'});
+assert.equal(fallback.result.mutation.outcomes[0].verdict, 'execution-error');
+assert.deepEqual(fallback.result.mutation.outcomes[0].setups[0].report.moduleFailures, []);
+const fallbackHuman = run('import-observer-unverified-readable', ['mutate', '--scratch', scratch, '--no-progress'], 2);
+assert.match(fallbackHuman.stdout, /Import-failure observer inactive for setup "node" \(node-version\)/);
+assert.match(fallbackHuman.stdout, /ambiguous import crashes remain execution errors/);
+Object.assign(originals, beforeGuard);
+for (const [path, source] of Object.entries(originals)) writeFileSync(join(project, path), source);
+configure();
 
 // Alternate otherwise identical real executions; timing noise is not a performance guarantee.
 const progressSamples = {on:[], off:[]};
