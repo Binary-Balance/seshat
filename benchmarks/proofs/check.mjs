@@ -84,19 +84,19 @@ for (const [name, action, expected] of [
   ['mixed-error', 'process.exit(1);', 'execution-error'],
   ['mixed-timeout', 'setInterval(()=>{},1000);', 'timed-out'],
 ]) {
-  const failed = check(name, c => {c.setups[1].timeoutMs=3000;c.setups[1].test=wrappedTest(inverted,action);});
+  const failed = check(name, c => {
+    c.setups[1].timeoutMs=3000;
+    c.setups[1].typecheck=node('');
+    c.setups[1].test=wrappedTest(inverted,action);
+  });
   assert.equal(failed.complete, false);
   assert.equal(failed.mutation.score, null);
   assert.equal(failed.mutation.outcomes[0].verdict, 'survived');
   assert.equal(failed.mutation.outcomes[1].setups[0].state, 'failed');
   assert.equal(failed.mutation.outcomes[1].setups[1].state, expected);
   assert.equal(failed.mutation.outcomes[1].verdict, expected);
-  if (name === 'mixed-error') {
-    assert.deepEqual(failed.mutation.outcomes.slice(2).map(m => m.verdict), ['survived','killed','killed']);
-    assert.equal(failed.mutation.notRun, 0);
-  } else {
-    assert.ok(failed.mutation.outcomes.slice(2).every(m => m.verdict === 'not-run'));
-  }
+  assert.deepEqual(failed.mutation.outcomes.slice(2).map(m => m.verdict), ['survived','killed','killed']);
+  assert.equal(failed.mutation.notRun, 0);
 }
 const baseline = check('failed-baseline', c => c.setups[0].test = node('process.exit(1)'));
 assert.equal(baseline.mutation.jobsAttempted, 0);

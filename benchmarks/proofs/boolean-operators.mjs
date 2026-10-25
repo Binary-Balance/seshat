@@ -199,10 +199,10 @@ function assess(name, operators, switching = false, workers = 1, status = 0) {
   const enabled = operators ?? allFamilies;
   const planned = (enabled.includes('boolean') ? 4 : 0) + (enabled.includes('comparison') ? 2 : 0) + (enabled.includes('statement') ? 1 : 0);
   assert.equal(result.planned,planned);
-  assert.equal(result.completed,status === 0 ? planned : 1);
-  assert.equal(result.notRun,status === 0 ? 0 : planned - 1);
-  assert.equal(result.jobsAttempted,status === 0 ? planned : 1);
-  assert.equal(result.survived,status === 0 ? Number(enabled.includes('boolean')) + Number(enabled.includes('statement')) : 0);
+  assert.equal(result.completed,planned);
+  assert.equal(result.notRun,0);
+  assert.equal(result.jobsAttempted,planned);
+  assert.equal(result.survived,Number(enabled.includes('boolean')) + Number(enabled.includes('statement')));
   assert.equal(report.result.pseudoTesting.planned,5);
   for (const key of ['planned','completed','jobsAttempted']) {
     assert.equal(result.perOperator.reduce((sum,row) => sum + row[key],0),result[key]);
@@ -213,7 +213,9 @@ function assess(name, operators, switching = false, workers = 1, status = 0) {
     assert.equal(result.killed,planned - result.survived);
     assert.equal(result.score,planned === 0 ? null : result.killed / planned * 100);
   } else {
-    assert.equal(result.unresolved,planned);
+    assert.equal(result.unresolved,1);
+    assert.equal(result.outcomes[0].verdict,'timed-out');
+    assert.ok(result.outcomes.slice(1).every(row => ['killed','survived'].includes(row.verdict)));
     assert.equal(result.score,null);
     assert.equal(result.outcomes.filter(row => row.kind === 'boolean' && row.verdict === 'timed-out').length,1);
   }

@@ -254,9 +254,9 @@ impl CommandEvidence {
 
     fn can_continue_mutation(&self) -> bool {
         matches!(self.state, TestState::Passed | TestState::Failed)
-            // An unresolved receipt does not prevent another fresh, safely isolated job.
-            || (self.state == TestState::ExecutionError
-                && self.details["timedOut"] == false
+            // A cleaned-up unresolved job does not prevent another fresh, isolated job.
+            || (((self.state == TestState::ExecutionError && self.details["timedOut"] == false)
+                || (self.state == TestState::TimedOut && self.details["timedOut"] == true))
                 && self.details["cancelled"] == false
                 && self.details["error"].is_null()
                 && self.details["pipeError"].is_null()
@@ -759,6 +759,37 @@ fn only_cleaned_up_execution_errors_allow_more_mutants() {
         assert!(!outcome.can_continue_mutation(), "{field}");
     }
     assert!(!CommandEvidence::error("could not start job".into()).can_continue_mutation());
+}
+
+#[test]
+fn only_cleaned_up_job_deadlines_allow_more_mutants() {
+    let evidence = json!({"exit":null,"timedOut":true,"cancelled":false,"overflow":false});
+    let outcome = CommandEvidence {
+        state: classify("observed", &evidence),
+        details: evidence.clone(),
+    };
+    assert_eq!(outcome.state, TestState::TimedOut);
+    assert!(outcome.can_continue_mutation());
+    assert_ne!(outcome.into_json()["testTimedOut"], true);
+    for (field, value) in [
+        ("timedOut", Value::Null),
+        ("cancelled", json!(true)),
+        ("cancelled", Value::Null),
+        ("overflow", json!(true)),
+        ("overflow", Value::Null),
+        ("error", json!("termination failed")),
+        ("pipeError", json!("read failed")),
+        ("cleanupError", json!("child or job artifacts may remain")),
+        ("sourceError", json!("captured source changed")),
+    ] {
+        let mut changed = evidence.clone();
+        changed[field] = value;
+        let outcome = CommandEvidence {
+            state: classify("observed", &changed),
+            details: changed,
+        };
+        assert!(!outcome.can_continue_mutation(), "{field}");
+    }
 }
 
 #[test]

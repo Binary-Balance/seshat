@@ -258,12 +258,12 @@ cleanup succeeded. Additional receipt errors, including attributed hook errors
 alongside a timeout, still stop scheduling. Neither kind of timeout counts as a
 kill.
 
-A mutant's `execution-error` does not stop later setups or mutants when the
-managed command has ended without cancellation, a job deadline or a
-pipe/supervision error, cleanup succeeded and captured inputs are unchanged.
-This includes runner crashes and missing or invalid receipts. The error stays
-unresolved, keeps the run incomplete and withholds the score. A selected run's
-execution error is retained without a full-command retry. Command-start,
+A mutant's `execution-error` or job deadline does not stop later setups or mutants
+when the managed process tree has ended without cancellation or a pipe/supervision
+error, cleanup succeeded and captured inputs are unchanged. This includes runner
+crashes and missing or invalid receipts. The error or timeout stays unresolved,
+keeps the run incomplete and withholds the score. A selected run's execution error
+or job deadline is retained without a full-command retry. Command-start,
 preparation, restoration and cleanup failures still stop later mutants.
 Other setups for the current mutant can still run, except after failed cleanup
 or cancellation.
@@ -281,7 +281,17 @@ concurrency sections. Unavailable values use `null` or the states below:
   `declaredComparison` and `lockedComparison`; the three version values are
   strings or `null`, and each comparison uses the same four states. A version
   range is `not-comparable`, not a mismatch. Node setups have an empty
-  `packages` array.
+  `packages` array. Each entry also has `importFailureObserver` with `state`
+  and `reason`. It is `active` with a `null` reason for Node setups whose
+  observed runtime is exactly 24.20.0 or 24.21.0. Other or unavailable Node
+  versions produce `inactive` with reason `node-version`; Jest and Vitest
+  produce `inactive` with reason `runner`. This uses the same validated receipt
+  as `runtime.node`, preferring the baseline and falling back to coverage.
+  It describes the Node adapter's runtime gate, not proof that a particular
+  crash can be attributed. The observer requires the verified default process
+  isolation and loader configuration described in
+  [runner compatibility](runner-compatibility.md#import-failure-observer).
+  Readable output includes an explanation for every inactive entry.
 * `concurrency.seshat` always has numeric `configuredWorkers`,
   `effectiveWorkers` as a number or `null`, and `state` as `known` or
   `not-requested`. For mutation, `effectiveWorkers` reports the same scheduler
@@ -383,6 +393,12 @@ setup never becomes a kill merely because another setup failed its test. A
 complete mutation result contains only `killed` and `survived` outcomes. A
 zero-mutant complete result has `score: null`, meaning not applicable, not
 `100`.
+
+Only original source is typechecked. Operator and extreme mutants run without
+a separate typecheck, so even a mutation TypeScript would reject can receive a
+runtime verdict. Type-invalid operator mutants remain in the score denominator
+when they are killed or survive. There is no `compile-error` verdict or option
+to exclude them in this release.
 
 `mutation.diagnostics.unresolvedBreakdown` counts `timedOut`, `executionError`,
 `cancelled`, `notRun` and `unassessed` verdicts. Its `throughput` values are
@@ -618,10 +634,10 @@ The stable `result.mutation` counters, score, timings and diagnostics cover
 operator mutants only. The aggregate `result.jobsAttempted` and execution
 time include both phases. `diagnostics.concurrency.seshat.effectiveWorkers`
 continues to describe the operator scheduler; each phase reports its own
-`workersUsed`. Safely cleaned-up extreme execution errors and eligible
-runner-reported timeouts allow operator scheduling, while the incomplete extreme
-phase still withholds the final score. Job deadlines, cancellation and unsafe
-execution or cleanup failures prevent operator scheduling. Unknown coverage can
+`workersUsed`. Safely cleaned-up extreme execution errors, job deadlines and
+eligible runner-reported timeouts allow operator scheduling, while the incomplete
+extreme phase still withholds the final score. Cancellation and unsafe execution
+or cleanup failures prevent operator scheduling. Unknown coverage can
 retain resolved extreme execution evidence while leaving function flags and
 overall completeness unknown.
 
