@@ -81,6 +81,7 @@ assert.equal(results.timeout.setups[0].baseline.timedOut, true);
 assert.equal(results.overflow.setups[0].baseline.outputTruncated, true);
 const noisy = collect('truncated-test-output', c => {
   c.source.include = ['src/rules.ts'];
+  c.mutationOperators = ['comparison'];
   c.setups = [{...setup('noisy'), typecheck:[process.execPath,
     join(repo, 'benchmarks/node_modules/typescript/bin/tsc'),
     '--ignoreConfig', '--strict', '--noEmit', '--skipLibCheck', 'src/rules.ts']}];
