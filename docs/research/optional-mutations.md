@@ -103,9 +103,9 @@ The CLI proof checks default selection, optional-only selection, disabling all
 operators, two workers, replacement/switching verdict and identity parity,
 per-operator counts and timing totals, original source bytes and empty scratch
 directories. Seven extreme candidates remain when optional operators are off.
-A deadline leaves the first optional mutant timed out and later mutants not run
-under both strategies. A successful process without a runner receipt also
-remains unresolved. Both failures withhold the score. A selected `delete` chain
+After a safely cleaned-up deadline, the first optional mutant stays timed out
+and later mutants run under both strategies. A successful process without a
+runner receipt also remains unresolved. Both failures withhold the score. A selected `delete` chain
 makes switching preparation fail after passing original baselines, with no
 operator attempts and no mutation score.
 

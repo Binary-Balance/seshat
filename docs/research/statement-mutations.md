@@ -61,7 +61,8 @@ Family selection, replacement and switching, two workers, repeatable IDs,
 source bytes and empty scratch directories are checked. The five extreme
 candidates remain a separate phase when statement mutations or all operator
 mutations are disabled. A job deadline leaves the first statement mutant timed
-out, the remaining four not run and the mutation score withheld.
+out, completes the remaining four after safe cleanup and withholds the mutation
+score.
 
 The Vitest stack and public consumer examples additionally require the Fastify
 route-registration statement to be killed, alongside the existing expression

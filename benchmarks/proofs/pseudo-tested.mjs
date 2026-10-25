@@ -111,14 +111,9 @@ for (const [name, action, verdict] of [['error','process.exit(1);','execution-er
   });
   assert.equal(report.complete, false);
   assert.equal(report.result.pseudoTesting.outcomes[0].verdict, verdict);
-  if (name === 'error') {
-    assert.ok(report.result.pseudoTesting.outcomes.slice(1).every(row => ['killed','survived'].includes(row.verdict)));
-    assert.equal(report.result.pseudoTesting.notRun, 0);
-    assert.equal(report.result.pseudoTesting.pseudoTested, checked.result.pseudoTesting.pseudoTested);
-  } else {
-    assert.ok(report.result.pseudoTesting.outcomes.slice(1).every(row => row.verdict === 'not-run'));
-    assert.equal(report.result.pseudoTesting.pseudoTested, 0);
-  }
+  assert.ok(report.result.pseudoTesting.outcomes.slice(1).every(row => ['killed','survived'].includes(row.verdict)));
+  assert.equal(report.result.pseudoTesting.notRun, 0);
+  assert.equal(report.result.pseudoTesting.pseudoTested, checked.result.pseudoTesting.pseudoTested);
   assert.equal(report.result.sources[0].result.functions[0].pseudoTested, null);
 }
 const baseline = run('baseline-error', 'check', value => value.setups[0].test = [process.execPath,'-e','process.exit(1)']);

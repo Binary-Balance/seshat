@@ -216,11 +216,18 @@ Job `state` values are:
 | `no-coverage` | Mutant setup only. Complete coverage across every setup proved that the operator mutant's source was unexecuted, so no test command was needed. |
 
 An attempted job can include `exit`, `ms`, `timedOut`, `cancelled`,
-`overflow`, `pipeError` and a runner `report`. Jobs stopped before they start
-can contain only their state. `ms` is the child-process duration in
+`outputTruncated`, `pipeError` and a runner `report`. Jobs stopped before they
+start can contain only their state. `ms` is the child-process duration in
 milliseconds. Runner receipts, command diagnostics and stack traces are
 evidence with runner-specific shape and text. Do not parse them as a stable
 protocol. The job state, setup name and timing fields above are the contract.
+
+Seshat retains at most 2 MiB from each output stream. It keeps draining and
+discarding excess bytes and sets `outputTruncated: true` when either stream
+exceeds that limit. Truncation does not change the job state or stop mutation
+scheduling. The receipt determines the test verdict. Diagnostics still contain
+at most 1,000 characters from each stream, 2,000 in total. Job deadlines,
+cancellation, pipe errors and unsafe cleanup still stop jobs.
 
 A complete, valid Jest receipt with exit `1` and failed tests can produce
 `state: "failed"` even when it reports errors. Every error must be proven to
@@ -253,12 +260,12 @@ a detected mutant. With `countTimeoutsAsKilled: true`, only a clean
 runner-reported timeout can count. Job deadlines never qualify. Baseline
 failures, cancellation and infrastructure errors never become detected mutants.
 
-A mutant's `execution-error` does not stop later setups or mutants when the
-managed command has ended without cancellation, a job deadline, output overflow
-or a pipe/supervision error, cleanup succeeded and captured inputs are unchanged.
-This includes runner crashes and missing or invalid receipts. The error stays
-unresolved, keeps the run incomplete and withholds the score. A selected run's
-execution error is retained without a full-command retry. Command-start,
+A mutant's `execution-error` or job deadline does not stop later setups or mutants
+when the managed process tree has ended without cancellation or a pipe/supervision
+error, cleanup succeeded and captured inputs are unchanged. This includes runner
+crashes and missing or invalid receipts. The error or timeout stays unresolved,
+keeps the run incomplete and withholds the score. A selected run's execution error
+or job deadline is retained without a full-command retry. Command-start,
 preparation, restoration and cleanup failures still stop later mutants.
 Other setups for the current mutant can still run, except after failed cleanup
 or cancellation.
@@ -276,7 +283,17 @@ concurrency sections. Unavailable values use `null` or the states below:
   `declaredComparison` and `lockedComparison`; the three version values are
   strings or `null`, and each comparison uses the same four states. A version
   range is `not-comparable`, not a mismatch. Node setups have an empty
-  `packages` array.
+  `packages` array. Each entry also has `importFailureObserver` with `state`
+  and `reason`. It is `active` with a `null` reason for Node setups whose
+  observed runtime is exactly 24.20.0 or 24.21.0. Other or unavailable Node
+  versions produce `inactive` with reason `node-version`; Jest and Vitest
+  produce `inactive` with reason `runner`. This uses the same validated receipt
+  as `runtime.node`, preferring the baseline and falling back to coverage.
+  It describes the Node adapter's runtime gate, not proof that a particular
+  crash can be attributed. The observer requires the verified default process
+  isolation and loader configuration described in
+  [runner compatibility](runner-compatibility.md#import-failure-observer).
+  Readable output includes an explanation for every inactive entry.
 * `concurrency.seshat` always has numeric `configuredWorkers`,
   `effectiveWorkers` as a number or `null`, and `state` as `known` or
   `not-requested`. For mutation, `effectiveWorkers` reports the same scheduler
@@ -388,6 +405,12 @@ A complete mutation result contains `killed`, `survived` and, when opted in,
 `timed-out` outcomes with `countedAsKilled: true`. A timeout alongside a missing
 setup retains the `timed-out` verdict but does not count. A zero-mutant complete
 result has `score: null`, meaning not applicable, not `100`.
+
+Only original source is typechecked. Operator and extreme mutants run without
+a separate typecheck, so even a mutation TypeScript would reject can receive a
+runtime verdict. Type-invalid operator mutants remain in the score denominator
+when they are killed or survive. There is no `compile-error` verdict or option
+to exclude them in this release.
 
 `mutation.diagnostics.unresolvedBreakdown` counts `timedOut`, `executionError`,
 `cancelled`, `notRun` and `unassessed` verdicts. Its `throughput` values are
@@ -631,12 +654,12 @@ The stable `result.mutation` counters, score, timings and diagnostics cover
 operator mutants only. The aggregate `result.jobsAttempted` and execution
 time include both phases. `diagnostics.concurrency.seshat.effectiveWorkers`
 continues to describe the operator scheduler; each phase reports its own
-`workersUsed`. Safely cleaned-up extreme execution errors and eligible
+`workersUsed`. Safely cleaned-up extreme execution errors, job deadlines and eligible
 runner-reported timeouts allow operator scheduling. Unresolved extreme execution
 outcomes still withhold the final score. Counted extreme timeouts resolve as
-checked when coverage is reliable and positive. Job deadlines, cancellation and
-unsafe execution or cleanup failures prevent operator scheduling. Unknown
-coverage can retain resolved extreme execution evidence while leaving function flags and
+checked when coverage is reliable and positive. Cancellation and unsafe execution
+or cleanup failures prevent operator scheduling. Unknown coverage can
+retain resolved extreme execution evidence while leaving function flags and
 overall completeness unknown.
 
 Pseudo-tested counts have no threshold and do not alter `minMutationScore`.

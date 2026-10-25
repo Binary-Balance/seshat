@@ -476,6 +476,18 @@ fn runner_packages(runner: Runner) -> &'static [&'static str] {
     }
 }
 
+fn import_failure_observer(runner: Runner, node: Option<&str>) -> Value {
+    // Match node-load-observer.mjs, independently of the supported Node range.
+    let reason = if !matches!(runner, Runner::Node) {
+        Some("runner")
+    } else if !matches!(node, Some("24.20.0" | "24.21.0")) {
+        Some("node-version")
+    } else {
+        None
+    };
+    json!({"state":if reason.is_none() { "active" } else { "inactive" },"reason":reason})
+}
+
 fn numeric_flag(args: &[String], name: &str) -> Option<Option<usize>> {
     let prefix = format!("{name}=");
     let mut found = false;
@@ -739,6 +751,7 @@ impl CapturedProject {
                 "runtime":{"node":node,"declared":node_declared,
                     "declaredComparison":version_comparison(node,node_declared)},
                 "packages":packages,
+                "importFailureObserver":import_failure_observer(config.runner.clone(), node),
             }));
             concurrency.push(runner_concurrency(
                 config,
@@ -938,7 +951,6 @@ impl CapturedProject {
             } else if result["timedOut"] == true {
                 TestState::TimedOut
             } else if result["exit"] == 0
-                && result["overflow"] == false
                 && result["pipeError"].is_null()
                 && result["error"].is_null()
                 && result["cleanupError"].is_null()
@@ -956,8 +968,7 @@ impl CapturedProject {
                     result["report"] = report;
                     if result["cancelled"] == true {
                         TestState::Cancelled
-                    } else if result["overflow"] == true
-                        || !result["pipeError"].is_null()
+                    } else if !result["pipeError"].is_null()
                         || !result["error"].is_null()
                         || !result["cleanupError"].is_null()
                     {
@@ -1053,7 +1064,6 @@ impl CapturedProject {
             let mut result = if job["exit"] == 0
                 && job["cancelled"] == false
                 && job["timedOut"] == false
-                && job["overflow"] == false
                 && job["error"].is_null()
                 && job["cleanupError"].is_null()
                 && job["pipeError"].is_null()
@@ -1252,6 +1262,7 @@ impl CapturedProject {
             jobs += 1;
             if let selection::Selection::Files { files, .. } = &selections[index]
                 && observed.state != TestState::ExecutionError
+                && observed.details["timedOut"] == false
                 && observed.can_continue_mutation()
                 && !self.test_selection[index].as_ref().unwrap().verifies(
                     &self.directory.0,
@@ -2418,9 +2429,9 @@ mod tests {
     }
 
     #[test]
-    fn unresolved_receipts_allow_later_setups_and_mutants() {
+    fn unresolved_jobs_allow_later_setups_and_mutants() {
         for (switching, workers) in [(false, 1), (false, 2), (true, 1), (true, 2)] {
-            for fault in ["missing", "invalid", "replayed", "runner-error"] {
+            for fault in ["missing", "invalid", "replayed", "runner-error", "deadline"] {
                 let fixture = super::super::tests::Fixture::new();
                 let mut captured = fixture.capture().unwrap();
                 captured
@@ -2428,6 +2439,9 @@ mod tests {
                     .retain(|(path, _)| path == Path::new("src/calc.ts"));
                 captured.config.workers = workers;
                 let mut first = captured.config.setups[0].clone();
+                if fault == "deadline" {
+                    first.timeout_ms = 1000;
+                }
                 first.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
                 let receipt = r#"
                     const fs = require('fs'), path = process.env.SESHAT_RECEIPT;
@@ -2443,6 +2457,7 @@ mod tests {
                         r#"{receipt}
                     if (mutant) {{
                         if ('{fault}' === 'missing') process.exit(1);
+                        if ('{fault}' === 'deadline') {{ while (true) {{}} }}
                         if ('{fault}' === 'invalid') {{ fs.writeFileSync(path, '{{'); process.exit(1); }}
                         if ('{fault}' === 'replayed') report.executionId = 'old-execution';
                         if ('{fault}' === 'runner-error') report.errors = 1;
@@ -2475,15 +2490,21 @@ mod tests {
                 assert_eq!(mutation["completed"], 2, "{fault}: {result}");
                 assert_eq!(mutation["notRun"], 0);
                 assert_eq!(mutation["jobsAttempted"], 4);
-                assert_eq!(mutation["outcomes"][0]["verdict"], "execution-error");
-                assert_eq!(
-                    mutation["outcomes"][0]["setups"][0]["state"],
+                let unresolved = if fault == "deadline" {
+                    "timed-out"
+                } else {
                     "execution-error"
-                );
+                };
+                assert_eq!(mutation["outcomes"][0]["verdict"], unresolved);
+                assert_eq!(mutation["outcomes"][0]["setups"][0]["state"], unresolved);
                 assert_eq!(mutation["outcomes"][0]["setups"][1]["state"], "failed");
                 assert_eq!(mutation["outcomes"][1]["verdict"], "survived");
                 assert_eq!(
-                    mutation["diagnostics"]["unresolvedBreakdown"]["executionError"],
+                    mutation["diagnostics"]["unresolvedBreakdown"][if fault == "deadline" {
+                        "timedOut"
+                    } else {
+                        "executionError"
+                    }],
                     1
                 );
                 assert_eq!(mutation["complete"], false);
@@ -2496,11 +2517,20 @@ mod tests {
 
     #[test]
     fn cleanup_failure_stops_pending_setups_and_prepared_baselines() {
-        for (switching, worker_baseline) in [(false, false), (true, false), (true, true)] {
+        for (switching, worker_baseline, deadline) in [
+            (false, false, false),
+            (true, false, false),
+            (true, true, false),
+            (false, false, true),
+            (true, false, true),
+        ] {
             let fixture = super::super::tests::Fixture::new();
             let mut captured = fixture.capture().unwrap();
             captured.config.workers = if worker_baseline { 2 } else { 1 };
             let mut first = captured.config.setups[0].clone();
+            if deadline {
+                first.timeout_ms = 1000;
+            }
             first.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
             let receipt = r#"
                 const fs = require('fs'), path = process.env.SESHAT_RECEIPT;
@@ -2521,7 +2551,7 @@ mod tests {
                 "node".into(),
                 "-e".into(),
                 format!(
-                    "{receipt} if (id.includes({fault:?})) fs.mkdirSync(path + '.events-failure');"
+                    "{receipt} if (id.includes({fault:?})) {{ fs.mkdirSync(path + '.events-failure'); if ({deadline}) setInterval(() => {{}}, 1000); }}"
                 ),
             ];
             captured.config.setups = vec![first, second];
@@ -3147,6 +3177,61 @@ mod tests {
         assert_eq!(breakdown["testTimedOut"], 2);
         assert_eq!(breakdown["countedTimeouts"], 1);
         assert_eq!(breakdown["executionError"], 1);
+    }
+
+    #[test]
+    fn observer_diagnostics_use_each_setups_runner_receipt() {
+        let fixture = super::super::tests::Fixture::new();
+        let mut captured = fixture.capture().unwrap();
+        let mut jest = captured.config.setups[0].clone();
+        jest.name = "jest".into();
+        jest.runner = Runner::Jest;
+        let mut vitest = jest.clone();
+        vitest.name = "vitest".into();
+        vitest.runner = Runner::Vitest;
+        captured.config.setups.extend([jest, vitest]);
+        for (node, state, reason) in [
+            (Some("24.20.0"), "active", None),
+            (Some("24.21.0"), "active", None),
+            (Some("24.22.0"), "inactive", Some("node-version")),
+            (Some("24.20.1"), "inactive", Some("node-version")),
+            (Some("24.21.0-rc.1"), "inactive", Some("node-version")),
+            (None, "inactive", Some("node-version")),
+        ] {
+            let setups = vec![json!({"baseline":{"report":{"node":node}}}); 3];
+            let diagnostics = captured.diagnostics(&setups, None);
+            let versions = diagnostics["runnerVersions"].as_array().unwrap();
+            assert_eq!(versions.len(), 3);
+            assert_eq!(versions[0]["setup"], "unit");
+            assert_eq!(versions[0]["runtime"]["node"], json!(node));
+            assert_eq!(
+                versions[0]["importFailureObserver"],
+                json!({"state":state,"reason":reason})
+            );
+            for row in &versions[1..] {
+                assert_eq!(
+                    row["importFailureObserver"],
+                    json!({"state":"inactive","reason":"runner"})
+                );
+            }
+        }
+        let diagnostics = captured.diagnostics(
+            &[
+                json!({"baseline":{"state":"not-run"},"coverage":{"report":{"node":"24.21.0"}}}),
+                json!({}),
+                json!({}),
+            ],
+            None,
+        );
+        assert_eq!(
+            diagnostics["runnerVersions"][0]["importFailureObserver"]["state"],
+            "active"
+        );
+        let diagnostics = captured.diagnostics(&vec![json!({}); 3], None);
+        assert_eq!(
+            diagnostics["runnerVersions"][0]["importFailureObserver"],
+            json!({"state":"inactive","reason":"node-version"})
+        );
     }
 
     #[test]

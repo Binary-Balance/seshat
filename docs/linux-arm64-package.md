@@ -63,7 +63,7 @@ cleanup. The workspace install remains in the npm proof. The parallel proof
 runs the extracted standalone binary, including cancellation, deadlines,
 worker isolation, source-integrity and descendant cleanup checks. The native
 lifecycle proof exercises all four cancellation phases for SIGINT and SIGTERM,
-plus timeout, output overflow and leader-exit handling, with the matching
+plus timeout, output truncation and leader-exit handling, with the matching
 packaged proof binary.
 
 The workflow retains a portable preflight report, repeat-pack provenance,

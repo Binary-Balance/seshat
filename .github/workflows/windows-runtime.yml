@@ -12,6 +12,8 @@ on:
       - benchmarks/proofs/windows-runtime-cli.mjs
       - benchmarks/proofs/cli.mjs
       - benchmarks/proofs/parallel.mjs
+      - benchmarks/proofs/job-deadlines.mjs
+      - benchmarks/proofs/test-selection.mjs
       - benchmarks/proofs/process.mjs
       - benchmarks/proofs/jest-expo-check.mjs
       - benchmarks/proofs/jest-*.cjs
@@ -31,6 +33,8 @@ on:
       - benchmarks/proofs/windows-runtime-cli.mjs
       - benchmarks/proofs/cli.mjs
       - benchmarks/proofs/parallel.mjs
+      - benchmarks/proofs/job-deadlines.mjs
+      - benchmarks/proofs/test-selection.mjs
       - benchmarks/proofs/process.mjs
       - benchmarks/proofs/jest-expo-check.mjs
       - benchmarks/proofs/jest-*.cjs
@@ -204,6 +208,18 @@ jobs:
             --cli "$env:GITHUB_WORKSPACE\crates\seshat\target\release\seshat.exe" `
             --deps "$env:GITHUB_WORKSPACE\benchmarks\proofs" `
             --cases timeout-continues,operator-timeout-continues,crash-continues,operator-crash-continues 2>&1 | Tee-Object -FilePath work/windows/vitest-timeouts.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify job deadline continuation
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          node benchmarks/proofs/job-deadlines.mjs --cli crates/seshat/target/release/seshat.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Verify selected deadline evidence
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          node benchmarks/proofs/test-selection.mjs --cli crates/seshat/target/release/seshat.exe --cases job-deadline
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Require shared fixture reports
         shell: pwsh
