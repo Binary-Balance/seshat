@@ -57,7 +57,7 @@ package scripts, `npm exec`, workspace installation where supported, source
 preservation and archive identity. The standalone route lists and extracts the
 same archive, then runs the binary without npm. Both routes remove Cargo and
 Rustc from the consuming environment. The native lifecycle proofs retain
-deadlines, output overflow handling, descendant cleanup and empty scratch
+deadlines, output truncation handling, descendant cleanup and empty scratch
 directories. Unix uses SIGINT/SIGTERM with exits 130/143; Windows uses
 `CTRL_BREAK_EVENT` through the native console helper and makes no POSIX signal
 claim.

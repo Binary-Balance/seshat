@@ -101,6 +101,56 @@ fn command_root_loads_captured_scripts() {
 }
 
 #[test]
+fn truncated_test_output_keeps_kills_and_schedules_later_mutants() {
+    let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
+    for strategy in ["replace", "switch"] {
+        let mut fixture = Fixture::new();
+        fixture.config["runner"] = json!("node");
+        fixture.config["limit"] = json!(2);
+        fs::write(
+            fixture.root.join("input/subject.ts"),
+            "export function adult(age: number) { return age >= 18; }\n",
+        )
+        .unwrap();
+        fs::write(
+            fixture.root.join("input/reporter.mjs"),
+            include_str!("../../../benchmarks/proofs/node-reporter.mjs"),
+        )
+        .unwrap();
+        fs::write(
+            fixture.root.join("input/check.mjs"),
+            "import {test} from 'node:test'; import assert from 'node:assert/strict';
+            import {adult} from './subject.ts';
+            test('boundaries', () => {
+                if (Number(process.env.SESHAT_MUTANT_ID) >= 0) console.log('x'.repeat(5*1024*1024));
+                assert.equal(adult(18), true); assert.equal(adult(17), false);
+            });",
+        )
+        .unwrap();
+        fixture.config["test"] = json!([
+            "node",
+            "--test",
+            "--test-reporter=./reporter.mjs",
+            "check.mjs"
+        ]);
+        let result = report(&fixture.execute(strategy).output().unwrap(), 0);
+        assert_eq!(result["complete"], true, "{strategy}: {result}");
+        assert_eq!(result["score"].as_f64(), Some(100.0));
+        let outcomes = result["outcomes"].as_array().unwrap();
+        assert_eq!(outcomes.len(), 2);
+        for outcome in outcomes {
+            assert_eq!(outcome["verdict"], "killed");
+            let evidence = &outcome["evidence"];
+            assert_eq!(evidence["outputTruncated"], true);
+            assert_eq!(evidence["timedOut"], false);
+            assert_eq!(evidence["report"]["complete"], true);
+            assert!(evidence["diagnostic"].as_str().unwrap().chars().count() <= 2000);
+        }
+        fixture.clean();
+    }
+}
+
+#[test]
 fn invalid_configuration_never_starts_an_earlier_command() {
     let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
     let mut fixture = Fixture::new();

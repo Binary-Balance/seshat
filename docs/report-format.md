@@ -216,11 +216,18 @@ Job `state` values are:
 | `no-coverage` | Mutant setup only. Complete coverage across every setup proved that the operator mutant's source was unexecuted, so no test command was needed. |
 
 An attempted job can include `exit`, `ms`, `timedOut`, `cancelled`,
-`overflow`, `pipeError` and a runner `report`. Jobs stopped before they start
-can contain only their state. `ms` is the child-process duration in
+`outputTruncated`, `pipeError` and a runner `report`. Jobs stopped before they
+start can contain only their state. `ms` is the child-process duration in
 milliseconds. Runner receipts, command diagnostics and stack traces are
 evidence with runner-specific shape and text. Do not parse them as a stable
 protocol. The job state, setup name and timing fields above are the contract.
+
+Seshat retains at most 2 MiB from each output stream. It keeps draining and
+discarding excess bytes and sets `outputTruncated: true` when either stream
+exceeds that limit. Truncation does not change the job state or stop mutation
+scheduling. The receipt determines the test verdict. Diagnostics still contain
+at most 1,000 characters from each stream, 2,000 in total. Job deadlines,
+cancellation, pipe errors and unsafe cleanup still stop jobs.
 
 A complete, valid Jest receipt with exit `1` and failed tests can produce
 `state: "failed"` even when it reports errors. Every error must be proven to
@@ -252,11 +259,11 @@ alongside a timeout, still stop scheduling. Neither kind of timeout counts as a
 kill.
 
 A mutant's `execution-error` or job deadline does not stop later setups or mutants
-when the managed process tree has ended without cancellation, output overflow
-or a pipe/supervision error, cleanup succeeded and captured inputs are unchanged.
-This includes runner crashes and missing or invalid receipts. The error or timeout
-stays unresolved, keeps the run incomplete and withholds the score. A selected run's
-execution error or job deadline is retained without a full-command retry. Command-start,
+when the managed process tree has ended without cancellation or a pipe/supervision
+error, cleanup succeeded and captured inputs are unchanged. This includes runner
+crashes and missing or invalid receipts. The error or timeout stays unresolved,
+keeps the run incomplete and withholds the score. A selected run's execution error
+or job deadline is retained without a full-command retry. Command-start,
 preparation, restoration and cleanup failures still stop later mutants.
 Other setups for the current mutant can still run, except after failed cleanup
 or cancellation.

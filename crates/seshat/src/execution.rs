@@ -258,7 +258,6 @@ impl CommandEvidence {
             || (((self.state == TestState::ExecutionError && self.details["timedOut"] == false)
                 || (self.state == TestState::TimedOut && self.details["timedOut"] == true))
                 && self.details["cancelled"] == false
-                && self.details["overflow"] == false
                 && self.details["error"].is_null()
                 && self.details["pipeError"].is_null()
                 && self.details["cleanupError"].is_null()
@@ -474,7 +473,6 @@ impl Session {
         } else if key != "test" {
             if evidence["exit"] == 0
                 && evidence["timedOut"] != true
-                && evidence["overflow"] != true
                 && evidence["pipeError"].is_null()
                 && evidence["error"].is_null()
                 && evidence["cleanupError"].is_null()
@@ -605,8 +603,7 @@ fn classify(runner: &str, evidence: &Value) -> TestState {
     if evidence["timedOut"] == true {
         return TestState::TimedOut;
     }
-    if evidence["overflow"] == true
-        || !evidence["pipeError"].is_null()
+    if !evidence["pipeError"].is_null()
         || !evidence["error"].is_null()
         || !evidence["cleanupError"].is_null()
     {
@@ -671,7 +668,6 @@ impl Drop for Session {
 #[test]
 fn exit_code_is_not_a_verdict() {
     for failure in [
-        json!({"overflow":true}),
         json!({"pipeError":"read failed"}),
         json!({"error":"wait failed"}),
         json!({"cleanupError":"child may remain"}),
@@ -708,8 +704,26 @@ fn exit_code_is_not_a_verdict() {
 }
 
 #[test]
+fn truncated_output_does_not_change_receipt_verdicts() {
+    for runner in ["node", "observed"] {
+        for (exit, passed, failed, expected) in
+            [(0, 1, 0, TestState::Passed), (1, 0, 1, TestState::Failed)]
+        {
+            let details = json!({"exit":exit,"outputTruncated":true,
+                "report":{"complete":true,"passed":passed,"failed":failed,"errors":0,"timeouts":0}});
+            let outcome = CommandEvidence {
+                state: classify(runner, &details),
+                details,
+            };
+            assert_eq!(outcome.state, expected);
+            assert!(outcome.can_continue_mutation());
+        }
+    }
+}
+
+#[test]
 fn only_cleaned_up_execution_errors_allow_more_mutants() {
-    let evidence = json!({"exit":1,"timedOut":false,"cancelled":false,"overflow":false,
+    let evidence = json!({"exit":1,"timedOut":false,"cancelled":false,"outputTruncated":true,
         "report":{"complete":true,"passed":0,"failed":0,"errors":1,"timeouts":0}});
     for report in [
         evidence["report"].clone(),
@@ -731,8 +745,6 @@ fn only_cleaned_up_execution_errors_allow_more_mutants() {
         ("timedOut", Value::Null),
         ("cancelled", json!(true)),
         ("cancelled", Value::Null),
-        ("overflow", json!(true)),
-        ("overflow", Value::Null),
         ("error", json!("wait failed")),
         ("pipeError", json!("read failed")),
         ("cleanupError", json!("child or job artifacts may remain")),
@@ -751,7 +763,7 @@ fn only_cleaned_up_execution_errors_allow_more_mutants() {
 
 #[test]
 fn only_cleaned_up_job_deadlines_allow_more_mutants() {
-    let evidence = json!({"exit":null,"timedOut":true,"cancelled":false,"overflow":false});
+    let evidence = json!({"exit":null,"timedOut":true,"cancelled":false,"outputTruncated":true});
     let outcome = CommandEvidence {
         state: classify("observed", &evidence),
         details: evidence.clone(),
@@ -763,8 +775,6 @@ fn only_cleaned_up_job_deadlines_allow_more_mutants() {
         ("timedOut", Value::Null),
         ("cancelled", json!(true)),
         ("cancelled", Value::Null),
-        ("overflow", json!(true)),
-        ("overflow", Value::Null),
         ("error", json!("termination failed")),
         ("pipeError", json!("read failed")),
         ("cleanupError", json!("child or job artifacts may remain")),
@@ -810,7 +820,6 @@ fn only_bounded_runner_timeouts_allow_more_mutants() {
         ("exit", json!(0)),
         ("exit", json!(2)),
         ("cancelled", json!(true)),
-        ("overflow", json!(true)),
         ("pipeError", json!("read failed")),
         ("cleanupError", json!("job artifacts could not be removed")),
     ] {
@@ -883,7 +892,6 @@ fn jest_hook_kills_require_all_errors_to_be_attributed() {
         ("exit", Value::Null),
         ("exit", json!(0)),
         ("exit", json!(2)),
-        ("overflow", json!(true)),
         ("pipeError", json!("read failed")),
         ("error", json!("wait failed")),
         ("cleanupError", json!("child may remain")),
