@@ -721,17 +721,14 @@ fn readable(report: &Value) -> String {
                 })
             });
             if job_timed_out {
-                let _ = writeln!(
-                    output,
-                    "Mutation scheduling stopped with {timed_out} timed-out {noun}."
-                );
+                let _ = writeln!(output, "Timeouts affected {timed_out} {noun}.");
             } else {
                 let _ = writeln!(
                     output,
                     "Runner-reported test timeouts affected {timed_out} {noun}."
                 );
             }
-            output.push_str("Timeouts remain unresolved, so the overall mutation score is withheld. Results from work already in progress are retained.\n");
+            output.push_str("Timeouts remain unresolved, so the overall mutation score is withheld. Completed results are retained.\n");
             match mutation["notRun"].as_u64() {
                 Some(0) => output.push_str("No mutants were left unrun.\n"),
                 Some(1) => output.push_str("1 mutant was not run.\n"),
@@ -1435,25 +1432,25 @@ mod tests {
             (
                 vec![vec!["failed", "timed-out"]],
                 1,
-                "stopped with 1 timed-out mutant.",
+                "Timeouts affected 1 mutant.",
                 "1 mutant was not run.",
             ),
             (
                 vec![vec!["timed-out"], vec!["timed-out"]],
                 42,
-                "stopped with 2 timed-out mutants.",
+                "Timeouts affected 2 mutants.",
                 "42 mutants were not run.",
             ),
             (
                 vec![vec!["timed-out"], vec!["passed"]],
                 0,
-                "stopped with 1 timed-out mutant.",
+                "Timeouts affected 1 mutant.",
                 "No mutants were left unrun.",
             ),
             (
                 vec![vec!["timed-out", "execution-error"], vec!["cancelled"]],
                 1,
-                "stopped with 1 timed-out mutant.",
+                "Timeouts affected 1 mutant.",
                 "1 mutant was not run.",
             ),
             (vec![vec!["execution-error"]], 1, "", ""),
@@ -1478,15 +1475,16 @@ mod tests {
             assert_eq!(report["quality"]["state"], "incomplete");
             assert!(report["quality"]["checks"][0]["actual"].is_null());
             let rendered = readable(&report);
+            assert!(!rendered.contains("scheduling stopped"));
             assert!(rendered.contains("score withheld (incomplete)"));
             if expected_timeout.is_empty() {
-                assert!(!rendered.contains("Mutation scheduling stopped with"));
+                assert!(!rendered.contains("Timeouts affected"));
             } else {
                 assert!(rendered.contains(expected_timeout));
                 assert!(rendered.contains(
                     "Timeouts remain unresolved, so the overall mutation score is withheld."
                 ));
-                assert!(rendered.contains("Results from work already in progress are retained."));
+                assert!(rendered.contains("Completed results are retained."));
                 assert!(rendered.contains(expected_unrun));
             }
         }
@@ -1495,7 +1493,7 @@ mod tests {
                 "verdict":"execution-error","setups":[{"state":"execution-error","timedOut":true}]
             }]}
         }}));
-        assert!(mixed.contains("stopped with 1 timed-out mutant."));
+        assert!(mixed.contains("Timeouts affected 1 mutant."));
         assert!(mixed.contains("No mutants were left unrun."));
         let runner_timeout = readable(&json!({"timings":{"wallMs":1.0},"result":{
             "mutation":{"score":null,"notRun":0,"outcomes":[{
@@ -1503,7 +1501,7 @@ mod tests {
             }]}
         }}));
         assert!(runner_timeout.contains("Runner-reported test timeouts affected 1 mutant."));
-        assert!(!runner_timeout.contains("Mutation scheduling stopped"));
+        assert!(!runner_timeout.contains("scheduling stopped"));
         assert!(runner_timeout.contains("No mutants were left unrun."));
     }
 }

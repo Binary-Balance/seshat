@@ -320,7 +320,9 @@ assert.deepEqual(stopped.result.mutation.outcomes.map(row=>row.verdict), ['timed
 assert.equal(stopped.quality.state, 'incomplete');
 assert.equal(stopped.quality.checks[0].actual, null);
 const stoppedHuman = run('mutant-timeout-human', ['mutate','--config',configPath,'--scratch',scratch], 2);
-assert.match(stoppedHuman.stdout, /stopped with 1 timed-out mutant\./);
+assert.match(stoppedHuman.stdout, /Timeouts affected 1 mutant\./);
+assert.doesNotMatch(stoppedHuman.stdout, /scheduling stopped/);
+assert.match(stoppedHuman.stdout, /Completed results are retained\./);
 assert.match(stoppedHuman.stdout, /Timeouts remain unresolved, so the overall mutation score is withheld\./);
 assert.doesNotMatch(stoppedHuman.stdout, /mutant was not run\./);
 assert.match(stoppedHuman.stdout, /score withheld \(incomplete\)/);
