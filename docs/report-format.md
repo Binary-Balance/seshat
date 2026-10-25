@@ -611,10 +611,10 @@ The stable `result.mutation` counters, score, timings and diagnostics cover
 operator mutants only. The aggregate `result.jobsAttempted` and execution
 time include both phases. `diagnostics.concurrency.seshat.effectiveWorkers`
 continues to describe the operator scheduler; each phase reports its own
-`workersUsed`. Safely cleaned-up extreme execution errors and eligible
-runner-reported timeouts allow operator scheduling, while the incomplete extreme
-phase still withholds the final score. Job deadlines, cancellation and unsafe
-execution or cleanup failures prevent operator scheduling. Unknown coverage can
+`workersUsed`. Safely cleaned-up extreme execution errors, job deadlines and
+eligible runner-reported timeouts allow operator scheduling, while the incomplete
+extreme phase still withholds the final score. Cancellation and unsafe execution
+or cleanup failures prevent operator scheduling. Unknown coverage can
 retain resolved extreme execution evidence while leaving function flags and
 overall completeness unknown.
 

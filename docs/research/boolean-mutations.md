@@ -57,9 +57,10 @@ families are disabled.
 
 The assessments compare replacement and switching identities/outcomes, including
 two workers, and check input bytes and empty scratch directories after each run.
-A separate job-timeout case leaves one timed-out boolean mutant and three
-not-run mutants, stops scheduling and withholds the score. A switching-rejection case
-also remains incomplete with a null score and preserved source.
+A separate job-timeout case leaves one timed-out boolean mutant, completes the
+other three mutants after safe cleanup and withholds the score. A
+switching-rejection case also remains incomplete with a null score and preserved
+source.
 
 ## Switching boundary
 
