@@ -13,6 +13,11 @@ serial and two-worker runs with replacement and experimental switching,
 retaining source integrity and empty scratch directories. Linux x64 package
 and Windows runtime CI run this proof.
 
+The `job-deadline` case in `test-selection.mjs` verifies that a deadline in a
+selected Vitest job stays unresolved in both mutation phases, even when the
+full command would pass. It must not trigger a full-command retry. Linux x64
+and Windows runtime CI also run this control.
+
 Requirements: Linux x64 or Windows x64, Node 24, npm and Rust 1.98.1. Linux
 requires a `kill` executable that supports process-group IDs; Windows runtime
 proofs require the checked native symlink and junction capabilities on the

@@ -1239,6 +1239,7 @@ impl CapturedProject {
             jobs += 1;
             if let selection::Selection::Files { files, .. } = &selections[index]
                 && observed.state != TestState::ExecutionError
+                && observed.details["timedOut"] == false
                 && observed.can_continue_mutation()
                 && !self.test_selection[index].as_ref().unwrap().verifies(
                     &self.directory.0,

@@ -256,7 +256,7 @@ when the managed process tree has ended without cancellation, output overflow
 or a pipe/supervision error, cleanup succeeded and captured inputs are unchanged.
 This includes runner crashes and missing or invalid receipts. The error or timeout
 stays unresolved, keeps the run incomplete and withholds the score. A selected run's
-execution error is retained without a full-command retry. Command-start,
+execution error or job deadline is retained without a full-command retry. Command-start,
 preparation, restoration and cleanup failures still stop later mutants.
 Other setups for the current mutant can still run, except after failed cleanup
 or cancellation.

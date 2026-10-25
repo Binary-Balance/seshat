@@ -489,6 +489,8 @@ when its process tree was stopped, cleanup succeeded and captured inputs are
 unchanged. The timeout stays unresolved. Failed termination, pipe errors or
 unsafe cleanup still stop later mutants. Original and worker baselines must
 pass, so a deadline there prevents mutation work.
+A selected test job that reaches its deadline is retained without a full-command
+retry.
 
 A runner-reported test timeout can allow scheduling to continue when the command
 exits `1` within `timeoutMs`, its complete receipt has valid test counts and no
