@@ -463,6 +463,18 @@ fn runner_packages(runner: Runner) -> &'static [&'static str] {
     }
 }
 
+fn import_failure_observer(runner: Runner, node: Option<&str>) -> Value {
+    // Match node-load-observer.mjs, independently of the supported Node range.
+    let reason = if !matches!(runner, Runner::Node) {
+        Some("runner")
+    } else if !matches!(node, Some("24.20.0" | "24.21.0")) {
+        Some("node-version")
+    } else {
+        None
+    };
+    json!({"state":if reason.is_none() { "active" } else { "inactive" },"reason":reason})
+}
+
 fn numeric_flag(args: &[String], name: &str) -> Option<Option<usize>> {
     let prefix = format!("{name}=");
     let mut found = false;
@@ -726,6 +738,7 @@ impl CapturedProject {
                 "runtime":{"node":node,"declared":node_declared,
                     "declaredComparison":version_comparison(node,node_declared)},
                 "packages":packages,
+                "importFailureObserver":import_failure_observer(config.runner.clone(), node),
             }));
             concurrency.push(runner_concurrency(
                 config,
@@ -3108,6 +3121,61 @@ mod tests {
                 Err(expected.into())
             );
         }
+    }
+
+    #[test]
+    fn observer_diagnostics_use_each_setups_runner_receipt() {
+        let fixture = super::super::tests::Fixture::new();
+        let mut captured = fixture.capture().unwrap();
+        let mut jest = captured.config.setups[0].clone();
+        jest.name = "jest".into();
+        jest.runner = Runner::Jest;
+        let mut vitest = jest.clone();
+        vitest.name = "vitest".into();
+        vitest.runner = Runner::Vitest;
+        captured.config.setups.extend([jest, vitest]);
+        for (node, state, reason) in [
+            (Some("24.20.0"), "active", None),
+            (Some("24.21.0"), "active", None),
+            (Some("24.22.0"), "inactive", Some("node-version")),
+            (Some("24.20.1"), "inactive", Some("node-version")),
+            (Some("24.21.0-rc.1"), "inactive", Some("node-version")),
+            (None, "inactive", Some("node-version")),
+        ] {
+            let setups = vec![json!({"baseline":{"report":{"node":node}}}); 3];
+            let diagnostics = captured.diagnostics(&setups, None);
+            let versions = diagnostics["runnerVersions"].as_array().unwrap();
+            assert_eq!(versions.len(), 3);
+            assert_eq!(versions[0]["setup"], "unit");
+            assert_eq!(versions[0]["runtime"]["node"], json!(node));
+            assert_eq!(
+                versions[0]["importFailureObserver"],
+                json!({"state":state,"reason":reason})
+            );
+            for row in &versions[1..] {
+                assert_eq!(
+                    row["importFailureObserver"],
+                    json!({"state":"inactive","reason":"runner"})
+                );
+            }
+        }
+        let diagnostics = captured.diagnostics(
+            &[
+                json!({"baseline":{"state":"not-run"},"coverage":{"report":{"node":"24.21.0"}}}),
+                json!({}),
+                json!({}),
+            ],
+            None,
+        );
+        assert_eq!(
+            diagnostics["runnerVersions"][0]["importFailureObserver"]["state"],
+            "active"
+        );
+        let diagnostics = captured.diagnostics(&vec![json!({}); 3], None);
+        assert_eq!(
+            diagnostics["runnerVersions"][0]["importFailureObserver"],
+            json!({"state":"inactive","reason":"node-version"})
+        );
     }
 
     #[test]

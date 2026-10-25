@@ -213,6 +213,13 @@ declarations and `package-lock.json` versions when present. Exact declarations
 are compared with
 the observed version; ranges are `not-comparable`, and missing receipts or
 manifests are `unavailable`. It never treats a declared range as a mismatch.
+Each setup row also includes `importFailureObserver` with `state` and `reason`.
+The Node adapter's runtime gate is `active` with a `null` reason for observed
+Node 24.20.0/24.21.0, or `inactive` with `node-version` for another or unavailable
+version. Jest and Vitest report `inactive` with `runner`. Readable output explains
+inactive entries. This does not widen the observer's verified runtime or loader
+configuration. The CLI proof compares the state with an actual import-crash
+verdict, including a synthetic unverified-version control.
 `result.diagnostics.concurrency.seshat` reports the configured mutation worker
 limit and its effective use. Each runner entry is labelled `test` or
 `coverage` and reports an effective worker limit only when the direct runner

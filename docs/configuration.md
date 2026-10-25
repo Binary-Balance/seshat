@@ -345,6 +345,13 @@ baseline and fresh coverage. All three commands collect fresh coverage.
 `mutate` needs statement coverage to skip unexecuted functions during extreme
 mutation; it still does not evaluate `maxCrap` thresholds.
 
+Tests must be deterministic. Each required baseline runs once; Seshat does not
+repeat baselines to detect test instability or rerun killed mutants to confirm
+their failures. A flaky test can kill a mutant by chance, changing the score
+between otherwise identical runs. Fix intermittent failures before interpreting
+mutation scores. A selected test run may fall back to the full command when its
+test identities do not match, but that check does not detect flakiness.
+
 `check` and `mutate` replace each eligible function body once before operator
 mutation. Functions explicitly returning `void`, using a `void` expression or
 without a return expression get an empty body; other functions get
@@ -654,6 +661,26 @@ default is the operating system's temporary directory. Handled Unix SIGINT and
 SIGTERM cancellation removes owned execution copies and stops owned child
 processes. Windows console cancellation is handled separately and reports
 `signal: 2`. A forced kill such as SIGKILL cannot perform cleanup.
+
+Budget scratch space as the total size of the configured `capture` inputs,
+including dependencies, multiplied by configured `workers`, which defaults to
+one, plus generated files. Every run needs the initial capture, even when no
+mutants run. For a completed run, actual copy counts can be estimated from the
+larger of `result.pseudoTesting.workersUsed` and `result.mutation.workersUsed`,
+with a minimum of one. The diagnostic `effectiveWorkers` field covers only the
+operator phase. The CLI does not currently expose the captured byte count.
+File sizes are a planning estimate, not a bound on physical storage or
+test-generated output.
+
+On Linux, `/tmp` may use tmpfs, which stores files in memory and may use swap.
+Copying a large dependency tree there can exhaust memory or the filesystem's
+size limit. Prefer a disk-backed scratch directory on the same filesystem as
+the project. Seshat uses Rust's [`io::copy`](https://doc.rust-lang.org/std/io/fn.copy.html),
+which can use Linux's [`copy_file_range`](https://man7.org/linux/man-pages/man2/copy_file_range.2.html).
+Compatible filesystems can share copy-on-write blocks, reducing copy time and
+physical space; do not assume that saving when budgeting space. On macOS,
+Seshat's current copy path copies file contents rather than requesting cloned
+files. The same-filesystem choice does not promise copy-on-write there.
 
 Process-exit polling during cleanup has one five-second budget per job, shared
 by retries and final cleanup. Further cancellation signals do not restart that
