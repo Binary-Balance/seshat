@@ -85,13 +85,41 @@ async function pair(name, config=base, switching=false) {
 const rows = report => ['pseudoTesting','mutation'].flatMap(key => report.result[key]?.outcomes ?? []);
 const choices = report => rows(report).flatMap(row => row.setups.map(setup => setup.selection)).filter(Boolean);
 const valid = ['normal','parallel','switching','module','hooks','concurrent','missing','filter','timeout','query','cleanup','assertion-cleanup',
-  'exclude','exclude-equals','unsupported','extra-coverage'];
+  'exclude','exclude-equals','unsupported','extra-coverage','job-deadline'];
 const requested = new Set((values.cases ?? valid.join(',')).split(','));
 assert.ok([...requested].every(name => valid.includes(name)), 'unknown proof case');
 
 for (const name of requested) {
   reset();
   const config = structuredClone(base);
+  if (name === 'job-deadline') {
+    reset({body:'export function decision(value: number): boolean { return value > 0; }\n',
+      test:"import {expect,test} from 'vitest';import {decision} from './target.ts';test('positive',()=>expect(decision(2)).toBe(true));\n",
+      coverageSources:['target.ts']});
+    config.source.include=['target.ts'];
+    config.mutationOperators=['comparison'];
+    const originalConfig = readFileSync(join(project,'vitest.config.mjs'),'utf8');
+    write('vitest.config.mjs', `import {basename} from 'node:path';
+if(process.argv.some(arg=>basename(arg)==='a.test.ts') && /-(extreme|mutant)-0-0$/.test(process.env.SESHAT_EXECUTION_ID??'')) {
+  while(true) {}
+}
+${originalConfig}`);
+    const full = await run(`${name}-full`, {...config,testSelection:false});
+    assert.equal(full.complete,true, 'the full command is a successful retry control');
+    const selected = await run(`${name}-selected`,config);
+    assert.equal(selected.complete,false, 'a full retry must not replace a job deadline');
+    assert.equal(selected.result.mutation.score,null);
+    for (const phase of ['pseudoTesting','mutation']) {
+      const measured = selected.result[phase], first = measured.outcomes[0];
+      assert.equal(measured.notRun,0, 'later mutants must still run');
+      assert.equal(first.verdict,'timed-out');
+      assert.equal(first.setups[0].timedOut,true);
+      assert.equal(first.setups[0].selection.mode,'selected');
+      assert.equal(first.setups[0].jobsAttempted,1, 'a deadline must not trigger a full retry');
+    }
+    assert.equal(selected.result.mutation.outcomes[1].verdict,'killed');
+    continue;
+  }
   let switching = false;
   if (name === 'parallel' || name === 'switching') config.workers = 2;
   if (name === 'switching') switching = true;
@@ -209,4 +237,4 @@ if (process.env.SESHAT_PROOF_OUTPUT) {
   const {runs,timings,...portable} = summary;
   writeFileSync(process.env.SESHAT_PROOF_OUTPUT,JSON.stringify(portable,null,2)+'\n');
 }
-console.log(`Whole-file selection: ${requested.size} matched cases; ${relative(repo,join(work,'result.json'))}`);
+console.log(`Whole-file selection: ${requested.size} cases; ${relative(repo,join(work,'result.json'))}`);

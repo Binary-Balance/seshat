@@ -1252,6 +1252,7 @@ impl CapturedProject {
             jobs += 1;
             if let selection::Selection::Files { files, .. } = &selections[index]
                 && observed.state != TestState::ExecutionError
+                && observed.details["timedOut"] == false
                 && observed.can_continue_mutation()
                 && !self.test_selection[index].as_ref().unwrap().verifies(
                     &self.directory.0,
@@ -2410,9 +2411,9 @@ mod tests {
     }
 
     #[test]
-    fn unresolved_receipts_allow_later_setups_and_mutants() {
+    fn unresolved_jobs_allow_later_setups_and_mutants() {
         for (switching, workers) in [(false, 1), (false, 2), (true, 1), (true, 2)] {
-            for fault in ["missing", "invalid", "replayed", "runner-error"] {
+            for fault in ["missing", "invalid", "replayed", "runner-error", "deadline"] {
                 let fixture = super::super::tests::Fixture::new();
                 let mut captured = fixture.capture().unwrap();
                 captured
@@ -2420,6 +2421,9 @@ mod tests {
                     .retain(|(path, _)| path == Path::new("src/calc.ts"));
                 captured.config.workers = workers;
                 let mut first = captured.config.setups[0].clone();
+                if fault == "deadline" {
+                    first.timeout_ms = 1000;
+                }
                 first.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
                 let receipt = r#"
                     const fs = require('fs'), path = process.env.SESHAT_RECEIPT;
@@ -2435,6 +2439,7 @@ mod tests {
                         r#"{receipt}
                     if (mutant) {{
                         if ('{fault}' === 'missing') process.exit(1);
+                        if ('{fault}' === 'deadline') {{ while (true) {{}} }}
                         if ('{fault}' === 'invalid') {{ fs.writeFileSync(path, '{{'); process.exit(1); }}
                         if ('{fault}' === 'replayed') report.executionId = 'old-execution';
                         if ('{fault}' === 'runner-error') report.errors = 1;
@@ -2467,15 +2472,21 @@ mod tests {
                 assert_eq!(mutation["completed"], 2, "{fault}: {result}");
                 assert_eq!(mutation["notRun"], 0);
                 assert_eq!(mutation["jobsAttempted"], 4);
-                assert_eq!(mutation["outcomes"][0]["verdict"], "execution-error");
-                assert_eq!(
-                    mutation["outcomes"][0]["setups"][0]["state"],
+                let unresolved = if fault == "deadline" {
+                    "timed-out"
+                } else {
                     "execution-error"
-                );
+                };
+                assert_eq!(mutation["outcomes"][0]["verdict"], unresolved);
+                assert_eq!(mutation["outcomes"][0]["setups"][0]["state"], unresolved);
                 assert_eq!(mutation["outcomes"][0]["setups"][1]["state"], "failed");
                 assert_eq!(mutation["outcomes"][1]["verdict"], "survived");
                 assert_eq!(
-                    mutation["diagnostics"]["unresolvedBreakdown"]["executionError"],
+                    mutation["diagnostics"]["unresolvedBreakdown"][if fault == "deadline" {
+                        "timedOut"
+                    } else {
+                        "executionError"
+                    }],
                     1
                 );
                 assert_eq!(mutation["complete"], false);
@@ -2488,11 +2499,20 @@ mod tests {
 
     #[test]
     fn cleanup_failure_stops_pending_setups_and_prepared_baselines() {
-        for (switching, worker_baseline) in [(false, false), (true, false), (true, true)] {
+        for (switching, worker_baseline, deadline) in [
+            (false, false, false),
+            (true, false, false),
+            (true, true, false),
+            (false, false, true),
+            (true, false, true),
+        ] {
             let fixture = super::super::tests::Fixture::new();
             let mut captured = fixture.capture().unwrap();
             captured.config.workers = if worker_baseline { 2 } else { 1 };
             let mut first = captured.config.setups[0].clone();
+            if deadline {
+                first.timeout_ms = 1000;
+            }
             first.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
             let receipt = r#"
                 const fs = require('fs'), path = process.env.SESHAT_RECEIPT;
@@ -2513,7 +2533,7 @@ mod tests {
                 "node".into(),
                 "-e".into(),
                 format!(
-                    "{receipt} if (id.includes({fault:?})) fs.mkdirSync(path + '.events-failure');"
+                    "{receipt} if (id.includes({fault:?})) {{ fs.mkdirSync(path + '.events-failure'); if ({deadline}) setInterval(() => {{}}, 1000); }}"
                 ),
             ];
             captured.config.setups = vec![first, second];
