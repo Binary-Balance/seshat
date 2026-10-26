@@ -440,6 +440,13 @@ fn readable(report: &Value) -> String {
         output.push_str(
             "Extreme mutations use source replacement; operator mutation scores are separate.\n",
         );
+        let counted_timeouts = pseudo["countedTimeouts"].as_u64().unwrap_or(0);
+        if counted_timeouts > 0 {
+            let _ = writeln!(
+                output,
+                "Extreme runner-reported timeouts counted as killed: {counted_timeouts}."
+            );
+        }
         for key in ["error", "restorationError"] {
             if let Some(error) = pseudo.get(key).filter(|value| !value.is_null()) {
                 let _ = writeln!(output, "Extreme mutation {key}: {error}");
@@ -450,8 +457,14 @@ fn readable(report: &Value) -> String {
             let _ = writeln!(
                 output,
                 "Unresolved extreme mutations: timed-out {} (runner-reported {}), execution-error {}, cancelled {}, not-run {}, unassessed {}",
-                breakdown["timedOut"],
-                breakdown["testTimedOut"],
+                breakdown["timedOut"]
+                    .as_u64()
+                    .unwrap_or(0)
+                    .saturating_sub(counted_timeouts),
+                breakdown["testTimedOut"]
+                    .as_u64()
+                    .unwrap_or(0)
+                    .saturating_sub(counted_timeouts),
                 breakdown["executionError"],
                 breakdown["cancelled"],
                 breakdown["notRun"],
@@ -459,7 +472,7 @@ fn readable(report: &Value) -> String {
             );
             if breakdown["timedOut"]
                 .as_u64()
-                .is_some_and(|count| count > 0)
+                .is_some_and(|count| count > counted_timeouts)
             {
                 output.push_str("Extreme mutation timeouts remain unresolved, so the overall mutation score is withheld.\n");
             }
@@ -634,6 +647,13 @@ fn readable(report: &Value) -> String {
             "Mutation: {} planned, {} killed, {} survived; score {score}",
             mutation["planned"], mutation["killed"], mutation["survived"]
         );
+        let counted_timeouts = mutation["countedTimeouts"].as_u64().unwrap_or(0);
+        if counted_timeouts > 0 {
+            let _ = writeln!(
+                output,
+                "Runner-reported timeouts counted as killed: {counted_timeouts}."
+            );
+        }
         for row in array(&mutation["perOperator"]) {
             let _ = writeln!(
                 output,
@@ -668,8 +688,14 @@ fn readable(report: &Value) -> String {
             let _ = writeln!(
                 output,
                 "Unresolved breakdown: timed-out {} (runner-reported {}), execution-error {}, cancelled {}, not-run {}, unassessed {}",
-                breakdown["timedOut"],
-                breakdown["testTimedOut"],
+                breakdown["timedOut"]
+                    .as_u64()
+                    .unwrap_or(0)
+                    .saturating_sub(counted_timeouts),
+                breakdown["testTimedOut"]
+                    .as_u64()
+                    .unwrap_or(0)
+                    .saturating_sub(counted_timeouts),
                 breakdown["executionError"],
                 breakdown["cancelled"],
                 breakdown["notRun"],
@@ -680,9 +706,10 @@ fn readable(report: &Value) -> String {
         let timed_out = array(&mutation["outcomes"])
             .iter()
             .filter(|outcome| {
-                array(&outcome["setups"])
-                    .iter()
-                    .any(|setup| setup["state"] == "timed-out" || setup["timedOut"] == true)
+                outcome["countedAsKilled"] != true
+                    && array(&outcome["setups"])
+                        .iter()
+                        .any(|setup| setup["state"] == "timed-out" || setup["timedOut"] == true)
             })
             .count();
         if timed_out > 0 {
@@ -694,17 +721,14 @@ fn readable(report: &Value) -> String {
                 })
             });
             if job_timed_out {
-                let _ = writeln!(
-                    output,
-                    "Mutation scheduling stopped with {timed_out} timed-out {noun}."
-                );
+                let _ = writeln!(output, "Timeouts affected {timed_out} {noun}.");
             } else {
                 let _ = writeln!(
                     output,
                     "Runner-reported test timeouts affected {timed_out} {noun}."
                 );
             }
-            output.push_str("Timeouts remain unresolved, so the overall mutation score is withheld. Results from work already in progress are retained.\n");
+            output.push_str("Timeouts remain unresolved, so the overall mutation score is withheld. Completed results are retained.\n");
             match mutation["notRun"].as_u64() {
                 Some(0) => output.push_str("No mutants were left unrun.\n"),
                 Some(1) => output.push_str("1 mutant was not run.\n"),
@@ -1372,30 +1396,61 @@ mod tests {
     }
 
     #[test]
+    fn counted_timeouts_can_pass_thresholds_without_claiming_a_withheld_score() {
+        for (score, limit, status) in [(100.0, 100.0, 0), (50.0, 80.0, 1)] {
+            let (report, code) = report(
+                Some("mutate"),
+                Value::Null,
+                json!({"complete":true,"pseudoTesting":{"complete":true,"countedTimeouts":1,"unresolved":0},
+                    "mutation":{"complete":true,"planned":if score == 100.0 {1} else {2},"killed":0,"survived":if score == 100.0 {0} else {1},"score":score,
+                    "countedTimeouts":1,"unresolved":0,"notRun":0,
+                    "diagnostics":{"unresolvedBreakdown":{"timedOut":1,"testTimedOut":1,"countedTimeouts":1,
+                        "executionError":0,"cancelled":0,"notRun":0,"unassessed":0}},
+                    "outcomes":[{"verdict":"timed-out","countedAsKilled":true,
+                        "setups":[{"state":"timed-out","testTimedOut":true,"timedOut":false}]}]}}),
+                1.0,
+                None,
+                Some(Thresholds {
+                    min_mutation_score: Some(limit),
+                    ..Thresholds::default()
+                }),
+            );
+            assert_eq!(code, status);
+            assert_eq!(report["quality"]["checks"][0]["actual"], score);
+            let rendered = readable(&report);
+            assert!(rendered.contains("Runner-reported timeouts counted as killed: 1."));
+            assert!(rendered.contains("Extreme runner-reported timeouts counted as killed: 1."));
+            assert!(rendered.contains("Unresolved breakdown: timed-out 0 (runner-reported 0)"));
+            assert!(!rendered.contains("score is withheld"));
+            assert!(!rendered.contains("scheduling stopped"));
+        }
+    }
+
+    #[test]
     fn mutation_timeouts_explain_withheld_scores_and_unrun_work() {
         for (states, not_run, expected_timeout, expected_unrun) in [
             (
                 vec![vec!["failed", "timed-out"]],
                 1,
-                "stopped with 1 timed-out mutant.",
+                "Timeouts affected 1 mutant.",
                 "1 mutant was not run.",
             ),
             (
                 vec![vec!["timed-out"], vec!["timed-out"]],
                 42,
-                "stopped with 2 timed-out mutants.",
+                "Timeouts affected 2 mutants.",
                 "42 mutants were not run.",
             ),
             (
                 vec![vec!["timed-out"], vec!["passed"]],
                 0,
-                "stopped with 1 timed-out mutant.",
+                "Timeouts affected 1 mutant.",
                 "No mutants were left unrun.",
             ),
             (
                 vec![vec!["timed-out", "execution-error"], vec!["cancelled"]],
                 1,
-                "stopped with 1 timed-out mutant.",
+                "Timeouts affected 1 mutant.",
                 "1 mutant was not run.",
             ),
             (vec![vec!["execution-error"]], 1, "", ""),
@@ -1420,15 +1475,16 @@ mod tests {
             assert_eq!(report["quality"]["state"], "incomplete");
             assert!(report["quality"]["checks"][0]["actual"].is_null());
             let rendered = readable(&report);
+            assert!(!rendered.contains("scheduling stopped"));
             assert!(rendered.contains("score withheld (incomplete)"));
             if expected_timeout.is_empty() {
-                assert!(!rendered.contains("Mutation scheduling stopped with"));
+                assert!(!rendered.contains("Timeouts affected"));
             } else {
                 assert!(rendered.contains(expected_timeout));
                 assert!(rendered.contains(
                     "Timeouts remain unresolved, so the overall mutation score is withheld."
                 ));
-                assert!(rendered.contains("Results from work already in progress are retained."));
+                assert!(rendered.contains("Completed results are retained."));
                 assert!(rendered.contains(expected_unrun));
             }
         }
@@ -1437,7 +1493,7 @@ mod tests {
                 "verdict":"execution-error","setups":[{"state":"execution-error","timedOut":true}]
             }]}
         }}));
-        assert!(mixed.contains("stopped with 1 timed-out mutant."));
+        assert!(mixed.contains("Timeouts affected 1 mutant."));
         assert!(mixed.contains("No mutants were left unrun."));
         let runner_timeout = readable(&json!({"timings":{"wallMs":1.0},"result":{
             "mutation":{"score":null,"notRun":0,"outcomes":[{
@@ -1445,7 +1501,7 @@ mod tests {
             }]}
         }}));
         assert!(runner_timeout.contains("Runner-reported test timeouts affected 1 mutant."));
-        assert!(!runner_timeout.contains("Mutation scheduling stopped"));
+        assert!(!runner_timeout.contains("scheduling stopped"));
         assert!(runner_timeout.contains("No mutants were left unrun."));
     }
 }

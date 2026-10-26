@@ -20,8 +20,7 @@ attempt remains `execution-error`, the run remains incomplete and the mutation
 score stays withheld.
 
 Cancellation, supervision/pipe failures and unsafe cleanup or
-source changes still stop later mutants. Test-selection retries and timeout
-scoring rules are unchanged. This resolves
+source changes still stop later mutants. This resolves
 [#168](https://github.com/Binary-Balance/seshat/issues/168).
 
 ## Continue after truncated test output
@@ -43,6 +42,20 @@ cleanup and captured-source integrity are confirmed. The mutant remains
 Original and worker baselines must still pass. Cancellation, supervision/pipe
 failures and unsafe cleanup still stop scheduling. This resolves
 [#213](https://github.com/Binary-Balance/seshat/issues/213).
+
+## Opt-in timeout scoring
+
+Set `"countTimeoutsAsKilled": true` to count clean, complete runner-reported
+mutant test timeouts as detected. The default remains `false`. Reports keep
+`timed-out` verdicts and timeout evidence, add `countedAsKilled` per outcome and
+report `countedTimeouts` separately from ordinary kills. Counted timeouts allow
+complete scores and threshold evaluation. The same policy marks qualifying
+extreme mutants as checked.
+
+Job deadlines, failed baselines, cancellation, receipt errors and unsafe cleanup
+never qualify. Scheduling is unchanged. Prefer tests that fail explicitly when
+awaited work never settles. Resolves
+[#169](https://github.com/Binary-Balance/seshat/issues/169).
 
 ## Document execution limits
 

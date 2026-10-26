@@ -61,9 +61,9 @@ A mutant under which the selected tests complete successfully.
 _Avoid_: proven equivalent mutant
 
 **Mutation score**:
-The percentage of resolved mutants killed in a complete run, calculated as
-`killed / (killed + survived) * 100`. It is not applicable when there are no
-mutants, and no final percentage is reported for an incomplete run.
+The percentage of detected mutants in a complete run, including eligible
+runner-reported timeouts when explicitly opted in. It is not applicable when
+there are no mutants, and no final percentage is reported for an incomplete run.
 _Avoid_: percentage of bugs found
 
 **Comparison mutant**:

@@ -521,13 +521,39 @@ preparation or restoration failures still stop later mutants.
 Other setups for the current mutant can still run. Failed cleanup and
 cancellation stop its remaining setups immediately.
 
-Both kinds of timeout remain unresolved. They do not prove that tests detected
-the mutation. The overall mutation score stays withheld, including when an
-extreme mutant times out and all operator mutants resolve. The terminal report
-shows runner-reported timeout and unrun counts; JSON retains the attempts,
-`complete: false` and `score: null`. A timeout exits `2`, and an incomplete
-mutation-score threshold cannot pass. See the
-[report fields](report-format.md#setup-jobs-and-evidence).
+### Count runner-reported timeouts as detected
+
+The top-level `"countTimeoutsAsKilled": true` setting opts in to counting clean
+runner-reported mutant test timeouts as detected. It defaults to `false`.
+Non-boolean values are rejected. Scheduling is unchanged.
+
+A timeout qualifies only with `testTimedOut: true`, `timedOut: false`, exit `1`,
+a complete receipt with valid non-negative integer `passed` and `failed` counts,
+zero receipt `errors`, and successful cleanup. Additional errors, including
+attributed Jest test-hook errors, disqualify it. Every configured setup must
+pass, fail or have a qualifying timeout. A job deadline, execution error,
+cancellation or missing setup keeps that mutant unresolved. Original and worker
+baselines must still pass.
+
+The same policy applies to extreme mutants. A qualifying extreme timeout marks
+a covered function as checked rather than pseudo-tested. Counted timeouts do
+not themselves make the run incomplete or return exit `2`, and a complete score
+can pass `minMutationScore`. The operator score is
+`(killed + countedTimeouts) / (killed + countedTimeouts + survived) × 100`.
+
+Reports retain `timed-out` verdicts, raw timeout counts and `testTimedOut`
+evidence. `countedTimeouts` reports detected timeouts separately from `killed`,
+and each outcome has `countedAsKilled`. The terminal report distinguishes
+counted and unresolved timeouts. See the
+[report fields](report-format.md#mutation-assessment).
+
+With the setting omitted or `false`, all timeouts remain unresolved, withhold
+the affected final score, return exit `2` and prevent a mutation-score threshold
+from passing. Job deadlines always remain unresolved regardless of this option.
+Prefer tests that fail explicitly when awaited work never settles, so a timeout
+is a diagnostic rather than the only evidence that behaviour changed.
+
+### Mutation strategies
 
 `check` and `mutate` use source replacement by default. Pass
 `--experimental-switching` to use the bounded helper-based switching experiment.

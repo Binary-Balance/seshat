@@ -270,6 +270,14 @@ impl CommandEvidence {
                 && self.details["cleanupError"].is_null())
     }
 
+    fn assessment_state(&self, count_timeouts_as_killed: bool) -> TestState {
+        if count_timeouts_as_killed && self.test_timed_out() && self.can_continue_mutation() {
+            TestState::CountedTimeout
+        } else {
+            self.state
+        }
+    }
+
     fn clear_job_artifacts(&mut self, receipt: &Path, observer: Option<&[PathBuf; 2]>) {
         // Unconfirmed process cleanup means a reporter may still need these files.
         if !self.details["cleanupError"].is_null() {
@@ -799,6 +807,8 @@ fn only_bounded_runner_timeouts_allow_more_mutants() {
         details: evidence.clone(),
     };
     assert!(outcome.can_continue_mutation());
+    assert_eq!(outcome.assessment_state(false), TestState::TimedOut);
+    assert_eq!(outcome.assessment_state(true), TestState::CountedTimeout);
     assert_eq!(outcome.into_json()["testTimedOut"], true);
     for (field, value) in [
         ("errors", json!(1)),
@@ -814,6 +824,11 @@ fn only_bounded_runner_timeouts_allow_more_mutants() {
             details: changed,
         };
         assert!(!outcome.can_continue_mutation(), "{field}");
+        assert_ne!(
+            outcome.assessment_state(true),
+            TestState::CountedTimeout,
+            "{field}"
+        );
     }
     for (field, value) in [
         ("timedOut", json!(true)),
@@ -821,6 +836,7 @@ fn only_bounded_runner_timeouts_allow_more_mutants() {
         ("exit", json!(2)),
         ("cancelled", json!(true)),
         ("pipeError", json!("read failed")),
+        ("error", json!("wait failed")),
         ("cleanupError", json!("job artifacts could not be removed")),
     ] {
         let mut changed = evidence.clone();
@@ -830,6 +846,11 @@ fn only_bounded_runner_timeouts_allow_more_mutants() {
             details: changed,
         };
         assert!(!outcome.can_continue_mutation(), "{field}");
+        assert_ne!(
+            outcome.assessment_state(true),
+            TestState::CountedTimeout,
+            "{field}"
+        );
     }
 }
 
