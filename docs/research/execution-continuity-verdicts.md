@@ -23,7 +23,8 @@ For every mutant and pseudo-test outcome in `summary.json`,
 `vitest-check.json` and `jest-expo-check.json`, the comparison required the
 same report position, ID, kind, path, offset, original text, replacement and
 verdict. `vitest-check.json` stores each run's result twice; each outcome is
-counted once.
+counted once. For each example it also required the same completeness, mutation
+score and job counts, and the 0.10.0 report's worker 1/2 parity check to pass.
 
 The other proof files in the same artifacts (`standalone.json`, `debian11.json`,
 `operators.json` and `shared-parallel.json`) also contain fault-injection
@@ -31,10 +32,13 @@ scenarios: `job-timeout`, `switch-job-timeout`, `missing-receipt-replace`,
 `missing-receipt-switch`, `receipt-error` and `timeout`. Their verdicts change by
 design. Mutants after the injected fault were `not-run` in 0.9.0 and now run
 ([#168](https://github.com/Binary-Balance/seshat/issues/168),
-[#213](https://github.com/Binary-Balance/seshat/issues/213)). Those proofs
-assert the new behaviour. Every other scenario in those files has unchanged
-outcomes on all five hosts. The table covers only the public examples. For each example it also required the same completeness, mutation
-score and job counts, and the 0.10.0 report's worker 1/2 parity check to pass.
+[#213](https://github.com/Binary-Balance/seshat/issues/213)). In the `timeout`
+scenario, mutant 1 also changes from `timed-out` to `killed`: the
+[#213 change](https://github.com/Binary-Balance/seshat/commit/6e9904ab704f192fe4b91b5f246f2e81b1a8ce46)
+made that fixture hang only mutant 0's `high` setup, so the proof can show
+later mutants resolving.
+Those proofs assert the new behaviour. Every other scenario in those files has
+unchanged outcomes on all five hosts. The table covers only the public examples.
 
 ## Result
 
