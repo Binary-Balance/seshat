@@ -2469,6 +2469,7 @@ mod tests {
                 assert_eq!(concurrency["state"], "not-requested");
                 assert!(concurrency["effectiveWorkers"].is_null());
             }
+            assert!(result["setups"][0]["mutantTimeoutMs"].is_null(), "{result}");
             fixture.assert_clean();
         }
     }
@@ -2713,6 +2714,77 @@ mod tests {
             }
             fixture.assert_clean();
         }
+    }
+
+    #[test]
+    fn unconfirmed_selection_retries_stop_at_the_mutant_limit() {
+        let fixture = super::super::tests::Fixture::new();
+        let mut captured = fixture.capture().unwrap();
+        captured
+            .sources
+            .retain(|(path, _)| path == Path::new("src/calc.ts"));
+        let root = captured.directory.0.clone();
+        fs::write(root.join("a.test.ts"), "").unwrap();
+        fs::create_dir(root.join("node_modules/vitest")).unwrap();
+        // A selected run reports an extra test, so Seshat retries with the
+        // full command, and that retry hangs.
+        fs::write(
+            root.join("node_modules/vitest/vitest.mjs"),
+            r#"
+            import {mkdirSync, readFileSync, writeFileSync} from 'node:fs';
+            import {dirname, resolve} from 'node:path';
+            const id = process.env.SESHAT_EXECUTION_ID, coverage = process.env.SESHAT_COVERAGE_REPORT;
+            if (id.endsWith('-full')) while (true) {}
+            const file = resolve('a.test.ts'), source = resolve('src/calc.ts');
+            const tests = [{file, id:'a'}];
+            if (process.argv.some(arg => arg.endsWith('a.test.ts'))) tests.push({file, id:'b'});
+            if (coverage) {
+                const text = readFileSync(source, 'utf8');
+                const start = text.indexOf('=>') + 3, end = text.indexOf(';', start);
+                mkdirSync(dirname(coverage), {recursive:true});
+                writeFileSync(coverage, JSON.stringify({[source]:{path:source, branchMap:{}, b:{},
+                    statementMap:{0:{start:{line:1,column:start},end:{line:1,column:end}}}, s:{0:1}}}));
+            }
+            writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({version:1, executionId:id,
+                runner:'vitest', vitest:'5.0.0', actual:{vitest:'5.0.0'}, node:process.versions.node,
+                complete:true, passed:tests.length, failed:0, errors:0, timeouts:0, testFiles:[file], tests,
+                fileCoverage:{version:1, complete:true,
+                    files:[{file, sources:[{path:source, static:false, hit:true}]}]}}));
+            "#,
+        )
+        .unwrap();
+        let setup = &mut captured.config.setups[0];
+        setup.runner = Runner::Vitest;
+        setup.timeout_ms = 20_000;
+        setup.mutant_timeout_factor = 1.0;
+        setup.mutant_timeout_min_ms = 1000;
+        setup.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
+        setup.test = vec![
+            "node".into(),
+            "node_modules/vitest/vitest.mjs".into(),
+            "run".into(),
+        ];
+        setup.coverage.command = [setup.test.clone(), vec!["--coverage".into()]].concat();
+        let result = captured.assess(AssessmentMode::Mutate, false).unwrap();
+        let limit = result["setups"][0]["mutantTimeoutMs"].as_u64().unwrap();
+        for phase in ["pseudoTesting", "mutation"] {
+            let outcomes = result[phase]["outcomes"].as_array().unwrap();
+            assert!(!outcomes.is_empty(), "{phase}: {result}");
+            for outcome in outcomes {
+                let job = &outcome["setups"][0];
+                assert_eq!(
+                    job["selection"]["reason"], "selection-not-confirmed",
+                    "{result}"
+                );
+                assert_eq!(job["timedOut"], true, "{phase}: {result}");
+                let ms = job["ms"].as_f64().unwrap();
+                assert!(
+                    ms >= limit as f64 && ms < 10_000.0,
+                    "{ms} ms, limit {limit}"
+                );
+            }
+        }
+        fixture.assert_clean();
     }
 
     #[test]

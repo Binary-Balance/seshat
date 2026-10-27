@@ -1032,8 +1032,12 @@ Parallel mutation workers are opt-in below.
   project-relative and must exist as a directory in the copy. Coverage report
   paths are relative to that directory and must differ between setups. Commands
   are arrays, not shell strings; no shell interpolation is supplied.
-- `timeoutMs` is a positive integer, default 30,000, applied separately to each
-  typecheck, baseline, coverage and mutant job, not the entire assessment.
+- `timeoutMs` is a positive integer, default 30,000, that caps each typecheck,
+  baseline, coverage and mutant job separately, not the entire assessment.
+  Mutant jobs can stop sooner, at a limit set by the optional
+  `mutantTimeoutFactor` (positive number, default 5) and `mutantTimeoutMinMs`
+  (positive integer, default 30,000). See
+  [mutant time limits](../../docs/configuration.md#mutant-time-limits).
 - Top-level `workers` is a positive integer, default `1`. It limits simultaneous
   mutant executions in `check`; it does not parallelise `collect` or the original
   typecheck/coverage jobs. See the parallel-worker instructions below.
