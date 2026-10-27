@@ -46,6 +46,12 @@ function reset({body=source, test=tests, extra='', isolated=true, coverageSource
     isolate:${isolated},include:['a.test.ts','b.test.ts'${extra}],coverage:{provider:'istanbul',
     include:${JSON.stringify(coverageSources)},reporter:['json'],reportsDirectory:'coverage'}}};\n`);
 }
+// Run the coverage command, then remove its file attribution from the receipt.
+const dropAttribution = `import {spawnSync} from 'node:child_process';import {readFileSync,writeFileSync} from 'node:fs';
+      const child=spawnSync(process.execPath,process.argv.slice(2),{stdio:'inherit'});
+      if(child.status===0){const receipt=JSON.parse(readFileSync(process.env.SESHAT_RECEIPT,'utf8'));
+        delete receipt.fileCoverage;writeFileSync(process.env.SESHAT_RECEIPT,JSON.stringify(receipt));}
+      process.exit(child.status??2);\n`;
 const runs = [];
 const comparisons = [];
 const normalize = value => JSON.parse(JSON.stringify(value).replaceAll(project, '<project>').replaceAll(work, '<work>'));
@@ -85,7 +91,7 @@ async function pair(name, config=base, switching=false) {
 const rows = report => ['pseudoTesting','mutation'].flatMap(key => report.result[key]?.outcomes ?? []);
 const choices = report => rows(report).flatMap(row => row.setups.map(setup => setup.selection)).filter(Boolean);
 const valid = ['normal','parallel','switching','module','hooks','concurrent','missing','filter','timeout','query','cleanup','assertion-cleanup',
-  'exclude','exclude-equals','unsupported','extra-coverage','job-deadline'];
+  'exclude','exclude-equals','unsupported','extra-coverage','job-deadline','setups'];
 const requested = new Set((values.cases ?? valid.join(',')).split(','));
 assert.ok([...requested].every(name => valid.includes(name)), 'unknown proof case');
 
@@ -133,11 +139,7 @@ ${originalConfig}`);
     config.setups[0].coverage.command = [...config.setups[0].test,'--coverage'];
   }
   if (name === 'missing') {
-    write('coverage-wrapper.mjs', `import {spawnSync} from 'node:child_process';import {readFileSync,writeFileSync} from 'node:fs';
-      const child=spawnSync(process.execPath,process.argv.slice(2),{stdio:'inherit'});
-      if(child.status===0){const receipt=JSON.parse(readFileSync(process.env.SESHAT_RECEIPT,'utf8'));
-        delete receipt.fileCoverage;writeFileSync(process.env.SESHAT_RECEIPT,JSON.stringify(receipt));}
-      process.exit(child.status??2);\n`);
+    write('coverage-wrapper.mjs', dropAttribution);
     config.capture.push('coverage-wrapper.mjs');
     config.setups[0].coverage.command = [nodeCommand,'coverage-wrapper.mjs',...args.slice(1),'--coverage'];
   }
@@ -168,6 +170,16 @@ ${originalConfig}`);
     reset({body:'export function decision(): boolean { return true; }\n',
       test:"import {test} from 'vitest';import {decision} from './target.ts';test('bounded timeout',()=>decision()?Promise.resolve():new Promise(()=>{}),50);\n"});
     config.mutationOperators=['boolean'];
+  }
+  if (name === 'setups') {
+    // Only the unit setup imports target.ts; the other setup runs b.test.ts alone.
+    reset({body:source+'export const limit = 1 + 1;\n'});
+    write('vitest.other.config.mjs', `import config from './vitest.config.mjs';
+export default {test:{...config.test,include:['b.test.ts'],coverage:{...config.test.coverage,reportsDirectory:'coverage-other'}}};\n`);
+    config.capture.push('vitest.other.config.mjs');
+    const test = args.map(arg => arg === 'vitest.config.mjs' ? 'vitest.other.config.mjs' : arg);
+    config.setups.push({...structuredClone(config.setups[0]), name:'other', test,
+      coverage:{command:[...test,'--coverage'], report:'coverage-other/coverage-final.json'}});
   }
   if (name === 'query') {
     write('b.test.ts', "import {expect,test} from 'vitest';import {decision} from './target.ts?variant';test('boundary via query',()=>expect(decision(0)).toBe(false));\n");
@@ -214,6 +226,34 @@ ${originalConfig}`);
     assert.ok(rows(result.selected).some(row => row.path === 'target.ts' && row.verdict === 'survived'));
     assert.ok(choices(result.selected).some(choice => choice.mode === 'no-coverage'), 'proved zero coverage should skip jobs');
     assert.ok(result.selected.result.mutation.jobsAttempted < result.full.result.mutation.jobsAttempted);
+  }
+  if (name === 'setups') {
+    assert.deepEqual(result.selected.result.setups[1].selection, {state:'available'});
+    const jobs = row => row.setups.map(setup => [setup.selection.mode, setup.jobsAttempted]);
+    const moduleLevel = targetRows.filter(row => row.setups[0].selection.reason === 'module-level-code');
+    assert.ok(moduleLevel.length > 0 && moduleLevel.length < targetRows.length, 'fixture needs both mutant kinds');
+    for (const row of targetRows) {
+      if (moduleLevel.includes(row)) {
+        assert.deepEqual(jobs(row), [['full',1],['full',1]], 'module-level mutants run every setup');
+      } else {
+        assert.deepEqual(jobs(row), [['selected',1],['no-coverage',0]], 'zero coverage skips only that setup');
+        assert.equal(row.setups[1].state, 'no-coverage');
+      }
+    }
+    // Incomplete attribution in the other setup must keep its full command.
+    write('coverage-wrapper.mjs', dropAttribution);
+    const unattributed = structuredClone(config);
+    unattributed.capture.push('coverage-wrapper.mjs');
+    unattributed.setups[1].coverage.command = [nodeCommand,'coverage-wrapper.mjs',...unattributed.setups[1].test.slice(1),'--coverage'];
+    const report = await run(`${name}-unattributed`, unattributed);
+    assert.deepEqual(outcomes(report), outcomes(result.full), `${name}: changed verdicts without attribution`);
+    assert.deepEqual(report.result.setups[1].selection, {state:'unavailable',reason:'attribution-unavailable'});
+    for (const row of rows(report)) assert.deepEqual(jobs(row)[1], ['full',1]);
+    assert.ok(report.result.pseudoTesting.outcomes.length > 0, 'extreme mutants must run');
+    // uncovered.ts puts the zero-coverage setup first.
+    const zeroFirst = rows(report).filter(row => row.path === 'uncovered.ts');
+    assert.ok(zeroFirst.length > 0, 'fixture needs a zero-coverage first setup');
+    for (const row of zeroFirst) assert.deepEqual(jobs(row), [['no-coverage',0],['full',1]]);
   }
   if (name === 'timeout') assert.ok(targetRows.some(row => row.verdict === 'timed-out'));
   if (name === 'cleanup' || name === 'assertion-cleanup') {

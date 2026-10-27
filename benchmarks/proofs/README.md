@@ -80,6 +80,11 @@ The `exclude` and `exclude-equals` cases retain both forms of Vitest's exclusion
 option while preventing a failing, substring-matched database test from running.
 The `unsupported` and `extra-coverage` cases check setup-level JSON fallback
 reasons and the single human notice, including the rejected command option.
+The `setups` case adds a second setup that never imports the mutated source. That
+setup skips each function-body mutant's job, so one job runs per mutant.
+Module-level mutants still run both setups. Removing the second setup's file
+attribution restores its full command for extreme and operator mutants, while
+the first setup still skips mutants in a source it never executes.
 
 ## CLI
 

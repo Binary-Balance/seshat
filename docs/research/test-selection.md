@@ -15,8 +15,8 @@ use full commands. Full original, worker and inactive switching baselines remain
 
 Per-file runtime evidence may omit an unimported source. Rust resolves that
 omission against complete, source-mapped Istanbul evidence before using it.
-Only complete zero statement coverage across every setup permits skipping an
-operator mutant. An omitted source or missing receipt alone never proves zero.
+A setup skips a mutant's job only when its complete statement coverage of that
+source is zero. An omitted source or missing receipt alone never proves zero.
 
 Selected commands must report the same test identities, including duplicate
 names, that the baseline recorded for those files. A completed run with different

@@ -480,8 +480,9 @@ test run executed a different workload, it reruns the full command and retains
 the first attempt. Empty selected runs and infrastructure failures never become
 passing evidence.
 
-An operator mutant can skip execution only when all setups prove complete,
-reliable zero coverage of its source. It is reported as survived without coverage.
+A setup skips a mutant's job only when it proves complete, reliable zero
+coverage of the mutant's source. That setup counts as passed. A mutant skipped
+by every setup is reported as survived without coverage.
 Unknown coverage cannot justify skipping. The existing zero-coverage skip rule
 for extreme mutations remains in effect.
 

@@ -80,7 +80,7 @@ jobs:
       - name: Verify whole-file selection
         run: |
           node --test benchmarks/proofs/vitest-file-coverage.test.mjs
-          node benchmarks/proofs/test-selection.mjs --cli crates/seshat/target/debug/seshat --cases normal,query,cleanup,assertion-cleanup,exclude,exclude-equals,unsupported,extra-coverage,job-deadline
+          node benchmarks/proofs/test-selection.mjs --cli crates/seshat/target/debug/seshat --cases normal,query,cleanup,assertion-cleanup,exclude,exclude-equals,unsupported,extra-coverage,job-deadline,setups
       - name: Verify unresolved crash continuation
         env:
           SESHAT_PROOF_OUTPUT: work/x64/crash-continuation.json

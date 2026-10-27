@@ -1175,6 +1175,7 @@ impl CapturedProject {
                 Err(fallback) => selection::Selection::Full(fallback.reason.clone()),
             })
             .collect();
+        // With no job to run, skip writing and restoring the mutant source.
         if !selections.is_empty()
             && selections
                 .iter()
@@ -1232,6 +1233,19 @@ impl CapturedProject {
         let mut jobs = 0;
         let mut can_continue = true;
         for (index, setup) in self.config.setups.iter().enumerate() {
+            let args = match &selections[index] {
+                selection::Selection::Files { command, .. } => command,
+                selection::Selection::Full(_) => &setup.test,
+                // This setup's tests executed nothing in the source, so the mutant cannot
+                // change their result. Other setups' coverage does not alter that.
+                selection::Selection::NoCoverage => {
+                    row["setups"][index]["state"] = json!("no-coverage");
+                    row["setups"][index]["jobsAttempted"] = json!(0);
+                    row["setups"][index]["selection"] = selections[index].json();
+                    states.push(TestState::Passed);
+                    continue;
+                }
+            };
             if stopped.load(Ordering::Relaxed) || cancellation_signal() != 0 {
                 break;
             }
@@ -1246,15 +1260,6 @@ impl CapturedProject {
                 row["id"]
             );
             let mut selection = selections[index].json();
-            let args = match &selections[index] {
-                selection::Selection::Files { command, .. } => command,
-                selection::Selection::NoCoverage => {
-                    selection =
-                        selection::Selection::Full("other-setup-needs-execution".into()).json();
-                    &setup.test
-                }
-                selection::Selection::Full(_) => &setup.test,
-            };
             let jobs_before = jobs;
             let mut observed = self
                 .run_job(setup, args, evidence, &id, JobKind::Test)
@@ -2242,6 +2247,45 @@ mod tests {
             .unwrap();
         assert_eq!(result.state, TestState::Passed, "{}", result.details);
         drop(evidence);
+        drop(captured);
+        fixture.assert_clean();
+    }
+
+    #[test]
+    fn zero_coverage_setup_resolves_before_a_stop() {
+        let fixture = super::super::tests::Fixture::new();
+        let mut captured = fixture.capture().unwrap();
+        captured
+            .sources
+            .retain(|(path, _)| path == Path::new("src/calc.ts"));
+        let mut second = captured.config.setups[0].clone();
+        second.name = "second".into();
+        captured.config.setups.push(second);
+        captured.test_selection = vec![
+            Ok(selection::SetupEvidence::unexecuted(1)),
+            Err("disabled".into()),
+        ];
+        let (path, source) = &captured.sources[0];
+        let analysis = Analysis::inspect(&stable_path(path), source).unwrap();
+        let operator = &analysis.operators[0];
+        let row = json!({"id":0,"kind":operator.kind,"offset":operator.offset,
+            "setups":[{"name":"unit","state":"not-run"},{"name":"second","state":"not-run"}]});
+        // A stop before the second setup's job must keep the first setup's verified skip.
+        let result = captured.run_mutant(
+            &analysis,
+            0,
+            operator.first_id,
+            Path::new("receipts"),
+            row,
+            false,
+            &AtomicBool::new(true),
+        );
+        assert_eq!(result.states, [TestState::Passed]);
+        assert_eq!(result.jobs, 0);
+        assert_eq!(result.row["setups"][0]["state"], "no-coverage");
+        assert_eq!(result.row["setups"][0]["jobsAttempted"], 0);
+        assert_eq!(result.row["setups"][1]["state"], "not-run");
+        assert!(result.restoration_error.is_none());
         drop(captured);
         fixture.assert_clean();
     }
