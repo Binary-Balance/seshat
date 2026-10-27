@@ -163,6 +163,11 @@ export function view(value: any) { const object = { value }; class Child extends
   assert.equal(excluded.state, 'not-in-program');
   assert.equal(excluded.locations, null);
   assert.deepEqual(inferred.inferredAny.sources[3].locations.map(({ start, end }) => view.slice(start, end)), ['value', 'base', 'Component']);
+  // Seshat skips tsc only when this program checked cleanly and tsc could not emit.
+  assert.equal(inferred.typecheck, 'passed');
+  const emitting = inspect(['-p', '.', '--noEmit', 'false', '--outDir', 'out'], root, compiler, selected);
+  assert.equal(emitting.inferredAny.state, 'known', emitting.inferredAny.error);
+  assert.equal(emitting.typecheck, undefined);
 
   write('subject.ts', 'export function broken() { return missing.value(); }');
   const errors = inspect(['-p', '.'], root, compiler, selected);
@@ -170,6 +175,7 @@ export function view(value: any) { const object = { value }; class Child extends
   assert.equal(errors.inferredAny.state, 'unknown');
   assert.equal(errors.inferredAny.sources, null);
   assert.match(errors.inferredAny.error, /missing/);
+  assert.equal(errors.typecheck, undefined);
   write('subject.ts', '// @ts-ignore\nexport const broken = missing.value();');
   const suppressed = inspect(['-p', '.'], root, compiler, selected);
   assert.equal(suppressed.inferredAny.state, 'unknown');

@@ -141,7 +141,8 @@ async function check(name,workers,mode='normal',signal,attempt=1){
       }],problems:[],typeSafety:{unowned:{explicitAny:0,typeAssertions:0,doubleAssertions:0,nonNullAssertions:0,tsIgnore:0,tsExpectError:0,tsNocheck:0},suppressions:[],inferredAny}}}]);
       const count=Math.min(workers??1,4);
       assert.equal(result.mutation.workersUsed,count);assert.equal(result.mutation.workerBaselineJobs,(count-1)*2);
-      assert.equal(result.jobsAttempted,8+2+8+(count-1)*2);
+      // Two compiler helpers replace tsc, leaving two baselines and two coverage runs.
+      assert.equal(result.jobsAttempted,8+2+6+(count-1)*2);
       let active=0,peak=0;const activeRoots=new Set();
       for(const event of observed.sort((a,b)=>a.time-b.time||(a.kind==='end'?-1:1))){
         if(event.kind==='start'){assert.ok(!activeRoots.has(event.cwd),'workers shared writable files');activeRoots.add(event.cwd);peak=Math.max(peak,++active);}

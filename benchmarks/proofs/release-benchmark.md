@@ -32,10 +32,12 @@ tuple is `[complexity, covered, total, crap]`. The exact mutants are:
 
 The expected test counts are Node 1, Vitest 3 and Jest/Expo 3. Each result is
 complete with zero unresolved or not-run mutants. Expected `jobsAttempted` is
-Node 8/9, Vitest 12/13 and Jest/Expo 11/12 for workers 1/2 respectively,
-including the compiler strictness job and extreme mutation; both phases share
-one worker baseline per copy. Candidates predating extreme mutation also predate
-compiler strictness and retain the historical counts of 5/6, 7/8 and 7/8. The
+Node 7/8, Vitest 11/12 and Jest/Expo 10/11 for workers 1/2 respectively,
+including the compiler strictness job and extreme mutation. Its passing check
+replaces the separate `tsc` job, and both phases share one worker baseline per
+copy. Candidates that still run `tsc` retain 8/9, 12/13 and 11/12. Candidates
+predating extreme mutation also predate compiler strictness and retain the
+historical counts of 5/6, 7/8 and 7/8. The
 worker count and this job count are the intentional differences removed from
 the cross-worker parity hash.
 

@@ -257,7 +257,7 @@ function assertNormal(result, workers, sourcePath = 'src/status.tsx') {
     {state: 'inactive', reason: 'runner'});
   assert.equal(result.complete, true, JSON.stringify(result));
   const setup = result.setups[0];
-  assert.equal(setup.typecheck.state, 'passed');
+  assert.deepEqual(setup.typecheck, {state: 'passed', reusedFrom: 'compilerStrictness'});
   assert.equal(setup.baseline.state, 'passed');
   assert.equal(setup.baseline.report.passed, 3);
   assert.equal(setup.baseline.report.failed, 0);
@@ -290,7 +290,8 @@ function assertNormal(result, workers, sourcePath = 'src/status.tsx') {
   assert.equal(result.pseudoTesting.checked, 3);
   // Both mutation phases share the worker copies, so each worker baseline runs once.
   assert.equal(result.pseudoTesting.workerBaselineJobs, 0);
-  assert.equal(result.jobsAttempted, 11 + (workers - 1));
+  // The compiler findings helper stands in for the separate tsc job.
+  assert.equal(result.jobsAttempted, 10 + (workers - 1));
 }
 
 function assertControl(result, expected) {
