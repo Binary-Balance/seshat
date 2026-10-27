@@ -110,8 +110,9 @@ for (const workers of [1, 2]) {
   assert.equal(switching[workers].mutation.preparedBaselineJobs, 1);
   assert.equal(switching[workers].mutation.preparedBaselines[0].state, 'passed');
   assert.equal(switching[workers].mutation.workersUsed, workers);
-  assert.equal(switching[workers].mutation.workerBaselineJobs, workers - 1);
-  assert.equal(switching[workers].mutation.workerBaselines.length, workers - 1);
+  // Each worker runs its original baseline before the extreme phase and its prepared baseline after it.
+  assert.equal(switching[workers].mutation.workerBaselineJobs, 2 * (workers - 1));
+  assert.equal(switching[workers].mutation.workerBaselines.length, 2 * (workers - 1));
   assert.ok(switching[workers].mutation.workerBaselines.every(({state}) => state === 'passed'));
   assert.deepEqual(switching[workers].mutation.outcomes.map(({path, localId}) => [path, localId]), [
     ['src/first.ts', 0], ['src/first.ts', 1], ['src/second.ts', 0], ['src/second.ts', 1],

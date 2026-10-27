@@ -413,8 +413,9 @@ function makeJestFixture() {
 
 function expectedJobs(fixture, workers, strategy = 'replace', withExtreme = false, withStrictness = false) {
   const functions = Object.values(fixture.expected.sourceMetrics).flat().length;
-  const extremeJobs = withExtreme ? functions + Math.min(workers, functions) - 1 : 0;
-  return 3 + fixture.expected.mutants.length + (workers - 1) + (strategy === 'switch' ? 1 : 0) + extremeJobs + Number(withStrictness);
+  // Both phases share the worker baselines. Switching adds a prepared baseline per copy.
+  const extremeJobs = withExtreme ? functions : 0;
+  return 3 + fixture.expected.mutants.length + (workers - 1) + (strategy === 'switch' ? workers : 0) + extremeJobs + Number(withStrictness);
 }
 
 function reportResult(report) {
@@ -572,8 +573,9 @@ function assertExpected(fixture, result, workers, strategy = 'replace', includeS
   assert.equal(result.mutation.score, expected.score);
   assert.equal(result.mutation.workersRequested, workers);
   assert.equal(result.mutation.workersUsed, workers);
-  assert.equal(result.mutation.workerBaselineJobs, workers - 1);
-  assert.equal(result.mutation.workerBaselines.length, workers - 1);
+  const workerBaselines = (workers - 1) * (strategy === 'switch' ? 2 : 1);
+  assert.equal(result.mutation.workerBaselineJobs, workerBaselines);
+  assert.equal(result.mutation.workerBaselines.length, workerBaselines);
   assert.ok(result.mutation.workerBaselines.every(setup => setup.state === 'passed'));
   assert.equal(result.mutation.completed, expected.mutants.length);
   assert.equal(result.mutation.notRun, 0);
@@ -610,7 +612,7 @@ function assertExpected(fixture, result, workers, strategy = 'replace', includeS
       assert.equal(result.mutation.preparedBaselines[0].report.passed, expected.tests);
       assert.ok(Number.isFinite(result.mutation.switchPreparationMs));
       assert.ok(Number.isFinite(result.mutation.preparedBaselineMs));
-      assert.ok(result.mutation.workerBaselines.every(row => row.phase === 'prepared-baseline'));
+      assert.equal(result.mutation.workerBaselines.filter(row => row.phase === 'prepared-baseline').length, workers - 1);
     } else {
       assert.equal(result.mutation.preparedBaselineJobs ?? 0, 0);
       assert.equal(result.mutation.preparedBaselines?.length ?? 0, 0);
@@ -1008,17 +1010,24 @@ function selfCheckSwitchingReport(workers, strategy = 'replace') {
     jobsAttempted: fixture.expected.mutants.length,
     workersRequested: workers,
     workersUsed: workers,
-    workerBaselineJobs: workers - 1,
+    workerBaselineJobs: (workers - 1) * (strategy === 'switch' ? 2 : 1),
     completed: fixture.expected.mutants.length,
     notRun: 0,
     unresolved: 0,
     error: null,
     restorationError: null,
-    workerBaselines: Array.from({length: workers - 1}, (_, index) => ({
-      state: 'passed',
-      report: receiptReport(`worker-baseline-${index + 1}`),
-      ...(strategy === 'switch' ? {phase: 'prepared-baseline', worker: index + 1} : {}),
-    })),
+    workerBaselines: [
+      ...Array.from({length: workers - 1}, (_, index) => ({
+        state: 'passed',
+        report: receiptReport(`worker-baseline-${index + 1}`),
+      })),
+      ...(strategy === 'switch' ? Array.from({length: workers - 1}, (_, index) => ({
+        state: 'passed',
+        report: receiptReport(`worker-prepared-baseline-${index + 1}`),
+        phase: 'prepared-baseline',
+        worker: index + 1,
+      })) : []),
+    ],
     outcomes: fixture.expected.mutants.map(item => ({
       ...item,
       executionMs: 1,
@@ -1122,7 +1131,7 @@ function runSwitchingSelfCheck() {
   wrongPreparedCount.result.mutation.preparedBaselineJobs = 0;
   assert.throws(() => assertExpected(fixture, wrongPreparedCount.result, 1, 'switch', true));
   const wrongWorkerPhase = structuredClone(reports[2]);
-  wrongWorkerPhase.result.mutation.workerBaselines[0].phase = 'original-baseline';
+  wrongWorkerPhase.result.mutation.workerBaselines.at(-1).phase = 'original-baseline';
   assert.throws(() => assertExpected(fixture, wrongWorkerPhase.result, 2, 'switch', true));
   const wrongParity = structuredClone(records);
   wrongParity[0].report.result.sources[0].result.functions[0].crap = Object.values(fixture.expected.sourceMetrics)[0][0][3] + 1;

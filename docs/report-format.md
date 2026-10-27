@@ -85,8 +85,10 @@ Failed or cancelled attempted phases keep their elapsed time. The per-setup
 `timings` object has `typecheckMs`, `baselineMs` and `coverageMs` with the same
 rule. The aggregate original-check values sum the measured setup phases.
 
-`mutation.executionMs` includes mutation preparation, scheduling and cleanup of
-additional worker copies. `mutation.mutationWallMs` covers the scheduler and
+`mutation.executionMs` includes switching preparation, scheduling and cleanup of
+additional worker copies. Those copies and their baselines are prepared once,
+before the extreme phase, so that preparation is outside both phases'
+`executionMs`. `mutation.mutationWallMs` covers the scheduler and
 worker join interval. `workerPreparationMs`, `workerCleanupMs` and per-job
 durations are nested or parallel intervals. They are measurements, not parts
 that can be blindly summed into wall time.
@@ -327,8 +329,8 @@ command text or free-form diagnostic nested under them remains evidence.
 | `unresolved` | `planned - killed - countedTimeouts - survived`, including incomplete attempts and unstarted work. |
 | `jobsAttempted` | Mutant test jobs only. Top-level `result.jobsAttempted` also includes original and worker baseline jobs. |
 | `workersRequested`, `workersUsed` | `workersRequested` is the configured Seshat worker limit. `workersUsed` is `min(workersRequested, planned)` when preparation succeeds and no cancellation was observed before scheduling, otherwise `0`. It is scheduler capacity, not observed worker activity, and is not reduced after scheduling starts for worker-start failure, cancellation or early stopping. |
-| `workerBaselineJobs`, `workerBaselines` | Additional worker baseline jobs and their evidence. |
-| `workerPreparationMs`, `mutationWallMs`, `workerCleanupMs` | Mutation preparation, scheduling and additional-worker cleanup timings. |
+| `workerBaselineJobs`, `workerBaselines` | Additional worker baseline jobs and their evidence. Both mutation phases share the additional workers, so each worker's baseline runs once, before the extreme phase, and is reported only here. With switching, each worker also runs a prepared baseline, marked `phase: "prepared-baseline"`. |
+| `workerPreparationMs`, `mutationWallMs`, `workerCleanupMs` | Mutation preparation, scheduling and additional-worker cleanup timings. Preparation includes the shared worker copies and baselines. |
 | `diagnostics` | Unresolved counts, throughput, cumulative worker time and up to five slow executions. |
 | `error`, `restorationError` | Nullable diagnostic strings for mutation or source-restoration failures. Either failure makes mutation incomplete and withholds its score. |
 
@@ -630,7 +632,11 @@ includes `--json` emits the argument-error JSON envelope with `command: null`.
 `result.pseudoTesting` reuses the mutation scheduler's execution fields,
 including `strategy`, `complete`, `planned`, `killed`, `countedTimeouts`,
 `survived`, `outcomes`, worker/baseline counts, timing and diagnostics. It has no
-`score`.
+`score`. Its additional workers are those of `result.mutation`, so their
+baselines, preparation and cleanup are reported there: here
+`workerBaselineJobs` is `0`, `workerBaselines` is empty and
+`workerPreparationMs` and `workerCleanupMs` cover no worker copies. A failed
+worker copy or baseline stops both phases.
 `pseudoTested` and `checked` count functions with true and false flags;
 `unknown` counts eligible functions whose flags remain null. Counts retain
 resolved evidence in incomplete runs. `complete` requires all extreme executions

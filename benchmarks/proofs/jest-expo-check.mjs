@@ -288,7 +288,9 @@ function assertNormal(result, workers, sourcePath = 'src/status.tsx') {
   assert.ok(result.mutation.workerBaselines.every(row => row.state === 'passed' && row.report.passed === 3));
   assert.equal(result.pseudoTesting.planned, 3);
   assert.equal(result.pseudoTesting.checked, 3);
-  assert.equal(result.jobsAttempted, 11 + 2 * (workers - 1));
+  // Both mutation phases share the worker copies, so each worker baseline runs once.
+  assert.equal(result.pseudoTesting.workerBaselineJobs, 0);
+  assert.equal(result.jobsAttempted, 11 + (workers - 1));
 }
 
 function assertControl(result, expected) {
