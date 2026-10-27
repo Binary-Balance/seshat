@@ -194,11 +194,20 @@ async function check(name, input, flags = []) {
   save();
   assert.equal(run.status,result.complete?0:2,run.stderr);
   assert.deepEqual(readdirSync(scratch),[],'Native session must clean up');
-  if (result.setups?.[0].coverage.state==='passed' && result.mutation?.workersUsed > 0) {
-    assert.equal(result.mutation.workersUsed,Math.min(workers,result.mutation.planned));
-    assert.equal(result.mutation.workerBaselineJobs,(result.mutation.workersUsed-1)*input.setups.length);
-    assert.ok(result.mutation.workerBaselines.every(b=>b.state==='passed'));
-    const receipts=[...result.mutation.workerBaselines,...result.mutation.outcomes.flatMap(m=>m.setups)].filter(s=>s.report).map(s=>s.report.executionId);
+  const phases=[result.pseudoTesting,result.mutation].filter(Boolean);
+  if (result.setups?.[0].coverage.state==='passed' && phases.some(phase=>phase.workersUsed > 0)) {
+    for (const phase of phases) if (phase.workersUsed > 0) assert.equal(phase.workersUsed,Math.min(workers,phase.planned));
+    // Both phases share copies made for the larger plan, and result.mutation reports their
+    // baselines once. Switching adds a prepared baseline on each copy the operator phase uses.
+    const copies=Math.min(workers,Math.max(...phases.map(phase=>phase.planned)))-1;
+    const prepared=flags.includes('--experimental-switching')?Math.max(result.mutation.workersUsed-1,0):0;
+    const rows=result.mutation.workerBaselines;
+    assert.equal(rows.filter(b=>b.phase===undefined).length,copies*input.setups.length);
+    assert.equal(rows.filter(b=>b.phase==='prepared-baseline').length,prepared*input.setups.length);
+    assert.equal(result.mutation.workerBaselineJobs,rows.length);
+    assert.equal(result.pseudoTesting?.workerBaselineJobs ?? 0,0);
+    assert.ok(rows.every(b=>b.state==='passed'));
+    const receipts=[...rows,...phases.flatMap(phase=>phase.outcomes.flatMap(m=>m.setups))].filter(s=>s.report).map(s=>s.report.executionId);
     assert.equal(new Set(receipts).size,receipts.length,'Workers reused a receipt identity');
   }
   for (const [name, source] of Object.entries(inputs)) {

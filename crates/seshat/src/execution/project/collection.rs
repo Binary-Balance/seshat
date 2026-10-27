@@ -1128,7 +1128,7 @@ impl CapturedProject {
         label: &str,
         worker: Option<usize>,
         progress: &Progress,
-    ) -> (Vec<Value>, bool, usize) {
+    ) -> (Vec<Value>, bool) {
         let mut rows = Vec::new();
         let mut ready = true;
         for (index, setup) in self.config.setups.iter().enumerate() {
@@ -1156,8 +1156,7 @@ impl CapturedProject {
                 break;
             }
         }
-        let jobs = rows.len();
-        (rows, ready, jobs)
+        (rows, ready)
     }
 
     fn run_mutant(
@@ -1502,7 +1501,7 @@ impl CapturedProject {
                         worker_ready = false;
                         break;
                     }
-                    let (rows, ready, _) = worker.run_prepared_baselines(
+                    let (rows, ready) = worker.run_prepared_baselines(
                         &receipts.0,
                         &format!("worker-{worker_id}-prepared"),
                         Some(worker_id),
@@ -1523,10 +1522,10 @@ impl CapturedProject {
                     worker_ready = false;
                 } else {
                     let prepared_baseline_started = Instant::now();
-                    let (rows, ready, jobs) =
+                    let (rows, ready) =
                         self.run_prepared_baselines(evidence, "primary", None, progress);
                     worker_ready &= ready;
-                    prepared_baseline_jobs = jobs;
+                    prepared_baseline_jobs = rows.len();
                     prepared_baselines = rows;
                     prepared_baseline_ms =
                         Some(prepared_baseline_started.elapsed().as_secs_f64() * 1000.0);
@@ -2605,13 +2604,17 @@ mod tests {
 
     #[test]
     fn cleanup_failure_stops_pending_setups_and_prepared_baselines() {
-        for (switching, worker_baseline, deadline) in [
-            (false, false, false),
-            (true, false, false),
-            (true, true, false),
-            (false, false, true),
-            (true, false, true),
+        // The original worker baseline runs before the extreme phase; the
+        // prepared one runs on the same copy before the operator phase.
+        for (switching, fault, deadline) in [
+            (false, "-mutant-", false),
+            (true, "-mutant-", false),
+            (false, "-worker-1-baseline-", false),
+            (true, "-worker-1-prepared-baseline-", false),
+            (false, "-mutant-", true),
+            (true, "-mutant-", true),
         ] {
+            let worker_baseline = fault != "-mutant-";
             let fixture = super::super::tests::Fixture::new();
             let mut captured = fixture.capture().unwrap();
             captured.config.workers = if worker_baseline { 2 } else { 1 };
@@ -2630,11 +2633,6 @@ mod tests {
             second.name = "second".into();
             second.coverage.report = "second-coverage.json".into();
             second.test = vec!["node".into(), "-e".into(), receipt.into()];
-            let fault = if worker_baseline {
-                "-worker-1-baseline-"
-            } else {
-                "-mutant-"
-            };
             first.test = vec![
                 "node".into(),
                 "-e".into(),
@@ -2654,15 +2652,21 @@ mod tests {
                 mutation["planned"].as_u64().unwrap()
             );
             if worker_baseline {
-                assert_eq!(mutation["workerBaselineJobs"], 1);
-                assert_eq!(mutation["preparedBaselineJobs"], 0);
+                // A prepared failure follows both setups' passing original baselines.
+                let failed = if switching { 2 } else { 0 };
+                assert_eq!(
+                    mutation["workerBaselineJobs"],
+                    failed + 1,
+                    "{fault}: {result}"
+                );
+                assert_eq!(mutation["preparedBaselineJobs"].as_u64().unwrap_or(0), 0);
                 assert_eq!(mutation["jobsAttempted"], 0);
-                assert!(mutation["workerBaselines"][0]["cleanupError"].is_string());
+                assert!(mutation["workerBaselines"][failed]["cleanupError"].is_string());
                 assert_eq!(mutation["outcomes"][0]["verdict"], "not-run");
             } else {
                 assert_eq!(
                     mutation["jobsAttempted"], 1,
-                    "switching={switching}, worker_baseline={worker_baseline}: {result}"
+                    "switching={switching}, deadline={deadline}: {result}"
                 );
                 assert!(mutation["outcomes"][0]["setups"][0]["cleanupError"].is_string());
                 assert_eq!(mutation["outcomes"][0]["setups"][1]["state"], "not-run");

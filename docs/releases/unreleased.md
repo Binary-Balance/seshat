@@ -17,10 +17,11 @@ run their commands. This resolves
 With `workers` above one, Seshat now copies the project and runs each worker's
 baselines once, before the extreme phase, and both mutation phases reuse those
 copies. Previously each phase made its own copies and baselines. Verdicts are
-unchanged; `jobsAttempted` no longer includes a second set of worker baselines.
-`result.mutation` reports the shared `workerBaselineJobs`, `workerBaselines`,
-`workerPreparationMs` and `workerCleanupMs`; `result.pseudoTesting` reports no
-worker baselines. A failed worker copy or baseline now stops both phases. With
-switching, each worker still runs a prepared baseline before the operator
-phase. This resolves
+unchanged. Without switching, `jobsAttempted` no longer includes a second set
+of worker baselines. `result.mutation` reports the shared `workerBaselineJobs`,
+`workerBaselines`, `workerPreparationMs` and `workerCleanupMs`;
+`result.pseudoTesting` reports no worker baselines. A failed worker copy or
+baseline now stops both phases. With switching, each worker still runs a
+prepared baseline before the operator phase, so switching saves the copies but
+not those baselines. This resolves
 [#221](https://github.com/Binary-Balance/seshat/issues/221).
