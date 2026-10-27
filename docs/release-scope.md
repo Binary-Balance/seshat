@@ -159,7 +159,9 @@ single-package project can use one entry; a mixed-runner project can declare
 several. Assess every mutant across all configured setups. Verified whole-file
 selection may reduce each mutant's test workload; unsupported or ambiguous
 setups retain the full command. A setup with proved zero coverage of a
-mutant's source skips that mutant's job. Baselines remain full runs.
+mutant's source may skip that mutant's job, but module-level mutants still run
+in every setup; see [mutation execution](configuration.md#mutation-execution).
+Baselines remain full runs.
 
 Combine statement hits when source and statement mappings agree. Combine branch
 hits for matching source outcomes independently of statement merging. Conflicting

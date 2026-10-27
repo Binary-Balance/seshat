@@ -290,6 +290,20 @@ impl SetupEvidence {
         })
     }
 
+    #[cfg(test)]
+    pub(super) fn unexecuted(sources: usize) -> Self {
+        let source = SourceEvidence {
+            files: Vec::new(),
+            static_hit: false,
+            zero: true,
+        };
+        Self {
+            command: Vec::new(),
+            tests: BTreeMap::new(),
+            sources: vec![source; sources],
+        }
+    }
+
     pub(super) fn select(&self, root: &Path, source: usize, runtime: bool) -> Selection {
         if !runtime {
             return Selection::Full("module-level-code".into());

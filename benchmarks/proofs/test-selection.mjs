@@ -248,7 +248,12 @@ export default {test:{...config.test,include:['b.test.ts'],coverage:{...config.t
     const report = await run(`${name}-unattributed`, unattributed);
     assert.deepEqual(outcomes(report), outcomes(result.full), `${name}: changed verdicts without attribution`);
     assert.deepEqual(report.result.setups[1].selection, {state:'unavailable',reason:'attribution-unavailable'});
-    for (const row of report.result.mutation.outcomes) assert.deepEqual(jobs(row)[1], ['full',1]);
+    for (const row of rows(report)) assert.deepEqual(jobs(row)[1], ['full',1]);
+    assert.ok(report.result.pseudoTesting.outcomes.length > 0, 'extreme mutants must run');
+    // uncovered.ts puts the zero-coverage setup first.
+    const zeroFirst = rows(report).filter(row => row.path === 'uncovered.ts');
+    assert.ok(zeroFirst.length > 0, 'fixture needs a zero-coverage first setup');
+    for (const row of zeroFirst) assert.deepEqual(jobs(row), [['no-coverage',0],['full',1]]);
   }
   if (name === 'timeout') assert.ok(targetRows.some(row => row.verdict === 'timed-out'));
   if (name === 'cleanup' || name === 'assertion-cleanup') {
