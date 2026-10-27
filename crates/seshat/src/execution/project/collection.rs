@@ -1232,6 +1232,19 @@ impl CapturedProject {
         let mut jobs = 0;
         let mut can_continue = true;
         for (index, setup) in self.config.setups.iter().enumerate() {
+            let args = match &selections[index] {
+                selection::Selection::Files { command, .. } => command,
+                selection::Selection::Full(_) => &setup.test,
+                // This setup's tests executed nothing in the source, so the mutant cannot
+                // change their result. Other setups' coverage does not alter that.
+                selection::Selection::NoCoverage => {
+                    row["setups"][index]["state"] = json!("no-coverage");
+                    row["setups"][index]["jobsAttempted"] = json!(0);
+                    row["setups"][index]["selection"] = selections[index].json();
+                    states.push(TestState::Passed);
+                    continue;
+                }
+            };
             if stopped.load(Ordering::Relaxed) || cancellation_signal() != 0 {
                 break;
             }
@@ -1246,15 +1259,6 @@ impl CapturedProject {
                 row["id"]
             );
             let mut selection = selections[index].json();
-            let args = match &selections[index] {
-                selection::Selection::Files { command, .. } => command,
-                selection::Selection::NoCoverage => {
-                    selection =
-                        selection::Selection::Full("other-setup-needs-execution".into()).json();
-                    &setup.test
-                }
-                selection::Selection::Full(_) => &setup.test,
-            };
             let jobs_before = jobs;
             let mut observed = self
                 .run_job(setup, args, evidence, &id, JobKind::Test)

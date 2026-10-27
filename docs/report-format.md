@@ -213,7 +213,7 @@ Job `state` values are:
 | `cancelled` | Cancellation stopped the command. |
 | `not-run` | The requested job was not reached. `crap` also uses this state for an intentionally omitted optional typecheck; a complete run keeps `typecheck.state: "not-run"` and `timings.typecheckMs: null` in that setup. |
 | `not-requested` | The command does not request this job. Retained for compatibility; all current public commands request coverage. |
-| `no-coverage` | Mutant setup only. Complete coverage across every setup proved that the operator mutant's source was unexecuted, so no test command was needed. |
+| `no-coverage` | Mutant setup only. That setup's complete coverage proved the mutant's source was unexecuted, so it needed no test command. |
 
 An attempted job can include `exit`, `ms`, `timedOut`, `cancelled`,
 `outputTruncated`, `pipeError` and a runner `report`. Jobs stopped before they
@@ -381,9 +381,10 @@ the exact mutant. Module-level and module-load coverage use full commands.
 Setup `jobsAttempted` counts actual mutant job attempts, including a full rerun
 after an unconfirmed selection. A setup with proved zero source coverage has
 `state: "no-coverage"`, selection mode `no-coverage` and `jobsAttempted: 0`.
-Only unanimous, reliable zero-coverage evidence across all setups permits this
-skip. Such an operator mutant is survived without running a test job. It remains
-in the score denominator. Existing extreme-mutation zero-coverage skips remain
+Each setup decides from its own reliable zero-coverage evidence. A skipped setup
+counts as passed, and other setups still run their jobs. A mutant skipped by
+every setup is survived without running a test job. It remains in the score
+denominator. Existing extreme-mutation zero-coverage skips remain
 separate. Missing evidence never counts as zero coverage.
 
 Original baselines must all be `passed` before any mutant can be assessed. If
