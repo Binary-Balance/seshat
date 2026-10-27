@@ -658,7 +658,8 @@ same nullable `pseudoTested` flag as its function row.
 Extreme mutations always use `strategy: "replace"`, including with
 `--experimental-switching`. Operator mutants still use the requested strategy.
 The stable `result.mutation` counters, score, timings and diagnostics cover
-operator mutants only. The aggregate `result.jobsAttempted` and execution
+operator mutants only, apart from the shared worker fields described above. The
+aggregate `result.jobsAttempted` and execution
 time include both phases. `diagnostics.concurrency.seshat.effectiveWorkers`
 continues to describe the operator scheduler; each phase reports its own
 `workersUsed`. Safely cleaned-up extreme execution errors, job deadlines and eligible

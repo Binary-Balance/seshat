@@ -1657,8 +1657,9 @@ unresolved while later mutants run, as do safely terminated job deadlines;
 an assertion failure alone does not stop
 scheduling.
 
-With `--experimental-switching`, each additional copy receives every prepared
-source after the extreme phase and runs an inactive prepared baseline. The
+With `--experimental-switching`, each additional copy the operator phase uses
+receives every prepared source after the extreme phase and runs an inactive
+prepared baseline. The
 primary copy runs the same prepared baseline, and all of these rows remain
 separate from the original baselines and mutant jobs. A failed or incomplete
 prepared baseline prevents mutant execution and withholds the score.
@@ -1676,7 +1677,8 @@ The mutation JSON adds `workersRequested`, `workersUsed`, `workerBaselines`,
 `preparedBaselines`, `preparedBaselineJobs`, `switchPreparationMs` and
 `preparedBaselineMs`. Preparation covers additional copies, receipts and
 baseline jobs, made once before the extreme phase and reported only in the
-mutation JSON; mutation wall time covers the scheduler through joining workers,
+mutation JSON, plus any switching prepared baselines, which run after the
+extreme phase; mutation wall time covers the scheduler through joining workers,
 not that preparation or final cleanup. `mutation.executionMs` includes the
 scheduler, switching preparation and additional-worker cleanup, but not the
 shared preparation before the extreme phase. Per-job `ms` values overlap under
