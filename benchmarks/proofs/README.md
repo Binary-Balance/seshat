@@ -8,9 +8,10 @@ The earlier benchmark under `benchmarks/rust/` is unchanged.
 
 `node benchmarks/proofs/job-deadlines.mjs --cli PATH` verifies that real
 `node:test` hangs under extreme mutants reach the job deadline, remain
-unresolved and allow later extreme and operator mutants to finish. It checks
-serial and two-worker runs with replacement and experimental switching,
-retaining source integrity and empty scratch directories. Linux x64 package
+unresolved and allow later extreme and operator mutants to finish. Its
+`timeoutMs` of 3,000 caps the mutant limit. It checks serial and two-worker
+runs with replacement and experimental switching, retaining source integrity
+and empty scratch directories. Linux x64 package
 and Windows runtime CI run this proof.
 
 The `job-deadline` case in `test-selection.mjs` verifies that a deadline in a

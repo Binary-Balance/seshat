@@ -191,8 +191,15 @@ mutations. A complete mutation result does not make incomplete CRAP complete.
 
 ### Setup jobs and evidence
 
-Each `result.setups` row has `name`, `typecheck`, `baseline`, `coverage` and
-`timings`. Setup order follows configuration order.
+Each `result.setups` row has `name`, `typecheck`, `baseline`, `coverage`,
+`timings` and `mutantTimeoutMs`. Setup order follows configuration order.
+
+`mutantTimeoutMs` is the time limit, in milliseconds, that the setup's mutant
+jobs used in both mutation phases: `timeoutMs` or the lower limit derived from
+the slowest original or worker baseline. See
+[mutant time limits](configuration.md#mutant-time-limits). It is `null` when
+no mutant job ran for the setup. A mutant job that reaches it has
+`timedOut: true`, and the human report prints the limit next to that mutant.
 
 Setup-level `selection` records whether test-file selection is available after
 the original checks. Its `state` is `available`, `unavailable`, `not-run` when
@@ -210,7 +217,7 @@ Job `state` values are:
 | --- | --- |
 | `passed` | The command produced valid passing evidence. |
 | `failed` | The test runner produced a test failure. A test failure can kill a mutant only when every required setup resolves without infrastructure errors. |
-| `timed-out` | The configured deadline stopped the command, or the runner reported a test timeout. |
+| `timed-out` | The job deadline stopped the command, or the runner reported a test timeout. The deadline is `timeoutMs`, or `mutantTimeoutMs` for mutant jobs. |
 | `execution-error` | The command, receipt, coverage file, output pipe or other execution evidence was invalid or failed. |
 | `cancelled` | Cancellation stopped the command. |
 | `not-run` | The requested job was not reached. `crap` also uses this state for an intentionally omitted optional typecheck; a complete run keeps `typecheck.state: "not-run"` and `timings.typecheckMs: null` in that setup. |
