@@ -1631,8 +1631,10 @@ Set a top-level limit in the experimental `seshat.json`:
 ```
 
 The default remains one. The effective limit cannot exceed the planned mutant
-count; a no-mutant run creates no mutation workers. Each worker runs one mutant
-at a time and all of its setups sequentially, with fresh test processes. A free
+count; a no-mutant run creates no mutation workers. Additional copies are made
+once, before the extreme phase, for the larger of the extreme and operator
+plans, and both phases reuse them. Each worker runs one mutant at a time and
+all of its setups sequentially, with fresh test processes. A free
 worker takes the next planned mutant without waiting for slower workers. Results
 are returned in planned order, not completion order. Error/cancellation timing
 can change which later mutants started, but every planned row remains visible.
@@ -1655,11 +1657,12 @@ unresolved while later mutants run, as do safely terminated job deadlines;
 an assertion failure alone does not stop
 scheduling.
 
-With `--experimental-switching`, each additional copy receives every prepared
-source before its baseline. The primary copy runs the same inactive prepared
-baseline, and all of these rows remain separate from the original baselines and
-mutant jobs. A failed or incomplete prepared baseline prevents mutant execution
-and withholds the score.
+With `--experimental-switching`, each additional copy the operator phase uses
+receives every prepared source after the extreme phase and runs an inactive
+prepared baseline. The
+primary copy runs the same prepared baseline, and all of these rows remain
+separate from the original baselines and mutant jobs. A failed or incomplete
+prepared baseline prevents mutant execution and withholds the score.
 
 Parallelism is safe only when the tests isolate their external resources. Use
 temporary paths within each copy, dynamically allocated ports, and separate test
@@ -1673,10 +1676,13 @@ The mutation JSON adds `workersRequested`, `workersUsed`, `workerBaselines`,
 `workerBaselineJobs`, `workerPreparationMs` and `mutationWallMs`. Switching adds
 `preparedBaselines`, `preparedBaselineJobs`, `switchPreparationMs` and
 `preparedBaselineMs`. Preparation covers additional copies, receipts and
-baseline jobs; mutation wall time covers the scheduler through joining workers,
-not that preparation or final cleanup.
-`mutation.executionMs` includes both and additional-worker cleanup. Per-job `ms`
-values overlap under parallelism and must not be added to estimate wall time.
+baseline jobs, made once before the extreme phase and reported only in the
+mutation JSON, plus any switching prepared baselines, which run after the
+extreme phase; mutation wall time covers the scheduler through joining workers,
+not that preparation or final cleanup. `mutation.executionMs` includes the
+scheduler, switching preparation and additional-worker cleanup, but not the
+shared preparation before the extreme phase. Per-job `ms` values overlap under
+parallelism and must not be added to estimate wall time.
 Top-level `jobsAttempted` includes additional baselines; mutation `jobsAttempted`
 continues to count only mutant test jobs. Copy/baseline overhead can outweigh the
 saving on a small workload. Benchmark the complete command, not just its mutants.
