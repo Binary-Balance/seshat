@@ -1123,7 +1123,9 @@ This Linux proof supports **Node 24.20.0**, with its built-in runner,
 **Jest 29.7.0 / jest-expo 57.0.5 or 57.0.6**, or **Vitest 5** with Istanbul coverage.
 Unsupported versions in receipts prevent assessment. Each setup
 runs its baseline, then coverage, sequentially in the
-copy. A configured typecheck runs before the setup's baseline. After a failed job,
+copy. A configured typecheck runs before the setup's baseline, unless a direct
+`tsc` with `noEmit` was already checked by the compiler findings helper (see
+[configuration](../../docs/configuration.md)). After a failed job,
 later jobs remain `not-run`. Mutation execution and score thresholds are not part
 of `collect`; use the experimental `check` below for combined assessment.
 
