@@ -201,6 +201,11 @@ the slowest original or worker baseline. See
 no mutant job ran for the setup. A mutant job that reaches it has
 `timedOut: true`, and the human report prints the limit next to that mutant.
 
+`typecheck.reusedFrom: "compilerStrictness"` with `state: "passed"` means the
+compiler findings program had no errors and `noEmit` was set, so `tsc` did not
+run; see [test setups](configuration.md#test-setups). That typecheck adds
+nothing to `jobsAttempted`, and its `timings.typecheckMs` stays `null`.
+
 Setup-level `selection` records whether test-file selection is available after
 the original checks. Its `state` is `available`, `unavailable`, `not-run` when
 those checks did not reach the selection decision, or `not-requested` for

@@ -1808,11 +1808,15 @@ impl CapturedProject {
         let mut baselines = vec![TestState::NotRun; setups.len()];
         let mut reports = Vec::new();
         let mut inferred_sources = Vec::new();
+        let mut helper_typechecks = Vec::new();
         let mut commands_run = 0;
         for (index, setup) in self.config.setups.iter().enumerate() {
             progress.phase(format_args!("compiler findings {:?}", setup.name));
             let phase_started = Instant::now();
             let (mut strictness, attempted) = self.compiler_strictness(setup, &evidence.0, index);
+            let typechecked = strictness.as_object_mut().unwrap().remove("typecheck");
+            helper_typechecks
+                .push(strictness["state"] == "known" && typechecked == Some(json!("passed")));
             let mut inferred = strictness
                 .as_object_mut()
                 .unwrap()
@@ -1842,7 +1846,11 @@ impl CapturedProject {
             if !complete {
                 break;
             }
-            if let Some(args) = &setup.typecheck {
+            if helper_typechecks[index] {
+                // The compiler findings helper already ran every check this tsc command would.
+                setups[index]["typecheck"] =
+                    json!({"state":"passed","reusedFrom":"compilerStrictness"});
+            } else if let Some(args) = &setup.typecheck {
                 progress.phase(format_args!("typecheck {:?}", setup.name));
                 let phase_started = Instant::now();
                 let id = format!(

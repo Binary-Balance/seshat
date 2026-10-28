@@ -117,6 +117,9 @@ try {
       const program = ts.createProgram({ rootNames: fileNames, options, projectReferences, host });
       const errors = ts.getPreEmitDiagnostics(program).filter(diagnostic => diagnostic.category === ts.DiagnosticCategory.Error);
       if (errors.length) throw new Error(errors.map(diagnostic => ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')).join('\n'));
+      // tsc would repeat this check. Only stand in for it under noEmit, where tsc writes no
+      // JavaScript or declarations that tests might load.
+      if (options.noEmit === true) result.typecheck = 'passed';
       const checker = program.getTypeChecker();
       const sources = context.sources.map(filename => {
         const source = program.getSourceFile(path.resolve(context.root, filename));

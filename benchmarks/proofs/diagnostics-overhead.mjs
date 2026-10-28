@@ -411,11 +411,12 @@ function makeJestFixture() {
   };
 }
 
-function expectedJobs(fixture, workers, strategy = 'replace', withExtreme = false, withStrictness = false) {
+function expectedJobs(fixture, workers, strategy = 'replace', withExtreme = false, withStrictness = false, withTypecheck = true) {
   const functions = Object.values(fixture.expected.sourceMetrics).flat().length;
   // Both phases share the worker baselines. Switching adds a prepared baseline per copy.
   const extremeJobs = withExtreme ? functions : 0;
-  return 3 + fixture.expected.mutants.length + (workers - 1) + (strategy === 'switch' ? workers : 0) + extremeJobs + Number(withStrictness);
+  // A passing compiler findings check replaces the separate tsc job.
+  return Number(withTypecheck) + 2 + fixture.expected.mutants.length + (workers - 1) + (strategy === 'switch' ? workers : 0) + extremeJobs + Number(withStrictness);
 }
 
 function reportResult(report) {
@@ -535,7 +536,8 @@ function metricsFor(result) {
 function assertExpected(fixture, result, workers, strategy = 'replace', includeStrategy = switchingMode) {
   const {expected} = fixture;
   assert.equal(result.complete, true, `${fixture.id} report incomplete`);
-  assert.equal(result.jobsAttempted, expectedJobs(fixture, workers, strategy, Boolean(result.pseudoTesting), Boolean(result.setups?.[0]?.compilerStrictness?.job)));
+  assert.equal(result.jobsAttempted, expectedJobs(fixture, workers, strategy, Boolean(result.pseudoTesting),
+    Boolean(result.setups?.[0]?.compilerStrictness?.job), result.setups?.[0]?.typecheck?.reusedFrom !== 'compilerStrictness'));
   if (result.pseudoTesting) {
     const functions = Object.values(expected.sourceMetrics).flat().length;
     assert.equal(result.pseudoTesting.planned, functions);

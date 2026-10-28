@@ -46,7 +46,8 @@ function check(name, change = () => {}) {
 }
 const passed = check('complete');
 assert.equal(passed.complete, true, JSON.stringify(passed));
-assert.equal(passed.jobsAttempted, 22, 'two strictness helpers, six original jobs, four extreme jobs, ten comparison jobs');
+assert.equal(passed.jobsAttempted, 20, 'two strictness helpers, four original jobs, four extreme jobs, ten comparison jobs');
+assert.ok(passed.setups.every(setup => setup.typecheck.reusedFrom === 'compilerStrictness'));
 assert.ok(passed.setups.every(setup => setup.compilerStrictness.state === 'known'));
 assert.ok(passed.setups.every(setup => setup.compilerStrictness.options.strict === true));
 assert.ok(passed.setups.every(setup => setup.inferredAny.state === 'known'));

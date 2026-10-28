@@ -39,3 +39,10 @@ mutant jobs used as `mutantTimeoutMs`, or `null` when none ran, and the
 terminal report prints it next to each mutant that reached it. See
 [mutant time limits](../configuration.md#mutant-time-limits). This resolves
 [#202](https://github.com/Binary-Balance/seshat/issues/202).
+
+## Skip a repeated TypeScript check
+
+A direct `tsc` typecheck no longer runs when the compiler findings helper has
+already checked the same program without errors and `noEmit` is set. Reports
+record this as `setups[].typecheck.reusedFrom: "compilerStrictness"`. This
+resolves [#222](https://github.com/Binary-Balance/seshat/issues/222).

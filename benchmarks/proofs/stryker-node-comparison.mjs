@@ -425,7 +425,9 @@ function assertSeshatReport(report, workers) {
   assert.equal(mutation.completed, 2);
   assert.equal(mutation.notRun, 0);
   assert.equal(mutation.unresolved, 0);
-  assert.equal(result.jobsAttempted, 4 + NODE_WORKSPACE_EXPECTED.mutants.length + workers - 1
+  // Compiler findings, baseline and coverage; a passing findings check replaces the tsc job.
+  const originalJobs = 3 + Number(setup.typecheck.reusedFrom !== 'compilerStrictness');
+  assert.equal(result.jobsAttempted, originalJobs + NODE_WORKSPACE_EXPECTED.mutants.length + workers - 1
     + result.pseudoTesting.jobsAttempted + result.pseudoTesting.workerBaselineJobs);
   const normalized = (mutation.outcomes ?? []).map(({path, offset, original, replacement, verdict}) => ({
     path, offset, original, replacement, verdict,

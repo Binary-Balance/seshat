@@ -346,6 +346,13 @@ baseline and fresh coverage. All three commands collect fresh coverage.
 `mutate` needs statement coverage to skip unexecuted functions during extreme
 mutation; it still does not evaluate `maxCrap` thresholds.
 
+When `typecheck` runs `typescript/bin/tsc` or `typescript/lib/tsc.js` directly,
+with TypeScript `>=5.0 <7.0` and without `noCheck`, the compiler findings helper
+already builds and checks the same TypeScript program. If it finds no errors and
+the effective options set `noEmit`, `tsc` does not run again. Otherwise `tsc`
+always runs. The helper reads only captured files and the TypeScript package. A
+type package outside the copy makes the helper fail, so `tsc` then runs.
+
 Tests must be deterministic. Each required baseline runs once; Seshat does not
 repeat baselines to detect test instability or rerun killed mutants to confirm
 their failures. A flaky test can kill a mutant by chance, changing the score

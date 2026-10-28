@@ -96,12 +96,15 @@ assert.match(results.check.stderr, /capturing configured inputs/);
 assert.equal(checked.result.mutation.score, 50);
 assert.deepEqual(checked.result.mutation.enabledOperators, ['comparison','logical','arithmetic','boolean','statement','optional']);
 assert.deepEqual(checked.scope.files, ['subject.ts']);
-assert.equal(checked.result.jobsAttempted, 7);
+assert.equal(checked.result.jobsAttempted, 6, 'the compiler findings program replaces tsc');
+assert.deepEqual(checked.result.setups[0].typecheck, {state:'passed', reusedFrom:'compilerStrictness'});
 assert.equal(checked.result.setups[0].compilerStrictness.state, 'known');
 assert.equal(checked.result.setups[0].compilerStrictness.options.strict, true);
 assert.deepEqual(checked.result.setups[0].selection, {state:'unavailable',reason:'unsupported-runner'});
-for (const ms of Object.values(checked.result.phaseTimings)) assert.ok(Number.isFinite(ms) && ms >= 0);
-for (const [phase,key] of [['typecheck','typecheckMs'],['baseline','baselineMs'],['coverage','coverageMs']]) {
+const {typecheckMs, ...measuredPhases} = checked.result.phaseTimings;
+assert.equal(typecheckMs, null);
+for (const ms of Object.values(measuredPhases)) assert.ok(Number.isFinite(ms) && ms >= 0);
+for (const [phase,key] of [['baseline','baselineMs'],['coverage','coverageMs']]) {
   const setup = checked.result.setups[0];
   assert.ok(setup.timings[key] >= setup[phase].ms);
   assert.equal(checked.result.phaseTimings[key], setup.timings[key]);
@@ -113,10 +116,10 @@ assert.match(results.check.stderr, /mutation finished: completed 2\/2, running 0
 const crap = json('crap', 'crap');
 assert.deepEqual(crap.result.setups[0].selection, {state:'not-requested'});
 assert.equal(crap.result.mutation, undefined);
-assert.equal(crap.result.jobsAttempted, 4);
+assert.equal(crap.result.jobsAttempted, 3);
 assert.deepEqual(crap.result.sources, checked.result.sources.map(source => ({...source,result:{...source.result,functions:source.result.functions.map(({pseudoTested,pseudoTestStatus,pseudoTestReason,...row}) => row)}})));
 const mutated = json('mutate', 'mutate');
-assert.equal(mutated.result.jobsAttempted, 7);
+assert.equal(mutated.result.jobsAttempted, 6);
 assert.equal(mutated.result.setups[0].coverage.state, 'passed');
 assert.deepEqual(mutated.result.setups[0].selection, checked.result.setups[0].selection);
 assert.deepEqual(mutated.result.sources, checked.result.sources);
