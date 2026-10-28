@@ -13,8 +13,8 @@ unresolved and allow later extreme and operator mutants to finish. Its
 `countTimeoutsAsKilled`, `timeoutMs` 60,000 and `mutantTimeoutMinMs` 1,000 stop
 each hang at the derived limit and count it, so the run completes with a score.
 It checks serial and two-worker runs with replacement and experimental
-switching, retaining source integrity and empty scratch directories. Linux
-x64 package and Windows runtime CI run this proof.
+switching, retaining source integrity and empty scratch directories. CI runs
+this proof on Linux x64, Linux ARM64, both macOS CPUs and Windows x64.
 
 The `job-deadline` case in `test-selection.mjs` verifies that a deadline in a
 selected Vitest job stays unresolved in both mutation phases, even when the

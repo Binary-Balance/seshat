@@ -203,6 +203,11 @@ jobs:
         run: |
           PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/macos/${SESHAT_CPU}/package-result.json")"
           SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/execute-cancellation.mjs 2>&1 | tee "work/macos/${SESHAT_CPU}/execute-cancellation.log"
+      - name: Verify job deadline continuation
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
+        run: |
+          NATIVE_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).binaryPath);' "work/macos/${SESHAT_CPU}/package-result.json")"
+          node benchmarks/proofs/job-deadlines.mjs --cli "$NATIVE_BINARY"
       # Intel runs this pass in the latest-node job. Arm64 still finishes before
       # Intel with it here, which saves one of the five concurrent macOS runners.
       - name: Set up latest supported Node runtime
