@@ -131,6 +131,8 @@ enum MutationKind<'a> {
 
 enum JobKind<'a> {
     Test,
+    // A mutant's test job, stopped at its setup's mutant limit.
+    Mutant(Duration),
     Coverage(&'a Path),
     Typecheck,
 }
@@ -953,7 +955,11 @@ impl CapturedProject {
             } else {
                 None
             };
-        let mut result = job::run(&mut command, Duration::from_millis(setup.timeout_ms))?;
+        let timeout = match kind {
+            JobKind::Mutant(limit) => limit,
+            _ => Duration::from_millis(setup.timeout_ms),
+        };
+        let mut result = job::run(&mut command, timeout)?;
         let mut state = if matches!(kind, JobKind::Typecheck) {
             // A compiler's exit code is validation evidence, never a mutant kill.
             if result["cancelled"] == true {
@@ -1167,6 +1173,7 @@ impl CapturedProject {
         evidence: &Path,
         mut row: Value,
         switching: bool,
+        mutant_timeouts: &[u64],
         stopped: &AtomicBool,
     ) -> MutantExecution {
         let started = Instant::now();
@@ -1270,8 +1277,9 @@ impl CapturedProject {
             );
             let mut selection = selections[index].json();
             let jobs_before = jobs;
+            let limit = Duration::from_millis(mutant_timeouts[index]);
             let mut observed = self
-                .run_job(setup, args, evidence, &id, JobKind::Test)
+                .run_job(setup, args, evidence, &id, JobKind::Mutant(limit))
                 .unwrap_or_else(CommandEvidence::error);
             jobs += 1;
             if let selection::Selection::Files { files, .. } = &selections[index]
@@ -1293,7 +1301,7 @@ impl CapturedProject {
                         &setup.test,
                         evidence,
                         &format!("{id}-full"),
-                        JobKind::Test,
+                        JobKind::Mutant(limit),
                     )
                     .unwrap_or_else(CommandEvidence::error);
                 jobs += 1;
@@ -1400,6 +1408,7 @@ impl CapturedProject {
         progress: &Progress,
         kind: MutationKind<'_>,
         workers: &mut Workers,
+        mutant_timeouts: &[u64],
     ) -> (Value, bool) {
         let started = Instant::now();
         let (switching, extreme_sources) = match kind {
@@ -1581,6 +1590,7 @@ impl CapturedProject {
                         receipts,
                         outcomes[id].clone(),
                         switching,
+                        mutant_timeouts,
                         &stopped,
                     );
                     if progress.enabled {
@@ -1790,7 +1800,7 @@ impl CapturedProject {
         let preparation_started = Instant::now();
         let evidence = self.prepare_evidence()?;
         timings["preparationMs"] = json!(preparation_started.elapsed().as_secs_f64() * 1000.0);
-        let mut setups: Vec<_> = self.config.setups.iter().map(|setup| json!({"name":setup.name,"typecheck":{"state":"not-run"},"baseline":{"state":"not-run"},"coverage":{"state":"not-run"}})).collect();
+        let mut setups: Vec<_> = self.config.setups.iter().map(|setup| json!({"name":setup.name,"typecheck":{"state":"not-run"},"baseline":{"state":"not-run"},"coverage":{"state":"not-run"},"mutantTimeoutMs":null})).collect();
         for setup in &mut setups {
             setup["timings"] = json!({"compilerStrictnessMs":null,"typecheckMs":null,"baselineMs":null,"coverageMs":null});
             setup["selection"] = json!({"state":if mutate { "not-run" } else { "not-requested" }});
@@ -2029,6 +2039,26 @@ impl CapturedProject {
             };
             let mut workers = self.prepare_workers(limit, &progress);
             let ready = mutation_ready && workers.ready;
+            // One limit per setup for both phases. A worker copy's baseline can
+            // be slower than the original's, so the slowest of them sets it.
+            let mutant_timeouts: Vec<u64> = self
+                .config
+                .setups
+                .iter()
+                .zip(&setups)
+                .map(|(setup, row)| {
+                    let slowest = workers
+                        .baselines
+                        .iter()
+                        .filter(|baseline| baseline["name"] == setup.name)
+                        .chain([&row["baseline"]])
+                        .filter_map(|baseline| baseline["ms"].as_f64())
+                        .fold(0.0, f64::max);
+                    let derived = ((slowest * setup.mutant_timeout_factor).ceil() as u64)
+                        .max(setup.mutant_timeout_min_ms);
+                    derived.min(setup.timeout_ms)
+                })
+                .collect();
             progress.phase(format_args!("extreme mutation using source replacement"));
             let (mut measured, can_continue) = self.mutate(
                 &facts,
@@ -2038,6 +2068,7 @@ impl CapturedProject {
                 &progress,
                 MutationKind::Extreme { sources: &sources },
                 &mut workers,
+                &mutant_timeouts,
             );
             let operator_ready = ready && can_continue;
             let extreme_execution_complete = measured["complete"] == true;
@@ -2089,6 +2120,7 @@ impl CapturedProject {
                 &progress,
                 MutationKind::Operators { switching },
                 &mut workers,
+                &mutant_timeouts,
             );
             if !extreme_execution_complete {
                 measured["complete"] = json!(false);
@@ -2099,6 +2131,21 @@ impl CapturedProject {
             commands_run += measured["workerBaselineJobs"].as_u64().unwrap();
             commands_run += measured["preparedBaselineJobs"].as_u64().unwrap_or(0);
             mutation = Some(measured);
+            // Report a limit only for setups where a mutant job ran under it.
+            for (index, setup) in setups.iter_mut().enumerate() {
+                let ran = [&pseudo_testing, &mutation]
+                    .into_iter()
+                    .flatten()
+                    .flat_map(|phase| phase["outcomes"].as_array().unwrap())
+                    .any(|outcome| {
+                        outcome["setups"][index]["jobsAttempted"]
+                            .as_u64()
+                            .is_some_and(|jobs| jobs > 0)
+                    });
+                if ran {
+                    setup["mutantTimeoutMs"] = json!(mutant_timeouts[index]);
+                }
+            }
         }
         let diagnostics = self.diagnostics(&setups, mutation.as_ref());
         let mut result = json!({"phase":match mode { AssessmentMode::Check=>"check",AssessmentMode::Crap=>"crap",AssessmentMode::Mutate=>"mutate" },"complete":complete,"jobsAttempted":commands_run,
@@ -2319,6 +2366,7 @@ mod tests {
             Path::new("receipts"),
             row,
             false,
+            &[],
             &AtomicBool::new(true),
         );
         assert_eq!(result.states, [TestState::Passed]);
@@ -2365,6 +2413,7 @@ mod tests {
             &progress,
             MutationKind::Operators { switching: false },
             &mut workers,
+            &[],
         );
         assert_eq!(result["planned"], 5);
         assert_eq!(result["jobsAttempted"], 0);
@@ -2420,6 +2469,7 @@ mod tests {
                 assert_eq!(concurrency["state"], "not-requested");
                 assert!(concurrency["effectiveWorkers"].is_null());
             }
+            assert!(result["setups"][0]["mutantTimeoutMs"].is_null(), "{result}");
             fixture.assert_clean();
         }
     }
@@ -2597,9 +2647,144 @@ mod tests {
                 assert_eq!(mutation["complete"], false);
                 assert!(mutation["score"].is_null());
                 assert_eq!(result["complete"], false);
+                // A lower timeoutMs caps the default 30000 ms floor.
+                let limit = if fault == "deadline" { 1000 } else { 30_000 };
+                for setup in result["setups"].as_array().unwrap() {
+                    assert_eq!(setup["mutantTimeoutMs"], limit);
+                }
                 fixture.assert_clean();
             }
         }
+    }
+
+    #[test]
+    fn hanging_mutants_stop_at_the_limit_from_the_slowest_baseline() {
+        // One worker leaves the 1000 ms floor in charge. With two, a slowed
+        // worker baseline must set the limit instead of the original one.
+        for (workers, floor) in [(1, 1000), (2, 1)] {
+            let fixture = super::super::tests::Fixture::new();
+            let mut captured = fixture.capture().unwrap();
+            captured
+                .sources
+                .retain(|(path, _)| path == Path::new("src/calc.ts"));
+            captured.config.workers = workers;
+            let setup = &mut captured.config.setups[0];
+            setup.timeout_ms = 60_000;
+            setup.mutant_timeout_factor = 4.0;
+            setup.mutant_timeout_min_ms = floor;
+            setup.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
+            setup.test = vec![
+                "node".into(),
+                "-e".into(),
+                r#"
+                const id = process.env.SESHAT_EXECUTION_ID;
+                if (/-(extreme|mutant)-\d+-\d+$/.test(id)) while (true) {}
+                if (id.includes('-worker-')) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 300);
+                require('fs').writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({version:1,
+                    executionId:id, node:process.versions.node, complete:true,
+                    passed:1, failed:0, errors:0}));
+                "#
+                .into(),
+            ];
+            let result = captured.assess(AssessmentMode::Mutate, false).unwrap();
+            let original = result["setups"][0]["baseline"]["ms"].as_f64().unwrap();
+            let baselines = result["mutation"]["workerBaselines"].as_array().unwrap();
+            assert_eq!(baselines.len(), workers - 1, "{result}");
+            let slowest = baselines
+                .iter()
+                .map(|baseline| baseline["ms"].as_f64().unwrap())
+                .fold(original, f64::max);
+            let limit = result["setups"][0]["mutantTimeoutMs"].as_u64().unwrap();
+            assert_eq!(limit, ((slowest * 4.0).ceil() as u64).max(floor));
+            if workers == 2 {
+                assert!(slowest > original, "{result}");
+            }
+            for phase in ["pseudoTesting", "mutation"] {
+                let outcomes = result[phase]["outcomes"].as_array().unwrap();
+                assert!(!outcomes.is_empty(), "{phase}: {result}");
+                for outcome in outcomes {
+                    let job = &outcome["setups"][0];
+                    assert_eq!(job["timedOut"], true, "{phase}: {result}");
+                    let ms = job["ms"].as_f64().unwrap();
+                    assert!(
+                        ms >= limit as f64 && ms < 30_000.0,
+                        "{ms} ms, limit {limit}"
+                    );
+                }
+            }
+            fixture.assert_clean();
+        }
+    }
+
+    #[test]
+    fn unconfirmed_selection_retries_stop_at_the_mutant_limit() {
+        let fixture = super::super::tests::Fixture::new();
+        let mut captured = fixture.capture().unwrap();
+        captured
+            .sources
+            .retain(|(path, _)| path == Path::new("src/calc.ts"));
+        let root = captured.directory.0.clone();
+        fs::write(root.join("a.test.ts"), "").unwrap();
+        fs::create_dir(root.join("node_modules/vitest")).unwrap();
+        // A selected run reports an extra test, so Seshat retries with the
+        // full command, and that retry hangs.
+        fs::write(
+            root.join("node_modules/vitest/vitest.mjs"),
+            r#"
+            import {mkdirSync, readFileSync, writeFileSync} from 'node:fs';
+            import {dirname, resolve} from 'node:path';
+            const id = process.env.SESHAT_EXECUTION_ID, coverage = process.env.SESHAT_COVERAGE_REPORT;
+            if (id.endsWith('-full')) while (true) {}
+            const file = resolve('a.test.ts'), source = resolve('src/calc.ts');
+            const tests = [{file, id:'a'}];
+            if (process.argv.some(arg => arg.endsWith('a.test.ts'))) tests.push({file, id:'b'});
+            if (coverage) {
+                const text = readFileSync(source, 'utf8');
+                const start = text.indexOf('=>') + 3, end = text.indexOf(';', start);
+                mkdirSync(dirname(coverage), {recursive:true});
+                writeFileSync(coverage, JSON.stringify({[source]:{path:source, branchMap:{}, b:{},
+                    statementMap:{0:{start:{line:1,column:start},end:{line:1,column:end}}}, s:{0:1}}}));
+            }
+            writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({version:1, executionId:id,
+                runner:'vitest', vitest:'5.0.0', actual:{vitest:'5.0.0'}, node:process.versions.node,
+                complete:true, passed:tests.length, failed:0, errors:0, timeouts:0, testFiles:[file], tests,
+                fileCoverage:{version:1, complete:true,
+                    files:[{file, sources:[{path:source, static:false, hit:true}]}]}}));
+            "#,
+        )
+        .unwrap();
+        let setup = &mut captured.config.setups[0];
+        setup.runner = Runner::Vitest;
+        setup.timeout_ms = 20_000;
+        setup.mutant_timeout_factor = 1.0;
+        setup.mutant_timeout_min_ms = 1000;
+        setup.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
+        setup.test = vec![
+            "node".into(),
+            "node_modules/vitest/vitest.mjs".into(),
+            "run".into(),
+        ];
+        setup.coverage.command = [setup.test.clone(), vec!["--coverage".into()]].concat();
+        let result = captured.assess(AssessmentMode::Mutate, false).unwrap();
+        let limit = result["setups"][0]["mutantTimeoutMs"].as_u64().unwrap();
+        for phase in ["pseudoTesting", "mutation"] {
+            let outcomes = result[phase]["outcomes"].as_array().unwrap();
+            assert!(!outcomes.is_empty(), "{phase}: {result}");
+            for outcome in outcomes {
+                let job = &outcome["setups"][0];
+                assert_eq!(
+                    job["selection"]["reason"], "selection-not-confirmed",
+                    "{result}"
+                );
+                assert_eq!(job["timedOut"], true, "{phase}: {result}");
+                let ms = job["ms"].as_f64().unwrap();
+                assert!(
+                    ms >= limit as f64 && ms < 10_000.0,
+                    "{ms} ms, limit {limit}"
+                );
+            }
+        }
+        fixture.assert_clean();
     }
 
     #[test]
@@ -3393,6 +3578,8 @@ mod tests {
                 report: "coverage.json".into(),
             },
             timeout_ms: 1000,
+            mutant_timeout_factor: 5.0,
+            mutant_timeout_min_ms: 30_000,
         };
         assert_eq!(
             runner_concurrency(&setup, &setup.test, "test", None)["effectiveWorkers"],

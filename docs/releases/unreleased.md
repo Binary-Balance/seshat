@@ -25,3 +25,17 @@ baseline now stops both phases. With switching, each worker still runs a
 prepared baseline before the operator phase, so switching saves the copies but
 not those baselines. This resolves
 [#221](https://github.com/Binary-Balance/seshat/issues/221).
+
+## Set mutant time limits from baseline duration
+
+Mutant jobs in both mutation phases now stop at
+`min(timeoutMs, max(slowest baseline × mutantTimeoutFactor, mutantTimeoutMinMs))`.
+The slowest baseline is the longest of each setup's original and worker
+baselines. The two new optional per-setup settings default to 5 and 30,000,
+so with the default `timeoutMs` every limit is unchanged. A setup that raised
+`timeoutMs` now waits less for each hanging mutant. Typecheck, baseline and
+coverage jobs keep `timeoutMs`. Each `result.setups` row reports the limit its
+mutant jobs used as `mutantTimeoutMs`, or `null` when none ran, and the
+terminal report prints it next to each mutant that reached it. See
+[mutant time limits](../configuration.md#mutant-time-limits). This resolves
+[#202](https://github.com/Binary-Balance/seshat/issues/202).

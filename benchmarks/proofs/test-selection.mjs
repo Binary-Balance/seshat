@@ -115,6 +115,7 @@ ${originalConfig}`);
     const selected = await run(`${name}-selected`,config);
     assert.equal(selected.complete,false, 'a full retry must not replace a job deadline');
     assert.equal(selected.result.mutation.score,null);
+    assert.equal(selected.result.setups[0].mutantTimeoutMs,15000, 'timeoutMs caps the mutant limit');
     for (const phase of ['pseudoTesting','mutation']) {
       const measured = selected.result[phase], first = measured.outcomes[0];
       assert.equal(measured.notRun,0, 'later mutants must still run');

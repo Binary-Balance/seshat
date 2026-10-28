@@ -271,10 +271,22 @@ struct Setup {
     coverage: CoverageCommand,
     #[serde(default = "default_timeout", rename = "timeoutMs")]
     timeout_ms: u64,
+    #[serde(
+        default = "default_mutant_timeout_factor",
+        rename = "mutantTimeoutFactor"
+    )]
+    mutant_timeout_factor: f64,
+    // Equal to the default timeoutMs, so default mutant limits are unchanged.
+    #[serde(default = "default_timeout", rename = "mutantTimeoutMinMs")]
+    mutant_timeout_min_ms: u64,
 }
 
 fn default_timeout() -> u64 {
     30_000
+}
+
+fn default_mutant_timeout_factor() -> f64 {
+    5.0
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -406,6 +418,18 @@ impl Config {
         for setup in &config.setups {
             if setup.timeout_ms == 0 {
                 return Err(format!("{}.timeoutMs must be positive", setup.name));
+            }
+            if setup.mutant_timeout_factor <= 0.0 {
+                return Err(format!(
+                    "{}.mutantTimeoutFactor must be positive",
+                    setup.name
+                ));
+            }
+            if setup.mutant_timeout_min_ms == 0 {
+                return Err(format!(
+                    "{}.mutantTimeoutMinMs must be positive",
+                    setup.name
+                ));
             }
             if setup.name.trim().is_empty()
                 || setup.name.chars().any(char::is_control)
@@ -1242,6 +1266,41 @@ mod tests {
             let mut config = fixture.config.clone();
             config["countTimeoutsAsKilled"] = invalid;
             assert!(parse(&config).unwrap_err().contains("boolean"));
+        }
+    }
+
+    #[test]
+    fn mutant_time_limit_settings_are_optional_and_positive() {
+        let fixture = Fixture::new();
+        let parse = |key: &str, value: &Value| {
+            let mut config = fixture.config.clone();
+            config["setups"][0][key] = value.clone();
+            Config::parse(&serde_json::to_vec(&config).unwrap())
+        };
+        let defaults = &Config::parse(&serde_json::to_vec(&fixture.config).unwrap())
+            .unwrap()
+            .setups[0];
+        assert_eq!(defaults.mutant_timeout_factor, 5.0);
+        assert_eq!(defaults.mutant_timeout_min_ms, 30_000);
+        for factor in [json!(0.1), json!(1.5), json!(5)] {
+            let setup = &parse("mutantTimeoutFactor", &factor).unwrap().setups[0];
+            assert_eq!(setup.mutant_timeout_factor, factor.as_f64().unwrap());
+        }
+        let setup = &parse("mutantTimeoutMinMs", &json!(1)).unwrap().setups[0];
+        assert_eq!(setup.mutant_timeout_min_ms, 1);
+        for (key, invalid) in [
+            ("mutantTimeoutFactor", json!(0)),
+            ("mutantTimeoutFactor", json!(-1)),
+            ("mutantTimeoutFactor", json!("5")),
+            ("mutantTimeoutFactor", Value::Null),
+            ("mutantTimeoutFactor", json!(true)),
+            ("mutantTimeoutMinMs", json!(0)),
+            ("mutantTimeoutMinMs", json!(-1)),
+            ("mutantTimeoutMinMs", json!(1.5)),
+            ("mutantTimeoutMinMs", json!("100")),
+            ("mutantTimeoutMinMs", Value::Null),
+        ] {
+            assert!(parse(key, &invalid).is_err(), "accepted {key}: {invalid}");
         }
     }
 

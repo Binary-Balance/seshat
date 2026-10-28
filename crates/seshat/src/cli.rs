@@ -289,6 +289,23 @@ fn text(value: &Value) -> &str {
     value.as_str().unwrap_or("unknown")
 }
 
+// Runner-reported timeouts end before the job deadline, so only `timedOut`
+// shows that a mutant reached its setup's limit.
+fn mutant_deadlines(outcome: &Value, setups: &Value) -> String {
+    array(&outcome["setups"])
+        .iter()
+        .zip(array(setups))
+        .filter(|(row, _)| row["timedOut"] == true)
+        .map(|(_, setup)| {
+            format!(
+                ", setup {:?} reached the {} ms mutant limit",
+                text(&setup["name"]),
+                setup["mutantTimeoutMs"]
+            )
+        })
+        .collect()
+}
+
 fn readable(report: &Value) -> String {
     let result = &report["result"];
     let state = if report["cancelled"] == true {
@@ -475,6 +492,19 @@ fn readable(report: &Value) -> String {
                 .is_some_and(|count| count > counted_timeouts)
             {
                 output.push_str("Extreme mutation timeouts remain unresolved, so the overall mutation score is withheld.\n");
+            }
+        }
+        for row in array(&pseudo["outcomes"]) {
+            let deadlines = mutant_deadlines(row, &result["setups"]);
+            if !deadlines.is_empty() {
+                let _ = writeln!(
+                    output,
+                    "  Extreme #{} {:?} {:?}: {}{deadlines}",
+                    row["id"],
+                    text(&row["path"]),
+                    text(&row["name"]),
+                    text(&row["verdict"])
+                );
             }
         }
     }
@@ -771,13 +801,14 @@ fn readable(report: &Value) -> String {
         for row in array(&mutation["outcomes"]) {
             let _ = writeln!(
                 output,
-                "  #{} {:?} byte {} {:?} -> {:?}: {}",
+                "  #{} {:?} byte {} {:?} -> {:?}: {}{}",
                 row["id"],
                 text(&row["path"]),
                 row["offset"],
                 text(&row["original"]),
                 text(&row["replacement"]),
-                text(&row["verdict"])
+                text(&row["verdict"]),
+                mutant_deadlines(row, &result["setups"])
             );
         }
         if let Some(error) = mutation.get("error").filter(|v| !v.is_null()) {
@@ -1503,5 +1534,29 @@ mod tests {
         assert!(runner_timeout.contains("Runner-reported test timeouts affected 1 mutant."));
         assert!(!runner_timeout.contains("scheduling stopped"));
         assert!(runner_timeout.contains("No mutants were left unrun."));
+        assert!(!runner_timeout.contains("mutant limit"));
+    }
+
+    #[test]
+    fn readable_prints_the_limit_next_to_mutants_that_reach_it() {
+        let rendered = readable(&json!({"timings":{"wallMs":1.0},"result":{
+            "setups":[{"name":"unit","mutantTimeoutMs":4000},{"name":"slow","mutantTimeoutMs":9000}],
+            "pseudoTesting":{"outcomes":[
+                {"id":0,"path":"a.ts","name":"hang","verdict":"timed-out",
+                    "setups":[{"timedOut":true},{"timedOut":false}]},
+                {"id":1,"path":"a.ts","name":"quick","verdict":"killed",
+                    "setups":[{"timedOut":false},{"timedOut":false}]}]},
+            "mutation":{"outcomes":[{"id":0,"path":"a.ts","offset":3,"original":">",
+                "replacement":">=","verdict":"timed-out","setups":[
+                    {"state":"timed-out","timedOut":false,"testTimedOut":true},{"timedOut":true}]}]}
+        }}));
+        assert!(rendered.contains(
+            "  Extreme #0 \"a.ts\" \"hang\": timed-out, setup \"unit\" reached the 4000 ms mutant limit\n"
+        ));
+        assert!(!rendered.contains("quick"));
+        // The runner-reported timeout in "unit" ended before that setup's limit.
+        assert!(rendered.contains(
+            "\">\" -> \">=\": timed-out, setup \"slow\" reached the 9000 ms mutant limit\n"
+        ));
     }
 }

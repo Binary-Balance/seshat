@@ -45,6 +45,7 @@ for (const workers of [1, 2]) {
     const report = JSON.parse(child.stdout), result = report.result;
     const extreme = result.pseudoTesting, mutation = result.mutation;
     assert.equal(report.complete, false);
+    assert.equal(result.setups[0].mutantTimeoutMs, 3000, 'timeoutMs caps the mutant limit');
     assert.equal(extreme.notRun, 0, child.stdout);
     assert.deepEqual(extreme.outcomes.map(row => row.verdict), ['timed-out','killed']);
     for (const row of extreme.outcomes.filter(row => row.verdict === 'timed-out')) {

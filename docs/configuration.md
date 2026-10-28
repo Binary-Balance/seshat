@@ -313,7 +313,8 @@ and [examples/workspaces/seshat.json](../examples/workspaces/seshat.json).
 
 Each setup has a unique `name`, a `runner` of `node`, `jest` or `vitest`, and a
 project-relative `cwd`. Commands are argument arrays, not shell expressions.
-`timeoutMs` defaults to 30,000 and applies to each job separately.
+`timeoutMs` defaults to 30,000 and caps each job separately. Mutant jobs can
+stop sooner, at the [mutant time limit](#mutant-time-limits).
 On Windows, `.cmd` and `.bat` programs use `cmd.exe` with argument escaping.
 
 Commands run trusted project code with the invoking process's environment.
@@ -363,6 +364,33 @@ skipped. A surviving replacement with reliable positive statement coverage
 marks the function `pseudoTested: true`. A killed replacement marks it false;
 unresolved executions or unknown coverage leave the flag null. Counts and
 execution evidence appear in `pseudoTesting`, separately from operator scores.
+
+### Mutant time limits
+
+Each mutant job, in both the extreme and operator phases, stops at its setup's
+mutant limit:
+
+```text
+min(timeoutMs, max(slowest baseline × mutantTimeoutFactor, mutantTimeoutMinMs))
+```
+
+The slowest baseline is the longest of the setup's original baseline and its
+worker baselines, measured once before the extreme phase. With
+`--experimental-switching`, the prepared baselines run later and do not affect
+it. Typecheck, baseline and coverage jobs keep `timeoutMs`.
+
+Two optional per-setup settings adjust the limit. `mutantTimeoutFactor`
+defaults to 5 and must be a positive number. `mutantTimeoutMinMs` defaults to
+30,000 and must be a positive integer. With the default `timeoutMs`, every
+mutant limit stays 30,000. A setup that raises `timeoutMs` waits less for each
+hanging mutant: with `"timeoutMs": 60000` and a 4-second suite, a hanging
+mutant stops at 30 s instead of 60 s.
+
+Lower settings end hanging mutants sooner, but a slow mutant that would have
+finished then stays unresolved as `timed-out`. Reports record each setup's
+limit in `result.setups[].mutantTimeoutMs`, and the terminal report shows it
+next to each mutant that reached it; see the
+[report format](report-format.md#setup-jobs-and-evidence).
 
 ### Mutation operators
 
@@ -492,8 +520,8 @@ such suites. Matched proof fixtures cannot establish independence for every
 consumer project. Reports retain the selection, executed-test evidence and
 fallback reasons; see the [report format](report-format.md#mutation-assessment).
 
-A mutant job that exceeds `timeoutMs` allows later setups and mutants to run
-when its process tree was stopped, cleanup succeeded and captured inputs are
+A mutant job that reaches its mutant limit allows later setups and mutants to
+run when its process tree was stopped, cleanup succeeded and captured inputs are
 unchanged. The timeout stays unresolved. Failed termination, pipe errors or
 unsafe cleanup still stop later mutants. Original and worker baselines must
 pass, so a deadline there prevents mutation work.
@@ -501,9 +529,10 @@ A selected test job that reaches its deadline is retained without a full-command
 retry.
 
 A runner-reported test timeout can allow scheduling to continue when the command
-exits `1` within `timeoutMs`, its complete receipt has valid test counts and no
-execution errors, and cleanup succeeds. Later extreme and operator mutants still
-run. A timeout receipt with additional errors still stops scheduling.
+exits `1` within its mutant limit, its complete receipt has valid test counts
+and no execution errors, and cleanup succeeds. Later extreme and operator
+mutants still run. A timeout receipt with additional errors still stops
+scheduling.
 
 A complete Jest receipt with exit `1`, valid counts, failed tests and no test
 timeouts can count as a kill when every reported error is attributed to a
