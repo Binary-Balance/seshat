@@ -453,10 +453,11 @@ These two timeout counters retain all raw `timed-out` verdicts, including counte
 timeouts. The additive `unresolvedBreakdown.countedTimeouts` is the counted
 subset of `timedOut` and equals the phase's `countedTimeouts`. Subtract it from
 `timedOut` to obtain unresolved timeouts. A counted job deadline is not in
-`testTimedOut`, so subtract only counted outcomes without a `timedOut: true`
-setup from `testTimedOut`. The readable report makes these subtractions and
-displays counted timeouts separately. Other breakdown counters keep their
-existing meaning.
+`testTimedOut`, so `testTimedOut - countedTimeouts` does not give the
+unresolved runner-reported timeouts. Subtract only counted outcomes without a
+`timedOut: true` setup from `testTimedOut`. The readable report makes these
+subtractions and displays counted timeouts separately. Other breakdown counters
+keep their existing meaning.
 
 ## Type-safety findings
 

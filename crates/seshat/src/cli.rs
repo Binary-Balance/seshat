@@ -290,7 +290,9 @@ fn text(value: &Value) -> &str {
 }
 
 // Runner-reported timeouts end before the job deadline, so only `timedOut`
-// shows that a mutant reached its setup's limit.
+// shows that a mutant reached its setup's limit. This says plain "limit"
+// because, when timeoutMs caps it, the setup line uses "mutant limit" for the
+// higher derived value.
 fn mutant_deadlines(outcome: &Value, setups: &Value) -> String {
     array(&outcome["setups"])
         .iter()
@@ -298,7 +300,7 @@ fn mutant_deadlines(outcome: &Value, setups: &Value) -> String {
         .filter(|(row, _)| row["timedOut"] == true)
         .map(|(_, setup)| {
             format!(
-                ", setup {:?} reached the {} ms mutant limit",
+                ", setup {:?} reached its {} ms limit",
                 text(&setup["name"]),
                 setup["mutantTimeoutMs"]
             )
@@ -1554,7 +1556,7 @@ mod tests {
         assert!(runner_timeout.contains("Runner-reported test timeouts affected 1 mutant."));
         assert!(!runner_timeout.contains("scheduling stopped"));
         assert!(runner_timeout.contains("No mutants were left unrun."));
-        assert!(!runner_timeout.contains("mutant limit"));
+        assert!(!runner_timeout.contains("ms limit"));
     }
 
     #[test]
@@ -1596,12 +1598,13 @@ mod tests {
                     {"state":"timed-out","timedOut":false,"testTimedOut":true},{"timedOut":true}]}]}
         }}));
         assert!(rendered.contains(
-            "  Extreme #0 \"a.ts\" \"hang\": timed-out, setup \"unit\" reached the 4000 ms mutant limit\n"
+            "  Extreme #0 \"a.ts\" \"hang\": timed-out, setup \"unit\" reached its 4000 ms limit\n"
         ));
         assert!(!rendered.contains("quick"));
         // The runner-reported timeout in "unit" ended before that setup's limit.
-        assert!(rendered.contains(
-            "\">\" -> \">=\": timed-out, setup \"slow\" reached the 9000 ms mutant limit\n"
-        ));
+        assert!(
+            rendered
+                .contains("\">\" -> \">=\": timed-out, setup \"slow\" reached its 9000 ms limit\n")
+        );
     }
 }

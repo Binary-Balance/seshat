@@ -2693,10 +2693,12 @@ mod tests {
 
     #[test]
     fn counted_deadlines_need_a_clean_stop_and_every_setup_resolved() {
-        for (other, cleanup_fails, verdict, counted) in [
-            ("passed", false, "timed-out", true),
-            ("execution-error", false, "execution-error", false),
-            ("passed", true, "timed-out", false),
+        for (other, cleanup_fails, tie, verdict, counted) in [
+            ("passed", false, false, "timed-out", true),
+            // As with the defaults, the floor sets a limit equal to timeoutMs.
+            ("passed", false, true, "timed-out", true),
+            ("execution-error", false, false, "execution-error", false),
+            ("passed", true, false, "timed-out", false),
         ] {
             let fixture = super::super::tests::Fixture::new();
             let mut captured = fixture.capture().unwrap();
@@ -2705,7 +2707,13 @@ mod tests {
                 .retain(|(path, _)| path == Path::new("src/calc.ts"));
             captured.config.count_timeouts_as_killed = true;
             let mut first = captured.config.setups[0].clone();
-            first.mutant_timeout_min_ms = 1000;
+            if tie {
+                first.timeout_ms = 3000;
+                first.mutant_timeout_min_ms = 3000;
+                first.mutant_timeout_factor = 0.001;
+            } else {
+                first.mutant_timeout_min_ms = 1000;
+            }
             first.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
             let receipt = r#"
                 const fs = require('fs'), path = process.env.SESHAT_RECEIPT;
@@ -2746,6 +2754,12 @@ mod tests {
             );
             assert_eq!(mutation["countedTimeouts"], usize::from(counted));
             assert_eq!(mutation["complete"], counted);
+            if tie {
+                assert_eq!(result["setups"][1]["mutantTimeoutMs"], 3000);
+            }
+            for setup in result["setups"].as_array().unwrap() {
+                assert!(setup["uncappedMutantTimeoutMs"].is_null(), "{result}");
+            }
             fixture.assert_clean();
         }
     }
