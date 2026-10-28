@@ -192,7 +192,8 @@ mutations. A complete mutation result does not make incomplete CRAP complete.
 ### Setup jobs and evidence
 
 Each `result.setups` row has `name`, `typecheck`, `baseline`, `coverage`,
-`timings` and `mutantTimeoutMs`. Setup order follows configuration order.
+`timings`, `mutantTimeoutMs` and `uncappedMutantTimeoutMs`. Setup order follows
+configuration order.
 
 `mutantTimeoutMs` is the time limit, in milliseconds, that the setup's mutant
 jobs used in both mutation phases: `timeoutMs` or the lower limit derived from
@@ -205,6 +206,13 @@ no mutant job ran for the setup. A mutant job that reaches it has
 compiler findings program had no errors and `noEmit` was set, so `tsc` did not
 run; see [test setups](configuration.md#test-setups). That typecheck adds
 nothing to `jobsAttempted`, and its `timings.typecheckMs` stays `null`.
+
+`uncappedMutantTimeoutMs` is the derived limit before the `timeoutMs` cap. It
+is set only with `countTimeoutsAsKilled: true`, when `timeoutMs` was below it
+and a mutant job for the setup reached its deadline, so that deadline did not
+count. Otherwise it is `null`. The human report then prints a
+`Job deadlines not counted` line once for the setup; see the
+[timeout policy](configuration.md#count-timeouts-as-detected).
 
 Setup-level `selection` records whether test-file selection is available after
 the original checks. Its `state` is `available`, `unavailable`, `not-run` when
@@ -270,8 +278,11 @@ reached. This timeout allows further mutation scheduling only when the command
 exited `1`, the complete receipt has valid counts and no execution errors, and
 cleanup succeeded. Additional receipt errors, including attributed hook errors
 alongside a timeout, still stop scheduling. By default neither kind counts as
-a detected mutant. With `countTimeoutsAsKilled: true`, only a clean
-runner-reported timeout can count. Job deadlines never qualify. Baseline
+a detected mutant. With `countTimeoutsAsKilled: true`, a clean runner-reported
+timeout can count, and so can a mutant job deadline at the setup's derived
+mutant limit when the process tree ended without cancellation, pipe,
+supervision or source errors and cleanup succeeded. A deadline that a lower
+`timeoutMs` cut short does not count. Baseline and coverage deadlines, baseline
 failures, cancellation and infrastructure errors never become detected mutants.
 
 A mutant's `execution-error` or job deadline does not stop later setups or mutants
@@ -367,9 +378,9 @@ retains its job state and evidence. An unstarted setup remains `not-run`.
 
 Each outcome also has `countedAsKilled`, a boolean. It is true only for a
 `timed-out` verdict counted under `countTimeoutsAsKilled: true`. All setups must
-have passed, failed or had a qualifying runner timeout, and at least one must
-have had that timeout. A timeout alongside an execution error, cancellation,
-job deadline, ineligible timeout or missing setup never counts. The original
+have passed, failed or had a qualifying timeout, and at least one must have had
+that timeout. A timeout alongside an execution error, cancellation, ineligible
+timeout or missing setup never counts. The original
 setup states and timeout evidence are preserved. A qualifying timeout takes
 precedence over an ordinary test failure for the raw verdict.
 
@@ -439,11 +450,13 @@ not individual tests or setups, and is not added to `timedOut`. The same field
 appears in extreme-mutation diagnostics.
 
 These two timeout counters retain all raw `timed-out` verdicts, including counted
-timeouts. The additive `unresolvedBreakdown.countedTimeouts` is their counted
-subset and equals the phase's `countedTimeouts`. Subtract it from `timedOut` or
-`testTimedOut` to obtain unresolved timeout counts. The readable report makes
-that subtraction and displays counted timeouts separately. Other breakdown
-counters keep their existing meaning.
+timeouts. The additive `unresolvedBreakdown.countedTimeouts` is the counted
+subset of `timedOut` and equals the phase's `countedTimeouts`. Subtract it from
+`timedOut` to obtain unresolved timeouts. A counted job deadline is not in
+`testTimedOut`, so subtract only counted outcomes without a `timedOut: true`
+setup from `testTimedOut`. The readable report makes these subtractions and
+displays counted timeouts separately. Other breakdown counters keep their
+existing meaning.
 
 ## Type-safety findings
 

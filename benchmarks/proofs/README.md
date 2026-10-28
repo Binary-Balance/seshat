@@ -9,15 +9,19 @@ The earlier benchmark under `benchmarks/rust/` is unchanged.
 `node benchmarks/proofs/job-deadlines.mjs --cli PATH` verifies that real
 `node:test` hangs under extreme mutants reach the job deadline, remain
 unresolved and allow later extreme and operator mutants to finish. Its
-`timeoutMs` of 3,000 caps the mutant limit. It checks serial and two-worker
-runs with replacement and experimental switching, retaining source integrity
-and empty scratch directories. Linux x64 package
-and Windows runtime CI run this proof.
+`timeoutMs` of 3,000 caps the mutant limit. The same runs with
+`countTimeoutsAsKilled`, `timeoutMs` 60,000 and `mutantTimeoutMinMs` 1,000 stop
+each hang at the derived limit and count it, so the run completes with a score.
+It checks serial and two-worker runs with replacement and experimental
+switching, retaining source integrity and empty scratch directories. Linux
+x64 package and Windows runtime CI run this proof.
 
 The `job-deadline` case in `test-selection.mjs` verifies that a deadline in a
 selected Vitest job stays unresolved in both mutation phases, even when the
-full command would pass. It must not trigger a full-command retry. Linux x64
-and Windows runtime CI also run this control.
+full command would pass. It must not trigger a full-command retry. With
+`countTimeoutsAsKilled` and a `timeoutMs` above the derived limit, the same
+deadline counts and the run completes. Linux x64 and Windows runtime CI also
+run this control.
 
 Requirements: Linux x64 or Windows x64, Node 24, npm and Rust 1.98.1. Linux
 requires a `kill` executable that supports process-group IDs; Windows runtime
@@ -1243,8 +1247,9 @@ All configured original checks, baselines and coverage collection must pass, and
 CRAP attribution must be complete, before any mutant starts. The proof uses source
 replacement by default, one worker by default, and fresh test processes. Every
 setup runs for each mutant even when another setup has already detected it. A
-setup job deadline leaves that mutant unresolved, but permits later mutants
-after confirmed process-tree termination, cleanup and source integrity checks.
+setup job deadline leaves that mutant unresolved unless `countTimeoutsAsKilled`
+counts it. Either way, it permits later mutants after confirmed process-tree
+termination, cleanup and source integrity checks.
 A safely cleaned-up runner crash or receipt error remains unresolved but allows
 later mutants to run. A bounded runner-reported test timeout with otherwise
 valid evidence does the same. See the
@@ -1586,7 +1591,9 @@ SESHAT_VITEST_CHECK_CASES=retry,repeat,expected-failure,concurrent node benchmar
 The opt-in timeout-scoring proof uses real Vitest and Jest/Expo fixtures whose
 awaited work never settles. It checks omitted, false and true policies,
 replacement and switching, ordinary and extreme mutants, raw timeout evidence,
-score thresholds, multiple setups, receipt errors and job-deadline exclusion.
+score thresholds, multiple setups and receipt errors. A Vitest job deadline
+that `timeoutMs` cuts short stays unresolved; with a `timeoutMs` above the
+derived mutant limit, the same deadline counts.
 It also verifies baseline timeouts never count, source restoration, scratch
 cleanup and one attempt per mutant/setup. With the existing proof dependencies
 and Jest/Expo fixture dependencies available, run:

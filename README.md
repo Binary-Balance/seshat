@@ -139,10 +139,11 @@ The mutation score is the percentage of mutants that made a test fail. A mutant
 makes one deliberate code change, such as `>` to `>=` or `true` to `false`.
 If tests catch two of three mutants, the score is `66.67%`. Timeouts remain
 unresolved by default. Opt in with `"countTimeoutsAsKilled": true` to count clean
-runner-reported test timeouts as detected, with separate timeout counts. Job
-deadlines and execution errors remain unresolved and withhold the score. Prefer
-tests that fail explicitly when awaited work never settles. See the
-[timeout policy](docs/configuration.md#count-runner-reported-timeouts-as-detected).
+runner-reported test timeouts, and clean job deadlines at the mutant time limit,
+as detected, with separate timeout counts. Other timeouts and execution errors
+remain unresolved and withhold the score. Prefer tests that fail explicitly when
+awaited work never settles. See the
+[timeout policy](docs/configuration.md#count-timeouts-as-detected).
 Neither score proves correctness.
 
 Seshat assumes deterministic tests. It does not repeat baselines to detect flaky

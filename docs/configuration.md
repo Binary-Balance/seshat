@@ -394,10 +394,19 @@ hanging mutant: with `"timeoutMs": 60000` and a 4-second suite, a hanging
 mutant stops at 30 s instead of 60 s.
 
 Lower settings end hanging mutants sooner, but a slow mutant that would have
-finished then stays unresolved as `timed-out`. Reports record each setup's
-limit in `result.setups[].mutantTimeoutMs`, and the terminal report shows it
-next to each mutant that reached it; see the
+finished then stays unresolved as `timed-out`, or counts as detected under
+`countTimeoutsAsKilled`. Reports record each setup's limit in
+`result.setups[].mutantTimeoutMs`, and the terminal report shows it next to
+each mutant that reached it; see the
 [report format](report-format.md#setup-jobs-and-evidence).
+
+With [`countTimeoutsAsKilled`](#count-timeouts-as-detected), a mutant job that
+reaches this limit and stops cleanly counts as detected. That needs `timeoutMs`
+at or above `max(slowest baseline × mutantTimeoutFactor, mutantTimeoutMinMs)`;
+a deadline set by a lower `timeoutMs` does not count. In a setup that raised
+`timeoutMs`, a slow test whose runner timeout used to fire first and count can
+now reach the lower mutant limit first. That deadline still counts when it
+stops cleanly.
 
 ### Mutation operators
 
@@ -529,9 +538,10 @@ fallback reasons; see the [report format](report-format.md#mutation-assessment).
 
 A mutant job that reaches its mutant limit allows later setups and mutants to
 run when its process tree was stopped, cleanup succeeded and captured inputs are
-unchanged. The timeout stays unresolved. Failed termination, pipe errors or
-unsafe cleanup still stop later mutants. Original and worker baselines must
-pass, so a deadline there prevents mutation work.
+unchanged. The timeout stays unresolved unless
+[`countTimeoutsAsKilled`](#count-timeouts-as-detected) counts it. Failed
+termination, pipe errors or unsafe cleanup still stop later mutants. Original
+and worker baselines must pass, so a deadline there prevents mutation work.
 A selected test job that reaches its deadline is retained without a full-command
 retry.
 
@@ -558,19 +568,34 @@ preparation or restoration failures still stop later mutants.
 Other setups for the current mutant can still run. Failed cleanup and
 cancellation stop its remaining setups immediately.
 
-### Count runner-reported timeouts as detected
+### Count timeouts as detected
 
 The top-level `"countTimeoutsAsKilled": true` setting opts in to counting clean
-runner-reported mutant test timeouts as detected. It defaults to `false`.
-Non-boolean values are rejected. Scheduling is unchanged.
+mutant timeouts as detected. It defaults to `false`. Non-boolean values are
+rejected. Scheduling is unchanged. Two kinds of timeout qualify:
 
-A timeout qualifies only with `testTimedOut: true`, `timedOut: false`, exit `1`,
-a complete receipt with valid non-negative integer `passed` and `failed` counts,
-zero receipt `errors`, and successful cleanup. Additional errors, including
-attributed Jest test-hook errors, disqualify it. Every configured setup must
-pass, fail or have a qualifying timeout. A job deadline, execution error,
-cancellation or missing setup keeps that mutant unresolved. Original and worker
-baselines must still pass.
+* A runner-reported test timeout with `testTimedOut: true`, `timedOut: false`,
+  exit `1`, a complete receipt with valid non-negative integer `passed` and
+  `failed` counts, zero receipt `errors`, and successful cleanup. Additional
+  errors, including attributed Jest test-hook errors, disqualify it.
+* A job deadline (`timedOut: true`) at the setup's
+  [mutant limit](#mutant-time-limits), when Seshat ended the whole process tree
+  without cancellation, pipe, supervision or source errors and cleanup
+  succeeded. A deadline leaves no receipt, so the receipt conditions above do
+  not apply. If `timeoutMs` is below the derived limit, it stops the job first
+  and the deadline does not count.
+
+A synchronous endless loop can end only at a job deadline, because the
+runner's own test timer cannot fire while the loop blocks it. A mutant that
+reaches its limit ran at least `mutantTimeoutFactor` times as long as the
+slowest baseline, and at least `mutantTimeoutMinMs`. A project that lowers
+these settings and opts in accepts that a slow mutant that would have survived
+can count as detected.
+
+Every configured setup must pass, fail or have a qualifying timeout. An
+execution error, cancellation, other timeout or missing setup keeps that mutant
+unresolved. Original and worker baselines must still pass, and baseline and
+coverage deadlines never count.
 
 The same policy applies to extreme mutants. A qualifying extreme timeout marks
 a covered function as checked rather than pseudo-tested. Counted timeouts do
@@ -582,13 +607,22 @@ Reports retain `timed-out` verdicts, raw timeout counts and `testTimedOut`
 evidence. `countedTimeouts` reports detected timeouts separately from `killed`,
 and each outcome has `countedAsKilled`. The terminal report distinguishes
 counted and unresolved timeouts. See the
-[report fields](report-format.md#mutation-assessment).
+[report fields](report-format.md#mutation-assessment). When `timeoutMs` stopped
+a mutant job before the derived limit, the terminal report says so once for
+that setup:
+
+```text
+  Job deadlines not counted: timeoutMs 30000 is below the mutant limit 61000; set timeoutMs to at least 61000.
+```
+
+It prints nothing in advance, because the limit follows each run's measured
+baseline.
 
 With the setting omitted or `false`, all timeouts remain unresolved, withhold
 the affected final score, return exit `2` and prevent a mutation-score threshold
-from passing. Job deadlines always remain unresolved regardless of this option.
-Prefer tests that fail explicitly when awaited work never settles, so a timeout
-is a diagnostic rather than the only evidence that behaviour changed.
+from passing. Prefer tests that fail explicitly when awaited work never
+settles, so a timeout is a diagnostic rather than the only evidence that
+behaviour changed.
 
 ### Mutation strategies
 

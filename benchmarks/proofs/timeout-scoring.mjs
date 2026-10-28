@@ -154,12 +154,29 @@ test('await completion',async()=>{await new Promise<void>(resolve=>{if(ready)res
     rmSync(join(input, secondFile));
     fixture('export const ready = 1 === 1;\nexport const later = 2 === 2;\n', `import {ready,later} from './subject';
 test('blocked event loop',()=>{if(!ready)while(true){};expect(later).toBe(true);});`);
+    // timeoutMs 5000 cuts the job short of the 30000 mutant limit, so it does not count.
     const deadline = run('job-deadline', value => {value.countTimeoutsAsKilled = true; value.mutationOperators = ['comparison']; value.setups[0].timeoutMs = 5000;});
     assert.equal(deadline.complete, false);
     assert.equal(deadline.result.mutation.score, null);
     assert.equal(deadline.result.mutation.countedTimeouts, 0);
     assert.equal(deadline.result.mutation.outcomes[0].verdict, 'timed-out');
+    assert.equal(deadline.result.mutation.outcomes[0].countedAsKilled, false);
     assert.equal(deadline.result.mutation.outcomes[0].setups[0].timedOut, true);
+    assert.equal(deadline.result.setups[0].mutantTimeoutMs, 5000);
+    assert.ok(deadline.result.setups[0].uncappedMutantTimeoutMs >= 30000);
+    const counted = run('job-deadline-counted', value => {
+      value.countTimeoutsAsKilled = true;
+      value.mutationOperators = ['comparison'];
+      Object.assign(value.setups[0], {timeoutMs:60000, mutantTimeoutMinMs:1000});
+    });
+    assert.equal(counted.complete, true);
+    assert.equal(counted.quality.state, 'passed');
+    assert.equal(counted.result.mutation.score, 100);
+    assert.equal(counted.result.mutation.countedTimeouts, 1);
+    assert.equal(counted.result.mutation.outcomes[0].countedAsKilled, true);
+    assert.equal(counted.result.mutation.outcomes[0].setups[0].timedOut, true);
+    assert.ok(counted.result.setups[0].mutantTimeoutMs < 60000, 'the derived limit applies');
+    assert.equal(counted.result.setups[0].uncappedMutantTimeoutMs, null);
     fixture('export const ready = 1 === 1;\n', `test('baseline never settles',async()=>{await new Promise(()=>{});},${testTimeout});`);
     const baseline = run('baseline-timeout', value => {value.countTimeoutsAsKilled = true; value.mutationOperators = ['comparison'];});
     assert.equal(baseline.complete, false);

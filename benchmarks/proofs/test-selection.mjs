@@ -125,6 +125,19 @@ ${originalConfig}`);
       assert.equal(first.setups[0].jobsAttempted,1, 'a deadline must not trigger a full retry');
     }
     assert.equal(selected.result.mutation.outcomes[1].verdict,'killed');
+    // Opted in, the same deadline at the derived limit counts, so the run completes.
+    const counted = await run(`${name}-counted`, {...config,countTimeoutsAsKilled:true,
+      setups:[{...config.setups[0],timeoutMs:60000,mutantTimeoutMinMs:1000}]});
+    assert.equal(counted.complete,true);
+    assert.equal(counted.result.mutation.score,100);
+    assert.ok(counted.result.setups[0].mutantTimeoutMs < 60000, 'the derived limit applies');
+    for (const phase of ['pseudoTesting','mutation']) {
+      const first = counted.result[phase].outcomes[0];
+      assert.equal(first.verdict,'timed-out');
+      assert.equal(first.countedAsKilled,true);
+      assert.equal(first.setups[0].timedOut,true);
+      assert.equal(first.setups[0].jobsAttempted,1);
+    }
     continue;
   }
   let switching = false;
