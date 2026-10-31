@@ -581,9 +581,9 @@ rejected. Scheduling is unchanged. Two kinds of timeout qualify:
 * A job deadline (`timedOut: true`) at the setup's
   [mutant limit](#mutant-time-limits), when Seshat ended the whole process tree
   without cancellation, pipe, supervision or source errors and cleanup
-  succeeded. A deadline leaves no receipt, so the receipt conditions above do
-  not apply. If `timeoutMs` is below the derived limit, it stops the job first
-  and the deadline does not count.
+  succeeded. The receipt conditions above do not apply to a deadline. If
+  `timeoutMs` is below the derived limit, it stops the job first and the
+  deadline does not count.
 
 A synchronous endless loop can end only at a job deadline, because the
 runner's own test timer cannot fire while the loop blocks it. A mutant that

@@ -202,17 +202,18 @@ the slowest original or worker baseline. See
 no mutant job ran for the setup. A mutant job that reaches it has
 `timedOut: true`, and the human report prints the limit next to that mutant.
 
+`uncappedMutantTimeoutMs` is the derived limit before the `timeoutMs` cap. It
+is set only with `countTimeoutsAsKilled: true`, when `timeoutMs` was below it
+and a mutant job for the setup reached its deadline, so that deadline did not
+count. The human report then prints a `Job deadlines not counted` line once
+for the setup; see the
+[timeout policy](configuration.md#count-timeouts-as-detected). Otherwise it is
+`null`.
+
 `typecheck.reusedFrom: "compilerStrictness"` with `state: "passed"` means the
 compiler findings program had no errors and `noEmit` was set, so `tsc` did not
 run; see [test setups](configuration.md#test-setups). That typecheck adds
 nothing to `jobsAttempted`, and its `timings.typecheckMs` stays `null`.
-
-`uncappedMutantTimeoutMs` is the derived limit before the `timeoutMs` cap. It
-is set only with `countTimeoutsAsKilled: true`, when `timeoutMs` was below it
-and a mutant job for the setup reached its deadline, so that deadline did not
-count. Otherwise it is `null`. The human report then prints a
-`Job deadlines not counted` line once for the setup; see the
-[timeout policy](configuration.md#count-timeouts-as-detected).
 
 Setup-level `selection` records whether test-file selection is available after
 the original checks. Its `state` is `available`, `unavailable`, `not-run` when
