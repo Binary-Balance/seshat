@@ -108,11 +108,12 @@ baseline jobs. Every change from 0.10.0 to 0.11.0 comes from the causes below.
   0.11.0 Linux x64 run, but its report is not retained.
 - **`worker-baseline-error` falls from 11 to 7.** Two typecheck jobs go (#222),
   and the extreme mutant's two setup jobs no longer run (#221).
-- **`source-error` varies by one job from timing.** Two workers race to reach the
-  injected fault, so one setup of a stopped mutant can record `not-run` instead of
-  `execution-error`. Mutant verdicts match. Beyond the two typecheck jobs, it
-  loses a job on macOS (16 → 13) and gains one on Windows (15 → 14), and the
-  rows differ between the two macOS ARM64 runs of the same build.
+- **`source-error` varies by one job, probably from timing.** Beyond the two
+  typecheck jobs, it loses a job on macOS (16 → 13) and gains one on Windows
+  (15 → 14), and the rows differ between the two macOS ARM64 runs of the same
+  build. Two workers appear to race to reach the injected fault, so one setup of
+  a stopped mutant can record `not-run` instead of `execution-error`. That cause
+  is inferred from these rows, not traced in the code. Mutant verdicts match.
 - **14 reports that stop early keep their counts.** These are the `SIGINT`,
   `SIGTERM` and `SIGTERM-after-receipt` CLI checks and five Windows runtime
   scenarios. Their compiler findings state is `unknown`, so no typecheck is
