@@ -2766,12 +2766,12 @@ mod tests {
 
     #[test]
     fn hanging_mutants_stop_at_the_limit_from_the_slowest_baseline() {
-        // One worker leaves the 1000 ms floor in charge. With two, a slowed
-        // worker baseline must set the limit instead of the original one. Its
-        // wait must outlast the original's cold start, which took 1136 ms on a
-        // busy Intel macOS runner, so the low factor keeps this test short.
-        // Only the second run opts in, so its clean deadlines count.
-        for (workers, floor, counted) in [(1, 1000, false), (2, 1, true)] {
+        // The floor, the original baseline and a slowed worker baseline each
+        // set the limit in turn. The worker's wait must outlast the original's
+        // cold start, which took 1136 ms on a busy Intel macOS runner, so the
+        // low factor keeps this test short. Only the last run opts in, so its
+        // clean deadlines count.
+        for (workers, floor, counted) in [(1, 1000, false), (1, 1, false), (2, 1, true)] {
             let fixture = super::super::tests::Fixture::new();
             let mut captured = fixture.capture().unwrap();
             captured
@@ -2781,7 +2781,7 @@ mod tests {
             captured.config.count_timeouts_as_killed = counted;
             let setup = &mut captured.config.setups[0];
             setup.timeout_ms = 60_000;
-            setup.mutant_timeout_factor = 1.0;
+            setup.mutant_timeout_factor = 1.5;
             setup.mutant_timeout_min_ms = floor;
             setup.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
             setup.test = vec![
@@ -2806,7 +2806,7 @@ mod tests {
                 .map(|baseline| baseline["ms"].as_f64().unwrap())
                 .fold(original, f64::max);
             let limit = result["setups"][0]["mutantTimeoutMs"].as_u64().unwrap();
-            assert_eq!(limit, (slowest.ceil() as u64).max(floor));
+            assert_eq!(limit, ((slowest * 1.5).ceil() as u64).max(floor));
             if workers == 2 {
                 assert!(slowest > original, "{result}");
             }
