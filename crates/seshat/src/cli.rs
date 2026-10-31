@@ -290,7 +290,9 @@ fn text(value: &Value) -> &str {
 }
 
 // Runner-reported timeouts end before the job deadline, so only `timedOut`
-// shows that a mutant reached its setup's limit.
+// shows that a mutant reached its setup's limit. This says plain "limit"
+// because, when timeoutMs caps it, the setup line uses "mutant limit" for the
+// higher derived value.
 fn mutant_deadlines(outcome: &Value, setups: &Value) -> String {
     array(&outcome["setups"])
         .iter()
@@ -298,12 +300,26 @@ fn mutant_deadlines(outcome: &Value, setups: &Value) -> String {
         .filter(|(row, _)| row["timedOut"] == true)
         .map(|(_, setup)| {
             format!(
-                ", setup {:?} reached the {} ms mutant limit",
+                ", setup {:?} reached its {} ms limit",
                 text(&setup["name"]),
                 setup["mutantTimeoutMs"]
             )
         })
         .collect()
+}
+
+// `testTimedOut` excludes mutants with a job deadline, so counted deadlines
+// must not be subtracted from it.
+fn counted_runner_timeouts(phase: &Value) -> u64 {
+    array(&phase["outcomes"])
+        .iter()
+        .filter(|outcome| {
+            outcome["countedAsKilled"] == true
+                && !array(&outcome["setups"])
+                    .iter()
+                    .any(|setup| setup["timedOut"] == true)
+        })
+        .count() as u64
 }
 
 fn readable(report: &Value) -> String {
@@ -461,7 +477,7 @@ fn readable(report: &Value) -> String {
         if counted_timeouts > 0 {
             let _ = writeln!(
                 output,
-                "Extreme runner-reported timeouts counted as killed: {counted_timeouts}."
+                "Extreme timeouts counted as killed: {counted_timeouts}."
             );
         }
         for key in ["error", "restorationError"] {
@@ -481,7 +497,7 @@ fn readable(report: &Value) -> String {
                 breakdown["testTimedOut"]
                     .as_u64()
                     .unwrap_or(0)
-                    .saturating_sub(counted_timeouts),
+                    .saturating_sub(counted_runner_timeouts(pseudo)),
                 breakdown["executionError"],
                 breakdown["cancelled"],
                 breakdown["notRun"],
@@ -526,6 +542,14 @@ fn readable(report: &Value) -> String {
                 output,
                 "  Test selection unavailable: {}{option}; using the full test command.",
                 text(&setup["selection"]["reason"])
+            );
+        }
+        // Set only after a deadline, so the line never appears in advance.
+        if let Some(limit) = setup["uncappedMutantTimeoutMs"].as_u64() {
+            let _ = writeln!(
+                output,
+                "  Job deadlines not counted: timeoutMs {} is below the mutant limit {limit}; set timeoutMs to at least {limit}.",
+                setup["mutantTimeoutMs"]
             );
         }
         if let Some(strictness) = setup.get("compilerStrictness") {
@@ -679,10 +703,7 @@ fn readable(report: &Value) -> String {
         );
         let counted_timeouts = mutation["countedTimeouts"].as_u64().unwrap_or(0);
         if counted_timeouts > 0 {
-            let _ = writeln!(
-                output,
-                "Runner-reported timeouts counted as killed: {counted_timeouts}."
-            );
+            let _ = writeln!(output, "Timeouts counted as killed: {counted_timeouts}.");
         }
         for row in array(&mutation["perOperator"]) {
             let _ = writeln!(
@@ -725,7 +746,7 @@ fn readable(report: &Value) -> String {
                 breakdown["testTimedOut"]
                     .as_u64()
                     .unwrap_or(0)
-                    .saturating_sub(counted_timeouts),
+                    .saturating_sub(counted_runner_timeouts(mutation)),
                 breakdown["executionError"],
                 breakdown["cancelled"],
                 breakdown["notRun"],
@@ -745,10 +766,11 @@ fn readable(report: &Value) -> String {
         if timed_out > 0 {
             let noun = if timed_out == 1 { "mutant" } else { "mutants" };
             let job_timed_out = array(&mutation["outcomes"]).iter().any(|outcome| {
-                array(&outcome["setups"]).iter().any(|setup| {
-                    setup["timedOut"] == true
-                        || setup["state"] == "timed-out" && setup["testTimedOut"] != true
-                })
+                outcome["countedAsKilled"] != true
+                    && array(&outcome["setups"]).iter().any(|setup| {
+                        setup["timedOut"] == true
+                            || setup["state"] == "timed-out" && setup["testTimedOut"] != true
+                    })
             });
             if job_timed_out {
                 let _ = writeln!(output, "Timeouts affected {timed_out} {noun}.");
@@ -1449,8 +1471,8 @@ mod tests {
             assert_eq!(code, status);
             assert_eq!(report["quality"]["checks"][0]["actual"], score);
             let rendered = readable(&report);
-            assert!(rendered.contains("Runner-reported timeouts counted as killed: 1."));
-            assert!(rendered.contains("Extreme runner-reported timeouts counted as killed: 1."));
+            assert!(rendered.contains("Timeouts counted as killed: 1."));
+            assert!(rendered.contains("Extreme timeouts counted as killed: 1."));
             assert!(rendered.contains("Unresolved breakdown: timed-out 0 (runner-reported 0)"));
             assert!(!rendered.contains("score is withheld"));
             assert!(!rendered.contains("scheduling stopped"));
@@ -1534,7 +1556,32 @@ mod tests {
         assert!(runner_timeout.contains("Runner-reported test timeouts affected 1 mutant."));
         assert!(!runner_timeout.contains("scheduling stopped"));
         assert!(runner_timeout.contains("No mutants were left unrun."));
-        assert!(!runner_timeout.contains("mutant limit"));
+        assert!(!runner_timeout.contains("ms limit"));
+    }
+
+    #[test]
+    fn counted_deadlines_keep_runner_timeouts_unresolved_and_explain_the_cap() {
+        let setups = readable(&json!({"timings":{"wallMs":1.0},"result":{"setups":[
+            {"name":"unit","mutantTimeoutMs":30000,"uncappedMutantTimeoutMs":61000},
+            {"name":"slow","mutantTimeoutMs":4000,"uncappedMutantTimeoutMs":null}]}}));
+        assert_eq!(setups.matches("Job deadlines not counted").count(), 1);
+        assert!(setups.contains(
+            "Setup \"unit\": typecheck unknown, baseline unknown, coverage unknown\n  Job deadlines not counted: timeoutMs 30000 is below the mutant limit 61000; set timeoutMs to at least 61000.\n"
+        ));
+        // A counted deadline is in countedTimeouts but not in testTimedOut.
+        let rendered = readable(&json!({"timings":{"wallMs":1.0},"result":{
+            "mutation":{"score":null,"notRun":0,"countedTimeouts":1,
+                "diagnostics":{"unresolvedBreakdown":{"timedOut":2,"testTimedOut":1,
+                    "countedTimeouts":1,"executionError":0,"cancelled":0,"notRun":0,"unassessed":0}},
+                "outcomes":[
+                    {"verdict":"timed-out","countedAsKilled":true,
+                        "setups":[{"state":"timed-out","timedOut":true}]},
+                    {"verdict":"timed-out","countedAsKilled":false,
+                        "setups":[{"state":"timed-out","timedOut":false,"testTimedOut":true}]}]}
+        }}));
+        assert!(rendered.contains("Timeouts counted as killed: 1."));
+        assert!(rendered.contains("Unresolved breakdown: timed-out 1 (runner-reported 1)"));
+        assert!(rendered.contains("Runner-reported test timeouts affected 1 mutant."));
     }
 
     #[test]
@@ -1551,12 +1598,13 @@ mod tests {
                     {"state":"timed-out","timedOut":false,"testTimedOut":true},{"timedOut":true}]}]}
         }}));
         assert!(rendered.contains(
-            "  Extreme #0 \"a.ts\" \"hang\": timed-out, setup \"unit\" reached the 4000 ms mutant limit\n"
+            "  Extreme #0 \"a.ts\" \"hang\": timed-out, setup \"unit\" reached its 4000 ms limit\n"
         ));
         assert!(!rendered.contains("quick"));
         // The runner-reported timeout in "unit" ended before that setup's limit.
-        assert!(rendered.contains(
-            "\">\" -> \">=\": timed-out, setup \"slow\" reached the 9000 ms mutant limit\n"
-        ));
+        assert!(
+            rendered
+                .contains("\">\" -> \">=\": timed-out, setup \"slow\" reached its 9000 ms limit\n")
+        );
     }
 }

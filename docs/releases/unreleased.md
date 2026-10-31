@@ -46,3 +46,32 @@ A direct `tsc` typecheck no longer runs when the compiler findings helper has
 already checked the same program without errors and `noEmit` is set. Reports
 record this as `setups[].typecheck.reusedFrom: "compilerStrictness"`. This
 resolves [#222](https://github.com/Binary-Balance/seshat/issues/222).
+
+## Count clean deadlines at the mutant limit as detected
+
+With `countTimeoutsAsKilled: true`, a mutant job deadline now counts as
+detected when the job ran to its setup's mutant limit and Seshat stopped the
+process tree cleanly. A synchronous endless loop, which the runner's own test
+timer cannot stop, no longer withholds the score. Extreme mutants follow the
+same rule. Reports keep the `timed-out` verdict and `timedOut: true`, and add
+counted deadlines to `countedTimeouts`. Baseline and coverage deadlines never
+count, and without the opt-in, verdicts are unchanged.
+
+A deadline that a lower `timeoutMs` cut short still stays unresolved. Each
+`result.setups` row then reports the derived limit as
+`uncappedMutantTimeoutMs`, and the terminal report prints one line for the
+setup saying which `timeoutMs` would let it count.
+
+With the opt-in and a raised `timeoutMs`, a slow test whose runner timeout used
+to fire first and count can now reach the lower mutant limit first. That
+deadline still counts when it stops cleanly. The terminal report now says
+"Timeouts counted as killed" instead of "Runner-reported timeouts counted as
+killed".
+
+With the opt-in, `countedTimeouts` can now include job deadlines, and these are
+not in `unresolvedBreakdown.testTimedOut`. So `testTimedOut - countedTimeouts`
+no longer gives the uncounted runner-reported timeouts. Subtract only counted
+outcomes that have no `timedOut: true` setup; see the
+[report format](../report-format.md#mutation-assessment). See also the
+[timeout policy](../configuration.md#count-timeouts-as-detected). This resolves
+[#240](https://github.com/Binary-Balance/seshat/issues/240).

@@ -186,6 +186,11 @@ jobs:
         run: |
           PROOF_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync(process.argv[1])).proofBinary);' "work/arm64/package-result.json")"
           SESHAT_PROOF_BINARY="$PROOF_BINARY" node benchmarks/proofs/execute-cancellation.mjs 2>&1 | tee "work/arm64/execute-cancellation.log"
+      - name: Verify job deadline continuation
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
+        run: |
+          NATIVE_BINARY="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/arm64/package-result.json")).binaryPath);')"
+          node benchmarks/proofs/job-deadlines.mjs --cli "$NATIVE_BINARY"
       - name: Write portable summary
         if: always()
         run: |

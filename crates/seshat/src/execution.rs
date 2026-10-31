@@ -270,8 +270,17 @@ impl CommandEvidence {
                 && self.details["cleanupError"].is_null())
     }
 
-    fn assessment_state(&self, count_timeouts_as_killed: bool) -> TestState {
-        if count_timeouts_as_killed && self.test_timed_out() && self.can_continue_mutation() {
+    // A mutant that ran to its derived limit took far longer than the slowest
+    // baseline, so a clean deadline there is evidence of a hang. A deadline
+    // set by a lower timeoutMs is not: a slow mutant could still have finished.
+    fn assessment_state(&self, count_timeouts_as_killed: bool, at_mutant_limit: bool) -> TestState {
+        let job_deadline = self.state == TestState::TimedOut
+            && self.details["timedOut"] == true
+            && at_mutant_limit;
+        if count_timeouts_as_killed
+            && (self.test_timed_out() || job_deadline)
+            && self.can_continue_mutation()
+        {
             TestState::CountedTimeout
         } else {
             self.state
@@ -770,7 +779,7 @@ fn only_cleaned_up_execution_errors_allow_more_mutants() {
 }
 
 #[test]
-fn only_cleaned_up_job_deadlines_allow_more_mutants() {
+fn only_cleaned_up_job_deadlines_continue_or_count() {
     let evidence = json!({"exit":null,"timedOut":true,"cancelled":false,"outputTruncated":true});
     let outcome = CommandEvidence {
         state: classify("observed", &evidence),
@@ -778,6 +787,12 @@ fn only_cleaned_up_job_deadlines_allow_more_mutants() {
     };
     assert_eq!(outcome.state, TestState::TimedOut);
     assert!(outcome.can_continue_mutation());
+    assert_eq!(
+        outcome.assessment_state(true, true),
+        TestState::CountedTimeout
+    );
+    assert_eq!(outcome.assessment_state(true, false), TestState::TimedOut);
+    assert_eq!(outcome.assessment_state(false, true), TestState::TimedOut);
     assert_ne!(outcome.into_json()["testTimedOut"], true);
     for (field, value) in [
         ("timedOut", Value::Null),
@@ -795,6 +810,11 @@ fn only_cleaned_up_job_deadlines_allow_more_mutants() {
             details: changed,
         };
         assert!(!outcome.can_continue_mutation(), "{field}");
+        assert_ne!(
+            outcome.assessment_state(true, true),
+            TestState::CountedTimeout,
+            "{field}"
+        );
     }
 }
 
@@ -807,8 +827,16 @@ fn only_bounded_runner_timeouts_allow_more_mutants() {
         details: evidence.clone(),
     };
     assert!(outcome.can_continue_mutation());
-    assert_eq!(outcome.assessment_state(false), TestState::TimedOut);
-    assert_eq!(outcome.assessment_state(true), TestState::CountedTimeout);
+    assert_eq!(outcome.assessment_state(false, true), TestState::TimedOut);
+    assert_eq!(
+        outcome.assessment_state(true, true),
+        TestState::CountedTimeout
+    );
+    // The timeoutMs cap only matters for job deadlines.
+    assert_eq!(
+        outcome.assessment_state(true, false),
+        TestState::CountedTimeout
+    );
     assert_eq!(outcome.into_json()["testTimedOut"], true);
     for (field, value) in [
         ("errors", json!(1)),
@@ -825,7 +853,7 @@ fn only_bounded_runner_timeouts_allow_more_mutants() {
         };
         assert!(!outcome.can_continue_mutation(), "{field}");
         assert_ne!(
-            outcome.assessment_state(true),
+            outcome.assessment_state(true, true),
             TestState::CountedTimeout,
             "{field}"
         );
@@ -847,7 +875,7 @@ fn only_bounded_runner_timeouts_allow_more_mutants() {
         };
         assert!(!outcome.can_continue_mutation(), "{field}");
         assert_ne!(
-            outcome.assessment_state(true),
+            outcome.assessment_state(true, true),
             TestState::CountedTimeout,
             "{field}"
         );
