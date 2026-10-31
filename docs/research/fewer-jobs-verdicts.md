@@ -14,10 +14,10 @@ It retains each `seshat check --json` report in the host's
 `*-package-proof` artifact. The comparison uses those artifacts from two
 builds on all five supported hosts:
 
-| Build | Head | Linux x64 | Linux ARM64 | macOS x64 and ARM64 | Windows x64 |
-| --- | --- | --- | --- | --- | --- |
-| 0.10.0 | `de3f53a9ec0231e942ef545174ffbd1a6e49f573` | [40416308408](https://github.com/Binary-Balance/seshat/actions/runs/40416308408) | [40416308416](https://github.com/Binary-Balance/seshat/actions/runs/40416308416) | [40416308390](https://github.com/Binary-Balance/seshat/actions/runs/40416308390) | [40416308384](https://github.com/Binary-Balance/seshat/actions/runs/40416308384) |
-| 0.11.0 | `394afba477bb974f0fb74103186a22d0644f0eef` | [41187182223](https://github.com/Binary-Balance/seshat/actions/runs/41187182223) | [41187182290](https://github.com/Binary-Balance/seshat/actions/runs/41187182290) | [41187182250](https://github.com/Binary-Balance/seshat/actions/runs/41187182250) | [41187182235](https://github.com/Binary-Balance/seshat/actions/runs/41187182235) |
+| Build | Head | Linux x64 | Linux ARM64 | macOS x64 and ARM64 | Windows x64 | Windows runtime |
+| --- | --- | --- | --- | --- | --- | --- |
+| 0.10.0 | `de3f53a9ec0231e942ef545174ffbd1a6e49f573` | [40416308408](https://github.com/Binary-Balance/seshat/actions/runs/40416308408) | [40416308416](https://github.com/Binary-Balance/seshat/actions/runs/40416308416) | [40416308390](https://github.com/Binary-Balance/seshat/actions/runs/40416308390) | [40416308384](https://github.com/Binary-Balance/seshat/actions/runs/40416308384) | [40416308383](https://github.com/Binary-Balance/seshat/actions/runs/40416308383) |
+| 0.11.0 | `394afba477bb974f0fb74103186a22d0644f0eef` | [41187182223](https://github.com/Binary-Balance/seshat/actions/runs/41187182223) | [41187182290](https://github.com/Binary-Balance/seshat/actions/runs/41187182290) | [41187182250](https://github.com/Binary-Balance/seshat/actions/runs/41187182250) | [41187182235](https://github.com/Binary-Balance/seshat/actions/runs/41187182235) | [41187182262](https://github.com/Binary-Balance/seshat/actions/runs/41187182262) |
 
 For every mutant and pseudo-test outcome in `summary.json`,
 `vitest-check.json` and `jest-expo-check.json`, the comparison required the
@@ -44,8 +44,23 @@ scenarios. Their outcomes had the same comparison:
 | windows-x64 | `operators.json`, `shared-cli.json`, `shared-parallel.json`, `windows-runtime-cli-evidence.json` | 378 | 429 | 1 |
 
 `public-consumer-examples.json` repeats the examples in `summary.json`, so it is
-not counted. The latest-Node proofs moved from Node 24.22.1 to 24.22.2 between
-the builds.
+not counted.
+
+The remaining artifacts from the same runs and the Windows runtime runs had the
+same comparison too:
+
+| Artifact | Proof files | Outcomes | Outcomes that differ |
+| --- | --- | ---: | ---: |
+| `linux-x64-latest-node` | `cli.json`, `jest-expo-check.json`, `node-load-failure.json`, `parallel.json`, `vitest-check.json` | 139 | 1 |
+| `linux-arm64-latest-node` | as above | 139 | 1 |
+| `macos-x64-latest-node` | as above | 139 | 1 |
+| `windows-x64-latest-node` | as above | 139 | 1 |
+| `windows-shared-fixture-evidence` | `jest-expo-check.json`, `shared-cli.json`, `shared-parallel.json`, `vitest-check.json`, `vitest-timeouts.json` | 97 | 1 |
+| `windows-runtime-cli-evidence` | `windows-runtime-cli-evidence.json` | 3 | 0 |
+
+`linux-x64-debian-stage-evidence` and `windows-runtime-preflight` hold no
+outcomes. Every latest-Node proof moved from Node 24.22.1 to 24.22.2 between the
+builds.
 
 ## Result
 
@@ -56,8 +71,9 @@ incomplete `before-all` checks. Worker parity passes for every example on every
 host. `countedAsKilled` is `false` for every outcome and `countedTimeouts` is 0,
 because none of these reports opts in.
 
-Across all 2,382 compared outcomes, 8 differ. All 8 are the same outcome in one
-scenario. Every other scenario has unchanged outcomes on all five hosts.
+Across the 3,038 outcomes in both tables, 13 differ: 8 of 2,382 in the
+`*-package-proof` artifacts and 5 of 656 in the others. All 13 are the same
+outcome in one scenario. Every other scenario has unchanged outcomes.
 
 ### Changed verdict: `worker-baseline-error`
 
@@ -66,8 +82,8 @@ worker baseline fail. Its one extreme mutant changes from `killed` to `not-run`:
 
 - in `standalone.json` on Linux x64, Linux ARM64, macOS x64 and macOS ARM64;
 - in both parallel sections of `debian11.json`;
-- in the macOS ARM64 latest-Node `parallel.json`; and
-- in the Windows `shared-parallel.json`.
+- in the latest-Node `parallel.json` on all five hosts; and
+- in `shared-parallel.json` in the Windows package and Windows runtime runs.
 
 The cause is [#221](https://github.com/Binary-Balance/seshat/issues/221), not
 [#202](https://github.com/Binary-Balance/seshat/issues/202) or
@@ -86,35 +102,49 @@ nothing about `pseudoTesting` in this mode, so its proof passes on both builds.
 
 ### Job counts
 
-The arithmetic was checked, not assumed. In all 185 retained reports with a
+The arithmetic was checked, not assumed. In all 350 reports with a
 `jobsAttempted` value, in both builds, it equals the report's baseline, coverage,
 typecheck, compiler findings and mutant jobs plus its worker and prepared
 baseline jobs. Every change from 0.10.0 to 0.11.0 comes from the causes below.
 
 - [#222](https://github.com/Binary-Balance/seshat/issues/222) **explains the
-  drops in all 12 reports.** Each has one setup, with
+  drops in the 12 reports in the tables below.** Each has one setup, with
   `typecheck.reusedFrom: "compilerStrictness"`, so `jobsAttempted` falls by
   exactly one. Parallel scenarios have two setups and fall by two, for example
   20 → 18.
-- [#221](https://github.com/Binary-Balance/seshat/issues/221) **saves no jobs in
-  these reports.** The examples and checks here use one worker. All 80 retained
-  multi-worker reports plan one extreme mutant, so
-  `pseudoTesting.workerBaselineJobs` was already 0 in 0.10.0. The two-worker
-  example runs keep only a parity result. PR #242 measured the saving on the Node
-  example with two workers: `jobsAttempted` 12 → 11.
+- [#221](https://github.com/Binary-Balance/seshat/issues/221) **saves a job in
+  one report, and adds two in another.** The saving needs more than one worker
+  and more than one extreme mutant. The 12 reports below use one worker. The
+  two-worker example runs keep only a parity result. Of the 135 multi-worker
+  reports, only two plan more than one extreme mutant, so
+  `pseudoTesting.workerBaselineJobs` was already 0 elsewhere in 0.10.0. PR #242
+  measured the saving on the Node example with two workers: `jobsAttempted`
+  12 → 11. In `vitest-timeouts.json` from the Windows runtime run:
+  - `timeout-continues` falls from 10 to 8. One typecheck job goes (#222), and
+    one worker baseline goes (#221): `pseudoTesting.workerBaselineJobs` 1 → 0.
+  - `crash-continues` falls from 8 to 7. One typecheck job goes (#222). Its one
+    worker baseline moves from `pseudoTesting` to `mutation`, so #221 saves
+    nothing here.
+  - `operator-crash-continues-switching` stays at 18. Two typecheck jobs go
+    (#222), and two worker baselines are added (#221):
+    `mutation.workerBaselineJobs` 2 → 4. With switching and no extreme mutants,
+    0.10.0 ran only prepared baselines. 0.11.0 also runs each copy's original
+    baseline.
 - [#227](https://github.com/Binary-Balance/seshat/issues/227) **saves no jobs in
-  these reports.** No retained report has a `no-coverage` setup in either build.
-  The `setups` case of `test-selection.mjs` asserts that saving and passed in the
-  0.11.0 Linux x64 run, but its report is not retained.
+  these artifacts.** No compared report has a `no-coverage` setup in either
+  build. The `setups` case of `test-selection.mjs` asserts that saving and passed
+  in the 0.11.0 Linux x64 run, but CI does not keep its report.
 - **`worker-baseline-error` falls from 11 to 7.** Two typecheck jobs go (#222),
-  and the extreme mutant's two setup jobs no longer run (#221).
-- **`source-error` varies by one job, probably from timing.** Beyond the two
-  typecheck jobs, it loses a job on macOS (16 → 13) and gains one on Windows
-  (15 → 14), and the rows differ between the two macOS ARM64 runs of the same
-  build. Two workers appear to race to reach the injected fault, so one setup of
-  a stopped mutant can record `not-run` instead of `execution-error`. That cause
-  is inferred from these rows, not traced in the code. Mutant verdicts match.
-- **14 reports that stop early keep their counts.** These are the `SIGINT`,
+  and the extreme mutant's two setup jobs no longer run (#221). That is lost work,
+  not a saving.
+- **`source-error` varies by one job from timing.** Each worker sets a shared stop
+  flag when a finished mutant cannot continue, and checks it before each setup
+  (`collection.rs`). So timing decides whether the other worker's second setup
+  runs or records `not-run`. Mutant verdicts match. Each build varies: 0.10.0 ran
+  15 or 16 jobs and 0.11.0 ran 13 or 14. Beyond the two typecheck jobs, a report
+  can therefore show one job fewer (macOS, 16 → 13) or one more (Windows,
+  15 → 14).
+- **34 reports that stop early keep their counts.** These are the `SIGINT`,
   `SIGTERM` and `SIGTERM-after-receipt` CLI checks and five Windows runtime
   scenarios. Their compiler findings state is `unknown`, so no typecheck is
   reused.
@@ -123,9 +153,11 @@ baseline jobs. Every change from 0.10.0 to 0.11.0 comes from the causes below.
 [#240](https://github.com/Binary-Balance/seshat/issues/240) change no job count
 or verdict here. The Jest/Expo reports set `timeoutMs` to 60,000, so their
 mutant limit falls from 60,000 to 30,000, or to 30,216 for the Windows Jest/Expo
-example (5 × its 6,043 ms baseline). Every other retained limit is 30,000, or
-`null` where no mutants ran. No mutant job in the 12 reports timed out; the slowest took
-4,992 ms. `uncappedMutantTimeoutMs` is `null` throughout.
+example (5 × its 6,043 ms baseline). In the `macos-x64-latest-node` artifact, 10
+Jest/Expo reports have limits from 31,427 to 51,462, from baselines of 6.3 to
+10.3 s. Every other limit is 30,000, or `null` where no mutants ran. No mutant
+job in the 12 reports timed out in either build; the slowest took 4,992 ms.
+`uncappedMutantTimeoutMs` is `null` throughout.
 
 ## Timings
 
