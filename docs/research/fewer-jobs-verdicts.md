@@ -59,8 +59,9 @@ same comparison too:
 | `windows-runtime-cli-evidence` | `windows-runtime-cli-evidence.json` | 3 | 0 |
 
 `linux-x64-debian-stage-evidence` and `windows-runtime-preflight` hold no
-outcomes. Every latest-Node proof moved from Node 24.22.1 to 24.22.2 between the
-builds.
+outcomes. `node-load-failure.json` rows hold only an ID, verdict and evidence, so
+those rows compare position, ID and verdict. Every latest-Node proof moved from
+Node 24.22.1 to 24.22.2 between the builds.
 
 ## Result
 
@@ -102,24 +103,31 @@ nothing about `pseudoTesting` in this mode, so its proof passes on both builds.
 
 ### Job counts
 
-The arithmetic was checked, not assumed. In all 350 reports with a
-`jobsAttempted` value, in both builds, it equals the report's baseline, coverage,
-typecheck, compiler findings and mutant jobs plus its worker and prepared
-baseline jobs. Every change from 0.10.0 to 0.11.0 comes from the causes below.
+The arithmetic was checked, not assumed. In all 350 full reports, in both builds,
+`jobsAttempted` equals the report's baseline, coverage, typecheck, compiler
+findings and mutant jobs plus its worker and prepared baseline jobs. Every change
+in those reports from 0.10.0 to 0.11.0 comes from the causes below.
+
+The 280 operator-proof rows in `standalone.json` and `operators.json` are outside
+that arithmetic. They keep only the operator phase of a report, without
+`pseudoTesting` or setup rows, so their `jobsAttempted` counts that phase alone.
+Their outcomes are in the totals above. Of these rows, 215 also keep the report's
+total as `totalJobsAttempted`. In 185 one-worker rows it falls by one (#222). The
+30 two-worker rows are under #221 below. The other 65 rows keep no total.
 
 - [#222](https://github.com/Binary-Balance/seshat/issues/222) **explains the
   drops in the 12 reports in the tables below.** Each has one setup, with
   `typecheck.reusedFrom: "compilerStrictness"`, so `jobsAttempted` falls by
   exactly one. Parallel scenarios have two setups and fall by two, for example
   20 → 18.
-- [#221](https://github.com/Binary-Balance/seshat/issues/221) **saves a job in
-  one report, and adds two in another.** The saving needs more than one worker
-  and more than one extreme mutant. The 12 reports below use one worker. The
-  two-worker example runs keep only a parity result. Of the 135 multi-worker
-  reports, only two plan more than one extreme mutant, so
-  `pseudoTesting.workerBaselineJobs` was already 0 elsewhere in 0.10.0. PR #242
-  measured the saving on the Node example with two workers: `jobsAttempted`
-  12 → 11. In `vitest-timeouts.json` from the Windows runtime run:
+- [#221](https://github.com/Binary-Balance/seshat/issues/221) **saves a worker
+  baseline in 16 reports, and adds two in another.** The saving needs at least two
+  workers, at least two mutants in each phase, and no switching. The 12 reports
+  below use one worker, and the two-worker example runs keep only a parity result.
+  Of the 135 full reports that request several workers, only two plan more than
+  one extreme mutant. PR #242 measured the saving on the Node example with two
+  workers: `jobsAttempted` 12 → 11. In `vitest-timeouts.json` from the Windows
+  runtime run:
   - `timeout-continues` falls from 10 to 8. One typecheck job goes (#222), and
     one worker baseline goes (#221): `pseudoTesting.workerBaselineJobs` 1 → 0.
   - `crash-continues` falls from 8 to 7. One typecheck job goes (#222). Its one
@@ -130,6 +138,23 @@ baseline jobs. Every change from 0.10.0 to 0.11.0 comes from the causes below.
     `mutation.workerBaselineJobs` 2 → 4. With switching and no extreme mutants,
     0.10.0 ran only prepared baselines. 0.11.0 also runs each copy's original
     baseline.
+
+  In the operator-proof rows, on all five hosts:
+  - `boolean-only-parallel`, `optional-only-parallel` and
+    `statement-only-parallel` fall 15 → 13, 20 → 18 and 16 → 14 in
+    `totalJobsAttempted`. One typecheck job goes (#222), and one worker baseline
+    goes (#221). With the `timeout-continues` report, these 15 make the 16.
+  - `boolean-switching-parallel`, `optional-switching-parallel` and
+    `statement-switching-parallel` fall 16 → 15, 21 → 20 and 17 → 16. Only the
+    typecheck job goes (#222). `workerBaselineJobs` goes 1 → 2 because a worker
+    baseline moves into `mutation`.
+
+  Both groups are inferred from their totals, because these rows drop
+  `pseudoTesting`. Adding the four setup jobs, the extreme mutants each proof
+  asserts and the row's own mutant and baseline jobs leaves exactly one 0.10.0 job
+  unaccounted for, the extreme phase's worker baseline. The same sum for 0.11.0,
+  without the typecheck job, leaves none. The `arithmetic-replacement-parallel` and
+  `logical-switching-parallel` rows keep no total, so they are not counted.
 - [#227](https://github.com/Binary-Balance/seshat/issues/227) **saves no jobs in
   these artifacts.** No compared report has a `no-coverage` setup in either
   build. The `setups` case of `test-selection.mjs` asserts that saving and passed
@@ -144,10 +169,12 @@ baseline jobs. Every change from 0.10.0 to 0.11.0 comes from the causes below.
   15 or 16 jobs and 0.11.0 ran 13 or 14. Beyond the two typecheck jobs, a report
   can therefore show one job fewer (macOS, 16 → 13) or one more (Windows,
   15 → 14).
-- **34 reports that stop early keep their counts.** These are the `SIGINT`,
-  `SIGTERM` and `SIGTERM-after-receipt` CLI checks and five Windows runtime
-  scenarios. Their compiler findings state is `unknown`, so no typecheck is
-  reused.
+- **34 reports keep their counts.** Their compiler findings state is `unknown`,
+  so no typecheck is reused. Of these, 28 are incomplete: the `SIGINT`, `SIGTERM`
+  and `SIGTERM-after-receipt` CLI proof runs and the Windows runtime `timeout` and
+  `consoleCancellation` scenarios. The other 6 are complete `crap` runs, the
+  Windows runtime `overflow`, `leaderExit` and `leaderExitRepeat` scenarios, which
+  run no typecheck in either build.
 
 [#202](https://github.com/Binary-Balance/seshat/issues/202) and
 [#240](https://github.com/Binary-Balance/seshat/issues/240) change no job count
