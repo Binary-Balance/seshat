@@ -391,7 +391,9 @@ defaults to 5 and must be a positive number. `mutantTimeoutMinMs` defaults to
 30,000 and must be a positive integer. With the default `timeoutMs`, every
 mutant limit stays 30,000. A setup that raises `timeoutMs` waits less for each
 hanging mutant: with `"timeoutMs": 60000` and a 4-second suite, a hanging
-mutant stops at 30 s instead of 60 s.
+mutant stops at 30 s instead of 60 s. A slow mutant that would have finished
+within `timeoutMs` stops there too. To keep the full wait, set
+`mutantTimeoutMinMs` to the `timeoutMs` value.
 
 Lower settings end hanging mutants sooner, but a slow mutant that would have
 finished then stays unresolved as `timed-out`, or counts as detected under
@@ -588,9 +590,10 @@ rejected. Scheduling is unchanged. Two kinds of timeout qualify:
 A synchronous endless loop can end only at a job deadline, because the
 runner's own test timer cannot fire while the loop blocks it. A mutant that
 reaches its limit ran at least `mutantTimeoutFactor` times as long as the
-slowest baseline, and at least `mutantTimeoutMinMs`. A project that lowers
-these settings and opts in accepts that a slow mutant that would have survived
-can count as detected.
+slowest baseline, and at least `mutantTimeoutMinMs`. Opting in accepts that a
+slow mutant that would have survived can count as detected, more often if
+these settings are lowered. To give slow mutants longer, raise
+`mutantTimeoutMinMs` and `timeoutMs` together.
 
 Every configured setup must pass, fail or have a qualifying timeout. An
 execution error, cancellation, other timeout or missing setup keeps that mutant
