@@ -135,10 +135,11 @@ async function check(name,workers,mode='normal',signal,attempt=1){
       const inferredAny=['high','low'].map(setup=>({setup,state:'known',count:0,locations:[]}));
       assert.deepEqual(result.sources,[{path:'subject.ts',result:{complete:true,functions:[{
         complexity:1,cognitiveComplexity:0,coverage:1,covered:1,crap:1,name:'adult',start:7,status:'measured',total:1,
+        coverageSuppressions:0,
         branchCovered:0,branchTotal:0,branchCoverage:null,coverageBasis:'statement',
         pseudoTested:false,pseudoTestStatus:'checked',pseudoTestReason:null,
         typeSafety:{explicitAny:0,typeAssertions:0,doubleAssertions:0,nonNullAssertions:0,tsIgnore:0,tsExpectError:0,tsNocheck:0,inferredAny}
-      }],problems:[],typeSafety:{unowned:{explicitAny:0,typeAssertions:0,doubleAssertions:0,nonNullAssertions:0,tsIgnore:0,tsExpectError:0,tsNocheck:0},suppressions:[],inferredAny}}}]);
+      }],problems:[],coverageSuppressions:{count:0,hints:[]},typeSafety:{unowned:{explicitAny:0,typeAssertions:0,doubleAssertions:0,nonNullAssertions:0,tsIgnore:0,tsExpectError:0,tsNocheck:0},suppressions:[],inferredAny}}}]);
       const count=Math.min(workers??1,4);
       assert.equal(result.mutation.workersUsed,count);assert.equal(result.mutation.workerBaselineJobs,(count-1)*2);
       // Two compiler helpers replace tsc, leaving two baselines and two coverage runs.

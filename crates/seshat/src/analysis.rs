@@ -80,6 +80,26 @@ fn javascript_whitespace(character: char) -> bool {
         | '\u{205f}' | '\u{3000}' | '\u{feff}')
 }
 
+fn coverage_hint(content: &str) -> Option<(&str, &str)> {
+    let (provider, rest) = content
+        .trim_start_matches(javascript_whitespace)
+        .split_once(javascript_whitespace)?;
+    if !matches!(provider, "istanbul" | "c8" | "v8") {
+        return None;
+    }
+    let rest = rest.trim_start_matches(javascript_whitespace);
+    let rest = rest.strip_prefix("ignore")?;
+    if !rest.starts_with(javascript_whitespace) {
+        return None;
+    }
+    let rest = rest.trim_start_matches(javascript_whitespace);
+    ["next", "if", "else", "file"].into_iter().find_map(|kind| {
+        rest.strip_prefix(kind)
+            .filter(|suffix| !suffix.starts_with(|c: char| c.is_ascii_alphanumeric() || c == '_'))
+            .map(|_| (provider, kind))
+    })
+}
+
 #[derive(Debug)]
 pub struct Scope {
     pub name: String,
@@ -92,6 +112,9 @@ pub struct Scope {
     pub extreme_skip: Option<&'static str>,
     pub returns_value: bool,
     pub type_safety: TypeSafety,
+    pub coverage_suppressions: u32,
+    pub coverage_suppressed: bool,
+    pub coverage_partial_suppression: bool,
 }
 
 pub struct BranchSite {
@@ -239,6 +262,10 @@ pub struct Analysis {
     unowned_type_safety: TypeSafety,
     suppressions: Vec<Value>,
     suppression_targets: std::collections::BTreeMap<u32, u32>,
+    coverage_targets: BTreeMap<u32, Span>,
+    coverage_declarations: BTreeSet<u32>,
+    coverage_suppressions: Vec<Value>,
+    pub coverage_ignored_file: bool,
     cognitive_owner: Option<usize>,
     cognitive_depth: u32,
     cognitive_stack: Vec<(Option<usize>, u32)>,
@@ -613,6 +640,33 @@ impl<'a> Visit<'a> for Analysis {
         if let Some(target) = suppression_target {
             self.suppression_targets.insert(node.span().start, target);
         }
+        let coverage_target = match node {
+            AstKind::Function(_)
+            | AstKind::ArrowFunctionExpression(_)
+            | AstKind::ParenthesizedExpression(_)
+            | AstKind::ExportDeclaration(_)
+            | AstKind::ExportDefaultDeclaration(_)
+            | AstKind::VariableDeclaration(_)
+            | AstKind::VariableDeclarator(_)
+            | AstKind::Class(_)
+            | AstKind::MethodDefinition(_)
+            | AstKind::PropertyDefinition(_) => true,
+            AstKind::ObjectProperty(property) => {
+                property.method || property.kind != PropertyKind::Init
+            }
+            _ => false,
+        };
+        if coverage_target {
+            self.coverage_targets
+                .entry(node.span().start)
+                .or_insert(node.span());
+        }
+        if matches!(
+            node,
+            AstKind::VariableDeclaration(_) | AstKind::VariableDeclarator(_)
+        ) {
+            self.coverage_declarations.insert(node.span().start);
+        }
         let assertion = match node {
             AstKind::TSAnyKeyword(_) => {
                 self.escapes.push((node.span(), Escape::Any));
@@ -827,6 +881,9 @@ impl<'a> Visit<'a> for Analysis {
                 cognitive_complexity: 0,
                 implicit: false,
                 type_safety: TypeSafety::default(),
+                coverage_suppressions: 0,
+                coverage_suppressed: false,
+                coverage_partial_suppression: false,
                 // Only claim emptiness where parameter evaluation cannot hide work.
                 empty: b.statements.is_empty()
                     && b.directives.is_empty()
@@ -843,6 +900,9 @@ impl<'a> Visit<'a> for Analysis {
                 cognitive_complexity: 0,
                 implicit: false,
                 type_safety: TypeSafety::default(),
+                coverage_suppressions: 0,
+                coverage_suppressed: false,
+                coverage_partial_suppression: false,
                 empty: matches!(&f.body, ArrowFunctionBody::FunctionBody(b) if b.statements.is_empty() && b.directives.is_empty())
                     && plain_parameters(&f.params),
                 extreme_skip: matches!(&f.body, ArrowFunctionBody::FunctionBody(b) if b.statements.is_empty() && b.directives.is_empty()).then_some("empty"),
@@ -858,6 +918,9 @@ impl<'a> Visit<'a> for Analysis {
                 cognitive_complexity: 0,
                 implicit: true,
                 type_safety: TypeSafety::default(),
+                coverage_suppressions: 0,
+                coverage_suppressed: false,
+                coverage_partial_suppression: false,
                 empty: false,
                 extreme_skip: Some("implicit-scope"),
                 returns_value: false,
@@ -870,6 +933,9 @@ impl<'a> Visit<'a> for Analysis {
                 cognitive_complexity: 0,
                 implicit: true,
                 type_safety: TypeSafety::default(),
+                coverage_suppressions: 0,
+                coverage_suppressed: false,
+                coverage_partial_suppression: false,
                 empty: false,
                 extreme_skip: Some("implicit-scope"),
                 returns_value: false,
@@ -910,6 +976,9 @@ impl<'a> Visit<'a> for Analysis {
                 self.statement_starts.insert(v.span.start);
                 if let Some(value) = &v.init {
                     self.statement_starts.insert(value.span().start);
+                    // Source maps may omit the initializer's parentheses.
+                    self.statement_starts
+                        .insert(value.without_parentheses().span().start);
                 }
             }
             AstKind::FormalParameter(p) => {
@@ -1634,6 +1703,75 @@ impl Analysis {
         for comment in &parsed.program.comments {
             let span = comment.content_span();
             let content = &source[span.start as usize..span.end as usize];
+            if let Some((provider, kind)) = coverage_hint(content) {
+                let file_level = kind == "file";
+                let target = (kind == "next")
+                    .then(|| {
+                        result
+                            .coverage_targets
+                            .get(&comment.attached_to)
+                            .copied()
+                            .filter(|target| comment.span.end <= target.start)
+                            .or_else(|| {
+                                // OXC can classify a line-ending hint before a function as trailing.
+                                result
+                                    .coverage_targets
+                                    .range(comment.span.end..)
+                                    .next()
+                                    .filter(|(start, _)| {
+                                        source[comment.span.end as usize..**start as usize]
+                                            .chars()
+                                            .all(javascript_whitespace)
+                                    })
+                                    .map(|(_, target)| *target)
+                            })
+                    })
+                    .flatten();
+                let affected: Vec<_> = result
+                    .scopes
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, scope)| {
+                        file_level
+                            || target.is_some_and(|target| {
+                                target.start <= scope.span.start && scope.span.end <= target.end
+                            })
+                    })
+                    .map(|(i, _)| i)
+                    .collect();
+                let owner = result.owner(comment.span.start);
+                // Ignoring a declaration can also remove work outside its nested functions.
+                let partial_owner = owner.filter(|&owner| {
+                    !file_level
+                        && (affected.is_empty()
+                            || target.is_some_and(|target| {
+                                result.coverage_declarations.contains(&target.start)
+                                    || result.branches.iter().any(|branch| {
+                                        target.start <= branch.span.start
+                                            && branch.span.end <= target.end
+                                            && result.owner(branch.span.start) == Some(owner)
+                                    })
+                            }))
+                });
+                let attributed: BTreeSet<_> =
+                    affected.iter().copied().chain(partial_owner).collect();
+                for (index, scope) in result.scopes.iter_mut().enumerate() {
+                    if attributed.contains(&index) {
+                        scope.coverage_suppressions += 1;
+                    }
+                    if provider == "istanbul" && affected.contains(&index) {
+                        scope.coverage_suppressed = true;
+                    }
+                    if provider == "istanbul" && partial_owner == Some(index) {
+                        scope.coverage_partial_suppression = true;
+                    }
+                }
+                result.coverage_ignored_file |= provider == "istanbul" && file_level;
+                result.coverage_suppressions.push(json!({"provider":provider,"kind":kind,
+                    "start":comment.span.start,"end":comment.span.end,
+                    "functions":attributed.iter().map(|&i| result.scopes[i].span.start).collect::<Vec<_>>(),
+                    "wholeFunction":provider == "istanbul" && (file_level || !affected.is_empty())}));
+            }
             // TypeScript line directives start the comment; block directives use its last line.
             let line = if comment.is_line() {
                 content
@@ -1802,6 +1940,10 @@ impl Analysis {
 
     pub fn type_safety(&self) -> Value {
         json!({"unowned":self.unowned_type_safety,"suppressions":self.suppressions})
+    }
+
+    pub fn coverage_suppressions(&self) -> Value {
+        json!({"count":self.coverage_suppressions.len(),"hints":self.coverage_suppressions})
     }
 
     pub fn count(&self) -> usize {
@@ -2109,8 +2251,9 @@ impl Analysis {
     }
 
     pub fn json(&self) -> Value {
-        json!({"scopes": self.scopes.iter().map(|s| json!({"name":s.name,"start":s.span.start,"end":s.span.end,"complexity":s.complexity,"cognitiveComplexity":s.cognitive_complexity,"implicit":s.implicit,"empty":s.empty,"typeSafety":s.type_safety})).collect::<Vec<_>>(),
+        json!({"scopes": self.scopes.iter().map(|s| json!({"name":s.name,"start":s.span.start,"end":s.span.end,"complexity":s.complexity,"cognitiveComplexity":s.cognitive_complexity,"implicit":s.implicit,"empty":s.empty,"typeSafety":s.type_safety,"coverageSuppressions":s.coverage_suppressions})).collect::<Vec<_>>(),
             "typeSafety":self.type_safety(),
+            "coverageSuppressions":self.coverage_suppressions(),
             "mutants": self.operators.iter().flat_map(|c| c.replacements.iter().enumerate().map(move |(i, op)| json!({"id":c.first_id+i,"kind":c.kind,"offset":c.offset,"original":c.original,"replacement":op}))).collect::<Vec<_>>()})
     }
 }
@@ -2692,6 +2835,137 @@ fn switching_preserves_hashbangs_and_directives() {
             "{source}"
         );
     }
+}
+
+#[test]
+fn coverage_hints_distinguish_whole_functions_and_partial_suppressions() {
+    for source in [
+        "/* istanbul ignore next */ function ignored() { return 1; }",
+        "// istanbul ignore next\nexport function ignored() { return 1; }",
+        "/* istanbul ignore next */ export default function() { return 1; }",
+        "/* istanbul ignore next */ const ignored = () => 1, alsoIgnored = () => 2;",
+        "const ignored = /* istanbul ignore next */ () => 1;",
+        "const ignored = /* istanbul ignore next */ (() => 1);",
+        "const ignored = /* istanbul ignore next */\n(() => 1);",
+        "const ignored = /* istanbul ignore next */ ((function () { return 1; }));",
+        "const object = { /* istanbul ignore next */ ignored() { return 1; } };",
+        "const object = { /* istanbul ignore next */ get value() { return 1; } };",
+        "const object = { /* istanbul ignore next */ set value(value: number) { work(value); } };",
+        "class C { /* istanbul ignore next */ ignored() { return 1; } }",
+        "/* istanbul ignore next */ function ignored() { function nested() { return 1; } return nested(); }",
+        "/* istanbul ignore file */ function ignored() { return 1; }",
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        assert_eq!(analysis.coverage_suppressions()["count"], 1, "{source}");
+        for scope in &analysis.scopes {
+            assert!(scope.coverage_suppressed, "{source}: {scope:?}");
+            assert_eq!(scope.coverage_suppressions, 1, "{source}");
+            assert!(!scope.coverage_partial_suppression, "{source}");
+        }
+    }
+    for source in [
+        "function f() { /* istanbul ignore next */ work(); return 1; }",
+        "function f(x: boolean) { /* istanbul ignore else */ if (x) return 1; return 2; }",
+        "function f(x: boolean) { /* istanbul ignore if */ if (x) return 1; return 2; }",
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        assert_eq!(analysis.coverage_suppressions()["count"], 1);
+        assert!(!analysis.scopes[0].coverage_suppressed, "{source}");
+        assert!(analysis.scopes[0].coverage_partial_suppression, "{source}");
+    }
+}
+
+#[test]
+fn ignored_declarations_preserve_partial_suppression_in_the_enclosing_function() {
+    for source in [
+        "function outer(flag: boolean) { /* istanbul ignore next */ const inner = flag ? () => 1 : () => 2; return 0; }",
+        "function outer(flag: boolean) { const object = { /* istanbul ignore next */ [flag ? 'a' : 'b']() { return 1; } }; return 0; }",
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        assert!(analysis.scopes[0].coverage_partial_suppression);
+        assert_eq!(analysis.scopes[0].coverage_suppressions, 1);
+        for scope in &analysis.scopes[1..] {
+            assert!(scope.coverage_suppressed);
+            assert_eq!(scope.coverage_suppressions, 1);
+        }
+        assert_eq!(
+            analysis.coverage_suppressions()["hints"][0]["functions"],
+            json!(
+                analysis
+                    .scopes
+                    .iter()
+                    .map(|scope| scope.span.start)
+                    .collect::<Vec<_>>()
+            )
+        );
+    }
+    for source in [
+        "function outer() { /* istanbul ignore next */ function inner() { return 1; } return 0; }",
+        "function outer() { const inner = /* istanbul ignore next */ (() => 1); return 0; }",
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        assert!(!analysis.scopes[0].coverage_partial_suppression, "{source}");
+        assert!(analysis.scopes[1].coverage_suppressed, "{source}");
+    }
+    let source =
+        "function outer() { const inner = /* istanbul ignore next */ (() => 1); return 0; }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    assert!(
+        analysis
+            .statement_starts
+            .contains(&analysis.scopes[1].span.start)
+    );
+}
+
+#[test]
+fn coverage_hint_counts_do_not_infer_support_from_other_providers() {
+    for provider in ["c8", "v8"] {
+        for kind in ["next", "file"] {
+            let source = format!("/* {provider} ignore {kind} */ function f() {{ return 1; }}");
+            let analysis = Analysis::inspect("source.ts", &source).unwrap();
+            assert_eq!(analysis.coverage_suppressions()["count"], 1);
+            assert_eq!(analysis.scopes[0].coverage_suppressions, 1);
+            assert!(!analysis.scopes[0].coverage_suppressed);
+            assert!(!analysis.scopes[0].coverage_partial_suppression);
+            assert_eq!(
+                analysis.coverage_suppressions()["hints"][0]["wholeFunction"],
+                false
+            );
+            assert_eq!(
+                analysis.coverage_suppressions()["hints"][0]["functions"],
+                json!([analysis.scopes[0].span.start])
+            );
+            assert!(!analysis.coverage_ignored_file);
+        }
+    }
+    for content in [
+        "istanbul ignore nextSuffix",
+        "istanbul ignore next_suffix",
+        "prose istanbul ignore file",
+        "Istanbul ignore next",
+        "istanbulignore next",
+        "istanbul ignorefile",
+    ] {
+        assert_eq!(coverage_hint(content), None, "{content}");
+    }
+    for content in [
+        "istanbul  ignore\tnext: reason",
+        "istanbul\u{feff}ignore next",
+        "\n istanbul ignore next\n",
+    ] {
+        assert_eq!(
+            coverage_hint(content),
+            Some(("istanbul", "next")),
+            "{content}"
+        );
+    }
+    let source = "function f() { const text = 'istanbul ignore file'; return text; }";
+    assert_eq!(
+        Analysis::inspect("source.ts", source)
+            .unwrap()
+            .coverage_suppressions()["count"],
+        0
+    );
 }
 
 #[test]

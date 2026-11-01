@@ -132,6 +132,7 @@ coverage attribution ran, it also has `result`:
 | `complete` | Whether this source's coverage mapping was usable for all normal function scopes. |
 | `functions` | Function and implicit-scope measurements. |
 | `problems` | Coverage mapping problems. The list is diagnostic evidence; its exact wording is not stable. |
+| `coverageSuppressions` | Static hint findings: `count` and `hints`, described below. Available even when coverage is incomplete. |
 
 A source row can instead have an `error` string when source analysis failed.
 The string is diagnostic evidence. A source `result.complete: false` does not
@@ -154,11 +155,12 @@ Function rows produced by coverage attribution have these fields:
 | `branchCoverage` | `branchCovered / branchTotal` as a fraction from `0` to `1`, only for `measured` rows with recorded branches. Otherwise `null`. |
 | `coverageBasis` | `"branch"` when CRAP uses `branchCoverage`, `"statement"` when the function has no recorded branches and CRAP uses `coverage`, or `null` when unscored. |
 | `crap` | `complexity² × (1 − input)³ + complexity`, using the coverage selected by `coverageBasis`, only for `measured` rows. |
-| `status` | `measured`, `unknown`, `not-applicable` or `complexity-only`. |
+| `status` | `measured`, `unknown`, `suppressed`, `not-applicable` or `complexity-only`. |
 | `pseudoTested` | Additive boolean or `null` for `check`/`mutate`. True when an extreme replacement survives with reliable positive statement coverage; false when it is killed or its timeout counts as killed with that coverage; otherwise null. |
 | `pseudoTestStatus` | `pseudo-tested`, `checked`, `unknown` or `not-applicable`, for `check`/`mutate`. |
-| `pseudoTestReason` | Skip reason `empty`, `constructor`, `accessor`, `generator`, `implicit-scope` or `zero-coverage`; otherwise `null`, for `check`/`mutate`. |
+| `pseudoTestReason` | Skip reason `empty`, `constructor`, `accessor`, `generator`, `implicit-scope`, `coverage-suppressed` or `zero-coverage`; otherwise `null`, for `check`/`mutate`. |
 | `typeSafety` | Syntax escape counts described under [type-safety findings](#type-safety-findings). |
+| `coverageSuppressions` | Number of hint comments attributed to this function, including hints inherited from an ignored enclosing function, declaration, class or file. |
 
 `measured` means valid coverage supports CRAP for a non-empty ordinary function.
 `unknown` means required coverage is missing or unreliable. When only branch
@@ -171,6 +173,41 @@ implicit scope such as a class field initializer or static block. Those rows
 retain complexity but have `null` coverage and CRAP, regardless of any counters
 retained from decoded evidence. A `null` measurement is therefore different
 from a measured zero.
+
+`suppressed` identifies a scope wholly excluded by an Istanbul `ignore next`
+or `ignore file` hint. Its `coverage`, `branchCoverage`, `coverageBasis` and
+`crap` are `null`. Suppression alone does not make the assessment incomplete.
+The scope retains complexity and type-safety findings. Its pseudo-testing is
+not applicable because positive statement coverage is unavailable; operator
+mutations still run. Suppression is not a passing coverage or CRAP value.
+
+Each source's `coverageSuppressions.hints` item has `provider`, `kind`, `start`,
+`end`, `functions` and `wholeFunction`. Providers are `istanbul`, `c8` or `v8`;
+kinds are `next`, `if`, `else` or `file`. Offsets are zero-based source bytes.
+`functions` lists the attributed scope starts. `wholeFunction` is true when an
+Istanbul hint targets whole scopes or a file. It records the directive's
+recognised scope, not proof that instrumentation was omitted; the validated
+function status determines whether suppression is accepted.
+An ignored declaration can also partially suppress its enclosing function;
+that function appears in `functions` but stays unknown.
+The source count counts each comment once; function counts can include the
+same inherited comment, so their sum need not equal the source count.
+
+Other hint forms are counted without claiming support. Partial Istanbul hints
+leave an affected ordinary function `unknown`, with null coverage and CRAP and
+a diagnostic. `c8` and `v8` hints do not suppress Istanbul instrumentation, so
+they leave its measurements unchanged. Missing or malformed evidence remains
+incomplete. An Istanbul `ignore file` hint allows the source entry to be absent
+from an otherwise successful coverage report; it does not excuse a failed
+coverage job or the absence of all reports.
+Statement, branch or function records remaining inside a supposedly wholly
+suppressed ordinary function also leave it unknown and incomplete, including
+function records with zero invocation counts. Function records never establish
+statement coverage. Optional `fnMap`/`f` pairs must have usable function start
+locations, matching IDs and nonnegative integer counters when Seshat checks
+whole suppression; malformed or unpaired metadata keeps the run incomplete.
+Implicit scopes keep their
+`complexity-only` status under suppression hints.
 
 Cognitive complexity remains available in function rows when coverage fails.
 

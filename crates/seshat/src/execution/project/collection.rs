@@ -1993,9 +1993,10 @@ impl CapturedProject {
                     Ok(analysis) => {
                         // A setup may cover a different package. Merge only its entries for this file;
                         // failed collection still makes the whole run incomplete above.
-                        let applicable = reports
-                            .iter()
-                            .filter(|report| report.get(&stable_path(&path)).is_some());
+                        let applicable = reports.iter().filter(|report| {
+                            analysis.coverage_ignored_file
+                                || report.get(&stable_path(&path)).is_some()
+                        });
                         let mut measured =
                             coverage::attribute(analysis, &stable_path(&path), source, applicable);
                         attribute_inferred_any(
@@ -2027,10 +2028,16 @@ impl CapturedProject {
                         .iter_mut()
                         .zip(&analysis.scopes)
                     {
-                        let reason = scope.extreme_skip.or_else(|| {
-                            (mutation_ready && function["coverage"].as_f64() == Some(0.0))
-                                .then_some("zero-coverage")
-                        });
+                        let reason = scope
+                            .extreme_skip
+                            .or_else(|| {
+                                (function["status"] == "suppressed")
+                                    .then_some("coverage-suppressed")
+                            })
+                            .or_else(|| {
+                                (mutation_ready && function["coverage"].as_f64() == Some(0.0))
+                                    .then_some("zero-coverage")
+                            });
                         function["pseudoTested"] = Value::Null;
                         function["pseudoTestStatus"] = json!(if reason.is_some() {
                             "not-applicable"
