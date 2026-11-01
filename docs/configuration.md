@@ -756,6 +756,11 @@ sources, use a preserved comment such as
 or a string is not a directive.
 If counters remain inside a supposedly wholly suppressed function, Seshat
 reports it as unknown and incomplete instead of discarding measured evidence.
+The verified Vitest transform still instruments a parenthesized arrow when
+the hint is between `=` and the parentheses, as in
+`const f = /* istanbul ignore next -- @preserve */ (() => 1);`.
+That form remains incomplete. Put the hint before the whole declaration for
+the supported Vitest suppression route.
 
 Partial statement and branch hints, including `istanbul ignore if` and
 `istanbul ignore else`, are counted but remain unsupported. Affected ordinary

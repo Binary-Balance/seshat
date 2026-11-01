@@ -943,6 +943,10 @@ The same routes verify whole-function and whole-file Istanbul suppression
 hints, including nested functions, arrows and methods. Suppressed functions
 retain hint counts and null scores; `c8` and `v8` hints are counted without
 changing Istanbul measurements.
+Ignored declarations with nested functions keep their enclosing function
+unknown when its own work is omitted. Parenthesized arrows are suppressed on
+Node and Jest/Expo; the verified Vitest transform still instruments that
+placement and the proof requires an incomplete result.
 
 Set `SESHAT_PROOF_BINARY` for an alternate fresh proof executable and
 `SESHAT_JEST_EXPO_DEPS` for an existing copy of the pinned fixture dependencies.

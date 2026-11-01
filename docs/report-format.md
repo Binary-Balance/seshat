@@ -186,6 +186,8 @@ Each source's `coverageSuppressions.hints` item has `provider`, `kind`, `start`,
 kinds are `next`, `if`, `else` or `file`. Offsets are zero-based source bytes.
 `functions` lists the attributed scope starts. `wholeFunction` is true only
 when the hint wholly suppresses scopes through the supported Istanbul route.
+An ignored declaration can also partially suppress its enclosing function;
+that function appears in `functions` but stays unknown.
 The source count counts each comment once; function counts can include the
 same inherited comment, so their sum need not equal the source count.
 

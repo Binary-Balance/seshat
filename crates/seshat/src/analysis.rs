@@ -263,6 +263,7 @@ pub struct Analysis {
     suppressions: Vec<Value>,
     suppression_targets: std::collections::BTreeMap<u32, u32>,
     coverage_targets: BTreeMap<u32, Span>,
+    coverage_declarations: BTreeSet<u32>,
     coverage_suppressions: Vec<Value>,
     pub coverage_ignored_file: bool,
     cognitive_owner: Option<usize>,
@@ -642,6 +643,7 @@ impl<'a> Visit<'a> for Analysis {
         let coverage_target = match node {
             AstKind::Function(_)
             | AstKind::ArrowFunctionExpression(_)
+            | AstKind::ParenthesizedExpression(_)
             | AstKind::ExportDeclaration(_)
             | AstKind::ExportDefaultDeclaration(_)
             | AstKind::VariableDeclaration(_)
@@ -656,6 +658,12 @@ impl<'a> Visit<'a> for Analysis {
             self.coverage_targets
                 .entry(node.span().start)
                 .or_insert(node.span());
+        }
+        if matches!(
+            node,
+            AstKind::VariableDeclaration(_) | AstKind::VariableDeclarator(_)
+        ) {
+            self.coverage_declarations.insert(node.span().start);
         }
         let assertion = match node {
             AstKind::TSAnyKeyword(_) => {
@@ -966,6 +974,9 @@ impl<'a> Visit<'a> for Analysis {
                 self.statement_starts.insert(v.span.start);
                 if let Some(value) = &v.init {
                     self.statement_starts.insert(value.span().start);
+                    // Source maps may omit the initializer's parentheses.
+                    self.statement_starts
+                        .insert(value.without_parentheses().span().start);
                 }
             }
             AstKind::FormalParameter(p) => {
@@ -1691,7 +1702,7 @@ impl Analysis {
             let span = comment.content_span();
             let content = &source[span.start as usize..span.end as usize];
             if let Some((provider, kind)) = coverage_hint(content) {
-                let file_level = provider == "istanbul" && kind == "file";
+                let file_level = kind == "file";
                 let target = (comment.is_leading() && kind == "next")
                     .then(|| result.coverage_targets.get(&comment.attached_to).copied())
                     .flatten();
@@ -1708,22 +1719,36 @@ impl Analysis {
                     .map(|(i, _)| i)
                     .collect();
                 let owner = result.owner(comment.span.start);
+                // Ignoring a declaration can also remove work outside its nested functions.
+                let partial_owner = owner.filter(|&owner| {
+                    !file_level
+                        && (affected.is_empty()
+                            || target.is_some_and(|target| {
+                                result.coverage_declarations.contains(&target.start)
+                                    || result.branches.iter().any(|branch| {
+                                        target.start <= branch.span.start
+                                            && branch.span.end <= target.end
+                                            && result.owner(branch.span.start) == Some(owner)
+                                    })
+                            }))
+                });
+                let attributed: BTreeSet<_> =
+                    affected.iter().copied().chain(partial_owner).collect();
                 for (index, scope) in result.scopes.iter_mut().enumerate() {
-                    if affected.contains(&index) || (affected.is_empty() && owner == Some(index)) {
+                    if attributed.contains(&index) {
                         scope.coverage_suppressions += 1;
                     }
                     if provider == "istanbul" && affected.contains(&index) {
                         scope.coverage_suppressed = true;
                     }
-                    if provider == "istanbul" && affected.is_empty() && owner == Some(index) {
+                    if provider == "istanbul" && partial_owner == Some(index) {
                         scope.coverage_partial_suppression = true;
                     }
                 }
-                result.coverage_ignored_file |= file_level;
+                result.coverage_ignored_file |= provider == "istanbul" && file_level;
                 result.coverage_suppressions.push(json!({"provider":provider,"kind":kind,
                     "start":comment.span.start,"end":comment.span.end,
-                    "functions":if affected.is_empty() { owner.into_iter().map(|i| result.scopes[i].span.start).collect::<Vec<_>>() }
-                        else { affected.iter().map(|&i| result.scopes[i].span.start).collect::<Vec<_>>() },
+                    "functions":attributed.iter().map(|&i| result.scopes[i].span.start).collect::<Vec<_>>(),
                     "wholeFunction":provider == "istanbul" && (file_level || !affected.is_empty())}));
             }
             // TypeScript line directives start the comment; block directives use its last line.
@@ -2799,6 +2824,8 @@ fn coverage_hints_distinguish_whole_functions_and_partial_suppressions() {
         "/* istanbul ignore next */ export default function() { return 1; }",
         "/* istanbul ignore next */ const ignored = () => 1, alsoIgnored = () => 2;",
         "const ignored = /* istanbul ignore next */ () => 1;",
+        "const ignored = /* istanbul ignore next */ (() => 1);",
+        "const ignored = /* istanbul ignore next */ ((function () { return 1; }));",
         "const object = { /* istanbul ignore next */ ignored() { return 1; } };",
         "class C { /* istanbul ignore next */ ignored() { return 1; } }",
         "/* istanbul ignore next */ function ignored() { function nested() { return 1; } return nested(); }",
@@ -2825,18 +2852,67 @@ fn coverage_hints_distinguish_whole_functions_and_partial_suppressions() {
 }
 
 #[test]
+fn ignored_declarations_preserve_partial_suppression_in_the_enclosing_function() {
+    for source in [
+        "function outer(flag: boolean) { /* istanbul ignore next */ const inner = flag ? () => 1 : () => 2; return 0; }",
+        "function outer(flag: boolean) { const object = { /* istanbul ignore next */ [flag ? 'a' : 'b']() { return 1; } }; return 0; }",
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        assert!(analysis.scopes[0].coverage_partial_suppression);
+        assert_eq!(analysis.scopes[0].coverage_suppressions, 1);
+        for scope in &analysis.scopes[1..] {
+            assert!(scope.coverage_suppressed);
+            assert_eq!(scope.coverage_suppressions, 1);
+        }
+        assert_eq!(
+            analysis.coverage_suppressions()["hints"][0]["functions"],
+            json!(
+                analysis
+                    .scopes
+                    .iter()
+                    .map(|scope| scope.span.start)
+                    .collect::<Vec<_>>()
+            )
+        );
+    }
+    for source in [
+        "function outer() { /* istanbul ignore next */ function inner() { return 1; } return 0; }",
+        "function outer() { const inner = /* istanbul ignore next */ (() => 1); return 0; }",
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        assert!(!analysis.scopes[0].coverage_partial_suppression, "{source}");
+        assert!(analysis.scopes[1].coverage_suppressed, "{source}");
+    }
+    let source =
+        "function outer() { const inner = /* istanbul ignore next */ (() => 1); return 0; }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    assert!(
+        analysis
+            .statement_starts
+            .contains(&analysis.scopes[1].span.start)
+    );
+}
+
+#[test]
 fn coverage_hint_counts_do_not_infer_support_from_other_providers() {
     for provider in ["c8", "v8"] {
-        let source = format!("/* {provider} ignore next */ function f() {{ return 1; }}");
-        let analysis = Analysis::inspect("source.ts", &source).unwrap();
-        assert_eq!(analysis.coverage_suppressions()["count"], 1);
-        assert_eq!(analysis.scopes[0].coverage_suppressions, 1);
-        assert!(!analysis.scopes[0].coverage_suppressed);
-        assert!(!analysis.scopes[0].coverage_partial_suppression);
-        assert_eq!(
-            analysis.coverage_suppressions()["hints"][0]["wholeFunction"],
-            false
-        );
+        for kind in ["next", "file"] {
+            let source = format!("/* {provider} ignore {kind} */ function f() {{ return 1; }}");
+            let analysis = Analysis::inspect("source.ts", &source).unwrap();
+            assert_eq!(analysis.coverage_suppressions()["count"], 1);
+            assert_eq!(analysis.scopes[0].coverage_suppressions, 1);
+            assert!(!analysis.scopes[0].coverage_suppressed);
+            assert!(!analysis.scopes[0].coverage_partial_suppression);
+            assert_eq!(
+                analysis.coverage_suppressions()["hints"][0]["wholeFunction"],
+                false
+            );
+            assert_eq!(
+                analysis.coverage_suppressions()["hints"][0]["functions"],
+                json!([analysis.scopes[0].span.start])
+            );
+            assert!(!analysis.coverage_ignored_file);
+        }
     }
     for content in [
         "istanbul ignore nextSuffix",

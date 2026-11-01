@@ -125,7 +125,7 @@ export function suppressed(flag: boolean) {
   return suppressedNested();
 }
 /* istanbul ignore next -- @preserve */
-export const suppressedArrow = (flag: boolean) => flag ? 1 : 2;
+export const suppressedArrow = ((flag: boolean) => flag ? 1 : 2);
 export class SuppressedMethod {
   /* istanbul ignore next -- @preserve */
   ignored(flag: boolean) { return flag ? 1 : 2; }
@@ -138,6 +138,24 @@ export function v8Hint() { return 1; }
 const ignoredSource = join(work, 'ignored.ts');
 writeFileSync(ignoredSource, `/* istanbul ignore file -- @preserve */
 export function ignoredFile(flag: boolean) { return flag ? 1 : 2; }
+`);
+const otherHintsSource = join(work, 'other-hints.ts');
+writeFileSync(otherHintsSource, `/* c8 ignore file -- @preserve */
+/* v8 ignore file -- @preserve */
+export function otherHints() { return 1; }
+`);
+const partialSource = join(work, 'partial.ts');
+writeFileSync(partialSource, `export function partiallySuppressed(flag: boolean) {
+  /* istanbul ignore next -- @preserve */
+  const inner = flag ? () => 1 : () => 2;
+  return 0;
+}
+`);
+const parenthesizedSource = join(work, 'parenthesized.ts');
+writeFileSync(parenthesizedSource, `export function parenthesizedWrapper() {
+  const ignored = /* istanbul ignore next -- @preserve */ (() => 1);
+  return ignored();
+}
 `);
 const checks = `assert.equal(subject.price(100, true), 90);
 assert.equal(subject.conditional(true), 1);
@@ -185,24 +203,34 @@ function run(args) {
   assert.equal(child.status, 0, child.stdout + child.stderr);
 }
 json(join(work, 'package.json'), {private: true, type: 'commonjs'});
-const compiled = ts.transpileModule(readFileSync(source, 'utf8'), {fileName: source,
-  compilerOptions: {target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS,
-    jsx: ts.JsxEmit.React, sourceMap: true, inlineSources: true}, reportDiagnostics: true});
-assert.equal(compiled.diagnostics.length, 0);
-const tool = instrument.createInstrumenter();
-writeFileSync(join(work, 'subject.instrumented.cjs'), tool.instrumentSync(
-  compiled.outputText.replace(/\/\/# sourceMappingURL=.*$/m, ''), join(work, 'subject.cjs'),
-  JSON.parse(compiled.sourceMapText)));
-const ignoredCompiled = ts.transpileModule(readFileSync(ignoredSource, 'utf8'), {
-  fileName: ignoredSource,
-  compilerOptions: {target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS},
-});
-writeFileSync(join(work, 'ignored.instrumented.cjs'), instrument.createInstrumenter()
-  .instrumentSync(ignoredCompiled.outputText, join(work, 'ignored.cjs')));
+function instrumentSource(source, name) {
+  const compiled = ts.transpileModule(readFileSync(source, 'utf8'), {fileName: source,
+    compilerOptions: {target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS,
+      jsx: ts.JsxEmit.React, sourceMap: true, inlineSources: true}, reportDiagnostics: true});
+  assert.equal(compiled.diagnostics.length, 0);
+  writeFileSync(join(work, `${name}.instrumented.cjs`), instrument.createInstrumenter().instrumentSync(
+    compiled.outputText.replace(/\/\/# sourceMappingURL=.*$/m, ''), join(work, `${name}.cjs`),
+    JSON.parse(compiled.sourceMapText)));
+}
+instrumentSource(source, 'subject');
+instrumentSource(ignoredSource, 'ignored');
+instrumentSource(otherHintsSource, 'other-hints');
+instrumentSource(partialSource, 'partial');
+instrumentSource(parenthesizedSource, 'parenthesized');
+function scoreSource(source, report, status = 0) {
+  const child = spawnSync(binary, ['score', source, report], {encoding: 'utf8', timeout: 10000});
+  assert.ifError(child.error);
+  const result = JSON.parse(child.stdout);
+  assert.equal(child.status, status, JSON.stringify({source, report, problems: result.problems}));
+  return result;
+}
 writeFileSync(join(work, 'checks.node.cjs'), `const {test, after} = require('node:test');
 const assert = require('node:assert/strict');
 const subject = require('./subject.instrumented.cjs');
 require('./ignored.instrumented.cjs').ignoredFile(true);
+require('./other-hints.instrumented.cjs').otherHints();
+require('./partial.instrumented.cjs').partiallySuppressed(true);
+assert.equal(require('./parenthesized.instrumented.cjs').parenthesizedWrapper(), 1);
 test('branch coverage', () => { ${checks} });
 after(() => require('node:fs').writeFileSync('node-raw.json', JSON.stringify(globalThis.__coverage__)));
 `);
@@ -210,17 +238,29 @@ writeFileSync(join(work, 'checks.vitest.mjs'), `import {test} from ${JSON.string
 import assert from 'node:assert/strict';
 import * as subject from './subject.tsx';
 import {ignoredFile} from './ignored.ts';
+import {otherHints} from './other-hints.ts';
+import {partiallySuppressed} from './partial.ts';
+import {parenthesizedWrapper} from './parenthesized.ts';
 ignoredFile(true);
+otherHints();
+partiallySuppressed(true);
+assert.equal(parenthesizedWrapper(), 1);
 test('branch coverage', () => { ${checks} });
 `);
 writeFileSync(join(work, 'vitest.config.mjs'), `export default {test: {
-include: ['checks.vitest.mjs'], coverage: {provider: 'istanbul', include: ['subject.tsx', 'ignored.ts'],
+include: ['checks.vitest.mjs'], coverage: {provider: 'istanbul', include: ['subject.tsx', 'ignored.ts', 'other-hints.ts', 'partial.ts', 'parenthesized.ts'],
 reporter: ['json'], reportsDirectory: 'coverage-vitest'}}};
 `);
 writeFileSync(join(work, 'checks.jest.test.tsx'), `import assert from 'node:assert/strict';
 import * as subject from './subject';
 import {ignoredFile} from './ignored';
+import {otherHints} from './other-hints';
+import {partiallySuppressed} from './partial';
+import {parenthesizedWrapper} from './parenthesized';
 ignoredFile(true);
+otherHints();
+partiallySuppressed(true);
+assert.equal(parenthesizedWrapper(), 1);
 test('branch coverage', () => { ${checks} });
 `);
 writeFileSync(join(work, 'babel.config.cjs'), `module.exports = {presets: [[${JSON.stringify(join(expo, 'node_modules/babel-preset-expo'))}, {jsxRuntime: 'classic'}]]};
@@ -228,7 +268,7 @@ writeFileSync(join(work, 'babel.config.cjs'), `module.exports = {presets: [[${JS
 writeFileSync(join(work, 'jest.config.cjs'), `module.exports = {
 preset: ${JSON.stringify(join(expo, 'node_modules/jest-expo'))},
 rootDir: __dirname, moduleDirectories: ['node_modules', ${JSON.stringify(join(expo, 'node_modules'))}],
-testMatch: ['**/checks.jest.test.tsx'], coverageProvider: 'babel', collectCoverageFrom: ['subject.tsx', 'ignored.ts'],
+testMatch: ['**/checks.jest.test.tsx'], coverageProvider: 'babel', collectCoverageFrom: ['subject.tsx', 'ignored.ts', 'other-hints.ts', 'partial.ts', 'parenthesized.ts'],
 coverageReporters: ['json'], coverageDirectory: 'coverage-jest-expo'};
 `);
 run(['--test', 'checks.node.cjs']);
@@ -254,12 +294,9 @@ const results = {environment: {
 }, routes: {}};
 for (const [provider, path] of Object.entries(reports)) {
   const file = JSON.parse(readFileSync(path, 'utf8'))[source];
-  const child = spawnSync(binary, ['score', source, path], {encoding: 'utf8', timeout: 10000});
-  assert.ifError(child.error);
-  const result = JSON.parse(child.stdout);
+  const result = scoreSource(source, path);
   results.routes[provider] = {result, branches: Object.entries(file.branchMap)
     .map(([id, branch]) => ({...branch, hits: file.b[id]}))};
-  assert.equal(child.status, 0, JSON.stringify(result));
   const named = Object.fromEntries(result.functions.map(row => [row.name, row]));
   for (const name of ['price', 'conditional', 'parenthesized', 'logical', 'nullish',
     'view', 'fragment', 'fragmentMultiline', 'elementMultiline', 'fragmentText',
@@ -328,19 +365,56 @@ for (const [provider, path] of Object.entries(reports)) {
     assert.equal(row.crap, null);
     assert.equal(row.coverageSuppressions, 1);
   }
+  const suppressed = result.functions.filter(row => row.status === 'suppressed');
+  assert.equal(suppressed.length, 4);
+  assert.ok(suppressed.every(row => row.coverage === null && row.crap === null && row.coverageSuppressions === 1));
   assert.equal(result.coverageSuppressions.count, 5);
   for (const name of ['c8Hint', 'v8Hint']) {
     assert.equal(named[name].status, 'measured');
     assert.equal(named[name].coverageSuppressions, 1);
     assert.equal(named[name].crap, 1);
   }
-  const ignored = spawnSync(binary, ['score', ignoredSource, path], {encoding: 'utf8', timeout: 10000});
-  assert.ifError(ignored.error);
-  assert.equal(ignored.status, 0, `${provider}: ${ignored.stdout}${ignored.stderr}`);
-  const ignoredResult = JSON.parse(ignored.stdout);
+  const ignoredResult = scoreSource(ignoredSource, path);
   assert.equal(ignoredResult.functions[0].status, 'suppressed');
   assert.equal(ignoredResult.coverageSuppressions.count, 1);
   results.routes[provider].ignoredFile = ignoredResult;
+  const otherHintsResult = scoreSource(otherHintsSource, path);
+  assert.equal(otherHintsResult.coverageSuppressions.count, 2);
+  assert.equal(otherHintsResult.functions[0].status, 'measured');
+  assert.equal(otherHintsResult.functions[0].coverageSuppressions, 2);
+  assert.equal(otherHintsResult.functions[0].coverage, 1);
+  assert.equal(otherHintsResult.functions[0].crap, 1);
+  assert.ok(otherHintsResult.coverageSuppressions.hints.every(hint =>
+    !hint.wholeFunction && hint.functions.length === 1));
+  results.routes[provider].otherHints = otherHintsResult;
+  const partialResult = scoreSource(partialSource, path, 2);
+  assert.equal(partialResult.complete, false);
+  assert.equal(partialResult.functions[0].status, 'unknown');
+  assert.equal(partialResult.functions[0].coverage, null);
+  assert.equal(partialResult.functions[0].crap, null);
+  assert.equal(partialResult.functions[0].coverageSuppressions, 1);
+  assert.equal(partialResult.coverageSuppressions.count, 1);
+  assert.equal(partialResult.coverageSuppressions.hints[0].functions.length, 3);
+  assert.equal(partialResult.functions.length, 3);
+  assert.ok(partialResult.functions.slice(1).every(row =>
+    row.status === 'suppressed' && row.coverageSuppressions === 1));
+  results.routes[provider].partialSuppression = partialResult;
+  // Vitest's transform keeps instrumenting this arrow despite the preserved hint.
+  const parenthesizedResult = scoreSource(parenthesizedSource, path, provider === 'vitest' ? 2 : 0);
+  assert.equal(parenthesizedResult.coverageSuppressions.count, 1);
+  assert.equal(parenthesizedResult.functions[1].coverageSuppressions, 1);
+  assert.equal(parenthesizedResult.functions[1].crap, null);
+  if (provider === 'vitest') {
+    assert.equal(parenthesizedResult.complete, false);
+    assert.equal(parenthesizedResult.functions[0].status, 'unknown');
+    assert.equal(parenthesizedResult.functions[0].crap, null);
+  } else {
+    assert.equal(parenthesizedResult.complete, true);
+    assert.equal(parenthesizedResult.functions[0].status, 'measured');
+    assert.equal(parenthesizedResult.functions[0].crap, 1);
+    assert.equal(parenthesizedResult.functions[1].status, 'suppressed');
+  }
+  results.routes[provider].parenthesizedSuppression = parenthesizedResult;
   function rejects(name, invalid) {
     const invalidPath = join(work, `${provider}-${name}.json`);
     json(invalidPath, invalid);
