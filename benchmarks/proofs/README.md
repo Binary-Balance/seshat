@@ -947,6 +947,10 @@ Ignored declarations with nested functions keep their enclosing function
 unknown when its own work is omitted. Parenthesized arrows are suppressed on
 Node and Jest/Expo; the verified Vitest transform still instruments that
 placement and the proof requires an incomplete result.
+Getter/setter hints are verified on all three routes. Function-counter-only
+fixtures include executable parameters, empty arrows and nested declarations;
+retained invocation records must keep suppression incomplete without becoming
+statement coverage.
 
 Set `SESHAT_PROOF_BINARY` for an alternate fresh proof executable and
 `SESHAT_JEST_EXPO_DEPS` for an existing copy of the pinned fixture dependencies.

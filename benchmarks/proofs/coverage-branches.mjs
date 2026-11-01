@@ -134,6 +134,12 @@ export class SuppressedMethod {
 export function c8Hint() { return 1; }
 /* v8 ignore next -- @preserve */
 export function v8Hint() { return 1; }
+export const suppressedAccessors = {
+  /* istanbul ignore next -- @preserve */
+  get value() { return 1; },
+  /* istanbul ignore next -- @preserve */
+  set value(value: number) { if (value < 0) throw new Error('negative'); },
+};
 `);
 const ignoredSource = join(work, 'ignored.ts');
 writeFileSync(ignoredSource, `/* istanbul ignore file -- @preserve */
@@ -154,6 +160,22 @@ writeFileSync(partialSource, `export function partiallySuppressed(flag: boolean)
 const parenthesizedSource = join(work, 'parenthesized.ts');
 writeFileSync(parenthesizedSource, `export function parenthesizedWrapper() {
   const ignored = /* istanbul ignore next -- @preserve */ (() => 1);
+  return ignored();
+}
+`);
+const functionCountersSource = join(work, 'function-counters.ts');
+writeFileSync(functionCountersSource, `function key() { return 'value'; }
+export function functionCounterWrapper() {
+  const ignored = /* istanbul ignore next -- @preserve */
+    (({[key()]: value}: Record<string, number>) => {});
+  return ignored({value: 1});
+}
+export function emptyWrapper() {
+  const ignored = /* istanbul ignore next -- @preserve */ (() => {});
+  return ignored();
+}
+export function declarationWrapper() {
+  const ignored = /* istanbul ignore next -- @preserve */ (() => { function nested() {} });
   return ignored();
 }
 `);
@@ -194,6 +216,8 @@ assert.equal(subject.suppressedArrow(true), 1);
 assert.equal(new subject.SuppressedMethod().ignored(true), 1);
 assert.equal(subject.c8Hint(), 1);
 assert.equal(subject.v8Hint(), 1);
+assert.equal(subject.suppressedAccessors.value, 1);
+subject.suppressedAccessors.value = 1;
 `;
 function run(args) {
   const child = spawnSync(process.execPath, args, {
@@ -217,6 +241,7 @@ instrumentSource(ignoredSource, 'ignored');
 instrumentSource(otherHintsSource, 'other-hints');
 instrumentSource(partialSource, 'partial');
 instrumentSource(parenthesizedSource, 'parenthesized');
+instrumentSource(functionCountersSource, 'function-counters');
 function scoreSource(source, report, status = 0) {
   const child = spawnSync(binary, ['score', source, report], {encoding: 'utf8', timeout: 10000});
   assert.ifError(child.error);
@@ -231,6 +256,8 @@ require('./ignored.instrumented.cjs').ignoredFile(true);
 require('./other-hints.instrumented.cjs').otherHints();
 require('./partial.instrumented.cjs').partiallySuppressed(true);
 assert.equal(require('./parenthesized.instrumented.cjs').parenthesizedWrapper(), 1);
+const functionCounters = require('./function-counters.instrumented.cjs');
+functionCounters.functionCounterWrapper(); functionCounters.emptyWrapper(); functionCounters.declarationWrapper();
 test('branch coverage', () => { ${checks} });
 after(() => require('node:fs').writeFileSync('node-raw.json', JSON.stringify(globalThis.__coverage__)));
 `);
@@ -241,14 +268,16 @@ import {ignoredFile} from './ignored.ts';
 import {otherHints} from './other-hints.ts';
 import {partiallySuppressed} from './partial.ts';
 import {parenthesizedWrapper} from './parenthesized.ts';
+import * as functionCounters from './function-counters.ts';
 ignoredFile(true);
 otherHints();
 partiallySuppressed(true);
 assert.equal(parenthesizedWrapper(), 1);
+functionCounters.functionCounterWrapper(); functionCounters.emptyWrapper(); functionCounters.declarationWrapper();
 test('branch coverage', () => { ${checks} });
 `);
 writeFileSync(join(work, 'vitest.config.mjs'), `export default {test: {
-include: ['checks.vitest.mjs'], coverage: {provider: 'istanbul', include: ['subject.tsx', 'ignored.ts', 'other-hints.ts', 'partial.ts', 'parenthesized.ts'],
+include: ['checks.vitest.mjs'], coverage: {provider: 'istanbul', include: ['subject.tsx', 'ignored.ts', 'other-hints.ts', 'partial.ts', 'parenthesized.ts', 'function-counters.ts'],
 reporter: ['json'], reportsDirectory: 'coverage-vitest'}}};
 `);
 writeFileSync(join(work, 'checks.jest.test.tsx'), `import assert from 'node:assert/strict';
@@ -257,10 +286,12 @@ import {ignoredFile} from './ignored';
 import {otherHints} from './other-hints';
 import {partiallySuppressed} from './partial';
 import {parenthesizedWrapper} from './parenthesized';
+import * as functionCounters from './function-counters';
 ignoredFile(true);
 otherHints();
 partiallySuppressed(true);
 assert.equal(parenthesizedWrapper(), 1);
+functionCounters.functionCounterWrapper(); functionCounters.emptyWrapper(); functionCounters.declarationWrapper();
 test('branch coverage', () => { ${checks} });
 `);
 writeFileSync(join(work, 'babel.config.cjs'), `module.exports = {presets: [[${JSON.stringify(join(expo, 'node_modules/babel-preset-expo'))}, {jsxRuntime: 'classic'}]]};
@@ -268,7 +299,7 @@ writeFileSync(join(work, 'babel.config.cjs'), `module.exports = {presets: [[${JS
 writeFileSync(join(work, 'jest.config.cjs'), `module.exports = {
 preset: ${JSON.stringify(join(expo, 'node_modules/jest-expo'))},
 rootDir: __dirname, moduleDirectories: ['node_modules', ${JSON.stringify(join(expo, 'node_modules'))}],
-testMatch: ['**/checks.jest.test.tsx'], coverageProvider: 'babel', collectCoverageFrom: ['subject.tsx', 'ignored.ts', 'other-hints.ts', 'partial.ts', 'parenthesized.ts'],
+testMatch: ['**/checks.jest.test.tsx'], coverageProvider: 'babel', collectCoverageFrom: ['subject.tsx', 'ignored.ts', 'other-hints.ts', 'partial.ts', 'parenthesized.ts', 'function-counters.ts'],
 coverageReporters: ['json'], coverageDirectory: 'coverage-jest-expo'};
 `);
 run(['--test', 'checks.node.cjs']);
@@ -366,9 +397,9 @@ for (const [provider, path] of Object.entries(reports)) {
     assert.equal(row.coverageSuppressions, 1);
   }
   const suppressed = result.functions.filter(row => row.status === 'suppressed');
-  assert.equal(suppressed.length, 4);
+  assert.equal(suppressed.length, 6);
   assert.ok(suppressed.every(row => row.coverage === null && row.crap === null && row.coverageSuppressions === 1));
-  assert.equal(result.coverageSuppressions.count, 5);
+  assert.equal(result.coverageSuppressions.count, 7);
   for (const name of ['c8Hint', 'v8Hint']) {
     assert.equal(named[name].status, 'measured');
     assert.equal(named[name].coverageSuppressions, 1);
@@ -415,6 +446,29 @@ for (const [provider, path] of Object.entries(reports)) {
     assert.equal(parenthesizedResult.functions[1].status, 'suppressed');
   }
   results.routes[provider].parenthesizedSuppression = parenthesizedResult;
+  const functionCountersResult = scoreSource(functionCountersSource, path, provider === 'vitest' ? 2 : 0);
+  const functionCandidates = functionCountersResult.functions.filter(row => row.coverageSuppressions > 0);
+  assert.equal(functionCandidates.length, 4);
+  assert.ok(functionCandidates.every(row => row.total === 0 && row.branchTotal === 0 && row.coverage === null && row.crap === null));
+  if (provider === 'vitest') {
+    assert.equal(functionCountersResult.complete, false);
+    assert.ok(functionCandidates.filter(row => row.status === 'unknown').length >= 3);
+    const raw = JSON.parse(readFileSync(path, 'utf8'))[functionCountersSource];
+    const arrowLine = readFileSync(functionCountersSource, 'utf8').split('\n').findIndex(line => line.includes('(({[key()]')) + 1;
+    assert.ok(Object.entries(raw.fnMap).some(([id, fn]) => fn.loc.start.line === arrowLine && raw.f[id] > 0));
+  } else {
+    assert.equal(functionCountersResult.complete, true);
+    assert.ok(functionCandidates.every(row => row.status === 'suppressed'));
+  }
+  results.routes[provider].functionCounterSuppression = functionCountersResult;
+  const unhintedSource = join(work, `function-counters-unhinted-${provider}.ts`);
+  writeFileSync(unhintedSource, readFileSync(functionCountersSource, 'utf8')
+    .replace(/\/\* istanbul ignore next -- @preserve \*\//g, hint => ' '.repeat(hint.length)));
+  const unhintedReport = join(work, `function-counters-unhinted-${provider}.json`);
+  const raw = JSON.parse(readFileSync(path, 'utf8'))[functionCountersSource];
+  json(unhintedReport, {[unhintedSource]: {...raw, path: unhintedSource}});
+  const unhinted = scoreSource(unhintedSource, unhintedReport, 2);
+  assert.equal(unhinted.functions.find(row => row.start === functionCandidates[0].start).status, 'unknown');
   function rejects(name, invalid) {
     const invalidPath = join(work, `${provider}-${name}.json`);
     json(invalidPath, invalid);

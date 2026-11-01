@@ -651,7 +651,9 @@ impl<'a> Visit<'a> for Analysis {
             | AstKind::Class(_)
             | AstKind::MethodDefinition(_)
             | AstKind::PropertyDefinition(_) => true,
-            AstKind::ObjectProperty(property) => property.method,
+            AstKind::ObjectProperty(property) => {
+                property.method || property.kind != PropertyKind::Init
+            }
             _ => false,
         };
         if coverage_target {
@@ -1703,8 +1705,27 @@ impl Analysis {
             let content = &source[span.start as usize..span.end as usize];
             if let Some((provider, kind)) = coverage_hint(content) {
                 let file_level = kind == "file";
-                let target = (comment.is_leading() && kind == "next")
-                    .then(|| result.coverage_targets.get(&comment.attached_to).copied())
+                let target = (kind == "next")
+                    .then(|| {
+                        result
+                            .coverage_targets
+                            .get(&comment.attached_to)
+                            .copied()
+                            .filter(|target| comment.span.end <= target.start)
+                            .or_else(|| {
+                                // OXC can classify a line-ending hint before a function as trailing.
+                                result
+                                    .coverage_targets
+                                    .range(comment.span.end..)
+                                    .next()
+                                    .filter(|(start, _)| {
+                                        source[comment.span.end as usize..**start as usize]
+                                            .chars()
+                                            .all(javascript_whitespace)
+                                    })
+                                    .map(|(_, target)| *target)
+                            })
+                    })
                     .flatten();
                 let affected: Vec<_> = result
                     .scopes
@@ -2825,8 +2846,11 @@ fn coverage_hints_distinguish_whole_functions_and_partial_suppressions() {
         "/* istanbul ignore next */ const ignored = () => 1, alsoIgnored = () => 2;",
         "const ignored = /* istanbul ignore next */ () => 1;",
         "const ignored = /* istanbul ignore next */ (() => 1);",
+        "const ignored = /* istanbul ignore next */\n(() => 1);",
         "const ignored = /* istanbul ignore next */ ((function () { return 1; }));",
         "const object = { /* istanbul ignore next */ ignored() { return 1; } };",
+        "const object = { /* istanbul ignore next */ get value() { return 1; } };",
+        "const object = { /* istanbul ignore next */ set value(value: number) { work(value); } };",
         "class C { /* istanbul ignore next */ ignored() { return 1; } }",
         "/* istanbul ignore next */ function ignored() { function nested() { return 1; } return nested(); }",
         "/* istanbul ignore file */ function ignored() { return 1; }",

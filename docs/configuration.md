@@ -736,7 +736,8 @@ scoring. Unknown and not-applicable rows do not become passing numbers.
 
 Seshat recognises whole-function `/* istanbul ignore next */` hints and
 `/* istanbul ignore file */`. A whole-function hint also applies to functions
-inside an ignored declaration or class. These functions report
+inside an ignored declaration or class, including methods and object
+getters/setters. These functions report
 `status: "suppressed"`, with null coverage and CRAP, and do not make the assessment
 incomplete solely because their counters are absent. A file-level hint may
 omit the source from the report entirely. Original coverage jobs must still
@@ -754,8 +755,13 @@ Keep hints in the code sent to the instrumenter. For Vitest's transformed
 sources, use a preserved comment such as
 `/* istanbul ignore next -- @preserve */`. A comment mentioning a hint in prose
 or a string is not a directive.
-If counters remain inside a supposedly wholly suppressed function, Seshat
-reports it as unknown and incomplete instead of discarding measured evidence.
+If statement, branch or function records remain inside a supposedly wholly
+suppressed function, Seshat reports it as unknown and incomplete instead of
+discarding measured evidence.
+Function records contradict whole suppression even when their invocation
+count is zero; they do not establish statement coverage. When `fnMap` or `f`
+is supplied for a file with whole-function hints, Seshat requires usable
+function records and matching nonnegative counters to check for this conflict.
 The verified Vitest transform still instruments a parenthesized arrow when
 the hint is between `=` and the parentheses, as in
 `const f = /* istanbul ignore next -- @preserve */ (() => 1);`.

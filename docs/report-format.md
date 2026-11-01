@@ -184,8 +184,10 @@ mutations still run. Suppression is not a passing coverage or CRAP value.
 Each source's `coverageSuppressions.hints` item has `provider`, `kind`, `start`,
 `end`, `functions` and `wholeFunction`. Providers are `istanbul`, `c8` or `v8`;
 kinds are `next`, `if`, `else` or `file`. Offsets are zero-based source bytes.
-`functions` lists the attributed scope starts. `wholeFunction` is true only
-when the hint wholly suppresses scopes through the supported Istanbul route.
+`functions` lists the attributed scope starts. `wholeFunction` is true when an
+Istanbul hint targets whole scopes or a file. It records the directive's
+recognised scope, not proof that instrumentation was omitted; the validated
+function status determines whether suppression is accepted.
 An ignored declaration can also partially suppress its enclosing function;
 that function appears in `functions` but stays unknown.
 The source count counts each comment once; function counts can include the
@@ -198,8 +200,13 @@ they leave its measurements unchanged. Missing or malformed evidence remains
 incomplete. An Istanbul `ignore file` hint allows the source entry to be absent
 from an otherwise successful coverage report; it does not excuse a failed
 coverage job or the absence of all reports.
-Counters remaining inside a supposedly wholly suppressed ordinary function
-also leave it unknown and incomplete. Implicit scopes keep their
+Statement, branch or function records remaining inside a supposedly wholly
+suppressed ordinary function also leave it unknown and incomplete, including
+function records with zero invocation counts. Function records never establish
+statement coverage. Optional `fnMap`/`f` pairs must have usable function start
+locations, matching IDs and nonnegative integer counters when Seshat checks
+whole suppression; malformed or unpaired metadata keeps the run incomplete.
+Implicit scopes keep their
 `complexity-only` status under suppression hints.
 
 Cognitive complexity remains available in function rows when coverage fails.
