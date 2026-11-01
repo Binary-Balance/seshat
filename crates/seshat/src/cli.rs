@@ -371,6 +371,7 @@ fn readable(report: &Value) -> String {
         let _ = writeln!(output, "Source {:?}", text(&source["path"]));
         for function in array(&source["result"]["functions"]) {
             let unmeasured = match text(&function["status"]) {
+                "suppressed" => "suppressed",
                 "not-applicable" => "not applicable",
                 "complexity-only" => "not applicable (complexity only)",
                 _ => "unknown",
@@ -430,6 +431,18 @@ fn readable(report: &Value) -> String {
                     );
                 }
             }
+            if let Some(count) = function["coverageSuppressions"]
+                .as_u64()
+                .filter(|count| *count > 0)
+            {
+                let _ = writeln!(output, "    Coverage suppression hints: {count}");
+            }
+        }
+        if let Some(count) = source["result"]["coverageSuppressions"]["count"]
+            .as_u64()
+            .filter(|count| *count > 0)
+        {
+            let _ = writeln!(output, "  Coverage suppression hints in file: {count}");
         }
         if let Some(unowned) = source["result"]["typeSafety"]["unowned"].as_object()
             && unowned
@@ -1035,6 +1048,22 @@ mod tests {
         assert!(output.contains("inactive for setup \"missing\" (node-version)"));
         assert!(output.contains("(runner): this observer is only used by the Node test runner"));
         assert!(!output.contains('\u{001b}'));
+    }
+
+    #[test]
+    fn readable_coverage_suppressions_keep_counts_and_unscored_status_visible() {
+        let output = readable(
+            &json!({"command":"crap","complete":true,"timings":{"wallMs":1},"result":{
+                "sources":[{"path":"source.ts","result":{
+                    "coverageSuppressions":{"count":2,"hints":[]},
+                    "functions":[{"name":"ignored","complexity":1,"cognitiveComplexity":0,
+                        "status":"suppressed","coverageSuppressions":1,"crap":null,"coverage":null}]
+                }}]
+            }}),
+        );
+        assert!(output.contains("statements suppressed, CRAP suppressed"));
+        assert!(output.contains("Coverage suppression hints: 1"));
+        assert!(output.contains("Coverage suppression hints in file: 2"));
     }
 
     #[test]

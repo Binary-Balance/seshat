@@ -930,6 +930,58 @@ mod tests {
         assert_eq!(fs::read_dir(&parent.0).unwrap().count(), 0);
     }
 
+    #[test]
+    fn coverage_suppressions_skip_pseudo_testing_but_keep_operator_mutations() {
+        for kind in ["next", "file"] {
+            let mut fixture = Fixture::new();
+            fixture.config["source"]["include"] = json!(["src/calc.ts"]);
+            let source = format!(
+                "/* istanbul ignore {kind} */ export const below = (x: number): boolean => x < 1;\n"
+            );
+            fs::write(fixture.project.join("src/calc.ts"), &source).unwrap();
+            let mut captured = fixture.capture().unwrap();
+            captured.config.mutation_operators = vec![MutationOperator::Comparison];
+            let receipt = r#"require('fs').writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({
+                version:1,executionId:process.env.SESHAT_EXECUTION_ID,node:process.versions.node,
+                complete:true,passed:1,failed:0,errors:0}));"#;
+            let setup = &mut captured.config.setups[0];
+            setup.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
+            setup.test = vec!["node".into(), "-e".into(), receipt.into()];
+            setup.coverage.command = vec![
+                "node".into(),
+                "-e".into(),
+                format!(
+                    r#"
+                const fs = require('fs'), path = require('path'), report = {{}};
+                if ({has_entry}) {{
+                    const name = path.resolve('src/calc.ts');
+                    report[name] = {{path:name,statementMap:{{}},s:{{}},branchMap:{{}},b:{{}}}};
+                }}
+                fs.mkdirSync('coverage', {{recursive:true}});
+                fs.writeFileSync(process.env.SESHAT_COVERAGE_REPORT, JSON.stringify(report));
+                {receipt}
+            "#,
+                    has_entry = kind == "next"
+                ),
+            ];
+            let result = captured.assess(AssessmentMode::Check, false).unwrap();
+            assert_eq!(result["complete"], true, "{kind}: {result}");
+            let function = &result["sources"][0]["result"]["functions"][0];
+            assert_eq!(function["status"], "suppressed");
+            assert_eq!(function["coverage"], Value::Null);
+            assert_eq!(function["pseudoTestStatus"], "not-applicable");
+            assert_eq!(function["pseudoTestReason"], "coverage-suppressed");
+            assert_eq!(result["pseudoTesting"]["planned"], 0);
+            assert_eq!(result["mutation"]["planned"], 2);
+            assert_eq!(result["mutation"]["jobsAttempted"], 2);
+            assert_eq!(
+                fs::read_to_string(fixture.project.join("src/calc.ts")).unwrap(),
+                source
+            );
+            fixture.assert_clean();
+        }
+    }
+
     pub(super) struct Fixture {
         pub(super) _directory: OwnedDirectory,
         project: PathBuf,

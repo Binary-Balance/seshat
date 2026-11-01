@@ -294,6 +294,10 @@ pub fn attribute<'a>(
     for report in reports {
         report_count += 1;
         let Some(file) = report.get(path) else {
+            // Istanbul omits the entire entry when a file-level hint disables instrumentation.
+            if analysis.coverage_ignored_file && supported_positions {
+                continue;
+            }
             problems.push(format!("missing source coverage: {path}"));
             statements_reliable = false;
             continue;
@@ -432,23 +436,131 @@ pub fn attribute<'a>(
             }
         }
     }
+    for (index, scope) in analysis.scopes.iter().enumerate() {
+        if scope.coverage_partial_suppression
+            && !scope.coverage_suppressed
+            && !scope.implicit
+            && !scope.empty
+        {
+            problems.push(format!(
+                "partial coverage suppression is not supported: {}",
+                scope.name
+            ));
+        }
+        if scope.coverage_suppressed
+            && !scope.implicit
+            && (!statements[index].is_empty() || !branches[index].is_empty())
+        {
+            problems.push(format!(
+                "whole-function coverage suppression still has counters: {}",
+                scope.name
+            ));
+        }
+    }
     let mut complete = problems.is_empty();
     let rows: Vec<_> = analysis.scopes.iter().enumerate().map(|(i,s)| {
         let total = statements[i].len();
         let covered = statements[i].iter().filter(|&&hit| hit).count();
         let branch_total = branches[i].len();
         let branch_covered = branches[i].iter().filter(|&&hit| hit).count();
-        let status = if s.implicit { "complexity-only" } else if s.empty { "not-applicable" }
-            else if !statements_reliable || unreliable_branches.contains(&i) || total == 0 { complete = false; "unknown" } else { "measured" };
+        let status = if s.implicit { "complexity-only" }
+            else if s.coverage_suppressed { if total == 0 && branch_total == 0 { "suppressed" } else { "unknown" } }
+            else if s.empty { "not-applicable" }
+            else if s.coverage_partial_suppression || !statements_reliable || unreliable_branches.contains(&i) || total == 0 { complete = false; "unknown" } else { "measured" };
         json!({"name":s.name,"start":s.span.start,"complexity":s.complexity,"cognitiveComplexity":s.cognitive_complexity,"status":status,
             "typeSafety":s.type_safety,
-            "covered":covered,"total":total,"coverage":if statements_reliable && !s.implicit && !s.empty && total > 0 {Some(covered as f64/total as f64)}else{None},
+            "coverageSuppressions":s.coverage_suppressions,
+            "covered":covered,"total":total,"coverage":if statements_reliable && !s.coverage_suppressed && !s.coverage_partial_suppression && !s.implicit && !s.empty && total > 0 {Some(covered as f64/total as f64)}else{None},
             "branchCovered":branch_covered,"branchTotal":branch_total,
             "branchCoverage":if status=="measured" && branch_total > 0 {Some(branch_covered as f64/branch_total as f64)}else{None},
             "coverageBasis":if status=="measured" {Some(if branch_total > 0 {"branch"} else {"statement"})}else{None},
             "crap":if status=="measured" {if branch_total > 0 {assessment::score(s.complexity,branch_covered,branch_total)} else {assessment::score(s.complexity,covered,total)}}else{None}})
     }).collect();
-    json!({"complete":complete,"functions":rows,"problems":problems,"typeSafety":analysis.type_safety()})
+    json!({"complete":complete,"functions":rows,"problems":problems,"typeSafety":analysis.type_safety(),"coverageSuppressions":analysis.coverage_suppressions()})
+}
+
+#[test]
+fn whole_function_suppressions_are_visible_and_do_not_require_counters() {
+    let source = "/* istanbul ignore next */ function ignored() { return 1; }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let report =
+        json!({"source.ts":{"path":"source.ts","statementMap":{},"s":{},"branchMap":{},"b":{}}});
+    let result = attribute(&analysis, "source.ts", source, [&report]);
+    assert_eq!(result["complete"], true, "{result}");
+    assert_eq!(result["problems"], json!([]));
+    let row = &result["functions"][0];
+    assert_eq!(row["status"], "suppressed");
+    assert_eq!(row["coverageSuppressions"], 1);
+    assert_eq!(result["coverageSuppressions"]["count"], 1);
+    for key in ["coverage", "branchCoverage", "coverageBasis", "crap"] {
+        assert_eq!(row[key], Value::Null, "{key}");
+    }
+    let missing = attribute(&analysis, "source.ts", source, [&json!({})]);
+    assert_eq!(missing["complete"], false);
+    let unhinted = source.replace("/* istanbul ignore next */ ", "");
+    let ordinary = Analysis::inspect("source.ts", &unhinted).unwrap();
+    let unknown = attribute(&ordinary, "source.ts", &unhinted, [&report]);
+    assert_eq!(unknown["complete"], false);
+    assert_eq!(unknown["functions"][0]["status"], "unknown");
+}
+
+#[test]
+fn file_suppression_allows_an_omitted_entry_but_never_hides_bad_evidence() {
+    let source = "/* istanbul ignore file */ function ignored() { return 1; }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let result = attribute(&analysis, "source.ts", source, [&json!({})]);
+    assert_eq!(result["complete"], true, "{result}");
+    assert_eq!(result["functions"][0]["status"], "suppressed");
+    assert_eq!(
+        attribute(&analysis, "source.ts", source, std::iter::empty())["complete"],
+        false
+    );
+    for invalid in [
+        json!({"source.ts":{"path":"wrong.ts","statementMap":{},"s":{},"branchMap":{},"b":{}}}),
+        json!({"source.ts":{"path":"source.ts","statementMap":{},"s":{}}}),
+        json!({"source.ts":{"path":"source.ts","statementMap":{},"s":{"0":1},"branchMap":{},"b":{}}}),
+    ] {
+        let result = attribute(&analysis, "source.ts", source, [&invalid]);
+        assert_eq!(result["complete"], false, "{result}");
+        assert!(!result["problems"].as_array().unwrap().is_empty());
+    }
+}
+
+#[test]
+fn partial_suppression_cannot_become_full_statement_coverage() {
+    let source = "function f() { /* istanbul ignore next */ work(); return 1; }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let start = source.find("return").unwrap();
+    let report = json!({"source.ts":{"path":"source.ts","statementMap":{"0":{
+        "start":{"line":1,"column":start},"end":{"line":1,"column":start+9}}},
+        "s":{"0":1},"branchMap":{},"b":{}}});
+    let result = attribute(&analysis, "source.ts", source, [&report]);
+    assert_eq!(result["complete"], false, "{result}");
+    assert_eq!(result["functions"][0]["status"], "unknown");
+    assert_eq!(result["functions"][0]["coverageSuppressions"], 1);
+    assert_eq!(result["functions"][0]["coverage"], Value::Null);
+    assert_eq!(result["functions"][0]["crap"], Value::Null);
+}
+
+#[test]
+fn suppression_does_not_hide_existing_counters_or_reclassify_implicit_scopes() {
+    let source = "/* istanbul ignore next */ function ignored() { return 1; }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let start = source.find("return").unwrap();
+    let report = json!({"source.ts":{"path":"source.ts","statementMap":{"0":{
+        "start":{"line":1,"column":start},"end":{"line":1,"column":start+9}}},
+        "s":{"0":1},"branchMap":{},"b":{}}});
+    let result = attribute(&analysis, "source.ts", source, [&report]);
+    assert_eq!(result["complete"], false, "{result}");
+    assert_eq!(result["functions"][0]["status"], "unknown");
+    assert_eq!(result["functions"][0]["coverage"], Value::Null);
+    let source = "/* istanbul ignore file */ class C { value = 1; static { work(); } }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let result = attribute(&analysis, "source.ts", source, [&json!({})]);
+    assert_eq!(result["complete"], true);
+    for row in result["functions"].as_array().unwrap() {
+        assert_eq!(row["status"], "complexity-only");
+    }
 }
 
 #[cfg(test)]

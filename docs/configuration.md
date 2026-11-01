@@ -732,9 +732,39 @@ executable body or parameter work have not-applicable coverage and CRAP. Class
 initialisers and static blocks retain complexity results but are outside CRAP
 scoring. Unknown and not-applicable rows do not become passing numbers.
 
+### Coverage suppression hints
+
+Seshat recognises whole-function `/* istanbul ignore next */` hints and
+`/* istanbul ignore file */`. A whole-function hint also applies to functions
+inside an ignored declaration or class. These functions report
+`status: "suppressed"`, with null coverage and CRAP, and do not make the assessment
+incomplete solely because their counters are absent. A file-level hint may
+omit the source from the report entirely. Original coverage jobs must still
+pass and supply valid reports. An unhinted function without mapped statements
+stays unknown.
+
+Suppressed functions retain complexity and type-safety findings. Their
+pseudo-testing is not applicable because it needs positive statement coverage.
+Operator mutations still run; coverage hints do not disable mutation testing.
+The terminal report shows hint counts per function and file. JSON also records
+each hint's provider, kind, source range and attributed functions under
+`coverageSuppressions`. Counts are findings, not quality thresholds.
+
+Keep hints in the code sent to the instrumenter. For Vitest's transformed
+sources, use a preserved comment such as
+`/* istanbul ignore next -- @preserve */`. A comment mentioning a hint in prose
+or a string is not a directive.
+If counters remain inside a supposedly wholly suppressed function, Seshat
+reports it as unknown and incomplete instead of discarding measured evidence.
+
+Partial statement and branch hints, including `istanbul ignore if` and
+`istanbul ignore else`, are counted but remain unsupported. Affected ordinary
+functions stay unknown with null coverage and CRAP and keep the assessment
+incomplete. `c8` and `v8` hint spellings are counted, but do not suppress
+Istanbul coverage or establish support for those providers.
+
 Branch entries must match source `if`, ternary, logical, default-value or switch
-syntax. Partially suppressed outcomes, such as `istanbul ignore else`, remain
-unknown when the remaining entry cannot describe the complete source branch.
+syntax.
 A function with executable parameters but no mapped statements also remains
 unknown, even when it has branch counters.
 

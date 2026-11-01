@@ -939,6 +939,11 @@ that fully executed statements can still produce a higher CRAP score when
 branch outcomes are untested. Functions with no recorded branches retain
 statement-based scoring. See the [measurements](../../docs/research/coverage-branches.md).
 
+The same routes verify whole-function and whole-file Istanbul suppression
+hints, including nested functions, arrows and methods. Suppressed functions
+retain hint counts and null scores; `c8` and `v8` hints are counted without
+changing Istanbul measurements.
+
 Set `SESHAT_PROOF_BINARY` for an alternate fresh proof executable and
 `SESHAT_JEST_EXPO_DEPS` for an existing copy of the pinned fixture dependencies.
 `SESHAT_VITEST_DEPS` selects an alternate Vitest `node_modules` directory without
