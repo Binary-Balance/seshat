@@ -1,3 +1,3 @@
 # Unreleased changes
 
-Changes after [Seshat 0.11.0](0.11.0.md).
+Changes after [Seshat 0.12.0](0.12.0.md).
