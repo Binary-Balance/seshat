@@ -1,25 +1,25 @@
-# 0.12.0 release notice audit
+# 0.12.1 release notice audit
 
 Captured 2026-11-03. Native audit complete; local install and publication checks remain.
 
-Build source [5c493ef546ad9845ba3a1670be9f2b87f6ca7bc9](https://github.com/Binary-Balance/seshat/commit/5c493ef546ad9845ba3a1670be9f2b87f6ca7bc9), ref `refs/pull/256/merge`.
+Build source [a106c83e94a4b956f75338d9da17abc6ff7fa1f4](https://github.com/Binary-Balance/seshat/commit/a106c83e94a4b956f75338d9da17abc6ff7fa1f4), ref `refs/pull/262/merge`.
 
-Reviewed head [a311b2fdac98c844e9af9b4b9889ccb3ff1955d6](https://github.com/Binary-Balance/seshat/commit/a311b2fdac98c844e9af9b4b9889ccb3ff1955d6), [pull request](https://github.com/Binary-Balance/seshat/pull/256).
+Reviewed head [d64aa48f243f6e4647b23cdf93ccc557877a1f42](https://github.com/Binary-Balance/seshat/commit/d64aa48f243f6e4647b23cdf93ccc557877a1f42), [pull request](https://github.com/Binary-Balance/seshat/pull/262).
 
 | source directory | Git tree |
 | --- | --- |
-| `crates` | `a4047c963a2426cb964a6763c5e2d9413afbc371` |
+| `crates` | `6dcb598b08e978cd7d09b34672dae24f042d3dde` |
 | `packages` | `f0def6505038c2cd06697bc668f48021160c48c3` |
-| `packaging` | `d8acfc43aa5706baeb2c8b9c8a613b629f3cae14` |
+| `packaging` | `1496f41b82bc51b0fd0134ccac064c41e73b675f` |
 
 | package | target | run and artifact | archive | bytes | SHA-256 |
 | --- | --- | --- | --- | ---: | --- |
-| `@binary-balance/seshat-linux-x64` | `linux-x64` | [41563731109](https://github.com/Binary-Balance/seshat/actions/runs/41563731109), `linux-x64-package-proof` | `seshat-linux-x64-release.tgz` | 1,128,624 | `1a4008621f2b543cc6c18b5485e60cc2d859bbe5b11c0a458592248904289e36` |
-| `@binary-balance/seshat-linux-arm64` | `linux-arm64` | [41563731058](https://github.com/Binary-Balance/seshat/actions/runs/41563731058), `linux-arm64-package-proof` | `seshat-linux-arm64-release.tgz` | 1,062,399 | `24c36c06178127fa254b343eaf2c07e9fb4164674b9c1dbd01eb734d570fcee8` |
-| `@binary-balance/seshat-darwin-x64` | `darwin-x64` | [41563730896](https://github.com/Binary-Balance/seshat/actions/runs/41563730896), `macos-x64-package-proof` | `seshat-darwin-x64-release.tgz` | 1,065,114 | `f5fd0c0a67b4e1cb3f63e44551f60c2b6c126170231db4ba836ef3b76f0d0a66` |
-| `@binary-balance/seshat-darwin-arm64` | `darwin-arm64` | [41563730896](https://github.com/Binary-Balance/seshat/actions/runs/41563730896), `macos-arm64-package-proof` | `seshat-darwin-arm64-release.tgz` | 1,032,321 | `3b237e044ae33b0d33076de4ad3fda2339969ba019ce1bad30b753a1f6d544fa` |
-| `@binary-balance/seshat-win32-x64` | `win32-x64` | [41563730938](https://github.com/Binary-Balance/seshat/actions/runs/41563730938), `windows-x64-package-proof` | `seshat-win32-x64-release.tgz` | 1,086,618 | `7c8938cc5ea7ba1b4078cd2f438b1ab9ab59c4e7238fc0e2470049a1a2d314ae` |
-| `@binary-balance/seshat` | `universal` | [41563731109](https://github.com/Binary-Balance/seshat/actions/runs/41563731109), `linux-x64-package-proof` | `seshat-entry.tgz` | 6,077 | `2baf310a33443e714a7cabda465ad1a34dd688099d14c6c938cccb204b22fe91` |
+| `@binary-balance/seshat-linux-x64` | `linux-x64` | [41618407576](https://github.com/Binary-Balance/seshat/actions/runs/41618407576), `linux-x64-package-proof` | `seshat-linux-x64-release.tgz` | 1,129,015 | `b113e5b8ca4febe5cca8edfba5d40e7bec08f7b8b29ea9747dd4e4c1daeaa0ee` |
+| `@binary-balance/seshat-linux-arm64` | `linux-arm64` | [41618407524](https://github.com/Binary-Balance/seshat/actions/runs/41618407524), `linux-arm64-package-proof` | `seshat-linux-arm64-release.tgz` | 1,062,100 | `f0b55d20faf17c35b25abb646efdcdd31c3b68f0118c282495584303745ae019` |
+| `@binary-balance/seshat-darwin-x64` | `darwin-x64` | [41618407710](https://github.com/Binary-Balance/seshat/actions/runs/41618407710), `macos-x64-package-proof` | `seshat-darwin-x64-release.tgz` | 1,066,116 | `507edcb1368196dcfbbfe49041995ef0f9586d1303d851775d6458b3aed2804e` |
+| `@binary-balance/seshat-darwin-arm64` | `darwin-arm64` | [41618407710](https://github.com/Binary-Balance/seshat/actions/runs/41618407710), `macos-arm64-package-proof` | `seshat-darwin-arm64-release.tgz` | 1,032,065 | `720f6a5d720c9413b4b4742c3abc113c037b37235a61c8215f0d8bb014c38af9` |
+| `@binary-balance/seshat-win32-x64` | `win32-x64` | [41618407605](https://github.com/Binary-Balance/seshat/actions/runs/41618407605), `windows-x64-package-proof` | `seshat-win32-x64-release.tgz` | 1,086,764 | `753873ca6767a5758eead521c42a56efe1ed5a10b3b89dcfd7523ca600b89591` |
+| `@binary-balance/seshat` | `universal` | [41618407576](https://github.com/Binary-Balance/seshat/actions/runs/41618407576), `linux-x64-package-proof` | `seshat-entry.tgz` | 6,077 | `ce7c79afb82bff3b7814b479d95a0258722baab0ab3a8df388df0fba4aa12f09` |
 
 ## Canonical entry members
 
@@ -27,22 +27,22 @@ Reviewed head [a311b2fdac98c844e9af9b4b9889ccb3ff1955d6](https://github.com/Bina
 | --- | ---: | --- | --- |
 | `package/bin/seshat.mjs` | 5,036 | `a8042d06d93200c3c98cc1c22da7e8bb100c5f5a5cf03075c820209a801a6426` | `0755` |
 | `package/LICENSE` | 1,074 | `d2895ef18f0ba19d7c3e0b8c08a087554bddfb2f3cacb22343b412f3b32cbd91` | `0644` |
-| `package/package.json` | 758 | `2631faf47cacf7b3881a7cfe476a0759b3d350270dc484717be485c2527ecb86` | `0644` |
+| `package/package.json` | 758 | `e874c9bbd82160566114c3f9f7cdb0ef761ddd1ae9ca39800e4d96c333579822` | `0644` |
 | `package/README.md` | 7,857 | `2affbcb637e93a915da66535fce33c8f0586f2b957d9bf2c27bf4a83984afab4` | `0644` |
 
 ## Native members
 
 | target | binary | `BUILD.json` | `package.json` | notices |
 | --- | --- | --- | --- | --- |
-| `linux-x64` | `package/bin/seshat`, 2,451,632 bytes, `0ff4d47361336d7dd65a28bdd69bdc367bc9e73db34df3d8d3987ceaba082de7`, `0755` | 9,953 bytes, `ffc1f5011d8cd2c9923d6136de69e6d9eeb3747ed34890894d6938629b9c3725` | 498 bytes, `8c20e832fee0ec2c72dadb64154d4342f256ae66828ccc1ec86a506590e478b8` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
-| `linux-arm64` | `package/bin/seshat`, 2,175,696 bytes, `926ae9820bf37ade955a1caf26ff72132642af9e22f0c022cd127e97c608f80b`, `0755` | 9,428 bytes, `ef7cc9eaa85f882ab1e59f0015fb8839533a8ce677837f34a3430f40d3c206fe` | 504 bytes, `ae41bdcc9d178ed9f9e6445d657813dfc0d4687bb56645643ce95d99c7b8aec0` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
-| `darwin-x64` | `package/bin/seshat`, 2,264,328 bytes, `6feea2b20d6b409ff117b9ae201f8a4794a896f6e126b041195463a90b5f2810`, `0755` | 9,386 bytes, `4a94869ffaa9805b418ef02b23fec248ae3035d2f92d756c65fc6c8152d0b7ce` | 472 bytes, `62f74f21af80e855552a92d1fe886cfa1d03c835e6eb8e64b9b5dd6b1a08f471` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
-| `darwin-arm64` | `package/bin/seshat`, 2,157,472 bytes, `235418b7ab704f92b8df293a9510400eab5a8fab41bb4c6ff7e4ec19879223ab`, `0755` | 9,390 bytes, `c295ce17d762a3b9332acd6368bc3617ebe2a08f063a70a58bf29d9656f6fb02` | 478 bytes, `9431e311f442581203b2585663f0e686edee7cced1436c57a06df1ade0a0cdc2` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
-| `win32-x64` | `package/bin/seshat.exe`, 2,569,216 bytes, `f21672b34abf400a11af3d1e8ab8c4fd5d39444b5e16d1c1afdbc59824801f28`, `0644` | 10,225 bytes, `7c461c2d513cbe220278c1e34a2ad44f6a856c4cfd216703cf0562c608802173` | 473 bytes, `6b92db49499ad5c6f562c2fe5527e77a25a3ec054a86f57f18077daf5449b0e6` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
+| `linux-x64` | `package/bin/seshat`, 2,450,168 bytes, `32c1431914e0db7f66b593104ed9bdac16fbc84785af70c31e90bc04efef6414`, `0755` | 9,953 bytes, `d1e5136ccbfc3ebebe53b74208fa13fbd75b4d6562623f143b4e4b324002a1cc` | 498 bytes, `2e76ecfa9a169227a9263830eb9af75ed56c2374e8721a5a249573604d203db9` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
+| `linux-arm64` | `package/bin/seshat`, 2,171,600 bytes, `99981b45b439089f5728fc87da78be647ac4f54b1b69e9e9a1029f8b2215eeeb`, `0755` | 9,428 bytes, `7a33d56884eb62caaa7264f35240d2d80a951665ad519244c13f2543d7681aa0` | 504 bytes, `10804a206e56e6d5c54ed5d4b8d67ca0374da59524ddf9b10579cb0887506df8` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
+| `darwin-x64` | `package/bin/seshat`, 2,264,328 bytes, `2727a63d63923e277843bfd4c211b08ea91b26795f41a017fdf7213cbfa32674`, `0755` | 9,386 bytes, `eb65e5a33b1409b975fa9fcf1b7486f27eee633224505ae8fb650169a60df7dd` | 472 bytes, `f7b8a7e2c282453282b506121d0d6406d7aba9cfdfe72682580507c753ffc8f1` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
+| `darwin-arm64` | `package/bin/seshat`, 2,157,456 bytes, `49b8dd014e969776ecb567c54215671a80d502d9a426c352efc8f1908c93b017`, `0755` | 9,390 bytes, `dde0d535d9584a792e11031e3116172d7543d5a6d305638ce35f5ea7205ef2b0` | 478 bytes, `578c75f8d2f5253cbf582ddbb3b8b34148d8684728020913debab939959a462c` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
+| `win32-x64` | `package/bin/seshat.exe`, 2,569,216 bytes, `da3fe71988f04cad12e844aed2a22fa73b46836081ce52ddc8fe2a0b9a523a43`, `0644` | 10,225 bytes, `ce53079246df131e3d0b555be77fa40af715280be527fb6c2d3d07c2fc120b33` | 473 bytes, `d4621a2a8e7c4b4590f5bfe9b644b297d49331ec9ca84deae228ddca2cdfd570` | 2,057,917 bytes, `890de6ea484f036b81a26b4b9bc42e926c2efc32a35344ec156a20f9bba1f3f8` |
 
 ## Previous release comparison
 
-Previous version `0.11.0`.
+Previous version `0.12.0`.
 
 | check | matches previous release |
 | --- | --- |
@@ -61,7 +61,7 @@ Rust toolchain: `rustc 1.98.1 (48a229cea 2026-09-01)` → `rustc 1.98.1 (48a229c
 
 ## Windows runtime
 
-[Run 41563731038](https://github.com/Binary-Balance/seshat/actions/runs/41563731038) passed the runtime proof.
+[Run 41618407578](https://github.com/Binary-Balance/seshat/actions/runs/41618407578) passed the runtime proof.
 
 Scenarios: `baseline`, `timeout`, `overflow`, `leaderExit`, `leaderExitRepeat`, `consoleCancellation`.
 
