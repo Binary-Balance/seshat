@@ -311,7 +311,7 @@ function installTarball(label, tarball) {
     },
     installWallMs: installed.wallMs,
     version,
-    package: JSON.parse(readFileSync(join(consumer, 'node_modules/@binary-balance/seshat/package.json'), 'utf8')),
+    package: JSON.parse(readFileSync(join(packageRoot, 'package.json'), 'utf8')),
   };
   return {label, executable, root, env: npmEnv, artifact};
 }
