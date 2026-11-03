@@ -74,10 +74,32 @@ const cases = [
   ['same-span-boolean', 'function f() { true } f();', undefined, [undefined]],
   ['value-return', 'function f() { return 7; } f();', 7, []],
   ['void-return', 'const log: number[] = []; function f() { return void log.push(7); } [f(),log];', [undefined,[7]], []],
-  ['async', 'async function f() { await Promise.resolve(); return; } f();', undefined, []],
-  ['generator', 'function* f() { yield 7; return; } [...f()];', [7], []],
-  ['nested-in-async', 'async function f() { function inner() { 123; } inner(); return 7; } f();', 7, [7]],
-  ['nested-async', 'function f() { const inner = async () => { 123; return; }; return 7; } f();', 7, []],
+  ['async', 'async function f() { await Promise.resolve(); return; } f();', undefined, [undefined,undefined]],
+  ['async-effects', 'async function f() { const log: number[] = []; log.push(1); await Promise.resolve().then(() => log.push(2)); return log; } f();',
+    [1,2], [[2],[1]]],
+  ['async-order', "async function f(log: string[]) { log.push('first'); await Promise.resolve(); log.push('last'); } const log: string[] = []; const pending = f(log); log.push('caller'); pending.then(() => log);",
+    ['first','caller','last'], [['caller','last'],['first','last','caller'],['first','caller']]],
+  ['async-arrow', 'const f = async () => { const log: number[] = []; await Promise.resolve().then(() => log.push(1)); return log; }; f();', [1], [[]]],
+  ['async-rejection', 'async function f() { await Promise.reject(new Error()); } f().catch(error => error.name);', 'Error', [undefined]],
+  ['async-finally', 'async function f() { try { throw new Error(); } finally { return; } } f();', undefined, [{error:'Error'}]],
+  ['async-guard', 'async function f() { const log: number[] = []; if (1) return; log.push(1); return log; } f();', undefined, [[1],undefined]],
+  ['for-await', 'async function f() { const log: number[] = []; for await (const value of [1,2]) log.push(value); return log; } f();', [1,2], [[]]],
+  ['generator', 'function* f() { yield 7; return; } [...f()];', [7], [[],[7]]],
+  ['generator-delegate', 'function* f() { yield* [1,2]; } [...f()];', [1,2], [[]]],
+  ['generator-resume', 'function* f(log: number[]) { log.push(yield 1); return 9; } const log: number[] = []; const it = f(log); [it.next(),it.next(42),log];',
+    [{value:1,done:false},{value:9,done:true},[42]], [[{value:9,done:true},{value:undefined,done:true},[]]]],
+  ['generator-finally', 'function* f() { try { yield 1; } finally { return; } } const it = f(); [it.next(),it.throw(new Error())];',
+    [{value:1,done:false},{value:undefined,done:true}], [{error:'Error'},{error:'Error'}]],
+  ['generator-cleanup', 'const log: number[] = []; function* f() { try { yield 1; } finally { log.push(2); } } const it = f(); it.next(); it.return(); log;',
+    [2], [[2],[]]],
+  ['async-generator', 'async function* f() { yield await Promise.resolve(1); yield* [2,3]; } Array.fromAsync(f());', [1,2,3], [[2,3],[1]]],
+  ['async-generator-finally', 'async function* f() { try { throw new Error(); } finally { return; } } f().next();',
+    {value:undefined,done:true}, [{error:'Error'}]],
+  ['async-method', 'class C { async f() { const log: number[] = []; await Promise.resolve().then(() => log.push(1)); return log; } } new C().f();', [1], [[]]],
+  ['generator-method', 'const obj = { *f() { yield 1; } }; [...obj.f()];', [1], [[]]],
+  ['async-generator-method', 'class C { async *f() { yield await Promise.resolve(1); } } Array.fromAsync(new C().f());', [1], [[]]],
+  ['nested-in-async', 'async function f() { function inner() { 123; } inner(); return 7; } f();', 7, [7,7]],
+  ['nested-async', 'function f() { const inner = async () => { 123; return; }; return 7; } f();', 7, [7,7]],
   ['constructor', 'class C { constructor() { work(); } } 7;', 7, []],
   ['super-arrow', 'class B {} class C extends B { constructor() { (() => { consume(super()); })(); } } 7;', 7, []],
   ['super-method', 'class B { method() {} } class C extends B { method() { super.method(); return 7; } } new C().method();', 7, [7]],
@@ -127,19 +149,27 @@ const originals = {
     'export function guard(stop: boolean, log: number[]) { if (stop) return; log.push(1); }',
     'export function equivalent() { 123; return 7; }',
     'export function terminal() { return; }',
+    'export async function asyncAdd(log: number[]) { log.push(1); await Promise.resolve(log.push(2)); return log.length; }',
+    'export function* values() { yield 3; yield* [4]; return; }',
+    'export async function* asyncValues() { yield await Promise.resolve(5); }',
+    'export class Skipped { constructor() { 0; return; } }',
+    'void 0;',
     '',
   ].join('\n'),
   'comparison.ts':'export function positive(value: number) { return value > 0; }\n',
   'test.mjs':[
     "import {test} from 'node:test';",
     "import assert from 'node:assert/strict';",
-    "import {add,guard,equivalent,terminal} from './statements.ts';",
+    "import {add,guard,equivalent,terminal,asyncAdd,values,asyncValues} from './statements.ts';",
     "import {positive} from './comparison.ts';",
-    "test('statements', () => {",
+    "test('statements', async () => {",
     '  const log = []; assert.equal(add(log),1); assert.deepEqual(log,[7]);',
     '  const guarded = []; guard(true,guarded); assert.deepEqual(guarded,[]);',
     '  guard(false,guarded); assert.deepEqual(guarded,[1]);',
     '  assert.equal(equivalent(),7); assert.equal(terminal(),undefined);',
+    '  const asyncLog = []; assert.equal(await asyncAdd(asyncLog),2); assert.deepEqual(asyncLog,[1,2]);',
+    '  assert.deepEqual([...values()],[3,4]);',
+    '  assert.deepEqual(await Array.fromAsync(asyncValues()),[5]);',
     '  assert.deepEqual([positive(-1),positive(0),positive(1)],[false,false,true]);',
     '});',
     '',
@@ -150,7 +180,7 @@ const oldFamilies = ['comparison','logical','arithmetic','boolean'];
 const allFamilies = [...oldFamilies,'statement','optional'];
 const config = {source:{include:['*.ts']},capture:Object.keys(originals),setups:[{
   name:'node',runner:'node',cwd:'.',timeoutMs:10000,
-  typecheck:[process.execPath,join(repo,'benchmarks/node_modules/typescript/bin/tsc'),'--ignoreConfig','--strict','--noEmit','--skipLibCheck','statements.ts','comparison.ts'],
+  typecheck:[process.execPath,join(repo,'benchmarks/node_modules/typescript/bin/tsc'),'--ignoreConfig','--strict','--noEmit','--skipLibCheck','--target','ES2022','statements.ts','comparison.ts'],
   test:[process.execPath,'--test','--test-concurrency=1','--test-reporter={seshatReporter}','test.mjs'],
   coverage:{command:[process.execPath,join(here,'collect-node.mjs'),'test.mjs'],report:'coverage/final.json'},
 }]};
@@ -167,19 +197,31 @@ function assess(name, operators, switching = false, workers = 1, status = 0) {
   assert.equal(report.complete,status === 0,JSON.stringify(report));
   const enabled = operators ?? allFamilies;
   assert.deepEqual(result.enabledOperators,enabled);
-  const planned = (enabled.includes('statement') ? 5 : 0) + (enabled.includes('comparison') ? 2 : 0);
+  const planned = (enabled.includes('statement') ? 11 : 0) + (enabled.includes('comparison') ? 2 : 0);
   assert.equal(result.planned,planned);
   assert.equal(result.completed,planned);
   assert.equal(result.notRun,0);
   assert.equal(result.jobsAttempted,planned);
-  assert.equal(report.result.pseudoTesting.planned,5);
+  assert.equal(report.result.pseudoTesting.planned,6);
   for (const key of ['planned','completed','jobsAttempted']) {
     assert.equal(result.perOperator.reduce((sum,row) => sum + row[key],0),result[key]);
   }
   assert(result.perOperator.every(row => row.executionMs >= 0));
+  if (enabled.includes('statement')) {
+    const expressions = result.perOperator.find(row => row.operator === 'expression-statement');
+    const returns = result.perOperator.find(row => row.operator === 'return');
+    assert.deepEqual([expressions.eligibleSites,expressions.excludedSites,expressions.planned],[8,2,8]);
+    assert.deepEqual([returns.eligibleSites,returns.excludedSites,returns.planned],[3,1,3]);
+  } else {
+    assert(result.perOperator.every(row => row.kind !== 'statement'));
+  }
+  if (enabled.includes('comparison')) {
+    const comparison = result.perOperator.find(row => row.operator === '>');
+    assert.deepEqual([comparison.eligibleSites,comparison.excludedSites,comparison.planned],[1,0,2]);
+  }
   if (status === 0) {
     assert.equal(result.unresolved,0);
-    assert.equal(result.survived,enabled.includes('statement') ? 2 : 0);
+    assert.equal(result.survived,enabled.includes('statement') ? 3 : 0);
     assert.equal(result.killed,planned - result.survived);
     assert.equal(result.score,planned === 0 ? null : result.killed / planned * 100);
   } else {
@@ -191,7 +233,7 @@ function assess(name, operators, switching = false, workers = 1, status = 0) {
   }
   assert.deepEqual(readdirSync(scratch),[]);
   for (const [path,source] of Object.entries(originals)) assert.equal(readFileSync(join(project,path),'utf8'),source);
-  reports.push({name,totalJobsAttempted:report.result.jobsAttempted,...result});
+  reports.push({name,totalJobsAttempted:report.result.jobsAttempted,phaseTimings:report.result.phaseTimings,...result});
   console.log(name + ': ' + planned + ' planned, ' + result.killed + ' killed, ' + result.survived + ' survived');
   return result;
 }
@@ -219,7 +261,7 @@ for (let sample = 0; sample < samples; sample++) {
   for (const strategy of ['switch','replace']) {
     const off = reports.find(row => row.name === 'cost-off-' + strategy + '-' + sample);
     const on = reports.find(row => row.name === 'cost-on-' + strategy + '-' + sample);
-    assert.equal(on.totalJobsAttempted - off.totalJobsAttempted,5);
+    assert.equal(on.totalJobsAttempted - off.totalJobsAttempted,11);
   }
 }
 const originalTestCommand = config.setups[0].test;
@@ -240,8 +282,8 @@ const evidence = {
   binaries:{cliSha256:digest(readFileSync(binary)),proofSha256:digest(readFileSync(proof))},
   semantics,semanticMutants,
   fixtureHashes:Object.fromEntries(Object.entries(originals).map(([path,source]) => [path,digest(source)])),
-  equivalentMutants:{statement:{count:2,planned:5},
-    basis:'Discarding the numeric literal has no effect in equivalent(); dropping terminal bare return has no effect in terminal(). Neither function reflects on source. These closed examples do not estimate equivalence elsewhere.'},
+  equivalentMutants:{statement:{count:3,planned:11},
+    basis:'Discarding the numeric literal in equivalent() and dropping terminal bare returns in terminal() and values() do not change this fixture. The functions do not reflect on source. These closed examples do not estimate equivalence elsewhere.'},
   samples,reports,
 };
 mkdirSync(dirname(output),{recursive:true});

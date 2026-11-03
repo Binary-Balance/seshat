@@ -775,10 +775,13 @@ Its fixed semantic cases compare replacement, inactive switching and active
 switching for expression statements and bare returns. They cover loops,
 unbraced bodies, labels, switch fall-through, `finally`, automatic semicolon
 insertion, directives, direct `eval`, nested functions and operators, TSX,
-and the documented async, generator, constructor and `super()` exclusions.
-Its CLI fixture checks five statement mutants alongside two comparisons,
-family selection, parallel workers, stable IDs, source preservation, scratch
-cleanup, timeouts and score withholding. The statement proof warms both
+async scheduling and rejection, `yield`, `yield*`, generator resumption and
+cleanup. Constructor and `super()` exclusions remain covered.
+Its CLI fixture checks eleven statement mutants alongside two comparisons,
+including async functions, generators, async generators and eligible/excluded
+site counts. It also checks family selection, parallel workers, stable IDs,
+source preservation, scratch cleanup, timeouts and score withholding.
+The statement proof warms both
 strategies before alternating matched cost samples.
 
 Set `SESHAT_OPERATOR_SAMPLES=3` for repeated cost measurements. Samples alternate

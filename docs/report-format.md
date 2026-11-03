@@ -380,7 +380,7 @@ command text or free-form diagnostic nested under them remains evidence.
 | `complete` | Whether every planned mutant received a resolved verdict and mutation preparation, execution and cleanup succeeded. An incomplete extreme-mutation execution also keeps this false, even when all operator mutants resolve. |
 | `planned` | Number of generated replacements across all selected operator families. |
 | `enabledOperators` | Configured operator families, defaulting to `["comparison", "logical", "arithmetic", "boolean", "statement", "optional"]`. An empty array disables operator mutants. |
-| `perOperator` | Rows sorted by original operator text. Each has `operator`, `kind`, `planned`, `completed`, `jobsAttempted` and `executionMs`. Planned counts include unstarted work; completed counts include returned attempts. Times sum those attempts and can overlap under parallelism. Operators without planned mutants have no row. |
+| `perOperator` | Rows sorted by original operator text. Each has `operator`, `kind`, `eligibleSites`, `excludedSites`, `planned`, `completed`, `jobsAttempted` and `executionMs`. Site counts describe discovered AST sites before replacement expansion. Planned counts include unstarted work; completed counts include returned attempts. Times sum those attempts and can overlap under parallelism. Rows include operators whose discovered sites are all excluded. Disabled families and operators with no discovered sites have no row. |
 | `killed`, `survived` | Counts of outcomes with those resolved verdicts. |
 | `countedTimeouts` | Number of `timed-out` outcomes counted as detected by the opt-in policy. They are excluded from `killed`. Defaults to zero. |
 | `score` | `(killed + countedTimeouts) / (killed + countedTimeouts + survived) × 100` for a complete non-empty plan; otherwise `null`. The value is a percentage from `0` to `100`. |
@@ -403,11 +403,25 @@ removing `!` uses an empty `replacement` string and parenthesises the operand.
 Statement outcomes use `expression-statement` or `return` as `original`, and
 `;` as `replacement`. Their offset points to the start of the complete AST
 statement being removed. The same labels group `perOperator` counts and timings.
+Async and generator bodies qualify, including complete `await`, `yield` and
+`yield*` expression statements and bare returns. Value-bearing returns remain
+excluded, including `return await work()`.
 Optional outcomes use `?.` as `original` and `.` or the empty string as
 `replacement`, or `??` and `||`. Token offsets are UTF-8 byte offsets in the
 original source. Whitespace used to separate tokens is not part of these labels.
 Each optional chain segment has its own ID; per-operator rows group all `?.`
 segments together and all `??` defaults together.
+
+`eligibleSites` and `excludedSites` count each discovered site once across the
+successfully analysed source files, using that operator's eligibility filters.
+They are independent of coverage, execution and worker count. A comparison site
+can produce two planned mutants; a statement site produces one. Statement site
+counts cover expression statements and bare returns, including excluded module,
+static-block and constructor sites or statements containing `super()`. Other
+statement forms, such as declarations and value-bearing returns, are not
+discovered statement sites and do not contribute to either count. Disabled
+families contribute no counts. An operator with only excluded sites has zero
+planned mutants and zero execution counters.
 
 IDs follow resolved source order, then AST site order by start offset, with enclosing sites before nested sites
 at the same start, then replacement order. Optional segments sharing a complete

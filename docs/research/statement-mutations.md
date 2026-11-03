@@ -1,8 +1,11 @@
 # Statement mutation evidence
 
-The [retained JSON](statement-mutations.json) records the fixed semantic checks,
-fixture and binary hashes, execution outcomes, operator counts and matched
-timings for [#164](https://github.com/Binary-Balance/seshat/issues/164).
+The [original retained JSON](statement-mutations.json) records the synchronous
+fixture and matched timings for
+[#164](https://github.com/Binary-Balance/seshat/issues/164). The
+[extended evidence summary](statement-async.json) records async and generator
+checks, fixture and binary hashes, verdicts, site counts and timings for
+[#218](https://github.com/Binary-Balance/seshat/issues/218).
 
 ## Rules
 
@@ -19,50 +22,73 @@ directive after an earlier statement is removed. These choices follow the
 ECMAScript rules for [statements and completion records](https://tc39.es/ecma262/multipage/ecmascript-language-statements-and-declarations.html)
 and [automatic semicolon insertion](https://tc39.es/ecma262/multipage/ecmascript-language-lexical-grammar.html#sec-automatic-semicolon-insertion).
 
-Candidates must belong directly to an explicit synchronous, non-generator
-function. Module-level statements, static blocks and constructors are excluded.
-Nested functions qualify independently, including synchronous functions inside
-async functions. Declarations, blocks, labels, breaks, continues, throws,
+Candidates must belong directly to an explicit function, including async
+functions, generators, async generators, arrows and methods. Module-level
+statements, static blocks and constructors are excluded. Nested functions
+qualify independently. Declarations, blocks, labels, breaks, continues, throws,
 directives and value-bearing returns are not removal candidates. In particular,
 `return void work()` is excluded along with other value-bearing returns.
 
 Any candidate containing a `super()` call is excluded, including calls through
 nested arrows. A [super call initializes the derived instance](https://tc39.es/ecma262/multipage/ecmascript-language-expressions.html#sec-super-keyword).
 Ordinary `super.method()` calls in eligible methods remain candidates. Removing
-an ordinary call can remove asynchronous work it starts; async and generator
-function bodies themselves are outside this release's statement family.
+an ordinary call can remove asynchronous work it starts. Complete `await`,
+`yield` and `yield*` expression statements qualify. Removing them skips the
+work, suspension or delegated iteration and can change execution order or
+generator cleanup. Bare returns qualify in these functions too. Value-bearing
+returns, such as `return await work()`, remain excluded.
+
+`perOperator.eligibleSites` and `excludedSites` count discovered sites before
+replacement expansion, including rows with only exclusions. For the statement
+family, these sites are expression statements and bare returns. Declarations
+and other unsupported statement forms do not count as excluded sites. Disabled
+families have no rows. These counts describe static eligibility, independent of
+coverage or whether execution reached a mutant.
 
 ## Semantic and execution checks
 
-The proof compares 34 fixed cases and 36 active statement mutations under
-source replacement and switching, alongside original and inactive execution.
+The extended proof compares 50 fixed cases and 66 active statement mutations
+under source replacement and switching, alongside original and inactive execution.
 Fixed examples cover side-effect order,
 bare guards, unbraced `if`/`else`, every loop form, labels and labelled
 `continue`, switch fall-through, returns in switch cases, `finally`, semicolon
 insertion, Unicode/comments, strict directives, later string expressions,
 direct `eval`, nested functions and expression candidates, and TSX.
-Negative cases cover value-bearing returns, async/generator ownership,
-constructors, `super()` and static blocks.
+Async and generator examples cover awaited side effects, microtask ordering,
+rejected promises, early returns, `for await`, `yield`, `yield*`, resumption,
+`.throw()` and `.return()` cleanup, and async generator iteration. Arrows,
+methods and nested functions are included. Negative cases cover value-bearing
+returns, constructors, `super()` and static blocks.
 
 Removing a terminal return is not always equivalent. In
 `try { throw error; } finally { return; }`, removing the return exposes the
 pending throw. The proof requires that result under replacement and switching.
 
-Real CLI assessments select two files and five covered functions with one Node
-setup. The statement family adds five mutants to two comparison mutants. Three
-statement mutants are killed: the observed `log.push(7)`, the bare guard return
-and the observed `log.push(1)`. Two survive and are hand-checked as equivalent
-within this closed fixture: discarding the literal `123` and dropping a final
-bare return in an otherwise empty function. Neither function reflects on its
-source. Survival alone does not establish equivalence, and these counts do not
-estimate equivalent-mutant rates elsewhere.
+Real CLI assessments select two files with one Node setup. The statement family
+adds eleven mutants to two comparison mutants. Eight statement mutants are
+killed, including an ordinary call and an awaited call in an async function,
+yielded values and delegated iteration in a generator, and an awaited yield in
+an async generator. Three survive and are hand-checked as equivalent within
+this closed fixture: discarding the literal `123` and dropping terminal bare
+returns in an empty function and a generator. These functions do not reflect
+on their source. Survival alone does not establish equivalence, and these
+counts do not estimate equivalent-mutant rates elsewhere.
 
 Family selection, replacement and switching, two workers, repeatable IDs,
-source bytes and empty scratch directories are checked. The five extreme
+source bytes and empty scratch directories are checked. The six extreme
 candidates remain a separate phase when statement mutations or all operator
-mutations are disabled. A job deadline leaves the first statement mutant timed
-out, completes the remaining four after safe cleanup and withholds the mutation
-score.
+mutations are disabled. Generators remain excluded from extreme mutation.
+A job deadline leaves the first statement mutant timed out, completes the
+remaining ten after safe cleanup and withholds the mutation score.
+
+The retained summary keeps source and binary hashes, mutant definitions,
+per-run verdicts, site and job counts, worker baseline jobs and phase timings.
+It omits repeated setup receipts from the full proof output. To repeat the
+debug-build check after building both binaries:
+
+```sh
+SESHAT_CLI_BINARY=crates/seshat/target/debug/seshat SESHAT_PROOF_BINARY=crates/seshat/target/debug/seshat-proofs SESHAT_PROOF_OUTPUT=work/statement-async.json node benchmarks/proofs/statement-operators.mjs
+```
 
 The Vitest stack and public consumer examples additionally require the Fastify
 route-registration statement to be killed, alongside the existing expression
@@ -85,7 +111,7 @@ replacement while the surrounding statement guard is inactive. Existing
 experimental restrictions on reflected source, transformed TypeScript narrowing
 and the 8 MiB rendered-source bound still apply.
 
-## Matched cost
+## Historical matched cost
 
 Build the release binaries, then run:
 
@@ -93,11 +119,16 @@ Build the release binaries, then run:
 SESHAT_OPERATOR_SAMPLES=3 SESHAT_PROOF_OUTPUT=work/statement-operators.json node benchmarks/proofs/statement-operators.mjs
 ```
 
-The comparison uses the same installed dependencies, source, tests, coverage,
-five extreme candidates and one worker. Both strategies are warmed first.
-Each sample compares the four-family selection from 0.7.0 with the five-family
-default, reversing selection and strategy order on alternate samples. The new
-family adds exactly five fresh mutant test jobs per setup under both strategies.
+The original comparison used the synchronous fixture retained in
+`statement-mutations.json`. It used the same installed dependencies, source,
+tests, coverage, five extreme candidates and one worker. Both strategies were
+warmed first. Each sample compared the four-family selection from 0.7.0 with
+the five-family default, reversing selection and strategy order on alternate
+samples. The new family added exactly five fresh mutant test jobs per setup
+under both strategies.
+The current expanded fixture adds eleven and cannot be compared directly with
+these historical timings. The extended evidence records one debug-build sample
+to check job counts, not to claim release performance.
 
 The recorded host is Linux x64 with Node 24.22.0 and TypeScript 6.0.3.
 Three sequential samples ran without another proof suite or build running.
