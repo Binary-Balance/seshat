@@ -1721,13 +1721,21 @@ impl CapturedProject {
         if operators {
             result["enabledOperators"] = json!(self.config.mutation_operators);
             let mut counts = BTreeMap::<String, Value>::new();
+            for analysis in facts.iter().flatten() {
+                for (operator, sites) in &analysis.operator_sites {
+                    let count = counts.entry((*operator).into()).or_insert_with(|| json!({
+                        "operator":operator,"kind":sites.kind,"eligibleSites":0,"excludedSites":0,
+                        "planned":0,"completed":0,"jobsAttempted":0,"executionMs":0.0
+                    }));
+                    count["eligibleSites"] =
+                        json!(count["eligibleSites"].as_u64().unwrap() + sites.eligible as u64);
+                    count["excludedSites"] =
+                        json!(count["excludedSites"].as_u64().unwrap() + sites.excluded as u64);
+                }
+            }
             for row in result["outcomes"].as_array().unwrap() {
                 let operator = row["original"].as_str().unwrap();
-                let count = counts.entry(operator.into()).or_insert_with(|| {
-                    json!({
-                    "operator":operator,"kind":row["kind"],"planned":0,"completed":0,
-                    "jobsAttempted":0,"executionMs":0.0})
-                });
+                let count = counts.get_mut(operator).unwrap();
                 count["planned"] = json!(count["planned"].as_u64().unwrap() + 1);
                 if let Some(ms) = row["executionMs"].as_f64() {
                     count["completed"] = json!(count["completed"].as_u64().unwrap() + 1);
@@ -2418,7 +2426,7 @@ mod tests {
             ("src/broken.ts".into(), "export const broken = ;".into()),
             (
                 "src/second.ts".into(),
-                "export function second(a: number) { return a > 0; }".into(),
+                "export function second(a: number) { return a > 0; } boot();".into(),
             ),
         ];
         let facts: Vec<_> = captured
@@ -2451,9 +2459,10 @@ mod tests {
         assert_eq!(
             result["perOperator"],
             json!([
-                {"operator":"<","kind":"comparison","planned":2,"completed":0,"jobsAttempted":0,"executionMs":0.0},
-                {"operator":"===","kind":"comparison","planned":1,"completed":0,"jobsAttempted":0,"executionMs":0.0},
-                {"operator":">","kind":"comparison","planned":2,"completed":0,"jobsAttempted":0,"executionMs":0.0}
+                {"operator":"<","kind":"comparison","eligibleSites":1,"excludedSites":0,"planned":2,"completed":0,"jobsAttempted":0,"executionMs":0.0},
+                {"operator":"===","kind":"comparison","eligibleSites":1,"excludedSites":0,"planned":1,"completed":0,"jobsAttempted":0,"executionMs":0.0},
+                {"operator":">","kind":"comparison","eligibleSites":1,"excludedSites":0,"planned":2,"completed":0,"jobsAttempted":0,"executionMs":0.0},
+                {"operator":"expression-statement","kind":"statement","eligibleSites":0,"excludedSites":1,"planned":0,"completed":0,"jobsAttempted":0,"executionMs":0.0}
             ])
         );
         let outcomes = result["outcomes"].as_array().unwrap();

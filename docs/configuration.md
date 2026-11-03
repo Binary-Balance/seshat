@@ -462,28 +462,35 @@ See the [optional/nullish evidence](research/optional-mutations.md) for the exac
 forms, switching exclusions, hand-checked examples and added test-job cost.
 
 Statement removal selects whole expression statements, including assignments,
-updates and calls, and bare returns in explicit synchronous, non-generator
-functions. It removes the expression's evaluation or the return's early exit.
+updates, calls, `await` and `yield`, and bare returns in explicit functions.
+Async functions, generators and async generators qualify, including async arrows
+and async/generator methods. Removal skips the expression's evaluation or the
+return's early exit.
 Replacing the complete AST statement with `;` preserves unbraced control-flow
 bodies, labels, adjacent statements and barriers before later string literals.
 Directives, declarations, blocks, control-flow targets and `return value` are
 excluded. This also excludes `return void work()`, preserving its operand.
 
-Module-level and static-block statements, constructors, async and generator
-function bodies are excluded. Nested functions qualify independently, so a
-synchronous function inside an async function can still have candidates.
+Module-level and static-block statements and constructors are excluded.
+Nested functions qualify independently.
 Any candidate containing a `super()` call is excluded, including calls inside
 nested arrows. Ordinary `super.method()` calls in eligible methods remain
 eligible. Removing an ordinary call can still remove asynchronous work it starts.
+Removing an awaited call skips its work and suspension; removing `yield` or
+`yield*` skips the yielded value or delegated iteration. These changes can alter
+execution order and generator cleanup, just as a removed bare return can expose
+later code. Generator bodies remain excluded from the separate extreme phase.
 See the [statement evidence](research/statement-mutations.md) for fixed examples,
 exclusions and added test-job cost.
 
 The mutation score includes all selected operator families. Adding families
 can change the score and adds one test job per setup per new mutant.
 JSON reports retain `enabledOperators`, each outcome's `kind`, and `perOperator`
-planned/completed counts, job counts and cumulative execution time. The terminal
-report prints each original operator's counts. Surviving mutants are not proof
-of equivalence. See the [operator fixture evidence](research/mutation-operators.md).
+eligible/excluded site counts, planned/completed mutant counts, job counts and
+cumulative execution time. The terminal report prints each original operator's
+counts, including operators whose discovered sites are all excluded. Surviving
+mutants are not proof of equivalence. See the
+[operator fixture evidence](research/mutation-operators.md).
 
 ### Mutation execution
 

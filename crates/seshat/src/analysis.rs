@@ -236,12 +236,19 @@ pub struct OperatorSite {
     pub first_id: usize,
 }
 
+pub struct OperatorSiteCounts {
+    pub kind: MutationOperator,
+    pub eligible: usize,
+    pub excluded: usize,
+}
+
 #[derive(Default)]
 pub struct Analysis {
     pub scopes: Vec<Scope>,
     pub branches: Vec<BranchSite>,
     pub branch_end_ranges: Vec<Span>,
     pub operators: Vec<OperatorSite>,
+    pub operator_sites: BTreeMap<&'static str, OperatorSiteCounts>,
     non_runtime: Vec<Span>,
     expression_statements: BTreeSet<u32>,
     switching_reference_sites: BTreeSet<u32>,
@@ -384,12 +391,6 @@ impl<'a> Visit<'a> for Analysis {
             });
         }
         match node {
-            AstKind::Function(function) if function.r#async || function.generator => {
-                self.statement_excluded_functions.insert(span.start);
-            }
-            AstKind::ArrowFunctionExpression(function) if function.r#async => {
-                self.statement_excluded_functions.insert(span.start);
-            }
             AstKind::MethodDefinition(method)
                 if method.kind == MethodDefinitionKind::Constructor =>
             {
@@ -1848,17 +1849,19 @@ impl Analysis {
         }
         let mut operators = std::mem::take(&mut result.operators);
         operators.retain(|site| {
-            enabled.contains(&site.kind)
-                && (!matches!(
-                    site.kind,
-                    MutationOperator::Boolean
-                        | MutationOperator::Statement
-                        | MutationOperator::Optional
-                ) || (!source_type.is_typescript_definition()
-                    && !result
-                        .non_runtime
-                        .iter()
-                        .any(|range| range.start <= site.span.start && site.span.end <= range.end)))
+            if !enabled.contains(&site.kind) {
+                return false;
+            }
+            let eligible = (!matches!(
+                site.kind,
+                MutationOperator::Boolean
+                    | MutationOperator::Statement
+                    | MutationOperator::Optional
+            ) || (!source_type.is_typescript_definition()
+                && !result
+                    .non_runtime
+                    .iter()
+                    .any(|range| range.start <= site.span.start && site.span.end <= range.end)))
                 && (site.kind != MutationOperator::Statement
                     || (result
                         .statement_owner(site.span.start)
@@ -1871,7 +1874,21 @@ impl Analysis {
                         })
                         && !result.super_calls.iter().any(|call| {
                             site.span.start <= call.start && call.end <= site.span.end
-                        })))
+                        })));
+            let counts = result
+                .operator_sites
+                .entry(site.original)
+                .or_insert(OperatorSiteCounts {
+                    kind: site.kind,
+                    eligible: 0,
+                    excluded: 0,
+                });
+            if eligible {
+                counts.eligible += 1;
+            } else {
+                counts.excluded += 1;
+            }
+            eligible
         });
         result.operators = operators;
         result.operators.sort_by_key(|c| {
@@ -2298,15 +2315,11 @@ fn statement_candidates_use_function_statements_and_bare_returns() {
 }
 
 #[test]
-fn statement_candidates_exclude_structural_and_suspending_code() {
+fn statement_candidates_exclude_structural_code() {
     for source in [
         "boot(); class C { static { boot(); } }",
         "function f() { 'use strict'; const value = 1; function nested() {} return value; }",
         "function f() { return void work(); }",
-        "async function f() { work(); return; }",
-        "const f = async () => { work(); return; };",
-        "function* f() { yield 1; return; }",
-        "async function* f() { await work(); yield 1; return; }",
         "class C { constructor() { work(); return; } }",
         "class C extends B { constructor() { (() => { consume(super()); })(); } }",
         "declare namespace Ambient { function f(): void; }",
@@ -2333,6 +2346,66 @@ fn statement_candidates_exclude_structural_and_suspending_code() {
             "{source}"
         );
     }
+}
+
+#[test]
+fn statement_candidates_include_async_and_generator_bodies() {
+    for (source, expected) in [
+        ("async function f() { work(); await other(); return; }", 3),
+        (
+            "const f = async () => { work(); await other(); return; };",
+            3,
+        ),
+        (
+            "function* f() { work(); yield 1; yield* other(); return; }",
+            4,
+        ),
+        (
+            "async function* f() { await work(); yield 1; yield* other(); return; }",
+            4,
+        ),
+        (
+            "const obj = { async f() { await work(); }, *g() { yield 1; } };",
+            2,
+        ),
+        (
+            "class C { async f() { await work(); } async *g() { yield 1; } }",
+            2,
+        ),
+    ] {
+        let analysis =
+            Analysis::inspect_with_operators("source.ts", source, &[MutationOperator::Statement])
+                .unwrap();
+        assert_eq!(analysis.count(), expected, "{source}");
+        for id in 0..expected {
+            Analysis::inspect("mutant.ts", &analysis.replace(source, id).unwrap()).unwrap();
+        }
+        Analysis::inspect("switched.ts", &analysis.switched(source).unwrap()).unwrap();
+    }
+}
+
+#[test]
+fn operator_site_counts_include_exclusions_but_not_disabled_families() {
+    let source = "boot(); class C { constructor() { work(); return; } } async function f() { work(); await other(); return; } function positive(n: number) { return n > 0; }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let expressions = &analysis.operator_sites["expression-statement"];
+    assert_eq!((expressions.eligible, expressions.excluded), (2, 2));
+    let returns = &analysis.operator_sites["return"];
+    assert_eq!((returns.eligible, returns.excluded), (1, 1));
+    let comparisons = &analysis.operator_sites[">"];
+    assert_eq!((comparisons.eligible, comparisons.excluded), (1, 0));
+    assert_eq!(analysis.count(), 5);
+    let declared = Analysis::inspect_with_operators(
+        "source.d.ts",
+        "declare const fixed = true;",
+        &[MutationOperator::Boolean],
+    )
+    .unwrap();
+    assert!(declared.operators.is_empty());
+    let literal = &declared.operator_sites["true"];
+    assert_eq!((literal.eligible, literal.excluded), (0, 1));
+    let disabled = Analysis::inspect_with_operators("source.ts", source, &[]).unwrap();
+    assert!(disabled.operator_sites.is_empty());
 }
 
 #[test]

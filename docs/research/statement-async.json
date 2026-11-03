@@ -1,0 +1,1256 @@
+{
+  "environment": {
+    "node": "v24.22.1",
+    "platform": "linux",
+    "arch": "x64",
+    "typescript": "6.0.3"
+  },
+  "binaries": {
+    "cliSha256": "62daaa6dd521211d766434c3252fd65a985e2159f0c128a14874828a1720d32c",
+    "proofSha256": "4a324690cc91401013a9cf475579f5e85751f388ecbb82f45d4687a44a3ebf6e"
+  },
+  "fixtureHashes": {
+    "package.json": "6dc1b06d6b093e9cccb20bee06a93836eee0420ae26803ca2ce4065d82f070d1",
+    "statements.ts": "b785f88b0e4fbbb7a9c474f586edf294cdd5e3ca68110fce3e5c4b7bc1b9d388",
+    "comparison.ts": "505715675387313ccc38a4ac051d031dd5c144501f516ba8842636f8cccf2dcf",
+    "test.mjs": "d12fc496243972097ab1b2cbc02ddcb11802539c95dbcaf1b64eaa5d13e054f2"
+  },
+  "semantics": [
+    {
+      "name": "effects",
+      "sites": 2,
+      "sourceSha256": "a70041b08eceba609f181a30d0beed4b2f9493956243438cae3d5d3fe71f143e"
+    },
+    {
+      "name": "guard",
+      "sites": 2,
+      "sourceSha256": "aae59fee78475b2fa231e5dab09e1ed81faeb8ac1bc1ccbbbbb6fab38115fda4"
+    },
+    {
+      "name": "if-else",
+      "sites": 2,
+      "sourceSha256": "aa7e2636d167064f3fe1c6f931825b045882433306bcff22dfa27a8a3191cc15"
+    },
+    {
+      "name": "for",
+      "sites": 1,
+      "sourceSha256": "2c779a27ba5f5b62aa4a44c11aafbed2782d95f3a270a558215eb4a3788b2a8c"
+    },
+    {
+      "name": "while",
+      "sites": 1,
+      "sourceSha256": "7dd8305d11fa52659ceebcb52edf4530f6c7e80417cc0c161b2b4a9a0e4967df"
+    },
+    {
+      "name": "do",
+      "sites": 1,
+      "sourceSha256": "399e0b9ce9a60236b13ccf24caa83ffb17c3d963883dc2b40725a32c58c5f55b"
+    },
+    {
+      "name": "for-of",
+      "sites": 1,
+      "sourceSha256": "e7f0831b064a97554d822a5b14671f1da5d4363629d77f0be080dc90d2b2b563"
+    },
+    {
+      "name": "for-in",
+      "sites": 1,
+      "sourceSha256": "f6c3d227275602e2f220fa42ecdcfec67df19e6bdf9a06788064f4cc378f1644"
+    },
+    {
+      "name": "label",
+      "sites": 1,
+      "sourceSha256": "749d3b0a6f70166843a5e7f47211425a31e301fc3048ae17b72dabaa056a02be"
+    },
+    {
+      "name": "labelled-continue",
+      "sites": 1,
+      "sourceSha256": "29d5b24416b4fa382fa29aea6ac34dbecb6f03f94c1d92d5cc996b4814da7a5b"
+    },
+    {
+      "name": "fall-through",
+      "sites": 2,
+      "sourceSha256": "9b0fc7b9d9bdb03a4f2352fc423c895503cba49a3e099be8d8c904726806b524"
+    },
+    {
+      "name": "switch-return",
+      "sites": 2,
+      "sourceSha256": "c53f154f46bd2f655bddc4e8a53b254ea2ac1045acce18cfabffd37bbc29dbc3"
+    },
+    {
+      "name": "finally",
+      "sites": 1,
+      "sourceSha256": "35a3ab37bced11b1596ae0aa5f396c09704215f91bcba334bd093648d11b77e3"
+    },
+    {
+      "name": "return-asi",
+      "sites": 2,
+      "sourceSha256": "7a1b71ff41f65fbe95e3505ce2979933b309c65b51c69bfa6641b10fd130d140"
+    },
+    {
+      "name": "asi-and-trivia",
+      "sites": 2,
+      "sourceSha256": "071e64a36227f2dd9199eabb5f49bdb6b98fa655a8e87eb61dd9e3f557e9194a"
+    },
+    {
+      "name": "directive",
+      "sites": 1,
+      "sourceSha256": "a422508e063058433413482d02acd8ad0e9d64a8de743d3786a9dd2747d36ff2"
+    },
+    {
+      "name": "directive-barrier",
+      "sites": 2,
+      "sourceSha256": "2506bc8a7c46bc52892818bdabfc25ece038189c41d34107a610e9b2fc659d72"
+    },
+    {
+      "name": "direct-eval",
+      "sites": 1,
+      "sourceSha256": "fccbb8f46a5c2940de4d3c1ac28e542efefff11d438f1d197a35e668739842d4"
+    },
+    {
+      "name": "nested",
+      "sites": 2,
+      "sourceSha256": "caab2c973bcf852d1f7b4eb4558eea09fc8b62c273d7487a5bfd9ee47203a8f5"
+    },
+    {
+      "name": "nested-expression",
+      "sites": 2,
+      "sourceSha256": "7ca6dd76f2aefec443bfd351f2afb3427fadba42055b655b78b6fa5a10035a16"
+    },
+    {
+      "name": "equivalent-expression",
+      "sites": 1,
+      "sourceSha256": "875e346c60cb3a14c34c7b81b3a0edf9151fc43f4db612b479e464726bf1ae47"
+    },
+    {
+      "name": "equivalent-return",
+      "sites": 1,
+      "sourceSha256": "bd00ebd6c7063e9eff973bf748af1b4a532bfc7cb3e3687374e4b32bd4f65791"
+    },
+    {
+      "name": "same-span-boolean",
+      "sites": 1,
+      "sourceSha256": "3ac292be7269adb3eb8145dffbf7f9126e14dc605a3acd62e147bc26f79a5ac6"
+    },
+    {
+      "name": "value-return",
+      "sites": 0,
+      "sourceSha256": "c5b56732ea8d4fbbf06dbfa54d6459ac307885ff8a247bacb0aad5a274e3783d"
+    },
+    {
+      "name": "void-return",
+      "sites": 0,
+      "sourceSha256": "829a973de8810fcb9f9083a02bca34f988dde8af49dafe3745e47f83da6803bc"
+    },
+    {
+      "name": "async",
+      "sites": 2,
+      "sourceSha256": "2219425f075f62d90a62df17d4a7b93b3c60c390fc7a5176e088d8a09a8c6949"
+    },
+    {
+      "name": "async-effects",
+      "sites": 2,
+      "sourceSha256": "19fd6e8ad15a0f69810568088d4298801909fd2e6b1fd21d89ec3c4d3d14eb34"
+    },
+    {
+      "name": "async-order",
+      "sites": 3,
+      "sourceSha256": "1c04b13327c3edc129e6f8942fdecb832cf9697fc78801f8f39a7e4fb05b802f"
+    },
+    {
+      "name": "async-arrow",
+      "sites": 1,
+      "sourceSha256": "d565cc486c51c8917f68d9453c4ad3392e1c2f8d5189ec54fcb9a751518920d2"
+    },
+    {
+      "name": "async-rejection",
+      "sites": 1,
+      "sourceSha256": "8681fd23558d7ac822b1a3333e53016e594ce65a69c493c9ac00597f24939b66"
+    },
+    {
+      "name": "async-finally",
+      "sites": 1,
+      "sourceSha256": "27c3e6d7133b0122e57b042ada2a69e7f28f3701352712405a2be667fee63fcf"
+    },
+    {
+      "name": "async-guard",
+      "sites": 2,
+      "sourceSha256": "df97a2fa520c255c445a7b43ba53a17943f9b6c75c006dbeade2254bcdaf3c9a"
+    },
+    {
+      "name": "for-await",
+      "sites": 1,
+      "sourceSha256": "2e886630c962a2d2c3ed16c801fb8f9d13b111909fbbd3ef48c0179fb974639d"
+    },
+    {
+      "name": "generator",
+      "sites": 2,
+      "sourceSha256": "42ea9a1714fd0acab8006ffe423787962eaf99c1fbac000d388718e131516cba"
+    },
+    {
+      "name": "generator-delegate",
+      "sites": 1,
+      "sourceSha256": "ff010d79bc9b7ce27fc18e45ccf5fbb228dcf35d310bb12f58305806500d9b7b"
+    },
+    {
+      "name": "generator-resume",
+      "sites": 1,
+      "sourceSha256": "804dd88941864c7a8d34674ef60c4d525ab2d55027023b0389d6de38c751a78b"
+    },
+    {
+      "name": "generator-finally",
+      "sites": 2,
+      "sourceSha256": "fac5a42f18cd360ca651fe4d9bfa8de95f383f01e6e7afd17c3e2d234a5bdad0"
+    },
+    {
+      "name": "generator-cleanup",
+      "sites": 2,
+      "sourceSha256": "f48f67632bd9bd67cda3594da202a67250420b3ec54de757c832aea7015126ad"
+    },
+    {
+      "name": "async-generator",
+      "sites": 2,
+      "sourceSha256": "5bb89bd89c9d143551fc9119928b57f3843f7309513cd9861f53840104ad76be"
+    },
+    {
+      "name": "async-generator-finally",
+      "sites": 1,
+      "sourceSha256": "ae98f6c07dd0149ca04d07ae9286cac9ee3936b6081a2c4653f6c588eab5f9f2"
+    },
+    {
+      "name": "async-method",
+      "sites": 1,
+      "sourceSha256": "f762ee03eccda897ab297492a05ebf7d207ba32f688141fa7a779036fccd331e"
+    },
+    {
+      "name": "generator-method",
+      "sites": 1,
+      "sourceSha256": "81766a5717c26f885ddb33442ddc769f4991ca2bdcbc35ae27540ef631a99c6d"
+    },
+    {
+      "name": "async-generator-method",
+      "sites": 1,
+      "sourceSha256": "9c44892840e50dc6fad8619214aa6d9956881423c8624334266bdc70d63654f6"
+    },
+    {
+      "name": "nested-in-async",
+      "sites": 2,
+      "sourceSha256": "c48a102cea82aeafb399503a5c07f4e12c94c4319f036c16bbc56ccacfe640a4"
+    },
+    {
+      "name": "nested-async",
+      "sites": 2,
+      "sourceSha256": "eb39f645d2c0c5594a98175de824677aef88a1332d0e2df708ae4d677600e9ed"
+    },
+    {
+      "name": "constructor",
+      "sites": 0,
+      "sourceSha256": "cd7a5f84f33c7520a05a71c295fb00c6607728aecd2079689dbbe1fbc3d35330"
+    },
+    {
+      "name": "super-arrow",
+      "sites": 0,
+      "sourceSha256": "6f2d6d48a2977660bcfe19a8c80a531c22fb1f05747cf3d063fc7a49dc285663"
+    },
+    {
+      "name": "super-method",
+      "sites": 1,
+      "sourceSha256": "d3842ebcdb56ef94f614d4cd40eb6dd5f2af681b4835f481c889299e9d4102e9"
+    },
+    {
+      "name": "static-block",
+      "sites": 0,
+      "sourceSha256": "0ec408436cd8baabe50e942a4f25d72471375466656a60a0b35f8026140c5013"
+    },
+    {
+      "name": "tsx.tsx",
+      "sites": 1,
+      "sourceSha256": "b3a6fb79624895e9f4cf6e230e21bdfb5997c32d2426d287c3ab171b03fecd9a"
+    }
+  ],
+  "semanticMutants": 66,
+  "equivalentMutants": {
+    "statement": {
+      "count": 3,
+      "planned": 11
+    },
+    "basis": "Discarding the numeric literal in equivalent() and dropping terminal bare returns in terminal() and values() do not change this fixture. The functions do not reflect on source. These closed examples do not estimate equivalence elsewhere."
+  },
+  "samples": 1,
+  "buildProfile": "debug",
+  "purpose": "Semantic and job-count checks; timings are not release performance measurements.",
+  "definitions": [
+    {
+      "id": 0,
+      "localId": 0,
+      "path": "comparison.ts",
+      "offset": 55,
+      "kind": "comparison",
+      "original": ">",
+      "replacement": ">="
+    },
+    {
+      "id": 1,
+      "localId": 1,
+      "path": "comparison.ts",
+      "offset": 55,
+      "kind": "comparison",
+      "original": ">",
+      "replacement": "<="
+    },
+    {
+      "id": 2,
+      "localId": 0,
+      "path": "statements.ts",
+      "offset": 37,
+      "kind": "statement",
+      "original": "expression-statement",
+      "replacement": ";"
+    },
+    {
+      "id": 3,
+      "localId": 1,
+      "path": "statements.ts",
+      "offset": 135,
+      "kind": "statement",
+      "original": "return",
+      "replacement": ";"
+    },
+    {
+      "id": 4,
+      "localId": 2,
+      "path": "statements.ts",
+      "offset": 143,
+      "kind": "statement",
+      "original": "expression-statement",
+      "replacement": ";"
+    },
+    {
+      "id": 5,
+      "localId": 3,
+      "path": "statements.ts",
+      "offset": 189,
+      "kind": "statement",
+      "original": "expression-statement",
+      "replacement": ";"
+    },
+    {
+      "id": 6,
+      "localId": 4,
+      "path": "statements.ts",
+      "offset": 235,
+      "kind": "statement",
+      "original": "return",
+      "replacement": ";"
+    },
+    {
+      "id": 7,
+      "localId": 5,
+      "path": "statements.ts",
+      "offset": 293,
+      "kind": "statement",
+      "original": "expression-statement",
+      "replacement": ";"
+    },
+    {
+      "id": 8,
+      "localId": 6,
+      "path": "statements.ts",
+      "offset": 306,
+      "kind": "statement",
+      "original": "expression-statement",
+      "replacement": ";"
+    },
+    {
+      "id": 9,
+      "localId": 7,
+      "path": "statements.ts",
+      "offset": 391,
+      "kind": "statement",
+      "original": "expression-statement",
+      "replacement": ";"
+    },
+    {
+      "id": 10,
+      "localId": 8,
+      "path": "statements.ts",
+      "offset": 400,
+      "kind": "statement",
+      "original": "expression-statement",
+      "replacement": ";"
+    },
+    {
+      "id": 11,
+      "localId": 9,
+      "path": "statements.ts",
+      "offset": 412,
+      "kind": "statement",
+      "original": "return",
+      "replacement": ";"
+    },
+    {
+      "id": 12,
+      "localId": 10,
+      "path": "statements.ts",
+      "offset": 461,
+      "kind": "statement",
+      "original": "expression-statement",
+      "replacement": ";"
+    }
+  ],
+  "runs": [
+    {
+      "name": "default-replacement",
+      "strategy": "replace",
+      "complete": true,
+      "enabledOperators": [
+        "comparison",
+        "logical",
+        "arithmetic",
+        "boolean",
+        "statement",
+        "optional"
+      ],
+      "planned": 13,
+      "completed": 13,
+      "killed": 10,
+      "survived": 3,
+      "unresolved": 0,
+      "score": 76.92307692307693,
+      "jobsAttempted": 13,
+      "totalJobsAttempted": 22,
+      "workerBaselineJobs": 0,
+      "workersUsed": 1,
+      "phaseTimings": {
+        "analysisMs": 1.212196,
+        "attributionMs": 0.76517,
+        "baselineMs": 213.79281,
+        "cleanupMs": 0.5990989999999999,
+        "compilerStrictnessMs": 1703.193784,
+        "coverageMs": 484.93106800000004,
+        "preparationMs": 0.492431,
+        "typecheckMs": null
+      },
+      "perOperator": [
+        {
+          "completed": 2,
+          "eligibleSites": 1,
+          "excludedSites": 0,
+          "executionMs": 352.133574,
+          "jobsAttempted": 2,
+          "kind": "comparison",
+          "operator": ">",
+          "planned": 2
+        },
+        {
+          "completed": 8,
+          "eligibleSites": 8,
+          "excludedSites": 2,
+          "executionMs": 1638.7130280000001,
+          "jobsAttempted": 8,
+          "kind": "statement",
+          "operator": "expression-statement",
+          "planned": 8
+        },
+        {
+          "completed": 3,
+          "eligibleSites": 3,
+          "excludedSites": 1,
+          "executionMs": 593.4727949999999,
+          "jobsAttempted": 3,
+          "kind": "statement",
+          "operator": "return",
+          "planned": 3
+        }
+      ],
+      "verdicts": [
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "survived",
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "killed"
+      ]
+    },
+    {
+      "name": "default-switching",
+      "strategy": "switch",
+      "complete": true,
+      "enabledOperators": [
+        "comparison",
+        "logical",
+        "arithmetic",
+        "boolean",
+        "statement",
+        "optional"
+      ],
+      "planned": 13,
+      "completed": 13,
+      "killed": 10,
+      "survived": 3,
+      "unresolved": 0,
+      "score": 76.92307692307693,
+      "jobsAttempted": 13,
+      "totalJobsAttempted": 23,
+      "workerBaselineJobs": 0,
+      "workersUsed": 1,
+      "phaseTimings": {
+        "analysisMs": 1.267188,
+        "attributionMs": 1.019655,
+        "baselineMs": 444.06940299999997,
+        "cleanupMs": 0.48076800000000003,
+        "compilerStrictnessMs": 1845.404094,
+        "coverageMs": 732.148545,
+        "preparationMs": 0.5054540000000001,
+        "typecheckMs": null
+      },
+      "perOperator": [
+        {
+          "completed": 2,
+          "eligibleSites": 1,
+          "excludedSites": 0,
+          "executionMs": 334.274486,
+          "jobsAttempted": 2,
+          "kind": "comparison",
+          "operator": ">",
+          "planned": 2
+        },
+        {
+          "completed": 8,
+          "eligibleSites": 8,
+          "excludedSites": 2,
+          "executionMs": 1332.894971,
+          "jobsAttempted": 8,
+          "kind": "statement",
+          "operator": "expression-statement",
+          "planned": 8
+        },
+        {
+          "completed": 3,
+          "eligibleSites": 3,
+          "excludedSites": 1,
+          "executionMs": 489.19784300000003,
+          "jobsAttempted": 3,
+          "kind": "statement",
+          "operator": "return",
+          "planned": 3
+        }
+      ],
+      "verdicts": [
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "survived",
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "killed"
+      ]
+    },
+    {
+      "name": "statement-only",
+      "strategy": "replace",
+      "complete": true,
+      "enabledOperators": [
+        "statement"
+      ],
+      "planned": 11,
+      "completed": 11,
+      "killed": 8,
+      "survived": 3,
+      "unresolved": 0,
+      "score": 72.72727272727273,
+      "jobsAttempted": 11,
+      "totalJobsAttempted": 20,
+      "workerBaselineJobs": 0,
+      "workersUsed": 1,
+      "phaseTimings": {
+        "analysisMs": 0.785668,
+        "attributionMs": 0.724535,
+        "baselineMs": 161.09074900000002,
+        "cleanupMs": 174.563382,
+        "compilerStrictnessMs": 1020.082672,
+        "coverageMs": 484.252407,
+        "preparationMs": 0.261599,
+        "typecheckMs": null
+      },
+      "perOperator": [
+        {
+          "completed": 8,
+          "eligibleSites": 8,
+          "excludedSites": 2,
+          "executionMs": 1333.558921,
+          "jobsAttempted": 8,
+          "kind": "statement",
+          "operator": "expression-statement",
+          "planned": 8
+        },
+        {
+          "completed": 3,
+          "eligibleSites": 3,
+          "excludedSites": 1,
+          "executionMs": 492.665122,
+          "jobsAttempted": 3,
+          "kind": "statement",
+          "operator": "return",
+          "planned": 3
+        }
+      ],
+      "verdicts": [
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "survived",
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "killed"
+      ]
+    },
+    {
+      "name": "statement-only-parallel",
+      "strategy": "replace",
+      "complete": true,
+      "enabledOperators": [
+        "statement"
+      ],
+      "planned": 11,
+      "completed": 11,
+      "killed": 8,
+      "survived": 3,
+      "unresolved": 0,
+      "score": 72.72727272727273,
+      "jobsAttempted": 11,
+      "totalJobsAttempted": 21,
+      "workerBaselineJobs": 1,
+      "workersUsed": 2,
+      "phaseTimings": {
+        "analysisMs": 1.00076,
+        "attributionMs": 3.56896,
+        "baselineMs": 161.17742800000002,
+        "cleanupMs": 0.426928,
+        "compilerStrictnessMs": 1054.285459,
+        "coverageMs": 515.8651279999999,
+        "preparationMs": 0.41911299999999996,
+        "typecheckMs": null
+      },
+      "perOperator": [
+        {
+          "completed": 8,
+          "eligibleSites": 8,
+          "excludedSites": 2,
+          "executionMs": 1928.00969,
+          "jobsAttempted": 8,
+          "kind": "statement",
+          "operator": "expression-statement",
+          "planned": 8
+        },
+        {
+          "completed": 3,
+          "eligibleSites": 3,
+          "excludedSites": 1,
+          "executionMs": 749.208713,
+          "jobsAttempted": 3,
+          "kind": "statement",
+          "operator": "return",
+          "planned": 3
+        }
+      ],
+      "verdicts": [
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "survived",
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "killed"
+      ]
+    },
+    {
+      "name": "statement-switching-parallel",
+      "strategy": "switch",
+      "complete": true,
+      "enabledOperators": [
+        "statement"
+      ],
+      "planned": 11,
+      "completed": 11,
+      "killed": 8,
+      "survived": 3,
+      "unresolved": 0,
+      "score": 72.72727272727273,
+      "jobsAttempted": 11,
+      "totalJobsAttempted": 23,
+      "workerBaselineJobs": 2,
+      "workersUsed": 2,
+      "phaseTimings": {
+        "analysisMs": 0.810725,
+        "attributionMs": 0.774457,
+        "baselineMs": 162.232981,
+        "cleanupMs": 0.425635,
+        "compilerStrictnessMs": 1038.700307,
+        "coverageMs": 492.306201,
+        "preparationMs": 0.291024,
+        "typecheckMs": null
+      },
+      "perOperator": [
+        {
+          "completed": 8,
+          "eligibleSites": 8,
+          "excludedSites": 2,
+          "executionMs": 1943.4194559999999,
+          "jobsAttempted": 8,
+          "kind": "statement",
+          "operator": "expression-statement",
+          "planned": 8
+        },
+        {
+          "completed": 3,
+          "eligibleSites": 3,
+          "excludedSites": 1,
+          "executionMs": 745.508894,
+          "jobsAttempted": 3,
+          "kind": "statement",
+          "operator": "return",
+          "planned": 3
+        }
+      ],
+      "verdicts": [
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "survived",
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "killed"
+      ]
+    },
+    {
+      "name": "no-operators",
+      "strategy": "replace",
+      "complete": true,
+      "enabledOperators": [],
+      "planned": 0,
+      "completed": 0,
+      "killed": 0,
+      "survived": 0,
+      "unresolved": 0,
+      "score": null,
+      "jobsAttempted": 0,
+      "totalJobsAttempted": 9,
+      "workerBaselineJobs": 0,
+      "workersUsed": 0,
+      "phaseTimings": {
+        "analysisMs": 0.707793,
+        "attributionMs": 0.768927,
+        "baselineMs": 156.512721,
+        "cleanupMs": 4.031354,
+        "compilerStrictnessMs": 1031.512934,
+        "coverageMs": 490.772945,
+        "preparationMs": 0.265235,
+        "typecheckMs": null
+      },
+      "perOperator": [],
+      "verdicts": []
+    },
+    {
+      "name": "warmup-false",
+      "strategy": "replace",
+      "complete": true,
+      "enabledOperators": [
+        "comparison",
+        "logical",
+        "arithmetic",
+        "boolean",
+        "statement",
+        "optional"
+      ],
+      "planned": 13,
+      "completed": 13,
+      "killed": 10,
+      "survived": 3,
+      "unresolved": 0,
+      "score": 76.92307692307693,
+      "jobsAttempted": 13,
+      "totalJobsAttempted": 22,
+      "workerBaselineJobs": 0,
+      "workersUsed": 1,
+      "phaseTimings": {
+        "analysisMs": 0.729102,
+        "attributionMs": 0.789606,
+        "baselineMs": 157.90686100000002,
+        "cleanupMs": 0.43173700000000004,
+        "compilerStrictnessMs": 1428.465911,
+        "coverageMs": 487.062868,
+        "preparationMs": 0.260167,
+        "typecheckMs": null
+      },
+      "perOperator": [
+        {
+          "completed": 2,
+          "eligibleSites": 1,
+          "excludedSites": 0,
+          "executionMs": 389.404971,
+          "jobsAttempted": 2,
+          "kind": "comparison",
+          "operator": ">",
+          "planned": 2
+        },
+        {
+          "completed": 8,
+          "eligibleSites": 8,
+          "excludedSites": 2,
+          "executionMs": 1303.749374,
+          "jobsAttempted": 8,
+          "kind": "statement",
+          "operator": "expression-statement",
+          "planned": 8
+        },
+        {
+          "completed": 3,
+          "eligibleSites": 3,
+          "excludedSites": 1,
+          "executionMs": 492.987259,
+          "jobsAttempted": 3,
+          "kind": "statement",
+          "operator": "return",
+          "planned": 3
+        }
+      ],
+      "verdicts": [
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "survived",
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "killed"
+      ]
+    },
+    {
+      "name": "warmup-true",
+      "strategy": "switch",
+      "complete": true,
+      "enabledOperators": [
+        "comparison",
+        "logical",
+        "arithmetic",
+        "boolean",
+        "statement",
+        "optional"
+      ],
+      "planned": 13,
+      "completed": 13,
+      "killed": 10,
+      "survived": 3,
+      "unresolved": 0,
+      "score": 76.92307692307693,
+      "jobsAttempted": 13,
+      "totalJobsAttempted": 23,
+      "workerBaselineJobs": 0,
+      "workersUsed": 1,
+      "phaseTimings": {
+        "analysisMs": 0.806006,
+        "attributionMs": 0.805776,
+        "baselineMs": 158.83352200000002,
+        "cleanupMs": 0.46537,
+        "compilerStrictnessMs": 1020.671471,
+        "coverageMs": 490.802006,
+        "preparationMs": 0.258884,
+        "typecheckMs": null
+      },
+      "perOperator": [
+        {
+          "completed": 2,
+          "eligibleSites": 1,
+          "excludedSites": 0,
+          "executionMs": 329.034067,
+          "jobsAttempted": 2,
+          "kind": "comparison",
+          "operator": ">",
+          "planned": 2
+        },
+        {
+          "completed": 8,
+          "eligibleSites": 8,
+          "excludedSites": 2,
+          "executionMs": 1340.93649,
+          "jobsAttempted": 8,
+          "kind": "statement",
+          "operator": "expression-statement",
+          "planned": 8
+        },
+        {
+          "completed": 3,
+          "eligibleSites": 3,
+          "excludedSites": 1,
+          "executionMs": 513.839034,
+          "jobsAttempted": 3,
+          "kind": "statement",
+          "operator": "return",
+          "planned": 3
+        }
+      ],
+      "verdicts": [
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "survived",
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "killed"
+      ]
+    },
+    {
+      "name": "cost-off-replace-0",
+      "strategy": "replace",
+      "complete": true,
+      "enabledOperators": [
+        "comparison",
+        "logical",
+        "arithmetic",
+        "boolean"
+      ],
+      "planned": 2,
+      "completed": 2,
+      "killed": 2,
+      "survived": 0,
+      "unresolved": 0,
+      "score": 100,
+      "jobsAttempted": 2,
+      "totalJobsAttempted": 11,
+      "workerBaselineJobs": 0,
+      "workersUsed": 1,
+      "phaseTimings": {
+        "analysisMs": 0.729834,
+        "attributionMs": 1.045473,
+        "baselineMs": 254.549627,
+        "cleanupMs": 0.40281300000000003,
+        "compilerStrictnessMs": 1056.702336,
+        "coverageMs": 714.00783,
+        "preparationMs": 0.25966500000000003,
+        "typecheckMs": null
+      },
+      "perOperator": [
+        {
+          "completed": 2,
+          "eligibleSites": 1,
+          "excludedSites": 0,
+          "executionMs": 330.007737,
+          "jobsAttempted": 2,
+          "kind": "comparison",
+          "operator": ">",
+          "planned": 2
+        }
+      ],
+      "verdicts": [
+        "killed",
+        "killed"
+      ]
+    },
+    {
+      "name": "cost-on-replace-0",
+      "strategy": "replace",
+      "complete": true,
+      "enabledOperators": [
+        "comparison",
+        "logical",
+        "arithmetic",
+        "boolean",
+        "statement",
+        "optional"
+      ],
+      "planned": 13,
+      "completed": 13,
+      "killed": 10,
+      "survived": 3,
+      "unresolved": 0,
+      "score": 76.92307692307693,
+      "jobsAttempted": 13,
+      "totalJobsAttempted": 22,
+      "workerBaselineJobs": 0,
+      "workersUsed": 1,
+      "phaseTimings": {
+        "analysisMs": 0.7211179999999999,
+        "attributionMs": 0.734162,
+        "baselineMs": 168.229983,
+        "cleanupMs": 0.45792499999999997,
+        "compilerStrictnessMs": 1010.267961,
+        "coverageMs": 485.03047100000003,
+        "preparationMs": 0.27827999999999997,
+        "typecheckMs": null
+      },
+      "perOperator": [
+        {
+          "completed": 2,
+          "eligibleSites": 1,
+          "excludedSites": 0,
+          "executionMs": 325.58315,
+          "jobsAttempted": 2,
+          "kind": "comparison",
+          "operator": ">",
+          "planned": 2
+        },
+        {
+          "completed": 8,
+          "eligibleSites": 8,
+          "excludedSites": 2,
+          "executionMs": 1303.345715,
+          "jobsAttempted": 8,
+          "kind": "statement",
+          "operator": "expression-statement",
+          "planned": 8
+        },
+        {
+          "completed": 3,
+          "eligibleSites": 3,
+          "excludedSites": 1,
+          "executionMs": 489.833132,
+          "jobsAttempted": 3,
+          "kind": "statement",
+          "operator": "return",
+          "planned": 3
+        }
+      ],
+      "verdicts": [
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "survived",
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "killed"
+      ]
+    },
+    {
+      "name": "cost-off-switch-0",
+      "strategy": "switch",
+      "complete": true,
+      "enabledOperators": [
+        "comparison",
+        "logical",
+        "arithmetic",
+        "boolean"
+      ],
+      "planned": 2,
+      "completed": 2,
+      "killed": 2,
+      "survived": 0,
+      "unresolved": 0,
+      "score": 100,
+      "jobsAttempted": 2,
+      "totalJobsAttempted": 12,
+      "workerBaselineJobs": 0,
+      "workersUsed": 1,
+      "phaseTimings": {
+        "analysisMs": 0.6986559999999999,
+        "attributionMs": 0.825403,
+        "baselineMs": 160.999457,
+        "cleanupMs": 1.9729869999999998,
+        "compilerStrictnessMs": 1059.306683,
+        "coverageMs": 490.591413,
+        "preparationMs": 0.258693,
+        "typecheckMs": null
+      },
+      "perOperator": [
+        {
+          "completed": 2,
+          "eligibleSites": 1,
+          "excludedSites": 0,
+          "executionMs": 532.3081,
+          "jobsAttempted": 2,
+          "kind": "comparison",
+          "operator": ">",
+          "planned": 2
+        }
+      ],
+      "verdicts": [
+        "killed",
+        "killed"
+      ]
+    },
+    {
+      "name": "cost-on-switch-0",
+      "strategy": "switch",
+      "complete": true,
+      "enabledOperators": [
+        "comparison",
+        "logical",
+        "arithmetic",
+        "boolean",
+        "statement",
+        "optional"
+      ],
+      "planned": 13,
+      "completed": 13,
+      "killed": 10,
+      "survived": 3,
+      "unresolved": 0,
+      "score": 76.92307692307693,
+      "jobsAttempted": 13,
+      "totalJobsAttempted": 23,
+      "workerBaselineJobs": 0,
+      "workersUsed": 1,
+      "phaseTimings": {
+        "analysisMs": 0.962579,
+        "attributionMs": 0.727329,
+        "baselineMs": 159.52757400000002,
+        "cleanupMs": 0.49618700000000004,
+        "compilerStrictnessMs": 1212.708541,
+        "coverageMs": 486.76689600000003,
+        "preparationMs": 0.33274200000000004,
+        "typecheckMs": null
+      },
+      "perOperator": [
+        {
+          "completed": 2,
+          "eligibleSites": 1,
+          "excludedSites": 0,
+          "executionMs": 333.99906599999997,
+          "jobsAttempted": 2,
+          "kind": "comparison",
+          "operator": ">",
+          "planned": 2
+        },
+        {
+          "completed": 8,
+          "eligibleSites": 8,
+          "excludedSites": 2,
+          "executionMs": 1335.6874910000001,
+          "jobsAttempted": 8,
+          "kind": "statement",
+          "operator": "expression-statement",
+          "planned": 8
+        },
+        {
+          "completed": 3,
+          "eligibleSites": 3,
+          "excludedSites": 1,
+          "executionMs": 502.16799299999997,
+          "jobsAttempted": 3,
+          "kind": "statement",
+          "operator": "return",
+          "planned": 3
+        }
+      ],
+      "verdicts": [
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "survived",
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "killed"
+      ]
+    },
+    {
+      "name": "job-timeout",
+      "strategy": "replace",
+      "complete": false,
+      "enabledOperators": [
+        "statement"
+      ],
+      "planned": 11,
+      "completed": 11,
+      "killed": 7,
+      "survived": 3,
+      "unresolved": 1,
+      "score": null,
+      "jobsAttempted": 11,
+      "totalJobsAttempted": 20,
+      "workerBaselineJobs": 0,
+      "workersUsed": 1,
+      "phaseTimings": {
+        "analysisMs": 0.801377,
+        "attributionMs": 0.7663220000000001,
+        "baselineMs": 207.020989,
+        "cleanupMs": 1.424653,
+        "compilerStrictnessMs": 1156.799428,
+        "coverageMs": 494.188487,
+        "preparationMs": 0.29964,
+        "typecheckMs": null
+      },
+      "perOperator": [
+        {
+          "completed": 8,
+          "eligibleSites": 8,
+          "excludedSites": 2,
+          "executionMs": 4417.92618,
+          "jobsAttempted": 8,
+          "kind": "statement",
+          "operator": "expression-statement",
+          "planned": 8
+        },
+        {
+          "completed": 3,
+          "eligibleSites": 3,
+          "excludedSites": 1,
+          "executionMs": 584.350664,
+          "jobsAttempted": 3,
+          "kind": "statement",
+          "operator": "return",
+          "planned": 3
+        }
+      ],
+      "verdicts": [
+        "timed-out",
+        "killed",
+        "killed",
+        "survived",
+        "survived",
+        "killed",
+        "killed",
+        "killed",
+        "killed",
+        "survived",
+        "killed"
+      ]
+    }
+  ]
+}

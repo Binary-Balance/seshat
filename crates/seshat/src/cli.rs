@@ -721,8 +721,10 @@ fn readable(report: &Value) -> String {
         for row in array(&mutation["perOperator"]) {
             let _ = writeln!(
                 output,
-                "Operator {}: {} planned, {} completed, {} test job(s)",
+                "Operator {}: {} eligible site(s), {} excluded; {} planned, {} completed, {} test job(s)",
                 text(&row["operator"]),
+                row["eligibleSites"],
+                row["excludedSites"],
                 row["planned"],
                 row["completed"],
                 row["jobsAttempted"]
@@ -1025,6 +1027,16 @@ mod tests {
                 .count(),
             1
         );
+    }
+
+    #[test]
+    fn readable_keeps_excluded_operator_sites_visible() {
+        let output = readable(&json!({"timings":{"wallMs":1},"result":{"mutation":{
+            "planned":0,"complete":true,"killed":0,"survived":0,"score":null,
+            "perOperator":[{"operator":"expression-statement","eligibleSites":0,"excludedSites":2,
+                "planned":0,"completed":0,"jobsAttempted":0}]
+        }}}));
+        assert!(output.contains("Operator expression-statement: 0 eligible site(s), 2 excluded; 0 planned, 0 completed, 0 test job(s)"));
     }
 
     #[test]
