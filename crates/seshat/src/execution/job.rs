@@ -362,6 +362,40 @@ mod tests {
         assert_eq!(output.bytes, b"diagnostic before exit");
     }
 
+    #[cfg(unix)]
+    #[test]
+    fn parallel_jobs_do_not_retain_another_jobs_output() {
+        for _ in 0..16 {
+            let start = std::sync::Barrier::new(2);
+            thread::scope(|scope| {
+                let completed = thread::Builder::new()
+                    .name("pipe-owner".into())
+                    .spawn_scoped(scope, || {
+                        let mut command = Command::new("sh");
+                        command.args(["-c", "exit 1"]);
+                        start.wait();
+                        run(&mut command, Duration::from_secs(5)).unwrap()
+                    })
+                    .unwrap();
+                start.wait();
+                let mut command = Command::new("sh");
+                command.args(["-c", "sleep 30"]);
+                let mut peer = super::super::platform::ManagedChild::spawn(&mut command).unwrap();
+                let mut result = completed.join().unwrap();
+                let peer_running = peer.try_wait().unwrap().is_none();
+                peer.kill_tree().unwrap();
+                assert!(peer_running, "the parallel job must still own its pipes");
+                assert!(result["pipeError"].is_null(), "{result}");
+                result["report"] = json!({"complete":true,"passed":0,"failed":1,"errors":0});
+                assert_eq!(
+                    super::super::classify("node", &result),
+                    crate::assessment::TestState::Failed,
+                    "{result}"
+                );
+            });
+        }
+    }
+
     #[test]
     fn retained_output_stays_bounded_while_draining_to_eof() {
         use std::io::Write;

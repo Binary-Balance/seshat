@@ -49,6 +49,7 @@ mod unix {
     // read-only settlement bounded and preserve EPERM if the group remains.
     const GROUP_SETTLEMENT_TIMEOUT: Duration = Duration::from_millis(100);
     const GROUP_SETTLEMENT_POLL: Duration = Duration::from_millis(2);
+    static SPAWN_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
     pub(super) struct Supervisor {
         pid: u32,
@@ -275,6 +276,10 @@ mod unix {
     }
 
     pub(super) fn spawn(command: &mut Command) -> Result<(Child, Supervisor), String> {
+        // macOS sets close-on-exec after creating pipes; serialize launches to prevent inheritance.
+        let _launch = SPAWN_LOCK
+            .lock()
+            .map_err(|_| "process launch lock poisoned")?;
         command.process_group(0);
         let child = command.spawn().map_err(|e| format!("spawn: {e}"))?;
         let supervisor = Supervisor::new(child.id());
