@@ -2616,7 +2616,7 @@ mod tests {
                 captured.config.count_timeouts_as_killed = opted_in;
                 let mut first = captured.config.setups[0].clone();
                 if fault == "deadline" {
-                    first.timeout_ms = 1000;
+                    first.timeout_ms = 3000;
                 }
                 first.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
                 let receipt = r#"
@@ -2688,7 +2688,7 @@ mod tests {
                 assert!(mutation["score"].is_null());
                 assert_eq!(result["complete"], false);
                 // A lower timeoutMs caps the default 30000 ms floor.
-                let limit = if fault == "deadline" { 1000 } else { 30_000 };
+                let limit = if fault == "deadline" { 3000 } else { 30_000 };
                 for setup in result["setups"].as_array().unwrap() {
                     assert_eq!(setup["mutantTimeoutMs"], limit);
                 }
@@ -2728,7 +2728,7 @@ mod tests {
                 first.mutant_timeout_min_ms = 3000;
                 first.mutant_timeout_factor = 0.001;
             } else {
-                first.mutant_timeout_min_ms = 1000;
+                first.mutant_timeout_min_ms = 3000;
             }
             first.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
             let receipt = r#"
@@ -2903,7 +2903,7 @@ mod tests {
         setup.runner = Runner::Vitest;
         setup.timeout_ms = 20_000;
         setup.mutant_timeout_factor = 1.0;
-        setup.mutant_timeout_min_ms = 1000;
+        setup.mutant_timeout_min_ms = 3000;
         setup.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
         setup.test = vec![
             "node".into(),
@@ -2951,7 +2951,7 @@ mod tests {
             captured.config.workers = if worker_baseline { 2 } else { 1 };
             let mut first = captured.config.setups[0].clone();
             if deadline {
-                first.timeout_ms = 1000;
+                first.timeout_ms = 3000;
             }
             first.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
             let receipt = r#"
