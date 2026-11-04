@@ -47,9 +47,22 @@ for (const [name, args] of [
     encoding: 'utf8', timeout: timeoutMs, maxBuffer: 16 * 1024 * 1024,
   });
   writeFileSync(join(output, `${name}.log`), (child.stdout + child.stderr).replaceAll(repo, '<repo>'));
-  evidence.checks.push({name, passed: !child.error && child.status === 0});
+  let passed = !child.error && child.status === 0;
+  if (name === 'node-load-failure' && passed) {
+    const proof = JSON.parse(readFileSync(join(output, `${name}.json`), 'utf8'));
+    const guard = proof['module-guard'].outcomes[0];
+    evidence.importFailureObserver = {
+      node: guard.evidence.report.node,
+      state: guard.evidence.report.moduleFailures.length === 1 ? 'active' : 'inactive',
+      verdict: guard.verdict,
+    };
+    passed = evidence.importFailureObserver.node === process.versions.node
+      && evidence.importFailureObserver.state === 'active' && guard.verdict === 'killed';
+  }
+  evidence.checks.push({name, passed});
   writeFileSync(join(output, 'summary.json'), JSON.stringify(evidence, null, 2) + '\n');
   assert.ifError(child.error);
   assert.equal(child.status, 0, child.stdout + child.stderr);
+  assert.ok(passed, 'latest supported Node must prove an active import-failure observer');
 }
 console.log(`Compatibility passed: ${output}`);

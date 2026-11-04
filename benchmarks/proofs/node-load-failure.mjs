@@ -18,7 +18,8 @@ const test = "import {test} from 'node:test';import {ready} from './subject.ts';
 writeFileSync(join(project, 'package.json'), '{"type":"module"}');
 const config = {template:project,scratch:work,source:'subject.ts',runner:'node',timeoutMs:5000,
   test:[process.execPath,'--test',`--test-reporter=${pathToFileURL(join(here,'node-reporter.mjs')).href}`,'@ROOT@/check.mjs']};
-const observerAvailable = ['24.20.0', '24.21.0'].includes(process.versions.node);
+const observerAvailable = /^24\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/.test(process.versions.node)
+  && Number(process.versions.node.split('.')[1]) >= 20;
 const importVerdict = observerAvailable ? 'killed' : 'execution-error';
 const results = {};
 async function execute(name, app, tests, expected, other) {
@@ -90,10 +91,10 @@ assert.equal(mixed.outcomes[0].evidence.report.failed, observerAvailable ? 1 : 0
 assert.equal(mixed.outcomes[0].evidence.report.errors, observerAvailable ? 1 : 2);
 // Synthetic version only: exercise the observer guard, not a claimed future runtime.
 // --require runs before the observer's --import in each test worker.
-writeFileSync(join(project, 'runtime.cjs'), "Object.defineProperty(process.versions, 'node', {value:'24.22.0'});");
+writeFileSync(join(project, 'runtime.cjs'), "Object.defineProperty(process.versions, 'node', {value:'24.21.0-rc.1'});");
 config.test.splice(1, 0, '--require', '@ROOT@/runtime.cjs');
 const fallback = await execute('unverified-observer-import', source, test, 'execution-error');
 assert.deepEqual(fallback.outcomes[0].evidence.report.moduleFailures, []);
-assert.equal(fallback.outcomes[0].evidence.report.node, '24.22.0');
+assert.equal(fallback.outcomes[0].evidence.report.node, '24.21.0-rc.1');
 await execute('unverified-observer-assertion', plain, test, 'killed');
 console.log(`Node load-failure checks passed: ${Object.keys(results).length} scenarios. Evidence: ${join(work,'result.json')}`);

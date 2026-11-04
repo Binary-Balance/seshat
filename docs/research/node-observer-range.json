@@ -1,0 +1,166 @@
+{
+  "baseRevision": "4128bcc3599f338fa37b4b40492ae8378aae304a",
+  "platform": "linux",
+  "arch": "x64",
+  "proof": "benchmarks/proofs/node-load-failure.mjs",
+  "scenariosPerRun": 26,
+  "changedApplicationImportCases": 11,
+  "results": [
+    {
+      "scenario": "module-guard",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "killed",
+      "after24.22.2": "killed"
+    },
+    {
+      "scenario": "catch-guard",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "killed",
+      "after24.22.2": "killed"
+    },
+    {
+      "scenario": "finally-guard",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "killed",
+      "after24.22.2": "killed"
+    },
+    {
+      "scenario": "try-finally-guard",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "killed",
+      "after24.22.2": "killed"
+    },
+    {
+      "scenario": "nested-try-finally",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "killed",
+      "after24.22.2": "killed"
+    },
+    {
+      "scenario": "nested-child-cwd",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "killed",
+      "after24.22.2": "killed"
+    },
+    {
+      "scenario": "unicode-crlf",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "killed",
+      "after24.22.2": "killed"
+    },
+    {
+      "scenario": "called-guard",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "killed",
+      "after24.22.2": "killed"
+    },
+    {
+      "scenario": "function-in-try",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "killed",
+      "after24.22.2": "killed"
+    },
+    {
+      "scenario": "arrow-in-try",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "killed",
+      "after24.22.2": "killed"
+    },
+    {
+      "scenario": "custom-error",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "killed",
+      "after24.22.2": "killed"
+    },
+    {
+      "scenario": "setup-throw",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "execution-error",
+      "after24.22.2": "execution-error"
+    },
+    {
+      "scenario": "process-exit",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "execution-error",
+      "after24.22.2": "execution-error"
+    },
+    {
+      "scenario": "missing-module",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "execution-error",
+      "after24.22.2": "execution-error"
+    },
+    {
+      "scenario": "reused-error",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "execution-error",
+      "after24.22.2": "execution-error"
+    },
+    {
+      "scenario": "caught-error",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "execution-error",
+      "after24.22.2": "execution-error"
+    },
+    {
+      "scenario": "outer-catches-catch",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "execution-error",
+      "after24.22.2": "execution-error"
+    },
+    {
+      "scenario": "outer-catches-finally",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "execution-error",
+      "after24.22.2": "execution-error"
+    },
+    {
+      "scenario": "outer-catches-static",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "execution-error",
+      "after24.22.2": "execution-error"
+    },
+    {
+      "scenario": "function-has-catch",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "execution-error",
+      "after24.22.2": "execution-error"
+    },
+    {
+      "scenario": "background-error",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "execution-error",
+      "after24.22.2": "execution-error"
+    },
+    {
+      "scenario": "custom-stack",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "execution-error",
+      "after24.22.2": "execution-error"
+    },
+    {
+      "scenario": "primitive-throw",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "execution-error",
+      "after24.22.2": "execution-error"
+    },
+    {
+      "scenario": "mixed-files",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "execution-error",
+      "after24.22.2": "execution-error"
+    },
+    {
+      "scenario": "unverified-observer-import",
+      "before24.22.2": "execution-error",
+      "after24.22.0": "execution-error",
+      "after24.22.2": "execution-error"
+    },
+    {
+      "scenario": "unverified-observer-assertion",
+      "before24.22.2": "killed",
+      "after24.22.0": "killed",
+      "after24.22.2": "killed"
+    }
+  ]
+}

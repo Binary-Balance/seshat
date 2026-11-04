@@ -671,7 +671,7 @@ fn readable(report: &Value) -> String {
                 let explanation = match observer["reason"].as_str() {
                     Some("runner") => "this observer is only used by the Node test runner",
                     _ => {
-                        "the observed Node version is unavailable or outside 24.20.0/24.21.0; ambiguous import crashes remain execution errors"
+                        "the observed Node version is unavailable or outside >=24.20.0 <25; ambiguous import crashes remain execution errors"
                     }
                 };
                 let _ = writeln!(
@@ -1044,7 +1044,7 @@ mod tests {
         let output = readable(&json!({"timings":{"wallMs":1},"result":{"diagnostics":{
             "runnerVersions":[
                 {"setup":"verified","runtime":{"node":"24.21.0"},"importFailureObserver":{"state":"active","reason":null}},
-                {"setup":"current","runtime":{"node":"24.22.0"},"importFailureObserver":{"state":"inactive","reason":"node-version"}},
+                {"setup":"unsupported","runtime":{"node":"24.19.0"},"importFailureObserver":{"state":"inactive","reason":"node-version"}},
                 {"setup":"missing","runtime":{"node":null},"importFailureObserver":{"state":"inactive","reason":"node-version"}},
                 {"setup":"jest\u{001b}","importFailureObserver":{"state":"inactive","reason":"runner"}}
             ]
@@ -1054,8 +1054,8 @@ mod tests {
             3
         );
         assert!(!output.contains("inactive for setup \"verified\""));
-        assert!(output.contains("inactive for setup \"current\" (node-version)"));
-        assert!(output.contains("Node \"24.22.0\""));
+        assert!(output.contains("inactive for setup \"unsupported\" (node-version)"));
+        assert!(output.contains("Node \"24.19.0\""));
         assert!(output.contains("ambiguous import crashes remain execution errors"));
         assert!(output.contains("inactive for setup \"missing\" (node-version)"));
         assert!(output.contains("(runner): this observer is only used by the Node test runner"));

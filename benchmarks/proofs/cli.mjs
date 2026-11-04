@@ -86,7 +86,8 @@ function cancellationRun(signal, args, ready, label) {
 const stableMutation = mutation => mutation.outcomes.map(({id,path,localId,offset,original,replacement,verdict}) =>
   ({id,path,localId,offset,original,replacement,verdict}));
 const checked = json('check', 'check');
-const observerAvailable = ['24.20.0', '24.21.0'].includes(process.versions.node);
+const observerAvailable = /^24\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/.test(process.versions.node)
+  && Number(process.versions.node.split('.')[1]) >= 20;
 const observerState = observerAvailable
   ? {state:'active',reason:null} : {state:'inactive',reason:'node-version'};
 assert.deepEqual(checked.result.diagnostics.runnerVersions[0].importFailureObserver, observerState);
@@ -165,21 +166,17 @@ const guard = json('import-observer', 'mutate', observerAvailable ? 0 : 2);
 assert.deepEqual(guard.result.diagnostics.runnerVersions[0].importFailureObserver, observerState);
 assert.equal(guard.result.mutation.outcomes[0].verdict, observerAvailable ? 'killed' : 'execution-error');
 assert.equal(guard.result.mutation.outcomes[0].setups[0].report.moduleFailures.length, observerAvailable ? 1 : 0);
-// A synthetic version exercises the unchanged pin even on a verified Node version.
-writeFileSync(join(project, 'runtime.cjs'), "Object.defineProperty(process.versions, 'node', {value:'24.22.0'});\n");
+// Missing load evidence stays unresolved even on a supported runtime.
+writeFileSync(join(project, 'runtime.cjs'), "delete process.env.SESHAT_LOAD_CONTEXT;\n");
 const fallbackConfig = structuredClone(guardConfig);
 fallbackConfig.capture.push('runtime.cjs');
 fallbackConfig.setups[0].test.splice(1, 0, '--require', './runtime.cjs');
 configure(fallbackConfig);
-const fallback = json('import-observer-unverified', 'mutate', 2);
-assert.equal(fallback.result.diagnostics.runnerVersions[0].runtime.node, '24.22.0');
-assert.deepEqual(fallback.result.diagnostics.runnerVersions[0].importFailureObserver,
-  {state:'inactive',reason:'node-version'});
+const fallback = json('import-observer-missing-context', 'mutate', 2);
+assert.equal(fallback.result.diagnostics.runnerVersions[0].runtime.node, process.versions.node);
+assert.deepEqual(fallback.result.diagnostics.runnerVersions[0].importFailureObserver, observerState);
 assert.equal(fallback.result.mutation.outcomes[0].verdict, 'execution-error');
 assert.deepEqual(fallback.result.mutation.outcomes[0].setups[0].report.moduleFailures, []);
-const fallbackHuman = run('import-observer-unverified-readable', ['mutate', '--scratch', scratch, '--no-progress'], 2);
-assert.match(fallbackHuman.stdout, /Import-failure observer inactive for setup "node" \(node-version\)/);
-assert.match(fallbackHuman.stdout, /ambiguous import crashes remain execution errors/);
 Object.assign(originals, beforeGuard);
 for (const [path, source] of Object.entries(originals)) writeFileSync(join(project, path), source);
 configure();

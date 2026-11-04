@@ -1,3 +1,4 @@
+import './node-load-observer.test.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {basename, dirname, join} from 'node:path';
@@ -20,6 +21,11 @@ for (const platform of ['win32', 'linux', 'darwin']) {
       payload: {binaryPath: '<binary>', tarball: '<archive>'}, env: {}, evidence,
       process: {platform, execPath: '<node>', versions: {node: '24.22.2'}},
       console: {log() {}}, writeFileSync() {},
+      readFileSync() {
+        return JSON.stringify({'module-guard': {outcomes: [{verdict: 'killed', evidence: {
+          report: {node: '24.22.2', moduleFailures: [{}]},
+        }}]}});
+      },
       spawnSync(command, args, options) {
         const name = basename(args[0], '.mjs');
         calls.push(name);
@@ -40,5 +46,35 @@ for (const platform of ['win32', 'linux', 'darwin']) {
       'jest-expo-check', 'vitest-check']);
     assert.equal(evidence.checks.length, calls.length);
     assert.ok(evidence.checks.every(check => check.passed));
+    assert.deepEqual(JSON.parse(JSON.stringify(evidence.importFailureObserver)),
+      {node: '24.22.2', state: 'active', verdict: 'killed'});
+  });
+}
+
+for (const [name, node, verdict, moduleFailures] of [
+  ['inactive observer', '24.22.2', 'execution-error', []],
+  ['wrong runtime', '24.21.0', 'killed', [{}]],
+]) {
+  test(`compatibility fails for ${name} despite a successful child process`, () => {
+    const evidence = {checks: []};
+    const summaries = [];
+    assert.throws(() => runInNewContext(suites, {
+      assert, join, repo: dirname(here), output: '<output>', jestDeps: '<jest-deps>',
+      payload: {binaryPath: '<binary>', tarball: '<archive>'}, env: {}, evidence,
+      process: {platform: 'linux', execPath: '<node>', versions: {node: '24.22.2'}},
+      console: {log() {}},
+      spawnSync() { return {status: 0, stdout: '', stderr: ''}; },
+      readFileSync() {
+        return JSON.stringify({'module-guard': {outcomes: [{verdict, evidence: {
+          report: {node, moduleFailures},
+        }}]}});
+      },
+      writeFileSync(path, contents) {
+        if (basename(path) === 'summary.json') summaries.push(JSON.parse(contents));
+      },
+    }), /must prove an active import-failure observer/);
+    assert.equal(evidence.checks.at(-1).name, 'node-load-failure');
+    assert.equal(evidence.checks.at(-1).passed, false);
+    assert.equal(summaries.at(-1).checks.at(-1).passed, false);
   });
 }

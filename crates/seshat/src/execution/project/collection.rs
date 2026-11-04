@@ -343,7 +343,7 @@ fn validate_runner_receipt(report: &Value, runner: &Runner, id: &str) -> Result<
         .ok_or("runner receipt has missing or invalid Node.js version")?;
     let [major, minor, _] =
         stable_version(node).ok_or("runner receipt has missing or invalid Node.js version")?;
-    // The tested floor is independent of the observer's narrower version set.
+    // Runner receipts and the load observer use the same supported Node range.
     if major != 24 || minor < 20 {
         return Err(format!(
             "unsupported Node.js version {node:?}; supported: >=24.20.0 <25"
@@ -562,10 +562,13 @@ fn runner_packages(runner: Runner) -> &'static [&'static str] {
 }
 
 fn import_failure_observer(runner: Runner, node: Option<&str>) -> Value {
-    // Match node-load-observer.mjs, independently of the supported Node range.
+    // Match node-load-observer.mjs; latest-node CI verifies the attribution route.
     let reason = if !matches!(runner, Runner::Node) {
         Some("runner")
-    } else if !matches!(node, Some("24.20.0" | "24.21.0")) {
+    } else if !node
+        .and_then(stable_version)
+        .is_some_and(|[major, minor, _]| major == 24 && minor >= 20)
+    {
         Some("node-version")
     } else {
         None
@@ -3904,8 +3907,14 @@ mod tests {
         for (node, state, reason) in [
             (Some("24.20.0"), "active", None),
             (Some("24.21.0"), "active", None),
-            (Some("24.22.0"), "inactive", Some("node-version")),
-            (Some("24.20.1"), "inactive", Some("node-version")),
+            (Some("24.22.0"), "active", None),
+            (Some("24.22.2"), "active", None),
+            (Some("24.20.1"), "active", None),
+            (Some("24.99.99"), "active", None),
+            (Some("24.19.99"), "inactive", Some("node-version")),
+            (Some("25.0.0"), "inactive", Some("node-version")),
+            (Some("024.21.0"), "inactive", Some("node-version")),
+            (Some("24.21.0+build"), "inactive", Some("node-version")),
             (Some("24.21.0-rc.1"), "inactive", Some("node-version")),
             (None, "inactive", Some("node-version")),
         ] {

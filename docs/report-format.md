@@ -348,7 +348,7 @@ concurrency sections. Unavailable values use `null` or the states below:
   range is `not-comparable`, not a mismatch. Node setups have an empty
   `packages` array. Each entry also has `importFailureObserver` with `state`
   and `reason`. It is `active` with a `null` reason for Node setups whose
-  observed runtime is exactly 24.20.0 or 24.21.0. Other or unavailable Node
+  observed runtime is stable Node `>=24.20.0 <25`. Unsupported or unavailable Node
   versions produce `inactive` with reason `node-version`; Jest and Vitest
   produce `inactive` with reason `runner`. This uses the same validated receipt
   as `runtime.node`, preferring the baseline and falling back to coverage.
