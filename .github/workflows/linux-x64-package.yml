@@ -66,6 +66,7 @@ jobs:
           node benchmarks/proofs/linux-x64-summary.mjs --self-check
           node packaging/repeat-pack-failure-check.mjs
           node --test packaging/npm.test.mjs packaging/metadata.test.mjs
+          node --test benchmarks/proofs/runner-compatibility.test.mjs
       - name: Fetch locked dependencies
         id: dependencies
         run: |
