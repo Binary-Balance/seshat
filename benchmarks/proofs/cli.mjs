@@ -177,6 +177,10 @@ assert.equal(fallback.result.diagnostics.runnerVersions[0].runtime.node, process
 assert.deepEqual(fallback.result.diagnostics.runnerVersions[0].importFailureObserver, observerState);
 assert.equal(fallback.result.mutation.outcomes[0].verdict, 'execution-error');
 assert.deepEqual(fallback.result.mutation.outcomes[0].setups[0].report.moduleFailures, []);
+const fallbackHuman = run('import-observer-missing-context-readable', ['mutate', '--scratch', scratch, '--no-progress'], 2);
+assert.match(fallbackHuman.stdout, /score withheld \(incomplete\)/);
+assert.match(fallbackHuman.stdout, /execution-error 1/);
+assert.equal(fallbackHuman.stdout.includes('Import-failure observer inactive for setup "node" (node-version)'), !observerAvailable);
 Object.assign(originals, beforeGuard);
 for (const [path, source] of Object.entries(originals)) writeFileSync(join(project, path), source);
 configure();

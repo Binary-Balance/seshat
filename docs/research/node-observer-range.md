@@ -22,7 +22,7 @@ checks source preservation and removal of the session copy.
 The CLI proof also checks the active diagnostic against an attributable import
 kill. Removing load context leaves the same runtime diagnostic active but the
 import crash unresolved: an active version gate alone cannot establish a kill.
-All 84 CLI scenarios plus legacy parity pass. The 180 Rust unit tests, three
+All 85 CLI scenarios plus legacy parity pass. The 180 Rust unit tests, three
 CLI output tests and eleven proof-input tests pass, as do the 21 observer-guard
 and compatibility-wrapper tests. The proof-input expectations use the new range;
 the initial run exposed their old two-version expectation before it was updated.
