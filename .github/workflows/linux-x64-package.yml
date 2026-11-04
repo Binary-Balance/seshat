@@ -50,7 +50,7 @@ jobs:
       - name: Set up Rust
         run: |
           set -euo pipefail
-          rustup toolchain install 1.98.1 --profile minimal --no-self-update
+          rustup toolchain install 1.98.1 --profile minimal --component rustfmt --component clippy --no-self-update
           rustup default 1.98.1
           rustc -vV
           test "$(rustc -vV | sed -n 's/^host: //p')" = x86_64-unknown-linux-gnu
@@ -74,6 +74,10 @@ jobs:
           npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund
           npm ci --prefix benchmarks/proofs --ignore-scripts --no-audit --no-fund
           cargo fetch --locked --manifest-path crates/seshat/Cargo.toml
+      - name: Check Rust formatting
+        run: cargo fmt --all --manifest-path crates/seshat/Cargo.toml -- --check
+      - name: Check Rust lints
+        run: cargo clippy --locked --offline --all-targets --manifest-path crates/seshat/Cargo.toml -- -D warnings
       - name: Run native Rust tests
         run: |
           set -euo pipefail

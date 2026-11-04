@@ -351,19 +351,18 @@ impl Session {
                 proof_command(&config, key)?;
             }
         }
-        if let Some(timeout) = config.get("timeoutMs") {
-            if timeout.as_u64().is_none_or(|value| value == 0) {
-                return Err("timeoutMs must be a positive integer".into());
-            }
+        if let Some(timeout) = config.get("timeoutMs")
+            && timeout.as_u64().is_none_or(|value| value == 0)
+        {
+            return Err("timeoutMs must be a positive integer".into());
         }
-        if let Some(limit) = config.get("limit") {
-            if limit
+        if let Some(limit) = config.get("limit")
+            && limit
                 .as_u64()
                 .and_then(|value| usize::try_from(value).ok())
                 .is_none()
-            {
-                return Err("limit must be a non-negative integer that fits this platform".into());
-            }
+        {
+            return Err("limit must be a non-negative integer that fits this platform".into());
         }
         if config.get("scenario").is_some_and(|value| {
             value

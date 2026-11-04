@@ -3,8 +3,11 @@ mod collection;
 mod selection;
 
 #[cfg(test)]
+type FileIoHook = (PathBuf, bool, Box<dyn FnOnce()>);
+
+#[cfg(test)]
 thread_local! {
-    static FILE_IO_HOOK: std::cell::RefCell<Option<(PathBuf, bool, Box<dyn FnOnce()>)>> = const { std::cell::RefCell::new(None) };
+    static FILE_IO_HOOK: std::cell::RefCell<Option<FileIoHook>> = const { std::cell::RefCell::new(None) };
 }
 
 #[cfg(test)]
@@ -821,7 +824,7 @@ impl CapturedProject {
                     relative.display()
                 ));
             }
-            create_link(&target, &directory.0.join(relative)).map_err(|e| e.to_string())?;
+            create_link(&target, directory.0.join(relative)).map_err(|e| e.to_string())?;
         }
         for setup in &config.setups {
             let cwd = directory.0.join(&setup.cwd);
@@ -2007,7 +2010,7 @@ mod tests {
     #[test]
     fn selected_links_and_link_parents_are_rejected() {
         let mut fixture = Fixture::new();
-        create_link(Path::new("calc.ts"), &fixture.project.join("src/alias.ts")).unwrap();
+        create_link(Path::new("calc.ts"), fixture.project.join("src/alias.ts")).unwrap();
         assert!(
             fixture
                 .capture()
@@ -2016,7 +2019,7 @@ mod tests {
                 .contains("selected source must not")
         );
         fs::remove_file(fixture.project.join("src/alias.ts")).unwrap();
-        create_link(Path::new("src"), &fixture.project.join("alias")).unwrap();
+        create_link(Path::new("src"), fixture.project.join("alias")).unwrap();
         fixture.config["capture"]
             .as_array_mut()
             .unwrap()

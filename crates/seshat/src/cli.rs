@@ -820,19 +820,19 @@ fn readable(report: &Value) -> String {
                 mutation["diagnostics"]["workerTimeMs"]
             );
         }
-        if let Some(slowest) = mutation["diagnostics"]["slowestExecutions"].as_array() {
-            if !slowest.is_empty() {
-                let _ = writeln!(output, "Slowest mutant executions:");
-                for row in slowest {
-                    let _ = writeln!(
-                        output,
-                        "  #{} {:?}: {} ms ({})",
-                        row["id"],
-                        text(&row["path"]),
-                        row["executionMs"],
-                        text(&row["verdict"])
-                    );
-                }
+        if let Some(slowest) = mutation["diagnostics"]["slowestExecutions"].as_array()
+            && !slowest.is_empty()
+        {
+            let _ = writeln!(output, "Slowest mutant executions:");
+            for row in slowest {
+                let _ = writeln!(
+                    output,
+                    "  #{} {:?}: {} ms ({})",
+                    row["id"],
+                    text(&row["path"]),
+                    row["executionMs"],
+                    text(&row["verdict"])
+                );
             }
         }
         for row in array(&mutation["outcomes"]) {

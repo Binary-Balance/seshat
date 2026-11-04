@@ -106,7 +106,15 @@ which catches accidentally ignored results, and
 [`unsafe_op_in_unsafe_fn`](https://doc.rust-lang.org/rustc/lints/listing/allowed-by-default.html#unsafe-op-in-unsafe-fn),
 which requires explicit unsafe blocks inside unsafe functions. Ordinary Cargo
 builds and tests enforce both. Deliberately ignored best-effort cleanup remains
-explicit in the code. Broad warning denial, Clippy pedantic/restriction groups
-and blanket `unwrap` bans are not enabled. They would also affect test assertions
-and deliberate invariants without establishing better error handling at input
-or process boundaries.
+explicit in the code. Clippy pedantic/restriction groups and blanket `unwrap`
+bans are not enabled.
+
+The Linux x64 package workflow installs rustfmt and Clippy for the pinned
+toolchain, then checks formatting and denies default Clippy warnings before
+running the Rust tests. Run the same gates locally from the repository root:
+
+```sh
+cargo fmt --all --manifest-path crates/seshat/Cargo.toml -- --check
+cargo clippy --locked --offline --all-targets \
+  --manifest-path crates/seshat/Cargo.toml -- -D warnings
+```
