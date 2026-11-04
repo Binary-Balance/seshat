@@ -1,0 +1,752 @@
+{
+  "cancelled": false,
+  "command": "check",
+  "complete": true,
+  "quality": {
+    "checks": [],
+    "state": "not-configured"
+  },
+  "result": {
+    "complete": true,
+    "diagnostics": {
+      "concurrency": {
+        "runners": [
+          {
+            "command": "test",
+            "effectiveWorkers": 1,
+            "runner": "node",
+            "setup": "node",
+            "source": "--test-concurrency",
+            "state": "known"
+          },
+          {
+            "command": "coverage",
+            "effectiveWorkers": null,
+            "runner": "node",
+            "setup": "node",
+            "source": null,
+            "state": "unavailable"
+          }
+        ],
+        "seshat": {
+          "configuredWorkers": 2,
+          "effectiveWorkers": 2,
+          "state": "known"
+        }
+      },
+      "runnerVersions": [
+        {
+          "importFailureObserver": {
+            "reason": "node-version",
+            "state": "inactive"
+          },
+          "packages": [],
+          "runner": "node",
+          "runtime": {
+            "declared": ">=24.20.0 <25",
+            "declaredComparison": "not-comparable",
+            "node": "24.22.2"
+          },
+          "setup": "node"
+        }
+      ]
+    },
+    "executionMs": 4699.877735,
+    "jobsAttempted": 10,
+    "mutation": {
+      "complete": true,
+      "completed": 4,
+      "countedTimeouts": 0,
+      "diagnostics": {
+        "slowestExecutions": [
+          {
+            "executionMs": 420.147943,
+            "id": 0,
+            "path": "src/rules.ts",
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 384.218702,
+            "id": 3,
+            "path": "src/rules.ts",
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 367.770045,
+            "id": 2,
+            "path": "src/rules.ts",
+            "verdict": "survived"
+          },
+          {
+            "executionMs": 315.213171,
+            "id": 1,
+            "path": "src/rules.ts",
+            "verdict": "killed"
+          }
+        ],
+        "throughput": {
+          "completedMutantsPerSecond": 4.9724549243418235,
+          "jobsPerSecond": 4.9724549243418235
+        },
+        "unresolvedBreakdown": {
+          "cancelled": 0,
+          "countedTimeouts": 0,
+          "executionError": 0,
+          "notRun": 0,
+          "testTimedOut": 0,
+          "timedOut": 0,
+          "unassessed": 0
+        },
+        "workerTimeMs": 1487.3498610000001
+      },
+      "enabledOperators": [
+        "comparison",
+        "logical",
+        "arithmetic",
+        "boolean",
+        "statement",
+        "optional"
+      ],
+      "error": null,
+      "executionMs": 902.994532,
+      "jobsAttempted": 4,
+      "killed": 3,
+      "mutationWallMs": 804.4316259999999,
+      "notRun": 0,
+      "outcomes": [
+        {
+          "countedAsKilled": false,
+          "executionMs": 420.147943,
+          "id": 0,
+          "kind": "comparison",
+          "localId": 0,
+          "offset": 69,
+          "original": ">=",
+          "path": "src/rules.ts",
+          "replacement": ">",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 419.267618,
+              "name": "node",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-mutant-0-0",
+                "failed": 1,
+                "moduleFailures": [],
+                "node": "24.22.2",
+                "passed": 1,
+                "version": 1
+              },
+              "selection": {
+                "mode": "full",
+                "reason": "unsupported-runner"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "verdict": "killed"
+        },
+        {
+          "countedAsKilled": false,
+          "executionMs": 315.213171,
+          "id": 1,
+          "kind": "comparison",
+          "localId": 1,
+          "offset": 69,
+          "original": ">=",
+          "path": "src/rules.ts",
+          "replacement": "<",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 314.344226,
+              "name": "node",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-1-mutant-1-0",
+                "failed": 1,
+                "moduleFailures": [],
+                "node": "24.22.2",
+                "passed": 1,
+                "version": 1
+              },
+              "selection": {
+                "mode": "full",
+                "reason": "unsupported-runner"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "verdict": "killed"
+        },
+        {
+          "countedAsKilled": false,
+          "executionMs": 367.770045,
+          "id": 2,
+          "kind": "comparison",
+          "localId": 2,
+          "offset": 164,
+          "original": ">",
+          "path": "src/rules.ts",
+          "replacement": ">=",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "error": null,
+              "exit": 0,
+              "jobsAttempted": 1,
+              "ms": 366.84610699999996,
+              "name": "node",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-1-mutant-2-0",
+                "failed": 0,
+                "moduleFailures": [],
+                "node": "24.22.2",
+                "passed": 2,
+                "version": 1
+              },
+              "selection": {
+                "mode": "full",
+                "reason": "unsupported-runner"
+              },
+              "state": "passed",
+              "timedOut": false
+            }
+          ],
+          "verdict": "survived"
+        },
+        {
+          "countedAsKilled": false,
+          "executionMs": 384.218702,
+          "id": 3,
+          "kind": "comparison",
+          "localId": 3,
+          "offset": 164,
+          "original": ">",
+          "path": "src/rules.ts",
+          "replacement": "<=",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 383.225716,
+              "name": "node",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-mutant-3-0",
+                "failed": 1,
+                "moduleFailures": [],
+                "node": "24.22.2",
+                "passed": 1,
+                "version": 1
+              },
+              "selection": {
+                "mode": "full",
+                "reason": "unsupported-runner"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "verdict": "killed"
+        }
+      ],
+      "perOperator": [
+        {
+          "completed": 2,
+          "eligibleSites": 1,
+          "excludedSites": 0,
+          "executionMs": 751.988747,
+          "jobsAttempted": 2,
+          "kind": "comparison",
+          "operator": ">",
+          "planned": 2
+        },
+        {
+          "completed": 2,
+          "eligibleSites": 1,
+          "excludedSites": 0,
+          "executionMs": 735.361114,
+          "jobsAttempted": 2,
+          "kind": "comparison",
+          "operator": ">=",
+          "planned": 2
+        }
+      ],
+      "planned": 4,
+      "restorationError": null,
+      "score": 75.0,
+      "strategy": "replace",
+      "survived": 1,
+      "unresolved": 0,
+      "workerBaselineJobs": 1,
+      "workerBaselines": [
+        {
+          "cancelled": false,
+          "cleanupError": null,
+          "error": null,
+          "exit": 0,
+          "ms": 239.001744,
+          "name": "node",
+          "outputTruncated": false,
+          "pipeError": null,
+          "report": {
+            "complete": true,
+            "errors": 0,
+            "executionId": "capture-1-worker-1-baseline-0",
+            "failed": 0,
+            "moduleFailures": [],
+            "node": "24.22.2",
+            "passed": 2,
+            "version": 1
+          },
+          "state": "passed",
+          "timedOut": false,
+          "worker": 1
+        }
+      ],
+      "workerCleanupMs": 98.459241,
+      "workerPreparationMs": 505.93020299999995,
+      "workersRequested": 2,
+      "workersUsed": 2
+    },
+    "phase": "check",
+    "phaseTimings": {
+      "analysisMs": 0.113833,
+      "attributionMs": 0.083566,
+      "baselineMs": 259.12481599999995,
+      "cleanupMs": 86.83516900000001,
+      "compilerStrictnessMs": 1891.300858,
+      "coverageMs": 715.134289,
+      "preparationMs": 0.136125,
+      "typecheckMs": null
+    },
+    "pseudoTesting": {
+      "checked": 2,
+      "complete": true,
+      "completed": 2,
+      "countedTimeouts": 0,
+      "diagnostics": {
+        "slowestExecutions": [
+          {
+            "executionMs": 421.46529799999996,
+            "id": 1,
+            "path": "src/rules.ts",
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 364.969854,
+            "id": 0,
+            "path": "src/rules.ts",
+            "verdict": "killed"
+          }
+        ],
+        "throughput": {
+          "completedMutantsPerSecond": 4.74012720676474,
+          "jobsPerSecond": 4.74012720676474
+        },
+        "unresolvedBreakdown": {
+          "cancelled": 0,
+          "countedTimeouts": 0,
+          "executionError": 0,
+          "notRun": 0,
+          "testTimedOut": 0,
+          "timedOut": 0,
+          "unassessed": 0
+        },
+        "workerTimeMs": 786.435152
+      },
+      "error": null,
+      "executionMs": 422.002321,
+      "jobsAttempted": 2,
+      "killed": 2,
+      "mutationWallMs": 421.929605,
+      "notRun": 0,
+      "outcomes": [
+        {
+          "countedAsKilled": false,
+          "coverage": 1.0,
+          "executionMs": 364.969854,
+          "id": 0,
+          "kind": "extreme",
+          "localId": 0,
+          "name": "classify",
+          "offset": 57,
+          "original": "{\n  if (age >= 18) return 'adult';\n  return 'minor';\n}",
+          "path": "src/rules.ts",
+          "pseudoTested": false,
+          "replacement": "{ return void 0; }",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 363.470563,
+              "name": "node",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-extreme-0-0",
+                "failed": 1,
+                "moduleFailures": [],
+                "node": "24.22.2",
+                "passed": 1,
+                "version": 1
+              },
+              "selection": {
+                "mode": "full",
+                "reason": "unsupported-runner"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "start": 7,
+          "verdict": "killed"
+        },
+        {
+          "countedAsKilled": false,
+          "coverage": 1.0,
+          "executionMs": 421.46529799999996,
+          "id": 1,
+          "kind": "extreme",
+          "localId": 1,
+          "name": "arrow@139",
+          "offset": 158,
+          "original": "value > 0",
+          "path": "src/rules.ts",
+          "pseudoTested": false,
+          "replacement": "{ return void 0; }",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 419.77558999999997,
+              "name": "node",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-1-extreme-1-0",
+                "failed": 1,
+                "moduleFailures": [],
+                "node": "24.22.2",
+                "passed": 1,
+                "version": 1
+              },
+              "selection": {
+                "mode": "full",
+                "reason": "unsupported-runner"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "start": 139,
+          "verdict": "killed"
+        }
+      ],
+      "planned": 2,
+      "pseudoTested": 0,
+      "restorationError": null,
+      "strategy": "replace",
+      "survived": 0,
+      "unknown": 0,
+      "unresolved": 0,
+      "workerBaselineJobs": 0,
+      "workerBaselines": [],
+      "workerCleanupMs": 0.00015,
+      "workerPreparationMs": 0.000301,
+      "workersRequested": 2,
+      "workersUsed": 2
+    },
+    "setups": [
+      {
+        "baseline": {
+          "cancelled": false,
+          "cleanupError": null,
+          "error": null,
+          "exit": 0,
+          "ms": 258.54373000000004,
+          "outputTruncated": false,
+          "pipeError": null,
+          "report": {
+            "complete": true,
+            "errors": 0,
+            "executionId": "capture-0-0-baseline",
+            "failed": 0,
+            "moduleFailures": [],
+            "node": "24.22.2",
+            "passed": 2,
+            "version": 1
+          },
+          "state": "passed",
+          "timedOut": false
+        },
+        "compilerStrictness": {
+          "compilerVersion": "6.0.3",
+          "config": "tsconfig.json",
+          "configSource": "project",
+          "disabled": [
+            "noUncheckedIndexedAccess",
+            "exactOptionalPropertyTypes",
+            "noImplicitOverride",
+            "noPropertyAccessFromIndexSignature"
+          ],
+          "enabledBypassOptions": [
+            "skipLibCheck"
+          ],
+          "error": null,
+          "job": {
+            "cancelled": false,
+            "cleanupError": null,
+            "diagnostic": "",
+            "error": null,
+            "exit": 0,
+            "ms": 1890.84147,
+            "outputTruncated": false,
+            "pipeError": null,
+            "timedOut": false
+          },
+          "options": {
+            "alwaysStrict": true,
+            "exactOptionalPropertyTypes": false,
+            "noCheck": false,
+            "noImplicitAny": true,
+            "noImplicitOverride": false,
+            "noImplicitThis": true,
+            "noPropertyAccessFromIndexSignature": false,
+            "noUncheckedIndexedAccess": false,
+            "skipLibCheck": true,
+            "strict": true,
+            "strictBindCallApply": true,
+            "strictBuiltinIteratorReturn": true,
+            "strictFunctionTypes": true,
+            "strictNullChecks": true,
+            "strictPropertyInitialization": true,
+            "useUnknownInCatchVariables": true
+          },
+          "state": "known",
+          "unsupported": []
+        },
+        "coverage": {
+          "cancelled": false,
+          "cleanupError": null,
+          "error": null,
+          "exit": 0,
+          "ms": 714.302454,
+          "outputTruncated": false,
+          "pipeError": null,
+          "report": {
+            "complete": true,
+            "errors": 0,
+            "executionId": "capture-0-0-coverage",
+            "failed": 0,
+            "moduleFailures": [],
+            "node": "24.22.2",
+            "passed": 2,
+            "version": 1
+          },
+          "state": "passed",
+          "timedOut": false
+        },
+        "inferredAny": {
+          "error": null,
+          "ms": 1512.881745,
+          "state": "known"
+        },
+        "mutantTimeoutMs": 30000,
+        "name": "node",
+        "selection": {
+          "reason": "unsupported-runner",
+          "state": "unavailable"
+        },
+        "timings": {
+          "baselineMs": 259.12481599999995,
+          "compilerStrictnessMs": 1891.300858,
+          "coverageMs": 715.134289,
+          "typecheckMs": null
+        },
+        "typecheck": {
+          "reusedFrom": "compilerStrictness",
+          "state": "passed"
+        },
+        "uncappedMutantTimeoutMs": null
+      }
+    ],
+    "sources": [
+      {
+        "path": "src/rules.ts",
+        "result": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 0,
+            "hints": []
+          },
+          "functions": [
+            {
+              "branchCoverage": 1.0,
+              "branchCovered": 2,
+              "branchTotal": 2,
+              "cognitiveComplexity": 1,
+              "complexity": 2,
+              "coverage": 1.0,
+              "coverageBasis": "branch",
+              "coverageSuppressions": 0,
+              "covered": 3,
+              "crap": 2.0,
+              "name": "classify",
+              "pseudoTestReason": null,
+              "pseudoTestStatus": "checked",
+              "pseudoTested": false,
+              "start": 7,
+              "status": "measured",
+              "total": 3,
+              "typeSafety": {
+                "doubleAssertions": 0,
+                "explicitAny": 0,
+                "inferredAny": [
+                  {
+                    "count": 0,
+                    "locations": [],
+                    "setup": "node",
+                    "state": "known"
+                  }
+                ],
+                "nonNullAssertions": 0,
+                "tsExpectError": 0,
+                "tsIgnore": 0,
+                "tsNocheck": 0,
+                "typeAssertions": 0
+              }
+            },
+            {
+              "branchCoverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "cognitiveComplexity": 0,
+              "complexity": 1,
+              "coverage": 1.0,
+              "coverageBasis": "statement",
+              "coverageSuppressions": 0,
+              "covered": 1,
+              "crap": 1.0,
+              "name": "arrow@139",
+              "pseudoTestReason": null,
+              "pseudoTestStatus": "checked",
+              "pseudoTested": false,
+              "start": 139,
+              "status": "measured",
+              "total": 1,
+              "typeSafety": {
+                "doubleAssertions": 0,
+                "explicitAny": 0,
+                "inferredAny": [
+                  {
+                    "count": 0,
+                    "locations": [],
+                    "setup": "node",
+                    "state": "known"
+                  }
+                ],
+                "nonNullAssertions": 0,
+                "tsExpectError": 0,
+                "tsIgnore": 0,
+                "tsNocheck": 0,
+                "typeAssertions": 0
+              }
+            }
+          ],
+          "problems": [],
+          "typeSafety": {
+            "inferredAny": [
+              {
+                "count": 0,
+                "locations": [],
+                "setup": "node",
+                "state": "known"
+              }
+            ],
+            "suppressions": [],
+            "unowned": {
+              "doubleAssertions": 0,
+              "explicitAny": 0,
+              "nonNullAssertions": 0,
+              "tsExpectError": 0,
+              "tsIgnore": 0,
+              "tsNocheck": 0,
+              "typeAssertions": 0
+            }
+          }
+        }
+      }
+    ]
+  },
+  "schemaVersion": 1,
+  "scope": {
+    "exclude": [
+      "src/ignored.ts"
+    ],
+    "files": [
+      "src/rules.ts"
+    ],
+    "include": [
+      "src/**/*.ts"
+    ],
+    "setups": [
+      {
+        "cwd": ".",
+        "name": "node",
+        "runner": "node"
+      }
+    ]
+  },
+  "signal": null,
+  "timings": {
+    "captureMs": 294.403972,
+    "executionMs": 4699.877735,
+    "wallMs": 5081.2968630000005
+  },
+  "toolVersion": "0.12.1"
+}

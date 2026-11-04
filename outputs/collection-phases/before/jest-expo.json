@@ -1,0 +1,903 @@
+{
+  "cancelled": false,
+  "command": "check",
+  "complete": true,
+  "quality": {
+    "checks": [],
+    "state": "not-configured"
+  },
+  "result": {
+    "complete": true,
+    "diagnostics": {
+      "concurrency": {
+        "runners": [
+          {
+            "command": "test",
+            "effectiveWorkers": 1,
+            "runner": "jest",
+            "setup": "jest-expo",
+            "source": "--runInBand",
+            "state": "known"
+          },
+          {
+            "command": "coverage",
+            "effectiveWorkers": 1,
+            "runner": "jest",
+            "setup": "jest-expo",
+            "source": "--runInBand",
+            "state": "known"
+          }
+        ],
+        "seshat": {
+          "configuredWorkers": 1,
+          "effectiveWorkers": 1,
+          "state": "known"
+        }
+      },
+      "runnerVersions": [
+        {
+          "importFailureObserver": {
+            "reason": "runner",
+            "state": "inactive"
+          },
+          "packages": [
+            {
+              "actual": "29.7.0",
+              "declared": "29.7.0",
+              "declaredComparison": "match",
+              "locked": "29.7.0",
+              "lockedComparison": "match",
+              "name": "jest"
+            },
+            {
+              "actual": "57.0.6",
+              "declared": "57.0.6",
+              "declaredComparison": "match",
+              "locked": "57.0.6",
+              "lockedComparison": "match",
+              "name": "jest-expo"
+            }
+          ],
+          "runner": "jest",
+          "runtime": {
+            "declared": ">=24.20.0 <25",
+            "declaredComparison": "not-comparable",
+            "node": "24.22.2"
+          },
+          "setup": "jest-expo"
+        }
+      ]
+    },
+    "executionMs": 28367.39081,
+    "jobsAttempted": 10,
+    "mutation": {
+      "complete": true,
+      "completed": 4,
+      "countedTimeouts": 0,
+      "diagnostics": {
+        "slowestExecutions": [
+          {
+            "executionMs": 2734.931284,
+            "id": 1,
+            "path": "src/status.tsx",
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 2590.817982,
+            "id": 0,
+            "path": "src/status.tsx",
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 1743.231913,
+            "id": 2,
+            "path": "src/status.tsx",
+            "verdict": "survived"
+          },
+          {
+            "executionMs": 1547.772717,
+            "id": 3,
+            "path": "src/status.tsx",
+            "verdict": "killed"
+          }
+        ],
+        "throughput": {
+          "completedMutantsPerSecond": 0.4642101457772014,
+          "jobsPerSecond": 0.4642101457772014
+        },
+        "unresolvedBreakdown": {
+          "cancelled": 0,
+          "countedTimeouts": 0,
+          "executionError": 0,
+          "notRun": 0,
+          "testTimedOut": 0,
+          "timedOut": 0,
+          "unassessed": 0
+        },
+        "workerTimeMs": 8616.753896
+      },
+      "enabledOperators": [
+        "comparison",
+        "logical",
+        "arithmetic",
+        "boolean",
+        "statement",
+        "optional"
+      ],
+      "error": null,
+      "executionMs": 8616.864773,
+      "jobsAttempted": 4,
+      "killed": 3,
+      "mutationWallMs": 8616.787109,
+      "notRun": 0,
+      "outcomes": [
+        {
+          "countedAsKilled": false,
+          "executionMs": 2590.817982,
+          "id": 0,
+          "kind": "comparison",
+          "localId": 0,
+          "offset": 113,
+          "original": ">=",
+          "path": "src/status.tsx",
+          "replacement": ">",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "FAIL tests/status.test.tsx\n  ✕ covers both classification boundaries (37 ms)\n  ✓ covers the intentionally surviving positive boundary (1 ms)\n  ✕ renders the Expo text element (163 ms)\n\n  ● covers both classification boundaries\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: \"minor\"\n\n      3 |\n      4 | test('covers both classification boundaries', () => {\n    > 5 |   expect(classify(18)).toBe('adult');\n        |                        ^\n      6 |   expect(classify(17)).toBe('minor');\n      7 | });\n      8 |\n\n      at Object.toBe (tests/status.test.tsx:5:24)\n\n  ● renders the Expo text element\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: \"minor\"\n\n      14 |   const element = statusCard(18);\n      15 |   expect(element.type).toBe(Text);\n    > 16 |   expect(element.props.children).toBe('adult');\n         |                                  ^\n      17 | });\n      18 |\n\n      at Object.toBe (tes",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 2590.0346289999998,
+              "name": "jest-expo",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "jest": "29.7.0",
+                  "jest-expo": "57.0.6"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-mutant-0-0",
+                "expo": "57.0.6",
+                "failed": 2,
+                "jest": "29.7.0",
+                "node": "24.22.2",
+                "passed": 1,
+                "runner": "jest",
+                "testHookErrors": 0,
+                "timeouts": 0,
+                "version": 1
+              },
+              "selection": {
+                "mode": "full",
+                "reason": "unsupported-runner"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "verdict": "killed"
+        },
+        {
+          "countedAsKilled": false,
+          "executionMs": 2734.931284,
+          "id": 1,
+          "kind": "comparison",
+          "localId": 1,
+          "offset": 113,
+          "original": ">=",
+          "path": "src/status.tsx",
+          "replacement": "<",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "FAIL tests/status.test.tsx\n  ✕ covers both classification boundaries (7 ms)\n  ✓ covers the intentionally surviving positive boundary\n  ✕ renders the Expo text element (151 ms)\n\n  ● covers both classification boundaries\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: \"minor\"\n\n      3 |\n      4 | test('covers both classification boundaries', () => {\n    > 5 |   expect(classify(18)).toBe('adult');\n        |                        ^\n      6 |   expect(classify(17)).toBe('minor');\n      7 | });\n      8 |\n\n      at Object.toBe (tests/status.test.tsx:5:24)\n\n  ● renders the Expo text element\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: \"minor\"\n\n      14 |   const element = statusCard(18);\n      15 |   expect(element.type).toBe(Text);\n    > 16 |   expect(element.props.children).toBe('adult');\n         |                                  ^\n      17 | });\n      18 |\n\n      at Object.toBe (tests/statu",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 2734.155416,
+              "name": "jest-expo",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "jest": "29.7.0",
+                  "jest-expo": "57.0.6"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-mutant-1-0",
+                "expo": "57.0.6",
+                "failed": 2,
+                "jest": "29.7.0",
+                "node": "24.22.2",
+                "passed": 1,
+                "runner": "jest",
+                "testHookErrors": 0,
+                "timeouts": 0,
+                "version": 1
+              },
+              "selection": {
+                "mode": "full",
+                "reason": "unsupported-runner"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "verdict": "killed"
+        },
+        {
+          "countedAsKilled": false,
+          "executionMs": 1743.231913,
+          "id": 2,
+          "kind": "comparison",
+          "localId": 2,
+          "offset": 216,
+          "original": ">",
+          "path": "src/status.tsx",
+          "replacement": ">=",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "error": null,
+              "exit": 0,
+              "jobsAttempted": 1,
+              "ms": 1742.568955,
+              "name": "jest-expo",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "jest": "29.7.0",
+                  "jest-expo": "57.0.6"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-mutant-2-0",
+                "expo": "57.0.6",
+                "failed": 0,
+                "jest": "29.7.0",
+                "node": "24.22.2",
+                "passed": 3,
+                "runner": "jest",
+                "testHookErrors": 0,
+                "timeouts": 0,
+                "version": 1
+              },
+              "selection": {
+                "mode": "full",
+                "reason": "unsupported-runner"
+              },
+              "state": "passed",
+              "timedOut": false
+            }
+          ],
+          "verdict": "survived"
+        },
+        {
+          "countedAsKilled": false,
+          "executionMs": 1547.772717,
+          "id": 3,
+          "kind": "comparison",
+          "localId": 3,
+          "offset": 216,
+          "original": ">",
+          "path": "src/status.tsx",
+          "replacement": "<=",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "FAIL tests/status.test.tsx\n  ✓ covers both classification boundaries (3 ms)\n  ✕ covers the intentionally surviving positive boundary (2 ms)\n  ✓ renders the Expo text element (76 ms)\n\n  ● covers the intentionally surviving positive boundary\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: true\n    Received: false\n\n       8 |\n       9 | test('covers the intentionally surviving positive boundary', () => {\n    > 10 |   expect(isPositive(1)).toBe(true);\n         |                         ^\n      11 | });\n      12 |\n      13 | test('renders the Expo text element', () => {\n\n      at Object.toBe (tests/status.test.tsx:10:25)\n\nTest Suites: 1 failed, 1 total\nTests:       1 failed, 2 passed, 3 total\nSnapshots:   0 total\nTime:        1.004 s\nRan all test suites within paths \"tests/status.test.tsx\".\n",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 1547.01007,
+              "name": "jest-expo",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "jest": "29.7.0",
+                  "jest-expo": "57.0.6"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-mutant-3-0",
+                "expo": "57.0.6",
+                "failed": 1,
+                "jest": "29.7.0",
+                "node": "24.22.2",
+                "passed": 2,
+                "runner": "jest",
+                "testHookErrors": 0,
+                "timeouts": 0,
+                "version": 1
+              },
+              "selection": {
+                "mode": "full",
+                "reason": "unsupported-runner"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "verdict": "killed"
+        }
+      ],
+      "perOperator": [
+        {
+          "completed": 2,
+          "eligibleSites": 1,
+          "excludedSites": 0,
+          "executionMs": 3291.0046300000004,
+          "jobsAttempted": 2,
+          "kind": "comparison",
+          "operator": ">",
+          "planned": 2
+        },
+        {
+          "completed": 2,
+          "eligibleSites": 1,
+          "excludedSites": 0,
+          "executionMs": 5325.749266,
+          "jobsAttempted": 2,
+          "kind": "comparison",
+          "operator": ">=",
+          "planned": 2
+        }
+      ],
+      "planned": 4,
+      "restorationError": null,
+      "score": 75.0,
+      "strategy": "replace",
+      "survived": 1,
+      "unresolved": 0,
+      "workerBaselineJobs": 0,
+      "workerBaselines": [],
+      "workerCleanupMs": 0.000341,
+      "workerPreparationMs": 0.0005020000000000001,
+      "workersRequested": 1,
+      "workersUsed": 1
+    },
+    "phase": "check",
+    "phaseTimings": {
+      "analysisMs": 0.6855220000000001,
+      "attributionMs": 0.098434,
+      "baselineMs": 4127.22303,
+      "cleanupMs": 259.588975,
+      "compilerStrictnessMs": 1452.835595,
+      "coverageMs": 6922.995536,
+      "preparationMs": 0.110787,
+      "typecheckMs": null
+    },
+    "pseudoTesting": {
+      "checked": 3,
+      "complete": true,
+      "completed": 3,
+      "countedTimeouts": 0,
+      "diagnostics": {
+        "slowestExecutions": [
+          {
+            "executionMs": 2590.734191,
+            "id": 0,
+            "path": "src/status.tsx",
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 2389.980122,
+            "id": 1,
+            "path": "src/status.tsx",
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 2262.850781,
+            "id": 2,
+            "path": "src/status.tsx",
+            "verdict": "killed"
+          }
+        ],
+        "throughput": {
+          "completedMutantsPerSecond": 0.41415888949348234,
+          "jobsPerSecond": 0.41415888949348234
+        },
+        "unresolvedBreakdown": {
+          "cancelled": 0,
+          "countedTimeouts": 0,
+          "executionError": 0,
+          "notRun": 0,
+          "testTimedOut": 0,
+          "timedOut": 0,
+          "unassessed": 0
+        },
+        "workerTimeMs": 7243.5650940000005
+      },
+      "error": null,
+      "executionMs": 7243.677335,
+      "jobsAttempted": 3,
+      "killed": 3,
+      "mutationWallMs": 7243.596784,
+      "notRun": 0,
+      "outcomes": [
+        {
+          "countedAsKilled": false,
+          "coverage": 1.0,
+          "executionMs": 2590.734191,
+          "id": 0,
+          "kind": "extreme",
+          "localId": 0,
+          "name": "classify",
+          "offset": 101,
+          "original": "{\n  if (age >= 18) return 'adult';\n  return 'minor';\n}",
+          "path": "src/status.tsx",
+          "pseudoTested": false,
+          "replacement": "{ return void 0; }",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "FAIL tests/status.test.tsx\n  ✕ covers both classification boundaries (5 ms)\n  ✓ covers the intentionally surviving positive boundary\n  ✕ renders the Expo text element (135 ms)\n\n  ● covers both classification boundaries\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: undefined\n\n      3 |\n      4 | test('covers both classification boundaries', () => {\n    > 5 |   expect(classify(18)).toBe('adult');\n        |                        ^\n      6 |   expect(classify(17)).toBe('minor');\n      7 | });\n      8 |\n\n      at Object.toBe (tests/status.test.tsx:5:24)\n\n  ● renders the Expo text element\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: \"adult\"\n    Received: undefined\n\n      14 |   const element = statusCard(18);\n      15 |   expect(element.type).toBe(Text);\n    > 16 |   expect(element.props.children).toBe('adult');\n         |                                  ^\n      17 | });\n      18 |\n\n      at Object.toBe (tests/s",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 2589.828229,
+              "name": "jest-expo",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "jest": "29.7.0",
+                  "jest-expo": "57.0.6"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-extreme-0-0",
+                "expo": "57.0.6",
+                "failed": 2,
+                "jest": "29.7.0",
+                "node": "24.22.2",
+                "passed": 1,
+                "runner": "jest",
+                "testHookErrors": 0,
+                "timeouts": 0,
+                "version": 1
+              },
+              "selection": {
+                "mode": "full",
+                "reason": "unsupported-runner"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "start": 70,
+          "verdict": "killed"
+        },
+        {
+          "countedAsKilled": false,
+          "coverage": 1.0,
+          "executionMs": 2389.980122,
+          "id": 1,
+          "kind": "extreme",
+          "localId": 1,
+          "name": "isPositive",
+          "offset": 199,
+          "original": "{\n  return value > 0;\n}",
+          "path": "src/status.tsx",
+          "pseudoTested": false,
+          "replacement": "{ return void 0; }",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "FAIL tests/status.test.tsx\n  ✓ covers both classification boundaries (3 ms)\n  ✕ covers the intentionally surviving positive boundary (2 ms)\n  ✓ renders the Expo text element (94 ms)\n\n  ● covers the intentionally surviving positive boundary\n\n    expect(received).toBe(expected) // Object.is equality\n\n    Expected: true\n    Received: undefined\n\n       8 |\n       9 | test('covers the intentionally surviving positive boundary', () => {\n    > 10 |   expect(isPositive(1)).toBe(true);\n         |                         ^\n      11 | });\n      12 |\n      13 | test('renders the Expo text element', () => {\n\n      at Object.toBe (tests/status.test.tsx:10:25)\n\nTest Suites: 1 failed, 1 total\nTests:       1 failed, 2 passed, 3 total\nSnapshots:   0 total\nTime:        1.522 s, estimated 2 s\nRan all test suites within paths \"tests/status.test.tsx\".\n",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 2389.286938,
+              "name": "jest-expo",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "jest": "29.7.0",
+                  "jest-expo": "57.0.6"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-extreme-1-0",
+                "expo": "57.0.6",
+                "failed": 1,
+                "jest": "29.7.0",
+                "node": "24.22.2",
+                "passed": 2,
+                "runner": "jest",
+                "testHookErrors": 0,
+                "timeouts": 0,
+                "version": 1
+              },
+              "selection": {
+                "mode": "full",
+                "reason": "unsupported-runner"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "start": 164,
+          "verdict": "killed"
+        },
+        {
+          "countedAsKilled": false,
+          "coverage": 1.0,
+          "executionMs": 2262.850781,
+          "id": 2,
+          "kind": "extreme",
+          "localId": 2,
+          "name": "statusCard",
+          "offset": 264,
+          "original": "{\n  return <Text>{classify(age)}</Text>;\n}",
+          "path": "src/status.tsx",
+          "pseudoTested": false,
+          "replacement": "{ return void 0; }",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "FAIL tests/status.test.tsx\n  ✓ covers both classification boundaries (4 ms)\n  ✓ covers the intentionally surviving positive boundary (1 ms)\n  ✕ renders the Expo text element\n\n  ● renders the Expo text element\n\n    TypeError: Cannot read properties of undefined (reading 'type')\n\n      13 | test('renders the Expo text element', () => {\n      14 |   const element = statusCard(18);\n    > 15 |   expect(element.type).toBe(Text);\n         |                  ^\n      16 |   expect(element.props.children).toBe('adult');\n      17 | });\n      18 |\n\n      at Object.type (tests/status.test.tsx:15:18)\n\nTest Suites: 1 failed, 1 total\nTests:       1 failed, 2 passed, 3 total\nSnapshots:   0 total\nTime:        1.342 s, estimated 2 s\nRan all test suites within paths \"tests/status.test.tsx\".\n",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 2262.071294,
+              "name": "jest-expo",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "jest": "29.7.0",
+                  "jest-expo": "57.0.6"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-extreme-2-0",
+                "expo": "57.0.6",
+                "failed": 1,
+                "jest": "29.7.0",
+                "node": "24.22.2",
+                "passed": 2,
+                "runner": "jest",
+                "testHookErrors": 0,
+                "timeouts": 0,
+                "version": 1
+              },
+              "selection": {
+                "mode": "full",
+                "reason": "unsupported-runner"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "start": 231,
+          "verdict": "killed"
+        }
+      ],
+      "planned": 3,
+      "pseudoTested": 0,
+      "restorationError": null,
+      "strategy": "replace",
+      "survived": 0,
+      "unknown": 0,
+      "unresolved": 0,
+      "workerBaselineJobs": 0,
+      "workerBaselines": [],
+      "workerCleanupMs": 4.9000000000000005e-05,
+      "workerPreparationMs": 0.00033,
+      "workersRequested": 1,
+      "workersUsed": 1
+    },
+    "setups": [
+      {
+        "baseline": {
+          "cancelled": false,
+          "cleanupError": null,
+          "error": null,
+          "exit": 0,
+          "ms": 4126.829736000001,
+          "outputTruncated": false,
+          "pipeError": null,
+          "report": {
+            "actual": {
+              "jest": "29.7.0",
+              "jest-expo": "57.0.6"
+            },
+            "complete": true,
+            "errors": 0,
+            "executionId": "capture-0-0-baseline",
+            "expo": "57.0.6",
+            "failed": 0,
+            "jest": "29.7.0",
+            "node": "24.22.2",
+            "passed": 3,
+            "runner": "jest",
+            "testHookErrors": 0,
+            "timeouts": 0,
+            "version": 1
+          },
+          "state": "passed",
+          "timedOut": false
+        },
+        "compilerStrictness": {
+          "compilerVersion": "6.0.3",
+          "config": "tsconfig.json",
+          "configSource": "project",
+          "disabled": [
+            "noUncheckedIndexedAccess",
+            "exactOptionalPropertyTypes",
+            "noImplicitOverride",
+            "noPropertyAccessFromIndexSignature"
+          ],
+          "enabledBypassOptions": [
+            "skipLibCheck"
+          ],
+          "error": null,
+          "job": {
+            "cancelled": false,
+            "cleanupError": null,
+            "diagnostic": "",
+            "error": null,
+            "exit": 0,
+            "ms": 1452.530144,
+            "outputTruncated": false,
+            "pipeError": null,
+            "timedOut": false
+          },
+          "options": {
+            "alwaysStrict": true,
+            "exactOptionalPropertyTypes": false,
+            "noCheck": false,
+            "noImplicitAny": true,
+            "noImplicitOverride": false,
+            "noImplicitThis": true,
+            "noPropertyAccessFromIndexSignature": false,
+            "noUncheckedIndexedAccess": false,
+            "skipLibCheck": true,
+            "strict": true,
+            "strictBindCallApply": true,
+            "strictBuiltinIteratorReturn": true,
+            "strictFunctionTypes": true,
+            "strictNullChecks": true,
+            "strictPropertyInitialization": true,
+            "useUnknownInCatchVariables": true
+          },
+          "state": "known",
+          "unsupported": []
+        },
+        "coverage": {
+          "cancelled": false,
+          "cleanupError": null,
+          "error": null,
+          "exit": 0,
+          "ms": 6922.283866,
+          "outputTruncated": false,
+          "pipeError": null,
+          "report": {
+            "actual": {
+              "jest": "29.7.0",
+              "jest-expo": "57.0.6"
+            },
+            "complete": true,
+            "errors": 0,
+            "executionId": "capture-0-0-coverage",
+            "expo": "57.0.6",
+            "failed": 0,
+            "jest": "29.7.0",
+            "node": "24.22.2",
+            "passed": 3,
+            "runner": "jest",
+            "testHookErrors": 0,
+            "timeouts": 0,
+            "version": 1
+          },
+          "state": "passed",
+          "timedOut": false
+        },
+        "inferredAny": {
+          "error": null,
+          "ms": 1211.128368,
+          "state": "known"
+        },
+        "mutantTimeoutMs": 30000,
+        "name": "jest-expo",
+        "selection": {
+          "reason": "unsupported-runner",
+          "state": "unavailable"
+        },
+        "timings": {
+          "baselineMs": 4127.22303,
+          "compilerStrictnessMs": 1452.835595,
+          "coverageMs": 6922.995536,
+          "typecheckMs": null
+        },
+        "typecheck": {
+          "reusedFrom": "compilerStrictness",
+          "state": "passed"
+        },
+        "uncappedMutantTimeoutMs": null
+      }
+    ],
+    "sources": [
+      {
+        "path": "src/status.tsx",
+        "result": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 0,
+            "hints": []
+          },
+          "functions": [
+            {
+              "branchCoverage": 1.0,
+              "branchCovered": 2,
+              "branchTotal": 2,
+              "cognitiveComplexity": 1,
+              "complexity": 2,
+              "coverage": 1.0,
+              "coverageBasis": "branch",
+              "coverageSuppressions": 0,
+              "covered": 3,
+              "crap": 2.0,
+              "name": "classify",
+              "pseudoTestReason": null,
+              "pseudoTestStatus": "checked",
+              "pseudoTested": false,
+              "start": 70,
+              "status": "measured",
+              "total": 3,
+              "typeSafety": {
+                "doubleAssertions": 0,
+                "explicitAny": 0,
+                "inferredAny": [
+                  {
+                    "count": 0,
+                    "locations": [],
+                    "setup": "jest-expo",
+                    "state": "known"
+                  }
+                ],
+                "nonNullAssertions": 0,
+                "tsExpectError": 0,
+                "tsIgnore": 0,
+                "tsNocheck": 0,
+                "typeAssertions": 0
+              }
+            },
+            {
+              "branchCoverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "cognitiveComplexity": 0,
+              "complexity": 1,
+              "coverage": 1.0,
+              "coverageBasis": "statement",
+              "coverageSuppressions": 0,
+              "covered": 1,
+              "crap": 1.0,
+              "name": "isPositive",
+              "pseudoTestReason": null,
+              "pseudoTestStatus": "checked",
+              "pseudoTested": false,
+              "start": 164,
+              "status": "measured",
+              "total": 1,
+              "typeSafety": {
+                "doubleAssertions": 0,
+                "explicitAny": 0,
+                "inferredAny": [
+                  {
+                    "count": 0,
+                    "locations": [],
+                    "setup": "jest-expo",
+                    "state": "known"
+                  }
+                ],
+                "nonNullAssertions": 0,
+                "tsExpectError": 0,
+                "tsIgnore": 0,
+                "tsNocheck": 0,
+                "typeAssertions": 0
+              }
+            },
+            {
+              "branchCoverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "cognitiveComplexity": 0,
+              "complexity": 1,
+              "coverage": 1.0,
+              "coverageBasis": "statement",
+              "coverageSuppressions": 0,
+              "covered": 1,
+              "crap": 1.0,
+              "name": "statusCard",
+              "pseudoTestReason": null,
+              "pseudoTestStatus": "checked",
+              "pseudoTested": false,
+              "start": 231,
+              "status": "measured",
+              "total": 1,
+              "typeSafety": {
+                "doubleAssertions": 0,
+                "explicitAny": 0,
+                "inferredAny": [
+                  {
+                    "count": 0,
+                    "locations": [],
+                    "setup": "jest-expo",
+                    "state": "known"
+                  }
+                ],
+                "nonNullAssertions": 0,
+                "tsExpectError": 0,
+                "tsIgnore": 0,
+                "tsNocheck": 0,
+                "typeAssertions": 0
+              }
+            }
+          ],
+          "problems": [],
+          "typeSafety": {
+            "inferredAny": [
+              {
+                "count": 0,
+                "locations": [],
+                "setup": "jest-expo",
+                "state": "known"
+              }
+            ],
+            "suppressions": [],
+            "unowned": {
+              "doubleAssertions": 0,
+              "explicitAny": 0,
+              "nonNullAssertions": 0,
+              "tsExpectError": 0,
+              "tsIgnore": 0,
+              "tsNocheck": 0,
+              "typeAssertions": 0
+            }
+          }
+        }
+      }
+    ]
+  },
+  "schemaVersion": 1,
+  "scope": {
+    "exclude": [],
+    "files": [
+      "src/status.tsx"
+    ],
+    "include": [
+      "src/status.tsx"
+    ],
+    "setups": [
+      {
+        "cwd": ".",
+        "name": "jest-expo",
+        "runner": "jest"
+      }
+    ]
+  },
+  "signal": null,
+  "timings": {
+    "captureMs": 2331.3526819999997,
+    "executionMs": 28367.39081,
+    "wallMs": 30958.510548
+  },
+  "toolVersion": "0.12.1"
+}

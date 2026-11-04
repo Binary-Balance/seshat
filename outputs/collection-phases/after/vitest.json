@@ -1,0 +1,1418 @@
+{
+  "cancelled": false,
+  "command": "check",
+  "complete": true,
+  "quality": {
+    "checks": [],
+    "state": "not-configured"
+  },
+  "result": {
+    "complete": true,
+    "diagnostics": {
+      "concurrency": {
+        "runners": [
+          {
+            "command": "test",
+            "effectiveWorkers": 1,
+            "runner": "vitest",
+            "setup": "vitest",
+            "source": "resolved-config",
+            "state": "known"
+          },
+          {
+            "command": "coverage",
+            "effectiveWorkers": 1,
+            "runner": "vitest",
+            "setup": "vitest",
+            "source": "resolved-config",
+            "state": "known"
+          }
+        ],
+        "seshat": {
+          "configuredWorkers": 1,
+          "effectiveWorkers": 1,
+          "state": "known"
+        }
+      },
+      "runnerVersions": [
+        {
+          "importFailureObserver": {
+            "reason": "runner",
+            "state": "inactive"
+          },
+          "packages": [
+            {
+              "actual": "5.0.0",
+              "declared": "5.0.0",
+              "declaredComparison": "match",
+              "locked": "5.0.0",
+              "lockedComparison": "match",
+              "name": "vitest"
+            }
+          ],
+          "runner": "vitest",
+          "runtime": {
+            "declared": ">=24.20.0 <25",
+            "declaredComparison": "not-comparable",
+            "node": "24.22.2"
+          },
+          "setup": "vitest"
+        }
+      ]
+    },
+    "executionMs": 13290.065012,
+    "jobsAttempted": 13,
+    "mutation": {
+      "complete": true,
+      "completed": 6,
+      "countedTimeouts": 0,
+      "diagnostics": {
+        "slowestExecutions": [
+          {
+            "executionMs": 1188.477439,
+            "id": 2,
+            "path": "src/tempo.ts",
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 996.187028,
+            "id": 1,
+            "path": "src/server.ts",
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 922.271347,
+            "id": 0,
+            "path": "src/server.ts",
+            "verdict": "survived"
+          },
+          {
+            "executionMs": 862.650966,
+            "id": 3,
+            "path": "src/tempo.ts",
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 860.942546,
+            "id": 4,
+            "path": "src/tempo.ts",
+            "verdict": "killed"
+          }
+        ],
+        "throughput": {
+          "completedMutantsPerSecond": 1.0553049049185486,
+          "jobsPerSecond": 1.0553049049185486
+        },
+        "unresolvedBreakdown": {
+          "cancelled": 0,
+          "countedTimeouts": 0,
+          "executionError": 0,
+          "notRun": 0,
+          "testTimedOut": 0,
+          "timedOut": 0,
+          "unassessed": 0
+        },
+        "workerTimeMs": 5685.513272000001
+      },
+      "enabledOperators": [
+        "comparison",
+        "logical",
+        "arithmetic",
+        "boolean",
+        "statement",
+        "optional"
+      ],
+      "error": null,
+      "executionMs": 5685.66181,
+      "jobsAttempted": 6,
+      "killed": 5,
+      "mutationWallMs": 5685.560611,
+      "notRun": 0,
+      "outcomes": [
+        {
+          "countedAsKilled": false,
+          "executionMs": 922.271347,
+          "id": 0,
+          "kind": "boolean",
+          "localId": 0,
+          "offset": 195,
+          "original": "false",
+          "path": "src/server.ts",
+          "replacement": "true",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "error": null,
+              "exit": 0,
+              "jobsAttempted": 1,
+              "ms": 920.942865,
+              "name": "vitest",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "vitest": "5.0.0"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-mutant-0-0",
+                "failed": 0,
+                "maxWorkers": 1,
+                "node": "24.22.2",
+                "passed": 3,
+                "runner": "vitest",
+                "testFiles": [
+                  "<scratch>/capture-1/tests/stack.test.tsx"
+                ],
+                "tests": [
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "Fastify validates transport without a listener"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "React TSX displays the rule result"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "pure rule has inclusive boundaries"
+                  }
+                ],
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "selection": {
+                "mode": "full",
+                "reason": "module-level-code"
+              },
+              "state": "passed",
+              "timedOut": false
+            }
+          ],
+          "verdict": "survived"
+        },
+        {
+          "countedAsKilled": false,
+          "executionMs": 996.187028,
+          "id": 1,
+          "kind": "statement",
+          "localId": 1,
+          "offset": 262,
+          "original": "expression-statement",
+          "path": "src/server.ts",
+          "replacement": ";",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "\n RUN  v5.0.0 <scratch>/capture-1\n\n ❯ tests/stack.test.tsx (3 tests | 1 failed) 145ms\n   ✓ pure rule has inclusive boundaries 4ms\n   ✓ React TSX displays the rule result 10ms\n   × Fastify validates transport without a listener 127ms\n\n Test Files  1 failed (1)\n      Tests  1 failed | 2 passed (3)\n   Start at  21:38:59\n   Duration  568ms (import 41%, tests 34%, transform 18%, worker 7%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  tests/stack.test.tsx > Fastify validates transport without a listener\nAssertionError: expected 404 to be 200 // Object.is equality\n\n- Expected\n+ Received\n\n- 200\n+ 404\n\n ❯ tests/stack.test.tsx:25:35\n     23|     for (const [bpm, label] of [[59, 'slow'], [60, 'steady'], [120, 's…\n     24|       const response = await app.inject({method: 'GET', url: '/tempo?b…\n     25|       expect(response.statusCode).toBe(200);\n       |                                   ^\n     26|       expect(response.json()).toEqual({label});\n     27|     }\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 994.5666,
+              "name": "vitest",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "vitest": "5.0.0"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-mutant-1-0",
+                "failed": 1,
+                "maxWorkers": 1,
+                "node": "24.22.2",
+                "passed": 2,
+                "runner": "vitest",
+                "testFiles": [
+                  "<scratch>/capture-1/tests/stack.test.tsx"
+                ],
+                "tests": [
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "Fastify validates transport without a listener"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "React TSX displays the rule result"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "pure rule has inclusive boundaries"
+                  }
+                ],
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "selection": {
+                "basis": "source-file",
+                "files": [
+                  "tests/stack.test.tsx"
+                ],
+                "mode": "selected"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "verdict": "killed"
+        },
+        {
+          "countedAsKilled": false,
+          "executionMs": 1188.477439,
+          "id": 2,
+          "kind": "comparison",
+          "localId": 0,
+          "offset": 60,
+          "original": "<",
+          "path": "src/tempo.ts",
+          "replacement": "<=",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "\n RUN  v5.0.0 <scratch>/capture-1\n\n ❯ tests/stack.test.tsx (3 tests | 3 failed) 192ms\n   × pure rule has inclusive boundaries 18ms\n   × React TSX displays the rule result 10ms\n   × Fastify validates transport without a listener 162ms\n\n Test Files  1 failed (1)\n      Tests  3 failed (3)\n   Start at  21:39:00\n   Duration  737ms (import 45%, tests 37%, transform 10%, worker 8%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  tests/stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ 'slow', 'slow', 'steady', 'fast' ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n    \"slow\",\n-   \"steady\",\n+   \"slow\",\n    \"steady\",\n    \"fast\",\n  ]\n\n ❯ tests/stack.test.tsx:8:46\n      6|\n      7| test('pure rule has inclusive boundaries', () => {\n      8|   expect([59, 60, 120, 121].map(tempoLabel)).toEqual([\n       |                                              ^\n      9|     'slow',\n     10|     'steady',\n ❯ EvidenceRunner.runTask ../capture-0/vitest-runner.mjs:161:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯\n\n FAIL  tests/stack.test.tsx > React TSX displays the rule result\nAssertionError: expected '<output>slow</output>' to be '<output>steady</output>' // Object.is equality\n\nExpected: \"<output>steady</output>\"\nReceived: \"<output>slow</output>\"\n\n ❯ tests/stack.test.tsx:17:51\n     15|\n     16| test('React TS",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 1186.95212,
+              "name": "vitest",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "vitest": "5.0.0"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-mutant-2-0",
+                "failed": 3,
+                "maxWorkers": 1,
+                "node": "24.22.2",
+                "passed": 0,
+                "runner": "vitest",
+                "testFiles": [
+                  "<scratch>/capture-1/tests/stack.test.tsx"
+                ],
+                "tests": [
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "Fastify validates transport without a listener"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "React TSX displays the rule result"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "pure rule has inclusive boundaries"
+                  }
+                ],
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "selection": {
+                "basis": "source-file",
+                "files": [
+                  "tests/stack.test.tsx"
+                ],
+                "mode": "selected"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "verdict": "killed"
+        },
+        {
+          "countedAsKilled": false,
+          "executionMs": 862.650966,
+          "id": 3,
+          "kind": "comparison",
+          "localId": 1,
+          "offset": 60,
+          "original": "<",
+          "path": "src/tempo.ts",
+          "replacement": ">=",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "\n RUN  v5.0.0 <scratch>/capture-1\n\n ❯ tests/stack.test.tsx (3 tests | 3 failed) 120ms\n   × pure rule has inclusive boundaries 11ms\n   × React TSX displays the rule result 8ms\n   × Fastify validates transport without a listener 99ms\n\n Test Files  1 failed (1)\n      Tests  3 failed (3)\n   Start at  21:39:02\n   Duration  465ms (import 44%, tests 36%, transform 12%, worker 8%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  tests/stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ 'steady', 'slow', 'slow', 'slow' ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n-   \"slow\",\n    \"steady\",\n-   \"steady\",\n-   \"fast\",\n+   \"slow\",\n+   \"slow\",\n+   \"slow\",\n  ]\n\n ❯ tests/stack.test.tsx:8:46\n      6|\n      7| test('pure rule has inclusive boundaries', () => {\n      8|   expect([59, 60, 120, 121].map(tempoLabel)).toEqual([\n       |                                              ^\n      9|     'slow',\n     10|     'steady',\n ❯ EvidenceRunner.runTask ../capture-0/vitest-runner.mjs:161:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯\n\n FAIL  tests/stack.test.tsx > React TSX displays the rule result\nAssertionError: expected '<output>slow</output>' to be '<output>steady</output>' // Object.is equality\n\nExpected: \"<output>steady</output>\"\nReceived: \"<output>slow</output>\"\n\n ❯ tests/stack.test.tsx:17:51\n     15|",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 861.271609,
+              "name": "vitest",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "vitest": "5.0.0"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-mutant-3-0",
+                "failed": 3,
+                "maxWorkers": 1,
+                "node": "24.22.2",
+                "passed": 0,
+                "runner": "vitest",
+                "testFiles": [
+                  "<scratch>/capture-1/tests/stack.test.tsx"
+                ],
+                "tests": [
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "Fastify validates transport without a listener"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "React TSX displays the rule result"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "pure rule has inclusive boundaries"
+                  }
+                ],
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "selection": {
+                "basis": "source-file",
+                "files": [
+                  "tests/stack.test.tsx"
+                ],
+                "mode": "selected"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "verdict": "killed"
+        },
+        {
+          "countedAsKilled": false,
+          "executionMs": 860.942546,
+          "id": 4,
+          "kind": "comparison",
+          "localId": 2,
+          "offset": 91,
+          "original": ">",
+          "path": "src/tempo.ts",
+          "replacement": ">=",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "\n RUN  v5.0.0 <scratch>/capture-1\n\n ❯ tests/stack.test.tsx (3 tests | 2 failed) 121ms\n   × pure rule has inclusive boundaries 11ms\n   ✓ React TSX displays the rule result 7ms\n   × Fastify validates transport without a listener 101ms\n\n Test Files  1 failed (1)\n      Tests  2 failed | 1 passed (3)\n   Start at  21:39:02\n   Duration  490ms (import 41%, tests 34%, worker 14%, transform 11%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  tests/stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ 'slow', 'steady', 'fast', 'fast' ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n    \"slow\",\n    \"steady\",\n-   \"steady\",\n+   \"fast\",\n    \"fast\",\n  ]\n\n ❯ tests/stack.test.tsx:8:46\n      6|\n      7| test('pure rule has inclusive boundaries', () => {\n      8|   expect([59, 60, 120, 121].map(tempoLabel)).toEqual([\n       |                                              ^\n      9|     'slow',\n     10|     'steady',\n ❯ EvidenceRunner.runTask ../capture-0/vitest-runner.mjs:161:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯\n\n FAIL  tests/stack.test.tsx > Fastify validates transport without a listener\nAssertionError: expected { label: 'fast' } to deeply equal { label: 'steady' }\n\n- Expected\n+ Received\n\n  {\n-   \"label\": \"steady\",\n+   \"label\": \"fast\",\n  }\n\n ❯ tests/stack.test.tsx:26:31\n     24|       const response = await a",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 859.392579,
+              "name": "vitest",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "vitest": "5.0.0"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-mutant-4-0",
+                "failed": 2,
+                "maxWorkers": 1,
+                "node": "24.22.2",
+                "passed": 1,
+                "runner": "vitest",
+                "testFiles": [
+                  "<scratch>/capture-1/tests/stack.test.tsx"
+                ],
+                "tests": [
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "Fastify validates transport without a listener"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "React TSX displays the rule result"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "pure rule has inclusive boundaries"
+                  }
+                ],
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "selection": {
+                "basis": "source-file",
+                "files": [
+                  "tests/stack.test.tsx"
+                ],
+                "mode": "selected"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "verdict": "killed"
+        },
+        {
+          "countedAsKilled": false,
+          "executionMs": 854.9839460000001,
+          "id": 5,
+          "kind": "comparison",
+          "localId": 3,
+          "offset": 91,
+          "original": ">",
+          "path": "src/tempo.ts",
+          "replacement": "<=",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "\n RUN  v5.0.0 <scratch>/capture-1\n\n ❯ tests/stack.test.tsx (3 tests | 3 failed) 131ms\n   × pure rule has inclusive boundaries 11ms\n   × React TSX displays the rule result 8ms\n   × Fastify validates transport without a listener 110ms\n\n Test Files  1 failed (1)\n      Tests  3 failed (3)\n   Start at  21:39:03\n   Duration  477ms (import 43%, tests 37%, transform 12%, worker 8%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  tests/stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ 'slow', 'fast', 'fast', 'steady' ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n    \"slow\",\n-   \"steady\",\n-   \"steady\",\n+   \"fast\",\n    \"fast\",\n+   \"steady\",\n  ]\n\n ❯ tests/stack.test.tsx:8:46\n      6|\n      7| test('pure rule has inclusive boundaries', () => {\n      8|   expect([59, 60, 120, 121].map(tempoLabel)).toEqual([\n       |                                              ^\n      9|     'slow',\n     10|     'steady',\n ❯ EvidenceRunner.runTask ../capture-0/vitest-runner.mjs:161:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯\n\n FAIL  tests/stack.test.tsx > React TSX displays the rule result\nAssertionError: expected '<output>fast</output>' to be '<output>steady</output>' // Object.is equality\n\nExpected: \"<output>steady</output>\"\nReceived: \"<output>fast</output>\"\n\n ❯ tests/stack.test.tsx:17:51\n     15|\n     16| ",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 853.687272,
+              "name": "vitest",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "vitest": "5.0.0"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-mutant-5-0",
+                "failed": 3,
+                "maxWorkers": 1,
+                "node": "24.22.2",
+                "passed": 0,
+                "runner": "vitest",
+                "testFiles": [
+                  "<scratch>/capture-1/tests/stack.test.tsx"
+                ],
+                "tests": [
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "Fastify validates transport without a listener"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "React TSX displays the rule result"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "pure rule has inclusive boundaries"
+                  }
+                ],
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "selection": {
+                "basis": "source-file",
+                "files": [
+                  "tests/stack.test.tsx"
+                ],
+                "mode": "selected"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "verdict": "killed"
+        }
+      ],
+      "perOperator": [
+        {
+          "completed": 2,
+          "eligibleSites": 1,
+          "excludedSites": 0,
+          "executionMs": 2051.128405,
+          "jobsAttempted": 2,
+          "kind": "comparison",
+          "operator": "<",
+          "planned": 2
+        },
+        {
+          "completed": 2,
+          "eligibleSites": 1,
+          "excludedSites": 0,
+          "executionMs": 1715.926492,
+          "jobsAttempted": 2,
+          "kind": "comparison",
+          "operator": ">",
+          "planned": 2
+        },
+        {
+          "completed": 1,
+          "eligibleSites": 1,
+          "excludedSites": 0,
+          "executionMs": 996.187028,
+          "jobsAttempted": 1,
+          "kind": "statement",
+          "operator": "expression-statement",
+          "planned": 1
+        },
+        {
+          "completed": 1,
+          "eligibleSites": 1,
+          "excludedSites": 0,
+          "executionMs": 922.271347,
+          "jobsAttempted": 1,
+          "kind": "boolean",
+          "operator": "false",
+          "planned": 1
+        }
+      ],
+      "planned": 6,
+      "restorationError": null,
+      "score": 83.33333333333334,
+      "strategy": "replace",
+      "survived": 1,
+      "unresolved": 0,
+      "workerBaselineJobs": 0,
+      "workerBaselines": [],
+      "workerCleanupMs": 0.000311,
+      "workerPreparationMs": 0.000451,
+      "workersRequested": 1,
+      "workersUsed": 1
+    },
+    "phase": "check",
+    "phaseTimings": {
+      "analysisMs": 0.31012900000000004,
+      "attributionMs": 0.093525,
+      "baselineMs": 838.6335339999999,
+      "cleanupMs": 63.140731,
+      "compilerStrictnessMs": 2371.343612,
+      "coverageMs": 1228.652396,
+      "preparationMs": 0.124022,
+      "typecheckMs": null
+    },
+    "pseudoTesting": {
+      "checked": 4,
+      "complete": true,
+      "completed": 4,
+      "countedTimeouts": 0,
+      "diagnostics": {
+        "slowestExecutions": [
+          {
+            "executionMs": 835.962273,
+            "id": 2,
+            "path": "src/tempo.ts",
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 834.74348,
+            "id": 1,
+            "path": "src/server.ts",
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 831.5751329999999,
+            "id": 3,
+            "path": "src/view.tsx",
+            "verdict": "killed"
+          },
+          {
+            "executionMs": 661.9203769999999,
+            "id": 0,
+            "path": "src/server.ts",
+            "verdict": "killed"
+          }
+        ],
+        "throughput": {
+          "completedMutantsPerSecond": 1.2641288984908805,
+          "jobsPerSecond": 1.2641288984908805
+        },
+        "unresolvedBreakdown": {
+          "cancelled": 0,
+          "countedTimeouts": 0,
+          "executionError": 0,
+          "notRun": 0,
+          "testTimedOut": 0,
+          "timedOut": 0,
+          "unassessed": 0
+        },
+        "workerTimeMs": 3164.201263
+      },
+      "error": null,
+      "executionMs": 3164.314043,
+      "jobsAttempted": 4,
+      "killed": 4,
+      "mutationWallMs": 3164.234284,
+      "notRun": 0,
+      "outcomes": [
+        {
+          "countedAsKilled": false,
+          "coverage": 1.0,
+          "executionMs": 661.9203769999999,
+          "id": 0,
+          "kind": "extreme",
+          "localId": 0,
+          "name": "createApp",
+          "offset": 233,
+          "original": "{\n  const app = Fastify();\n  app.get<{Querystring: Static<typeof Query>}>('/tempo', {\n    schema: {querystring: Query},\n  }, async request => ({label: tempoLabel(request.query.bpm)}));\n  return app;\n}",
+          "path": "src/server.ts",
+          "pseudoTested": false,
+          "replacement": "{ return void 0; }",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "\n RUN  v5.0.0 <scratch>/capture-1\n\n ❯ tests/stack.test.tsx (3 tests | 1 failed) 15ms\n   ✓ pure rule has inclusive boundaries 2ms\n   ✓ React TSX displays the rule result 6ms\n   × Fastify validates transport without a listener 6ms\n\n Test Files  1 failed (1)\n      Tests  1 failed | 2 passed (3)\n   Start at  21:38:55\n   Duration  284ms (import 58%, transform 17%, worker 16%, tests 9%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  tests/stack.test.tsx > Fastify validates transport without a listener\nTypeError: Cannot read properties of undefined (reading 'close')\n ❯ tests/stack.test.tsx:31:15\n     29|     expect((await app.inject({method: 'GET', url: '/tempo'})).statusCo…\n     30|   } finally {\n     31|     await app.close();\n       |               ^\n     32|   }\n     33| });\n ❯ EvidenceRunner.runTask ../capture-0/vitest-runner.mjs:161:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 660.712821,
+              "name": "vitest",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "vitest": "5.0.0"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-extreme-0-0",
+                "failed": 1,
+                "maxWorkers": 1,
+                "node": "24.22.2",
+                "passed": 2,
+                "runner": "vitest",
+                "testFiles": [
+                  "<scratch>/capture-1/tests/stack.test.tsx"
+                ],
+                "tests": [
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "Fastify validates transport without a listener"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "React TSX displays the rule result"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "pure rule has inclusive boundaries"
+                  }
+                ],
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "selection": {
+                "basis": "source-file",
+                "files": [
+                  "tests/stack.test.tsx"
+                ],
+                "mode": "selected"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "start": 212,
+          "verdict": "killed"
+        },
+        {
+          "countedAsKilled": false,
+          "coverage": 1.0,
+          "executionMs": 834.74348,
+          "id": 1,
+          "kind": "extreme",
+          "localId": 1,
+          "name": "arrow@358",
+          "offset": 375,
+          "original": "({label: tempoLabel(request.query.bpm)})",
+          "path": "src/server.ts",
+          "pseudoTested": false,
+          "replacement": "{ return void 0; }",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "\n RUN  v5.0.0 <scratch>/capture-1\n\n ❯ tests/stack.test.tsx (3 tests | 1 failed) 122ms\n   ✓ pure rule has inclusive boundaries 2ms\n   ✓ React TSX displays the rule result 6ms\n   × Fastify validates transport without a listener 112ms\n\n Test Files  1 failed (1)\n      Tests  1 failed | 2 passed (3)\n   Start at  21:38:56\n   Duration  466ms (import 44%, tests 36%, transform 12%, worker 8%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  tests/stack.test.tsx > Fastify validates transport without a listener\nSyntaxError: Unexpected end of JSON input\n ❯ Object.parseJsonPayload [as json] node_modules/light-my-request/lib/response.js:186:19\n ❯ tests/stack.test.tsx:26:23\n     24|       const response = await app.inject({method: 'GET', url: '/tempo?b…\n     25|       expect(response.statusCode).toBe(200);\n     26|       expect(response.json()).toEqual({label});\n       |                       ^\n     27|     }\n     28|     expect((await app.inject({method: 'GET', url: '/tempo?bpm=no'})).s…\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 833.427421,
+              "name": "vitest",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "vitest": "5.0.0"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-extreme-1-0",
+                "failed": 1,
+                "maxWorkers": 1,
+                "node": "24.22.2",
+                "passed": 2,
+                "runner": "vitest",
+                "testFiles": [
+                  "<scratch>/capture-1/tests/stack.test.tsx"
+                ],
+                "tests": [
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "Fastify validates transport without a listener"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "React TSX displays the rule result"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "pure rule has inclusive boundaries"
+                  }
+                ],
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "selection": {
+                "basis": "source-file",
+                "files": [
+                  "tests/stack.test.tsx"
+                ],
+                "mode": "selected"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "start": 358,
+          "verdict": "killed"
+        },
+        {
+          "countedAsKilled": false,
+          "coverage": 1.0,
+          "executionMs": 835.962273,
+          "id": 2,
+          "kind": "extreme",
+          "localId": 0,
+          "name": "tempoLabel",
+          "offset": 48,
+          "original": "{\n  if (bpm < 60) return 'slow';\n  if (bpm > 120) return 'fast';\n  return 'steady';\n}",
+          "path": "src/tempo.ts",
+          "pseudoTested": false,
+          "replacement": "{ return void 0; }",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "\n RUN  v5.0.0 <scratch>/capture-1\n\n ❯ tests/stack.test.tsx (3 tests | 3 failed) 119ms\n   × pure rule has inclusive boundaries 11ms\n   × React TSX displays the rule result 8ms\n   × Fastify validates transport without a listener 99ms\n\n Test Files  1 failed (1)\n      Tests  3 failed (3)\n   Start at  21:38:57\n   Duration  463ms (import 45%, tests 35%, transform 12%, worker 8%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  tests/stack.test.tsx > pure rule has inclusive boundaries\nAssertionError: expected [ undefined, undefined, …(2) ] to deeply equal [ 'slow', 'steady', 'steady', 'fast' ]\n\n- Expected\n+ Received\n\n  [\n-   \"slow\",\n-   \"steady\",\n-   \"steady\",\n-   \"fast\",\n+   undefined,\n+   undefined,\n+   undefined,\n+   undefined,\n  ]\n\n ❯ tests/stack.test.tsx:8:46\n      6|\n      7| test('pure rule has inclusive boundaries', () => {\n      8|   expect([59, 60, 120, 121].map(tempoLabel)).toEqual([\n       |                                              ^\n      9|     'slow',\n     10|     'steady',\n ❯ EvidenceRunner.runTask ../capture-0/vitest-runner.mjs:161:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯\n\n FAIL  tests/stack.test.tsx > React TSX displays the rule result\nAssertionError: expected '<output></output>' to be '<output>steady</output>' // Object.is equality\n\nExpected: \"<output>steady</output>\"\nReceived: \"<output></output>\"\n\n ❯ tests/stack.test.tsx:17:5",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 834.600699,
+              "name": "vitest",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "vitest": "5.0.0"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-extreme-2-0",
+                "failed": 3,
+                "maxWorkers": 1,
+                "node": "24.22.2",
+                "passed": 0,
+                "runner": "vitest",
+                "testFiles": [
+                  "<scratch>/capture-1/tests/stack.test.tsx"
+                ],
+                "tests": [
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "Fastify validates transport without a listener"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "React TSX displays the rule result"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "pure rule has inclusive boundaries"
+                  }
+                ],
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "selection": {
+                "basis": "source-file",
+                "files": [
+                  "tests/stack.test.tsx"
+                ],
+                "mode": "selected"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "start": 7,
+          "verdict": "killed"
+        },
+        {
+          "countedAsKilled": false,
+          "coverage": 1.0,
+          "executionMs": 831.5751329999999,
+          "id": 3,
+          "kind": "extreme",
+          "localId": 0,
+          "name": "Tempo",
+          "offset": 84,
+          "original": "{\n  return <output>{tempoLabel(bpm)}</output>;\n}",
+          "path": "src/view.tsx",
+          "pseudoTested": false,
+          "replacement": "{ return void 0; }",
+          "setups": [
+            {
+              "cancelled": false,
+              "cleanupError": null,
+              "diagnostic": "\n RUN  v5.0.0 <scratch>/capture-1\n\n ❯ tests/stack.test.tsx (3 tests | 1 failed) 122ms\n   ✓ pure rule has inclusive boundaries 2ms\n   × React TSX displays the rule result 13ms\n   ✓ Fastify validates transport without a listener 106ms\n\n Test Files  1 failed (1)\n      Tests  1 failed | 2 passed (3)\n   Start at  21:38:58\n   Duration  461ms (import 44%, tests 36%, transform 12%, worker 8%)\n\n\n⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯\n\n FAIL  tests/stack.test.tsx > React TSX displays the rule result\nAssertionError: expected '' to be '<output>steady</output>' // Object.is equality\n\n- Expected\n+ Received\n\n- <output>steady</output>\n\n ❯ tests/stack.test.tsx:17:51\n     15|\n     16| test('React TSX displays the rule result', () => {\n     17|   expect(renderToStaticMarkup(<Tempo bpm={60}/>)).toBe('<output>steady…\n       |                                                   ^\n     18| });\n     19|\n ❯ EvidenceRunner.runTask ../capture-0/vitest-runner.mjs:161:37\n\n⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯\n\n",
+              "error": null,
+              "exit": 1,
+              "jobsAttempted": 1,
+              "ms": 830.2415010000001,
+              "name": "vitest",
+              "outputTruncated": false,
+              "pipeError": null,
+              "report": {
+                "actual": {
+                  "vitest": "5.0.0"
+                },
+                "complete": true,
+                "errors": 0,
+                "executionId": "capture-0-extreme-3-0",
+                "failed": 1,
+                "maxWorkers": 1,
+                "node": "24.22.2",
+                "passed": 2,
+                "runner": "vitest",
+                "testFiles": [
+                  "<scratch>/capture-1/tests/stack.test.tsx"
+                ],
+                "tests": [
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "Fastify validates transport without a listener"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "React TSX displays the rule result"
+                  },
+                  {
+                    "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                    "id": "pure rule has inclusive boundaries"
+                  }
+                ],
+                "timeouts": 0,
+                "version": 1,
+                "vitest": "5.0.0"
+              },
+              "selection": {
+                "basis": "source-file",
+                "files": [
+                  "tests/stack.test.tsx"
+                ],
+                "mode": "selected"
+              },
+              "state": "failed",
+              "timedOut": false
+            }
+          ],
+          "start": 47,
+          "verdict": "killed"
+        }
+      ],
+      "planned": 4,
+      "pseudoTested": 0,
+      "restorationError": null,
+      "strategy": "replace",
+      "survived": 0,
+      "unknown": 0,
+      "unresolved": 0,
+      "workerBaselineJobs": 0,
+      "workerBaselines": [],
+      "workerCleanupMs": 2.9999999999999997e-05,
+      "workerPreparationMs": 0.000201,
+      "workersRequested": 1,
+      "workersUsed": 1
+    },
+    "setups": [
+      {
+        "baseline": {
+          "cancelled": false,
+          "cleanupError": null,
+          "error": null,
+          "exit": 0,
+          "ms": 838.035917,
+          "outputTruncated": false,
+          "pipeError": null,
+          "report": {
+            "actual": {
+              "vitest": "5.0.0"
+            },
+            "complete": true,
+            "errors": 0,
+            "executionId": "capture-0-0-baseline",
+            "failed": 0,
+            "maxWorkers": 1,
+            "node": "24.22.2",
+            "passed": 3,
+            "runner": "vitest",
+            "testFiles": [
+              "<scratch>/capture-1/tests/stack.test.tsx"
+            ],
+            "tests": [
+              {
+                "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                "id": "Fastify validates transport without a listener"
+              },
+              {
+                "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                "id": "React TSX displays the rule result"
+              },
+              {
+                "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                "id": "pure rule has inclusive boundaries"
+              }
+            ],
+            "timeouts": 0,
+            "version": 1,
+            "vitest": "5.0.0"
+          },
+          "state": "passed",
+          "timedOut": false
+        },
+        "compilerStrictness": {
+          "compilerVersion": "6.0.3",
+          "config": "tsconfig.json",
+          "configSource": "project",
+          "disabled": [
+            "noImplicitOverride",
+            "noPropertyAccessFromIndexSignature"
+          ],
+          "enabledBypassOptions": [
+            "skipLibCheck"
+          ],
+          "error": null,
+          "job": {
+            "cancelled": false,
+            "cleanupError": null,
+            "diagnostic": "",
+            "error": null,
+            "exit": 0,
+            "ms": 2370.70616,
+            "outputTruncated": false,
+            "pipeError": null,
+            "timedOut": false
+          },
+          "options": {
+            "alwaysStrict": true,
+            "exactOptionalPropertyTypes": true,
+            "noCheck": false,
+            "noImplicitAny": true,
+            "noImplicitOverride": false,
+            "noImplicitThis": true,
+            "noPropertyAccessFromIndexSignature": false,
+            "noUncheckedIndexedAccess": true,
+            "skipLibCheck": true,
+            "strict": true,
+            "strictBindCallApply": true,
+            "strictBuiltinIteratorReturn": true,
+            "strictFunctionTypes": true,
+            "strictNullChecks": true,
+            "strictPropertyInitialization": true,
+            "useUnknownInCatchVariables": true
+          },
+          "state": "known",
+          "unsupported": []
+        },
+        "coverage": {
+          "cancelled": false,
+          "cleanupError": null,
+          "error": null,
+          "exit": 0,
+          "ms": 1227.197849,
+          "outputTruncated": false,
+          "pipeError": null,
+          "report": {
+            "actual": {
+              "vitest": "5.0.0"
+            },
+            "complete": true,
+            "errors": 0,
+            "executionId": "capture-0-0-coverage",
+            "failed": 0,
+            "fileCoverage": {
+              "complete": true,
+              "files": [
+                {
+                  "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                  "sources": [
+                    {
+                      "hit": true,
+                      "path": "<scratch>/capture-1/src/server.ts",
+                      "static": false
+                    },
+                    {
+                      "hit": true,
+                      "path": "<scratch>/capture-1/src/tempo.ts",
+                      "static": false
+                    },
+                    {
+                      "hit": true,
+                      "path": "<scratch>/capture-1/src/view.tsx",
+                      "static": false
+                    }
+                  ]
+                }
+              ],
+              "version": 1
+            },
+            "maxWorkers": 1,
+            "node": "24.22.2",
+            "passed": 3,
+            "runner": "vitest",
+            "testFiles": [
+              "<scratch>/capture-1/tests/stack.test.tsx"
+            ],
+            "tests": [
+              {
+                "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                "id": "Fastify validates transport without a listener"
+              },
+              {
+                "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                "id": "React TSX displays the rule result"
+              },
+              {
+                "file": "<scratch>/capture-1/tests/stack.test.tsx",
+                "id": "pure rule has inclusive boundaries"
+              }
+            ],
+            "timeouts": 0,
+            "version": 1,
+            "vitest": "5.0.0"
+          },
+          "state": "passed",
+          "timedOut": false
+        },
+        "inferredAny": {
+          "error": null,
+          "ms": 1967.736876,
+          "state": "known"
+        },
+        "mutantTimeoutMs": 30000,
+        "name": "vitest",
+        "selection": {
+          "state": "available"
+        },
+        "timings": {
+          "baselineMs": 838.6335339999999,
+          "compilerStrictnessMs": 2371.343612,
+          "coverageMs": 1228.652396,
+          "typecheckMs": null
+        },
+        "typecheck": {
+          "reusedFrom": "compilerStrictness",
+          "state": "passed"
+        },
+        "uncappedMutantTimeoutMs": null
+      }
+    ],
+    "sources": [
+      {
+        "path": "src/server.ts",
+        "result": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 0,
+            "hints": []
+          },
+          "functions": [
+            {
+              "branchCoverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "cognitiveComplexity": 0,
+              "complexity": 1,
+              "coverage": 1.0,
+              "coverageBasis": "statement",
+              "coverageSuppressions": 0,
+              "covered": 3,
+              "crap": 1.0,
+              "name": "createApp",
+              "pseudoTestReason": null,
+              "pseudoTestStatus": "checked",
+              "pseudoTested": false,
+              "start": 212,
+              "status": "measured",
+              "total": 3,
+              "typeSafety": {
+                "doubleAssertions": 0,
+                "explicitAny": 0,
+                "inferredAny": [
+                  {
+                    "count": 0,
+                    "locations": [],
+                    "setup": "vitest",
+                    "state": "known"
+                  }
+                ],
+                "nonNullAssertions": 0,
+                "tsExpectError": 0,
+                "tsIgnore": 0,
+                "tsNocheck": 0,
+                "typeAssertions": 0
+              }
+            },
+            {
+              "branchCoverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "cognitiveComplexity": 0,
+              "complexity": 1,
+              "coverage": 1.0,
+              "coverageBasis": "statement",
+              "coverageSuppressions": 0,
+              "covered": 1,
+              "crap": 1.0,
+              "name": "arrow@358",
+              "pseudoTestReason": null,
+              "pseudoTestStatus": "checked",
+              "pseudoTested": false,
+              "start": 358,
+              "status": "measured",
+              "total": 1,
+              "typeSafety": {
+                "doubleAssertions": 0,
+                "explicitAny": 0,
+                "inferredAny": [
+                  {
+                    "count": 0,
+                    "locations": [],
+                    "setup": "vitest",
+                    "state": "known"
+                  }
+                ],
+                "nonNullAssertions": 0,
+                "tsExpectError": 0,
+                "tsIgnore": 0,
+                "tsNocheck": 0,
+                "typeAssertions": 0
+              }
+            }
+          ],
+          "problems": [],
+          "typeSafety": {
+            "inferredAny": [
+              {
+                "count": 0,
+                "locations": [],
+                "setup": "vitest",
+                "state": "known"
+              }
+            ],
+            "suppressions": [],
+            "unowned": {
+              "doubleAssertions": 0,
+              "explicitAny": 0,
+              "nonNullAssertions": 0,
+              "tsExpectError": 0,
+              "tsIgnore": 0,
+              "tsNocheck": 0,
+              "typeAssertions": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "src/tempo.ts",
+        "result": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 0,
+            "hints": []
+          },
+          "functions": [
+            {
+              "branchCoverage": 1.0,
+              "branchCovered": 4,
+              "branchTotal": 4,
+              "cognitiveComplexity": 2,
+              "complexity": 3,
+              "coverage": 1.0,
+              "coverageBasis": "branch",
+              "coverageSuppressions": 0,
+              "covered": 5,
+              "crap": 3.0,
+              "name": "tempoLabel",
+              "pseudoTestReason": null,
+              "pseudoTestStatus": "checked",
+              "pseudoTested": false,
+              "start": 7,
+              "status": "measured",
+              "total": 5,
+              "typeSafety": {
+                "doubleAssertions": 0,
+                "explicitAny": 0,
+                "inferredAny": [
+                  {
+                    "count": 0,
+                    "locations": [],
+                    "setup": "vitest",
+                    "state": "known"
+                  }
+                ],
+                "nonNullAssertions": 0,
+                "tsExpectError": 0,
+                "tsIgnore": 0,
+                "tsNocheck": 0,
+                "typeAssertions": 0
+              }
+            }
+          ],
+          "problems": [],
+          "typeSafety": {
+            "inferredAny": [
+              {
+                "count": 0,
+                "locations": [],
+                "setup": "vitest",
+                "state": "known"
+              }
+            ],
+            "suppressions": [],
+            "unowned": {
+              "doubleAssertions": 0,
+              "explicitAny": 0,
+              "nonNullAssertions": 0,
+              "tsExpectError": 0,
+              "tsIgnore": 0,
+              "tsNocheck": 0,
+              "typeAssertions": 0
+            }
+          }
+        }
+      },
+      {
+        "path": "src/view.tsx",
+        "result": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 0,
+            "hints": []
+          },
+          "functions": [
+            {
+              "branchCoverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "cognitiveComplexity": 0,
+              "complexity": 1,
+              "coverage": 1.0,
+              "coverageBasis": "statement",
+              "coverageSuppressions": 0,
+              "covered": 1,
+              "crap": 1.0,
+              "name": "Tempo",
+              "pseudoTestReason": null,
+              "pseudoTestStatus": "checked",
+              "pseudoTested": false,
+              "start": 47,
+              "status": "measured",
+              "total": 1,
+              "typeSafety": {
+                "doubleAssertions": 0,
+                "explicitAny": 0,
+                "inferredAny": [
+                  {
+                    "count": 0,
+                    "locations": [],
+                    "setup": "vitest",
+                    "state": "known"
+                  }
+                ],
+                "nonNullAssertions": 0,
+                "tsExpectError": 0,
+                "tsIgnore": 0,
+                "tsNocheck": 0,
+                "typeAssertions": 0
+              }
+            }
+          ],
+          "problems": [],
+          "typeSafety": {
+            "inferredAny": [
+              {
+                "count": 0,
+                "locations": [],
+                "setup": "vitest",
+                "state": "known"
+              }
+            ],
+            "suppressions": [],
+            "unowned": {
+              "doubleAssertions": 0,
+              "explicitAny": 0,
+              "nonNullAssertions": 0,
+              "tsExpectError": 0,
+              "tsIgnore": 0,
+              "tsNocheck": 0,
+              "typeAssertions": 0
+            }
+          }
+        }
+      }
+    ]
+  },
+  "schemaVersion": 1,
+  "scope": {
+    "exclude": [
+      "src/ignored.ts"
+    ],
+    "files": [
+      "src/server.ts",
+      "src/tempo.ts",
+      "src/view.tsx"
+    ],
+    "include": [
+      "src/**/*.ts",
+      "src/**/*.tsx"
+    ],
+    "setups": [
+      {
+        "cwd": ".",
+        "name": "vitest",
+        "runner": "vitest"
+      }
+    ]
+  },
+  "signal": null,
+  "timings": {
+    "captureMs": 535.2384169999999,
+    "executionMs": 13290.065012,
+    "wallMs": 13888.632362999999
+  },
+  "toolVersion": "0.12.1"
+}
