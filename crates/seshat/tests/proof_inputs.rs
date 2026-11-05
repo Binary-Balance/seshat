@@ -351,10 +351,13 @@ fn proof_commands_clear_ambient_node_options_and_use_private_scratch() {
         .output()
         .unwrap();
     let value: Value = serde_json::from_slice(&output.stdout).unwrap();
-    let observed = matches!(
-        value["baseline"]["report"]["node"].as_str(),
-        Some("24.20.0" | "24.21.0")
-    );
+    let observed = value["baseline"]["report"]["node"]
+        .as_str()
+        .unwrap()
+        .split('.')
+        .map(str::parse::<u32>)
+        .collect::<Result<Vec<_>, _>>()
+        .is_ok_and(|version| matches!(version.as_slice(), [24, minor, _] if *minor >= 20));
     let value = report(&output, if observed { 0 } else { 2 });
     assert_eq!(value["baseline"]["state"], "passed");
     assert_eq!(

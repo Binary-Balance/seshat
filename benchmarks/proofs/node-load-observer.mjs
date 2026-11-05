@@ -1,11 +1,14 @@
-// Only this import-failure inference needs exact runtime verification.
-// Other supported Node versions leave ambiguous import crashes unresolved.
+// Latest-node CI verifies this inference across the supported Node 24 range.
+// Unsupported runtimes leave ambiguous import crashes unresolved.
 // Observe fatal ESM entry imports without handling the exception.
 import {tracingChannel} from 'node:diagnostics_channel';
 import {readFileSync, writeFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
 
-if (process.env.NODE_TEST_CONTEXT === 'child-v8' && ['24.20.0', '24.21.0'].includes(process.versions.node)
+const node = process.versions.node;
+const supportedNode = /^24\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/.test(node)
+  && Number(node.split('.')[1]) >= 20;
+if (process.env.NODE_TEST_CONTEXT === 'child-v8' && supportedNode
   && process.env.SESHAT_LOAD_CONTEXT && typeof process.argv[1] === 'string') {
   const context = JSON.parse(readFileSync(process.env.SESHAT_LOAD_CONTEXT, 'utf8'));
   const sources = Array.isArray(context.sources) ? context.sources : [context];

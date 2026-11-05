@@ -225,11 +225,11 @@ the observed version; ranges are `not-comparable`, and missing receipts or
 manifests are `unavailable`. It never treats a declared range as a mismatch.
 Each setup row also includes `importFailureObserver` with `state` and `reason`.
 The Node adapter's runtime gate is `active` with a `null` reason for observed
-Node 24.20.0/24.21.0, or `inactive` with `node-version` for another or unavailable
-version. Jest and Vitest report `inactive` with `runner`. Readable output explains
-inactive entries. This does not widen the observer's verified runtime or loader
-configuration. The CLI proof compares the state with an actual import-crash
-verdict, including a synthetic unverified-version control.
+stable Node `>=24.20.0 <25`, or `inactive` with `node-version` for an unsupported
+or unavailable version. Jest and Vitest report `inactive` with `runner`.
+Readable output explains inactive entries. An active gate does not guarantee
+usable load evidence. The CLI proof checks actual import-crash verdicts and
+verifies that missing observation records stay unresolved.
 `result.diagnostics.concurrency.seshat` reports the configured mutation worker
 limit and its effective use. Each runner entry is labelled `test` or
 `coverage` and reports an effective worker limit only when the direct runner
@@ -1333,7 +1333,7 @@ Node's process-isolated test report replaces a crashed test file's exception wit
 a generic failure containing its exit code. That loses the distinction between
 an application guard throwing during import and a broken test environment.
 
-The bounded Node 24.20.0/24.21.0 adapter observes the child process's built-in
+The bounded Node `>=24.20.0 <25` adapter observes the child process's built-in
 `module.import` diagnostic and `uncaughtExceptionMonitor` event. It requires the
 same exception object from the failed test entry import and the fatal event.
 The error's first structured V8 call site must fall within a parser-identified
@@ -1504,10 +1504,11 @@ Node `>=24.20.0 <25` support range. Native package builds remain pinned to
 `runner-compatibility.mjs`, recording its resolved version and payload hashes.
 Most targets run it in a parallel `latest-node` job that builds the same commit;
 macOS ARM64 runs it at the end of its package job. The
-observer remains restricted to 24.20.0/24.21.0. On other versions, the load-failure
-proof requires ambiguous import crashes to stay unresolved and ordinary test
-failures to remain kills. Synthetic version controls exercise that fallback even
-when CI's current Node version has a verified observer.
+observer uses the supported Node range. Each compatibility pass requires an
+active observer and a killed application import mutant, records those results
+in its summary and fails if that proof breaks. Ambiguous import crashes remain
+unresolved. Synthetic version controls exercise the disabled-observer guard;
+they do not establish support for another runtime.
 
 ## Vitest combined workflow
 

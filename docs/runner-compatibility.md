@@ -60,20 +60,24 @@ node benchmarks/proofs/vitest-check.mjs \
 
 ## Import-failure observer
 
-The Node adapter's import-failure observer remains enabled only on Node 24.20.0
-and 24.21.0. It depends on experimental module tracing, test-process markers and
-stack-formatting behaviour. A passing general compatibility run does not
-implicitly expand this observer's verified versions.
+The Node adapter's import-failure observer is enabled on stable Node versions
+`>=24.20.0 <25`. It depends on experimental module tracing, test-process markers
+and stack-formatting behaviour. Each latest-node compatibility pass must prove
+an active observer and an attributable application import failure counted as a
+kill. Its summary records the actual runtime, observer state and verdict.
 
-On another supported Node version, normal tests and coverage still run. An
-assertion failure can still kill a mutation. An import crash that would need the
-observer to prove it came from the mutated application is reported as an
-execution error, leaving that mutation unresolved and the overall score
-incomplete. It is never silently counted as a kill. Setup errors remain errors.
+If a newer Node 24 breaks that proof, the latest-node job fails. Restore a
+deliberate version pin and record the failing runtime here before shipping that
+change. Do not accept disabled-observer fallback as a passing compatibility
+proof. Unsupported runtime receipts remain errors.
+
+An import crash without evidence that it came from the mutated application is
+an execution error, leaving that mutation unresolved and the overall score
+incomplete. Setup errors remain errors.
 
 Each `diagnostics.runnerVersions` setup row includes `importFailureObserver`.
-For Node, `state` is `active` with `reason: null` on the two verified versions,
-or `inactive` with `reason: "node-version"` on another or unavailable observed
+For Node, `state` is `active` with `reason: null` in the supported range,
+or `inactive` with `reason: "node-version"` on an unsupported or unavailable observed
 version. Jest and Vitest report `inactive` with `reason: "runner"`; this Node
 observer does not describe those adapters' own failure reporting. The observed
 version comes from a validated baseline receipt, or coverage when no baseline
@@ -81,9 +85,8 @@ receipt is available. Readable output explains inactive entries.
 
 This state describes the runtime gate. The verified route uses Node's default
 process isolation and loader configuration; an active entry does not guarantee
-that a crash meets the observer's attribution checks. The activation pin remains
-unchanged. Widening it is tracked separately in
-[#228](https://github.com/Binary-Balance/seshat/issues/228).
+that a crash meets the observer's attribution checks. Missing observation
+records and ambiguous failures remain unresolved even when this gate is active.
 
 ## Version checks
 
@@ -133,8 +136,8 @@ details. Each pass covers:
 - CLI baseline and coverage, assertion kills, survivors, malformed/replayed
   receipts, unsupported versions, timeout, cancellation and source preservation.
 - Parallel cancellation and cleanup.
-- Node import-failure evidence where verified, and conservative fallback
-  elsewhere; caught/reused errors, setup failures, custom stacks, Unicode/CRLF
+- Active Node import-failure evidence; caught/reused errors, setup failures,
+  custom stacks, Unicode/CRLF
   coordinates and mixed application/setup failures.
 - Installed Jest/Expo and Vitest coverage, assertion kills, survivors, setup
   hooks, import failures, test timeouts and hook timeouts.
@@ -142,11 +145,11 @@ details. Each pass covers:
   belongs to a failed test's hook. A mixed hook and file-load failure still
   stops scheduling.
 
-Synthetic version controls exercise the disabled-observer fallback on every run.
-They are guard regressions, not execution evidence for an unreleased Node version.
-CLI checks match the reported observer state to the actual import-crash verdict
-and check the readable inactive notice. Jest and Vitest checks retain the
-`runner` reason.
+Synthetic version controls exercise the disabled-observer guard. They are guard
+regressions, not execution evidence for an unreleased Node version. CLI checks
+match the reported observer state to the actual import-crash verdict and verify
+that missing observation records stay unresolved. Jest and Vitest checks retain
+the `runner` reason.
 
 Run a pass from the repository root after the normal package build and fixture
 installation, selecting the Node executable and its directory on `PATH`:
