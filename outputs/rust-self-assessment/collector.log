@@ -1,0 +1,20 @@
+Running rust-tests
+Running build
+
+    Finished report saved to <run>/unit.lcov
+warning: source/LCOV scope mismatch (18 analyzed, 16 in LCOV, 16 matched) — verify your --lcov path or coverage tool configuration
+  2 analyzed source file(s) had no matching entry in the LCOV report:
+    crates/seshat/src/bin/windows_console_helper/tests.rs
+    crates/seshat/src/execution/windows_spawn.rs
+Running cli
+Running vitest
+Running jest
+Running selection
+
+    Finished report saved to <run>/combined.lcov
+warning: source/LCOV scope mismatch (18 analyzed, 16 in LCOV, 16 matched) — verify your --lcov path or coverage tool configuration
+  2 analyzed source file(s) had no matching entry in the LCOV report:
+    crates/seshat/src/bin/windows_console_helper/tests.rs
+    crates/seshat/src/execution/windows_spawn.rs
+Validated 194 Rust tests; 288 measured functions; 76 pilot mutants.
+Portable evidence: <run>/evidence

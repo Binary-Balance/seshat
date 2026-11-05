@@ -1,0 +1,9 @@
+normal-1: exit 0, complete=true, score=75
+automatic-cleanup: exit 0, complete=true, score=50
+assertion-kill: exit 0, complete=true, score=100
+survivor: exit 0, complete=true, score=0
+after-each: exit 0, complete=true, score=100
+import-failure: exit 2, complete=false, score=null
+test-timeout: exit 2, complete=false, score=null
+hook-timeout: exit 2, complete=false, score=null
+Jest/Expo installed-command evidence: 8 checks; <repo>/work/assurance-proofs/jest-expo-check-MtAibm/result.json
