@@ -8,14 +8,19 @@ Latest-node package checks must prove an active observer before this ships.
 
 Linux x64, Rust 1.98.1, locked dependencies. The unchanged 0.12.1 proof
 executable was retained from `4128bcc3599f338fa37b4b40492ae8378aae304a`.
-Its Node 24.22.2 run leaves all eleven attributable application import failures
-unresolved. The candidate runs all 26 scenarios on actual Node 24.22.0 and
-24.22.2; those eleven become kills. The other fifteen verdicts stay unchanged.
-The [portable results](node-observer-range.json) record every scenario.
+Each run covers 26 scenarios and 42 planned outcomes. On actual Node 24.22.0
+and 24.22.2, 23 attributable outcomes change from execution errors to kills.
+The [portable table](node-observer-range.json) records only the first outcome
+of each scenario: eleven change and fifteen stay unchanged. That projection
+does not describe every outcome; the full release comparison retains all
+outcomes from its CI runs.
 
 Controls retain execution errors for setup throws, missing imports, caught or
 reused exceptions, background failures, custom stacks, primitive throws and
-mixed application/setup failures. Synthetic prerelease controls keep the
+mixed application/setup failures. In `mixed-files`, the first outcome still
+has an unresolved file error; the second has only an attributable application
+failure and becomes a kill. The scenario remains incomplete with a withheld
+score. Synthetic prerelease controls keep the
 observer disabled; they establish no prerelease support. Each real execution
 checks source preservation and removal of the session copy.
 

@@ -4,7 +4,13 @@
   "arch": "x64",
   "proof": "benchmarks/proofs/node-load-failure.mjs",
   "scenariosPerRun": 26,
-  "changedApplicationImportCases": 11,
+  "plannedOutcomesPerRun": 42,
+  "changedOutcomesPerRun": 23,
+  "firstOutcomeProjection": {
+    "outcomeIndex": 0,
+    "changed": 11,
+    "unchanged": 15
+  },
   "results": [
     {
       "scenario": "module-guard",
