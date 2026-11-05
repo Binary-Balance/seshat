@@ -124,6 +124,82 @@ struct Workers {
     preparation_ms: f64,
 }
 
+struct MutationContext<'a> {
+    facts: &'a [Result<Analysis, String>],
+    baselines: &'a [TestState],
+    evidence: &'a Path,
+    progress: &'a Progress,
+    mutant_timeouts: &'a [u64],
+}
+
+struct MutantJob<'a> {
+    evidence: &'a Path,
+    switching: bool,
+    mutant_timeouts: &'a [u64],
+    stopped: &'a AtomicBool,
+}
+
+struct MutationPlan {
+    ids: Vec<(usize, usize)>,
+    outcomes: Vec<Value>,
+    switching: bool,
+    operators: bool,
+}
+
+impl MutationPlan {
+    fn label(&self) -> &'static str {
+        if self.operators {
+            "mutation"
+        } else {
+            "extreme"
+        }
+    }
+}
+
+struct MutationPreparation {
+    worker_baselines: Vec<Value>,
+    prepared_baselines: Vec<Value>,
+    prepared_baseline_jobs: usize,
+    prepared_baseline_ms: Option<f64>,
+    switch_preparation_ms: Option<f64>,
+    preparation_ms: f64,
+    worker_ready: bool,
+    worker_limit: usize,
+    run_error: Option<String>,
+}
+
+struct MutationSchedule {
+    executions: Vec<Vec<TestState>>,
+    outcomes: Vec<Value>,
+    jobs_attempted: usize,
+    workers_used: usize,
+    scheduling_ms: f64,
+    stopped: bool,
+    run_error: Option<String>,
+}
+
+struct OriginalChecks {
+    setups: Vec<Value>,
+    baselines: Vec<TestState>,
+    reports: Vec<Value>,
+    inferred_sources: Vec<Value>,
+    jobs: u64,
+    complete: bool,
+}
+
+struct Attribution {
+    sources: Vec<Value>,
+    complete: bool,
+    ms: f64,
+}
+
+struct MutationAssessment {
+    pseudo_testing: Value,
+    mutation: Value,
+    complete: bool,
+    jobs: u64,
+}
+
 enum MutationKind<'a> {
     Operators { switching: bool },
     Extreme { sources: &'a [Value] },
@@ -1170,12 +1246,15 @@ impl CapturedProject {
         analysis: &Analysis,
         source_index: usize,
         local_id: usize,
-        evidence: &Path,
         mut row: Value,
-        switching: bool,
-        mutant_timeouts: &[u64],
-        stopped: &AtomicBool,
+        job: &MutantJob<'_>,
     ) -> MutantExecution {
+        let MutantJob {
+            evidence,
+            switching,
+            mutant_timeouts,
+            stopped,
+        } = *job;
         let started = Instant::now();
         let offset = row["offset"].as_u64().unwrap_or(u64::MAX);
         let runtime = analysis.scopes.iter().any(|scope| {
@@ -1404,26 +1483,14 @@ impl CapturedProject {
         workers
     }
 
-    fn mutate(
-        &mut self,
+    fn plan_mutation(
+        &self,
         facts: &[Result<Analysis, String>],
-        baselines: &[TestState],
-        evidence: &Path,
-        ready: bool,
-        progress: &Progress,
         kind: MutationKind<'_>,
-        workers: &mut Workers,
-        mutant_timeouts: &[u64],
-    ) -> (Value, bool) {
-        let started = Instant::now();
+    ) -> MutationPlan {
         let (switching, extreme_sources) = match kind {
             MutationKind::Operators { switching } => (switching, None),
             MutationKind::Extreme { sources } => (false, Some(sources)),
-        };
-        let label = if extreme_sources.is_some() {
-            "extreme"
-        } else {
-            "mutation"
         };
         let mut plan = Vec::new();
         let mut outcomes = Vec::new();
@@ -1460,11 +1527,36 @@ impl CapturedProject {
                 }
             }
         }
-        let mut executions = vec![Vec::new(); plan.len()];
-        let mut jobs_attempted = 0;
+        MutationPlan {
+            ids: plan,
+            outcomes,
+            switching,
+            operators: extreme_sources.is_none(),
+        }
+    }
+
+    fn prepare_mutation(
+        &mut self,
+        context: &MutationContext<'_>,
+        plan: &MutationPlan,
+        ready: bool,
+        workers: &mut Workers,
+    ) -> MutationPreparation {
+        let MutationContext {
+            facts,
+            evidence,
+            progress,
+            ..
+        } = *context;
+        let MutationPlan {
+            ids: plan,
+            switching,
+            operators,
+            ..
+        } = plan;
+        let (switching, operators) = (*switching, *operators);
         // The operator phase reports the shared workers once, in the stable
         // mutation section, and closes them after the last phase.
-        let operators = extreme_sources.is_none();
         let mut run_error = if operators {
             workers.error.take()
         } else {
@@ -1552,6 +1644,42 @@ impl CapturedProject {
         if operators {
             preparation_ms += workers.preparation_ms;
         }
+        MutationPreparation {
+            worker_baselines,
+            prepared_baselines,
+            prepared_baseline_jobs,
+            prepared_baseline_ms,
+            switch_preparation_ms,
+            preparation_ms,
+            worker_ready,
+            worker_limit,
+            run_error,
+        }
+    }
+
+    fn schedule_mutation(
+        &mut self,
+        context: &MutationContext<'_>,
+        plan: &mut MutationPlan,
+        preparation: &mut MutationPreparation,
+        workers: &mut Workers,
+    ) -> MutationSchedule {
+        let MutationContext {
+            facts,
+            evidence,
+            progress,
+            mutant_timeouts,
+            ..
+        } = *context;
+        let label = plan.label();
+        let switching = plan.switching;
+        let mut outcomes = std::mem::take(&mut plan.outcomes);
+        let plan = &plan.ids;
+        let mut executions = vec![Vec::new(); plan.len()];
+        let mut jobs_attempted = 0;
+        let worker_ready = preparation.worker_ready;
+        let worker_limit = preparation.worker_limit;
+        let mut run_error = preparation.run_error.take();
         let next = AtomicUsize::new(0);
         let stopped = AtomicBool::new(!worker_ready);
         let setup_count = self.config.setups.len();
@@ -1592,11 +1720,13 @@ impl CapturedProject {
                         facts[source_index].as_ref().unwrap(),
                         source_index,
                         local_id,
-                        receipts,
                         outcomes[id].clone(),
-                        switching,
-                        mutant_timeouts,
-                        &stopped,
+                        &MutantJob {
+                            evidence: receipts,
+                            switching,
+                            mutant_timeouts,
+                            stopped: &stopped,
+                        },
                     );
                     if progress.enabled {
                         live.lock().unwrap_or_else(|e| e.into_inner()).update(
@@ -1653,6 +1783,55 @@ impl CapturedProject {
             }
         }
         let scheduling_ms = scheduling_started.elapsed().as_secs_f64() * 1000.0;
+        MutationSchedule {
+            executions,
+            outcomes,
+            jobs_attempted,
+            workers_used,
+            scheduling_ms,
+            stopped: stopped.load(Ordering::Relaxed),
+            run_error,
+        }
+    }
+
+    fn summarize_mutation(
+        &self,
+        context: &MutationContext<'_>,
+        plan: MutationPlan,
+        preparation: MutationPreparation,
+        schedule: MutationSchedule,
+        workers: &mut Workers,
+        started: Instant,
+    ) -> (Value, bool) {
+        let MutationContext {
+            facts,
+            baselines,
+            progress,
+            ..
+        } = *context;
+        let label = plan.label();
+        let switching = plan.switching;
+        let operators = plan.operators;
+        let plan = plan.ids;
+        let MutationPreparation {
+            worker_baselines,
+            prepared_baselines,
+            prepared_baseline_jobs,
+            prepared_baseline_ms,
+            switch_preparation_ms,
+            preparation_ms,
+            worker_ready,
+            ..
+        } = preparation;
+        let MutationSchedule {
+            executions,
+            mut outcomes,
+            jobs_attempted,
+            workers_used,
+            scheduling_ms,
+            stopped,
+            mut run_error,
+        } = schedule;
         let cleanup_started = Instant::now();
         if operators {
             for (worker, receipts) in workers.copies.drain(..) {
@@ -1751,11 +1930,23 @@ impl CapturedProject {
             }
             result["perOperator"] = json!(counts.into_values().collect::<Vec<_>>());
         }
-        let can_continue = worker_ready
-            && !stopped.load(Ordering::Relaxed)
-            && run_error.is_none()
-            && cancellation_signal() == 0;
+        let can_continue =
+            worker_ready && !stopped && run_error.is_none() && cancellation_signal() == 0;
         (result, can_continue)
+    }
+
+    fn mutate(
+        &mut self,
+        context: &MutationContext<'_>,
+        ready: bool,
+        kind: MutationKind<'_>,
+        workers: &mut Workers,
+    ) -> (Value, bool) {
+        let started = Instant::now();
+        let mut plan = self.plan_mutation(context.facts, kind);
+        let mut preparation = self.prepare_mutation(context, &plan, ready, workers);
+        let schedule = self.schedule_mutation(context, &mut plan, &mut preparation, workers);
+        self.summarize_mutation(context, plan, preparation, schedule, workers, started)
     }
 
     pub fn collect(self, mutate: bool) -> Result<Value, String> {
@@ -1777,42 +1968,13 @@ impl CapturedProject {
         self.assess_with_strategy(mode, show_progress, false)
     }
 
-    pub fn assess_with_strategy(
-        mut self,
-        mode: AssessmentMode,
-        show_progress: bool,
-        switching: bool,
-    ) -> Result<Value, String> {
-        let mutate = mode != AssessmentMode::Crap;
-        self.config.validate_mode(mode)?;
-        self.test_selection = vec![Err("attribution-unavailable".into()); self.config.setups.len()];
-        let started = Instant::now();
-        let progress = Progress {
-            enabled: show_progress,
-            started,
-        };
-        progress.phase(format_args!(
-            "analysis: {} source file(s)",
-            self.sources.len()
-        ));
-        let facts: Vec<_> = self
-            .sources
-            .iter()
-            .map(|(path, source)| {
-                Analysis::inspect_with_operators(
-                    &stable_path(path),
-                    source,
-                    &self.config.mutation_operators,
-                )
-            })
-            .collect();
-        let mut timings = json!({"analysisMs":started.elapsed().as_secs_f64()*1000.0,
-            "preparationMs":null,"compilerStrictnessMs":null,"typecheckMs":null,"baselineMs":null,"coverageMs":null,"attributionMs":null,"cleanupMs":null});
-        let mut complete = facts.iter().all(Result::is_ok);
-        progress.phase(format_args!("preparing runner evidence"));
-        let preparation_started = Instant::now();
-        let evidence = self.prepare_evidence()?;
-        timings["preparationMs"] = json!(preparation_started.elapsed().as_secs_f64() * 1000.0);
+    fn check_originals(
+        &mut self,
+        evidence: &Path,
+        mutate: bool,
+        mut complete: bool,
+        progress: &Progress,
+    ) -> OriginalChecks {
         let mut setups: Vec<_> = self.config.setups.iter().map(|setup| json!({"name":setup.name,"typecheck":{"state":"not-run"},"baseline":{"state":"not-run"},"coverage":{"state":"not-run"},"mutantTimeoutMs":null,"uncappedMutantTimeoutMs":null})).collect();
         for setup in &mut setups {
             setup["timings"] = json!({"compilerStrictnessMs":null,"typecheckMs":null,"baselineMs":null,"coverageMs":null});
@@ -1826,7 +1988,7 @@ impl CapturedProject {
         for (index, setup) in self.config.setups.iter().enumerate() {
             progress.phase(format_args!("compiler findings {:?}", setup.name));
             let phase_started = Instant::now();
-            let (mut strictness, attempted) = self.compiler_strictness(setup, &evidence.0, index);
+            let (mut strictness, attempted) = self.compiler_strictness(setup, evidence, index);
             let typechecked = strictness.as_object_mut().unwrap().remove("typecheck");
             helper_typechecks
                 .push(strictness["state"] == "known" && typechecked == Some(json!("passed")));
@@ -1868,11 +2030,11 @@ impl CapturedProject {
                 let phase_started = Instant::now();
                 let id = format!(
                     "{}-{index}-typecheck",
-                    evidence.0.file_name().unwrap().to_str().unwrap()
+                    evidence.file_name().unwrap().to_str().unwrap()
                 );
                 commands_run += 1;
                 let checked = self
-                    .run_job(setup, args, &evidence.0, &id, JobKind::Typecheck)
+                    .run_job(setup, args, evidence, &id, JobKind::Typecheck)
                     .unwrap_or_else(CommandEvidence::error);
                 complete = checked.state == TestState::Passed;
                 setups[index]["typecheck"] = checked.into_json();
@@ -1885,9 +2047,9 @@ impl CapturedProject {
             let run = || -> Result<CommandEvidence, String> {
                 let id = format!(
                     "{}-{index}-baseline",
-                    evidence.0.file_name().unwrap().to_str().unwrap()
+                    evidence.file_name().unwrap().to_str().unwrap()
                 );
-                self.run_job(setup, &setup.test, &evidence.0, &id, JobKind::Test)
+                self.run_job(setup, &setup.test, evidence, &id, JobKind::Test)
             };
             commands_run += 1;
             progress.phase(format_args!("baseline {:?}", setup.name));
@@ -1918,13 +2080,13 @@ impl CapturedProject {
                     }
                     let id = format!(
                         "{}-{index}-coverage",
-                        evidence.0.file_name().unwrap().to_str().unwrap()
+                        evidence.file_name().unwrap().to_str().unwrap()
                     );
                     let mut result = self
                         .run_job(
                             setup,
                             &setup.coverage.command,
-                            &evidence.0,
+                            evidence,
                             &id,
                             JobKind::Coverage(&path),
                         )?
@@ -1949,7 +2111,7 @@ impl CapturedProject {
                     complete = result["state"] == "passed";
                     if complete && mutate {
                         self.test_selection[index] = selection::SetupEvidence::collect(
-                            &self,
+                            self,
                             setup,
                             &setups[index]["baseline"]["report"],
                             &result["report"],
@@ -1973,27 +2135,35 @@ impl CapturedProject {
             setups[index]["timings"]["coverageMs"] =
                 json!(phase_started.elapsed().as_secs_f64() * 1000.0);
         }
-        for key in [
-            "compilerStrictnessMs",
-            "typecheckMs",
-            "baselineMs",
-            "coverageMs",
-        ] {
-            let measured = setups
-                .iter()
-                .filter_map(|setup| setup["timings"][key].as_f64())
-                .reduce(|sum, ms| sum + ms);
-            timings[key] = json!(measured);
+        OriginalChecks {
+            setups,
+            baselines,
+            reports,
+            inferred_sources,
+            jobs: commands_run,
+            complete,
         }
+    }
+
+    fn attribute_sources(
+        &self,
+        facts: &[Result<Analysis, String>],
+        checks: &OriginalChecks,
+        progress: &Progress,
+    ) -> Attribution {
+        let OriginalChecks {
+            setups,
+            reports,
+            inferred_sources,
+            ..
+        } = checks;
+        let mut complete = checks.complete;
         progress.phase(format_args!("coverage attribution"));
-        // Original jobs must pass before mutations run. Coverage attribution
-        // affects CRAP completeness, not the already established baseline.
-        let mutation_ready = complete;
         let attribution_started = Instant::now();
-        let mut sources: Vec<_> = self
+        let sources: Vec<_> = self
             .sources
             .iter()
-            .zip(&facts)
+            .zip(facts)
             .map(|((relative, source), analysis)| {
                 let path = self.directory.0.join(relative);
                 match analysis {
@@ -2011,8 +2181,8 @@ impl CapturedProject {
                             analysis,
                             source,
                             &stable_path(relative),
-                            &setups,
-                            &inferred_sources,
+                            setups,
+                            inferred_sources,
                             &mut measured,
                         );
                         if measured["complete"] != true {
@@ -2023,174 +2193,263 @@ impl CapturedProject {
                 }
             })
             .collect();
-        timings["attributionMs"] = json!(attribution_started.elapsed().as_secs_f64() * 1000.0);
-        let mut pseudo_testing = None;
-        let mut mutation = None;
-        if mutate {
-            let mut extreme_planned = 0;
-            for (source, fact) in sources.iter_mut().zip(&facts) {
-                if let Ok(analysis) = fact {
-                    for (function, scope) in source["result"]["functions"]
-                        .as_array_mut()
-                        .unwrap()
-                        .iter_mut()
-                        .zip(&analysis.scopes)
-                    {
-                        let reason = scope
-                            .extreme_skip
-                            .or_else(|| {
-                                (function["status"] == "suppressed")
-                                    .then_some("coverage-suppressed")
-                            })
-                            .or_else(|| {
-                                (mutation_ready && function["coverage"].as_f64() == Some(0.0))
-                                    .then_some("zero-coverage")
-                            });
-                        function["pseudoTested"] = Value::Null;
-                        function["pseudoTestStatus"] = json!(if reason.is_some() {
-                            "not-applicable"
-                        } else {
-                            "unknown"
+        Attribution {
+            sources,
+            complete,
+            ms: attribution_started.elapsed().as_secs_f64() * 1000.0,
+        }
+    }
+
+    fn assess_mutations(
+        &mut self,
+        facts: &[Result<Analysis, String>],
+        sources: &mut [Value],
+        checks: &mut OriginalChecks,
+        evidence: &Path,
+        switching: bool,
+        progress: &Progress,
+    ) -> MutationAssessment {
+        // Attribution affects CRAP completeness, not the established baseline.
+        let mutation_ready = checks.complete;
+        let setups = &mut checks.setups;
+        let mut complete = true;
+        let mut commands_run = 0;
+        let mut extreme_planned = 0;
+        for (source, fact) in sources.iter_mut().zip(facts) {
+            if let Ok(analysis) = fact {
+                for (function, scope) in source["result"]["functions"]
+                    .as_array_mut()
+                    .unwrap()
+                    .iter_mut()
+                    .zip(&analysis.scopes)
+                {
+                    let reason = scope
+                        .extreme_skip
+                        .or_else(|| {
+                            (function["status"] == "suppressed").then_some("coverage-suppressed")
+                        })
+                        .or_else(|| {
+                            (mutation_ready && function["coverage"].as_f64() == Some(0.0))
+                                .then_some("zero-coverage")
                         });
-                        function["pseudoTestReason"] = json!(reason);
-                        extreme_planned += usize::from(reason.is_none());
-                    }
+                    function["pseudoTested"] = Value::Null;
+                    function["pseudoTestStatus"] = json!(if reason.is_some() {
+                        "not-applicable"
+                    } else {
+                        "unknown"
+                    });
+                    function["pseudoTestReason"] = json!(reason);
+                    extreme_planned += usize::from(reason.is_none());
                 }
             }
-            let operator_planned: usize = facts.iter().flatten().map(Analysis::count).sum();
-            let limit = if mutation_ready {
-                self.config
-                    .workers
-                    .min(extreme_planned.max(operator_planned))
-            } else {
-                0
-            };
-            let mut workers = self.prepare_workers(limit, &progress);
-            let ready = mutation_ready && workers.ready;
-            // One limit per setup for both phases. A worker copy's baseline can
-            // be slower than the original's, so the slowest of them sets it.
-            // Kept uncapped so a deadline shows whether timeoutMs cut it short.
-            let mutant_timeouts: Vec<u64> = self
-                .config
+        }
+        let operator_planned: usize = facts.iter().flatten().map(Analysis::count).sum();
+        let limit = if mutation_ready {
+            self.config
+                .workers
+                .min(extreme_planned.max(operator_planned))
+        } else {
+            0
+        };
+        let mut workers = self.prepare_workers(limit, progress);
+        let ready = mutation_ready && workers.ready;
+        // One limit per setup for both phases. A worker copy's baseline can
+        // be slower than the original's, so the slowest of them sets it.
+        // Kept uncapped so a deadline shows whether timeoutMs cut it short.
+        let mutant_timeouts: Vec<u64> = self
+            .config
+            .setups
+            .iter()
+            .zip(setups.iter())
+            .map(|(setup, row)| {
+                let slowest = workers
+                    .baselines
+                    .iter()
+                    .filter(|baseline| baseline["name"] == setup.name)
+                    .chain([&row["baseline"]])
+                    .filter_map(|baseline| baseline["ms"].as_f64())
+                    .fold(0.0, f64::max);
+                ((slowest * setup.mutant_timeout_factor).ceil() as u64)
+                    .max(setup.mutant_timeout_min_ms)
+            })
+            .collect();
+        progress.phase(format_args!("extreme mutation using source replacement"));
+        let context = MutationContext {
+            facts,
+            baselines: &checks.baselines,
+            evidence,
+            progress,
+            mutant_timeouts: &mutant_timeouts,
+        };
+        let (mut measured, can_continue) = self.mutate(
+            &context,
+            ready,
+            MutationKind::Extreme { sources },
+            &mut workers,
+        );
+        let operator_ready = ready && can_continue;
+        let extreme_execution_complete = measured["complete"] == true;
+        commands_run += measured["jobsAttempted"].as_u64().unwrap();
+        commands_run += measured["workerBaselineJobs"].as_u64().unwrap();
+        for outcome in measured["outcomes"].as_array().unwrap() {
+            let source = sources
+                .iter_mut()
+                .find(|source| source["path"] == outcome["path"])
+                .unwrap();
+            let function =
+                &mut source["result"]["functions"][outcome["localId"].as_u64().unwrap() as usize];
+            function["pseudoTested"] = outcome["pseudoTested"].clone();
+            function["pseudoTestStatus"] = json!(match outcome["pseudoTested"].as_bool() {
+                Some(true) => "pseudo-tested",
+                Some(false) => "checked",
+                None => "unknown",
+            });
+        }
+        let functions = sources
+            .iter()
+            .filter_map(|source| source["result"]["functions"].as_array())
+            .flatten();
+        let mut pseudo_tested = 0;
+        let mut checked = 0;
+        let mut unknown = 0;
+        for function in functions {
+            match function["pseudoTestStatus"].as_str() {
+                Some("pseudo-tested") => pseudo_tested += 1,
+                Some("checked") => checked += 1,
+                Some("unknown") => unknown += 1,
+                _ => {}
+            }
+        }
+        measured.as_object_mut().unwrap().remove("score");
+        measured["pseudoTested"] = json!(pseudo_tested);
+        measured["checked"] = json!(checked);
+        measured["unknown"] = json!(unknown);
+        if unknown > 0 {
+            measured["complete"] = json!(false);
+        }
+        complete &= measured["complete"] == true;
+        let pseudo_testing = measured;
+        let (mut measured, _) = self.mutate(
+            &context,
+            operator_ready,
+            MutationKind::Operators { switching },
+            &mut workers,
+        );
+        if !extreme_execution_complete {
+            measured["complete"] = json!(false);
+            measured["score"] = Value::Null;
+        }
+        complete &= measured["complete"] == true;
+        commands_run += measured["jobsAttempted"].as_u64().unwrap();
+        commands_run += measured["workerBaselineJobs"].as_u64().unwrap();
+        commands_run += measured["preparedBaselineJobs"].as_u64().unwrap_or(0);
+        let mutation = measured;
+        // Report a limit only for setups where a mutant job ran under it.
+        for (index, (setup, config)) in setups.iter_mut().zip(&self.config.setups).enumerate() {
+            let jobs: Vec<_> = [&pseudo_testing, &mutation]
+                .into_iter()
+                .flat_map(|phase| phase["outcomes"].as_array().unwrap())
+                .map(|outcome| &outcome["setups"][index])
+                .collect();
+            if jobs
+                .iter()
+                .any(|job| job["jobsAttempted"].as_u64().is_some_and(|count| count > 0))
+            {
+                setup["mutantTimeoutMs"] = json!(mutant_timeouts[index].min(config.timeout_ms));
+            }
+            // Tell opted-in users which timeoutMs would let these deadlines count.
+            if self.config.count_timeouts_as_killed
+                && mutant_timeouts[index] > config.timeout_ms
+                && jobs.iter().any(|job| job["timedOut"] == true)
+            {
+                setup["uncappedMutantTimeoutMs"] = json!(mutant_timeouts[index]);
+            }
+        }
+        MutationAssessment {
+            pseudo_testing,
+            mutation,
+            complete,
+            jobs: commands_run,
+        }
+    }
+
+    pub fn assess_with_strategy(
+        mut self,
+        mode: AssessmentMode,
+        show_progress: bool,
+        switching: bool,
+    ) -> Result<Value, String> {
+        let mutate = mode != AssessmentMode::Crap;
+        self.config.validate_mode(mode)?;
+        self.test_selection = vec![Err("attribution-unavailable".into()); self.config.setups.len()];
+        let started = Instant::now();
+        let progress = Progress {
+            enabled: show_progress,
+            started,
+        };
+        progress.phase(format_args!(
+            "analysis: {} source file(s)",
+            self.sources.len()
+        ));
+        let facts: Vec<_> = self
+            .sources
+            .iter()
+            .map(|(path, source)| {
+                Analysis::inspect_with_operators(
+                    &stable_path(path),
+                    source,
+                    &self.config.mutation_operators,
+                )
+            })
+            .collect();
+        let mut timings = json!({"analysisMs":started.elapsed().as_secs_f64()*1000.0,
+            "preparationMs":null,"compilerStrictnessMs":null,"typecheckMs":null,"baselineMs":null,"coverageMs":null,"attributionMs":null,"cleanupMs":null});
+        let mut complete = facts.iter().all(Result::is_ok);
+        progress.phase(format_args!("preparing runner evidence"));
+        let preparation_started = Instant::now();
+        let evidence = self.prepare_evidence()?;
+        timings["preparationMs"] = json!(preparation_started.elapsed().as_secs_f64() * 1000.0);
+        let mut checks = self.check_originals(&evidence.0, mutate, complete, &progress);
+        for key in [
+            "compilerStrictnessMs",
+            "typecheckMs",
+            "baselineMs",
+            "coverageMs",
+        ] {
+            let measured = checks
                 .setups
                 .iter()
-                .zip(&setups)
-                .map(|(setup, row)| {
-                    let slowest = workers
-                        .baselines
-                        .iter()
-                        .filter(|baseline| baseline["name"] == setup.name)
-                        .chain([&row["baseline"]])
-                        .filter_map(|baseline| baseline["ms"].as_f64())
-                        .fold(0.0, f64::max);
-                    ((slowest * setup.mutant_timeout_factor).ceil() as u64)
-                        .max(setup.mutant_timeout_min_ms)
-                })
-                .collect();
-            progress.phase(format_args!("extreme mutation using source replacement"));
-            let (mut measured, can_continue) = self.mutate(
-                &facts,
-                &baselines,
-                &evidence.0,
-                ready,
-                &progress,
-                MutationKind::Extreme { sources: &sources },
-                &mut workers,
-                &mutant_timeouts,
-            );
-            let operator_ready = ready && can_continue;
-            let extreme_execution_complete = measured["complete"] == true;
-            commands_run += measured["jobsAttempted"].as_u64().unwrap();
-            commands_run += measured["workerBaselineJobs"].as_u64().unwrap();
-            for outcome in measured["outcomes"].as_array().unwrap() {
-                let source = sources
-                    .iter_mut()
-                    .find(|source| source["path"] == outcome["path"])
-                    .unwrap();
-                let function = &mut source["result"]["functions"]
-                    [outcome["localId"].as_u64().unwrap() as usize];
-                function["pseudoTested"] = outcome["pseudoTested"].clone();
-                function["pseudoTestStatus"] = json!(match outcome["pseudoTested"].as_bool() {
-                    Some(true) => "pseudo-tested",
-                    Some(false) => "checked",
-                    None => "unknown",
-                });
-            }
-            let functions = sources
-                .iter()
-                .filter_map(|source| source["result"]["functions"].as_array())
-                .flatten();
-            let mut pseudo_tested = 0;
-            let mut checked = 0;
-            let mut unknown = 0;
-            for function in functions {
-                match function["pseudoTestStatus"].as_str() {
-                    Some("pseudo-tested") => pseudo_tested += 1,
-                    Some("checked") => checked += 1,
-                    Some("unknown") => unknown += 1,
-                    _ => {}
-                }
-            }
-            measured.as_object_mut().unwrap().remove("score");
-            measured["pseudoTested"] = json!(pseudo_tested);
-            measured["checked"] = json!(checked);
-            measured["unknown"] = json!(unknown);
-            if unknown > 0 {
-                measured["complete"] = json!(false);
-            }
-            complete &= measured["complete"] == true;
-            pseudo_testing = Some(measured);
-            let (mut measured, _) = self.mutate(
-                &facts,
-                &baselines,
-                &evidence.0,
-                operator_ready,
-                &progress,
-                MutationKind::Operators { switching },
-                &mut workers,
-                &mutant_timeouts,
-            );
-            if !extreme_execution_complete {
-                measured["complete"] = json!(false);
-                measured["score"] = Value::Null;
-            }
-            complete &= measured["complete"] == true;
-            commands_run += measured["jobsAttempted"].as_u64().unwrap();
-            commands_run += measured["workerBaselineJobs"].as_u64().unwrap();
-            commands_run += measured["preparedBaselineJobs"].as_u64().unwrap_or(0);
-            mutation = Some(measured);
-            // Report a limit only for setups where a mutant job ran under it.
-            for (index, (setup, config)) in setups.iter_mut().zip(&self.config.setups).enumerate() {
-                let jobs: Vec<_> = [&pseudo_testing, &mutation]
-                    .into_iter()
-                    .flatten()
-                    .flat_map(|phase| phase["outcomes"].as_array().unwrap())
-                    .map(|outcome| &outcome["setups"][index])
-                    .collect();
-                if jobs
-                    .iter()
-                    .any(|job| job["jobsAttempted"].as_u64().is_some_and(|count| count > 0))
-                {
-                    setup["mutantTimeoutMs"] = json!(mutant_timeouts[index].min(config.timeout_ms));
-                }
-                // Tell opted-in users which timeoutMs would let these deadlines count.
-                if self.config.count_timeouts_as_killed
-                    && mutant_timeouts[index] > config.timeout_ms
-                    && jobs.iter().any(|job| job["timedOut"] == true)
-                {
-                    setup["uncappedMutantTimeoutMs"] = json!(mutant_timeouts[index]);
-                }
-            }
+                .filter_map(|setup| setup["timings"][key].as_f64())
+                .reduce(|sum, ms| sum + ms);
+            timings[key] = json!(measured);
         }
-        let diagnostics = self.diagnostics(&setups, mutation.as_ref());
+        let mut attribution = self.attribute_sources(&facts, &checks, &progress);
+        complete = attribution.complete;
+        timings["attributionMs"] = json!(attribution.ms);
+        let mut commands_run = checks.jobs;
+        let phases = if mutate {
+            let phases = self.assess_mutations(
+                &facts,
+                &mut attribution.sources,
+                &mut checks,
+                &evidence.0,
+                switching,
+                &progress,
+            );
+            complete &= phases.complete;
+            commands_run += phases.jobs;
+            Some(phases)
+        } else {
+            None
+        };
+        let mutation = phases.as_ref().map(|phases| &phases.mutation);
+        let diagnostics = self.diagnostics(&checks.setups, mutation);
         let mut result = json!({"phase":match mode { AssessmentMode::Check=>"check",AssessmentMode::Crap=>"crap",AssessmentMode::Mutate=>"mutate" },"complete":complete,"jobsAttempted":commands_run,
-            "sources":sources,"setups":setups,"phaseTimings":timings,
+            "sources":attribution.sources,"setups":checks.setups,"phaseTimings":timings,
             "diagnostics":diagnostics,"executionMs":started.elapsed().as_secs_f64()*1000.0});
-        if let Some(mutation) = mutation {
-            result["mutation"] = mutation;
-        }
-        if let Some(pseudo_testing) = pseudo_testing {
-            result["pseudoTesting"] = pseudo_testing;
+        if let Some(phases) = phases {
+            result["mutation"] = phases.mutation;
+            result["pseudoTesting"] = phases.pseudo_testing;
         }
         progress.phase(format_args!("cleanup"));
         let cleanup_started = Instant::now();
@@ -2398,11 +2657,13 @@ mod tests {
             &analysis,
             0,
             operator.first_id,
-            Path::new("receipts"),
             row,
-            false,
-            &[],
-            &AtomicBool::new(true),
+            &MutantJob {
+                evidence: Path::new("receipts"),
+                switching: false,
+                mutant_timeouts: &[],
+                stopped: &AtomicBool::new(true),
+            },
         );
         assert_eq!(result.states, [TestState::Passed]);
         assert_eq!(result.jobs, 0);
@@ -2441,14 +2702,16 @@ mod tests {
         };
         let mut workers = captured.prepare_workers(0, &progress);
         let (result, _) = captured.mutate(
-            &facts,
-            &[TestState::Passed],
-            Path::new("unused"),
+            &MutationContext {
+                facts: &facts,
+                baselines: &[TestState::Passed],
+                evidence: Path::new("unused"),
+                progress: &progress,
+                mutant_timeouts: &[],
+            },
             false,
-            &progress,
             MutationKind::Operators { switching: false },
             &mut workers,
-            &[],
         );
         assert_eq!(result["planned"], 5);
         assert_eq!(result["jobsAttempted"], 0);

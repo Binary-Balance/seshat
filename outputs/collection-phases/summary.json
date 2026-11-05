@@ -1,0 +1,543 @@
+{
+  "baseRevision": "4128bcc3599f338fa37b4b40492ae8378aae304a",
+  "platform": "linux-x64",
+  "rust": "1.98.1",
+  "node": "24.22.2",
+  "beforeBinarySha256": "cc98e81e75abf52133c120474e69808e2e35b567da97f7a3a9ebb9db15fe10f5",
+  "afterBinarySha256": "3a870b3a6936c4b808ed002ae9546b801bd527bb7cf1edfeaaddbd78421fa960",
+  "collectionSourceSha256": "db6e65c183fb451a5c5e181e8507517c9bf1e30534e77db7a574bd03c3f01ef6",
+  "sourceHashes": {
+    "examples/node/src/ignored.ts": "fbf940e71831a75649aa6258aaf48b1768a73a563c2b3968e5a65c4c2ccd1748",
+    "examples/node/src/rules.ts": "74db525a842855e6e6b7a3cd52685a4d50a5683a7560c99a6e19e3663c001341",
+    "examples/node/tests/rules.test.mjs": "34ddd8ce579726ec2677b95489e026589fdbd38aede8c3659ce7bd6d8b3f757b",
+    "examples/vitest/src/ignored.ts": "fbf940e71831a75649aa6258aaf48b1768a73a563c2b3968e5a65c4c2ccd1748",
+    "examples/vitest/src/server.ts": "433a018e8e8150fd6673af372f77ad7b935124ce81f13f398c8180815f5c706c",
+    "examples/vitest/src/tempo.ts": "59436d39b26d49c5a2ec0a274b8be971dca72e463ca71dbd10c3786872fbe7c0",
+    "examples/vitest/src/view.tsx": "7288af8da1c31e9b5fcb6b77dd0b65c813ae64e2d42db5259932dcc15babd194",
+    "examples/vitest/tests/stack.test.tsx": "9472a8225b31b1783561bca99e13291f969a3283a72d60a3c7d7f7a21e6178e9",
+    "examples/jest-expo/src/status.tsx": "9ed0fc4bbefb6c4a1ebe65b1f8b49223159e440bd0be07c65542bf078570e822",
+    "examples/jest-expo/tests/status.test.tsx": "f89b8cd9c1c6f44b635127a05fdc0a973f342c49d038ad8e67ce13dc9b3800bf"
+  },
+  "sourcesUnchanged": true,
+  "examples": [
+    {
+      "example": "node",
+      "parity": "passed",
+      "timingDerivedDifferences": [
+        "/result/mutation/diagnostics/slowestExecutions: validated timing-derived top-five ranking in both reports",
+        "/result/pseudoTesting/diagnostics/slowestExecutions: validated timing-derived top-five ranking in both reports"
+      ],
+      "exitBefore": 0,
+      "exitAfter": 0,
+      "before": {
+        "complete": true,
+        "score": 75.0,
+        "jobsAttempted": 9,
+        "timings": {
+          "captureMs": 2758.704267,
+          "executionMs": 2601.5595710000002,
+          "wallMs": 5382.944479
+        },
+        "phaseTimings": {
+          "analysisMs": 0.138599,
+          "attributionMs": 0.056285,
+          "baselineMs": 166.319573,
+          "cleanupMs": 22.543425999999997,
+          "compilerStrictnessMs": 967.688536,
+          "coverageMs": 473.672372,
+          "preparationMs": 0.110676,
+          "typecheckMs": null
+        },
+        "mutation": {
+          "planned": 4,
+          "completed": 4,
+          "killed": 3,
+          "survived": 1,
+          "jobsAttempted": 4,
+          "workerBaselineJobs": 0,
+          "workersRequested": 1,
+          "workersUsed": 1,
+          "workerPreparationMs": 0.000362,
+          "mutationWallMs": 665.7508829999999,
+          "workerCleanupMs": 0.000281
+        },
+        "pseudoTesting": {
+          "planned": 2,
+          "completed": 2,
+          "killed": 2,
+          "survived": 0,
+          "jobsAttempted": 2,
+          "workerBaselineJobs": 0,
+          "workersRequested": 1,
+          "workersUsed": 1,
+          "workerPreparationMs": 0.00022,
+          "mutationWallMs": 327.35829,
+          "workerCleanupMs": 4e-05
+        }
+      },
+      "after": {
+        "complete": true,
+        "score": 75.0,
+        "jobsAttempted": 9,
+        "timings": {
+          "captureMs": 389.260269,
+          "executionMs": 2621.818628,
+          "wallMs": 3034.794485
+        },
+        "phaseTimings": {
+          "analysisMs": 0.130974,
+          "attributionMs": 0.08525999999999999,
+          "baselineMs": 163.070565,
+          "cleanupMs": 23.589983,
+          "compilerStrictnessMs": 1036.6873830000002,
+          "coverageMs": 448.87151400000005,
+          "preparationMs": 0.11233,
+          "typecheckMs": null
+        },
+        "mutation": {
+          "planned": 4,
+          "completed": 4,
+          "killed": 3,
+          "survived": 1,
+          "jobsAttempted": 4,
+          "workerBaselineJobs": 0,
+          "workersRequested": 1,
+          "workersUsed": 1,
+          "workerPreparationMs": 0.000361,
+          "mutationWallMs": 646.490008,
+          "workerCleanupMs": 0.00021
+        },
+        "pseudoTesting": {
+          "planned": 2,
+          "completed": 2,
+          "killed": 2,
+          "survived": 0,
+          "jobsAttempted": 2,
+          "workerBaselineJobs": 0,
+          "workersRequested": 1,
+          "workersUsed": 1,
+          "workerPreparationMs": 0.000511,
+          "mutationWallMs": 325.829203,
+          "workerCleanupMs": 2.9999999999999997e-05
+        }
+      }
+    },
+    {
+      "example": "vitest",
+      "parity": "passed",
+      "timingDerivedDifferences": [
+        "/result/mutation/diagnostics/slowestExecutions: validated timing-derived top-five ranking in both reports",
+        "/result/pseudoTesting/diagnostics/slowestExecutions: validated timing-derived top-five ranking in both reports"
+      ],
+      "exitBefore": 0,
+      "exitAfter": 0,
+      "before": {
+        "complete": true,
+        "score": 83.33333333333334,
+        "jobsAttempted": 13,
+        "timings": {
+          "captureMs": 529.497367,
+          "executionMs": 12954.11577,
+          "wallMs": 13548.949599
+        },
+        "phaseTimings": {
+          "analysisMs": 0.27873,
+          "attributionMs": 0.09407599999999999,
+          "baselineMs": 830.3042499999999,
+          "cleanupMs": 65.179277,
+          "compilerStrictnessMs": 2594.5060240000003,
+          "coverageMs": 1135.536914,
+          "preparationMs": 0.113773,
+          "typecheckMs": null
+        },
+        "mutation": {
+          "planned": 6,
+          "completed": 6,
+          "killed": 5,
+          "survived": 1,
+          "jobsAttempted": 6,
+          "workerBaselineJobs": 0,
+          "workersRequested": 1,
+          "workersUsed": 1,
+          "workerPreparationMs": 0.000761,
+          "mutationWallMs": 5141.675700999999,
+          "workerCleanupMs": 0.00021
+        },
+        "pseudoTesting": {
+          "planned": 4,
+          "completed": 4,
+          "killed": 4,
+          "survived": 0,
+          "jobsAttempted": 4,
+          "workerBaselineJobs": 0,
+          "workersRequested": 1,
+          "workersUsed": 1,
+          "workerPreparationMs": 0.00023999999999999998,
+          "mutationWallMs": 3250.489215,
+          "workerCleanupMs": 9.999999999999999e-05
+        }
+      },
+      "after": {
+        "complete": true,
+        "score": 83.33333333333334,
+        "jobsAttempted": 13,
+        "timings": {
+          "captureMs": 535.2384169999999,
+          "executionMs": 13290.065012,
+          "wallMs": 13888.632362999999
+        },
+        "phaseTimings": {
+          "analysisMs": 0.31012900000000004,
+          "attributionMs": 0.093525,
+          "baselineMs": 838.6335339999999,
+          "cleanupMs": 63.140731,
+          "compilerStrictnessMs": 2371.343612,
+          "coverageMs": 1228.652396,
+          "preparationMs": 0.124022,
+          "typecheckMs": null
+        },
+        "mutation": {
+          "planned": 6,
+          "completed": 6,
+          "killed": 5,
+          "survived": 1,
+          "jobsAttempted": 6,
+          "workerBaselineJobs": 0,
+          "workersRequested": 1,
+          "workersUsed": 1,
+          "workerPreparationMs": 0.000451,
+          "mutationWallMs": 5685.560611,
+          "workerCleanupMs": 0.000311
+        },
+        "pseudoTesting": {
+          "planned": 4,
+          "completed": 4,
+          "killed": 4,
+          "survived": 0,
+          "jobsAttempted": 4,
+          "workerBaselineJobs": 0,
+          "workersRequested": 1,
+          "workersUsed": 1,
+          "workerPreparationMs": 0.000201,
+          "mutationWallMs": 3164.234284,
+          "workerCleanupMs": 2.9999999999999997e-05
+        }
+      }
+    },
+    {
+      "example": "jest-expo",
+      "parity": "passed",
+      "timingDerivedDifferences": [
+        "/result/mutation/diagnostics/slowestExecutions: validated timing-derived top-five ranking in both reports",
+        "/result/mutation/outcomes/1/setups/0/diagnostic: timing text shifted the diagnostic cutoff by 8 characters",
+        "/result/pseudoTesting/diagnostics/slowestExecutions: validated timing-derived top-five ranking in both reports",
+        "/result/pseudoTesting/outcomes/0/setups/0/diagnostic: timing text shifted the diagnostic cutoff by 1 characters"
+      ],
+      "exitBefore": 0,
+      "exitAfter": 0,
+      "before": {
+        "complete": true,
+        "score": 75.0,
+        "jobsAttempted": 10,
+        "timings": {
+          "captureMs": 2331.3526819999997,
+          "executionMs": 28367.39081,
+          "wallMs": 30958.510548
+        },
+        "phaseTimings": {
+          "analysisMs": 0.6855220000000001,
+          "attributionMs": 0.098434,
+          "baselineMs": 4127.22303,
+          "cleanupMs": 259.588975,
+          "compilerStrictnessMs": 1452.835595,
+          "coverageMs": 6922.995536,
+          "preparationMs": 0.110787,
+          "typecheckMs": null
+        },
+        "mutation": {
+          "planned": 4,
+          "completed": 4,
+          "killed": 3,
+          "survived": 1,
+          "jobsAttempted": 4,
+          "workerBaselineJobs": 0,
+          "workersRequested": 1,
+          "workersUsed": 1,
+          "workerPreparationMs": 0.0005020000000000001,
+          "mutationWallMs": 8616.787109,
+          "workerCleanupMs": 0.000341
+        },
+        "pseudoTesting": {
+          "planned": 3,
+          "completed": 3,
+          "killed": 3,
+          "survived": 0,
+          "jobsAttempted": 3,
+          "workerBaselineJobs": 0,
+          "workersRequested": 1,
+          "workersUsed": 1,
+          "workerPreparationMs": 0.00033,
+          "mutationWallMs": 7243.596784,
+          "workerCleanupMs": 4.9000000000000005e-05
+        }
+      },
+      "after": {
+        "complete": true,
+        "score": 75.0,
+        "jobsAttempted": 10,
+        "timings": {
+          "captureMs": 2242.257458,
+          "executionMs": 46902.529574,
+          "wallMs": 49947.296269
+        },
+        "phaseTimings": {
+          "analysisMs": 1.2340369999999998,
+          "attributionMs": 0.095799,
+          "baselineMs": 4096.075622,
+          "cleanupMs": 802.313311,
+          "compilerStrictnessMs": 1535.142773,
+          "coverageMs": 4479.423940000001,
+          "preparationMs": 0.115697,
+          "typecheckMs": null
+        },
+        "mutation": {
+          "planned": 4,
+          "completed": 4,
+          "killed": 3,
+          "survived": 1,
+          "jobsAttempted": 4,
+          "workerBaselineJobs": 0,
+          "workersRequested": 1,
+          "workersUsed": 1,
+          "workerPreparationMs": 0.000441,
+          "mutationWallMs": 22255.861609,
+          "workerCleanupMs": 0.000451
+        },
+        "pseudoTesting": {
+          "planned": 3,
+          "completed": 3,
+          "killed": 3,
+          "survived": 0,
+          "jobsAttempted": 3,
+          "workerBaselineJobs": 0,
+          "workersRequested": 1,
+          "workersUsed": 1,
+          "workerPreparationMs": 0.00029,
+          "mutationWallMs": 14520.595361,
+          "workerCleanupMs": 0.00019999999999999998
+        }
+      }
+    },
+    {
+      "example": "node-workers-2",
+      "parity": "passed",
+      "timingDerivedDifferences": [
+        "/result/mutation/diagnostics/slowestExecutions: validated timing-derived top-five ranking in both reports",
+        "/result/pseudoTesting/diagnostics/slowestExecutions: validated timing-derived top-five ranking in both reports"
+      ],
+      "exitBefore": 0,
+      "exitAfter": 0,
+      "before": {
+        "complete": true,
+        "score": 75.0,
+        "jobsAttempted": 10,
+        "timings": {
+          "captureMs": 693.185474,
+          "executionMs": 6800.085172,
+          "wallMs": 7530.036069999999
+        },
+        "phaseTimings": {
+          "analysisMs": 0.12535500000000002,
+          "attributionMs": 0.126267,
+          "baselineMs": 404.422025,
+          "cleanupMs": 36.601159,
+          "compilerStrictnessMs": 2914.843276,
+          "coverageMs": 1165.082285,
+          "preparationMs": 0.147506,
+          "typecheckMs": null
+        },
+        "mutation": {
+          "planned": 4,
+          "completed": 4,
+          "killed": 3,
+          "survived": 1,
+          "jobsAttempted": 4,
+          "workerBaselineJobs": 1,
+          "workersRequested": 2,
+          "workersUsed": 2,
+          "workerPreparationMs": 939.6062880000001,
+          "mutationWallMs": 920.931136,
+          "workerCleanupMs": 33.331692000000004
+        },
+        "pseudoTesting": {
+          "planned": 2,
+          "completed": 2,
+          "killed": 2,
+          "survived": 0,
+          "jobsAttempted": 2,
+          "workerBaselineJobs": 0,
+          "workersRequested": 2,
+          "workersUsed": 2,
+          "workerPreparationMs": 0.00032,
+          "mutationWallMs": 420.72488400000003,
+          "workerCleanupMs": 0.00018099999999999998
+        }
+      },
+      "after": {
+        "complete": true,
+        "score": 75.0,
+        "jobsAttempted": 10,
+        "timings": {
+          "captureMs": 294.403972,
+          "executionMs": 4699.877735,
+          "wallMs": 5081.2968630000005
+        },
+        "phaseTimings": {
+          "analysisMs": 0.113833,
+          "attributionMs": 0.083566,
+          "baselineMs": 259.12481599999995,
+          "cleanupMs": 86.83516900000001,
+          "compilerStrictnessMs": 1891.300858,
+          "coverageMs": 715.134289,
+          "preparationMs": 0.136125,
+          "typecheckMs": null
+        },
+        "mutation": {
+          "planned": 4,
+          "completed": 4,
+          "killed": 3,
+          "survived": 1,
+          "jobsAttempted": 4,
+          "workerBaselineJobs": 1,
+          "workersRequested": 2,
+          "workersUsed": 2,
+          "workerPreparationMs": 505.93020299999995,
+          "mutationWallMs": 804.4316259999999,
+          "workerCleanupMs": 98.459241
+        },
+        "pseudoTesting": {
+          "planned": 2,
+          "completed": 2,
+          "killed": 2,
+          "survived": 0,
+          "jobsAttempted": 2,
+          "workerBaselineJobs": 0,
+          "workersRequested": 2,
+          "workersUsed": 2,
+          "workerPreparationMs": 0.000301,
+          "mutationWallMs": 421.929605,
+          "workerCleanupMs": 0.00015
+        }
+      }
+    },
+    {
+      "example": "node-workers-2-switch",
+      "parity": "passed",
+      "timingDerivedDifferences": [
+        "/result/mutation/diagnostics/slowestExecutions: validated timing-derived top-five ranking in both reports",
+        "/result/pseudoTesting/diagnostics/slowestExecutions: validated timing-derived top-five ranking in both reports"
+      ],
+      "exitBefore": 0,
+      "exitAfter": 0,
+      "before": {
+        "complete": true,
+        "score": 75.0,
+        "jobsAttempted": 12,
+        "timings": {
+          "captureMs": 402.509619,
+          "executionMs": 5233.952896,
+          "wallMs": 5676.819351
+        },
+        "phaseTimings": {
+          "analysisMs": 0.18031699999999998,
+          "attributionMs": 0.079208,
+          "baselineMs": 234.90510700000002,
+          "cleanupMs": 40.179794,
+          "compilerStrictnessMs": 1775.79686,
+          "coverageMs": 666.022263,
+          "preparationMs": 0.19538499999999998,
+          "typecheckMs": null
+        },
+        "mutation": {
+          "planned": 4,
+          "completed": 4,
+          "killed": 3,
+          "survived": 1,
+          "jobsAttempted": 4,
+          "workerBaselineJobs": 2,
+          "workersRequested": 2,
+          "workersUsed": 2,
+          "workerPreparationMs": 1298.211312,
+          "mutationWallMs": 739.51106,
+          "workerCleanupMs": 34.845656000000005,
+          "preparedBaselineJobs": 1,
+          "preparedBaselineMs": 246.34129199999998,
+          "switchPreparationMs": 492.263098
+        },
+        "pseudoTesting": {
+          "planned": 2,
+          "completed": 2,
+          "killed": 2,
+          "survived": 0,
+          "jobsAttempted": 2,
+          "workerBaselineJobs": 0,
+          "workersRequested": 2,
+          "workersUsed": 2,
+          "workerPreparationMs": 0.000311,
+          "mutationWallMs": 483.36555799999996,
+          "workerCleanupMs": 0.000171
+        }
+      },
+      "after": {
+        "complete": true,
+        "score": 75.0,
+        "jobsAttempted": 12,
+        "timings": {
+          "captureMs": 592.919152,
+          "executionMs": 5356.759314999999,
+          "wallMs": 5995.011037
+        },
+        "phaseTimings": {
+          "analysisMs": 0.18294200000000002,
+          "attributionMs": 0.08168299999999999,
+          "baselineMs": 328.11357000000004,
+          "cleanupMs": 45.156048999999996,
+          "compilerStrictnessMs": 1681.0703449999999,
+          "coverageMs": 980.463957,
+          "preparationMs": 0.22443,
+          "typecheckMs": null
+        },
+        "mutation": {
+          "planned": 4,
+          "completed": 4,
+          "killed": 3,
+          "survived": 1,
+          "jobsAttempted": 4,
+          "workerBaselineJobs": 2,
+          "workersRequested": 2,
+          "workersUsed": 2,
+          "workerPreparationMs": 1202.9942819999999,
+          "mutationWallMs": 721.846752,
+          "workerCleanupMs": 47.204609000000005,
+          "preparedBaselineJobs": 1,
+          "preparedBaselineMs": 282.89661,
+          "switchPreparationMs": 530.608688
+        },
+        "pseudoTesting": {
+          "planned": 2,
+          "completed": 2,
+          "killed": 2,
+          "survived": 0,
+          "jobsAttempted": 2,
+          "workerBaselineJobs": 0,
+          "workersRequested": 2,
+          "workersUsed": 2,
+          "workerPreparationMs": 0.00029099999999999997,
+          "mutationWallMs": 393.584374,
+          "workerCleanupMs": 0.000161
+        }
+      }
+    }
+  ],
+  "scratchEmpty": true
+}
