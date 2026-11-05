@@ -1590,6 +1590,35 @@ fn remapped_line_ends_allow_comments_but_not_code_or_newlines() {
 }
 
 #[test]
+fn empty_and_reversed_statement_spans_cannot_supply_coverage() {
+    let path = "/fixture.ts";
+    let source = "const arrow = () => 1;";
+    let analysis = Analysis::inspect(path, source).unwrap();
+    let start = source.find('1').unwrap();
+    for (end, valid) in [(start + 1, true), (start, false), (start - 1, false)] {
+        let report = json!({path:{"path":path,"branchMap":{},"b":{},
+            "statementMap":{"0":{"start":{"line":1,"column":start},
+            "end":{"line":1,"column":end}}},"s":{"0":1}}});
+        let result = attribute(&analysis, path, source, [&report]);
+        assert_eq!(result["complete"], valid, "{result}");
+        assert_eq!(
+            result["functions"][0]["coverage"],
+            if valid { json!(1.0) } else { Value::Null }
+        );
+        assert_eq!(
+            result["functions"][0]["crap"],
+            if valid { json!(1.0) } else { Value::Null }
+        );
+        if !valid {
+            assert_eq!(
+                result["problems"],
+                json!(["empty or reversed statement span"])
+            );
+        }
+    }
+}
+
+#[test]
 fn coincident_spans_and_incompatible_reports_stay_incomplete() {
     let path = "/fixture.ts";
     let source = "const arrow = () => 1; // trailing\n";

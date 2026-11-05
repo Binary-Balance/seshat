@@ -1,0 +1,456 @@
+
+*** crates/seshat/src/assessment.rs:16:9: replace TestState::label -> &'static str with ""
+
+*** mutation diff:
+--- crates/seshat/src/assessment.rs
++++ replace TestState::label -> &'static str with ""
+@@ -8,24 +8,17 @@
+     CountedTimeout,
+     ExecutionError,
+     Cancelled,
+     NotRun,
+ }
+
+ impl TestState {
+     pub fn label(self) -> &'static str {
+-        match self {
+-            Self::Passed => "passed",
+-            Self::Failed => "failed",
+-            Self::TimedOut | Self::CountedTimeout => "timed-out",
+-            Self::ExecutionError => "execution-error",
+-            Self::Cancelled => "cancelled",
+-            Self::NotRun => "not-run",
+-        }
++        "" /* ~ changed by cargo-mutants ~ */
+     }
+ }
+
+ #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+ pub enum Verdict {
+     Killed,
+     Survived,
+     TimedOut,
+
+
+*** <home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo test --no-run --verbose --package=seshat@0.13.0 --locked --offline
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   <tmp>/cargo-mutants-full-crate-EjC6aF.tmp/crates/seshat/Cargo.toml
+workspace: <tmp>/cargo-mutants-full-crate-EjC6aF.tmp/Cargo.toml
+       Fresh unicode-ident v1.0.24
+       Fresh proc-macro2 v1.0.107
+       Fresh siphasher v1.0.3
+       Fresh quote v1.0.47
+       Fresh phf_shared v0.14.0
+       Fresh syn v3.0.5
+       Fresh serde_core v1.0.229
+       Fresh zmij v1.0.23
+       Fresh rustversion v1.0.23
+       Fresh allocator-api2 v0.2.21
+       Fresh itoa v1.0.18
+       Fresh hashbrown v0.17.1
+       Fresh castaway v0.2.4
+       Fresh serde_derive v1.0.229
+       Fresh oxc_data_structures v0.148.0
+       Fresh rustc-hash v2.1.3
+       Fresh static_assertions v1.1.0
+       Fresh cfg-if v1.0.4
+       Fresh oxc_allocator v0.148.0
+       Fresh compact_str v0.10.0
+       Fresh serde v1.0.229
+       Fresh fastrand v2.5.0
+       Fresh oxc_estree v0.148.0
+       Fresh oxc_ast_macros v0.148.0
+       Fresh oxc_str v0.148.0
+       Fresh phf_generator v0.14.0
+       Fresh syn v2.0.119
+       Fresh phf_macros v0.14.0
+       Fresh oxc_span v0.148.0
+       Fresh memchr v2.8.3
+       Fresh autocfg v1.5.1
+       Fresh cow-utils v0.1.3
+       Fresh smawk v0.3.3
+       Fresh unicode-linebreak v0.1.5
+       Fresh unicode-width v0.2.2
+       Fresh textwrap v0.16.2
+       Fresh phf v0.14.0
+       Fresh smallvec v1.16.0
+       Fresh bitflags v2.13.1
+       Fresh unicode-id-start v1.4.0
+       Fresh bytecount v0.6.9
+       Fresh percent-encoding v2.3.2
+       Fresh nonmax v0.5.5
+       Fresh unicode-segmentation v1.13.3
+       Fresh dragonbox_ecma v0.1.12
+       Fresh oxc_diagnostics v0.148.0
+       Fresh oxc_index v5.0.0
+       Fresh oxc_syntax v0.148.0
+       Fresh oxc_regular_expression v0.148.0
+       Fresh num-traits v0.2.19
+       Fresh oxc_ast v0.148.0
+       Fresh num-integer v0.1.47
+       Fresh libc v0.2.189
+       Fresh num-bigint v0.5.1
+       Fresh errno v0.3.14
+       Fresh signal-hook-registry v1.4.8
+       Fresh oxc_ecmascript v0.148.0
+       Fresh seq-macro v0.3.6
+       Fresh signal-hook v0.4.4
+       Fresh serde_json v1.0.151
+       Fresh oxc_parser v0.148.0
+       Fresh oxc_ast_visit v0.148.0
+       Fresh glob v0.3.3
+       Dirty seshat v0.13.0 (<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/crates/seshat): the file `crates/seshat/src/assessment.rs` has changed (1793919842.763689992s, 1m 11s after last build at 1793919771.059543782s)
+   Compiling seshat v0.13.0 (<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/crates/seshat)
+     Running `<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name seshat --edition=2024 crates/seshat/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --deny=unused_must_use --deny=unsafe_op_in_unsafe_fn --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=bbcbad4eacc9f2f4 -C extra-filename=-cf953a26f912f0c4 --out-dir <tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps -C incremental=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/incremental -L dependency=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps --extern glob=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libglob-d07d23b8e47718be.rlib --extern libc=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liblibc-9cd8a66bfd45f04e.rlib --extern oxc_allocator=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_allocator-4045d27c5846644d.rlib --extern oxc_ast=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast-c27914f43b588712.rlib --extern oxc_ast_visit=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast_visit-32fcad2887e3c3ac.rlib --extern oxc_parser=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_parser-ec68ef441d9f598f.rlib --extern oxc_span=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_span-8564d652a1fac788.rlib --extern percent_encoding=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libpercent_encoding-956bedaa8b1c0286.rlib --extern serde=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde-67ce97fcc6ccd096.rlib --extern serde_json=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde_json-faa152da811c9e7c.rlib --extern signal_hook=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libsignal_hook-b6e7e39dd640576f.rlib`
+     Running `<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name seshat --edition=2024 crates/seshat/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 --deny=unused_must_use --deny=unsafe_op_in_unsafe_fn --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=789310e073b35ff8 -C extra-filename=-13d9b7cda9023333 --out-dir <tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps -C incremental=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/incremental -L dependency=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps --extern glob=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libglob-d07d23b8e47718be.rmeta --extern libc=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liblibc-9cd8a66bfd45f04e.rmeta --extern oxc_allocator=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_allocator-4045d27c5846644d.rmeta --extern oxc_ast=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast-c27914f43b588712.rmeta --extern oxc_ast_visit=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast_visit-32fcad2887e3c3ac.rmeta --extern oxc_parser=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_parser-ec68ef441d9f598f.rmeta --extern oxc_span=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_span-8564d652a1fac788.rmeta --extern percent_encoding=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libpercent_encoding-956bedaa8b1c0286.rmeta --extern serde=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde-67ce97fcc6ccd096.rmeta --extern serde_json=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde_json-faa152da811c9e7c.rmeta --extern signal_hook=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libsignal_hook-b6e7e39dd640576f.rmeta`
+     Running `<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name windows_console_helper --edition=2024 crates/seshat/src/bin/windows-console-helper.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --deny=unused_must_use --deny=unsafe_op_in_unsafe_fn --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=3360241a97961acc -C extra-filename=-3c56ee41650b79e8 --out-dir <tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps -C incremental=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/incremental -L dependency=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps --extern glob=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libglob-d07d23b8e47718be.rlib --extern libc=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liblibc-9cd8a66bfd45f04e.rlib --extern oxc_allocator=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_allocator-4045d27c5846644d.rlib --extern oxc_ast=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast-c27914f43b588712.rlib --extern oxc_ast_visit=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast_visit-32fcad2887e3c3ac.rlib --extern oxc_parser=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_parser-ec68ef441d9f598f.rlib --extern oxc_span=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_span-8564d652a1fac788.rlib --extern percent_encoding=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libpercent_encoding-956bedaa8b1c0286.rlib --extern serde=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde-67ce97fcc6ccd096.rlib --extern serde_json=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde_json-faa152da811c9e7c.rlib --extern seshat=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libseshat-13d9b7cda9023333.rlib --extern signal_hook=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libsignal_hook-b6e7e39dd640576f.rlib`
+     Running `<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name proof_inputs --edition=2024 crates/seshat/tests/proof_inputs.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --deny=unused_must_use --deny=unsafe_op_in_unsafe_fn --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=f6d259a564adfdd0 -C extra-filename=-2d4a0e026ebf66ef --out-dir <tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps -C incremental=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/incremental -L dependency=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps --extern glob=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libglob-d07d23b8e47718be.rlib --extern libc=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liblibc-9cd8a66bfd45f04e.rlib --extern oxc_allocator=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_allocator-4045d27c5846644d.rlib --extern oxc_ast=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast-c27914f43b588712.rlib --extern oxc_ast_visit=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast_visit-32fcad2887e3c3ac.rlib --extern oxc_parser=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_parser-ec68ef441d9f598f.rlib --extern oxc_span=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_span-8564d652a1fac788.rlib --extern percent_encoding=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libpercent_encoding-956bedaa8b1c0286.rlib --extern serde=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde-67ce97fcc6ccd096.rlib --extern serde_json=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde_json-faa152da811c9e7c.rlib --extern seshat=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libseshat-13d9b7cda9023333.rlib --extern signal_hook=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libsignal_hook-b6e7e39dd640576f.rlib`
+     Running `<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name seshat --edition=2024 crates/seshat/src/bin/seshat.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --deny=unused_must_use --deny=unsafe_op_in_unsafe_fn --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=f3ebc49fc6282cbf -C extra-filename=-6d33c69506b37472 --out-dir <tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps -C incremental=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/incremental -L dependency=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps --extern glob=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libglob-d07d23b8e47718be.rlib --extern libc=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liblibc-9cd8a66bfd45f04e.rlib --extern oxc_allocator=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_allocator-4045d27c5846644d.rlib --extern oxc_ast=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast-c27914f43b588712.rlib --extern oxc_ast_visit=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast_visit-32fcad2887e3c3ac.rlib --extern oxc_parser=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_parser-ec68ef441d9f598f.rlib --extern oxc_span=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_span-8564d652a1fac788.rlib --extern percent_encoding=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libpercent_encoding-956bedaa8b1c0286.rlib --extern serde=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde-67ce97fcc6ccd096.rlib --extern serde_json=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde_json-faa152da811c9e7c.rlib --extern seshat=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libseshat-13d9b7cda9023333.rlib --extern signal_hook=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libsignal_hook-b6e7e39dd640576f.rlib`
+     Running `<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name cli_output --edition=2024 crates/seshat/tests/cli_output.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --deny=unused_must_use --deny=unsafe_op_in_unsafe_fn --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=cc4c9e6f67fc1a86 -C extra-filename=-8d713dbd6dfbc32a --out-dir <tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps -C incremental=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/incremental -L dependency=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps --extern glob=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libglob-d07d23b8e47718be.rlib --extern libc=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liblibc-9cd8a66bfd45f04e.rlib --extern oxc_allocator=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_allocator-4045d27c5846644d.rlib --extern oxc_ast=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast-c27914f43b588712.rlib --extern oxc_ast_visit=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast_visit-32fcad2887e3c3ac.rlib --extern oxc_parser=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_parser-ec68ef441d9f598f.rlib --extern oxc_span=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_span-8564d652a1fac788.rlib --extern percent_encoding=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libpercent_encoding-956bedaa8b1c0286.rlib --extern serde=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde-67ce97fcc6ccd096.rlib --extern serde_json=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde_json-faa152da811c9e7c.rlib --extern seshat=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libseshat-13d9b7cda9023333.rlib --extern signal_hook=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libsignal_hook-b6e7e39dd640576f.rlib`
+     Running `<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name seshat_proofs --edition=2024 crates/seshat/src/bin/seshat-proofs.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --deny=unused_must_use --deny=unsafe_op_in_unsafe_fn --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=b10588d719d56eb3 -C extra-filename=-aa9f429aecef78ed --out-dir <tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps -C incremental=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/incremental -L dependency=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps --extern glob=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libglob-d07d23b8e47718be.rlib --extern libc=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liblibc-9cd8a66bfd45f04e.rlib --extern oxc_allocator=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_allocator-4045d27c5846644d.rlib --extern oxc_ast=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast-c27914f43b588712.rlib --extern oxc_ast_visit=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast_visit-32fcad2887e3c3ac.rlib --extern oxc_parser=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_parser-ec68ef441d9f598f.rlib --extern oxc_span=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_span-8564d652a1fac788.rlib --extern percent_encoding=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libpercent_encoding-956bedaa8b1c0286.rlib --extern serde=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde-67ce97fcc6ccd096.rlib --extern serde_json=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde_json-faa152da811c9e7c.rlib --extern seshat=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libseshat-13d9b7cda9023333.rlib --extern signal_hook=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libsignal_hook-b6e7e39dd640576f.rlib`
+     Running `<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name seshat_proofs --edition=2024 crates/seshat/src/bin/seshat-proofs.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --deny=unused_must_use --deny=unsafe_op_in_unsafe_fn --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=63ca8ceed2e67bab -C extra-filename=-a0cacdeb855e0e8d --out-dir <tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps -C incremental=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/incremental -L dependency=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps --extern glob=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libglob-d07d23b8e47718be.rlib --extern libc=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liblibc-9cd8a66bfd45f04e.rlib --extern oxc_allocator=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_allocator-4045d27c5846644d.rlib --extern oxc_ast=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast-c27914f43b588712.rlib --extern oxc_ast_visit=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast_visit-32fcad2887e3c3ac.rlib --extern oxc_parser=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_parser-ec68ef441d9f598f.rlib --extern oxc_span=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_span-8564d652a1fac788.rlib --extern percent_encoding=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libpercent_encoding-956bedaa8b1c0286.rlib --extern serde=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde-67ce97fcc6ccd096.rlib --extern serde_json=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde_json-faa152da811c9e7c.rlib --extern seshat=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libseshat-13d9b7cda9023333.rlib --extern signal_hook=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libsignal_hook-b6e7e39dd640576f.rlib`
+     Running `<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name seshat --edition=2024 crates/seshat/src/bin/seshat.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --deny=unused_must_use --deny=unsafe_op_in_unsafe_fn --test --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=3950f6c932b43f23 -C extra-filename=-373992d8e95cfb1a --out-dir <tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps -C incremental=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/incremental -L dependency=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps --extern glob=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libglob-d07d23b8e47718be.rlib --extern libc=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liblibc-9cd8a66bfd45f04e.rlib --extern oxc_allocator=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_allocator-4045d27c5846644d.rlib --extern oxc_ast=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast-c27914f43b588712.rlib --extern oxc_ast_visit=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast_visit-32fcad2887e3c3ac.rlib --extern oxc_parser=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_parser-ec68ef441d9f598f.rlib --extern oxc_span=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_span-8564d652a1fac788.rlib --extern percent_encoding=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libpercent_encoding-956bedaa8b1c0286.rlib --extern serde=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde-67ce97fcc6ccd096.rlib --extern serde_json=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde_json-faa152da811c9e7c.rlib --extern seshat=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libseshat-13d9b7cda9023333.rlib --extern signal_hook=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libsignal_hook-b6e7e39dd640576f.rlib`
+     Running `<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name windows_console_helper --edition=2024 crates/seshat/src/bin/windows-console-helper.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type bin --emit=dep-info,link -C embed-bitcode=no -C debuginfo=2 --deny=unused_must_use --deny=unsafe_op_in_unsafe_fn --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=236a17165cfad9e6 -C extra-filename=-25f9252843b15847 --out-dir <tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps -C incremental=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/incremental -L dependency=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps --extern glob=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libglob-d07d23b8e47718be.rlib --extern libc=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liblibc-9cd8a66bfd45f04e.rlib --extern oxc_allocator=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_allocator-4045d27c5846644d.rlib --extern oxc_ast=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast-c27914f43b588712.rlib --extern oxc_ast_visit=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_ast_visit-32fcad2887e3c3ac.rlib --extern oxc_parser=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_parser-ec68ef441d9f598f.rlib --extern oxc_span=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/liboxc_span-8564d652a1fac788.rlib --extern percent_encoding=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libpercent_encoding-956bedaa8b1c0286.rlib --extern serde=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde-67ce97fcc6ccd096.rlib --extern serde_json=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libserde_json-faa152da811c9e7c.rlib --extern seshat=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libseshat-13d9b7cda9023333.rlib --extern signal_hook=<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/libsignal_hook-b6e7e39dd640576f.rlib`
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.30s
+  Executable `<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/seshat-cf953a26f912f0c4`
+  Executable `<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/seshat-373992d8e95cfb1a`
+  Executable `<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/seshat_proofs-aa9f429aecef78ed`
+  Executable `<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/windows_console_helper-3c56ee41650b79e8`
+  Executable `<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/cli_output-8d713dbd6dfbc32a`
+  Executable `<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/proof_inputs-2d4a0e026ebf66ef`
+
+*** result: Success
+
+*** <home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo test --verbose --package=seshat@0.13.0 --locked --offline
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   <tmp>/cargo-mutants-full-crate-EjC6aF.tmp/crates/seshat/Cargo.toml
+workspace: <tmp>/cargo-mutants-full-crate-EjC6aF.tmp/Cargo.toml
+       Fresh unicode-ident v1.0.24
+       Fresh proc-macro2 v1.0.107
+       Fresh siphasher v1.0.3
+       Fresh quote v1.0.47
+       Fresh phf_shared v0.14.0
+       Fresh syn v3.0.5
+       Fresh zmij v1.0.23
+       Fresh serde_core v1.0.229
+       Fresh rustversion v1.0.23
+       Fresh itoa v1.0.18
+       Fresh allocator-api2 v0.2.21
+       Fresh hashbrown v0.17.1
+       Fresh castaway v0.2.4
+       Fresh serde_derive v1.0.229
+       Fresh static_assertions v1.1.0
+       Fresh cfg-if v1.0.4
+       Fresh oxc_data_structures v0.148.0
+       Fresh rustc-hash v2.1.3
+       Fresh serde v1.0.229
+       Fresh oxc_allocator v0.148.0
+       Fresh compact_str v0.10.0
+       Fresh fastrand v2.5.0
+       Fresh oxc_estree v0.148.0
+       Fresh oxc_ast_macros v0.148.0
+       Fresh oxc_str v0.148.0
+       Fresh phf_generator v0.14.0
+       Fresh syn v2.0.119
+       Fresh phf_macros v0.14.0
+       Fresh oxc_span v0.148.0
+       Fresh autocfg v1.5.1
+       Fresh unicode-linebreak v0.1.5
+       Fresh unicode-width v0.2.2
+       Fresh memchr v2.8.3
+       Fresh cow-utils v0.1.3
+       Fresh smawk v0.3.3
+       Fresh textwrap v0.16.2
+       Fresh phf v0.14.0
+       Fresh smallvec v1.16.0
+       Fresh bitflags v2.13.1
+       Fresh bytecount v0.6.9
+       Fresh unicode-segmentation v1.13.3
+       Fresh nonmax v0.5.5
+       Fresh percent-encoding v2.3.2
+       Fresh unicode-id-start v1.4.0
+       Fresh oxc_index v5.0.0
+       Fresh oxc_diagnostics v0.148.0
+       Fresh dragonbox_ecma v0.1.12
+       Fresh num-traits v0.2.19
+       Fresh oxc_syntax v0.148.0
+       Fresh oxc_regular_expression v0.148.0
+       Fresh num-integer v0.1.47
+       Fresh libc v0.2.189
+       Fresh oxc_ast v0.148.0
+       Fresh num-bigint v0.5.1
+       Fresh errno v0.3.14
+       Fresh signal-hook-registry v1.4.8
+       Fresh oxc_ecmascript v0.148.0
+       Fresh seq-macro v0.3.6
+       Fresh serde_json v1.0.151
+       Fresh oxc_parser v0.148.0
+       Fresh signal-hook v0.4.4
+       Fresh oxc_ast_visit v0.148.0
+       Fresh glob v0.3.3
+       Fresh seshat v0.13.0 (<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/crates/seshat)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
+     Running `<tmp>/cargo-mutants-full-crate-EjC6aF.tmp/target/debug/deps/seshat-cf953a26f912f0c4`
+
+running 180 tests
+test analysis::boolean_replacements_preserve_grouping_trivia_and_exactly_one_site ... ok
+test analysis::boolean_mutants_follow_runtime_expressions_and_selected_families ... ok
+test analysis::cognitive_accessors_use_implicit_initializer_scopes ... ok
+test analysis::cognitive_class_keys_stay_in_the_enclosing_scope ... ok
+test analysis::cognitive_complexity_follows_flow_and_nesting_rules ... ok
+test analysis::cognitive_complexity_owns_nested_functions_separately ... ok
+test analysis::cognitive_parameter_decorators_stay_in_the_enclosing_scope ... ok
+test analysis::cognitive_recursion_requires_unambiguous_visible_bindings ... ok
+test analysis::cognitive_recursion_respects_lexical_boundaries ... ok
+test analysis::coverage_hint_counts_do_not_infer_support_from_other_providers ... ok
+test analysis::coverage_hints_distinguish_whole_functions_and_partial_suppressions ... ok
+test analysis::boolean_switching_uses_inline_arms_and_global_ids ... ok
+test analysis::extreme_mutation_skips_empty_functions_and_special_methods ... ok
+test analysis::extreme_mutation_replaces_only_the_owning_body ... ok
+test analysis::ignored_declarations_preserve_partial_suppression_in_the_enclosing_function ... ok
+test analysis::load_evidence_requires_direct_uncaught_error_construction ... ok
+test analysis::load_evidence_respects_catch_blocks_and_function_boundaries ... ok
+test analysis::operator_mutants_follow_ast_sites_and_selected_families ... ok
+test analysis::operator_rendering_preserves_statement_boundaries ... ok
+test analysis::operator_replacements_preserve_token_boundaries ... ok
+test analysis::operator_site_counts_include_exclusions_but_not_disabled_families ... ok
+test analysis::optional_candidates_exclude_non_runtime_syntax ... ok
+test analysis::optional_candidates_preserve_tokens_and_stable_ids ... ok
+test analysis::optional_switching_rejects_reference_contexts ... ok
+test analysis::statement_candidates_exclude_structural_code ... ok
+test analysis::statement_candidates_include_async_and_generator_bodies ... ok
+test analysis::logical_switching_bounds_nested_expansion ... ok
+test analysis::statement_candidates_use_function_statements_and_bare_returns ... ok
+test analysis::switched_sources_can_use_run_wide_ids_and_reject_helper_collisions ... ok
+test analysis::switching_preserves_hashbangs_and_directives ... ok
+test analysis::switching_rejects_negation_removal_that_exposes_references ... ok
+test analysis::statement_removal_preserves_syntax_and_statement_boundaries ... ok
+test analysis::type_safety_assigns_leading_suppressions_to_default_export_functions ... ok
+test analysis::type_safety_assigns_leading_suppressions_to_initialized_functions_and_methods ... ok
+test analysis::type_safety_block_directives_preserve_prefix_order_and_last_line ... ok
+test analysis::type_safety_counts_syntax_and_preserves_unowned_suppressions ... ok
+test analysis::type_safety_handles_tsx_and_angle_const_assertions ... ok
+test analysis::type_safety_nocheck_uses_typescript_pragma_separators ... ok
+test assessment::tests::all_setups_must_resolve_before_a_kill_counts ... ok
+test assessment::tests::complete_scores_and_no_mutants ... ok
+test assessment::tests::counted_timeouts_require_every_setup_to_resolve ... ok
+test assessment::tests::crap_requires_valid_coverage_counts ... ok
+test assessment::tests::failed_or_missing_baselines_never_produce_a_mutation_score ... ok
+test assessment::tests::incomplete_runs_retain_resolved_results_in_planned_order ... ok
+test assessment::tests::pseudo_testing_requires_execution_and_resolved_mutants ... ok
+test cli::tests::arguments_reject_ambiguity_before_execution ... ok
+test cli::tests::cognitive_thresholds_ignore_coverage_status_and_include_zero ... ok
+test cli::tests::counted_deadlines_keep_runner_timeouts_unresolved_and_explain_the_cap ... ok
+test cli::tests::counted_timeouts_can_pass_thresholds_without_claiming_a_withheld_score ... ok
+test cli::tests::malformed_measured_rows_cannot_pass_a_threshold ... ok
+test cli::tests::mutation_timeouts_explain_withheld_scores_and_unrun_work ... ok
+test cli::tests::path_arguments_accept_unambiguous_leading_dashes ... ok
+test cli::tests::readable_coverage_suppressions_keep_counts_and_unscored_status_visible ... ok
+test cli::tests::readable_errors_omit_nulls_and_distinguish_cleanup ... ok
+test cli::tests::readable_explains_inactive_observers_per_setup ... ok
+test cli::tests::readable_keeps_excluded_operator_sites_visible ... ok
+test cli::tests::readable_prints_the_limit_next_to_mutants_that_reach_it ... ok
+test cli::tests::readable_type_safety_keeps_static_findings_and_unknown_config_visible ... ok
+test cli::tests::selection_fallback_is_reported_once_per_setup ... ok
+test cli::tests::threshold_boundaries_and_incomplete_precedence ... ok
+test analysis::type_safety_directives_use_javascript_whitespace ... ok
+test cli::tests::thresholds_do_not_invent_scores_or_request_extra_assessments ... ok
+test cli::tests::unknown_crap_retains_measured_statement_display ... ok
+test cli::tests::unknown_is_not_zero_and_terminal_controls_are_escaped ... ok
+test cli::tests::unscored_functions_and_empty_mutation_scope_are_not_failures ... ok
+test cli::type_safety::tests::missing_unknown_and_unmeasured_source_cannot_pass_as_zero ... ok
+test cli::type_safety::tests::unknown_compiler_blocks_only_requested_inferred_checks_and_preserves_evidence ... ok
+test cli::type_safety::tests::totals_include_all_rows_and_unowned_source_without_summing_setups ... ok
+test cli::type_safety::tests::zero_counts_pass_and_existing_incompleteness_takes_precedence ... ok
+test coverage::coincident_spans_and_incompatible_reports_stay_incomplete ... ok
+test coverage::declarations_without_bodies_do_not_create_coverage_rows ... ok
+test coverage::conflicting_branch_owners_never_gain_statement_fallback ... ok
+test coverage::default_ranges_stop_before_a_later_function_value ... ok
+test coverage::file_suppression_allows_an_omitted_entry_but_never_hides_bad_evidence ... ok
+test coverage::final_object_property_closing_brace_does_not_cross_a_sibling_expression ... ok
+test coverage::flattened_logical_branches_cannot_be_counted_again_as_nested_sites ... ok
+test coverage::functions_in_default_parameters_own_their_internal_branches ... ok
+test coverage::if_condition_and_object_property_ends_preserve_executable_boundaries ... ok
+test coverage::empty_bodies_require_non_executing_parameters ... ok
+test coverage::istanbul_label_and_debugger_mappings ... ok
+test coverage::jsx_closing_delimiters_do_not_allow_other_executable_children_or_code ... ok
+test coverage::incompatible_branches_merge_compatible_statements_without_scoring_partial_branches ... ok
+test coverage::jsx_fragment_closing_ranges_preserve_child_boundaries ... ok
+test coverage::jsx_container_and_opening_tag_ends_do_not_swallow_other_attributes_or_children ... ok
+test coverage::line_separators_cannot_inflate_coverage ... ok
+test coverage::malformed_columns_are_not_missing_columns ... ok
+test coverage::mapped_closing_parentheses_allow_trivia_but_not_executable_code ... ok
+test coverage::open_ends_are_not_missing_positions ... ok
+test coverage::parenthesized_arrow_return_has_an_executable_inner_start ... ok
+test coverage::partial_suppression_cannot_become_full_statement_coverage ... ok
+test coverage::provider_end_extensions_normalize_before_branch_hit_merging ... ok
+test coverage::recorded_branches_drive_crap_without_changing_statement_coverage ... ok
+test coverage::remapped_line_ends_allow_comments_but_not_code_or_newlines ... ok
+test coverage::suppression_does_not_hide_existing_counters_or_reclassify_implicit_scopes ... ok
+test coverage::suppression_rejects_retained_function_records_without_statement_evidence ... ok
+test coverage::suppression_requires_usable_function_metadata_when_present ... ok
+test coverage::unicode_positions ... ok
+test coverage::unreliable_branches_preserve_statements_and_other_functions ... ok
+test coverage::whole_function_suppressions_are_visible_and_do_not_require_counters ... ok
+test execution::exit_code_is_not_a_verdict ... ok
+test execution::jest_hook_kills_require_all_errors_to_be_attributed ... ok
+test coverage::missing_malformed_and_shifted_branch_evidence_never_falls_back ... ok
+test execution::job::tests::completed_jobs_keep_their_verdicts_after_host_cancellation ... ok
+test execution::job::tests::held_open_pipe_retains_partial_output ... ok
+test execution::job::tests::exited_child_group_is_reaped_before_cleanup_retry ... ok
+test execution::job::tests::interrupted_exit_before_host_cancellation_is_cancelled ... ok
+test execution::job::tests::interrupted_exit_without_host_cancellation_stays_an_error ... ok
+test execution::job::tests::parallel_jobs_do_not_retain_another_jobs_output ... ok
+test execution::job::tests::retained_output_stays_bounded_while_draining_to_eof ... ok
+test execution::job::tests::unrelated_failures_after_host_cancellation_stay_errors ... ok
+test execution::module_file_urls_encode_paths_and_are_absolute ... ok
+test execution::observed_failures_require_complete_hook_evidence ... ok
+test execution::only_bounded_runner_timeouts_allow_more_mutants ... ok
+test execution::only_cleaned_up_execution_errors_allow_more_mutants ... ok
+test execution::only_cleaned_up_job_deadlines_continue_or_count ... ok
+test execution::platform::cleanup_tests::reap_deadline_preserves_uncertainty_and_is_not_restarted ... ok
+test execution::platform::unix_tests::dropping_managed_child_reaps_the_leader ... ok
+test execution::platform::unix_tests::failed_settlement_never_retries_signals_after_reaping ... ok
+test execution::platform::unix_tests::kill_tree_settles_stop_error_without_retrying_group_signal ... ok
+managed child cleanup failed: stop tree: cannot signal process group after releasing its leader; reap leader: No child processes (os error 10); terminate leader fallback: cannot signal child after releasing its ownership; reap leader: No child processes (os error 10)
+test execution::platform::unix_tests::lost_child_ownership_prevents_cleanup_signals ... ok
+test execution::platform::unix_tests::natural_exit_never_signals_a_released_process_group ... ok
+test execution::platform::unix_tests::stop_failure_can_retry_while_the_leader_is_retained ... ok
+test execution::project::collection::tests::attribution_failure_allows_mutations_but_original_job_failures_stop_them ... FAILED
+test execution::project::collection::tests::cleanup_failure_stops_pending_setups_and_prepared_baselines ... FAILED
+test execution::project::collection::tests::compiler_strictness_recognition_is_explicit_and_failures_are_bounded ... ok
+test execution::project::collection::tests::completed_jobs_release_artifacts_and_workers_follow_the_plan ... FAILED
+test execution::project::collection::tests::counted_deadlines_need_a_clean_stop_and_every_setup_resolved ... FAILED
+test execution::project::collection::tests::coverage_report_normalizes_validated_file_identities ... ok
+test execution::project::collection::tests::coverage_report_rejects_dotted_alias_collisions ... ok
+test execution::project::collection::tests::coverage_report_rejects_mismatched_file_identity ... ok
+test execution::project::collection::tests::coverage_report_rejects_relative_escaping_and_linked_sources ... ok
+test execution::project::collection::tests::diagnostics_keep_ranges_unknown_and_incomplete_work_distinct ... ok
+test execution::project::collection::tests::extreme_and_operator_phases_share_one_worker_baseline ... FAILED
+test execution::project::collection::tests::hanging_mutants_stop_at_the_limit_from_the_slowest_baseline ... FAILED
+test execution::project::collection::tests::inferred_any_keeps_setup_counts_nested_owners_and_unknowns_separate ... ok
+test execution::project::collection::tests::jest_expo_receipts_accept_only_verified_versions ... ok
+test execution::project::collection::tests::live_timeout_counts_require_every_setup_to_resolve ... ok
+test execution::project::collection::tests::mutation_plan_preserves_analysis_ids_and_report_metadata ... ok
+test execution::project::collection::tests::mutation_restoration_rejects_concurrent_path_swaps ... ok
+test execution::project::collection::tests::observer_diagnostics_use_each_setups_runner_receipt ... ok
+test execution::project::collection::tests::receipt_versions_preserve_identity_and_format_validation ... ok
+test execution::project::collection::tests::report_paths_reject_links_before_removal_or_reading ... ok
+test execution::project::collection::tests::report_paths_reject_non_utf8_before_reading ... ok
+test execution::project::collection::tests::reporter_arguments_expand_without_changing_the_program ... ok
+test execution::project::collection::tests::requested_workers_remain_distinct_when_assessment_aborts ... ok
+test execution::project::collection::tests::restoration_checks_link_count_on_the_opened_file ... ok
+test execution::project::collection::tests::timeout_diagnostics_retain_raw_and_counted_totals ... ok
+test execution::project::collection::tests::unconfirmed_selection_retries_stop_at_the_mutant_limit ... FAILED
+test execution::project::collection::tests::unresolved_jobs_allow_later_setups_and_mutants ... FAILED
+test execution::project::collection::tests::zero_coverage_setup_resolves_before_a_stop ... ok
+test execution::project::selection::tests::attribution_requires_matching_workloads_and_complete_source_evidence ... ok
+test execution::project::selection::tests::filtering_preserves_supported_options_and_rejects_unknown_workloads ... ok
+test execution::project::tests::assessment_prerequisites_are_checked_before_capture_access ... ok
+test execution::project::tests::capture_read_rejects_concurrent_path_swaps ... ok
+test execution::project::tests::captured_bytes_and_workspace_links_do_not_alias_originals ... ok
+test execution::project::tests::concurrent_capture_directories_have_distinct_paths ... ok
+test execution::project::tests::config_read_rejects_concurrent_path_swaps ... ok
+test execution::project::tests::configuration_rejects_ambiguity_before_capture ... ok
+test execution::project::tests::copied_workspace_resolves_with_real_node ... ok
+test execution::project::tests::coverage_suppressions_skip_pseudo_testing_but_keep_operator_mutations ... FAILED
+test execution::project::tests::deep_capture_preserves_every_directory_and_source ... ok
+test execution::project::tests::git_case_variants_are_excluded_on_the_actual_filesystem ... ok
+test execution::project::tests::invalid_setup_directory_and_nested_scratch_are_rejected ... ok
+test execution::project::tests::job_artifact_cleanup_preserves_other_jobs_and_failure_evidence ... ok
+test execution::project::tests::mutant_time_limit_settings_are_optional_and_positive ... ok
+test execution::project::tests::mutation_operator_configuration_is_explicit_and_validated ... ok
+test execution::project::tests::non_utf8_names_fail_before_capture_or_reporting ... ok
+test execution::project::tests::reporter_placeholders_are_arguments_only ... ok
+test execution::project::tests::scope_cannot_silently_omit_selected_source ... ok
+test execution::project::tests::selected_links_and_link_parents_are_rejected ... ok
+test execution::project::tests::single_package_scope_does_not_require_workspace_capture ... ok
+test execution::project::tests::thresholds_are_optional_and_validated_before_capture ... ok
+test execution::project::tests::timeout_scoring_is_opt_in_and_boolean ... ok
+test execution::project::tests::type_safety_limits_keep_declarations_out_of_assessment_source ... ok
+test execution::project::tests::unicode_names_remain_distinct_and_copies_are_private ... ok
+test execution::project::tests::unsafe_links_fail_and_remove_partial_copies ... ok
+test execution::project::tests::workers_have_independent_files_and_rewritten_workspace_links ... ok
+test execution::proof_clock_before_epoch_is_a_controlled_error ... ok
+test execution::truncated_output_does_not_change_receipt_verdicts ... ok
+test execution::job::tests::output_and_deadline_are_bounded_without_redundant_cleanup ... ok
+
+failures:
+
+---- execution::project::collection::tests::attribution_failure_allows_mutations_but_original_job_failures_stop_them stdout ----
+
+thread 'execution::project::collection::tests::attribution_failure_allows_mutations_but_original_job_failures_stop_them' (738096) panicked at crates/seshat/src/execution/project/collection.rs:2847:17:
+assertion `left == right` failed
+  left: Null
+ right: 1.0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- execution::project::collection::tests::cleanup_failure_stops_pending_setups_and_prepared_baselines stdout ----
+
+thread 'execution::project::collection::tests::cleanup_failure_stops_pending_setups_and_prepared_baselines' (738111) panicked at crates/seshat/src/execution/project/collection.rs:3264:17:
+assertion `left == right` failed: switching=false, deadline=false: {"complete":false,"diagnostics":{"concurrency":{"runners":[{"command":"test","effectiveWorkers":null,"runner":"node","setup":"unit","source":null,"state":"unavailable"},{"command":"coverage","effectiveWorkers":null,"runner":"node","setup":"unit","source":null,"state":"unavailable"},{"command":"test","effectiveWorkers":null,"runner":"node","setup":"second","source":null,"state":"unavailable"},{"command":"coverage","effectiveWorkers":null,"runner":"node","setup":"second","source":null,"state":"unavailable"}],"seshat":{"configuredWorkers":1,"effectiveWorkers":0,"state":"known"}},"runnerVersions":[{"importFailureObserver":{"reason":null,"state":"active"},"packages":[],"runner":"node","runtime":{"declared":null,"declaredComparison":"unavailable","node":"24.22.2"},"setup":"unit"},{"importFailureObserver":{"reason":"node-version","state":"inactive"},"packages":[],"runner":"node","runtime":{"declared":null,"declaredComparison":"unavailable","node":null},"setup":"second"}]},"executionMs":63.919505,"jobsAttempted":2,"mutation":{"complete":false,"completed":0,"countedTimeouts":0,"diagnostics":{"slowestExecutions":[],"throughput":{"completedMutantsPerSecond":0.0,"jobsPerSecond":0.0},"unresolvedBreakdown":{"cancelled":0,"countedTimeouts":0,"executionError":0,"notRun":0,"testTimedOut":0,"timedOut":0,"unassessed":2},"workerTimeMs":-0.0},"enabledOperators":["comparison","logical","arithmetic","boolean","statement","optional"],"error":null,"executionMs":0.053089,"jobsAttempted":0,"killed":0,"mutationWallMs":0.00008,"notRun":2,"outcomes":[{"countedAsKilled":false,"id":0,"kind":"comparison","localId":0,"offset":46,"original":"<","path":"src/calc.ts","replacement":"<=","setups":[{"name":"unit","state":"not-run"},{"name":"second","state":"not-run"}],"verdict":"unassessed"},{"countedAsKilled":false,"id":1,"kind":"comparison","localId":1,"offset":46,"original":"<","path":"src/calc.ts","replacement":">=","setups":[{"name":"unit","state":"not-run"},{"name":"second","state":"not-run"}],"verdict":"unassessed"}],"perOperator":[{"completed":0,"eligibleSites":1,"excludedSites":0,"executionMs":0.0,"jobsAttempted":0,"kind":"comparison","operator":"<","planned":2}],"planned":2,"restorationError":null,"score":null,"strategy":"replace","survived":0,"unresolved":2,"workerBaselineJobs":0,"workerBaselines":[],"workerCleanupMs":0.001182,"workerPreparationMs":0.00024099999999999998,"workersRequested":1,"workersUsed":0},"phase":"mutate","phaseTimings":{"analysisMs":0.41814100000000004,"attributionMs":0.312324,"baselineMs":33.705695,"cleanupMs":0.240529,"compilerStrictnessMs":null,"coverageMs":null,"preparationMs":0.14510099999999998,"typecheckMs":28.583045000000002},"pseudoTesting":{"checked":0,"complete":false,"completed":0,"countedTimeouts":0,"diagnostics":{"slowestExecutions":[],"throughput":{"completedMutantsPerSecond":0.0,"jobsPerSecond":0.0},"unresolvedBreakdown":{"cancelled":0,"countedTimeouts":0,"executionError":0,"notRun":0,"testTimedOut":0,"timedOut":0,"unassessed":3},"workerTimeMs":-0.0},"error":null,"executionMs":0.10455500000000001,"jobsAttempted":0,"killed":0,"mutationWallMs":0.0006810000000000001,"notRun":3,"outcomes":[{"countedAsKilled":false,"coverage":null,"id":0,"kind":"extreme","localId":0,"name":"arrow@22","offset":36,"original":"42","path":"packages/rules/index.ts","pseudoTested":null,"replacement":"{ return void 0; }","setups":[{"name":"unit","state":"not-run"},{"name":"second","state":"not-run"}],"start":22,"verdict":"unassessed"},{"countedAsKilled":false,"coverage":null,"id":1,"kind":"extreme","localId":0,"name":"arrow@21","offset":40,"original":"value < 3","path":"src/calc.ts","pseudoTested":null,"replacement":"{ return void 0; }","setups":[{"name":"unit","state":"not-run"},{"name":"second","state":"not-run"}],"start":21,"verdict":"unassessed"},{"countedAsKilled":false,"coverage":null,"id":2,"kind":"extreme","localId":0,"name":"arrow@22","offset":28,"original":"<div />","path":"src/nested/render.tsx","pseudoTested":null,"replacement":"{ return void 0; }","setups":[{"name":"unit","state":"not-run"},{"name":"second","state":"not-run"}],"start":22,"verdict":"unassessed"}],"planned":3,"pseudoTested":0,"restorationError":null,"strategy":"replace","survived":0,"unknown":3,"unresolved":3,"workerBaselineJobs":0,"workerBaselines":[],"workerCleanupMs":0.000031,"workerPreparationMs":0.000361,"workersRequested":1,"workersUsed":0},"setups":[{"baseline":{"cancelled":false,"cleanupError":null,"error":null,"exit":0,"ms":32.493691,"outputTruncated":false,"pipeError":null,"report":{"complete":true,"errors":0,"executionId":"capture-737815-1793919846319897917-5-0-baseline","failed":0,"node":"24.22.2","passed":1,"version":1},"state":"","timedOut":false},"compilerStrictness":{"compilerVersion":null,"config":null,"configSource":null,"disabled":null,"enabledBypassOptions":null,"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","options":null,"state":"unknown","unsupported":[]},"coverage":{"state":"not-run"},"inferredAny":{"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","ms":null,"state":"unknown"},"mutantTimeoutMs":null,"name":"unit","selection":{"state":"not-run"},"timings":{"baselineMs":33.705695,"compilerStrictnessMs":null,"coverageMs":null,"typecheckMs":28.583045000000002},"typecheck":{"cancelled":false,"cleanupError":null,"error":null,"exit":0,"ms":27.858712,"outputTruncated":false,"pipeError":null,"state":"","timedOut":false},"uncappedMutantTimeoutMs":null},{"baseline":{"state":"not-run"},"compilerStrictness":{"compilerVersion":null,"config":null,"configSource":null,"disabled":null,"enabledBypassOptions":null,"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","options":null,"state":"unknown","unsupported":[]},"coverage":{"state":"not-run"},"inferredAny":{"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","ms":null,"state":"unknown"},"mutantTimeoutMs":null,"name":"second","selection":{"state":"not-run"},"timings":{"baselineMs":null,"compilerStrictnessMs":null,"coverageMs":null,"typecheckMs":null},"typecheck":{"state":"not-run"},"uncappedMutantTimeoutMs":null}],"sources":[{"path":"packages/rules/index.ts","result":{"complete":false,"coverageSuppressions":{"count":0,"hints":[]},"functions":[{"branchCoverage":null,"branchCovered":0,"branchTotal":0,"cognitiveComplexity":0,"complexity":1,"coverage":null,"coverageBasis":null,"coverageSuppressions":0,"covered":0,"crap":null,"name":"arrow@22","pseudoTestReason":null,"pseudoTestStatus":"unknown","pseudoTested":null,"start":22,"status":"unknown","total":0,"typeSafety":{"doubleAssertions":0,"explicitAny":0,"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"},{"count":null,"locations":null,"setup":"second","state":"unknown"}],"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}],"problems":["no coverage reports"],"typeSafety":{"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"},{"count":null,"locations":null,"setup":"second","state":"unknown"}],"suppressions":[],"unowned":{"doubleAssertions":0,"explicitAny":0,"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}}},{"path":"src/calc.ts","result":{"complete":false,"coverageSuppressions":{"count":0,"hints":[]},"functions":[{"branchCoverage":null,"branchCovered":0,"branchTotal":0,"cognitiveComplexity":0,"complexity":1,"coverage":null,"coverageBasis":null,"coverageSuppressions":0,"covered":0,"crap":null,"name":"arrow@21","pseudoTestReason":null,"pseudoTestStatus":"unknown","pseudoTested":null,"start":21,"status":"unknown","total":0,"typeSafety":{"doubleAssertions":0,"explicitAny":0,"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"},{"count":null,"locations":null,"setup":"second","state":"unknown"}],"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}],"problems":["no coverage reports"],"typeSafety":{"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"},{"count":null,"locations":null,"setup":"second","state":"unknown"}],"suppressions":[],"unowned":{"doubleAssertions":0,"explicitAny":0,"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}}},{"path":"src/nested/render.tsx","result":{"complete":false,"coverageSuppressions":{"count":0,"hints":[]},"functions":[{"branchCoverage":null,"branchCovered":0,"branchTotal":0,"cognitiveComplexity":0,"complexity":1,"coverage":null,"coverageBasis":null,"coverageSuppressions":0,"covered":0,"crap":null,"name":"arrow@22","pseudoTestReason":null,"pseudoTestStatus":"unknown","pseudoTested":null,"start":22,"status":"unknown","total":0,"typeSafety":{"doubleAssertions":0,"explicitAny":0,"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"},{"count":null,"locations":null,"setup":"second","state":"unknown"}],"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}],"problems":["no coverage reports"],"typeSafety":{"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"},{"count":null,"locations":null,"setup":"second","state":"unknown"}],"suppressions":[],"unowned":{"doubleAssertions":0,"explicitAny":0,"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}}}]}
+  left: Number(0)
+ right: 1
+
+---- execution::project::collection::tests::completed_jobs_release_artifacts_and_workers_follow_the_plan stdout ----
+
+thread 'execution::project::collection::tests::completed_jobs_release_artifacts_and_workers_follow_the_plan' (738148) panicked at crates/seshat/src/execution/project/collection.rs:3407:9:
+assertion `left == right` failed: {"complete":false,"diagnostics":{"concurrency":{"runners":[{"command":"test","effectiveWorkers":null,"runner":"node","setup":"unit","source":null,"state":"unavailable"},{"command":"coverage","effectiveWorkers":null,"runner":"node","setup":"unit","source":null,"state":"unavailable"}],"seshat":{"configuredWorkers":18446744073709551615,"effectiveWorkers":0,"state":"known"}},"runnerVersions":[{"importFailureObserver":{"reason":null,"state":"active"},"packages":[],"runner":"node","runtime":{"declared":null,"declaredComparison":"unavailable","node":"24.22.2"},"setup":"unit"}]},"executionMs":64.066759,"jobsAttempted":2,"mutation":{"complete":false,"completed":0,"countedTimeouts":0,"diagnostics":{"slowestExecutions":[],"throughput":{"completedMutantsPerSecond":0.0,"jobsPerSecond":0.0},"unresolvedBreakdown":{"cancelled":0,"countedTimeouts":0,"executionError":0,"notRun":2,"testTimedOut":0,"timedOut":0,"unassessed":0},"workerTimeMs":-0.0},"enabledOperators":["comparison","logical","arithmetic","boolean","statement","optional"],"error":null,"executionMs":0.063889,"jobsAttempted":0,"killed":0,"mutationWallMs":0.00008999999999999999,"notRun":2,"outcomes":[{"countedAsKilled":false,"id":0,"kind":"comparison","localId":0,"offset":46,"original":"<","path":"src/calc.ts","replacement":"<=","setups":[{"name":"unit","state":"not-run"}],"verdict":"not-run"},{"countedAsKilled":false,"id":1,"kind":"comparison","localId":1,"offset":46,"original":"<","path":"src/calc.ts","replacement":">=","setups":[{"name":"unit","state":"not-run"}],"verdict":"not-run"}],"perOperator":[{"completed":0,"eligibleSites":1,"excludedSites":0,"executionMs":0.0,"jobsAttempted":0,"kind":"comparison","operator":"<","planned":2}],"planned":2,"restorationError":null,"score":null,"strategy":"replace","survived":0,"unresolved":2,"workerBaselineJobs":0,"workerBaselines":[],"workerCleanupMs":0.001482,"workerPreparationMs":0.000441,"workersRequested":18446744073709551615,"workersUsed":0},"phase":"mutate","phaseTimings":{"analysisMs":0.221022,"attributionMs":0.275925,"baselineMs":35.067170000000004,"cleanupMs":0.217756,"compilerStrictnessMs":null,"coverageMs":null,"preparationMs":0.136715,"typecheckMs":27.808065},"pseudoTesting":{"checked":0,"complete":false,"completed":0,"countedTimeouts":0,"diagnostics":{"slowestExecutions":[],"throughput":{"completedMutantsPerSecond":0.0,"jobsPerSecond":0.0},"unresolvedBreakdown":{"cancelled":0,"countedTimeouts":0,"executionError":0,"notRun":1,"testTimedOut":0,"timedOut":0,"unassessed":0},"workerTimeMs":-0.0},"error":null,"executionMs":0.077254,"jobsAttempted":0,"killed":0,"mutationWallMs":0.001042,"notRun":1,"outcomes":[{"countedAsKilled":false,"coverage":null,"id":0,"kind":"extreme","localId":0,"name":"arrow@21","offset":40,"original":"value < 3","path":"src/calc.ts","pseudoTested":null,"replacement":"{ return void 0; }","setups":[{"name":"unit","state":"not-run"}],"start":21,"verdict":"not-run"}],"planned":1,"pseudoTested":0,"restorationError":null,"strategy":"replace","survived":0,"unknown":1,"unresolved":1,"workerBaselineJobs":0,"workerBaselines":[],"workerCleanupMs":0.00004,"workerPreparationMs":0.00039000000000000005,"workersRequested":18446744073709551615,"workersUsed":0},"setups":[{"baseline":{"cancelled":false,"cleanupError":null,"error":null,"exit":0,"ms":34.169544,"outputTruncated":false,"pipeError":null,"report":{"complete":true,"errors":0,"executionId":"capture-737815-1793919846521275142-12-0-baseline","failed":0,"node":"24.22.2","passed":1,"version":1},"state":"","timedOut":false},"compilerStrictness":{"compilerVersion":null,"config":null,"configSource":null,"disabled":null,"enabledBypassOptions":null,"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","options":null,"state":"unknown","unsupported":[]},"coverage":{"state":"not-run"},"inferredAny":{"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","ms":null,"state":"unknown"},"mutantTimeoutMs":null,"name":"unit","selection":{"state":"not-run"},"timings":{"baselineMs":35.067170000000004,"compilerStrictnessMs":null,"coverageMs":null,"typecheckMs":27.808065},"typecheck":{"cancelled":false,"cleanupError":null,"error":null,"exit":0,"ms":27.491433999999998,"outputTruncated":false,"pipeError":null,"state":"","timedOut":false},"uncappedMutantTimeoutMs":null}],"sources":[{"path":"src/calc.ts","result":{"complete":false,"coverageSuppressions":{"count":0,"hints":[]},"functions":[{"branchCoverage":null,"branchCovered":0,"branchTotal":0,"cognitiveComplexity":0,"complexity":1,"coverage":null,"coverageBasis":null,"coverageSuppressions":0,"covered":0,"crap":null,"name":"arrow@21","pseudoTestReason":null,"pseudoTestStatus":"unknown","pseudoTested":null,"start":21,"status":"unknown","total":0,"typeSafety":{"doubleAssertions":0,"explicitAny":0,"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"}],"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}],"problems":["no coverage reports"],"typeSafety":{"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"}],"suppressions":[],"unowned":{"doubleAssertions":0,"explicitAny":0,"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}}}]}
+  left: Bool(false)
+ right: true
+
+---- execution::project::collection::tests::counted_deadlines_need_a_clean_stop_and_every_setup_resolved stdout ----
+
+thread 'execution::project::collection::tests::counted_deadlines_need_a_clean_stop_and_every_setup_resolved' (738177) panicked at crates/seshat/src/execution/project/collection.rs:3029:13:
+assertion `left == right` failed: {"complete":false,"diagnostics":{"concurrency":{"runners":[{"command":"test","effectiveWorkers":null,"runner":"node","setup":"unit","source":null,"state":"unavailable"},{"command":"coverage","effectiveWorkers":null,"runner":"node","setup":"unit","source":null,"state":"unavailable"},{"command":"test","effectiveWorkers":null,"runner":"node","setup":"hanging","source":null,"state":"unavailable"},{"command":"coverage","effectiveWorkers":null,"runner":"node","setup":"hanging","source":null,"state":"unavailable"}],"seshat":{"configuredWorkers":1,"effectiveWorkers":0,"state":"known"}},"runnerVersions":[{"importFailureObserver":{"reason":null,"state":"active"},"packages":[],"runner":"node","runtime":{"declared":null,"declaredComparison":"unavailable","node":"24.22.2"},"setup":"unit"},{"importFailureObserver":{"reason":"node-version","state":"inactive"},"packages":[],"runner":"node","runtime":{"declared":null,"declaredComparison":"unavailable","node":null},"setup":"hanging"}]},"executionMs":61.166185999999996,"jobsAttempted":2,"mutation":{"complete":false,"completed":0,"countedTimeouts":0,"diagnostics":{"slowestExecutions":[],"throughput":{"completedMutantsPerSecond":0.0,"jobsPerSecond":0.0},"unresolvedBreakdown":{"cancelled":0,"countedTimeouts":0,"executionError":0,"notRun":0,"testTimedOut":0,"timedOut":0,"unassessed":2},"workerTimeMs":-0.0},"enabledOperators":["comparison","logical","arithmetic","boolean","statement","optional"],"error":null,"executionMs":0.056005000000000006,"jobsAttempted":0,"killed":0,"mutationWallMs":0.00008999999999999999,"notRun":2,"outcomes":[{"countedAsKilled":false,"id":0,"kind":"comparison","localId":0,"offset":46,"original":"<","path":"src/calc.ts","replacement":"<=","setups":[{"name":"unit","state":"not-run"},{"name":"hanging","state":"not-run"}],"verdict":"unassessed"},{"countedAsKilled":false,"id":1,"kind":"comparison","localId":1,"offset":46,"original":"<","path":"src/calc.ts","replacement":">=","setups":[{"name":"unit","state":"not-run"},{"name":"hanging","state":"not-run"}],"verdict":"unassessed"}],"perOperator":[{"completed":0,"eligibleSites":1,"excludedSites":0,"executionMs":0.0,"jobsAttempted":0,"kind":"comparison","operator":"<","planned":2}],"planned":2,"restorationError":null,"score":null,"strategy":"replace","survived":0,"unresolved":2,"workerBaselineJobs":0,"workerBaselines":[],"workerCleanupMs":0.001252,"workerPreparationMs":0.00026,"workersRequested":1,"workersUsed":0},"phase":"mutate","phaseTimings":{"analysisMs":0.209842,"attributionMs":0.210784,"baselineMs":32.832539000000004,"cleanupMs":0.22101200000000001,"compilerStrictnessMs":null,"coverageMs":null,"preparationMs":0.134391,"typecheckMs":27.074755},"pseudoTesting":{"checked":0,"complete":false,"completed":0,"countedTimeouts":0,"diagnostics":{"slowestExecutions":[],"throughput":{"completedMutantsPerSecond":0.0,"jobsPerSecond":0.0},"unresolvedBreakdown":{"cancelled":0,"countedTimeouts":0,"executionError":0,"notRun":0,"testTimedOut":0,"timedOut":0,"unassessed":1},"workerTimeMs":-0.0},"error":null,"executionMs":0.060954,"jobsAttempted":0,"killed":0,"mutationWallMs":0.000691,"notRun":1,"outcomes":[{"countedAsKilled":false,"coverage":null,"id":0,"kind":"extreme","localId":0,"name":"arrow@21","offset":40,"original":"value < 3","path":"src/calc.ts","pseudoTested":null,"replacement":"{ return void 0; }","setups":[{"name":"unit","state":"not-run"},{"name":"hanging","state":"not-run"}],"start":21,"verdict":"unassessed"}],"planned":1,"pseudoTested":0,"restorationError":null,"strategy":"replace","survived":0,"unknown":1,"unresolved":1,"workerBaselineJobs":0,"workerBaselines":[],"workerCleanupMs":0.000059999999999999995,"workerPreparationMs":0.00032,"workersRequested":1,"workersUsed":0},"setups":[{"baseline":{"cancelled":false,"cleanupError":null,"error":null,"exit":0,"ms":32.046772000000004,"outputTruncated":false,"pipeError":null,"report":{"complete":true,"errors":0,"executionId":"capture-737815-1793919846587693843-15-0-baseline","failed":0,"node":"24.22.2","passed":1,"version":1},"state":"","timedOut":false},"compilerStrictness":{"compilerVersion":null,"config":null,"configSource":null,"disabled":null,"enabledBypassOptions":null,"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","options":null,"state":"unknown","unsupported":[]},"coverage":{"state":"not-run"},"inferredAny":{"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","ms":null,"state":"unknown"},"mutantTimeoutMs":null,"name":"unit","selection":{"state":"not-run"},"timings":{"baselineMs":32.832539000000004,"compilerStrictnessMs":null,"coverageMs":null,"typecheckMs":27.074755},"typecheck":{"cancelled":false,"cleanupError":null,"error":null,"exit":0,"ms":26.762482000000002,"outputTruncated":false,"pipeError":null,"state":"","timedOut":false},"uncappedMutantTimeoutMs":null},{"baseline":{"state":"not-run"},"compilerStrictness":{"compilerVersion":null,"config":null,"configSource":null,"disabled":null,"enabledBypassOptions":null,"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","options":null,"state":"unknown","unsupported":[]},"coverage":{"state":"not-run"},"inferredAny":{"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","ms":null,"state":"unknown"},"mutantTimeoutMs":null,"name":"hanging","selection":{"state":"not-run"},"timings":{"baselineMs":null,"compilerStrictnessMs":null,"coverageMs":null,"typecheckMs":null},"typecheck":{"state":"not-run"},"uncappedMutantTimeoutMs":null}],"sources":[{"path":"src/calc.ts","result":{"complete":false,"coverageSuppressions":{"count":0,"hints":[]},"functions":[{"branchCoverage":null,"branchCovered":0,"branchTotal":0,"cognitiveComplexity":0,"complexity":1,"coverage":null,"coverageBasis":null,"coverageSuppressions":0,"covered":0,"crap":null,"name":"arrow@21","pseudoTestReason":null,"pseudoTestStatus":"unknown","pseudoTested":null,"start":21,"status":"unknown","total":0,"typeSafety":{"doubleAssertions":0,"explicitAny":0,"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"},{"count":null,"locations":null,"setup":"hanging","state":"unknown"}],"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}],"problems":["no coverage reports"],"typeSafety":{"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"},{"count":null,"locations":null,"setup":"hanging","state":"unknown"}],"suppressions":[],"unowned":{"doubleAssertions":0,"explicitAny":0,"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}}}]}
+  left: String("unassessed")
+ right: "timed-out"
+
+---- execution::project::collection::tests::extreme_and_operator_phases_share_one_worker_baseline stdout ----
+
+thread 'execution::project::collection::tests::extreme_and_operator_phases_share_one_worker_baseline' (738197) panicked at crates/seshat/src/execution/project/collection.rs:3451:13:
+assertion `left == right` failed: pseudoTesting: {"complete":false,"diagnostics":{"concurrency":{"runners":[{"command":"test","effectiveWorkers":null,"runner":"node","setup":"unit","source":null,"state":"unavailable"},{"command":"coverage","effectiveWorkers":null,"runner":"node","setup":"unit","source":null,"state":"unavailable"}],"seshat":{"configuredWorkers":2,"effectiveWorkers":0,"state":"known"}},"runnerVersions":[{"importFailureObserver":{"reason":null,"state":"active"},"packages":[],"runner":"node","runtime":{"declared":null,"declaredComparison":"unavailable","node":"24.22.2"},"setup":"unit"}]},"executionMs":63.08678700000001,"jobsAttempted":2,"mutation":{"complete":false,"completed":0,"countedTimeouts":0,"diagnostics":{"slowestExecutions":[],"throughput":{"completedMutantsPerSecond":0.0,"jobsPerSecond":0.0},"unresolvedBreakdown":{"cancelled":0,"countedTimeouts":0,"executionError":0,"notRun":2,"testTimedOut":0,"timedOut":0,"unassessed":0},"workerTimeMs":-0.0},"enabledOperators":["comparison","logical","arithmetic","boolean","statement","optional"],"error":null,"executionMs":0.048010000000000004,"jobsAttempted":0,"killed":0,"mutationWallMs":0.00008,"notRun":2,"outcomes":[{"countedAsKilled":false,"id":0,"kind":"comparison","localId":0,"offset":46,"original":"<","path":"src/calc.ts","replacement":"<=","setups":[{"name":"unit","state":"not-run"}],"verdict":"not-run"},{"countedAsKilled":false,"id":1,"kind":"comparison","localId":1,"offset":46,"original":"<","path":"src/calc.ts","replacement":">=","setups":[{"name":"unit","state":"not-run"}],"verdict":"not-run"}],"perOperator":[{"completed":0,"eligibleSites":1,"excludedSites":0,"executionMs":0.0,"jobsAttempted":0,"kind":"comparison","operator":"<","planned":2}],"planned":2,"restorationError":null,"score":null,"strategy":"replace","survived":0,"unresolved":2,"workerBaselineJobs":0,"workerBaselines":[],"workerCleanupMs":0.001392,"workerPreparationMs":0.00025,"workersRequested":2,"workersUsed":0},"phase":"mutate","phaseTimings":{"analysisMs":0.330768,"attributionMs":0.274273,"baselineMs":33.490384999999996,"cleanupMs":0.282338,"compilerStrictnessMs":null,"coverageMs":null,"preparationMs":0.142356,"typecheckMs":28.265647},"pseudoTesting":{"checked":0,"complete":false,"completed":0,"countedTimeouts":0,"diagnostics":{"slowestExecutions":[],"throughput":{"completedMutantsPerSecond":0.0,"jobsPerSecond":0.0},"unresolvedBreakdown":{"cancelled":0,"countedTimeouts":0,"executionError":0,"notRun":3,"testTimedOut":0,"timedOut":0,"unassessed":0},"workerTimeMs":-0.0},"error":null,"executionMs":0.098905,"jobsAttempted":0,"killed":0,"mutationWallMs":0.0006810000000000001,"notRun":3,"outcomes":[{"countedAsKilled":false,"coverage":null,"id":0,"kind":"extreme","localId":0,"name":"arrow@22","offset":36,"original":"42","path":"packages/rules/index.ts","pseudoTested":null,"replacement":"{ return void 0; }","setups":[{"name":"unit","state":"not-run"}],"start":22,"verdict":"not-run"},{"countedAsKilled":false,"coverage":null,"id":1,"kind":"extreme","localId":0,"name":"arrow@21","offset":40,"original":"value < 3","path":"src/calc.ts","pseudoTested":null,"replacement":"{ return void 0; }","setups":[{"name":"unit","state":"not-run"}],"start":21,"verdict":"not-run"},{"countedAsKilled":false,"coverage":null,"id":2,"kind":"extreme","localId":0,"name":"arrow@22","offset":28,"original":"<div />","path":"src/nested/render.tsx","pseudoTested":null,"replacement":"{ return void 0; }","setups":[{"name":"unit","state":"not-run"}],"start":22,"verdict":"not-run"}],"planned":3,"pseudoTested":0,"restorationError":null,"strategy":"replace","survived":0,"unknown":3,"unresolved":3,"workerBaselineJobs":0,"workerBaselines":[],"workerCleanupMs":0.000029999999999999997,"workerPreparationMs":0.00035,"workersRequested":2,"workersUsed":0},"setups":[{"baseline":{"cancelled":false,"cleanupError":null,"error":null,"exit":0,"ms":32.434453000000005,"outputTruncated":false,"pipeError":null,"report":{"complete":true,"errors":0,"executionId":"capture-737815-1793919846653688305-22-0-baseline","failed":0,"node":"24.22.2","passed":1,"version":1},"state":"","timedOut":false},"compilerStrictness":{"compilerVersion":null,"config":null,"configSource":null,"disabled":null,"enabledBypassOptions":null,"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","options":null,"state":"unknown","unsupported":[]},"coverage":{"state":"not-run"},"inferredAny":{"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","ms":null,"state":"unknown"},"mutantTimeoutMs":null,"name":"unit","selection":{"state":"not-run"},"timings":{"baselineMs":33.490384999999996,"compilerStrictnessMs":null,"coverageMs":null,"typecheckMs":28.265647},"typecheck":{"cancelled":false,"cleanupError":null,"error":null,"exit":0,"ms":27.553867,"outputTruncated":false,"pipeError":null,"state":"","timedOut":false},"uncappedMutantTimeoutMs":null}],"sources":[{"path":"packages/rules/index.ts","result":{"complete":false,"coverageSuppressions":{"count":0,"hints":[]},"functions":[{"branchCoverage":null,"branchCovered":0,"branchTotal":0,"cognitiveComplexity":0,"complexity":1,"coverage":null,"coverageBasis":null,"coverageSuppressions":0,"covered":0,"crap":null,"name":"arrow@22","pseudoTestReason":null,"pseudoTestStatus":"unknown","pseudoTested":null,"start":22,"status":"unknown","total":0,"typeSafety":{"doubleAssertions":0,"explicitAny":0,"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"}],"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}],"problems":["no coverage reports"],"typeSafety":{"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"}],"suppressions":[],"unowned":{"doubleAssertions":0,"explicitAny":0,"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}}},{"path":"src/calc.ts","result":{"complete":false,"coverageSuppressions":{"count":0,"hints":[]},"functions":[{"branchCoverage":null,"branchCovered":0,"branchTotal":0,"cognitiveComplexity":0,"complexity":1,"coverage":null,"coverageBasis":null,"coverageSuppressions":0,"covered":0,"crap":null,"name":"arrow@21","pseudoTestReason":null,"pseudoTestStatus":"unknown","pseudoTested":null,"start":21,"status":"unknown","total":0,"typeSafety":{"doubleAssertions":0,"explicitAny":0,"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"}],"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}],"problems":["no coverage reports"],"typeSafety":{"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"}],"suppressions":[],"unowned":{"doubleAssertions":0,"explicitAny":0,"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}}},{"path":"src/nested/render.tsx","result":{"complete":false,"coverageSuppressions":{"count":0,"hints":[]},"functions":[{"branchCoverage":null,"branchCovered":0,"branchTotal":0,"cognitiveComplexity":0,"complexity":1,"coverage":null,"coverageBasis":null,"coverageSuppressions":0,"covered":0,"crap":null,"name":"arrow@22","pseudoTestReason":null,"pseudoTestStatus":"unknown","pseudoTested":null,"start":22,"status":"unknown","total":0,"typeSafety":{"doubleAssertions":0,"explicitAny":0,"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"}],"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}],"problems":["no coverage reports"],"typeSafety":{"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"}],"suppressions":[],"unowned":{"doubleAssertions":0,"explicitAny":0,"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}}}]}
+  left: Number(0)
+ right: 2
+
+---- execution::project::collection::tests::hanging_mutants_stop_at_the_limit_from_the_slowest_baseline stdout ----
+
+thread 'execution::project::collection::tests::hanging_mutants_stop_at_the_limit_from_the_slowest_baseline' (738212) panicked at crates/seshat/src/execution/project/collection.rs:3090:73:
+called `Option::unwrap()` on a `None` value
+
+---- execution::project::collection::tests::unconfirmed_selection_retries_stop_at_the_mutant_limit stdout ----
+
+thread 'execution::project::collection::tests::unconfirmed_selection_retries_stop_at_the_mutant_limit' (738261) panicked at crates/seshat/src/execution/project/collection.rs:3181:69:
+called `Option::unwrap()` on a `None` value
+
+---- execution::project::collection::tests::unresolved_jobs_allow_later_setups_and_mutants stdout ----
+
+thread 'execution::project::collection::tests::unresolved_jobs_allow_later_setups_and_mutants' (738283) panicked at crates/seshat/src/execution/project/collection.rs:2932:17:
+assertion `left == right` failed: missing: {"complete":false,"diagnostics":{"concurrency":{"runners":[{"command":"test","effectiveWorkers":null,"runner":"node","setup":"unit","source":null,"state":"unavailable"},{"command":"coverage","effectiveWorkers":null,"runner":"node","setup":"unit","source":null,"state":"unavailable"},{"command":"test","effectiveWorkers":null,"runner":"node","setup":"second","source":null,"state":"unavailable"},{"command":"coverage","effectiveWorkers":null,"runner":"node","setup":"second","source":null,"state":"unavailable"}],"seshat":{"configuredWorkers":1,"effectiveWorkers":0,"state":"known"}},"runnerVersions":[{"importFailureObserver":{"reason":null,"state":"active"},"packages":[],"runner":"node","runtime":{"declared":null,"declaredComparison":"unavailable","node":"24.22.2"},"setup":"unit"},{"importFailureObserver":{"reason":"node-version","state":"inactive"},"packages":[],"runner":"node","runtime":{"declared":null,"declaredComparison":"unavailable","node":null},"setup":"second"}]},"executionMs":61.682758,"jobsAttempted":2,"mutation":{"complete":false,"completed":0,"countedTimeouts":0,"diagnostics":{"slowestExecutions":[],"throughput":{"completedMutantsPerSecond":0.0,"jobsPerSecond":0.0},"unresolvedBreakdown":{"cancelled":0,"countedTimeouts":0,"executionError":0,"notRun":0,"testTimedOut":0,"timedOut":0,"unassessed":2},"workerTimeMs":-0.0},"enabledOperators":["comparison","logical","arithmetic","boolean","statement","optional"],"error":null,"executionMs":0.056345,"jobsAttempted":0,"killed":0,"mutationWallMs":0.00008999999999999999,"notRun":2,"outcomes":[{"countedAsKilled":false,"id":0,"kind":"comparison","localId":0,"offset":46,"original":"<","path":"src/calc.ts","replacement":"<=","setups":[{"name":"unit","state":"not-run"},{"name":"second","state":"not-run"}],"verdict":"unassessed"},{"countedAsKilled":false,"id":1,"kind":"comparison","localId":1,"offset":46,"original":"<","path":"src/calc.ts","replacement":">=","setups":[{"name":"unit","state":"not-run"},{"name":"second","state":"not-run"}],"verdict":"unassessed"}],"perOperator":[{"completed":0,"eligibleSites":1,"excludedSites":0,"executionMs":0.0,"jobsAttempted":0,"kind":"comparison","operator":"<","planned":2}],"planned":2,"restorationError":null,"score":null,"strategy":"replace","survived":0,"unresolved":2,"workerBaselineJobs":0,"workerBaselines":[],"workerCleanupMs":0.001243,"workerPreparationMs":0.00034999999999999994,"workersRequested":1,"workersUsed":0},"phase":"mutate","phaseTimings":{"analysisMs":0.238495,"attributionMs":0.12874,"baselineMs":32.747048,"cleanupMs":0.220532,"compilerStrictnessMs":null,"coverageMs":null,"preparationMs":0.13464099999999998,"typecheckMs":27.750357},"pseudoTesting":{"checked":0,"complete":false,"completed":0,"countedTimeouts":0,"diagnostics":{"slowestExecutions":[],"throughput":{"completedMutantsPerSecond":0.0,"jobsPerSecond":0.0},"unresolvedBreakdown":{"cancelled":0,"countedTimeouts":0,"executionError":0,"notRun":0,"testTimedOut":0,"timedOut":0,"unassessed":1},"workerTimeMs":-0.0},"error":null,"executionMs":0.059501,"jobsAttempted":0,"killed":0,"mutationWallMs":0.0007120000000000001,"notRun":1,"outcomes":[{"countedAsKilled":false,"coverage":null,"id":0,"kind":"extreme","localId":0,"name":"arrow@21","offset":40,"original":"value < 3","path":"src/calc.ts","pseudoTested":null,"replacement":"{ return void 0; }","setups":[{"name":"unit","state":"not-run"},{"name":"second","state":"not-run"}],"start":21,"verdict":"unassessed"}],"planned":1,"pseudoTested":0,"restorationError":null,"strategy":"replace","survived":0,"unknown":1,"unresolved":1,"workerBaselineJobs":0,"workerBaselines":[],"workerCleanupMs":0.000029999999999999997,"workerPreparationMs":0.000321,"workersRequested":1,"workersUsed":0},"setups":[{"baseline":{"cancelled":false,"cleanupError":null,"error":null,"exit":0,"ms":31.952684,"outputTruncated":false,"pipeError":null,"report":{"complete":true,"errors":0,"executionId":"capture-737815-1793919846978200231-56-0-baseline","failed":0,"node":"24.22.2","passed":1,"version":1},"state":"","timedOut":false},"compilerStrictness":{"compilerVersion":null,"config":null,"configSource":null,"disabled":null,"enabledBypassOptions":null,"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","options":null,"state":"unknown","unsupported":[]},"coverage":{"state":"not-run"},"inferredAny":{"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","ms":null,"state":"unknown"},"mutantTimeoutMs":null,"name":"unit","selection":{"state":"not-run"},"timings":{"baselineMs":32.747048,"compilerStrictnessMs":null,"coverageMs":null,"typecheckMs":27.750357},"typecheck":{"cancelled":false,"cleanupError":null,"error":null,"exit":0,"ms":27.442212,"outputTruncated":false,"pipeError":null,"state":"","timedOut":false},"uncappedMutantTimeoutMs":null},{"baseline":{"state":"not-run"},"compilerStrictness":{"compilerVersion":null,"config":null,"configSource":null,"disabled":null,"enabledBypassOptions":null,"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","options":null,"state":"unknown","unsupported":[]},"coverage":{"state":"not-run"},"inferredAny":{"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","ms":null,"state":"unknown"},"mutantTimeoutMs":null,"name":"second","selection":{"state":"not-run"},"timings":{"baselineMs":null,"compilerStrictnessMs":null,"coverageMs":null,"typecheckMs":null},"typecheck":{"state":"not-run"},"uncappedMutantTimeoutMs":null}],"sources":[{"path":"src/calc.ts","result":{"complete":false,"coverageSuppressions":{"count":0,"hints":[]},"functions":[{"branchCoverage":null,"branchCovered":0,"branchTotal":0,"cognitiveComplexity":0,"complexity":1,"coverage":null,"coverageBasis":null,"coverageSuppressions":0,"covered":0,"crap":null,"name":"arrow@21","pseudoTestReason":null,"pseudoTestStatus":"unknown","pseudoTested":null,"start":21,"status":"unknown","total":0,"typeSafety":{"doubleAssertions":0,"explicitAny":0,"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"},{"count":null,"locations":null,"setup":"second","state":"unknown"}],"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}],"problems":["no coverage reports"],"typeSafety":{"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"},{"count":null,"locations":null,"setup":"second","state":"unknown"}],"suppressions":[],"unowned":{"doubleAssertions":0,"explicitAny":0,"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}}}]}
+  left: Number(0)
+ right: 2
+
+---- execution::project::tests::coverage_suppressions_skip_pseudo_testing_but_keep_operator_mutations stdout ----
+
+thread 'execution::project::tests::coverage_suppressions_skip_pseudo_testing_but_keep_operator_mutations' (738323) panicked at crates/seshat/src/execution/project.rs:971:13:
+assertion `left == right` failed: next: {"complete":false,"diagnostics":{"concurrency":{"runners":[{"command":"test","effectiveWorkers":null,"runner":"node","setup":"unit","source":null,"state":"unavailable"},{"command":"coverage","effectiveWorkers":null,"runner":"node","setup":"unit","source":null,"state":"unavailable"}],"seshat":{"configuredWorkers":1,"effectiveWorkers":0,"state":"known"}},"runnerVersions":[{"importFailureObserver":{"reason":null,"state":"active"},"packages":[],"runner":"node","runtime":{"declared":null,"declaredComparison":"unavailable","node":"24.22.2"},"setup":"unit"}]},"executionMs":66.617993,"jobsAttempted":2,"mutation":{"complete":false,"completed":0,"countedTimeouts":0,"diagnostics":{"slowestExecutions":[],"throughput":{"completedMutantsPerSecond":0.0,"jobsPerSecond":0.0},"unresolvedBreakdown":{"cancelled":0,"countedTimeouts":0,"executionError":0,"notRun":2,"testTimedOut":0,"timedOut":0,"unassessed":0},"workerTimeMs":-0.0},"enabledOperators":["comparison"],"error":null,"executionMs":0.08462700000000001,"jobsAttempted":0,"killed":0,"mutationWallMs":0.00015,"notRun":2,"outcomes":[{"countedAsKilled":false,"id":0,"kind":"comparison","localId":0,"offset":74,"original":"<","path":"src/calc.ts","replacement":"<=","setups":[{"name":"unit","state":"not-run"}],"verdict":"not-run"},{"countedAsKilled":false,"id":1,"kind":"comparison","localId":1,"offset":74,"original":"<","path":"src/calc.ts","replacement":">=","setups":[{"name":"unit","state":"not-run"}],"verdict":"not-run"}],"perOperator":[{"completed":0,"eligibleSites":1,"excludedSites":0,"executionMs":0.0,"jobsAttempted":0,"kind":"comparison","operator":"<","planned":2}],"planned":2,"restorationError":null,"score":null,"strategy":"replace","survived":0,"unresolved":2,"workerBaselineJobs":0,"workerBaselines":[],"workerCleanupMs":0.001603,"workerPreparationMs":0.000491,"workersRequested":1,"workersUsed":0},"phase":"check","phaseTimings":{"analysisMs":0.35695699999999997,"attributionMs":0.20733700000000002,"baselineMs":35.024617,"cleanupMs":0.22013100000000002,"compilerStrictnessMs":null,"coverageMs":null,"preparationMs":0.186117,"typecheckMs":30.296124},"pseudoTesting":{"checked":0,"complete":false,"completed":0,"countedTimeouts":0,"diagnostics":{"slowestExecutions":[],"throughput":{"completedMutantsPerSecond":0.0,"jobsPerSecond":0.0},"unresolvedBreakdown":{"cancelled":0,"countedTimeouts":0,"executionError":0,"notRun":0,"testTimedOut":0,"timedOut":0,"unassessed":0},"workerTimeMs":-0.0},"error":null,"executionMs":0.041006,"jobsAttempted":0,"killed":0,"mutationWallMs":0.000771,"notRun":0,"outcomes":[],"planned":0,"pseudoTested":0,"restorationError":null,"strategy":"replace","survived":0,"unknown":0,"unresolved":0,"workerBaselineJobs":0,"workerBaselines":[],"workerCleanupMs":0.00007000000000000001,"workerPreparationMs":0.00043099999999999996,"workersRequested":1,"workersUsed":0},"setups":[{"baseline":{"cancelled":false,"cleanupError":null,"error":null,"exit":0,"ms":34.148732,"outputTruncated":false,"pipeError":null,"report":{"complete":true,"errors":0,"executionId":"capture-737815-1793919847146961834-211-0-baseline","failed":0,"node":"24.22.2","passed":1,"version":1},"state":"","timedOut":false},"compilerStrictness":{"compilerVersion":null,"config":null,"configSource":null,"disabled":null,"enabledBypassOptions":null,"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","options":null,"state":"unknown","unsupported":[]},"coverage":{"state":"not-run"},"inferredAny":{"error":"compiler reporting requires a direct node invocation of typescript/bin/tsc or typescript/lib/tsc.js","ms":null,"state":"unknown"},"mutantTimeoutMs":null,"name":"unit","selection":{"state":"not-run"},"timings":{"baselineMs":35.024617,"compilerStrictnessMs":null,"coverageMs":null,"typecheckMs":30.296124},"typecheck":{"cancelled":false,"cleanupError":null,"error":null,"exit":0,"ms":29.932725,"outputTruncated":false,"pipeError":null,"state":"","timedOut":false},"uncappedMutantTimeoutMs":null}],"sources":[{"path":"src/calc.ts","result":{"complete":false,"coverageSuppressions":{"count":1,"hints":[{"end":26,"functions":[48],"kind":"next","provider":"istanbul","start":0,"wholeFunction":true}]},"functions":[{"branchCoverage":null,"branchCovered":0,"branchTotal":0,"cognitiveComplexity":0,"complexity":1,"coverage":null,"coverageBasis":null,"coverageSuppressions":1,"covered":0,"crap":null,"name":"arrow@48","pseudoTestReason":"coverage-suppressed","pseudoTestStatus":"not-applicable","pseudoTested":null,"start":48,"status":"suppressed","total":0,"typeSafety":{"doubleAssertions":0,"explicitAny":0,"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"}],"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}],"problems":["no coverage reports"],"typeSafety":{"inferredAny":[{"count":null,"locations":null,"setup":"unit","state":"unknown"}],"suppressions":[],"unowned":{"doubleAssertions":0,"explicitAny":0,"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}}}]}
+  left: Bool(false)
+ right: true
+
+
+failures:
+    execution::project::collection::tests::attribution_failure_allows_mutations_but_original_job_failures_stop_them
+    execution::project::collection::tests::cleanup_failure_stops_pending_setups_and_prepared_baselines
+    execution::project::collection::tests::completed_jobs_release_artifacts_and_workers_follow_the_plan
+    execution::project::collection::tests::counted_deadlines_need_a_clean_stop_and_every_setup_resolved
+    execution::project::collection::tests::extreme_and_operator_phases_share_one_worker_baseline
+    execution::project::collection::tests::hanging_mutants_stop_at_the_limit_from_the_slowest_baseline
+    execution::project::collection::tests::unconfirmed_selection_retries_stop_at_the_mutant_limit
+    execution::project::collection::tests::unresolved_jobs_allow_later_setups_and_mutants
+    execution::project::tests::coverage_suppressions_skip_pseudo_testing_but_keep_operator_mutations
+
+test result: FAILED. 171 passed; 9 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.47s
+
+error: test failed, to rerun pass `-p seshat --lib`
+
+*** result: Failure(101)

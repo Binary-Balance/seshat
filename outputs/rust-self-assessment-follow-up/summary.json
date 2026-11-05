@@ -1,0 +1,298 @@
+{
+  "baseRevision": "4081ba2d25b1065a300b10caa292a0d3aa3c0a66",
+  "environment": {
+    "rust": "rustc 1.98.1 (48a229cea 2026-09-01)",
+    "node": "v24.22.2",
+    "llvmCov": "cargo-llvm-cov 0.9.1",
+    "crap": "cargo-crap 0.9.0",
+    "mutants": "cargo-mutants 27.1.0"
+  },
+  "coverageScope": "native Rust tests only; compare with baseline unit-crap.json, not combined-crap.json",
+  "nativeTests": 196,
+  "measuredFunctions": 288,
+  "unmeasured": [
+    {
+      "file": "crates/seshat/src/bin/windows_console_helper/tests.rs",
+      "function": "Fixture::drop",
+      "line": 120,
+      "cyclomatic": 1.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows_console_helper/tests.rs",
+      "function": "Fixture::new",
+      "line": 113,
+      "cyclomatic": 1.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows_console_helper/tests.rs",
+      "function": "closed_gate_never_launches_command",
+      "line": 347,
+      "cyclomatic": 1.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows_console_helper/tests.rs",
+      "function": "exited",
+      "line": 106,
+      "cyclomatic": 1.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows_console_helper/tests.rs",
+      "function": "fixture_command",
+      "line": 68,
+      "cyclomatic": 1.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows_console_helper/tests.rs",
+      "function": "fixture_signal",
+      "line": 10,
+      "cyclomatic": 1.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows_console_helper/tests.rs",
+      "function": "helper",
+      "line": 126,
+      "cyclomatic": 1.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows_console_helper/tests.rs",
+      "function": "process_handle",
+      "line": 93,
+      "cyclomatic": 1.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows_console_helper/tests.rs",
+      "function": "until",
+      "line": 85,
+      "cyclomatic": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "AttributeList::as_ptr",
+      "line": 461,
+      "cyclomatic": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "AttributeList::drop",
+      "line": 495,
+      "cyclomatic": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "AttributeList::new",
+      "line": 465,
+      "cyclomatic": 4.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "Child::as_raw_handle",
+      "line": 77,
+      "cyclomatic": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "Child::id",
+      "line": 84,
+      "cyclomatic": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "Child::kill",
+      "line": 101,
+      "cyclomatic": 4.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "Child::try_wait",
+      "line": 88,
+      "cyclomatic": 5.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "append_arg",
+      "line": 292,
+      "cyclomatic": 15.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "check",
+      "line": 113,
+      "cyclomatic": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "command_line",
+      "line": 345,
+      "cyclomatic": 12.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "compare_keys",
+      "line": 389,
+      "cyclomatic": 5.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "environment",
+      "line": 410,
+      "cyclomatic": 10.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "exists",
+      "line": 221,
+      "cyclomatic": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "full_path",
+      "line": 145,
+      "cyclomatic": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "output_pipe",
+      "line": 446,
+      "cyclomatic": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "resolve_program",
+      "line": 227,
+      "cyclomatic": 16.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "spawn_suspended",
+      "line": 501,
+      "cyclomatic": 12.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "strip_verbatim",
+      "line": 150,
+      "cyclomatic": 8.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "user_path",
+      "line": 173,
+      "cyclomatic": 17.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "wide",
+      "line": 121,
+      "cyclomatic": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/windows_spawn.rs",
+      "function": "wide_buffer",
+      "line": 130,
+      "cyclomatic": 4.0
+    }
+  ],
+  "testFiles": {
+    "benchmarks/proofs/test-selection.mjs": "f0ab21b2cf86262bd4e8f98c8fe4d78dc21f972c0b299fb7348a6009599fd996",
+    "crates/seshat/src/coverage.rs": "36cb1c3a04b46b95ddfc5c27a1b7a1dc85a29f110a912bdb0b712b2896bb40e0",
+    "crates/seshat/src/execution/project/collection.rs": "67a947d1d9a20ea2d9e0cf56ea82f24903fe24305efc37ef5e39c6c152085188",
+    "crates/seshat/tests/proof_inputs.rs": "627d335e2a1b220b0422e5559fc6cb3476cecc2d1c861d5afbf3421a29bb9d25"
+  },
+  "originalPilotSurvivors": {
+    "fullCrateBaseline": "passed",
+    "generated": 2,
+    "caught": 2
+  },
+  "controlledRegressions": [
+    {
+      "name": "typecheck-control-old-tests",
+      "exit": 0,
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "<fixture>/Cargo.toml",
+        "--locked",
+        "--offline",
+        "--test",
+        "proof_inputs"
+      ],
+      "log": "typecheck-control-old-tests.log"
+    },
+    {
+      "name": "typecheck-control-new-tests",
+      "exit": 101,
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "<fixture>/Cargo.toml",
+        "--locked",
+        "--offline",
+        "--test",
+        "proof_inputs"
+      ],
+      "log": "typecheck-control-new-tests.log"
+    },
+    {
+      "name": "retry-count-control-old-tests",
+      "exit": 0,
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "<fixture>/Cargo.toml",
+        "--locked",
+        "--offline",
+        "--lib",
+        "unconfirmed_selection_retries_stop_at_the_mutant_limit"
+      ],
+      "log": "retry-count-control-old-tests.log"
+    },
+    {
+      "name": "retry-count-control-new-tests",
+      "exit": 101,
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "<fixture>/Cargo.toml",
+        "--locked",
+        "--offline",
+        "--lib",
+        "unconfirmed_selection_retries_stop_at_the_mutant_limit"
+      ],
+      "log": "retry-count-control-new-tests.log"
+    },
+    {
+      "name": "statement-span-control-old-tests",
+      "exit": 0,
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "<fixture>/Cargo.toml",
+        "--locked",
+        "--offline",
+        "--lib",
+        "coverage::"
+      ],
+      "log": "statement-span-control-old-tests.log"
+    },
+    {
+      "name": "statement-span-control-new-tests",
+      "exit": 101,
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "<fixture>/Cargo.toml",
+        "--locked",
+        "--offline",
+        "--lib",
+        "coverage::"
+      ],
+      "log": "statement-span-control-new-tests.log"
+    }
+  ]
+}

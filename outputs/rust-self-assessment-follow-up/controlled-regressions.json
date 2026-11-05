@@ -1,0 +1,95 @@
+{
+  "baseRevision": "4081ba2d25b1065a300b10caa292a0d3aa3c0a66",
+  "cases": [
+    {
+      "name": "typecheck-control-old-tests",
+      "exit": 0,
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "<fixture>/Cargo.toml",
+        "--locked",
+        "--offline",
+        "--test",
+        "proof_inputs"
+      ],
+      "log": "typecheck-control-old-tests.log"
+    },
+    {
+      "name": "typecheck-control-new-tests",
+      "exit": 101,
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "<fixture>/Cargo.toml",
+        "--locked",
+        "--offline",
+        "--test",
+        "proof_inputs"
+      ],
+      "log": "typecheck-control-new-tests.log"
+    },
+    {
+      "name": "retry-count-control-old-tests",
+      "exit": 0,
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "<fixture>/Cargo.toml",
+        "--locked",
+        "--offline",
+        "--lib",
+        "unconfirmed_selection_retries_stop_at_the_mutant_limit"
+      ],
+      "log": "retry-count-control-old-tests.log"
+    },
+    {
+      "name": "retry-count-control-new-tests",
+      "exit": 101,
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "<fixture>/Cargo.toml",
+        "--locked",
+        "--offline",
+        "--lib",
+        "unconfirmed_selection_retries_stop_at_the_mutant_limit"
+      ],
+      "log": "retry-count-control-new-tests.log"
+    },
+    {
+      "name": "statement-span-control-old-tests",
+      "exit": 0,
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "<fixture>/Cargo.toml",
+        "--locked",
+        "--offline",
+        "--lib",
+        "coverage::"
+      ],
+      "log": "statement-span-control-old-tests.log"
+    },
+    {
+      "name": "statement-span-control-new-tests",
+      "exit": 101,
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "<fixture>/Cargo.toml",
+        "--locked",
+        "--offline",
+        "--lib",
+        "coverage::"
+      ],
+      "log": "statement-span-control-new-tests.log"
+    }
+  ]
+}

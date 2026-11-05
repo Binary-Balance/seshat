@@ -1,5 +1,8 @@
 # Rust self-assessment baseline
 
+The [findings follow-up](rust-self-assessment-follow-up.md) validates the pilot
+survivors, strengthens confirmed test gaps and records architecture decisions.
+
 Issue [#270](https://github.com/Binary-Balance/seshat/issues/270) establishes
 an advisory baseline for Seshat's own Rust code before
 [#186](https://github.com/Binary-Balance/seshat/issues/186). This is a Linux x64

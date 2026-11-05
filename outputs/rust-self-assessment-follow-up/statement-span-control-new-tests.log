@@ -1,0 +1,58 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   <fixture>/crates/seshat/Cargo.toml
+workspace: <fixture>/Cargo.toml
+   Compiling seshat v0.13.0 (<fixture>/crates/seshat)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.85s
+     Running unittests src/lib.rs (work/self-assessment-follow-up/control-target/debug/deps/seshat-cf953a26f912f0c4)
+
+running 32 tests
+test coverage::coincident_spans_and_incompatible_reports_stay_incomplete ... ok
+test coverage::declarations_without_bodies_do_not_create_coverage_rows ... ok
+test coverage::conflicting_branch_owners_never_gain_statement_fallback ... ok
+test coverage::default_ranges_stop_before_a_later_function_value ... ok
+test coverage::empty_and_reversed_statement_spans_cannot_supply_coverage ... FAILED
+test coverage::file_suppression_allows_an_omitted_entry_but_never_hides_bad_evidence ... ok
+test coverage::final_object_property_closing_brace_does_not_cross_a_sibling_expression ... ok
+test coverage::flattened_logical_branches_cannot_be_counted_again_as_nested_sites ... ok
+test coverage::functions_in_default_parameters_own_their_internal_branches ... ok
+test coverage::if_condition_and_object_property_ends_preserve_executable_boundaries ... ok
+test coverage::empty_bodies_require_non_executing_parameters ... ok
+test coverage::istanbul_label_and_debugger_mappings ... ok
+test coverage::jsx_closing_delimiters_do_not_allow_other_executable_children_or_code ... ok
+test coverage::incompatible_branches_merge_compatible_statements_without_scoring_partial_branches ... ok
+test coverage::jsx_container_and_opening_tag_ends_do_not_swallow_other_attributes_or_children ... ok
+test coverage::line_separators_cannot_inflate_coverage ... ok
+test coverage::jsx_fragment_closing_ranges_preserve_child_boundaries ... ok
+test coverage::malformed_columns_are_not_missing_columns ... ok
+test coverage::mapped_closing_parentheses_allow_trivia_but_not_executable_code ... ok
+test coverage::open_ends_are_not_missing_positions ... ok
+test coverage::parenthesized_arrow_return_has_an_executable_inner_start ... ok
+test coverage::partial_suppression_cannot_become_full_statement_coverage ... ok
+test coverage::provider_end_extensions_normalize_before_branch_hit_merging ... ok
+test coverage::recorded_branches_drive_crap_without_changing_statement_coverage ... ok
+test coverage::remapped_line_ends_allow_comments_but_not_code_or_newlines ... ok
+test coverage::suppression_does_not_hide_existing_counters_or_reclassify_implicit_scopes ... ok
+test coverage::suppression_rejects_retained_function_records_without_statement_evidence ... ok
+test coverage::suppression_requires_usable_function_metadata_when_present ... ok
+test coverage::unicode_positions ... ok
+test coverage::unreliable_branches_preserve_statements_and_other_functions ... ok
+test coverage::whole_function_suppressions_are_visible_and_do_not_require_counters ... ok
+test coverage::missing_malformed_and_shifted_branch_evidence_never_falls_back ... ok
+
+failures:
+
+---- coverage::empty_and_reversed_statement_spans_cannot_supply_coverage stdout ----
+
+thread 'coverage::empty_and_reversed_statement_spans_cannot_supply_coverage' (757886) panicked at crates/seshat/src/coverage.rs:1600:9:
+assertion `left == right` failed: {"complete":true,"coverageSuppressions":{"count":0,"hints":[]},"functions":[{"branchCoverage":null,"branchCovered":0,"branchTotal":0,"cognitiveComplexity":0,"complexity":1,"coverage":1.0,"coverageBasis":"statement","coverageSuppressions":0,"covered":1,"crap":1.0,"name":"arrow@14","start":14,"status":"measured","total":1,"typeSafety":{"doubleAssertions":0,"explicitAny":0,"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}],"problems":[],"typeSafety":{"suppressions":[],"unowned":{"doubleAssertions":0,"explicitAny":0,"nonNullAssertions":0,"tsExpectError":0,"tsIgnore":0,"tsNocheck":0,"typeAssertions":0}}}
+  left: Bool(true)
+ right: false
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    coverage::empty_and_reversed_statement_spans_cannot_supply_coverage
+
+test result: FAILED. 31 passed; 1 failed; 0 ignored; 0 measured; 149 filtered out; finished in 0.08s
+
+error: test failed, to rerun pass `--lib`

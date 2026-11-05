@@ -101,6 +101,80 @@ fn command_root_loads_captured_scripts() {
 }
 
 #[test]
+fn failed_original_and_prepared_checks_never_start_mutants() {
+    let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
+    for strategy in ["replace", "switch"] {
+        for (phase, failing_command, failing_call, expected_trace) in [
+            ("original-typecheck", "typecheck", 1, vec!["typecheck"]),
+            ("original-build", "build", 1, vec!["typecheck", "build"]),
+            (
+                "original-baseline",
+                "test",
+                1,
+                vec!["typecheck", "build", "test"],
+            ),
+            (
+                "prepared-build",
+                "build",
+                2,
+                vec!["typecheck", "build", "test", "build"],
+            ),
+            (
+                "prepared-baseline",
+                "test",
+                2,
+                vec!["typecheck", "build", "test", "build", "test"],
+            ),
+        ] {
+            if strategy == "replace" && phase.starts_with("prepared-") {
+                continue;
+            }
+            let mut fixture = Fixture::new();
+            let trace = fixture.root.join("trace.json");
+            for command in ["typecheck", "build", "test"] {
+                let script = format!(
+                    "const fs=require('fs'), path={path}, name={name};
+                    const trace=fs.existsSync(path)?JSON.parse(fs.readFileSync(path,'utf8')):[];
+                    trace.push({{command:name,mutant:process.env.SESHAT_MUTANT_ID}});
+                    fs.writeFileSync(path,JSON.stringify(trace));
+                    const fail=name==={failing}&&trace.filter(row=>row.command===name).length==={call};
+                    if(name==='test')fs.writeFileSync(process.env.SESHAT_RECEIPT,
+                      JSON.stringify({{complete:true,passed:fail?0:1,failed:fail?1:0,errors:0,timeouts:0}}));
+                    process.exit(fail?1:0);",
+                    path = json!(trace),
+                    name = json!(command),
+                    failing = json!(failing_command),
+                    call = failing_call,
+                );
+                fixture.config[command] = node(&script);
+            }
+            let value = report(&fixture.execute(strategy).output().unwrap(), 2);
+            assert_eq!(value["complete"], false, "{phase}: {value}");
+            assert_eq!(value["phase"], phase);
+            assert_eq!(value["evidence"]["exit"], 1);
+            assert_eq!(
+                value["evidence"]["state"],
+                if failing_command == "test" {
+                    "failed"
+                } else {
+                    "execution-error"
+                }
+            );
+            assert!(value["score"].is_null());
+            assert!(value["outcomes"].is_null());
+            let trace: Vec<Value> = serde_json::from_slice(&fs::read(trace).unwrap()).unwrap();
+            let commands: Vec<_> = trace
+                .iter()
+                .map(|row| row["command"].as_str().unwrap())
+                .collect();
+            assert_eq!(commands, expected_trace, "{strategy}: {phase}");
+            assert!(trace.iter().all(|row| row["mutant"] == "-1"));
+            fixture.clean();
+        }
+    }
+}
+
+#[test]
 fn truncated_test_output_keeps_kills_and_schedules_later_mutants() {
     let _guard = CHILD_PROCESS_LOCK.lock().unwrap();
     for strategy in ["replace", "switch"] {

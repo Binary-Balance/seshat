@@ -1,0 +1,11 @@
+--- a/crates/seshat/src/execution.rs
++++ b/crates/seshat/src/execution.rs
+@@ -519,7 +519,7 @@
+             let check = self.command("typecheck", None)?;
+             if check.state != TestState::Passed {
+                 return Ok(
+-                    json!({"complete":false,"phase":"original-typecheck","evidence":check.into_json()}),
++                    json!({"complete":true,"phase":"original-typecheck","evidence":check.into_json()}),
+                 );
+             }
+             Some(check.into_json())
