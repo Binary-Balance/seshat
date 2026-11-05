@@ -60,12 +60,9 @@ impl MutationProgress {
         if finished {
             self.completed += 1;
             let missing_setup = states.len() < setup_count || states.contains(&TestState::NotRun);
-            if states
-                .iter()
-                .any(|state| *state == TestState::ExecutionError)
-            {
+            if states.contains(&TestState::ExecutionError) {
                 self.execution_errors += 1;
-            } else if states.iter().any(|state| *state == TestState::Cancelled) {
+            } else if states.contains(&TestState::Cancelled) {
                 self.cancelled += 1;
             } else if states.contains(&TestState::TimedOut)
                 || states.contains(&TestState::CountedTimeout) && missing_setup
@@ -539,7 +536,7 @@ fn locked_version(
     (versions.len() == 1).then(|| versions.into_iter().next().unwrap().to_string())
 }
 
-fn receipt_report<'a>(setup: &'a Value) -> Option<&'a Value> {
+fn receipt_report(setup: &Value) -> Option<&Value> {
     ["baseline", "coverage"].iter().find_map(|key| {
         setup[*key]["report"]
             .as_object()
@@ -588,10 +585,9 @@ fn numeric_flag(args: &[String], name: &str) -> Option<Option<usize>> {
                     .and_then(|value| value.parse::<usize>().ok())
                     .filter(|value| *value > 0),
             )
-        } else if let Some(raw) = arg.strip_prefix(&prefix) {
-            Some(raw.parse::<usize>().ok().filter(|value| *value > 0))
         } else {
-            None
+            arg.strip_prefix(&prefix)
+                .map(|raw| raw.parse::<usize>().ok().filter(|value| *value > 0))
         };
         if let Some(parsed) = parsed {
             if found && value != parsed {
@@ -704,7 +700,7 @@ fn attribute_inferred_any(
     measured["typeSafety"]["inferredAny"] = json!(rows.last().unwrap());
 }
 
-fn direct_runner_args<'a>(runner: Runner, args: &'a [String]) -> Option<&'a [String]> {
+fn direct_runner_args(runner: Runner, args: &[String]) -> Option<&[String]> {
     let program = args.first()?;
     let program_name = Path::new(program)
         .file_name()?
@@ -1599,43 +1595,47 @@ impl CapturedProject {
         let mut prepared_baseline_ms = None;
         let mut worker_ready =
             ready && (!switching || plan.is_empty() || prepared_sources.is_some());
-        if switching && worker_ready && !plan.is_empty() {
-            if let Some(sources) = &prepared_sources {
-                for (worker_id, (worker, receipts)) in (1..worker_limit).zip(&mut workers.copies) {
-                    if let Err(error) = worker.install_prepared_sources(sources) {
-                        run_error = Some(error);
-                        worker_ready = false;
-                        break;
-                    }
-                    let (rows, ready) = worker.run_prepared_baselines(
-                        &receipts.0,
-                        &format!("worker-{worker_id}-prepared"),
-                        Some(worker_id),
-                        progress,
-                    );
-                    worker_ready &= ready;
-                    worker_baselines.extend(rows);
-                    if !worker_ready {
-                        break;
-                    }
+        if switching
+            && worker_ready
+            && !plan.is_empty()
+            && let Some(sources) = &prepared_sources
+        {
+            for (worker_id, (worker, receipts)) in (1..worker_limit).zip(&mut workers.copies) {
+                if let Err(error) = worker.install_prepared_sources(sources) {
+                    run_error = Some(error);
+                    worker_ready = false;
+                    break;
+                }
+                let (rows, ready) = worker.run_prepared_baselines(
+                    &receipts.0,
+                    &format!("worker-{worker_id}-prepared"),
+                    Some(worker_id),
+                    progress,
+                );
+                worker_ready &= ready;
+                worker_baselines.extend(rows);
+                if !worker_ready {
+                    break;
                 }
             }
         }
-        if switching && worker_ready && !plan.is_empty() {
-            if let Some(sources) = &prepared_sources {
-                if let Err(error) = self.install_prepared_sources(sources) {
-                    run_error = Some(error);
-                    worker_ready = false;
-                } else {
-                    let prepared_baseline_started = Instant::now();
-                    let (rows, ready) =
-                        self.run_prepared_baselines(evidence, "primary", None, progress);
-                    worker_ready &= ready;
-                    prepared_baseline_jobs = rows.len();
-                    prepared_baselines = rows;
-                    prepared_baseline_ms =
-                        Some(prepared_baseline_started.elapsed().as_secs_f64() * 1000.0);
-                }
+        if switching
+            && worker_ready
+            && !plan.is_empty()
+            && let Some(sources) = &prepared_sources
+        {
+            if let Err(error) = self.install_prepared_sources(sources) {
+                run_error = Some(error);
+                worker_ready = false;
+            } else {
+                let prepared_baseline_started = Instant::now();
+                let (rows, ready) =
+                    self.run_prepared_baselines(evidence, "primary", None, progress);
+                worker_ready &= ready;
+                prepared_baseline_jobs = rows.len();
+                prepared_baselines = rows;
+                prepared_baseline_ms =
+                    Some(prepared_baseline_started.elapsed().as_secs_f64() * 1000.0);
             }
         }
         let switch_preparation_ms =
@@ -2173,7 +2173,7 @@ impl CapturedProject {
                         // failed collection still makes the whole run incomplete above.
                         let applicable = reports.iter().filter(|report| {
                             analysis.coverage_ignored_file
-                                || report.get(&stable_path(&path)).is_some()
+                                || report.get(stable_path(&path)).is_some()
                         });
                         let mut measured =
                             coverage::attribute(analysis, &stable_path(&path), source, applicable);
@@ -3344,8 +3344,8 @@ mod tests {
         let root = &directory.0;
         fs::write(root.join("original.json"), "{}").unwrap();
         fs::create_dir(root.join("reports")).unwrap();
-        create_link(Path::new("original.json"), &root.join("linked.json")).unwrap();
-        create_link(Path::new("reports"), &root.join("linked-parent")).unwrap();
+        create_link(Path::new("original.json"), root.join("linked.json")).unwrap();
+        create_link(Path::new("reports"), root.join("linked-parent")).unwrap();
         fs::hard_link(root.join("original.json"), root.join("hard.json")).unwrap();
         for relative in [
             "linked.json",
@@ -3533,8 +3533,8 @@ mod tests {
         fs::create_dir(root.join("src")).unwrap();
         let source = root.join("src/subject.ts");
         fs::write(&source, "export const value = 1;\n").unwrap();
-        create_link(Path::new("src/subject.ts"), &root.join("linked.ts")).unwrap();
-        create_link(Path::new("src"), &root.join("linked-parent")).unwrap();
+        create_link(Path::new("src/subject.ts"), root.join("linked.ts")).unwrap();
+        create_link(Path::new("src"), root.join("linked-parent")).unwrap();
         fs::hard_link(&source, root.join("hard.ts")).unwrap();
         let report_path = root.join("coverage.json");
         for path in [
