@@ -94,8 +94,8 @@ the first setup still skips mutants in a source it never executes.
 ## CLI
 
 The `seshat` and `seshat-proofs` binaries share the existing private Rust modules.
-No CLI framework or new dependency was added. The release crate is `seshat`
-version `0.2.0`. Running `cargo run` for `crates/seshat/Cargo.toml` defaults to
+No CLI framework or new dependency was added. The release crate is `seshat`; its version is declared in
+[`Cargo.toml`](../../crates/seshat/Cargo.toml). Running `cargo run` for `crates/seshat/Cargo.toml` defaults to
 the legacy `seshat-proofs` entry point. Select the user CLI explicitly from the
 repository root:
 
