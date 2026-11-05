@@ -1,0 +1,3114 @@
+{
+  "$schema": "https://raw.githubusercontent.com/minikin/cargo-crap/main/schemas/report-v1.json",
+  "version": "0.9.0",
+  "entries": [
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::cognitive_node",
+      "line": 1500,
+      "cyclomatic": 21.0,
+      "coverage": 100.0,
+      "crap": 21.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::cognitive_recursion",
+      "line": 1581,
+      "cyclomatic": 11.0,
+      "coverage": 100.0,
+      "crap": 11.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::count",
+      "line": 1966,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::count_escape",
+      "line": 1950,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::coverage_suppressions",
+      "line": 1962,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::enter_node",
+      "line": 350,
+      "cyclomatic": 200.0,
+      "coverage": 98.77835951134381,
+      "crap": 200.07292731856663,
+      "uncovered": [
+        {
+          "start": 366,
+          "end": 366
+        },
+        {
+          "start": 554,
+          "end": 554
+        },
+        {
+          "start": 615,
+          "end": 615
+        },
+        {
+          "start": 717,
+          "end": 718
+        },
+        {
+          "start": 1032,
+          "end": 1032
+        },
+        {
+          "start": 1064,
+          "end": 1064
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::extreme_body",
+      "line": 2085,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::inspect",
+      "line": 1663,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::inspect_with_operators",
+      "line": 1667,
+      "cyclomatic": 37.0,
+      "coverage": 97.53086419753086,
+      "crap": 37.02060812018644,
+      "uncovered": [
+        {
+          "start": 1699,
+          "end": 1699
+        },
+        {
+          "start": 1834,
+          "end": 1834
+        },
+        {
+          "start": 1922,
+          "end": 1924
+        },
+        {
+          "start": 1931,
+          "end": 1931
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::json",
+      "line": 2270,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::leave_node",
+      "line": 1082,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::load_failure_sites",
+      "line": 1627,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::owner",
+      "line": 1940,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::replace",
+      "line": 1996,
+      "cyclomatic": 11.0,
+      "coverage": 98.4126984126984,
+      "crap": 11.000483909025103,
+      "uncovered": [
+        {
+          "start": 2069,
+          "end": 2069
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::replace_extreme",
+      "line": 2072,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::statement_owner",
+      "line": 1970,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::statement_separator",
+      "line": 1987,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::switched",
+      "line": 2094,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::switched_with_offset",
+      "line": 2098,
+      "cyclomatic": 6.0,
+      "coverage": 96.5034965034965,
+      "crap": 6.001538878745588,
+      "uncovered": [
+        {
+          "start": 2168,
+          "end": 2168
+        },
+        {
+          "start": 2194,
+          "end": 2194
+        },
+        {
+          "start": 2244,
+          "end": 2246
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::type_safety",
+      "line": 1958,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::visit_expression",
+      "line": 315,
+      "cyclomatic": 7.0,
+      "coverage": 100.0,
+      "crap": 7.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::visit_statements",
+      "line": 306,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "Analysis::visit_ts_type",
+      "line": 345,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "TypeSafety::count",
+      "line": 41,
+      "cyclomatic": 8.0,
+      "coverage": 100.0,
+      "crap": 8.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "asserted",
+      "line": 60,
+      "cyclomatic": 4.0,
+      "coverage": 83.33333333333334,
+      "crap": 4.0740740740740735,
+      "uncovered": [
+        {
+          "start": 63,
+          "end": 63
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "const_assertion",
+      "line": 55,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "coverage_hint",
+      "line": 83,
+      "cyclomatic": 5.0,
+      "coverage": 100.0,
+      "crap": 5.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "default_mutation_operators",
+      "line": 210,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "initialized_function",
+      "line": 68,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "javascript_whitespace",
+      "line": 77,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "lexical_boundary",
+      "line": 1090,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "plain_parameters",
+      "line": 295,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/analysis.rs",
+      "function": "supports_line_positions",
+      "line": 1107,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/assessment.rs",
+      "function": "TestState::label",
+      "line": 15,
+      "cyclomatic": 7.0,
+      "coverage": 77.77777777777779,
+      "crap": 7.5377229080932775,
+      "uncovered": [
+        {
+          "start": 21,
+          "end": 22
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/assessment.rs",
+      "function": "Verdict::label",
+      "line": 40,
+      "cyclomatic": 8.0,
+      "coverage": 90.0,
+      "crap": 8.064,
+      "uncovered": [
+        {
+          "start": 46,
+          "end": 46
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/assessment.rs",
+      "function": "mutation",
+      "line": 87,
+      "cyclomatic": 6.0,
+      "coverage": 100.0,
+      "crap": 6.0
+    },
+    {
+      "file": "crates/seshat/src/assessment.rs",
+      "function": "pseudo_tested",
+      "line": 62,
+      "cyclomatic": 7.0,
+      "coverage": 100.0,
+      "crap": 7.0
+    },
+    {
+      "file": "crates/seshat/src/assessment.rs",
+      "function": "score",
+      "line": 74,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/bin/seshat-proofs.rs",
+      "function": "main",
+      "line": 1,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/bin/seshat.rs",
+      "function": "main",
+      "line": 1,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "OwnedChild::active",
+      "line": 214,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "OwnedChild::cleanup",
+      "line": 273,
+      "cyclomatic": 12.0,
+      "coverage": 100.0,
+      "crap": 12.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "OwnedChild::drop",
+      "line": 322,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "OwnedChild::kill",
+      "line": 254,
+      "cyclomatic": 6.0,
+      "coverage": 100.0,
+      "crap": 6.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "OwnedChild::launch",
+      "line": 120,
+      "cyclomatic": 6.0,
+      "coverage": 100.0,
+      "crap": 6.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "OwnedChild::poll",
+      "line": 184,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "OwnedChild::signal",
+      "line": 194,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "OwnedChild::terminate",
+      "line": 239,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "combine",
+      "line": 104,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "forward",
+      "line": 86,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "fresh_readiness",
+      "line": 69,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "isolate_console",
+      "line": 46,
+      "cyclomatic": 6.0,
+      "coverage": 100.0,
+      "crap": 6.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "main",
+      "line": 433,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "main",
+      "line": 450,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "main",
+      "line": 455,
+      "cyclomatic": 1.0,
+      "coverage": 0.0,
+      "crap": 2.0,
+      "uncovered": [
+        {
+          "start": 455,
+          "end": 457
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "outputs",
+      "line": 93,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "owned_child",
+      "line": 355,
+      "cyclomatic": 7.0,
+      "coverage": 100.0,
+      "crap": 7.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "preserve_helper",
+      "line": 38,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "ready",
+      "line": 77,
+      "cyclomatic": 5.0,
+      "coverage": 100.0,
+      "crap": 5.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "run",
+      "line": 383,
+      "cyclomatic": 15.0,
+      "coverage": 100.0,
+      "crap": 15.0
+    },
+    {
+      "file": "crates/seshat/src/bin/windows-console-helper.rs",
+      "function": "supervise",
+      "line": 330,
+      "cyclomatic": 11.0,
+      "coverage": 100.0,
+      "crap": 11.0
+    },
+    {
+      "file": "crates/seshat/src/cli.rs",
+      "function": "array",
+      "line": 285,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/cli.rs",
+      "function": "counted_runner_timeouts",
+      "line": 313,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/cli.rs",
+      "function": "main",
+      "line": 924,
+      "cyclomatic": 7.0,
+      "coverage": 81.15942028985508,
+      "crap": 7.327701828564818,
+      "uncovered": [
+        {
+          "start": 968,
+          "end": 981
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/cli.rs",
+      "function": "mutant_deadlines",
+      "line": 296,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/cli.rs",
+      "function": "parse",
+      "line": 60,
+      "cyclomatic": 22.0,
+      "coverage": 100.0,
+      "crap": 22.0
+    },
+    {
+      "file": "crates/seshat/src/cli.rs",
+      "function": "progress",
+      "line": 123,
+      "cyclomatic": 2.0,
+      "coverage": 80.0,
+      "crap": 2.032,
+      "uncovered": [
+        {
+          "start": 125,
+          "end": 125
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/cli.rs",
+      "function": "quality",
+      "line": 190,
+      "cyclomatic": 23.0,
+      "coverage": 100.0,
+      "crap": 23.0
+    },
+    {
+      "file": "crates/seshat/src/cli.rs",
+      "function": "readable",
+      "line": 325,
+      "cyclomatic": 77.0,
+      "coverage": 79.88165680473372,
+      "crap": 125.27898017095768,
+      "uncovered": [
+        {
+          "start": 328,
+          "end": 328
+        },
+        {
+          "start": 363,
+          "end": 368
+        },
+        {
+          "start": 400,
+          "end": 401
+        },
+        {
+          "start": 498,
+          "end": 498
+        },
+        {
+          "start": 502,
+          "end": 524
+        },
+        {
+          "start": 577,
+          "end": 583
+        },
+        {
+          "start": 605,
+          "end": 605
+        },
+        {
+          "start": 615,
+          "end": 615
+        },
+        {
+          "start": 645,
+          "end": 665
+        },
+        {
+          "start": 686,
+          "end": 695
+        },
+        {
+          "start": 739,
+          "end": 743
+        },
+        {
+          "start": 746,
+          "end": 750
+        },
+        {
+          "start": 809,
+          "end": 820
+        },
+        {
+          "start": 824,
+          "end": 836
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/cli.rs",
+      "function": "report",
+      "line": 129,
+      "cyclomatic": 14.0,
+      "coverage": 100.0,
+      "crap": 14.0
+    },
+    {
+      "file": "crates/seshat/src/cli.rs",
+      "function": "text",
+      "line": 288,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/cli.rs",
+      "function": "write_information",
+      "line": 913,
+      "cyclomatic": 4.0,
+      "coverage": 62.5,
+      "crap": 4.84375,
+      "uncovered": [
+        {
+          "start": 917,
+          "end": 919
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/cli/type_safety.rs",
+      "function": "checks",
+      "line": 119,
+      "cyclomatic": 5.0,
+      "coverage": 100.0,
+      "crap": 5.0
+    },
+    {
+      "file": "crates/seshat/src/cli/type_safety.rs",
+      "function": "count_check",
+      "line": 3,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/cli/type_safety.rs",
+      "function": "escape_total",
+      "line": 14,
+      "cyclomatic": 7.0,
+      "coverage": 100.0,
+      "crap": 7.0
+    },
+    {
+      "file": "crates/seshat/src/cli/type_safety.rs",
+      "function": "inferred_total",
+      "line": 41,
+      "cyclomatic": 13.0,
+      "coverage": 93.84615384615384,
+      "crap": 13.039384615384616,
+      "uncovered": [
+        {
+          "start": 108,
+          "end": 111
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/coverage.rs",
+      "function": "BranchCoverage::invalidate",
+      "line": 28,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/coverage.rs",
+      "function": "attribute",
+      "line": 310,
+      "cyclomatic": 38.0,
+      "coverage": 95.97989949748744,
+      "crap": 38.093816218792504,
+      "uncovered": [
+        {
+          "start": 431,
+          "end": 432
+        },
+        {
+          "start": 477,
+          "end": 481
+        },
+        {
+          "start": 485,
+          "end": 485
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/coverage.rs",
+      "function": "branch_span",
+      "line": 123,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/coverage.rs",
+      "function": "byte_position",
+      "line": 38,
+      "cyclomatic": 13.0,
+      "coverage": 97.05882352941177,
+      "crap": 13.004299816812539,
+      "uncovered": [
+        {
+          "start": 41,
+          "end": 41
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/coverage.rs",
+      "function": "decode_branch",
+      "line": 132,
+      "cyclomatic": 15.0,
+      "coverage": 100.0,
+      "crap": 15.0
+    },
+    {
+      "file": "crates/seshat/src/coverage.rs",
+      "function": "decode_branches",
+      "line": 222,
+      "cyclomatic": 7.0,
+      "coverage": 96.0,
+      "crap": 7.003136,
+      "uncovered": [
+        {
+          "start": 262,
+          "end": 263
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/coverage.rs",
+      "function": "function_suppression_conflicts",
+      "line": 282,
+      "cyclomatic": 12.0,
+      "coverage": 100.0,
+      "crap": 12.0
+    },
+    {
+      "file": "crates/seshat/src/coverage.rs",
+      "function": "recorded_fixture",
+      "line": 665,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/coverage.rs",
+      "function": "recorded_location",
+      "line": 780,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/coverage.rs",
+      "function": "same_line_trivia",
+      "line": 79,
+      "cyclomatic": 5.0,
+      "coverage": 100.0,
+      "crap": 5.0
+    },
+    {
+      "file": "crates/seshat/src/coverage.rs",
+      "function": "span_matches",
+      "line": 98,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "CommandEvidence::assessment_state",
+      "line": 276,
+      "cyclomatic": 7.0,
+      "coverage": 100.0,
+      "crap": 7.0
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "CommandEvidence::can_continue_mutation",
+      "line": 255,
+      "cyclomatic": 16.0,
+      "coverage": 100.0,
+      "crap": 16.0
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "CommandEvidence::clear_job_artifacts",
+      "line": 290,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "CommandEvidence::error",
+      "line": 324,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "CommandEvidence::into_json",
+      "line": 331,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "CommandEvidence::test_timed_out",
+      "line": 246,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "Session::capture",
+      "line": 341,
+      "cyclomatic": 36.0,
+      "coverage": 90.54054054054053,
+      "crap": 37.09699326792095,
+      "uncovered": [
+        {
+          "start": 379,
+          "end": 381
+        },
+        {
+          "start": 389,
+          "end": 389
+        },
+        {
+          "start": 392,
+          "end": 393
+        },
+        {
+          "start": 416,
+          "end": 416
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "Session::command",
+      "line": 427,
+      "cyclomatic": 29.0,
+      "coverage": 91.30434782608695,
+      "crap": 29.552971151475305,
+      "uncovered": [
+        {
+          "start": 429,
+          "end": 432
+        },
+        {
+          "start": 451,
+          "end": 451
+        },
+        {
+          "start": 488,
+          "end": 488
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "Session::drop",
+      "line": 673,
+      "cyclomatic": 2.0,
+      "coverage": 44.44444444444444,
+      "crap": 2.6858710562414267,
+      "uncovered": [
+        {
+          "start": 675,
+          "end": 679
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "Session::execute",
+      "line": 512,
+      "cyclomatic": 29.0,
+      "coverage": 96.90721649484536,
+      "crap": 29.0248796666495,
+      "uncovered": [
+        {
+          "start": 571,
+          "end": 571
+        },
+        {
+          "start": 584,
+          "end": 585
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "cancellation_signal",
+      "line": 159,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "check_cancellation",
+      "line": 165,
+      "cyclomatic": 2.0,
+      "coverage": 80.0,
+      "crap": 2.032,
+      "uncovered": [
+        {
+          "start": 167,
+          "end": 167
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "classify",
+      "line": 614,
+      "cyclomatic": 22.0,
+      "coverage": 89.13043478260869,
+      "crap": 22.621558313470864,
+      "uncovered": [
+        {
+          "start": 639,
+          "end": 644
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "encode_file_url_path",
+      "line": 98,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "epoch_nanos",
+      "line": 27,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "install_cancellation",
+      "line": 154,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "module_file_url",
+      "line": 107,
+      "cyclomatic": 7.0,
+      "coverage": 85.71428571428571,
+      "crap": 7.142857142857143,
+      "uncovered": [
+        {
+          "start": 110,
+          "end": 110
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "module_path",
+      "line": 136,
+      "cyclomatic": 4.0,
+      "coverage": 85.71428571428571,
+      "crap": 4.0466472303206995,
+      "uncovered": [
+        {
+          "start": 138,
+          "end": 138
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "observe_node_loads",
+      "line": 185,
+      "cyclomatic": 8.0,
+      "coverage": 96.22641509433963,
+      "crap": 8.0034390805833,
+      "uncovered": [
+        {
+          "start": 192,
+          "end": 192
+        },
+        {
+          "start": 199,
+          "end": 199
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "proof_command",
+      "line": 52,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "read_json_report",
+      "line": 59,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "stable_path",
+      "line": 71,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution.rs",
+      "function": "validate_command",
+      "line": 33,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/execution/files.rs",
+      "function": "RegularFile::copy_to",
+      "line": 181,
+      "cyclomatic": 5.0,
+      "coverage": 100.0,
+      "crap": 5.0
+    },
+    {
+      "file": "crates/seshat/src/execution/files.rs",
+      "function": "RegularFile::independent",
+      "line": 149,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/files.rs",
+      "function": "RegularFile::open",
+      "line": 31,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/files.rs",
+      "function": "RegularFile::open_io",
+      "line": 35,
+      "cyclomatic": 28.0,
+      "coverage": 98.0,
+      "crap": 28.006272,
+      "uncovered": [
+        {
+          "start": 42,
+          "end": 42
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/files.rs",
+      "function": "RegularFile::read",
+      "line": 172,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/files.rs",
+      "function": "RegularFile::write",
+      "line": 196,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/files.rs",
+      "function": "is_link",
+      "line": 9,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/job.rs",
+      "function": "Output::drain",
+      "line": 83,
+      "cyclomatic": 7.0,
+      "coverage": 76.19047619047619,
+      "crap": 7.661375661375661,
+      "uncovered": [
+        {
+          "start": 100,
+          "end": 104
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/job.rs",
+      "function": "Output::finish",
+      "line": 109,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/job.rs",
+      "function": "Output::new",
+      "line": 63,
+      "cyclomatic": 3.0,
+      "coverage": 92.85714285714286,
+      "crap": 3.003279883381924,
+      "uncovered": [
+        {
+          "start": 72,
+          "end": 72
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/job.rs",
+      "function": "cancelled_exit",
+      "line": 34,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/execution/job.rs",
+      "function": "collect_output",
+      "line": 167,
+      "cyclomatic": 21.0,
+      "coverage": 95.08196721311475,
+      "crap": 21.052458135262423,
+      "uncovered": [
+        {
+          "start": 216,
+          "end": 217
+        },
+        {
+          "start": 228,
+          "end": 228
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/job.rs",
+      "function": "interruption_signal",
+      "line": 18,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/job.rs",
+      "function": "read_available",
+      "line": 117,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/job.rs",
+      "function": "read_available",
+      "line": 122,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/execution/job.rs",
+      "function": "run",
+      "line": 152,
+      "cyclomatic": 3.0,
+      "coverage": 88.88888888888889,
+      "crap": 3.0123456790123457,
+      "uncovered": [
+        {
+          "start": 154,
+          "end": 154
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Job::active_processes",
+      "line": 489,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Job::create",
+      "line": 460,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Job::drop",
+      "line": 565,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Job::stop",
+      "line": 549,
+      "cyclomatic": 7.0,
+      "coverage": 100.0,
+      "crap": 7.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Job::terminate",
+      "line": 537,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Job::wait_empty",
+      "line": 525,
+      "cyclomatic": 5.0,
+      "coverage": 100.0,
+      "crap": 5.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "ManagedChild::cleanup_deadline",
+      "line": 1503,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "ManagedChild::drop",
+      "line": 1612,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "ManagedChild::force_cleanup",
+      "line": 1592,
+      "cyclomatic": 5.0,
+      "coverage": 100.0,
+      "crap": 5.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "ManagedChild::kill_leader",
+      "line": 1521,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "ManagedChild::kill_tree",
+      "line": 1566,
+      "cyclomatic": 7.0,
+      "coverage": 100.0,
+      "crap": 7.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "ManagedChild::settle_after_stop_error",
+      "line": 1537,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "ManagedChild::spawn",
+      "line": 1470,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "ManagedChild::stop_tree",
+      "line": 1532,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "ManagedChild::stop_tree_with_settlement",
+      "line": 1549,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "ManagedChild::take_stderr",
+      "line": 1488,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "ManagedChild::take_stdout",
+      "line": 1484,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "ManagedChild::test_fail_next_stop",
+      "line": 1557,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "ManagedChild::test_stop_attempts",
+      "line": 1562,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "ManagedChild::try_wait",
+      "line": 1492,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "ManagedChild::wait",
+      "line": 1509,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "SpawnGuard::cleanup",
+      "line": 596,
+      "cyclomatic": 13.0,
+      "coverage": 100.0,
+      "crap": 13.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "SpawnGuard::drop",
+      "line": 663,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "SpawnGuard::fail",
+      "line": 654,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Supervisor::drop",
+      "line": 265,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Supervisor::kill_leader",
+      "line": 191,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Supervisor::leader_exited",
+      "line": 125,
+      "cyclomatic": 5.0,
+      "coverage": 94.73684210526315,
+      "crap": 5.003644846187491,
+      "uncovered": [
+        {
+          "start": 149,
+          "end": 149
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Supervisor::new",
+      "line": 67,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Supervisor::settle_after_stop_error",
+      "line": 200,
+      "cyclomatic": 9.0,
+      "coverage": 100.0,
+      "crap": 9.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Supervisor::stop",
+      "line": 81,
+      "cyclomatic": 8.0,
+      "coverage": 88.23529411764706,
+      "crap": 8.104213311622226,
+      "uncovered": [
+        {
+          "start": 116,
+          "end": 119
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Supervisor::stop",
+      "line": 578,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Supervisor::test_fail_next_stop",
+      "line": 235,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Supervisor::test_stop_after_reap",
+      "line": 240,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Supervisor::test_stop_attempts",
+      "line": 245,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Supervisor::try_wait",
+      "line": 154,
+      "cyclomatic": 6.0,
+      "coverage": 58.82352941176471,
+      "crap": 8.513331976389171,
+      "uncovered": [
+        {
+          "start": 160,
+          "end": 167
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "Supervisor::wait",
+      "line": 173,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "assert_last_spawn_exited",
+      "line": 1238,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "assert_matches_std",
+      "line": 1085,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "captured",
+      "line": 1066,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "console_handler",
+      "line": 421,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "exited",
+      "line": 940,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "install_cancellation",
+      "line": 270,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "install_cancellation",
+      "line": 431,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "install_cancellation",
+      "line": 1619,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "owned_group_is_gone",
+      "line": 250,
+      "cyclomatic": 3.0,
+      "coverage": 81.81818181818183,
+      "crap": 3.0540946656649135,
+      "uncovered": [
+        {
+          "start": 252,
+          "end": 252
+        },
+        {
+          "start": 255,
+          "end": 255
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "settle",
+      "line": 293,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "spawn",
+      "line": 278,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "spawn",
+      "line": 670,
+      "cyclomatic": 14.0,
+      "coverage": 100.0,
+      "crap": 14.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "stop",
+      "line": 289,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "stop",
+      "line": 799,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "temporary_directory",
+      "line": 917,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "test_inject_failure",
+      "line": 402,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "test_record_spawn",
+      "line": 368,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "test_spawn_lock",
+      "line": 417,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "test_take_extra_thread",
+      "line": 412,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "test_take_failure",
+      "line": 389,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "test_take_spawn_wait_handle",
+      "line": 407,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "wait_for_pid",
+      "line": 928,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/execution/platform.rs",
+      "function": "wait_until",
+      "line": 24,
+      "cyclomatic": 5.0,
+      "coverage": 100.0,
+      "crap": 5.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "CapturedProject::capture",
+      "line": 753,
+      "cyclomatic": 17.0,
+      "coverage": 100.0,
+      "crap": 17.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "CapturedProject::copy_worker",
+      "line": 735,
+      "cyclomatic": 5.0,
+      "coverage": 94.11764705882352,
+      "crap": 5.005088540606554,
+      "uncovered": [
+        {
+          "start": 747,
+          "end": 747
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "CapturedProject::inspect",
+      "line": 869,
+      "cyclomatic": 2.0,
+      "coverage": 84.84848484848484,
+      "crap": 2.013913237053733,
+      "uncovered": [
+        {
+          "start": 881,
+          "end": 883
+        },
+        {
+          "start": 899,
+          "end": 900
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "CapturedProject::populate",
+      "line": 789,
+      "cyclomatic": 23.0,
+      "coverage": 94.11764705882352,
+      "crap": 23.107673519234684,
+      "uncovered": [
+        {
+          "start": 839,
+          "end": 842
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "CapturedProject::scope",
+      "line": 728,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "CapturedProject::thresholds",
+      "line": 724,
+      "cyclomatic": 1.0,
+      "coverage": 0.0,
+      "crap": 2.0,
+      "uncovered": [
+        {
+          "start": 724,
+          "end": 726
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "Config::parse",
+      "line": 362,
+      "cyclomatic": 35.0,
+      "coverage": 95.83333333333334,
+      "crap": 35.088614004629626,
+      "uncovered": [
+        {
+          "start": 408,
+          "end": 410
+        },
+        {
+          "start": 423,
+          "end": 423
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "Config::validate_mode",
+      "line": 354,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "OwnedDirectory::close",
+      "line": 506,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "OwnedDirectory::create",
+      "line": 473,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "OwnedDirectory::create_path",
+      "line": 490,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "OwnedDirectory::drop",
+      "line": 514,
+      "cyclomatic": 4.0,
+      "coverage": 70.0,
+      "crap": 4.432,
+      "uncovered": [
+        {
+          "start": 519,
+          "end": 521
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "Runner::label",
+      "line": 304,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "comparable_path",
+      "line": 101,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "create_link",
+      "line": 184,
+      "cyclomatic": 6.0,
+      "coverage": 100.0,
+      "crap": 6.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "default_mutant_timeout_factor",
+      "line": 291,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "default_test_selection",
+      "line": 239,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "default_timeout",
+      "line": 287,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "default_workers",
+      "line": 253,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "file_io_hook",
+      "line": 14,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "has_path_prefix",
+      "line": 145,
+      "cyclomatic": 6.0,
+      "coverage": 100.0,
+      "crap": 6.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "load_config",
+      "line": 687,
+      "cyclomatic": 10.0,
+      "coverage": 100.0,
+      "crap": 10.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "no_link_parents",
+      "line": 581,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "path_key",
+      "line": 119,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "patterns",
+      "line": 338,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "relative",
+      "line": 320,
+      "cyclomatic": 7.0,
+      "coverage": 100.0,
+      "crap": 7.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "relative_path",
+      "line": 159,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "same_component",
+      "line": 131,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "same_path_identity",
+      "line": 180,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "source_paths",
+      "line": 595,
+      "cyclomatic": 26.0,
+      "coverage": 97.53086419753086,
+      "crap": 26.010176106096445,
+      "uncovered": [
+        {
+          "start": 631,
+          "end": 631
+        },
+        {
+          "start": 666,
+          "end": 666
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "stable_path",
+      "line": 88,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "validate_path",
+      "line": 49,
+      "cyclomatic": 9.0,
+      "coverage": 100.0,
+      "crap": 9.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "walk",
+      "line": 533,
+      "cyclomatic": 13.0,
+      "coverage": 97.67441860465115,
+      "crap": 13.002125599003861,
+      "uncovered": [
+        {
+          "start": 563,
+          "end": 563
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project.rs",
+      "function": "within",
+      "line": 176,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::assess",
+      "line": 1970,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::assess_mutations",
+      "line": 2206,
+      "cyclomatic": 20.0,
+      "coverage": 99.35064935064936,
+      "crap": 20.000109521108005,
+      "uncovered": [
+        {
+          "start": 2247,
+          "end": 2247
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::assess_with_strategy",
+      "line": 2379,
+      "cyclomatic": 9.0,
+      "coverage": 92.13483146067416,
+      "crap": 9.039410243570995,
+      "uncovered": [
+        {
+          "start": 2461,
+          "end": 2467
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::attribute_sources",
+      "line": 2151,
+      "cyclomatic": 1.0,
+      "coverage": 97.87234042553192,
+      "crap": 1.0000096317771592,
+      "uncovered": [
+        {
+          "start": 2173,
+          "end": 2173
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::check_originals",
+      "line": 1974,
+      "cyclomatic": 19.0,
+      "coverage": 89.24050632911393,
+      "crap": 19.449658394163546,
+      "uncovered": [
+        {
+          "start": 2015,
+          "end": 2017
+        },
+        {
+          "start": 2022,
+          "end": 2022
+        },
+        {
+          "start": 2025,
+          "end": 2025
+        },
+        {
+          "start": 2028,
+          "end": 2030
+        },
+        {
+          "start": 2049,
+          "end": 2049
+        },
+        {
+          "start": 2078,
+          "end": 2078
+        },
+        {
+          "start": 2082,
+          "end": 2082
+        },
+        {
+          "start": 2095,
+          "end": 2095
+        },
+        {
+          "start": 2098,
+          "end": 2098
+        },
+        {
+          "start": 2133,
+          "end": 2136
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::collect",
+      "line": 1955,
+      "cyclomatic": 4.0,
+      "coverage": 0.0,
+      "crap": 20.0,
+      "uncovered": [
+        {
+          "start": 1955,
+          "end": 1968
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::compiler_strictness",
+      "line": 1109,
+      "cyclomatic": 4.0,
+      "coverage": 92.42424242424242,
+      "crap": 4.006956618526867,
+      "uncovered": [
+        {
+          "start": 1131,
+          "end": 1131
+        },
+        {
+          "start": 1174,
+          "end": 1177
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::diagnostics",
+      "line": 803,
+      "cyclomatic": 2.0,
+      "coverage": 96.72131147540983,
+      "crap": 2.0001409809631645,
+      "uncovered": [
+        {
+          "start": 828,
+          "end": 829
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::expected_source",
+      "line": 929,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::install_prepared_sources",
+      "line": 1192,
+      "cyclomatic": 6.0,
+      "coverage": 91.66666666666666,
+      "crap": 6.020833333333333,
+      "uncovered": [
+        {
+          "start": 1194,
+          "end": 1194
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::mutate",
+      "line": 1941,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::plan_mutation",
+      "line": 1485,
+      "cyclomatic": 10.0,
+      "coverage": 100.0,
+      "crap": 10.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::prepare_evidence",
+      "line": 871,
+      "cyclomatic": 5.0,
+      "coverage": 100.0,
+      "crap": 5.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::prepare_mutation",
+      "line": 1537,
+      "cyclomatic": 26.0,
+      "coverage": 92.5925925925926,
+      "crap": 26.274754864603974,
+      "uncovered": [
+        {
+          "start": 1581,
+          "end": 1583
+        },
+        {
+          "start": 1608,
+          "end": 1610
+        },
+        {
+          "start": 1631,
+          "end": 1632
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::prepare_workers",
+      "line": 1425,
+      "cyclomatic": 8.0,
+      "coverage": 95.91836734693877,
+      "crap": 8.004351928193184,
+      "uncovered": [
+        {
+          "start": 1456,
+          "end": 1457
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::replace_source",
+      "line": 1183,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::run_job",
+      "line": 941,
+      "cyclomatic": 44.0,
+      "coverage": 90.51094890510949,
+      "crap": 45.654145502387266,
+      "uncovered": [
+        {
+          "start": 950,
+          "end": 953
+        },
+        {
+          "start": 958,
+          "end": 958
+        },
+        {
+          "start": 961,
+          "end": 961
+        },
+        {
+          "start": 1041,
+          "end": 1041
+        },
+        {
+          "start": 1043,
+          "end": 1043
+        },
+        {
+          "start": 1061,
+          "end": 1061
+        },
+        {
+          "start": 1066,
+          "end": 1066
+        },
+        {
+          "start": 1080,
+          "end": 1080
+        },
+        {
+          "start": 1090,
+          "end": 1091
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::run_mutant",
+      "line": 1243,
+      "cyclomatic": 19.0,
+      "coverage": 85.35031847133759,
+      "crap": 20.13498926197701,
+      "uncovered": [
+        {
+          "start": 1278,
+          "end": 1290
+        },
+        {
+          "start": 1299,
+          "end": 1299
+        },
+        {
+          "start": 1316,
+          "end": 1324
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::run_prepared_baselines",
+      "line": 1206,
+      "cyclomatic": 5.0,
+      "coverage": 93.93939393939394,
+      "crap": 5.005565294821493,
+      "uncovered": [
+        {
+          "start": 1217,
+          "end": 1218
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::schedule_mutation",
+      "line": 1663,
+      "cyclomatic": 6.0,
+      "coverage": 80.8695652173913,
+      "crap": 6.25204438234569,
+      "uncovered": [
+        {
+          "start": 1710,
+          "end": 1710
+        },
+        {
+          "start": 1713,
+          "end": 1719
+        },
+        {
+          "start": 1735,
+          "end": 1741
+        },
+        {
+          "start": 1759,
+          "end": 1762
+        },
+        {
+          "start": 1770,
+          "end": 1772
+        },
+        {
+          "start": 1783,
+          "end": 1784
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::summarize_mutation",
+      "line": 1800,
+      "cyclomatic": 20.0,
+      "coverage": 99.19354838709677,
+      "crap": 20.000209794904503,
+      "uncovered": [
+        {
+          "start": 1843,
+          "end": 1843
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "CapturedProject::unchanged",
+      "line": 914,
+      "cyclomatic": 6.0,
+      "coverage": 69.23076923076923,
+      "crap": 7.048702776513427,
+      "uncovered": [
+        {
+          "start": 920,
+          "end": 923
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "MutationPlan::label",
+      "line": 147,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "MutationProgress::update",
+      "line": 51,
+      "cyclomatic": 13.0,
+      "coverage": 81.81818181818183,
+      "crap": 14.015777610818933,
+      "uncovered": [
+        {
+          "start": 64,
+          "end": 64
+        },
+        {
+          "start": 66,
+          "end": 66
+        },
+        {
+          "start": 72,
+          "end": 72
+        },
+        {
+          "start": 76,
+          "end": 78
+        },
+        {
+          "start": 83,
+          "end": 83
+        },
+        {
+          "start": 102,
+          "end": 102
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "Progress::phase",
+      "line": 27,
+      "cyclomatic": 2.0,
+      "coverage": 44.44444444444444,
+      "crap": 2.6858710562414267,
+      "uncovered": [
+        {
+          "start": 29,
+          "end": 33
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "actual_version",
+      "line": 547,
+      "cyclomatic": 4.0,
+      "coverage": 83.33333333333334,
+      "crap": 4.0740740740740735,
+      "uncovered": [
+        {
+          "start": 552,
+          "end": 552
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "attribute_inferred_any",
+      "line": 635,
+      "cyclomatic": 7.0,
+      "coverage": 96.7741935483871,
+      "crap": 7.001644792051291,
+      "uncovered": [
+        {
+          "start": 665,
+          "end": 665
+        },
+        {
+          "start": 671,
+          "end": 671
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "declared_version",
+      "line": 502,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "direct_runner_args",
+      "line": 706,
+      "cyclomatic": 25.0,
+      "coverage": 92.5925925925926,
+      "crap": 25.254026317126453,
+      "uncovered": [
+        {
+          "start": 719,
+          "end": 719
+        },
+        {
+          "start": 735,
+          "end": 735
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "direct_typescript",
+      "line": 614,
+      "cyclomatic": 19.0,
+      "coverage": 100.0,
+      "crap": 19.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "exact_version",
+      "line": 463,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "import_failure_observer",
+      "line": 564,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "independent_file",
+      "line": 214,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "json_file",
+      "line": 484,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "locked_version",
+      "line": 513,
+      "cyclomatic": 6.0,
+      "coverage": 0.0,
+      "crap": 42.0,
+      "uncovered": [
+        {
+          "start": 513,
+          "end": 537
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "mutation_diagnostics",
+      "line": 447,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "nearest_json",
+      "line": 489,
+      "cyclomatic": 5.0,
+      "coverage": 90.0,
+      "crap": 5.025,
+      "uncovered": [
+        {
+          "start": 498,
+          "end": 498
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "numeric_flag",
+      "line": 579,
+      "cyclomatic": 7.0,
+      "coverage": 86.95652173913044,
+      "crap": 7.10873674693844,
+      "uncovered": [
+        {
+          "start": 587,
+          "end": 589
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "per_second",
+      "line": 385,
+      "cyclomatic": 3.0,
+      "coverage": 80.0,
+      "crap": 3.072,
+      "uncovered": [
+        {
+          "start": 389,
+          "end": 389
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "read_report",
+      "line": 259,
+      "cyclomatic": 2.0,
+      "coverage": 100.0,
+      "crap": 2.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "receipt_report",
+      "line": 539,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "regular_path",
+      "line": 220,
+      "cyclomatic": 19.0,
+      "coverage": 97.05882352941177,
+      "crap": 19.00918481579483,
+      "uncovered": [
+        {
+          "start": 227,
+          "end": 227
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "runner_concurrency",
+      "line": 742,
+      "cyclomatic": 10.0,
+      "coverage": 100.0,
+      "crap": 10.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "runner_option_args",
+      "line": 610,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "runner_packages",
+      "line": 556,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "slowest_executions",
+      "line": 425,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "stable_version",
+      "line": 301,
+      "cyclomatic": 7.0,
+      "coverage": 100.0,
+      "crap": 7.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "unresolved_breakdown",
+      "line": 394,
+      "cyclomatic": 9.0,
+      "coverage": 100.0,
+      "crap": 9.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "validate_coverage_report",
+      "line": 264,
+      "cyclomatic": 12.0,
+      "coverage": 89.65517241379311,
+      "crap": 12.159416130222642,
+      "uncovered": [
+        {
+          "start": 274,
+          "end": 276
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "validate_runner_receipt",
+      "line": 311,
+      "cyclomatic": 18.0,
+      "coverage": 100.0,
+      "crap": 18.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/collection.rs",
+      "function": "version_comparison",
+      "line": 471,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/selection.rs",
+      "function": "Selection::json",
+      "line": 67,
+      "cyclomatic": 4.0,
+      "coverage": 100.0,
+      "crap": 4.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/selection.rs",
+      "function": "SetupEvidence::collect",
+      "line": 201,
+      "cyclomatic": 31.0,
+      "coverage": 93.90243902439023,
+      "crap": 31.217867195774872,
+      "uncovered": [
+        {
+          "start": 209,
+          "end": 209
+        },
+        {
+          "start": 219,
+          "end": 219
+        },
+        {
+          "start": 254,
+          "end": 254
+        },
+        {
+          "start": 268,
+          "end": 268
+        },
+        {
+          "start": 280,
+          "end": 280
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/selection.rs",
+      "function": "SetupEvidence::select",
+      "line": 307,
+      "cyclomatic": 6.0,
+      "coverage": 100.0,
+      "crap": 6.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/selection.rs",
+      "function": "SetupEvidence::unexecuted",
+      "line": 294,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/selection.rs",
+      "function": "SetupEvidence::verifies",
+      "line": 331,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/selection.rs",
+      "function": "Unavailable::command",
+      "line": 41,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/selection.rs",
+      "function": "Unavailable::from",
+      "line": 26,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/selection.rs",
+      "function": "Unavailable::from",
+      "line": 35,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/execution/project/selection.rs",
+      "function": "Unavailable::json",
+      "line": 48,
+      "cyclomatic": 2.0,
+      "coverage": 85.71428571428571,
+      "crap": 2.011661807580175,
+      "uncovered": [
+        {
+          "start": 51,
+          "end": 51
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/selection.rs",
+      "function": "files",
+      "line": 90,
+      "cyclomatic": 6.0,
+      "coverage": 81.81818181818183,
+      "crap": 6.216378662659654,
+      "uncovered": [
+        {
+          "start": 94,
+          "end": 94
+        },
+        {
+          "start": 98,
+          "end": 98
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/selection.rs",
+      "function": "identity",
+      "line": 78,
+      "cyclomatic": 6.0,
+      "coverage": 90.9090909090909,
+      "crap": 6.027047332832457,
+      "uncovered": [
+        {
+          "start": 81,
+          "end": 81
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/selection.rs",
+      "function": "tests",
+      "line": 103,
+      "cyclomatic": 10.0,
+      "coverage": 96.29629629629629,
+      "crap": 10.00508052634253,
+      "uncovered": [
+        {
+          "start": 114,
+          "end": 114
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/selection.rs",
+      "function": "vitest_command",
+      "line": 157,
+      "cyclomatic": 9.0,
+      "coverage": 91.8918918918919,
+      "crap": 9.04317611987444,
+      "uncovered": [
+        {
+          "start": 190,
+          "end": 192
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/execution/project/selection.rs",
+      "function": "vitest_entrypoint",
+      "line": 133,
+      "cyclomatic": 13.0,
+      "coverage": 95.0,
+      "crap": 13.021125,
+      "uncovered": [
+        {
+          "start": 145,
+          "end": 145
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/lib.rs",
+      "function": "finish",
+      "line": 94,
+      "cyclomatic": 7.0,
+      "coverage": 41.66666666666667,
+      "crap": 16.726273148148145,
+      "uncovered": [
+        {
+          "start": 97,
+          "end": 109
+        },
+        {
+          "start": 114,
+          "end": 114
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/lib.rs",
+      "function": "proof_main",
+      "line": 129,
+      "cyclomatic": 1.0,
+      "coverage": 100.0,
+      "crap": 1.0
+    },
+    {
+      "file": "crates/seshat/src/lib.rs",
+      "function": "run",
+      "line": 15,
+      "cyclomatic": 35.0,
+      "coverage": 59.42028985507246,
+      "crap": 116.85833569247724,
+      "uncovered": [
+        {
+          "start": 20,
+          "end": 38
+        },
+        {
+          "start": 43,
+          "end": 43
+        },
+        {
+          "start": 60,
+          "end": 68
+        },
+        {
+          "start": 91,
+          "end": 91
+        }
+      ]
+    },
+    {
+      "file": "crates/seshat/src/lib.rs",
+      "function": "write_output",
+      "line": 143,
+      "cyclomatic": 3.0,
+      "coverage": 100.0,
+      "crap": 3.0
+    }
+  ],
+  "diagnostics": {
+    "analyzed_files": 18,
+    "lcov_files": 16,
+    "matched_files": 16,
+    "source_only": {
+      "count": 2,
+      "examples": [
+        "crates/seshat/src/bin/windows_console_helper/tests.rs",
+        "crates/seshat/src/execution/windows_spawn.rs"
+      ]
+    },
+    "lcov_only": {
+      "count": 0,
+      "examples": []
+    }
+  }
+}

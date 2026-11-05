@@ -1,0 +1,186 @@
+{
+  "outcomes": [
+    {
+      "scenario": "Baseline",
+      "summary": "Success",
+      "log_path": "log/baseline.log",
+      "diff_path": null,
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 43.993025994,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat@0.13.0",
+            "--locked",
+            "--offline"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 53.634993615,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat@0.13.0",
+            "--locked",
+            "--offline"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/seshat/src/assessment.rs:16:9: replace TestState::label -> &'static str with \"\"",
+          "package": "seshat",
+          "file": "crates/seshat/src/assessment.rs",
+          "function": {
+            "function_name": "TestState::label",
+            "return_type": "-> &'static str",
+            "span": {
+              "start": {
+                "line": 15,
+                "column": 5
+              },
+              "end": {
+                "line": 24,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 16,
+              "column": 9
+            },
+            "end": {
+              "line": 23,
+              "column": 10
+            }
+          },
+          "replacement": "\"\"",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__seshat__src__assessment.rs_line_16_col_9.log",
+      "diff_path": "diff/crates__seshat__src__assessment.rs_line_16_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.321126074,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat@0.13.0",
+            "--locked",
+            "--offline"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 4.565882295,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat@0.13.0",
+            "--locked",
+            "--offline"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "crates/seshat/src/assessment.rs:16:9: replace TestState::label -> &'static str with \"xyzzy\"",
+          "package": "seshat",
+          "file": "crates/seshat/src/assessment.rs",
+          "function": {
+            "function_name": "TestState::label",
+            "return_type": "-> &'static str",
+            "span": {
+              "start": {
+                "line": 15,
+                "column": 5
+              },
+              "end": {
+                "line": 24,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 16,
+              "column": 9
+            },
+            "end": {
+              "line": 23,
+              "column": 10
+            }
+          },
+          "replacement": "\"xyzzy\"",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/crates__seshat__src__assessment.rs_line_16_col_9_001.log",
+      "diff_path": "diff/crates__seshat__src__assessment.rs_line_16_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 2.226636396,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat@0.13.0",
+            "--locked",
+            "--offline"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 4.564918424,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat@0.13.0",
+            "--locked",
+            "--offline"
+          ]
+        }
+      ]
+    }
+  ],
+  "total_mutants": 2,
+  "missed": 0,
+  "caught": 2,
+  "timeout": 0,
+  "unviable": 0,
+  "success": 0,
+  "start_time": "2026-11-05T23:02:25.131980904Z",
+  "end_time": "2026-11-05T23:04:16.630362768Z",
+  "cargo_mutants_version": "27.1.0"
+}

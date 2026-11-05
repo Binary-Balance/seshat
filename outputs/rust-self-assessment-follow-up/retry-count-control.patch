@@ -1,0 +1,11 @@
+--- a/crates/seshat/src/execution/project/collection.rs
++++ b/crates/seshat/src/execution/project/collection.rs
+@@ -1385,7 +1385,7 @@
+                         JobKind::Mutant(limit),
+                     )
+                     .unwrap_or_else(CommandEvidence::error);
+-                jobs += 1;
++                jobs += 0;
+             }
+             states.push(
+                 observed.assessment_state(self.config.count_timeouts_as_killed, at_mutant_limit),

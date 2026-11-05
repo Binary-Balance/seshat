@@ -217,6 +217,19 @@ export default {test:{...config.test,include:['b.test.ts'],coverage:{...config.t
     assert.ok(choices(result.selected).every(choice => choice.mode === 'full'), 'missing attribution must fall back');
   } else if (name === 'filter') {
     assert.ok(modes.some(choice => choice.reason === 'selection-not-confirmed'), 'expanded substring filter must fall back');
+    const retries = targetRows.flatMap(row => row.setups)
+      .filter(setup => setup.selection?.reason === 'selection-not-confirmed');
+    for (const setup of retries) {
+      assert.equal(setup.jobsAttempted, 2, 'an unconfirmed selection needs one full-command retry');
+      assert.deepEqual(setup.selection.requestedFiles, ['a.test.ts']);
+      const selected = setup.selection.selectedAttempt;
+      assert.ok(['passed','failed'].includes(selected.state), 'retain the selected execution verdict');
+      assert.equal(selected.timedOut, false);
+      assert.equal(selected.report.complete, true);
+      assert.ok(selected.report.testFiles.length > setup.selection.requestedFiles.length,
+        'retain evidence of the expanded workload');
+      assert.ok(selected.report.tests.length > 0, 'retain the executed test identities');
+    }
   } else {
     assert.ok(modes.some(choice => choice.mode === 'selected'), `${name}: no verified file selection`);
     for (const choice of modes.filter(choice => choice.mode === 'selected')) assert.deepEqual(choice.files, ['a.test.ts']);

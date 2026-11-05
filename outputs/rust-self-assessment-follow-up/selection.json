@@ -1,0 +1,254 @@
+{
+  "node": "v24.22.2",
+  "platform": "linux",
+  "arch": "x64",
+  "vitest": "5.0.0",
+  "binarySha256": "e0bcf4eb283b6b32c8f0ed720a50c90b31dcf908fb798da6440d9e7835cbfdce",
+  "checks": [
+    "filter",
+    "timeout",
+    "job-deadline",
+    "cleanup",
+    "assertion-cleanup"
+  ],
+  "comparisons": [
+    {
+      "name": "filter",
+      "verdictsMatch": true,
+      "outcomes": [
+        [
+          "pseudoTesting",
+          "target.ts",
+          0,
+          "killed"
+        ],
+        [
+          "pseudoTesting",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          1,
+          "killed"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          2,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          0,
+          "survived"
+        ],
+        [
+          "mutation",
+          "uncovered.ts",
+          1,
+          "survived"
+        ]
+      ],
+      "full": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 0.845168,
+          "attributionMs": 0.31113100000000005,
+          "baselineMs": 1024.9758490000002,
+          "cleanupMs": 213.178766,
+          "compilerStrictnessMs": 1014.40869,
+          "coverageMs": 2003.304215,
+          "preparationMs": 0.27854,
+          "typecheckMs": null
+        },
+        "mutationWallMs": 5157.366457,
+        "jobsAttempted": 5,
+        "perOperatorJobs": 5
+      },
+      "selected": {
+        "complete": true,
+        "score": 20,
+        "phases": {
+          "analysisMs": 0.772422,
+          "attributionMs": 0.275646,
+          "baselineMs": 992.5545989999999,
+          "cleanupMs": 202.433379,
+          "compilerStrictnessMs": 1018.6949030000001,
+          "coverageMs": 1405.251426,
+          "preparationMs": 0.26718899999999995,
+          "typecheckMs": null
+        },
+        "mutationWallMs": 5479.179253,
+        "jobsAttempted": 6,
+        "perOperatorJobs": 6
+      }
+    },
+    {
+      "name": "timeout",
+      "verdictsMatch": true,
+      "outcomes": [
+        [
+          "pseudoTesting",
+          "target.ts",
+          0,
+          "timed-out"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          0,
+          "timed-out"
+        ]
+      ],
+      "full": {
+        "complete": false,
+        "score": null,
+        "phases": {
+          "analysisMs": 0.656787,
+          "attributionMs": 0.250979,
+          "baselineMs": 786.108352,
+          "cleanupMs": 214.860938,
+          "compilerStrictnessMs": 965.650931,
+          "coverageMs": 1178.260423,
+          "preparationMs": 0.26276,
+          "typecheckMs": null
+        },
+        "mutationWallMs": 834.7193659999999,
+        "jobsAttempted": 1,
+        "perOperatorJobs": 1
+      },
+      "selected": {
+        "complete": false,
+        "score": null,
+        "phases": {
+          "analysisMs": 0.700318,
+          "attributionMs": 0.31006,
+          "baselineMs": 809.272334,
+          "cleanupMs": 213.265405,
+          "compilerStrictnessMs": 978.073885,
+          "coverageMs": 1100.555009,
+          "preparationMs": 0.271226,
+          "typecheckMs": null
+        },
+        "mutationWallMs": 590.9418029999999,
+        "jobsAttempted": 1,
+        "perOperatorJobs": 1
+      }
+    },
+    {
+      "name": "cleanup",
+      "verdictsMatch": true,
+      "outcomes": [
+        [
+          "pseudoTesting",
+          "target.ts",
+          0,
+          "execution-error"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          0,
+          "execution-error"
+        ]
+      ],
+      "full": {
+        "complete": false,
+        "score": null,
+        "phases": {
+          "analysisMs": 1.142213,
+          "attributionMs": 0.40189,
+          "baselineMs": 1896.814783,
+          "cleanupMs": 409.24178700000004,
+          "compilerStrictnessMs": 1928.2391169999999,
+          "coverageMs": 2640.332961,
+          "preparationMs": 0.402141,
+          "typecheckMs": null
+        },
+        "mutationWallMs": 1744.349661,
+        "jobsAttempted": 1,
+        "perOperatorJobs": 1
+      },
+      "selected": {
+        "complete": false,
+        "score": null,
+        "phases": {
+          "analysisMs": 0.9975610000000001,
+          "attributionMs": 0.38729399999999997,
+          "baselineMs": 1712.1356269999999,
+          "cleanupMs": 1167.060389,
+          "compilerStrictnessMs": 2498.851387,
+          "coverageMs": 2430.148075,
+          "preparationMs": 0.400196,
+          "typecheckMs": null
+        },
+        "mutationWallMs": 1359.957894,
+        "jobsAttempted": 1,
+        "perOperatorJobs": 1
+      }
+    },
+    {
+      "name": "assertion-cleanup",
+      "verdictsMatch": true,
+      "outcomes": [
+        [
+          "pseudoTesting",
+          "target.ts",
+          0,
+          "execution-error"
+        ],
+        [
+          "mutation",
+          "target.ts",
+          0,
+          "execution-error"
+        ]
+      ],
+      "full": {
+        "complete": false,
+        "score": null,
+        "phases": {
+          "analysisMs": 1.3397420000000002,
+          "attributionMs": 0.34435200000000005,
+          "baselineMs": 1139.396442,
+          "cleanupMs": 278.424464,
+          "compilerStrictnessMs": 1517.216507,
+          "coverageMs": 1966.690808,
+          "preparationMs": 0.422419,
+          "typecheckMs": null
+        },
+        "mutationWallMs": 1101.644662,
+        "jobsAttempted": 1,
+        "perOperatorJobs": 1
+      },
+      "selected": {
+        "complete": false,
+        "score": null,
+        "phases": {
+          "analysisMs": 2.947645,
+          "attributionMs": 3.463329,
+          "baselineMs": 1362.854611,
+          "cleanupMs": 422.73511,
+          "compilerStrictnessMs": 1938.999719,
+          "coverageMs": 2331.956643,
+          "preparationMs": 0.335416,
+          "typecheckMs": null
+        },
+        "mutationWallMs": 1296.0080139999998,
+        "jobsAttempted": 1,
+        "perOperatorJobs": 1
+      }
+    }
+  ]
+}

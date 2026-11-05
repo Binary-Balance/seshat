@@ -1,0 +1,12 @@
+--- a/crates/seshat/src/coverage.rs
++++ b/crates/seshat/src/coverage.rs
+@@ -362,9 +362,6 @@
+                     {
+                         end = scope_end;
+                     }
+-                }
+-                if start >= end {
+-                    return Err("empty or reversed statement span".into());
+                 }
+                 let hits = counters
+                     .get(id)

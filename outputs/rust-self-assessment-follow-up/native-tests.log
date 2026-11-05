@@ -1,0 +1,240 @@
+   Compiling seshat v0.13.0 (<repo>/crates/seshat)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 16.81s
+     Running unittests src/lib.rs (work/self-assessment-follow-up/coverage-target/debug/deps/seshat-442d1d1d107cc85e)
+
+running 181 tests
+test analysis::boolean_replacements_preserve_grouping_trivia_and_exactly_one_site ... ok
+test analysis::boolean_mutants_follow_runtime_expressions_and_selected_families ... ok
+test analysis::cognitive_accessors_use_implicit_initializer_scopes ... ok
+test analysis::cognitive_class_keys_stay_in_the_enclosing_scope ... ok
+test analysis::cognitive_complexity_follows_flow_and_nesting_rules ... ok
+test analysis::cognitive_complexity_owns_nested_functions_separately ... ok
+test analysis::cognitive_parameter_decorators_stay_in_the_enclosing_scope ... ok
+test analysis::cognitive_recursion_requires_unambiguous_visible_bindings ... ok
+test analysis::cognitive_recursion_respects_lexical_boundaries ... ok
+test analysis::coverage_hint_counts_do_not_infer_support_from_other_providers ... ok
+test analysis::coverage_hints_distinguish_whole_functions_and_partial_suppressions ... ok
+test analysis::boolean_switching_uses_inline_arms_and_global_ids ... ok
+test analysis::extreme_mutation_skips_empty_functions_and_special_methods ... ok
+test analysis::extreme_mutation_replaces_only_the_owning_body ... ok
+test analysis::ignored_declarations_preserve_partial_suppression_in_the_enclosing_function ... ok
+test analysis::load_evidence_requires_direct_uncaught_error_construction ... ok
+test analysis::load_evidence_respects_catch_blocks_and_function_boundaries ... ok
+test analysis::operator_mutants_follow_ast_sites_and_selected_families ... ok
+test analysis::operator_rendering_preserves_statement_boundaries ... ok
+test analysis::operator_replacements_preserve_token_boundaries ... ok
+test analysis::operator_site_counts_include_exclusions_but_not_disabled_families ... ok
+test analysis::optional_candidates_exclude_non_runtime_syntax ... ok
+test analysis::optional_candidates_preserve_tokens_and_stable_ids ... ok
+test analysis::optional_switching_rejects_reference_contexts ... ok
+test analysis::statement_candidates_exclude_structural_code ... ok
+test analysis::logical_switching_bounds_nested_expansion ... ok
+test analysis::statement_candidates_include_async_and_generator_bodies ... ok
+test analysis::statement_candidates_use_function_statements_and_bare_returns ... ok
+test analysis::switched_sources_can_use_run_wide_ids_and_reject_helper_collisions ... ok
+test analysis::switching_preserves_hashbangs_and_directives ... ok
+test analysis::switching_rejects_negation_removal_that_exposes_references ... ok
+test analysis::statement_removal_preserves_syntax_and_statement_boundaries ... ok
+test analysis::type_safety_assigns_leading_suppressions_to_default_export_functions ... ok
+test analysis::type_safety_assigns_leading_suppressions_to_initialized_functions_and_methods ... ok
+test analysis::type_safety_block_directives_preserve_prefix_order_and_last_line ... ok
+test analysis::type_safety_counts_syntax_and_preserves_unowned_suppressions ... ok
+test analysis::type_safety_handles_tsx_and_angle_const_assertions ... ok
+test analysis::type_safety_nocheck_uses_typescript_pragma_separators ... ok
+test assessment::tests::all_setups_must_resolve_before_a_kill_counts ... ok
+test assessment::tests::complete_scores_and_no_mutants ... ok
+test assessment::tests::counted_timeouts_require_every_setup_to_resolve ... ok
+test assessment::tests::crap_requires_valid_coverage_counts ... ok
+test assessment::tests::failed_or_missing_baselines_never_produce_a_mutation_score ... ok
+test assessment::tests::incomplete_runs_retain_resolved_results_in_planned_order ... ok
+test assessment::tests::pseudo_testing_requires_execution_and_resolved_mutants ... ok
+test cli::tests::arguments_reject_ambiguity_before_execution ... ok
+test cli::tests::cognitive_thresholds_ignore_coverage_status_and_include_zero ... ok
+test cli::tests::counted_deadlines_keep_runner_timeouts_unresolved_and_explain_the_cap ... ok
+test cli::tests::counted_timeouts_can_pass_thresholds_without_claiming_a_withheld_score ... ok
+test cli::tests::malformed_measured_rows_cannot_pass_a_threshold ... ok
+test cli::tests::mutation_timeouts_explain_withheld_scores_and_unrun_work ... ok
+test cli::tests::path_arguments_accept_unambiguous_leading_dashes ... ok
+test cli::tests::readable_coverage_suppressions_keep_counts_and_unscored_status_visible ... ok
+test cli::tests::readable_errors_omit_nulls_and_distinguish_cleanup ... ok
+test cli::tests::readable_explains_inactive_observers_per_setup ... ok
+test cli::tests::readable_keeps_excluded_operator_sites_visible ... ok
+test cli::tests::readable_prints_the_limit_next_to_mutants_that_reach_it ... ok
+test cli::tests::readable_type_safety_keeps_static_findings_and_unknown_config_visible ... ok
+test cli::tests::selection_fallback_is_reported_once_per_setup ... ok
+test cli::tests::threshold_boundaries_and_incomplete_precedence ... ok
+test cli::tests::thresholds_do_not_invent_scores_or_request_extra_assessments ... ok
+test cli::tests::unknown_crap_retains_measured_statement_display ... ok
+test cli::tests::unknown_is_not_zero_and_terminal_controls_are_escaped ... ok
+test cli::tests::unscored_functions_and_empty_mutation_scope_are_not_failures ... ok
+test analysis::type_safety_directives_use_javascript_whitespace ... ok
+test cli::type_safety::tests::missing_unknown_and_unmeasured_source_cannot_pass_as_zero ... ok
+test cli::type_safety::tests::unknown_compiler_blocks_only_requested_inferred_checks_and_preserves_evidence ... ok
+test cli::type_safety::tests::zero_counts_pass_and_existing_incompleteness_takes_precedence ... ok
+test coverage::coincident_spans_and_incompatible_reports_stay_incomplete ... ok
+test cli::type_safety::tests::totals_include_all_rows_and_unowned_source_without_summing_setups ... ok
+test coverage::conflicting_branch_owners_never_gain_statement_fallback ... ok
+test coverage::declarations_without_bodies_do_not_create_coverage_rows ... ok
+test coverage::empty_and_reversed_statement_spans_cannot_supply_coverage ... ok
+test coverage::default_ranges_stop_before_a_later_function_value ... ok
+test coverage::file_suppression_allows_an_omitted_entry_but_never_hides_bad_evidence ... ok
+test coverage::final_object_property_closing_brace_does_not_cross_a_sibling_expression ... ok
+test coverage::flattened_logical_branches_cannot_be_counted_again_as_nested_sites ... ok
+test coverage::functions_in_default_parameters_own_their_internal_branches ... ok
+test coverage::if_condition_and_object_property_ends_preserve_executable_boundaries ... ok
+test coverage::empty_bodies_require_non_executing_parameters ... ok
+test coverage::istanbul_label_and_debugger_mappings ... ok
+test coverage::jsx_closing_delimiters_do_not_allow_other_executable_children_or_code ... ok
+test coverage::incompatible_branches_merge_compatible_statements_without_scoring_partial_branches ... ok
+test coverage::jsx_fragment_closing_ranges_preserve_child_boundaries ... ok
+test coverage::line_separators_cannot_inflate_coverage ... ok
+test coverage::jsx_container_and_opening_tag_ends_do_not_swallow_other_attributes_or_children ... ok
+test coverage::malformed_columns_are_not_missing_columns ... ok
+test coverage::mapped_closing_parentheses_allow_trivia_but_not_executable_code ... ok
+test coverage::open_ends_are_not_missing_positions ... ok
+test coverage::parenthesized_arrow_return_has_an_executable_inner_start ... ok
+test coverage::partial_suppression_cannot_become_full_statement_coverage ... ok
+test coverage::provider_end_extensions_normalize_before_branch_hit_merging ... ok
+test coverage::recorded_branches_drive_crap_without_changing_statement_coverage ... ok
+test coverage::remapped_line_ends_allow_comments_but_not_code_or_newlines ... ok
+test coverage::suppression_does_not_hide_existing_counters_or_reclassify_implicit_scopes ... ok
+test coverage::suppression_rejects_retained_function_records_without_statement_evidence ... ok
+test coverage::suppression_requires_usable_function_metadata_when_present ... ok
+test coverage::unicode_positions ... ok
+test coverage::unreliable_branches_preserve_statements_and_other_functions ... ok
+test coverage::whole_function_suppressions_are_visible_and_do_not_require_counters ... ok
+test execution::exit_code_is_not_a_verdict ... ok
+test execution::jest_hook_kills_require_all_errors_to_be_attributed ... ok
+test coverage::missing_malformed_and_shifted_branch_evidence_never_falls_back ... ok
+test execution::job::tests::completed_jobs_keep_their_verdicts_after_host_cancellation ... ok
+test execution::job::tests::held_open_pipe_retains_partial_output ... ok
+test execution::job::tests::exited_child_group_is_reaped_before_cleanup_retry ... ok
+test execution::job::tests::interrupted_exit_before_host_cancellation_is_cancelled ... ok
+test execution::job::tests::interrupted_exit_without_host_cancellation_stays_an_error ... ok
+test execution::job::tests::parallel_jobs_do_not_retain_another_jobs_output ... ok
+test execution::job::tests::retained_output_stays_bounded_while_draining_to_eof ... ok
+test execution::job::tests::unrelated_failures_after_host_cancellation_stay_errors ... ok
+test execution::module_file_urls_encode_paths_and_are_absolute ... ok
+test execution::observed_failures_require_complete_hook_evidence ... ok
+test execution::only_bounded_runner_timeouts_allow_more_mutants ... ok
+test execution::only_cleaned_up_execution_errors_allow_more_mutants ... ok
+test execution::only_cleaned_up_job_deadlines_continue_or_count ... ok
+test execution::platform::cleanup_tests::reap_deadline_preserves_uncertainty_and_is_not_restarted ... ok
+test execution::platform::unix_tests::dropping_managed_child_reaps_the_leader ... ok
+test execution::platform::unix_tests::failed_settlement_never_retries_signals_after_reaping ... ok
+test execution::platform::unix_tests::kill_tree_settles_stop_error_without_retrying_group_signal ... ok
+managed child cleanup failed: stop tree: cannot signal process group after releasing its leader; reap leader: No child processes (os error 10); terminate leader fallback: cannot signal child after releasing its ownership; reap leader: No child processes (os error 10)
+test execution::platform::unix_tests::lost_child_ownership_prevents_cleanup_signals ... ok
+test execution::platform::unix_tests::natural_exit_never_signals_a_released_process_group ... ok
+test execution::platform::unix_tests::stop_failure_can_retry_while_the_leader_is_retained ... ok
+test execution::project::collection::tests::attribution_failure_allows_mutations_but_original_job_failures_stop_them ... ok
+test execution::job::tests::output_and_deadline_are_bounded_without_redundant_cleanup ... ok
+test execution::project::collection::tests::compiler_strictness_recognition_is_explicit_and_failures_are_bounded ... ok
+test execution::project::collection::tests::completed_jobs_release_artifacts_and_workers_follow_the_plan ... ok
+test execution::project::collection::tests::cleanup_failure_stops_pending_setups_and_prepared_baselines ... ok
+test execution::project::collection::tests::coverage_report_normalizes_validated_file_identities ... ok
+test execution::project::collection::tests::coverage_report_rejects_dotted_alias_collisions ... ok
+test execution::project::collection::tests::coverage_report_rejects_mismatched_file_identity ... ok
+test execution::project::collection::tests::coverage_report_rejects_relative_escaping_and_linked_sources ... ok
+test execution::project::collection::tests::diagnostics_keep_ranges_unknown_and_incomplete_work_distinct ... ok
+test execution::project::collection::tests::extreme_and_operator_phases_share_one_worker_baseline ... ok
+test execution::project::collection::tests::counted_deadlines_need_a_clean_stop_and_every_setup_resolved ... ok
+test execution::project::collection::tests::inferred_any_keeps_setup_counts_nested_owners_and_unknowns_separate ... ok
+test execution::project::collection::tests::jest_expo_receipts_accept_only_verified_versions ... ok
+test execution::project::collection::tests::live_timeout_counts_require_every_setup_to_resolve ... ok
+test execution::project::collection::tests::mutation_plan_preserves_analysis_ids_and_report_metadata ... ok
+test execution::project::collection::tests::mutation_restoration_rejects_concurrent_path_swaps ... ok
+test execution::project::collection::tests::observer_diagnostics_use_each_setups_runner_receipt ... ok
+test execution::project::collection::tests::receipt_versions_preserve_identity_and_format_validation ... ok
+test execution::project::collection::tests::report_paths_reject_links_before_removal_or_reading ... ok
+test execution::project::collection::tests::report_paths_reject_non_utf8_before_reading ... ok
+test execution::project::collection::tests::reporter_arguments_expand_without_changing_the_program ... ok
+test execution::project::collection::tests::requested_workers_remain_distinct_when_assessment_aborts ... ok
+test execution::project::collection::tests::restoration_checks_link_count_on_the_opened_file ... ok
+test execution::project::collection::tests::timeout_diagnostics_retain_raw_and_counted_totals ... ok
+test execution::project::collection::tests::hanging_mutants_stop_at_the_limit_from_the_slowest_baseline ... ok
+test execution::project::collection::tests::unconfirmed_selection_retries_stop_at_the_mutant_limit ... ok
+test execution::project::collection::tests::zero_coverage_setup_resolves_before_a_stop ... ok
+test execution::project::selection::tests::attribution_requires_matching_workloads_and_complete_source_evidence ... ok
+test execution::project::selection::tests::filtering_preserves_supported_options_and_rejects_unknown_workloads ... ok
+test execution::project::tests::assessment_prerequisites_are_checked_before_capture_access ... ok
+test execution::project::tests::capture_read_rejects_concurrent_path_swaps ... ok
+test execution::project::tests::captured_bytes_and_workspace_links_do_not_alias_originals ... ok
+test execution::project::tests::concurrent_capture_directories_have_distinct_paths ... ok
+test execution::project::tests::config_read_rejects_concurrent_path_swaps ... ok
+test execution::project::tests::configuration_rejects_ambiguity_before_capture ... ok
+test execution::project::tests::copied_workspace_resolves_with_real_node ... ok
+test execution::project::tests::coverage_suppressions_skip_pseudo_testing_but_keep_operator_mutations ... ok
+test execution::project::tests::deep_capture_preserves_every_directory_and_source ... ok
+test execution::project::tests::git_case_variants_are_excluded_on_the_actual_filesystem ... ok
+test execution::project::tests::invalid_setup_directory_and_nested_scratch_are_rejected ... ok
+test execution::project::tests::job_artifact_cleanup_preserves_other_jobs_and_failure_evidence ... ok
+test execution::project::tests::mutant_time_limit_settings_are_optional_and_positive ... ok
+test execution::project::tests::mutation_operator_configuration_is_explicit_and_validated ... ok
+test execution::project::tests::non_utf8_names_fail_before_capture_or_reporting ... ok
+test execution::project::tests::reporter_placeholders_are_arguments_only ... ok
+test execution::project::tests::scope_cannot_silently_omit_selected_source ... ok
+test execution::project::tests::selected_links_and_link_parents_are_rejected ... ok
+test execution::project::tests::single_package_scope_does_not_require_workspace_capture ... ok
+test execution::project::tests::thresholds_are_optional_and_validated_before_capture ... ok
+test execution::project::tests::timeout_scoring_is_opt_in_and_boolean ... ok
+test execution::project::tests::type_safety_limits_keep_declarations_out_of_assessment_source ... ok
+test execution::project::tests::unicode_names_remain_distinct_and_copies_are_private ... ok
+test execution::project::tests::unsafe_links_fail_and_remove_partial_copies ... ok
+test execution::project::tests::workers_have_independent_files_and_rewritten_workspace_links ... ok
+test execution::proof_clock_before_epoch_is_a_controlled_error ... ok
+test execution::truncated_output_does_not_change_receipt_verdicts ... ok
+test execution::project::collection::tests::unresolved_jobs_allow_later_setups_and_mutants ... ok
+
+test result: ok. 181 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 50.19s
+
+     Running unittests src/bin/seshat.rs (work/self-assessment-follow-up/coverage-target/debug/deps/seshat-f17074dd283e6752)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/seshat-proofs.rs (work/self-assessment-follow-up/coverage-target/debug/deps/seshat_proofs-ef7156e2b1e0c865)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/windows-console-helper.rs (work/self-assessment-follow-up/coverage-target/debug/deps/windows_console_helper-1850716fa3f1170c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/cli_output.rs (work/self-assessment-follow-up/coverage-target/debug/deps/cli_output-aa05b2d444795b93)
+
+running 3 tests
+test argument_errors_are_concise_or_json_and_escape_controls ... ok
+test closed_stdout_succeeds_only_for_information ... ok
+test help_and_version_forms_match_the_usage ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+
+     Running tests/proof_inputs.rs (work/self-assessment-follow-up/coverage-target/debug/deps/proof_inputs-a41a0d4079a28b6f)
+
+running 12 tests
+test closed_stdout_returns_an_output_error_without_panicking ... ok
+test command_root_loads_captured_scripts ... ok
+test consumed_legacy_evidence_is_released_between_jobs ... ok
+test invalid_configuration_never_starts_an_earlier_command ... ok
+test failed_original_and_prepared_checks_never_start_mutants ... ok
+test invalid_receipts_fail_closed_and_remove_scratch ... ok
+test legacy_artifact_cleanup_failure_stops_new_jobs_and_retains_scope ... ok
+test non_utf8_arguments_return_a_controlled_error ... ok
+test proof_commands_clear_ambient_node_options_and_use_private_scratch ... ok
+test successful_transform_commands_need_no_complete_field ... ok
+test truncated_test_output_keeps_kills_and_schedules_later_mutants ... ok
+test wait_and_cleanup_errors_keep_partial_output ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.88s
+
+   Doc-tests seshat
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

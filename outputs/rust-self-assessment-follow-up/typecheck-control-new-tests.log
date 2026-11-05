@@ -1,0 +1,88 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   <fixture>/crates/seshat/Cargo.toml
+workspace: <fixture>/Cargo.toml
+   Compiling seshat v0.13.0 (<fixture>/crates/seshat)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.93s
+     Running tests/proof_inputs.rs (work/self-assessment-follow-up/control-target/debug/deps/proof_inputs-2d4a0e026ebf66ef)
+
+running 12 tests
+test closed_stdout_returns_an_output_error_without_panicking ... ok
+test command_root_loads_captured_scripts ... ok
+test consumed_legacy_evidence_is_released_between_jobs ... ok
+test failed_original_and_prepared_checks_never_start_mutants ... FAILED
+test invalid_configuration_never_starts_an_earlier_command ... FAILED
+test invalid_receipts_fail_closed_and_remove_scratch ... FAILED
+test legacy_artifact_cleanup_failure_stops_new_jobs_and_retains_scope ... FAILED
+test non_utf8_arguments_return_a_controlled_error ... FAILED
+test proof_commands_clear_ambient_node_options_and_use_private_scratch ... FAILED
+test successful_transform_commands_need_no_complete_field ... FAILED
+test truncated_test_output_keeps_kills_and_schedules_later_mutants ... FAILED
+test wait_and_cleanup_errors_keep_partial_output ... FAILED
+
+failures:
+
+---- failed_original_and_prepared_checks_never_start_mutants stdout ----
+
+thread 'failed_original_and_prepared_checks_never_start_mutants' (753476) panicked at crates/seshat/tests/proof_inputs.rs:73:5:
+assertion `left == right` failed: stdout: {"complete":true,"evidence":{"cancelled":false,"cleanupError":null,"diagnostic":"","error":null,"exit":1,"ms":27.566058,"outputTruncated":false,"pipeError":null,"report":null,"state":"execution-error","timedOut":false},"phase":"original-typecheck"}
+
+stderr:
+  left: Some(0)
+ right: Some(2)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- invalid_configuration_never_starts_an_earlier_command stdout ----
+
+thread 'invalid_configuration_never_starts_an_earlier_command' (753550) panicked at crates/seshat/tests/proof_inputs.rs:229:44:
+called `Result::unwrap()` on an `Err` value: PoisonError { .. }
+
+---- invalid_receipts_fail_closed_and_remove_scratch stdout ----
+
+thread 'invalid_receipts_fail_closed_and_remove_scratch' (753551) panicked at crates/seshat/tests/proof_inputs.rs:329:44:
+called `Result::unwrap()` on an `Err` value: PoisonError { .. }
+
+---- legacy_artifact_cleanup_failure_stops_new_jobs_and_retains_scope stdout ----
+
+thread 'legacy_artifact_cleanup_failure_stops_new_jobs_and_retains_scope' (753552) panicked at crates/seshat/tests/proof_inputs.rs:523:44:
+called `Result::unwrap()` on an `Err` value: PoisonError { .. }
+
+---- non_utf8_arguments_return_a_controlled_error stdout ----
+
+thread 'non_utf8_arguments_return_a_controlled_error' (753553) panicked at crates/seshat/tests/proof_inputs.rs:272:44:
+called `Result::unwrap()` on an `Err` value: PoisonError { .. }
+
+---- proof_commands_clear_ambient_node_options_and_use_private_scratch stdout ----
+
+thread 'proof_commands_clear_ambient_node_options_and_use_private_scratch' (753554) panicked at crates/seshat/tests/proof_inputs.rs:372:44:
+called `Result::unwrap()` on an `Err` value: PoisonError { .. }
+
+---- successful_transform_commands_need_no_complete_field stdout ----
+
+thread 'successful_transform_commands_need_no_complete_field' (753555) panicked at crates/seshat/tests/proof_inputs.rs:310:44:
+called `Result::unwrap()` on an `Err` value: PoisonError { .. }
+
+---- truncated_test_output_keeps_kills_and_schedules_later_mutants stdout ----
+
+thread 'truncated_test_output_keeps_kills_and_schedules_later_mutants' (753556) panicked at crates/seshat/tests/proof_inputs.rs:179:44:
+called `Result::unwrap()` on an `Err` value: PoisonError { .. }
+
+---- wait_and_cleanup_errors_keep_partial_output stdout ----
+
+thread 'wait_and_cleanup_errors_keep_partial_output' (753557) panicked at crates/seshat/tests/proof_inputs.rs:456:44:
+called `Result::unwrap()` on an `Err` value: PoisonError { .. }
+
+
+failures:
+    failed_original_and_prepared_checks_never_start_mutants
+    invalid_configuration_never_starts_an_earlier_command
+    invalid_receipts_fail_closed_and_remove_scratch
+    legacy_artifact_cleanup_failure_stops_new_jobs_and_retains_scope
+    non_utf8_arguments_return_a_controlled_error
+    proof_commands_clear_ambient_node_options_and_use_private_scratch
+    successful_transform_commands_need_no_complete_field
+    truncated_test_output_keeps_kills_and_schedules_later_mutants
+    wait_and_cleanup_errors_keep_partial_output
+
+test result: FAILED. 3 passed; 9 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.04s
+
+error: test failed, to rerun pass `--test proof_inputs`

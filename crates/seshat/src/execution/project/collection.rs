@@ -3188,6 +3188,13 @@ mod tests {
                     job["selection"]["reason"], "selection-not-confirmed",
                     "{result}"
                 );
+                assert_eq!(job["jobsAttempted"], 2, "{phase}: {result}");
+                assert_eq!(job["selection"]["requestedFiles"], json!(["a.test.ts"]));
+                let selected = &job["selection"]["selectedAttempt"];
+                assert_eq!(selected["state"], "passed");
+                assert_eq!(selected["report"]["passed"], 2);
+                assert_eq!(selected["report"]["tests"].as_array().unwrap().len(), 2);
+                assert_eq!(selected["timedOut"], false);
                 assert_eq!(job["timedOut"], true, "{phase}: {result}");
                 let ms = job["ms"].as_f64().unwrap();
                 assert!(
