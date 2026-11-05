@@ -1,0 +1,9 @@
+stack: complete=true, score=83.33333333333334, 16410ms
+assertion: complete=true, score=100, 6083ms
+survived: complete=true, score=0, 5901ms
+cleanup: complete=false, score=null, 6016ms
+timeout: complete=false, score=null, 5985ms
+hook-timeout: complete=false, score=null, 6015ms
+import-error: complete=false, score=null, 7741ms
+concurrent: complete=false, score=null, 4490ms
+Vitest installed-command evidence: 8 checks; <repo>/work/assurance-proofs/vitest-check-GQeYcd/result.json

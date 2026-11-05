@@ -1,0 +1,4969 @@
+{
+  "outcomes": [
+    {
+      "scenario": "Baseline",
+      "summary": "Success",
+      "log_path": "log/baseline.log",
+      "diff_path": null,
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.453433546,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.105059333,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:16:9: replace TestState::label -> &'static str with \"\"",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "TestState::label",
+            "return_type": "-> &'static str",
+            "span": {
+              "start": {
+                "line": 15,
+                "column": 5
+              },
+              "end": {
+                "line": 24,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 16,
+              "column": 9
+            },
+            "end": {
+              "line": 23,
+              "column": 10
+            }
+          },
+          "replacement": "\"\"",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__lib.rs_line_16_col_9.log",
+      "diff_path": "diff/src__lib.rs_line_16_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.512112554,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.103428573,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:16:9: replace TestState::label -> &'static str with \"xyzzy\"",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "TestState::label",
+            "return_type": "-> &'static str",
+            "span": {
+              "start": {
+                "line": 15,
+                "column": 5
+              },
+              "end": {
+                "line": 24,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 16,
+              "column": 9
+            },
+            "end": {
+              "line": 23,
+              "column": 10
+            }
+          },
+          "replacement": "\"xyzzy\"",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "MissedMutant",
+      "log_path": "log/src__lib.rs_line_16_col_9_001.log",
+      "diff_path": "diff/src__lib.rs_line_16_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.661701654,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.152037378,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:41:9: replace Verdict::label -> &'static str with \"\"",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "Verdict::label",
+            "return_type": "-> &'static str",
+            "span": {
+              "start": {
+                "line": 40,
+                "column": 5
+              },
+              "end": {
+                "line": 50,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 41,
+              "column": 9
+            },
+            "end": {
+              "line": 49,
+              "column": 10
+            }
+          },
+          "replacement": "\"\"",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_41_col_9.log",
+      "diff_path": "diff/src__lib.rs_line_41_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.41312571,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051131148,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:41:9: replace Verdict::label -> &'static str with \"xyzzy\"",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "Verdict::label",
+            "return_type": "-> &'static str",
+            "span": {
+              "start": {
+                "line": 40,
+                "column": 5
+              },
+              "end": {
+                "line": 50,
+                "column": 6
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 41,
+              "column": 9
+            },
+            "end": {
+              "line": 49,
+              "column": 10
+            }
+          },
+          "replacement": "\"xyzzy\"",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_41_col_9_001.log",
+      "diff_path": "diff/src__lib.rs_line_41_col_9_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.455071291,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051249717,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:63:5: replace pseudo_tested -> Option<bool> with None",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "pseudo_tested",
+            "return_type": "-> Option<bool>",
+            "span": {
+              "start": {
+                "line": 62,
+                "column": 1
+              },
+              "end": {
+                "line": 72,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 63,
+              "column": 5
+            },
+            "end": {
+              "line": 71,
+              "column": 6
+            }
+          },
+          "replacement": "None",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_63_col_5.log",
+      "diff_path": "diff/src__lib.rs_line_63_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.256888913,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.059606159,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:63:5: replace pseudo_tested -> Option<bool> with Some(true)",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "pseudo_tested",
+            "return_type": "-> Option<bool>",
+            "span": {
+              "start": {
+                "line": 62,
+                "column": 1
+              },
+              "end": {
+                "line": 72,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 63,
+              "column": 5
+            },
+            "end": {
+              "line": 71,
+              "column": 6
+            }
+          },
+          "replacement": "Some(true)",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_63_col_5_001.log",
+      "diff_path": "diff/src__lib.rs_line_63_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.303373905,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051075915,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:63:5: replace pseudo_tested -> Option<bool> with Some(false)",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "pseudo_tested",
+            "return_type": "-> Option<bool>",
+            "span": {
+              "start": {
+                "line": 62,
+                "column": 1
+              },
+              "end": {
+                "line": 72,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 63,
+              "column": 5
+            },
+            "end": {
+              "line": 71,
+              "column": 6
+            }
+          },
+          "replacement": "Some(false)",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_63_col_5_002.log",
+      "diff_path": "diff/src__lib.rs_line_63_col_5_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.301849688,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.052631849,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:64:8: delete ! in pseudo_tested",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "pseudo_tested",
+            "return_type": "-> Option<bool>",
+            "span": {
+              "start": {
+                "line": 62,
+                "column": 1
+              },
+              "end": {
+                "line": 72,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 64,
+              "column": 8
+            },
+            "end": {
+              "line": 64,
+              "column": 9
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_64_col_8.log",
+      "diff_path": "diff/src__lib.rs_line_64_col_8.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.404697934,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051045037,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:64:25: replace && with || in pseudo_tested",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "pseudo_tested",
+            "return_type": "-> Option<bool>",
+            "span": {
+              "start": {
+                "line": 62,
+                "column": 1
+              },
+              "end": {
+                "line": 72,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 64,
+              "column": 25
+            },
+            "end": {
+              "line": 64,
+              "column": 27
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_64_col_25.log",
+      "diff_path": "diff/src__lib.rs_line_64_col_25.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.404685866,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.105642497,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:64:14: replace < with == in pseudo_tested",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "pseudo_tested",
+            "return_type": "-> Option<bool>",
+            "span": {
+              "start": {
+                "line": 62,
+                "column": 1
+              },
+              "end": {
+                "line": 72,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 64,
+              "column": 14
+            },
+            "end": {
+              "line": 64,
+              "column": 15
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_64_col_14.log",
+      "diff_path": "diff/src__lib.rs_line_64_col_14.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.304442582,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.050974525,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:64:14: replace < with > in pseudo_tested",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "pseudo_tested",
+            "return_type": "-> Option<bool>",
+            "span": {
+              "start": {
+                "line": 62,
+                "column": 1
+              },
+              "end": {
+                "line": 72,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 64,
+              "column": 14
+            },
+            "end": {
+              "line": 64,
+              "column": 15
+            }
+          },
+          "replacement": ">",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_64_col_14_001.log",
+      "diff_path": "diff/src__lib.rs_line_64_col_14_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.251634841,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051786482,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:64:14: replace < with <= in pseudo_tested",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "pseudo_tested",
+            "return_type": "-> Option<bool>",
+            "span": {
+              "start": {
+                "line": 62,
+                "column": 1
+              },
+              "end": {
+                "line": 72,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 64,
+              "column": 14
+            },
+            "end": {
+              "line": 64,
+              "column": 15
+            }
+          },
+          "replacement": "<=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_64_col_14_002.log",
+      "diff_path": "diff/src__lib.rs_line_64_col_14_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.301715214,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051093928,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:64:37: replace <= with > in pseudo_tested",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "pseudo_tested",
+            "return_type": "-> Option<bool>",
+            "span": {
+              "start": {
+                "line": 62,
+                "column": 1
+              },
+              "end": {
+                "line": 72,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 64,
+              "column": 37
+            },
+            "end": {
+              "line": 64,
+              "column": 39
+            }
+          },
+          "replacement": ">",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_64_col_37.log",
+      "diff_path": "diff/src__lib.rs_line_64_col_37.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.255890356,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.054160073,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:68:9: delete match arm Verdict::Survived in pseudo_tested",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "pseudo_tested",
+            "return_type": "-> Option<bool>",
+            "span": {
+              "start": {
+                "line": 62,
+                "column": 1
+              },
+              "end": {
+                "line": 72,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 68,
+              "column": 9
+            },
+            "end": {
+              "line": 68,
+              "column": 41
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_68_col_9.log",
+      "diff_path": "diff/src__lib.rs_line_68_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.353154219,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.050899334,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:69:9: delete match arm Verdict::Killed | Verdict::CountedTimeout in pseudo_tested",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "pseudo_tested",
+            "return_type": "-> Option<bool>",
+            "span": {
+              "start": {
+                "line": 62,
+                "column": 1
+              },
+              "end": {
+                "line": 72,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 69,
+              "column": 9
+            },
+            "end": {
+              "line": 69,
+              "column": 66
+            }
+          },
+          "replacement": "",
+          "genre": "MatchArm"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_69_col_9.log",
+      "diff_path": "diff/src__lib.rs_line_69_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.348088238,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051197551,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:75:5: replace score -> Option<f64> with None",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 75,
+              "column": 5
+            },
+            "end": {
+              "line": 80,
+              "column": 74
+            }
+          },
+          "replacement": "None",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_75_col_5.log",
+      "diff_path": "diff/src__lib.rs_line_75_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.51226115,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.101240217,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:75:5: replace score -> Option<f64> with Some(0.0)",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 75,
+              "column": 5
+            },
+            "end": {
+              "line": 80,
+              "column": 74
+            }
+          },
+          "replacement": "Some(0.0)",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_75_col_5_001.log",
+      "diff_path": "diff/src__lib.rs_line_75_col_5_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.643598523,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.101196633,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:75:5: replace score -> Option<f64> with Some(1.0)",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 75,
+              "column": 5
+            },
+            "end": {
+              "line": 80,
+              "column": 74
+            }
+          },
+          "replacement": "Some(1.0)",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_75_col_5_002.log",
+      "diff_path": "diff/src__lib.rs_line_75_col_5_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.483887122,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.104346416,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:75:5: replace score -> Option<f64> with Some(-1.0)",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 75,
+              "column": 5
+            },
+            "end": {
+              "line": 80,
+              "column": 74
+            }
+          },
+          "replacement": "Some(-1.0)",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_75_col_5_003.log",
+      "diff_path": "diff/src__lib.rs_line_75_col_5_003.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.641485248,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.196362308,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:75:38: replace || with && in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 75,
+              "column": 38
+            },
+            "end": {
+              "line": 75,
+              "column": 40
+            }
+          },
+          "replacement": "&&",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_75_col_38.log",
+      "diff_path": "diff/src__lib.rs_line_75_col_38.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 1.005247353,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.053100392,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:75:24: replace || with && in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 75,
+              "column": 24
+            },
+            "end": {
+              "line": 75,
+              "column": 26
+            }
+          },
+          "replacement": "&&",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_75_col_24.log",
+      "diff_path": "diff/src__lib.rs_line_75_col_24.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.648559033,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.101987141,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:75:19: replace == with != in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 75,
+              "column": 19
+            },
+            "end": {
+              "line": 75,
+              "column": 21
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_75_col_19.log",
+      "diff_path": "diff/src__lib.rs_line_75_col_19.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.521357984,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.111128369,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:75:33: replace == with != in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 75,
+              "column": 33
+            },
+            "end": {
+              "line": 75,
+              "column": 35
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_75_col_33.log",
+      "diff_path": "diff/src__lib.rs_line_75_col_33.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.484307607,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.056802727,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:75:49: replace > with < in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 75,
+              "column": 49
+            },
+            "end": {
+              "line": 75,
+              "column": 50
+            }
+          },
+          "replacement": "<",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_75_col_49_001.log",
+      "diff_path": "diff/src__lib.rs_line_75_col_49_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.575806177,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.052894801,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:75:49: replace > with == in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 75,
+              "column": 49
+            },
+            "end": {
+              "line": 75,
+              "column": 50
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_75_col_49.log",
+      "diff_path": "diff/src__lib.rs_line_75_col_49.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.615820499,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.108704333,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:75:49: replace > with >= in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 75,
+              "column": 49
+            },
+            "end": {
+              "line": 75,
+              "column": 50
+            }
+          },
+          "replacement": ">=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_75_col_49_002.log",
+      "diff_path": "diff/src__lib.rs_line_75_col_49_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.582141564,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.052334003,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:78:35: replace / with % in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 78,
+              "column": 35
+            },
+            "end": {
+              "line": 78,
+              "column": 36
+            }
+          },
+          "replacement": "%",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_78_col_35.log",
+      "diff_path": "diff/src__lib.rs_line_78_col_35.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.519098205,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051024218,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:78:35: replace / with * in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 78,
+              "column": 35
+            },
+            "end": {
+              "line": 78,
+              "column": 36
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_78_col_35_001.log",
+      "diff_path": "diff/src__lib.rs_line_78_col_35_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.514231488,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.052938069,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:80:61: replace + with - in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 61
+            },
+            "end": {
+              "line": 80,
+              "column": 62
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_80_col_61.log",
+      "diff_path": "diff/src__lib.rs_line_80_col_61.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.473580959,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.102754365,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:80:34: replace * with + in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 34
+            },
+            "end": {
+              "line": 80,
+              "column": 35
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_80_col_34.log",
+      "diff_path": "diff/src__lib.rs_line_80_col_34.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.473846055,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.053503054,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:80:61: replace + with * in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 61
+            },
+            "end": {
+              "line": 80,
+              "column": 62
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_80_col_61_001.log",
+      "diff_path": "diff/src__lib.rs_line_80_col_61_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.507698985,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.05433664,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:80:34: replace * with / in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 34
+            },
+            "end": {
+              "line": 80,
+              "column": 35
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_80_col_34_001.log",
+      "diff_path": "diff/src__lib.rs_line_80_col_34_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.559801845,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.10454599,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:80:21: replace * with + in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 21
+            },
+            "end": {
+              "line": 80,
+              "column": 22
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_80_col_21.log",
+      "diff_path": "diff/src__lib.rs_line_80_col_21.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.606670473,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.10118284,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:80:21: replace * with / in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 21
+            },
+            "end": {
+              "line": 80,
+              "column": 22
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_80_col_21_001.log",
+      "diff_path": "diff/src__lib.rs_line_80_col_21_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.52743381,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051829652,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:80:41: replace - with + in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 41
+            },
+            "end": {
+              "line": 80,
+              "column": 42
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_80_col_41.log",
+      "diff_path": "diff/src__lib.rs_line_80_col_41.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.47504836,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.05522392,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:92:5: replace mutation -> MutationAssessment with Default::default()",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 92,
+              "column": 5
+            },
+            "end": {
+              "line": 149,
+              "column": 6
+            }
+          },
+          "replacement": "Default::default()",
+          "genre": "FnValue"
+        }
+      },
+      "summary": "Unviable",
+      "log_path": "log/src__lib.rs_line_92_col_5.log",
+      "diff_path": "diff/src__lib.rs_line_92_col_5.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.547918018,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:80:41: replace - with / in score",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "score",
+            "return_type": "-> Option<f64>",
+            "span": {
+              "start": {
+                "line": 74,
+                "column": 1
+              },
+              "end": {
+                "line": 81,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 80,
+              "column": 41
+            },
+            "end": {
+              "line": 80,
+              "column": 42
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_80_col_41_001.log",
+      "diff_path": "diff/src__lib.rs_line_80_col_41_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.702482027,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.156607134,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:93:31: replace && with || in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 93,
+              "column": 31
+            },
+            "end": {
+              "line": 93,
+              "column": 33
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_93_col_31.log",
+      "diff_path": "diff/src__lib.rs_line_93_col_31.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.511558369,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.105338508,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:93:9: delete ! in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 93,
+              "column": 9
+            },
+            "end": {
+              "line": 93,
+              "column": 10
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_93_col_9.log",
+      "diff_path": "diff/src__lib.rs_line_93_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.513983016,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.101327751,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:93:70: replace == with != in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 93,
+              "column": 70
+            },
+            "end": {
+              "line": 93,
+              "column": 72
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_93_col_70.log",
+      "diff_path": "diff/src__lib.rs_line_93_col_70.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.613507419,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.10118305,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:96:16: delete ! in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 96,
+              "column": 16
+            },
+            "end": {
+              "line": 96,
+              "column": 17
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_96_col_16.log",
+      "diff_path": "diff/src__lib.rs_line_96_col_16.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.511796584,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.107466372,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:104:47: replace || with && in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 104,
+              "column": 47
+            },
+            "end": {
+              "line": 104,
+              "column": 49
+            }
+          },
+          "replacement": "&&",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_104_col_47.log",
+      "diff_path": "diff/src__lib.rs_line_104_col_47.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.509492819,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.102540705,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:104:29: replace > with == in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 104,
+              "column": 29
+            },
+            "end": {
+              "line": 104,
+              "column": 30
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_104_col_29.log",
+      "diff_path": "diff/src__lib.rs_line_104_col_29.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.670892131,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.052669711,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:104:29: replace > with < in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 104,
+              "column": 29
+            },
+            "end": {
+              "line": 104,
+              "column": 30
+            }
+          },
+          "replacement": "<",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_104_col_29_001.log",
+      "diff_path": "diff/src__lib.rs_line_104_col_29_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.459136791,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.111208,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:104:29: replace > with >= in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 104,
+              "column": 29
+            },
+            "end": {
+              "line": 104,
+              "column": 30
+            }
+          },
+          "replacement": ">=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_104_col_29_002.log",
+      "diff_path": "diff/src__lib.rs_line_104_col_29_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.629094814,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051356819,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:109:17: replace || with && in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 109,
+              "column": 17
+            },
+            "end": {
+              "line": 109,
+              "column": 19
+            }
+          },
+          "replacement": "&&",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_109_col_17.log",
+      "diff_path": "diff/src__lib.rs_line_109_col_17.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.410824985,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051468046,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:113:21: replace && with || in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 113,
+              "column": 21
+            },
+            "end": {
+              "line": 113,
+              "column": 23
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_113_col_21.log",
+      "diff_path": "diff/src__lib.rs_line_113_col_21.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.513344984,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.052286221,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:112:21: replace && with || in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 112,
+              "column": 21
+            },
+            "end": {
+              "line": 112,
+              "column": 23
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_112_col_21.log",
+      "diff_path": "diff/src__lib.rs_line_112_col_21.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.524297337,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.052070569,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:112:37: replace == with != in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 112,
+              "column": 37
+            },
+            "end": {
+              "line": 112,
+              "column": 39
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_112_col_37.log",
+      "diff_path": "diff/src__lib.rs_line_112_col_37.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.512625671,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.053678825,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:111:20: delete ! in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 111,
+              "column": 20
+            },
+            "end": {
+              "line": 111,
+              "column": 21
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_111_col_20.log",
+      "diff_path": "diff/src__lib.rs_line_111_col_20.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.617932952,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.103826787,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:113:24: delete ! in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 113,
+              "column": 24
+            },
+            "end": {
+              "line": 113,
+              "column": 25
+            }
+          },
+          "replacement": "",
+          "genre": "UnaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_113_col_24.log",
+      "diff_path": "diff/src__lib.rs_line_113_col_24.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.614369697,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051165361,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:119:54: replace || with && in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 119,
+              "column": 54
+            },
+            "end": {
+              "line": 119,
+              "column": 56
+            }
+          },
+          "replacement": "&&",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_119_col_54.log",
+      "diff_path": "diff/src__lib.rs_line_119_col_54.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.520346299,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.05293819,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:119:36: replace < with == in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 119,
+              "column": 36
+            },
+            "end": {
+              "line": 119,
+              "column": 37
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_119_col_36.log",
+      "diff_path": "diff/src__lib.rs_line_119_col_36.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.51159012,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051132741,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:119:36: replace < with > in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 119,
+              "column": 36
+            },
+            "end": {
+              "line": 119,
+              "column": 37
+            }
+          },
+          "replacement": ">",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_119_col_36_001.log",
+      "diff_path": "diff/src__lib.rs_line_119_col_36_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.512977861,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.0518822,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:128:49: replace == with != in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 128,
+              "column": 49
+            },
+            "end": {
+              "line": 128,
+              "column": 51
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_128_col_49.log",
+      "diff_path": "diff/src__lib.rs_line_128_col_49.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.417910017,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.105100867,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:119:36: replace < with <= in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 119,
+              "column": 36
+            },
+            "end": {
+              "line": 119,
+              "column": 37
+            }
+          },
+          "replacement": "<=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_119_col_36_002.log",
+      "diff_path": "diff/src__lib.rs_line_119_col_36_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.562548906,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.107343344,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:129:51: replace == with != in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 129,
+              "column": 51
+            },
+            "end": {
+              "line": 129,
+              "column": 53
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_129_col_51.log",
+      "diff_path": "diff/src__lib.rs_line_129_col_51.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.521420786,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051092815,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:132:25: replace == with != in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 132,
+              "column": 25
+            },
+            "end": {
+              "line": 132,
+              "column": 27
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_132_col_25.log",
+      "diff_path": "diff/src__lib.rs_line_132_col_25.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.413984319,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.052731477,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:135:9: replace && with || in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 135,
+              "column": 9
+            },
+            "end": {
+              "line": 135,
+              "column": 11
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_135_col_9.log",
+      "diff_path": "diff/src__lib.rs_line_135_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.466942779,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051024696,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:136:9: replace && with || in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 136,
+              "column": 9
+            },
+            "end": {
+              "line": 136,
+              "column": 11
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_136_col_9.log",
+      "diff_path": "diff/src__lib.rs_line_136_col_9.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.573977707,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.110598618,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:135:29: replace == with != in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 135,
+              "column": 29
+            },
+            "end": {
+              "line": 135,
+              "column": 31
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_135_col_29.log",
+      "diff_path": "diff/src__lib.rs_line_135_col_29.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.452850094,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.103455792,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:136:49: replace == with != in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 136,
+              "column": 49
+            },
+            "end": {
+              "line": 136,
+              "column": 51
+            }
+          },
+          "replacement": "!=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_136_col_49.log",
+      "diff_path": "diff/src__lib.rs_line_136_col_49.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.412560231,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.052315891,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:136:30: replace + with - in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 136,
+              "column": 30
+            },
+            "end": {
+              "line": 136,
+              "column": 31
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_136_col_30.log",
+      "diff_path": "diff/src__lib.rs_line_136_col_30.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.519453882,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051219384,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:136:30: replace + with * in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 136,
+              "column": 30
+            },
+            "end": {
+              "line": 136,
+              "column": 31
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_136_col_30_001.log",
+      "diff_path": "diff/src__lib.rs_line_136_col_30_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.520050304,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.059141885,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:136:19: replace + with - in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 136,
+              "column": 19
+            },
+            "end": {
+              "line": 136,
+              "column": 20
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_136_col_19.log",
+      "diff_path": "diff/src__lib.rs_line_136_col_19.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.514049358,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.0511057,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:136:19: replace + with * in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 136,
+              "column": 19
+            },
+            "end": {
+              "line": 136,
+              "column": 20
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_136_col_19_001.log",
+      "diff_path": "diff/src__lib.rs_line_136_col_19_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.467920726,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051164058,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:137:29: replace && with || in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 137,
+              "column": 29
+            },
+            "end": {
+              "line": 137,
+              "column": 31
+            }
+          },
+          "replacement": "||",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_137_col_29.log",
+      "diff_path": "diff/src__lib.rs_line_137_col_29.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.511499062,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051249809,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:137:49: replace > with == in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 137,
+              "column": 49
+            },
+            "end": {
+              "line": 137,
+              "column": 50
+            }
+          },
+          "replacement": "==",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_137_col_49.log",
+      "diff_path": "diff/src__lib.rs_line_137_col_49.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.514504551,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.053192326,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:137:49: replace > with >= in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 137,
+              "column": 49
+            },
+            "end": {
+              "line": 137,
+              "column": 50
+            }
+          },
+          "replacement": ">=",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_137_col_49_002.log",
+      "diff_path": "diff/src__lib.rs_line_137_col_49_002.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.457168869,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051010902,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:137:49: replace > with < in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 137,
+              "column": 49
+            },
+            "end": {
+              "line": 137,
+              "column": 50
+            }
+          },
+          "replacement": "<",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_137_col_49_001.log",
+      "diff_path": "diff/src__lib.rs_line_137_col_49_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.509545058,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051088557,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:138:75: replace * with / in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 138,
+              "column": 75
+            },
+            "end": {
+              "line": 138,
+              "column": 76
+            }
+          },
+          "replacement": "/",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_138_col_75_001.log",
+      "diff_path": "diff/src__lib.rs_line_138_col_75_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.455378535,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051083842,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:138:75: replace * with + in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 138,
+              "column": 75
+            },
+            "end": {
+              "line": 138,
+              "column": 76
+            }
+          },
+          "replacement": "+",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_138_col_75.log",
+      "diff_path": "diff/src__lib.rs_line_138_col_75.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.560127923,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.056266646,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:138:49: replace / with * in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 138,
+              "column": 49
+            },
+            "end": {
+              "line": 138,
+              "column": 50
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_138_col_49_001.log",
+      "diff_path": "diff/src__lib.rs_line_138_col_49_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.415347355,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051132662,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:138:49: replace / with % in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 138,
+              "column": 49
+            },
+            "end": {
+              "line": 138,
+              "column": 50
+            }
+          },
+          "replacement": "%",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_138_col_49.log",
+      "diff_path": "diff/src__lib.rs_line_138_col_49.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.506608406,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.051139201,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:138:22: replace + with - in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 138,
+              "column": 22
+            },
+            "end": {
+              "line": 138,
+              "column": 23
+            }
+          },
+          "replacement": "-",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_138_col_22.log",
+      "diff_path": "diff/src__lib.rs_line_138_col_22.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.469324785,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.052750932,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "Mutant": {
+          "name": "src/lib.rs:138:22: replace + with * in mutation",
+          "package": "seshat-assessment-pilot",
+          "file": "src/lib.rs",
+          "function": {
+            "function_name": "mutation",
+            "return_type": "-> MutationAssessment",
+            "span": {
+              "start": {
+                "line": 87,
+                "column": 1
+              },
+              "end": {
+                "line": 150,
+                "column": 2
+              }
+            }
+          },
+          "span": {
+            "start": {
+              "line": 138,
+              "column": 22
+            },
+            "end": {
+              "line": 138,
+              "column": 23
+            }
+          },
+          "replacement": "*",
+          "genre": "BinaryOperator"
+        }
+      },
+      "summary": "CaughtMutant",
+      "log_path": "log/src__lib.rs_line_138_col_22_001.log",
+      "diff_path": "diff/src__lib.rs_line_138_col_22_001.diff",
+      "phase_results": [
+        {
+          "phase": "Build",
+          "duration": 0.576438216,
+          "process_status": "Success",
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--no-run",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        },
+        {
+          "phase": "Test",
+          "duration": 0.053153265,
+          "process_status": {
+            "Failure": 101
+          },
+          "argv": [
+            "<home>/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/cargo",
+            "test",
+            "--verbose",
+            "--package=seshat-assessment-pilot@0.0.0"
+          ]
+        }
+      ]
+    }
+  ],
+  "total_mutants": 76,
+  "missed": 2,
+  "caught": 73,
+  "timeout": 0,
+  "unviable": 1,
+  "success": 0,
+  "start_time": "2026-11-05T22:09:49.556959883Z",
+  "end_time": "2026-11-05T22:10:12.064748025Z",
+  "cargo_mutants_version": "27.1.0"
+}

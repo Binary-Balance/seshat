@@ -1,0 +1,5 @@
+Found 76 mutants to test
+ok       Unmutated baseline in 0s build + 0s test
+MISSED   src/lib.rs:16:9: replace TestState::label -> &'static str with "" in 0s build + 0s test
+MISSED   src/lib.rs:16:9: replace TestState::label -> &'static str with "xyzzy" in 0s build + 0s test
+76 mutants tested in 22s: 2 missed, 73 caught, 1 unviable

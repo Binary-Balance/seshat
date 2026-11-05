@@ -192,7 +192,9 @@ rules.
 
 See the [architecture](docs/architecture.md), the
 [build and regression guide](benchmarks/proofs/README.md) and the
-[packaging guide](packaging/README.md).
+[packaging guide](packaging/README.md). The
+[Rust self-assessment baseline](docs/research/rust-self-assessment.md) records
+Seshat's own coverage, line-based CRAP measurements and mutation pilot.
 
 ## License
 
