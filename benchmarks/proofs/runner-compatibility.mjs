@@ -35,10 +35,12 @@ for (const [name, args] of [
     '--cases', 'normal-1,assertion-kill,expect-assertions,assertion-error,survivor,before-all,automatic-cleanup,mixed-load-hook,import-failure,test-timeout,hook-timeout,before-all-timeout']],
   ['vitest-check', ['--tarball', payload.tarball, '--deps', join(repo, 'benchmarks/proofs'),
     '--cases', 'stack,assertion,survived,before-all,import-error,timeout,hook-timeout']],
+  ['jest-node-selection', ['--cli', payload.binaryPath, '--deps', jestDeps,
+    '--cases', 'normal,parallel,cleanup,empty,filter,changed,reset,late-delete']],
 ]) {
   console.log(`Node ${process.versions.node}: ${name}`);
   // Jest on Intel macOS and twenty Windows cancellation checks can exceed ten minutes.
-  const longSuite = name === 'jest-expo-check'
+  const longSuite = ['jest-expo-check', 'jest-node-selection'].includes(name)
     || (name === 'parallel' && process.platform === 'win32');
   const timeoutMs = longSuite ? 1_800_000 : 600_000;
   const child = spawnSync(process.execPath, [join(repo, 'benchmarks/proofs', `${name}.mjs`), ...args], {

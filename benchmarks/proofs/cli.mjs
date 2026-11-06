@@ -101,7 +101,7 @@ assert.equal(checked.result.jobsAttempted, 6, 'the compiler findings program rep
 assert.deepEqual(checked.result.setups[0].typecheck, {state:'passed', reusedFrom:'compilerStrictness'});
 assert.equal(checked.result.setups[0].compilerStrictness.state, 'known');
 assert.equal(checked.result.setups[0].compilerStrictness.options.strict, true);
-assert.deepEqual(checked.result.setups[0].selection, {state:'unavailable',reason:'unsupported-runner'});
+assert.deepEqual(checked.result.setups[0].selection, {state:'available'});
 const {typecheckMs, ...measuredPhases} = checked.result.phaseTimings;
 assert.equal(typecheckMs, null);
 for (const ms of Object.values(measuredPhases)) assert.ok(Number.isFinite(ms) && ms >= 0);

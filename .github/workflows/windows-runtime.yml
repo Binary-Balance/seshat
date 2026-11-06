@@ -17,6 +17,10 @@ on:
       - benchmarks/proofs/process.mjs
       - benchmarks/proofs/jest-expo-check.mjs
       - benchmarks/proofs/jest-*.cjs
+      - benchmarks/proofs/jest-node-selection.mjs
+      - benchmarks/proofs/jest-file-coverage.test.mjs
+      - benchmarks/proofs/node-file-coverage*.mjs
+      - benchmarks/proofs/coverage-observer*.cjs
       - benchmarks/proofs/vitest-*.mjs
       - benchmarks/proofs/fixtures/**
       - benchmarks/proofs/liveness.mjs
@@ -38,6 +42,10 @@ on:
       - benchmarks/proofs/process.mjs
       - benchmarks/proofs/jest-expo-check.mjs
       - benchmarks/proofs/jest-*.cjs
+      - benchmarks/proofs/jest-node-selection.mjs
+      - benchmarks/proofs/jest-file-coverage.test.mjs
+      - benchmarks/proofs/node-file-coverage*.mjs
+      - benchmarks/proofs/coverage-observer*.cjs
       - benchmarks/proofs/vitest-*.mjs
       - benchmarks/proofs/fixtures/**
       - benchmarks/proofs/liveness.mjs

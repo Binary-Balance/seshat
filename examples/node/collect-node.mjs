@@ -41,7 +41,7 @@ const run = spawnSync(process.execPath, [
   '--test-concurrency=1',
   `--test-reporter=${process.env.SESHAT_NODE_REPORTER}`,
   ...process.argv.slice(2),
-], {stdio: 'inherit'});
+], {stdio: 'inherit', env: {...process.env, SESHAT_NODE_ISTANBUL: '1'}});
 assert.ifError(run.error);
 if (run.status !== 0) process.exit(run.status ?? 2);
 

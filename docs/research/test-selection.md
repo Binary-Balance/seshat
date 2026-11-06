@@ -4,7 +4,10 @@ Issue [#181](https://github.com/Binary-Balance/seshat/issues/181) adds default
 whole-test-file selection with an explicit `"testSelection": false` opt-out.
 The initial verified route is a direct Vitest 5 `run` command, the Seshat runner,
 isolated Node workers and default Istanbul instrumentation in one project.
-Node, Jest, command wrappers and unverified configurations retain full commands.
+Jest/Expo and Node routes were added in
+[#186](https://github.com/Binary-Balance/seshat/issues/186); their
+[separate evidence](jest-node-selection.md) records support and limits.
+Command wrappers and unverified configurations retain full commands.
 Raw coverage identities outside the assessed sources, including query imports,
 force full commands because their source remapping is unverified.
 

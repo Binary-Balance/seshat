@@ -502,15 +502,28 @@ Whole-test-file selection is enabled by default. Set top-level
 `"testSelection": false` to restore the full test command for every mutant.
 Original, worker and inactive switching baselines always run the full command.
 
-The initial selection route supports direct Vitest 5 `run` commands with the
-Seshat runner, isolated Node workers and Istanbul coverage. It selects every
-test file that executes any code in the mutated source file, including file
-hooks. This is a conservative superset of the files covering the exact mutant.
-It preserves each chosen file's tests, hooks and configured test order.
-Node and Jest setups, command wrappers and unverified Vitest configurations
-automatically retain full test commands.
+Selection supports these verified routes:
 
-Selected commands accept `--config`, `--reporter`, `--exclude`, `--maxWorkers`,
+- Direct Vitest 5 `run` commands with the Seshat runner, isolated Node workers
+  and Istanbul coverage.
+- Direct Jest 29.7.0 commands with jest-expo 57.0.5 or 57.0.6, the Seshat Expo
+  environment, one project, Babel coverage and babel-jest 29.7.0 transforms.
+  Serial files and process workers are supported. Concurrent test bodies,
+  custom environments/transforms, global setup/teardown, V8 coverage and worker
+  threads retain full commands. Plain Jest support remains separate.
+- Direct Node 24 `--test` commands (>=24.20.0 <25) with process isolation and
+  the [Istanbul collector recipe](../benchmarks/proofs/collect-node.mjs).
+  The collector must preserve Seshat's managed `NODE_OPTIONS` imports and set
+  `SESHAT_NODE_ISTANBUL=1` on its test processes, as the supplied recipe does. Concurrent
+  files and test bodies are supported; skipped/todo workloads and changes to
+  the observed process exit boundary retain full commands.
+
+It selects every test file that executes any code in the mutated source file,
+including file hooks. This is a conservative superset of the files covering
+the exact mutant. Each chosen file retains its tests, hooks and configured
+test order. Command wrappers and unverified configurations retain full commands.
+
+Vitest selected commands accept `--config`, `--reporter`, `--exclude`, `--maxWorkers`,
 `--maxConcurrency`, `--pool`, `--testTimeout` and `--hookTimeout`, with a separate
 value or `=value`. They also accept the flags `--no-file-parallelism`,
 `--no-color` and `--isolate`. Existing positional file filters are replaced by
@@ -519,10 +532,22 @@ Other options use the full command. Seshat reports a setup-wide fallback once
 in human output, with its reason and any rejected option. JSON records the same
 status in `result.setups[].selection`.
 
+Jest accepts `--config`, `--env`, `--testEnvironment`, `--reporters`,
+`--maxWorkers`, `--maxConcurrency` and `--testTimeout`, plus `--runInBand`,
+`--runTestsByPath`, `--no-cache`, `--no-colors` and `--ci`. Seshat uses
+`--runTestsByPath` with absolute paths for exact file filtering. Node accepts
+`--test-concurrency`, `--test-timeout`, `--test-reporter` and
+`--test-reporter-destination`. Value options accept separate values or `=value`.
+Name filters, sharding, watch modes and other unsupported options use full runs.
+
 Raw coverage identities must match assessed sources exactly. Additional
 instrumented sources, query imports and other unverified remapping use full runs.
 If a setup reports `attribution-unavailable`, check that
 Vitest's `coverage.include` instruments only the sources Seshat assesses.
+For Jest, set `collectCoverageFrom` to those sources. Jest and Node observe
+counter changes from before instrumented imports through cleanup; reset,
+replacement, deletion and incomplete lifecycle evidence disable attribution.
+See the [Jest/Node selection evidence](research/jest-node-selection.md).
 
 Selection requires matching baseline and coverage test identities, complete
 file attribution and supported command arguments. Module-level mutants and

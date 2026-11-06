@@ -27,7 +27,8 @@ const prepared=${JSON.stringify(prepared)};
 registerHooks({load(url,context,next){return Object.hasOwn(prepared,url)?{format:'module-typescript',shortCircuit:true,source:prepared[url]}:next(url,context);}});
 process.on('exit',()=>{if(globalThis.__coverage__)writeFileSync(${JSON.stringify(counters)}+'/'+process.pid+'.json',JSON.stringify(globalThis.__coverage__));});`);
 const run = spawnSync(process.execPath, ['--import', pathToFileURL(hook).href, '--test', '--test-concurrency=1',
-  `--test-reporter=${process.env.SESHAT_NODE_REPORTER}`, ...process.argv.slice(2)], {stdio:'inherit'});
+  `--test-reporter=${process.env.SESHAT_NODE_REPORTER}`, ...process.argv.slice(2)],
+  {stdio:'inherit', env:{...process.env, SESHAT_NODE_ISTANBUL:'1'}});
 assert.ifError(run.error);
 if (run.status !== 0) process.exit(run.status ?? 2);
 for (const name of readdirSync(counters)) initial.merge(JSON.parse(readFileSync(join(counters, name), 'utf8')));

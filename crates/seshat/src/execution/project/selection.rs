@@ -197,6 +197,93 @@ fn vitest_command(args: &[String]) -> Result<Vec<String>, Unavailable> {
     Ok(command)
 }
 
+fn runner_command(args: &[String], runner: &Runner) -> Result<Vec<String>, Unavailable> {
+    if matches!(runner, Runner::Vitest) {
+        return vitest_command(args);
+    }
+    let program = args
+        .first()
+        .and_then(|arg| Path::new(arg).file_name())
+        .and_then(|name| name.to_str())
+        .unwrap_or_default()
+        .trim_end_matches(".exe");
+    let node = matches!(program, "node" | "nodejs");
+    let offset = match runner {
+        Runner::Node if node && args.get(1).is_some_and(|arg| arg == "--test") => 2,
+        Runner::Jest if program == "jest" => 1,
+        Runner::Jest
+            if node
+                && args.get(1).is_some_and(|arg| {
+                    let path = Path::new(arg);
+                    path.ends_with("jest/bin/jest.js")
+                }) =>
+        {
+            2
+        }
+        _ => return Err(Unavailable::command(None)),
+    };
+    let mut command = args[..offset].to_vec();
+    let (values, switches): (&[&str], &[&str]) = match runner {
+        Runner::Jest => (
+            &[
+                "--config",
+                "--env",
+                "--testEnvironment",
+                "--reporters",
+                "--maxWorkers",
+                "--maxConcurrency",
+                "--testTimeout",
+            ],
+            &[
+                "--runInBand",
+                "--runTestsByPath",
+                "--no-cache",
+                "--no-colors",
+                "--ci",
+            ],
+        ),
+        Runner::Node => (
+            &[
+                "--test-concurrency",
+                "--test-timeout",
+                "--test-reporter",
+                "--test-reporter-destination",
+            ],
+            &[],
+        ),
+        Runner::Vitest => unreachable!(),
+    };
+    let mut arguments = args[offset..].iter();
+    while let Some(arg) = arguments.next() {
+        if !arg.starts_with('-') {
+            continue;
+        }
+        let (flag, value) = arg
+            .split_once('=')
+            .map_or((arg.as_str(), None), |(flag, value)| (flag, Some(value)));
+        if values.contains(&flag) {
+            command.push(arg.clone());
+            if value.is_none() {
+                let value = arguments
+                    .next()
+                    .filter(|value| !value.starts_with('-'))
+                    .ok_or_else(|| Unavailable::command(Some(flag)))?;
+                command.push(value.clone());
+            }
+        } else if value.is_none() && switches.contains(&flag) {
+            if flag != "--runTestsByPath" {
+                command.push(arg.clone());
+            }
+        } else {
+            return Err(Unavailable::command(Some(flag)));
+        }
+    }
+    if matches!(runner, Runner::Jest) {
+        command.push("--runTestsByPath".into());
+    }
+    Ok(command)
+}
+
 impl SetupEvidence {
     pub(super) fn collect(
         project: &CapturedProject,
@@ -208,10 +295,7 @@ impl SetupEvidence {
         if !project.config.test_selection {
             return Err("disabled".into());
         }
-        if !matches!(setup.runner, Runner::Vitest) {
-            return Err("unsupported-runner".into());
-        }
-        let command = vitest_command(&setup.test)?;
+        let command = runner_command(&setup.test, &setup.runner)?;
         // Positional filters must not widen the baseline workload through substring matching.
         let root = &project.directory.0;
         let baseline_tests = tests(root, baseline)?;
@@ -403,6 +487,87 @@ mod tests {
                     .iter()
                     .find(|arg| arg.starts_with('-'))
                     .map(|arg| arg.split('=').next().unwrap()),
+                "{command:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn jest_and_node_filters_use_exact_files_and_reject_changed_workloads() {
+        let args = |values: &[&str]| {
+            values
+                .iter()
+                .map(|value| value.to_string())
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(
+            runner_command(
+                &args(&[
+                    "node",
+                    "node_modules/jest/bin/jest.js",
+                    "tests/a.test.tsx",
+                    "--runInBand",
+                    "--config=jest.config.cjs",
+                    "--env={seshatEnvironment}",
+                    "--reporters={seshatReporter}"
+                ]),
+                &Runner::Jest
+            )
+            .unwrap(),
+            args(&[
+                "node",
+                "node_modules/jest/bin/jest.js",
+                "--runInBand",
+                "--config=jest.config.cjs",
+                "--env={seshatEnvironment}",
+                "--reporters={seshatReporter}",
+                "--runTestsByPath"
+            ])
+        );
+        assert_eq!(
+            runner_command(
+                &args(&[
+                    "node",
+                    "--test",
+                    "--test-concurrency=2",
+                    "tests/a.mjs",
+                    "--test-reporter",
+                    "{seshatReporter}",
+                    "tests/b.mjs"
+                ]),
+                &Runner::Node
+            )
+            .unwrap(),
+            args(&[
+                "node",
+                "--test",
+                "--test-concurrency=2",
+                "--test-reporter",
+                "{seshatReporter}"
+            ])
+        );
+        for (runner, command) in [
+            (Runner::Jest, vec!["jest", "--testNamePattern=one"]),
+            (Runner::Jest, vec!["jest", "--shard=1/2"]),
+            (Runner::Jest, vec!["jest", "--config", "--runInBand"]),
+            (
+                Runner::Node,
+                vec!["node", "--test", "--test-name-pattern=one"],
+            ),
+            (Runner::Node, vec!["node", "--test", "--test-only"]),
+            (
+                Runner::Node,
+                vec!["node", "--test", "--test-isolation=none"],
+            ),
+            (
+                Runner::Node,
+                vec!["node", "--test", "--test-rerun-failures=failures.json"],
+            ),
+            (Runner::Node, vec!["node", "wrapper.mjs", "--test"]),
+        ] {
+            assert_eq!(
+                runner_command(&args(&command), &runner).unwrap_err().reason,
+                "unsupported-test-command",
                 "{command:?}"
             );
         }
