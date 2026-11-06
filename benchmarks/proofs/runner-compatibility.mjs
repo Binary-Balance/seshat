@@ -36,7 +36,7 @@ for (const [name, args] of [
   ['vitest-check', ['--tarball', payload.tarball, '--deps', join(repo, 'benchmarks/proofs'),
     '--cases', 'stack,assertion,survived,before-all,import-error,timeout,hook-timeout']],
   ['jest-node-selection', ['--cli', payload.binaryPath, '--deps', jestDeps,
-    '--cases', 'normal,parallel,cleanup,empty,filter,changed,reset,late-delete']],
+    '--cases', 'normal,parallel,cleanup,empty,filter,changed,reset,late-delete,query,module-query']],
 ]) {
   console.log(`Node ${process.versions.node}: ${name}`);
   // Jest on Intel macOS and twenty Windows cancellation checks can exceed ten minutes.

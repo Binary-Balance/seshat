@@ -542,6 +542,9 @@ Name filters, sharding, watch modes and other unsupported options use full runs.
 
 Raw coverage identities must match assessed sources exactly. Additional
 instrumented sources, query imports and other unverified remapping use full runs.
+The Node recipe instruments query/fragment URL variants under the original
+source path, but revokes selection for that run. Such imports cannot masquerade
+as unexecuted sources or justify zero-coverage skips.
 If a setup reports `attribution-unavailable`, check that
 Vitest's `coverage.include` instruments only the sources Seshat assesses.
 For Jest, set `collectCoverageFrom` to those sources. Jest and Node observe

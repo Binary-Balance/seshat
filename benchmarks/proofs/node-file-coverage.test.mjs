@@ -65,6 +65,12 @@ test('unknown collectors retain their globals and fall back without attribution'
   assert.equal(result.fileCoverage.complete,false);
 });
 
+test('a collector can revoke attribution after a noncanonical source load', () => {
+  const {result}=run(prelude+"test('revoked',()=>{value();process.env.SESHAT_NODE_ISTANBUL='0';});");
+  assert.deepEqual([result.passed,result.failed,result.errors],[1,0,0]);
+  assert.equal(result.fileCoverage.complete,false);
+});
+
 test('real concurrent identities belong to entry files and retain duplicate ancestry', () => {
   write('shared.mjs', "import {test} from 'node:test';import {value} from './body.mjs';export function shared(){test('duplicate',()=>value());}");
   const {result, child} = run(`import {test,describe,after} from 'node:test';

@@ -42,7 +42,7 @@ if (supported && process.env.NODE_TEST_CONTEXT === 'child-v8'
       } finally {
         // A preload's exit listener precedes application cleanup and collector listeners.
         let result = observer.finish();
-        if (process.emit !== observeExit) result = {complete:false, sources:[]};
+        if (process.emit !== observeExit || process.env.SESHAT_NODE_ISTANBUL !== '1') result = {complete:false, sources:[]};
         if (finished) invalidate();
         else {
           finished = true;

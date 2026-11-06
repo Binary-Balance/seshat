@@ -34,6 +34,13 @@ preserves both Seshat preloads and supplies that signal. Unknown collectors
 leave their globals unchanged and use full commands. Clearing the managed
 imports also produces missing child evidence and forces full commands.
 
+The recipes normalize file URLs before their instrumentation lookup, including
+query, fragment and encoded-path variants. A noncanonical assessed import
+revokes the collector signal; the helper checks it again at finalization.
+Coverage still records the real source calls, but selection uses the full
+command. A query import cannot appear as an unexecuted source and justify a
+zero-coverage skip.
+
 ## Evidence and failure handling
 
 The shared observer installs before instrumented imports and watches statement
@@ -127,8 +134,8 @@ to set `"testSelection": false`.
 
 ## Retained validation
 
-The [portable results](../../outputs/jest-node-selection.json) retain 29 matched
-pairs: 18 Node cases on 24.20.0 and 11 Jest cases on 24.22.2, plus four Unix
+The [portable results](../../outputs/jest-node-selection.json) retain 33 matched
+pairs: 22 Node cases on 24.20.0 and 11 Jest cases on 24.22.2, plus four Unix
 cancellation controls. Each comparison records its actual binary hash; earlier
 passing controls are retained alongside the final integrity/collector changes.
 The ordinary fixture preserves its 20% score while reducing operator jobs from
@@ -136,10 +143,18 @@ five to three for both runners. Timing fields remain individual fixture samples.
 
 Final local checks passed 197 Rust tests, formatting and Clippy with warnings
 denied, 85 CLI scenarios plus legacy parity, eight shared-observer checks and
-twenty Node-adapter checks. Jest producer checks passed against both recorded
+twenty-one Node-adapter checks. Jest producer checks passed against both recorded
 Expo versions, including Node 24.20.0 controls and the unrelated-file regression.
 
-CI repeats all eighteen cases per runner on minimum Node 24.20.0/Linux x64.
-Latest-Node compatibility checks repeat eight cases per runner across the five
-supported hosts. These checks validate the PR head rather than relying only
-on the retained development samples.
+CI repeats twenty-two Node cases and eighteen Jest cases on minimum Node
+24.20.0/Linux x64. Latest-Node compatibility checks repeat ten Node cases and
+eight Jest cases across the five supported hosts. These checks validate the
+PR head rather than relying only on the retained development samples.
+
+Independent review reproduced an unsafe omission before the URL guard: a query
+import bypassed instrumentation, so full mutation execution scored 50% while
+selection skipped both jobs and scored 0%. The retained regression now verifies
+50% for both full and selected configurations using both collector recipes.
+Both use full commands, attempt two operator jobs and retain real source
+coverage. Separate query, fragment, encoded-query and module-load fixtures
+also match their full-command controls.

@@ -23,8 +23,16 @@ for (const path of JSON.parse(readFileSync(process.env.SESHAT_SOURCES, 'utf8')))
 }
 const hook = join(directory, 'hook.mjs');
 writeFileSync(hook, `import {registerHooks} from 'node:module';import {writeFileSync} from 'node:fs';
+import {fileURLToPath,pathToFileURL} from 'node:url';
 const prepared=${JSON.stringify(prepared)};
-registerHooks({load(url,context,next){return Object.hasOwn(prepared,url)?{format:'module-typescript',shortCircuit:true,source:prepared[url]}:next(url,context);}});
+registerHooks({load(url,context,next){
+  let canonical;
+  try { canonical=pathToFileURL(fileURLToPath(url)).href; } catch { return next(url,context); }
+  if(!Object.hasOwn(prepared,canonical))return next(url,context);
+  // URL variants must not look like unused sources; keep their selection conservative.
+  if(canonical!==url)process.env.SESHAT_NODE_ISTANBUL='0';
+  return {format:'module-typescript',shortCircuit:true,source:prepared[canonical]};
+}});
 process.on('exit',()=>{if(globalThis.__coverage__)writeFileSync(${JSON.stringify(counters)}+'/'+process.pid+'.json',JSON.stringify(globalThis.__coverage__));});`);
 const run = spawnSync(process.execPath, ['--import', pathToFileURL(hook).href, '--test', '--test-concurrency=1',
   `--test-reporter=${process.env.SESHAT_NODE_REPORTER}`, ...process.argv.slice(2)],

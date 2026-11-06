@@ -13,7 +13,8 @@ let cli = resolve(values.cli ?? join(repo, 'crates/seshat/target/debug', process
 assert.ok(existsSync(cli), 'build the CLI first or pass --cli');
 const runners = (values.runner ?? 'node,jest').split(',');
 assert.ok(runners.every(runner => ['node','jest'].includes(runner)));
-const valid = ['normal','module','hooks','parallel','concurrent','missing','filter','changed','empty','timeout','cleanup','assertion-cleanup','suite-cleanup','assertion-suite-cleanup','reset','late-delete','artifact-cleanup','process-error'];
+const aliases={query:'target.ts?variant',fragment:'target.ts#variant','encoded-query':'%74arget.ts?variant','module-query':'target.ts?variant'};
+const valid = ['normal','module','hooks','parallel','concurrent','missing','filter','changed','empty','timeout','cleanup','assertion-cleanup','suite-cleanup','assertion-suite-cleanup','reset','late-delete','artifact-cleanup','process-error',...Object.keys(aliases)];
 const cases = (values.cases ?? valid.join(',')).split(',');
 assert.ok(cases.every(name => valid.includes(name)));
 mkdirSync(join(repo, 'work/assurance-proofs'), {recursive:true});
@@ -64,10 +65,15 @@ for (const runner of runners) {
     return report;
   }
   for (const name of cases) {
+    if(jest && Object.hasOwn(aliases,name)) continue; // Node URL identities are separate from Jest resolution.
     write('target.ts',source); write('uncovered.ts','export function unused(value: number): boolean { return value > 10; }\n');
     write(first,tests); write(second,unrelated);
     if (jest) write('jest.config.cjs',`module.exports={preset:'jest-expo',rootDir:__dirname,testMatch:['<rootDir>/*.test.tsx'],maxWorkers:1};\n`);
     const config = structuredClone(base);
+    if(Object.hasOwn(aliases,name)) {
+      write(first,tests.replace("'./target.ts'",JSON.stringify(`./${aliases[name]}`)));
+      if(name==='module-query') write('target.ts',source+'export const loaded=decision(2);\n');
+    }
     if (name === 'module') write('target.ts',source+'export const loaded=decision(2);\n');
     if (name === 'hooks') write(first,imports+`${jest?'beforeAll':'before'}(()=>{decision(2);});test('hook',()=>{${check('decision(2)')}});\n`);
     if (name === 'parallel') {
@@ -126,7 +132,7 @@ for (const runner of runners) {
     } else {
       assert.ok(selected.result.mutation?.outcomes,`${runner}/${name}: no mutation phase: ${selected.result.error}`);
       const choices=rows(selected).filter(row=>row.path==='target.ts').flatMap(row=>row.setups.map(setup=>setup.selection)).filter(Boolean);
-      const fallback=['missing','reset','late-delete','filter'].includes(name) || (jest && name==='concurrent');
+      const fallback=['missing','reset','late-delete','filter'].includes(name) || Object.hasOwn(aliases,name) || (jest && name==='concurrent');
       if(fallback) assert.ok(choices.length && choices.every(choice=>choice.mode==='full'),`${runner}/${name}: unsafe selection`);
       else if(['module','hooks'].includes(name)) assert.ok(choices.length && choices.every(choice=>choice.mode==='full'),`${runner}/${name}: early calls require full command`);
       else if(jest && ['timeout','cleanup','assertion-cleanup'].includes(name)) {
@@ -145,6 +151,12 @@ for (const runner of runners) {
         for(const choice of choices.filter(choice=>choice.mode==='selected')) assert.deepEqual(choice.files,[first]);
       }
       if(name==='normal') assert.ok(selected.result.mutation.jobsAttempted<full.result.mutation.jobsAttempted,'zero coverage must save jobs');
+      if(Object.hasOwn(aliases,name)) {
+        assert.deepEqual(selected.result.setups[0].selection,{state:'unavailable',reason:'attribution-unavailable'});
+        assert.ok(rows(selected).some(row=>row.path==='target.ts'&&row.verdict==='killed'),'aliases must retain mutant kills');
+        assert.ok(selected.result.sources.find(row=>row.path==='target.ts').result.functions.some(fn=>fn.coverage>0),
+          'the collector must retain real source coverage for URL variants');
+      }
       if(name==='changed') {
         const retries=rows(selected).flatMap(row=>row.setups).filter(setup=>setup.selection?.reason==='selection-not-confirmed');
         assert.ok(retries.length,'changed test identities must trigger a full retry');
