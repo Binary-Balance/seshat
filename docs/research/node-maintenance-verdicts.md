@@ -31,7 +31,7 @@ was built from merge commit `a106c83e94a4b956f75338d9da17abc6ff7fa1f4`. The
 0.13.0 candidate has direct head `8b51fd7859e71124edf7a18d218cb302fcafd64f` and
 was built from merge commit `a195f7b55fba51df670c0cd0709d15537011014f`. These
 match the [preserved baseline audit](../releases/0.12.1-audit.json) and the
-[candidate audit](release-notice-audit.json). Every compared artifact's run head
+[candidate audit](../releases/0.13.0-audit.json). Every compared artifact's run head
 equals its build's direct head; the native package artifact coordinates also
 match the audits.
 
