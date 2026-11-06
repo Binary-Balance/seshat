@@ -190,6 +190,14 @@ jobs:
         if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' }}
         run: |
           npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
+      - name: Verify Jest and Node file selection
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.build.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
+        env:
+          SESHAT_PROOF_OUTPUT: work/x64/jest-node-selection.json
+        run: |
+          node --test benchmarks/proofs/coverage-observer.test.cjs benchmarks/proofs/node-file-coverage.test.mjs benchmarks/proofs/jest-file-coverage.test.mjs
+          node benchmarks/proofs/jest-node-selection.mjs --cli crates/seshat/target/debug/seshat
+          SESHAT_PROOF_OUTPUT=work/x64/selection-cancellation.json node benchmarks/proofs/selection-cancellation.mjs crates/seshat/target/debug/seshat
       - name: Verify installed Jest/Expo runner
         if: ${{ !cancelled() && steps.dependencies.outcome == 'success' && steps.payload.outcome == 'success' && steps.jest_dependencies.outcome == 'success' }}
         env:
@@ -301,6 +309,8 @@ jobs:
             work/x64/standalone.log
             work/x64/jest-expo-check.json
             work/x64/jest-expo-check.log
+            work/x64/jest-node-selection.json
+            work/x64/selection-cancellation.json
             work/x64/vitest-check.json
             work/x64/vitest-check.log
             work/x64/crash-continuation.json

@@ -876,6 +876,14 @@ impl CapturedProject {
                 include_str!("../../../../../benchmarks/proofs/node-reporter.mjs"),
             ),
             (
+                "node-file-coverage.mjs",
+                include_str!("../../../../../benchmarks/proofs/node-file-coverage.mjs"),
+            ),
+            (
+                "coverage-observer.cjs",
+                include_str!("../../../../../benchmarks/proofs/coverage-observer.cjs"),
+            ),
+            (
                 "vitest-reporter.mjs",
                 include_str!("../../../../../benchmarks/proofs/vitest-reporter.mjs"),
             ),
@@ -988,6 +996,8 @@ impl CapturedProject {
             .env_remove("NODE_PATH")
             .env_remove("SESHAT_MUTANT_ID")
             .env_remove("SESHAT_LOAD_CONTEXT")
+            .env_remove("SESHAT_NODE_TEST_PARENT")
+            .env_remove("SESHAT_NODE_ISTANBUL")
             .env_remove("SESHAT_COVERAGE_REPORT")
             .env("SESHAT_EXECUTION_ID", id)
             .env("SESHAT_RECEIPT", &receipt)
@@ -1030,6 +1040,27 @@ impl CapturedProject {
             } else {
                 None
             };
+        if matches!(setup.runner, Runner::Node)
+            && self.config.test_selection
+            && matches!(kind, JobKind::Coverage(_))
+        {
+            // Keep the load observer and attribution preload together in real test children.
+            let existing = command
+                .get_envs()
+                .find_map(|(key, value)| {
+                    (key == "NODE_OPTIONS")
+                        .then(|| value.map(|value| value.to_string_lossy().into_owned()))
+                        .flatten()
+                })
+                .unwrap_or_default();
+            command.env(
+                "NODE_OPTIONS",
+                format!(
+                    "{existing} --import={}",
+                    module_file_url(&evidence.join("node-file-coverage.mjs"))?
+                ),
+            );
+        }
         let timeout = match kind {
             JobKind::Mutant(limit) => limit,
             _ => Duration::from_millis(setup.timeout_ms),
@@ -3406,7 +3437,7 @@ mod tests {
                 .unwrap();
             assert_eq!(result.state, TestState::Passed, "{}", result.details);
             assert_eq!(result.details["report"]["executionId"], id);
-            assert_eq!(fs::read_dir(&evidence.0).unwrap().count(), 7);
+            assert_eq!(fs::read_dir(&evidence.0).unwrap().count(), 9);
         }
         evidence.close().unwrap();
         let config = captured.config.clone();

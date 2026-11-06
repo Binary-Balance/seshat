@@ -36,14 +36,14 @@ for (const platform of ['win32', 'linux', 'darwin']) {
             error: Object.assign(new Error('spawnSync ETIMEDOUT'), {code: 'ETIMEDOUT'})};
         }
         if (name !== 'parallel' || platform !== 'win32') {
-          assert.equal(options.timeout, name === 'jest-expo-check' ? 1_800_000 : 600_000);
+          assert.equal(options.timeout, ['jest-expo-check','jest-node-selection'].includes(name) ? 1_800_000 : 600_000);
         }
         assert.ok(options.timeout <= 1_800_000, 'suite remains bounded');
         return {status: 0, stdout: '', stderr: ''};
       },
     });
     assert.deepEqual(calls, ['cli', 'parallel', 'node-load-failure', 'jest-hook-errors',
-      'jest-expo-check', 'vitest-check']);
+      'jest-expo-check', 'vitest-check', 'jest-node-selection']);
     assert.equal(evidence.checks.length, calls.length);
     assert.ok(evidence.checks.every(check => check.passed));
     assert.deepEqual(JSON.parse(JSON.stringify(evidence.importFailureObserver)),

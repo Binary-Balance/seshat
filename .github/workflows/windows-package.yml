@@ -30,6 +30,10 @@ on:
       - benchmarks/proofs/jest-expo-check.mjs
       - benchmarks/proofs/jest-hook-errors.mjs
       - benchmarks/proofs/jest-*.cjs
+      - benchmarks/proofs/jest-node-selection.mjs
+      - benchmarks/proofs/jest-file-coverage.test.mjs
+      - benchmarks/proofs/node-file-coverage*.mjs
+      - benchmarks/proofs/coverage-observer*.cjs
       - benchmarks/proofs/vitest-*.mjs
       - benchmarks/proofs/fixtures/**
       - benchmarks/package.json
@@ -70,6 +74,10 @@ on:
       - benchmarks/proofs/jest-expo-check.mjs
       - benchmarks/proofs/jest-hook-errors.mjs
       - benchmarks/proofs/jest-*.cjs
+      - benchmarks/proofs/jest-node-selection.mjs
+      - benchmarks/proofs/jest-file-coverage.test.mjs
+      - benchmarks/proofs/node-file-coverage*.mjs
+      - benchmarks/proofs/coverage-observer*.cjs
       - benchmarks/proofs/vitest-*.mjs
       - benchmarks/proofs/fixtures/**
       - benchmarks/package.json
