@@ -1,4 +1,5 @@
 import './node-load-observer.test.mjs';
+import './process.test.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {basename, dirname, join} from 'node:path';
