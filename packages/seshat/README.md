@@ -18,6 +18,7 @@ insufficiently tested code.
 - Runs tests in isolated copies of the captured project.
 - Produces readable terminal output and versioned JSON, with optional CI thresholds.
 - Supports explicit source selection, multiple test setups and parallel mutation workers.
+- Selects whole test files for verified Vitest, Jest/Expo and Node setups, with full-run fallbacks and an opt-out.
 
 ## Install
 
