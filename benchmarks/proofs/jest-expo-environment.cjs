@@ -1,10 +1,10 @@
-// Bounded adapter for the verified Expo preset, not arbitrary custom environments.
-const {createRequire} = require('node:module');
-const {isAbsolute, join} = require('node:path');
+// Wrap only the environment resolved and verified before Jest loads this adapter.
+const {isAbsolute} = require('node:path');
 const {readFileSync, writeFileSync} = require('node:fs');
 const {createHash} = require('node:crypto');
-const projectRequire = createRequire(join(process.cwd(), 'package.json'));
-const Base = projectRequire(projectRequire('jest-expo/jest-preset').testEnvironment);
+const baseEnvironment = JSON.parse(process.env.SESHAT_JEST_ENVIRONMENT);
+const loaded = require(baseEnvironment.path);
+const Base = loaded.TestEnvironment ?? loaded.default ?? loaded;
 const EVENT_LIMIT = 16384;
 
 function testIdentity(test) {
@@ -23,7 +23,7 @@ module.exports = class EvidenceEnvironment extends Base {
     this.suiteErrors = new Set();
     this.evidence = {version:2, executionId:process.env.SESHAT_EXECUTION_ID,
       file:context.testPath, hookFailures:0, testHookErrors:0, passed:0, failed:0,
-      unattributedErrors:0, timeouts:0, retries:0};
+      unattributedErrors:0, timeouts:0, retries:0, environment:baseEnvironment};
     this.key = createHash('sha256').update(this.evidence.file).digest('hex');
     this.entered = new WeakMap();
     this.selectionBytes = 0;

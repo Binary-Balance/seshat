@@ -164,7 +164,10 @@ module.exports = class EvidenceReporter {
   onRunComplete(contexts, results) {
     const projectRequire = createRequire(join(process.cwd(), 'package.json'));
     const jest = projectRequire('jest/package.json').version;
-    const expo = projectRequire('jest-expo/package.json').version;
+    let expo;
+    try { expo = projectRequire('jest-expo/package.json').version; } catch { /* Plain Jest has no Expo dependency. */ }
+    const environment = process.env.SESHAT_JEST_ENVIRONMENT
+      ? JSON.parse(process.env.SESHAT_JEST_ENVIRONMENT) : undefined;
     // Keep cwd-resolved fields for the existing assessment contract; diagnostics use actual.
     const actual = executingVersions(process.argv[1], contexts);
     let errors = results.numRuntimeErrorTestSuites + Number(results.wasInterrupted);
@@ -182,6 +185,7 @@ module.exports = class EvidenceReporter {
         const event = JSON.parse(readFileSync(path, 'utf8'));
         if (event.version !== 2 || event.executionId !== process.env.SESHAT_EXECUTION_ID
           || event.file !== result.testFilePath
+          || JSON.stringify(event.environment) !== JSON.stringify(environment)
           || !['hookFailures','testHookErrors','passed','failed','unattributedErrors','timeouts','retries']
             .every(k => Number.isSafeInteger(event[k]) && event[k] >= 0)
           || event.testHookErrors > event.hookFailures
@@ -201,8 +205,11 @@ module.exports = class EvidenceReporter {
       ? selectionReport(contexts, results, events, actual, this.globalConfig, this.coverage) : {};
     writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({version:1,
       executionId:process.env.SESHAT_EXECUTION_ID, runner:'jest', node:process.versions.node,
-      jest, expo, actual, complete, passed, failed, errors, testHookErrors, timeouts, ...selection}), {flag:'wx'});
+      jest, expo, actual, environment, configDiscoveryMs:Number(process.env.SESHAT_JEST_CONFIG_MS),
+      complete, passed, failed, errors, testHookErrors, timeouts, ...selection}), {flag:'wx'});
   }
 };
 
 module.exports.executingVersions = executingVersions;
+module.exports.packageVersionAtPath = packageVersionAtPath;
+module.exports.selectedPackageVersion = selectedPackageVersion;

@@ -1,4 +1,5 @@
 import './node-load-observer.test.mjs';
+import './process.test.mjs';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {basename, dirname, join} from 'node:path';
@@ -43,7 +44,7 @@ for (const platform of ['win32', 'linux', 'darwin']) {
       },
     });
     assert.deepEqual(calls, ['cli', 'parallel', 'node-load-failure', 'jest-hook-errors',
-      'jest-expo-check', 'vitest-check', 'jest-node-selection']);
+      'jest-check', 'jest-expo-check', 'vitest-check', 'jest-node-selection']);
     assert.equal(evidence.checks.length, calls.length);
     assert.ok(evidence.checks.every(check => check.passed));
     assert.deepEqual(JSON.parse(JSON.stringify(evidence.importFailureObserver)),

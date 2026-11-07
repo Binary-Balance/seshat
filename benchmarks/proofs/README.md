@@ -1140,7 +1140,8 @@ crates/seshat/target/release/seshat-proofs collect /path/to/project/seshat.json 
 ```
 
 This Linux proof supports **Node 24.20.0**, with its built-in runner,
-**Jest 29.7.0 / jest-expo 57.0.5 or 57.0.6**, or **Vitest 5** with Istanbul coverage.
+**Jest 29.7.0 with babel-jest and node/jsdom 29.7.0, or jest-expo 57.0.5 or
+57.0.6**, or **Vitest 5** with Istanbul coverage.
 Unsupported versions in receipts prevent assessment. Each setup
 runs its baseline, then coverage, sequentially in the
 copy. A configured typecheck runs before the setup's baseline, unless a direct
@@ -1370,6 +1371,30 @@ of where that error may have been caught. Bare-CR and Unicode line-separator
 source positions are not accepted by this observation path. The verified route uses Node's default process
 isolation; alternate runner isolation/loader configurations are not certified.
 Do not replace missing evidence with stack-text matching or a generic exit-1 kill.
+
+## Plain Jest workflow
+
+`examples/jest` is the independent TypeScript/Babel fixture for Jest 29.7.0
+without Expo. The bounded proof verifies the default node environment and
+explicit jsdom environment, exact function coverage and replacement/switching
+verdict parity. An npm-script case preserves wrapper execution. Eight negative
+controls check configuration/version rejection, failed baselines and missing
+evidence when a docblock bypasses the wrapper.
+
+```sh
+npm ci --prefix examples/jest --ignore-scripts --no-audit --no-fund
+SESHAT_PROOF_OUTPUT=work/plain-jest.json node benchmarks/proofs/jest-check.mjs \
+  --cli /absolute/path/to/seshat --deps examples/jest
+```
+
+Without `--deps`, the driver installs the locked example into its disposable
+project. It checks the executable hash after every invocation, preserves
+portable reports, and keeps scratch cleanup and source restoration assertions.
+The [recorded proof](../../outputs/plain-jest.md) describes the verified scope
+and configuration-discovery cost. Plain Jest selection falls back to the full
+command. The public-example verifier checks one/two-worker parity, including
+installed packages; the latest-supported-Node compatibility harness also runs
+this proof.
 
 ## Jest/Expo combined workflow
 

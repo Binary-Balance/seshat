@@ -367,12 +367,25 @@ fn validate_runner_receipt(report: &Value, runner: &Runner, id: &str) -> Result<
         Runner::Jest => {
             // cwd-resolved versions alone do not establish which runner executed.
             version(&report["actual"]["jest"], "Jest", &["29.7.0"])?;
+            version(&report["jest"], "cwd Jest", &["29.7.0"])?;
+            if report["environment"]["kind"] == "plain" {
+                if !matches!(
+                    report["environment"]["name"].as_str(),
+                    Some("jest-environment-node" | "jest-environment-jsdom")
+                ) {
+                    return Err("unsupported plain Jest environment".into());
+                }
+                return version(
+                    &report["environment"]["version"],
+                    "Jest environment",
+                    &["29.7.0"],
+                );
+            }
             version(
                 &report["actual"]["jest-expo"],
                 "jest-expo",
                 &["57.0.5", "57.0.6"],
             )?;
-            version(&report["jest"], "cwd Jest", &["29.7.0"])?;
             version(&report["expo"], "cwd jest-expo", &["57.0.5", "57.0.6"])
         }
         Runner::Vitest => {
@@ -546,6 +559,9 @@ fn receipt_report(setup: &Value) -> Option<&Value> {
 
 fn actual_version<'a>(report: Option<&'a Value>, runner: Runner, package: &str) -> Option<&'a str> {
     let report = report?;
+    if matches!(runner, Runner::Jest) && report["environment"]["name"] == package {
+        return report["environment"]["version"].as_str();
+    }
     // The legacy top-level receipt fields are cwd lookups kept for assessment compatibility.
     match runner {
         Runner::Jest | Runner::Vitest => report["actual"][package].as_str(),
@@ -553,7 +569,14 @@ fn actual_version<'a>(report: Option<&'a Value>, runner: Runner, package: &str) 
     }
 }
 
-fn runner_packages(runner: Runner) -> &'static [&'static str] {
+fn runner_packages(runner: Runner, report: Option<&Value>) -> &'static [&'static str] {
+    if matches!(runner, Runner::Jest) {
+        match report.and_then(|report| report["environment"]["name"].as_str()) {
+            Some("jest-environment-node") => return &["jest", "jest-environment-node"],
+            Some("jest-environment-jsdom") => return &["jest", "jest-environment-jsdom"],
+            _ => {}
+        }
+    }
     match runner {
         Runner::Node => &[],
         Runner::Jest => &["jest", "jest-expo"],
@@ -817,7 +840,7 @@ impl CapturedProject {
             let node_declared = package
                 .as_ref()
                 .and_then(|(_, value)| value["engines"]["node"].as_str());
-            let packages = runner_packages(config.runner.clone())
+            let packages = runner_packages(config.runner.clone(), report)
                 .iter()
                 .map(|name| {
                     let actual = actual_version(report, config.runner.clone(), name);
@@ -894,6 +917,10 @@ impl CapturedProject {
             (
                 "jest-reporter.cjs",
                 include_str!("../../../../../benchmarks/proofs/jest-reporter.cjs"),
+            ),
+            (
+                "jest-config.cjs",
+                include_str!("../../../../../benchmarks/proofs/jest-config.cjs"),
             ),
             (
                 "jest-expo-environment.cjs",
@@ -999,6 +1026,8 @@ impl CapturedProject {
             .env_remove("SESHAT_NODE_TEST_PARENT")
             .env_remove("SESHAT_NODE_ISTANBUL")
             .env_remove("SESHAT_COVERAGE_REPORT")
+            .env_remove("SESHAT_JEST_ENVIRONMENT")
+            .env_remove("SESHAT_JEST_CONFIG_MS")
             .env("SESHAT_EXECUTION_ID", id)
             .env("SESHAT_RECEIPT", &receipt)
             .env(
@@ -1008,6 +1037,19 @@ impl CapturedProject {
             .env("SESHAT_NODE_REPORTER", &reporter)
             .env("SESHAT_VITEST_RUNNER", &vitest_runner)
             .env("SESHAT_SOURCES", evidence.join("sources.json"));
+        if matches!(setup.runner, Runner::Jest)
+            && !matches!(kind, JobKind::Typecheck)
+            && args.iter().any(|arg| arg.contains("{seshatEnvironment}"))
+        {
+            command.env(
+                "NODE_OPTIONS",
+                format!(
+                    "--require={}",
+                    serde_json::to_string(&module_path(&evidence.join("jest-config.cjs"))?)
+                        .unwrap()
+                ),
+            );
+        }
         if let Some(id) = self.active_mutant {
             command.env("SESHAT_MUTANT_ID", id.to_string());
         }
@@ -3437,7 +3479,7 @@ mod tests {
                 .unwrap();
             assert_eq!(result.state, TestState::Passed, "{}", result.details);
             assert_eq!(result.details["report"]["executionId"], id);
-            assert_eq!(fs::read_dir(&evidence.0).unwrap().count(), 9);
+            assert_eq!(fs::read_dir(&evidence.0).unwrap().count(), 10);
         }
         evidence.close().unwrap();
         let config = captured.config.clone();
@@ -3701,6 +3743,34 @@ mod tests {
                 .contains("duplicate normalized")
         );
         directory.close().unwrap();
+    }
+
+    #[test]
+    fn plain_jest_receipts_require_verified_environment_versions() {
+        let base = json!({"version":1,"executionId":"current","node":"24.20.0",
+            "runner":"jest","jest":"29.7.0","actual":{"jest":"29.7.0"},
+            "environment":{"kind":"plain","name":"jest-environment-node","version":"29.7.0"}});
+        for name in ["jest-environment-node", "jest-environment-jsdom"] {
+            let mut receipt = base.clone();
+            receipt["environment"]["name"] = json!(name);
+            assert!(validate_runner_receipt(&receipt, &Runner::Jest, "current").is_ok());
+        }
+        for (field, value) in [
+            ("kind", json!("custom")),
+            ("name", json!("custom")),
+            ("version", json!("30.0.0")),
+            ("version", json!("29.7.0-rc.1")),
+            ("version", Value::Null),
+        ] {
+            let mut receipt = base.clone();
+            receipt["environment"][field] = value;
+            assert!(validate_runner_receipt(&receipt, &Runner::Jest, "current").is_err());
+        }
+        for field in ["jest", "actual"] {
+            let mut receipt = base.clone();
+            receipt[field] = Value::Null;
+            assert!(validate_runner_receipt(&receipt, &Runner::Jest, "current").is_err());
+        }
     }
 
     #[test]

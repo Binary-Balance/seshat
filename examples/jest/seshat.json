@@ -1,0 +1,64 @@
+{
+  "source": {
+    "include": [
+      "src/rules.ts"
+    ]
+  },
+  "capture": [
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "babel.config.cjs",
+    "jest.config.cjs",
+    "src",
+    "tests",
+    "node_modules"
+  ],
+  "setups": [
+    {
+      "name": "jest",
+      "runner": "jest",
+      "cwd": ".",
+      "timeoutMs": 60000,
+      "typecheck": [
+        "node",
+        "node_modules/typescript/bin/tsc",
+        "--project",
+        "tsconfig.json"
+      ],
+      "test": [
+        "node",
+        "node_modules/jest/bin/jest.js",
+        "--config",
+        "jest.config.cjs",
+        "--runInBand",
+        "--runTestsByPath",
+        "tests/rules.test.ts",
+        "--reporters=default",
+        "--reporters={seshatReporter}",
+        "--env={seshatEnvironment}"
+      ],
+      "coverage": {
+        "command": [
+          "node",
+          "node_modules/jest/bin/jest.js",
+          "--config",
+          "jest.config.cjs",
+          "--runInBand",
+          "--runTestsByPath",
+          "tests/rules.test.ts",
+          "--reporters=default",
+          "--reporters={seshatReporter}",
+          "--env={seshatEnvironment}",
+          "--coverage",
+          "--coverageProvider=babel",
+          "--coverageReporters=json",
+          "--coverageDirectory=coverage",
+          "--collectCoverageFrom",
+          "src/rules.ts"
+        ],
+        "report": "coverage/coverage-final.json"
+      }
+    }
+  ]
+}
