@@ -31,6 +31,7 @@ for (const [name, args] of [
   ['parallel', []],
   ['node-load-failure', []],
   ['jest-hook-errors', []],
+  ['jest-check', ['--cli', payload.binaryPath]],
   ['jest-expo-check', ['--tarball', payload.tarball, '--deps', jestDeps,
     '--cases', 'normal-1,assertion-kill,expect-assertions,assertion-error,survivor,before-all,automatic-cleanup,mixed-load-hook,import-failure,test-timeout,hook-timeout,before-all-timeout']],
   ['vitest-check', ['--tarball', payload.tarball, '--deps', join(repo, 'benchmarks/proofs'),

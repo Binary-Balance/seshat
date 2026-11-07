@@ -8,7 +8,8 @@ dependencies needed by their setup commands. `source.include` and
 `scope.files`; selected source files must also be included in `capture`.
 
 The complete configurations are [the Node single-package example](node),
-[the workspace example](workspaces), [the Vitest example](vitest), and
+[the workspace example](workspaces), [the Vitest example](vitest),
+[the plain Jest example](jest), and
 [the Jest and Expo example](jest-expo). The shared rules are in the
 [configuration guide](../docs/configuration.md), and the stable report fields
 are in the [report format](../docs/report-format.md).

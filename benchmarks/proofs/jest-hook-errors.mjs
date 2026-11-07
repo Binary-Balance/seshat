@@ -12,6 +12,7 @@ const work = mkdtempSync(join(tmpdir(), 'seshat-jest-hooks-'));
 const previousCwd = process.cwd();
 const previousReceipt = process.env.SESHAT_RECEIPT;
 const previousId = process.env.SESHAT_EXECUTION_ID;
+const previousEnvironment = process.env.SESHAT_JEST_ENVIRONMENT;
 const base = join(work, 'base.cjs');
 writeFileSync(base, 'module.exports = class {};');
 for (const [name, version] of [['jest', '29.7.0'], ['jest-expo', '57.0.5']]) {
@@ -23,6 +24,7 @@ writeFileSync(join(work, 'node_modules/jest-expo/jest-preset.js'),
   `module.exports = {testEnvironment:${JSON.stringify(base)}};`);
 process.chdir(work);
 process.env.SESHAT_EXECUTION_ID = 'current';
+process.env.SESHAT_JEST_ENVIRONMENT = JSON.stringify({kind:'expo', path:base});
 
 try {
   const Environment = require('./jest-expo-environment.cjs');
@@ -124,5 +126,7 @@ try {
   else process.env.SESHAT_RECEIPT = previousReceipt;
   if (previousId === undefined) delete process.env.SESHAT_EXECUTION_ID;
   else process.env.SESHAT_EXECUTION_ID = previousId;
+  if (previousEnvironment === undefined) delete process.env.SESHAT_JEST_ENVIRONMENT;
+  else process.env.SESHAT_JEST_ENVIRONMENT = previousEnvironment;
   rmSync(work, {recursive:true, force:true});
 }

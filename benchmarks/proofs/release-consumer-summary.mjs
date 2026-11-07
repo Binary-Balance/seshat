@@ -1,4 +1,4 @@
-export const publicExampleNames = ['node', 'jest-expo', 'vitest', 'workspaces'];
+export const publicExampleNames = ['node', 'jest', 'jest-expo', 'vitest', 'workspaces'];
 
 export function validatePublicExamples(value, expectedCliKind, fail) {
   if (!value) {

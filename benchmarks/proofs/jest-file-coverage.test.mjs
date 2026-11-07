@@ -53,12 +53,15 @@ describe('a', () => test('b c', () => {value();}));
       ...extraConfig,
     })};\n`);
     const env = {...process.env, SESHAT_EXECUTION_ID:`run-${sequence}`, SESHAT_RECEIPT:receipt,
-      SESHAT_SOURCES:join(work, 'sources.json'), SESHAT_TEST_SELECTION:selection};
+      SESHAT_SOURCES:join(work, 'sources.json'), SESHAT_TEST_SELECTION:selection,
+      SESHAT_JEST_ENVIRONMENT:JSON.stringify({kind:'expo',
+        path:projectRequire.resolve(projectRequire('jest-expo/jest-preset').testEnvironment)})};
     if (coverage) env.SESHAT_COVERAGE_REPORT = join(work, `coverage-${sequence}/coverage-final.json`);
     else delete env.SESHAT_COVERAGE_REPORT;
     const child = spawnSync(process.execPath, ['--experimental-vm-modules', join(deps, 'jest/bin/jest.js'),
       '--config', join(work, 'jest.config.cjs'), ...(workers ? ['--maxWorkers=2'] : ['--runInBand']),
-      ...(coverage ? ['--coverage'] : [])], {cwd:work, env, encoding:'utf8', timeout:30000, maxBuffer:2e6});
+      // Cold Expo transforms can exceed 30 seconds while other compatibility proofs run.
+      ...(coverage ? ['--coverage'] : [])], {cwd:work, env, encoding:'utf8', timeout:60000, maxBuffer:2e6});
     assert.equal(child.error, undefined, child.stderr);
     assert.ok(child.status === 0 || child.status === 1, child.stderr);
     const report = JSON.parse(readFileSync(receipt, 'utf8'));

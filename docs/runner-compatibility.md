@@ -12,6 +12,7 @@ some locked runner dependencies require at least 24.11.0.
 | Runner | Supported Node range | Runner and coverage dependencies |
 | --- | --- | --- |
 | Node test runner | >=24.20.0 <25 | Checked-in TypeScript/Istanbul collector |
+| Jest | >=24.20.0 <25 | Jest, jest-runner, Jest Circus, babel-jest and jest-environment-node or jest-environment-jsdom 29.7.0; Babel coverage |
 | Jest/Expo | >=24.20.0 <25 | Jest 29.7.0, jest-expo 57.0.5 or 57.0.6, Expo 57.0.20, Jest Circus and Babel coverage |
 | Vitest | >=24.20.0 <25 | Vitest >=5.0.0 <6 and the matching @vitest/coverage-istanbul |
 
@@ -19,6 +20,36 @@ The Jest and Expo dependencies remain locked to the versions listed above.
 This policy does not expand CPU targets or OS support. Node 24.20.0 and
 24.21.0 have passed the native compatibility matrix; that tested set is distinct
 from the supported Node range.
+
+## Plain Jest
+
+The [plain Jest example](../examples/jest) uses Babel's TypeScript preset and
+CommonJS transform, with no Expo dependency. The default node environment and
+explicit jsdom environment both pass baseline, source-mapped coverage and
+mutation checks under replacement and experimental switching. The
+[proof](../benchmarks/proofs/jest-check.mjs) also checks unsupported versions,
+custom environments/transforms, V8 coverage, multiple projects, failed baselines
+and a docblock that bypasses the evidence wrapper. See the
+[recorded evidence](../outputs/plain-jest.md).
+
+Keep `--env={seshatEnvironment}` in each command. Before Jest starts, Seshat
+runs the same Jest CLI with `--showConfig`, removing that override, and wraps
+the original resolved environment. Config discovery is limited to 15 seconds
+and 1 MiB of output. It adds a fresh Jest configuration process per test job;
+`configDiscoveryMs` in runner receipts records that cost. Configuration files
+must be deterministic and safe to evaluate twice. Other Jest CLI options,
+environment options and the project's Babel setup remain in effect.
+
+Only one project, the standard Jest runner and Circus 29.7.0, Babel coverage
+and babel-jest 29.7.0 transforms are supported on this route. Custom environments
+and per-file `@jest-environment` overrides are unverified. A file that bypasses
+Seshat's wrapper cannot provide its event sidecar and leaves the run incomplete.
+ts-jest and other Jest versions remain unsupported.
+
+Plain Jest test-file selection is not claimed here. Its receipts omit the
+Expo-only selection evidence, so each mutant runs the full configured command
+and, with selection enabled, reports `missing-test-files`. This does not weaken
+baseline or coverage validation. The Expo selection route remains unchanged.
 
 ## Jest/Expo versions
 
