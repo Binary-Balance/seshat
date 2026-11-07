@@ -107,6 +107,17 @@ for (const environment of ['node','jsdom']) {
   }
 }
 writeFileSync(join(project, 'tests/rules.test.ts'), originalTests);
+config();
+const npmSetup = structuredClone(base);
+for (const command of [npmSetup.setups[0].test, npmSetup.setups[0].coverage.command]) {
+  // The fixture's npm script already supplies --config jest.config.cjs.
+  command.splice(0, 4, npmCommand, ...npmArgs, 'test', '--');
+}
+const wrapped = await run('npm-wrapper', {setup:npmSetup});
+assert.equal(wrapped.result.mutation.killed, 3);
+assert.equal(wrapped.result.mutation.survived, 1);
+assert.equal(wrapped.result.pseudoTesting.killed, 2);
+assert.equal(wrapped.result.setups[0].baseline.report.environment.name, 'jest-environment-node');
 for (const [name, extra] of [
   ['v8',{coverageProvider:'v8'}],
   ['custom-transform',{transform:{'^.+\\.tsx?$':'<rootDir>/transform.cjs'}}],

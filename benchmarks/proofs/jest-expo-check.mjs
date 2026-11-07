@@ -58,6 +58,7 @@ const defaultCases = [
   'normal-repeat',
   'normal-2',
   'nested-root',
+  'npm-wrapper',
   'assertion-kill',
   'expect-assertions',
   'assertion-error',
@@ -438,6 +439,13 @@ if (shouldRun('normal-2')) {
   const parallel = configFor({source: 'src/status.tsx', test: 'tests/status.test.tsx', workers: 2});
   const report = await check('normal-2', parallel, {assert: value => assertNormal(value, 2)});
   assert.deepEqual(stableMutation(report.result.mutation), results.normalDefinition);
+}
+
+if (shouldRun('npm-wrapper')) {
+  const wrapped = configFor({source:'src/status.tsx', test:'tests/status.test.tsx',
+    // The fixture's npm script already supplies --config jest.config.cjs.
+    testArgs:[npmCommand, ...npmArgs, 'test', '--', ...jestArgs('tests/status.test.tsx').slice(4)]});
+  await check('npm-wrapper', wrapped, {assert:value => assertNormal(value, 1)});
 }
 
 if (shouldRun('nested-root')) {

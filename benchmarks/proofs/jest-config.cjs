@@ -3,9 +3,10 @@ const {spawnSync} = require('node:child_process');
 const {createRequire} = require('node:module');
 const {join} = require('node:path');
 const {realpathSync: realpath} = require('node:fs');
-const {packageVersionAtPath, selectedPackageVersion} = require('./jest-reporter.cjs');
+const {executingVersions, packageVersionAtPath, selectedPackageVersion} = require('./jest-reporter.cjs');
 
-if (!process.env.SESHAT_JEST_ENVIRONMENT) {
+// npm and other Node wrappers inherit the preload; discovery belongs to Jest itself.
+if (!process.env.SESHAT_JEST_ENVIRONMENT && executingVersions(process.argv[1], []).jest) {
   const started = performance.now();
   const adapter = realpath(join(__dirname, 'jest-expo-environment.cjs'));
   const args = process.argv.slice(1);

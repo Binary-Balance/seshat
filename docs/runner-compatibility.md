@@ -34,8 +34,9 @@ and a docblock that bypasses the evidence wrapper. See the
 
 Keep `--env={seshatEnvironment}` in each command. Before Jest starts, Seshat
 runs the same Jest CLI with `--showConfig`, removing that override, and wraps
-the original resolved environment. Config discovery is limited to 15 seconds
-and 1 MiB of output. It adds a fresh Jest configuration process per test job;
+the original resolved environment. Discovery waits for the actual Jest CLI,
+including when it is launched through `npm test`. Config discovery is limited
+to 15 seconds and 1 MiB of output. It adds a fresh Jest configuration process per test job;
 `configDiscoveryMs` in runner receipts records that cost. Configuration files
 must be deterministic and safe to evaluate twice. Other Jest CLI options,
 environment options and the project's Babel setup remain in effect.

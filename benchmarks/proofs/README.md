@@ -1377,8 +1377,9 @@ Do not replace missing evidence with stack-text matching or a generic exit-1 kil
 `examples/jest` is the independent TypeScript/Babel fixture for Jest 29.7.0
 without Expo. The bounded proof verifies the default node environment and
 explicit jsdom environment, exact function coverage and replacement/switching
-verdict parity. Eight negative controls check configuration/version rejection,
-failed baselines and missing evidence when a docblock bypasses the wrapper.
+verdict parity. An npm-script case preserves wrapper execution. Eight negative
+controls check configuration/version rejection, failed baselines and missing
+evidence when a docblock bypasses the wrapper.
 
 ```sh
 npm ci --prefix examples/jest --ignore-scripts --no-audit --no-fund
