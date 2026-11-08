@@ -279,7 +279,7 @@ function selfCheck() {
     nativeNotices:{hasCopyright:true, hasUnlicense:true}, checks:releaseChecks,
   };
   const publicExamples = {schemaVersion:1, cli:{kind:'windows-npm-shim', sha256:'a'.repeat(64), bytes:1}, validation:{passed:true},
-    examples:Object.fromEntries(['node', 'jest-expo', 'vitest', 'workspaces'].map(name => [name, {
+    examples:Object.fromEntries(['node', 'jest', 'jest-expo', 'vitest', 'workspaces'].map(name => [name, {
       sourceFiles:['src/example.ts'], normal:{scope:{files:['src/example.ts']}, result:{sources:[], mutation:{}}},
       workers:{one:1, two:2, parity:true},
     }])), thresholds:{equality:{state:'passed'}, failure:{state:'failed'}, incomplete:{state:'incomplete'}}};

@@ -13,7 +13,13 @@ export function rustFreeEnvironment() {
   const env = {...process.env};
   const rustExecutables = ['cargo', 'cargo.exe', 'cargo.cmd', 'rustc', 'rustc.exe', 'rustc.cmd'];
   const hasRust = path => rustExecutables.some(name => existsSync(join(path, name)));
-  env.PATH = (env.PATH ?? '').split(delimiter).filter(path => path && !hasRust(path)).join(delimiter);
+  // process.env ignores Windows key case; its plain-object copy does not.
+  if (process.platform === 'win32') {
+    for (const key of Object.keys(env)) {
+      if (key !== 'PATH' && key.toUpperCase() === 'PATH') delete env[key];
+    }
+  }
+  env.PATH = (process.env.PATH ?? '').split(delimiter).filter(path => path && !hasRust(path)).join(delimiter);
   // Keep removals explicit: runProcess merges this full env over its parent copy.
   for (const name of ['CARGO_HOME', 'RUSTUP_HOME', 'CARGO_TARGET_DIR', 'NODE_OPTIONS', 'SESHAT_MUTANT_ID']) {
     env[name] = undefined;

@@ -94,6 +94,16 @@ both its test and coverage commands target `tests/check.mjs`.
 After `npm ci`, npm workspace links must resolve inside the captured inputs.
 Seshat rewrites those internal links in its execution copy.
 
+## Plain Jest example
+
+The [plain Jest example](../examples/jest/README.md) uses Jest 29.7.0,
+babel-jest 29.7.0 and Babel coverage with TypeScript. Leave `testEnvironment`
+unset for node, or set it to `jsdom` with jest-environment-jsdom 29.7.0.
+Use the same reporter and environment placeholders shown below; the complete
+configuration is [examples/jest/seshat.json](../examples/jest/seshat.json).
+Plain Jest runs the full command for each mutant. See the
+[supported combinations and limits](runner-compatibility.md#plain-jest).
+
 ## Jest/Expo example
 
 This example follows the [public Jest/Expo example](../examples/jest-expo/README.md).
@@ -710,10 +720,11 @@ Node's built-in test runner strip types, preserving multiline branch positions.
 They require Node `>=24.20.0 <25` and erasable TypeScript syntax. See the
 [Node example](../examples/node/README.md) for compatibility limits.
 
-The experimental Jest integration uses `{seshatReporter}` plus
-`--env={seshatEnvironment}`. Its environment extends the default `jest-expo`
-preset and is limited to Jest Circus, one Jest project per setup and the tested
-preset behaviour. Arbitrary Jest environments are not supported. The pinned
+The Jest integration uses `{seshatReporter}` plus
+`--env={seshatEnvironment}`. Its environment wraps the resolved node or jsdom
+29.7.0 environment for plain Jest, or the default `jest-expo` preset environment.
+It is limited to Jest Circus and one Jest project per setup.
+Arbitrary Jest environments are not supported. The pinned Expo
 public fixture and its installed-command controls are documented in the
 [Jest/Expo proof workflow](../benchmarks/proofs/README.md#jestexpo-combined-workflow);
 other runner versions and configurations remain unverified.
@@ -739,7 +750,7 @@ selected source files. Seshat removes a stale report in its execution copy and
 requires the coverage command to create a fresh one.
 
 The verified coverage routes are Node with the checked-in Istanbul statement
-adapter, Jest/Expo with Babel coverage, and Vitest with its Istanbul provider.
+adapter, plain Jest or Jest/Expo with Babel coverage, and Vitest with its Istanbul provider.
 Coverage tools remain project dependencies. c8's line counters do not provide
 the required statement measurement. Vitest's V8 provider has a known ambiguous
 same-line function mapping that Seshat rejects.

@@ -123,6 +123,7 @@ if (process.platform === 'win32') assert.ok(existsSync(npm[1]), `npm CLI is miss
 
 const examples = {
   node: ['src/rules.ts', 'src/ignored.ts'],
+  jest: ['src/rules.ts'],
   'jest-expo': ['src/status.tsx'],
   vitest: ['src/tempo.ts', 'src/view.tsx', 'src/server.ts', 'src/ignored.ts'],
   workspaces: ['src/compare.ts', 'packages/rules/index.ts'],
@@ -345,6 +346,16 @@ const expected = {
       'src/rules.ts': [
         {name: 'classify', covered: 3, total: 3, crap: 2},
         {name: 'arrow@139', covered: 1, total: 1, crap: 1},
+      ],
+    },
+    mutation: {planned: 4, killed: 3, survived: 1, unresolved: 0, score: 75},
+  },
+  jest: {
+    scope: ['src/rules.ts'],
+    functions: {
+      'src/rules.ts': [
+        {name: 'classify', covered: 3, total: 3, crap: 2},
+        {name: 'isPositive', covered: 1, total: 1, crap: 1},
       ],
     },
     mutation: {planned: 4, killed: 3, survived: 1, unresolved: 0, score: 75},

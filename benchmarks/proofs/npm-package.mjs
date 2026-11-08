@@ -329,7 +329,7 @@ function report(child) {
   return value;
 }
 
-const publicExampleNames = ['node', 'jest-expo', 'vitest', 'workspaces'];
+const publicExampleNames = ['node', 'jest', 'jest-expo', 'vitest', 'workspaces'];
 function validatePublicExamples(value, expectedCliKind) {
   assert.equal(value?.schemaVersion, 1);
   assert.equal(value?.validation?.passed, true, value?.validation?.error ?? 'public examples failed');
