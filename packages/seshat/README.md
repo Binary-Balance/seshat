@@ -10,7 +10,6 @@ insufficiently tested code.
 ## What Seshat does
 
 - Calculates function complexity and CRAP scores from branch coverage.
-- Selects whole test files for verified Vitest Istanbul setups, with full-run fallbacks and an opt-out.
 - Changes comparison, logical, arithmetic, boolean, optional and nullish
   expressions one at a time and checks whether tests detect them.
 - Replaces function bodies to find covered functions whose removal tests miss.
@@ -40,6 +39,7 @@ including TypeScript, its test runner and a coverage tool.
 | --- | --- |
 | Node's built-in test runner | Node `>=24.20.0 <25` |
 | Vitest | `>=5.0.0 <6` |
+| Jest | Jest, babel-jest and node or jsdom environment `29.7.0` |
 | Jest with Expo | Jest `29.7.0` with jest-expo `57.0.5` or `57.0.6` |
 
 Seshat checks the runner version on every run and stops if it is not
@@ -83,8 +83,8 @@ runner:
   command must write an Istanbul JSON report; `collect-node.mjs` is a small
   adapter from the [Node example](https://github.com/Binary-Balance/seshat/tree/main/examples/node).
 
-The [examples](https://github.com/Binary-Balance/seshat/blob/main/examples/README.md) include complete Node, npm workspace, Vitest
-and Jest/Expo projects. The [configuration guide](https://github.com/Binary-Balance/seshat/blob/main/docs/configuration.md) covers
+The [examples](https://github.com/Binary-Balance/seshat/blob/main/examples/README.md) include complete Node, npm workspace, Vitest,
+plain Jest and Jest/Expo projects. The [configuration guide](https://github.com/Binary-Balance/seshat/blob/main/docs/configuration.md) covers
 every field, including `workers` for parallel mutation runs.
 
 Comparison, logical, arithmetic, boolean, statement and optional mutants are
