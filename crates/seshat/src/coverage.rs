@@ -837,6 +837,37 @@ fn all_ignored_statements_are_partial_without_inventing_positive_coverage() {
 }
 
 #[test]
+fn enclosing_nonvisitor_hints_cannot_excuse_missing_descendant_branches() {
+    for expression in [
+        "Boolean(flag ? 1 : 2)",
+        "[flag ? 1 : 2]",
+        "!(flag ? 1 : 2)",
+        "Boolean((()=>flag ? 1 : 2)())",
+    ] {
+        let source = format!(
+            "function f(flag: boolean) {{ return /* istanbul ignore next */ {expression}; }}"
+        );
+        let analysis = Analysis::inspect("source.ts", &source).unwrap();
+        let start = source.find("return").unwrap();
+        let end = source.rfind(';').unwrap() + 1;
+        let report = json!({"source.ts":{"path":"source.ts","statementMap":{"0":{
+            "start":{"line":1,"column":start},"end":{"line":1,"column":end}}},
+            "s":{"0":1},"branchMap":{},"b":{}}});
+        let result = attribute(&analysis, "source.ts", &source, [&report]);
+        assert_eq!(result["complete"], false, "{source}: {result}");
+        assert_eq!(result["functions"][0]["status"], "unknown");
+        assert!(
+            result["problems"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|problem| problem.as_str().unwrap().contains("no instrumented target")),
+            "{source}: {result}"
+        );
+    }
+}
+
+#[test]
 fn invalid_partial_hint_targets_cannot_excuse_missing_coverage() {
     for source in [
         "function f() { /* istanbul ignore if */ return 1; }",

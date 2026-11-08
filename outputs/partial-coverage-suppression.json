@@ -14,7 +14,7 @@
     "node": {
       "complete": true,
       "coverageSuppressions": {
-        "count": 10,
+        "count": 12,
         "hints": [
           {
             "end": 94,
@@ -100,23 +100,44 @@
             "wholeFunction": false
           },
           {
-            "end": 1147,
+            "end": 1144,
             "functions": [
-              1060
+              1060,
+              1148
             ],
             "kind": "next",
             "provider": "istanbul",
-            "start": 1108,
+            "start": 1105,
+            "wholeFunction": true
+          },
+          {
+            "end": 1279,
+            "functions": [
+              1179
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1240,
             "wholeFunction": false
           },
           {
-            "end": 1304,
+            "end": 1407,
             "functions": [
-              1222
+              1320
             ],
             "kind": "next",
             "provider": "istanbul",
-            "start": 1265,
+            "start": 1368,
+            "wholeFunction": false
+          },
+          {
+            "end": 1564,
+            "functions": [
+              1482
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1525,
             "wholeFunction": false
           }
         ]
@@ -299,8 +320,56 @@
           "coverageSuppressions": 1
         },
         {
-          "name": "retainedInitializer",
+          "name": "ignoredExpressionWithFunction",
           "start": 1060,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "arrow@1148",
+          "start": 1148,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredCallOutcome",
+          "start": 1179,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 3,
+          "branchCoverage": 0.3333333333333333,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 3,
+          "cognitiveComplexity": 3,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "retainedInitializer",
+          "start": 1320,
           "status": "partially-suppressed",
           "covered": 2,
           "total": 2,
@@ -316,7 +385,7 @@
         },
         {
           "name": "retainedBranch",
-          "start": 1222,
+          "start": 1482,
           "status": "partially-suppressed",
           "covered": 1,
           "total": 1,
@@ -394,12 +463,177 @@
           }
         ],
         "problems": []
+      },
+      "functionOutcomes": {
+        "complete": true,
+        "coverageSuppressions": {
+          "count": 3,
+          "hints": [
+            {
+              "end": 111,
+              "functions": [
+                7,
+                113
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 72,
+              "wholeFunction": true
+            },
+            {
+              "end": 245,
+              "functions": [
+                140,
+                247
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 206,
+              "wholeFunction": true
+            },
+            {
+              "end": 369,
+              "functions": [
+                264,
+                380
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 330,
+              "wholeFunction": true
+            }
+          ]
+        },
+        "functions": [
+          {
+            "name": "ignoredFunctionOutcome",
+            "start": 7,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@113",
+            "start": 113,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@123",
+            "start": 123,
+            "status": "measured",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": "statement",
+            "crap": 1,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 0
+          },
+          {
+            "name": "ignoredLogicalFunction",
+            "start": 140,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@247",
+            "start": 247,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "ignoredGroupedFunction",
+            "start": 264,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 3,
+            "cognitiveComplexity": 2,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@380",
+            "start": 380,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          }
+        ],
+        "problems": []
+      },
+      "unsupportedTargets": {
+        "complete": false,
+        "problems": [
+          "coverage ignore next has no instrumented target at 58",
+          "coverage ignore next has no instrumented target at 182",
+          "coverage ignore next has no instrumented target at 299",
+          "coverage ignore next has no instrumented target at 420"
+        ]
       }
     },
     "vitest": {
       "complete": true,
       "coverageSuppressions": {
-        "count": 10,
+        "count": 12,
         "hints": [
           {
             "end": 94,
@@ -485,23 +719,44 @@
             "wholeFunction": false
           },
           {
-            "end": 1147,
+            "end": 1144,
             "functions": [
-              1060
+              1060,
+              1148
             ],
             "kind": "next",
             "provider": "istanbul",
-            "start": 1108,
+            "start": 1105,
+            "wholeFunction": true
+          },
+          {
+            "end": 1279,
+            "functions": [
+              1179
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1240,
             "wholeFunction": false
           },
           {
-            "end": 1304,
+            "end": 1407,
             "functions": [
-              1222
+              1320
             ],
             "kind": "next",
             "provider": "istanbul",
-            "start": 1265,
+            "start": 1368,
+            "wholeFunction": false
+          },
+          {
+            "end": 1564,
+            "functions": [
+              1482
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1525,
             "wholeFunction": false
           }
         ]
@@ -684,8 +939,56 @@
           "coverageSuppressions": 1
         },
         {
-          "name": "retainedInitializer",
+          "name": "ignoredExpressionWithFunction",
           "start": 1060,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "arrow@1148",
+          "start": 1148,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredCallOutcome",
+          "start": 1179,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 3,
+          "branchCoverage": 0.3333333333333333,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 3,
+          "cognitiveComplexity": 3,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "retainedInitializer",
+          "start": 1320,
           "status": "partially-suppressed",
           "covered": 2,
           "total": 2,
@@ -701,7 +1004,7 @@
         },
         {
           "name": "retainedBranch",
-          "start": 1222,
+          "start": 1482,
           "status": "partially-suppressed",
           "covered": 1,
           "total": 1,
@@ -782,12 +1085,179 @@
           "coverage retains an ignored branch",
           "coverage retains an ignored branch"
         ]
+      },
+      "functionOutcomes": {
+        "complete": false,
+        "coverageSuppressions": {
+          "count": 3,
+          "hints": [
+            {
+              "end": 111,
+              "functions": [
+                7,
+                113
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 72,
+              "wholeFunction": true
+            },
+            {
+              "end": 245,
+              "functions": [
+                140,
+                247
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 206,
+              "wholeFunction": true
+            },
+            {
+              "end": 369,
+              "functions": [
+                264,
+                380
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 330,
+              "wholeFunction": true
+            }
+          ]
+        },
+        "functions": [
+          {
+            "name": "ignoredFunctionOutcome",
+            "start": 7,
+            "status": "unknown",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@113",
+            "start": 113,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@123",
+            "start": 123,
+            "status": "unknown",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 0
+          },
+          {
+            "name": "ignoredLogicalFunction",
+            "start": 140,
+            "status": "unknown",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@247",
+            "start": 247,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "ignoredGroupedFunction",
+            "start": 264,
+            "status": "unknown",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 3,
+            "cognitiveComplexity": 2,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@380",
+            "start": 380,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          }
+        ],
+        "problems": [
+          "coverage retains an ignored statement at 117"
+        ]
+      },
+      "unsupportedTargets": {
+        "complete": false,
+        "problems": [
+          "coverage ignore next has no instrumented target at 58",
+          "coverage ignore next has no instrumented target at 182",
+          "coverage ignore next has no instrumented target at 299",
+          "coverage ignore next has no instrumented target at 420"
+        ]
       }
     },
     "jest-expo": {
       "complete": true,
       "coverageSuppressions": {
-        "count": 10,
+        "count": 12,
         "hints": [
           {
             "end": 94,
@@ -873,23 +1343,44 @@
             "wholeFunction": false
           },
           {
-            "end": 1147,
+            "end": 1144,
             "functions": [
-              1060
+              1060,
+              1148
             ],
             "kind": "next",
             "provider": "istanbul",
-            "start": 1108,
+            "start": 1105,
+            "wholeFunction": true
+          },
+          {
+            "end": 1279,
+            "functions": [
+              1179
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1240,
             "wholeFunction": false
           },
           {
-            "end": 1304,
+            "end": 1407,
             "functions": [
-              1222
+              1320
             ],
             "kind": "next",
             "provider": "istanbul",
-            "start": 1265,
+            "start": 1368,
+            "wholeFunction": false
+          },
+          {
+            "end": 1564,
+            "functions": [
+              1482
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1525,
             "wholeFunction": false
           }
         ]
@@ -1072,8 +1563,56 @@
           "coverageSuppressions": 1
         },
         {
-          "name": "retainedInitializer",
+          "name": "ignoredExpressionWithFunction",
           "start": 1060,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "arrow@1148",
+          "start": 1148,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredCallOutcome",
+          "start": 1179,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 3,
+          "branchCoverage": 0.3333333333333333,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 3,
+          "cognitiveComplexity": 3,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "retainedInitializer",
+          "start": 1320,
           "status": "partially-suppressed",
           "covered": 2,
           "total": 2,
@@ -1089,7 +1628,7 @@
         },
         {
           "name": "retainedBranch",
-          "start": 1222,
+          "start": 1482,
           "status": "partially-suppressed",
           "covered": 1,
           "total": 1,
@@ -1167,12 +1706,177 @@
           }
         ],
         "problems": []
+      },
+      "functionOutcomes": {
+        "complete": true,
+        "coverageSuppressions": {
+          "count": 3,
+          "hints": [
+            {
+              "end": 111,
+              "functions": [
+                7,
+                113
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 72,
+              "wholeFunction": true
+            },
+            {
+              "end": 245,
+              "functions": [
+                140,
+                247
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 206,
+              "wholeFunction": true
+            },
+            {
+              "end": 369,
+              "functions": [
+                264,
+                380
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 330,
+              "wholeFunction": true
+            }
+          ]
+        },
+        "functions": [
+          {
+            "name": "ignoredFunctionOutcome",
+            "start": 7,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@113",
+            "start": 113,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@123",
+            "start": 123,
+            "status": "measured",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": "statement",
+            "crap": 1,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 0
+          },
+          {
+            "name": "ignoredLogicalFunction",
+            "start": 140,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@247",
+            "start": 247,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "ignoredGroupedFunction",
+            "start": 264,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 3,
+            "cognitiveComplexity": 2,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@380",
+            "start": 380,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          }
+        ],
+        "problems": []
+      },
+      "unsupportedTargets": {
+        "complete": false,
+        "problems": [
+          "coverage ignore next has no instrumented target at 58",
+          "coverage ignore next has no instrumented target at 182",
+          "coverage ignore next has no instrumented target at 299",
+          "coverage ignore next has no instrumented target at 420"
+        ]
       }
     },
     "jest": {
       "complete": true,
       "coverageSuppressions": {
-        "count": 10,
+        "count": 12,
         "hints": [
           {
             "end": 94,
@@ -1258,23 +1962,44 @@
             "wholeFunction": false
           },
           {
-            "end": 1147,
+            "end": 1144,
             "functions": [
-              1060
+              1060,
+              1148
             ],
             "kind": "next",
             "provider": "istanbul",
-            "start": 1108,
+            "start": 1105,
+            "wholeFunction": true
+          },
+          {
+            "end": 1279,
+            "functions": [
+              1179
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1240,
             "wholeFunction": false
           },
           {
-            "end": 1304,
+            "end": 1407,
             "functions": [
-              1222
+              1320
             ],
             "kind": "next",
             "provider": "istanbul",
-            "start": 1265,
+            "start": 1368,
+            "wholeFunction": false
+          },
+          {
+            "end": 1564,
+            "functions": [
+              1482
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1525,
             "wholeFunction": false
           }
         ]
@@ -1457,8 +2182,56 @@
           "coverageSuppressions": 1
         },
         {
-          "name": "retainedInitializer",
+          "name": "ignoredExpressionWithFunction",
           "start": 1060,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "arrow@1148",
+          "start": 1148,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredCallOutcome",
+          "start": 1179,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 3,
+          "branchCoverage": 0.3333333333333333,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 3,
+          "cognitiveComplexity": 3,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "retainedInitializer",
+          "start": 1320,
           "status": "partially-suppressed",
           "covered": 2,
           "total": 2,
@@ -1474,7 +2247,7 @@
         },
         {
           "name": "retainedBranch",
-          "start": 1222,
+          "start": 1482,
           "status": "partially-suppressed",
           "covered": 1,
           "total": 1,
@@ -1552,6 +2325,171 @@
           }
         ],
         "problems": []
+      },
+      "functionOutcomes": {
+        "complete": true,
+        "coverageSuppressions": {
+          "count": 3,
+          "hints": [
+            {
+              "end": 111,
+              "functions": [
+                7,
+                113
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 72,
+              "wholeFunction": true
+            },
+            {
+              "end": 245,
+              "functions": [
+                140,
+                247
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 206,
+              "wholeFunction": true
+            },
+            {
+              "end": 369,
+              "functions": [
+                264,
+                380
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 330,
+              "wholeFunction": true
+            }
+          ]
+        },
+        "functions": [
+          {
+            "name": "ignoredFunctionOutcome",
+            "start": 7,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@113",
+            "start": 113,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@123",
+            "start": 123,
+            "status": "measured",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": "statement",
+            "crap": 1,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 0
+          },
+          {
+            "name": "ignoredLogicalFunction",
+            "start": 140,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@247",
+            "start": 247,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "ignoredGroupedFunction",
+            "start": 264,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 3,
+            "cognitiveComplexity": 2,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@380",
+            "start": 380,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          }
+        ],
+        "problems": []
+      },
+      "unsupportedTargets": {
+        "complete": false,
+        "problems": [
+          "coverage ignore next has no instrumented target at 58",
+          "coverage ignore next has no instrumented target at 182",
+          "coverage ignore next has no instrumented target at 299",
+          "coverage ignore next has no instrumented target at 420"
+        ]
       }
     }
   },
@@ -1596,17 +2534,17 @@
     "jobsAttempted": 6,
     "workerBaselineJobs": 0,
     "phaseTimings": {
-      "analysisMs": 0.308656,
-      "attributionMs": 0.135483,
-      "baselineMs": 153.124841,
-      "cleanupMs": 1.3894630000000001,
-      "compilerStrictnessMs": 2187.526251,
-      "coverageMs": 446.311216,
-      "preparationMs": 0.334415,
+      "analysisMs": 0.34066599999999997,
+      "attributionMs": 0.141424,
+      "baselineMs": 154.767595,
+      "cleanupMs": 0.443407,
+      "compilerStrictnessMs": 2126.740813,
+      "coverageMs": 451.755744,
+      "preparationMs": 0.330046,
       "typecheckMs": null
     },
-    "mutationWallMs": 315.631595,
-    "executionMs": 3263.585611,
+    "mutationWallMs": 327.259966,
+    "executionMs": 3223.047793,
     "pseudoTesting": {
       "planned": 1,
       "killed": 1
@@ -1627,9 +2565,13 @@
   "controls": [
     "Deleted retained statement and branch maps, truncated statement ends and unrelated statement ends rejected on all four routes",
     "Concise return counters accepted at full AST extents on Node and Jest; Vitest retained-branch conflicts remain incomplete",
+    "Function-valued conditional/logical outcomes and grouped logical subtree exclusions mark the containing scope partial on Node and Jest; Vitest transform conflicts remain incomplete",
+    "Missing retained branches from function-valued outcomes remain incomplete",
+    "Unsupported enclosing calls, arrays, unary expressions and calls containing functions remain incomplete with branches deleted and in both merge orders",
+    "Direct call outcomes retain their descendant conditional branch; deleting it fails on all four routes",
+    "Ignored expression statements containing functions mark the enclosing scope partial",
     "Parenthesized retained initializer source-map locations accepted on all four routes",
     "Existing whole-function/file suppression, c8/v8 and parenthesized-arrow transform controls passed",
-    "Rust tests reject retained ignored counters, wrong branch locations, missing counters, invalid hint targets and setup merge conflicts",
     "Original source unchanged and mutation scratch directory empty"
   ]
 }

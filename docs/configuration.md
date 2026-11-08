@@ -815,7 +815,9 @@ That form remains incomplete. Put the hint before the whole declaration for
 the supported Vitest suppression route. Vitest also retains branch counters
 when `ignore next` is immediately before a concise arrow's conditional or
 logical body. That placement remains incomplete; use a block body and a hint
-on the statement or branch outcome instead. Node and Jest retain the enclosing
+on the statement or branch outcome instead. Hints before parentheses around
+function-valued outcomes or logical groups share this Vitest transform limit:
+retained counters or unreliable source locations keep the assessment incomplete. Node and Jest retain the enclosing
 concise-return counter while omitting the hinted expression's branches; Seshat
 accepts that counter only at its full normalized AST extent.
 
@@ -828,6 +830,13 @@ partial coverage cannot establish whole-function CRAP. The CRAP threshold
 checks only measured functions; it is not applicable when none remain. Static
 findings and operator mutations remain, and pseudo-testing still requires
 reliable positive statement coverage.
+
+A hint on a conditional or logical outcome also marks the containing function
+partially suppressed when that outcome is a nested function. Hints on direct
+call, array or unary outcomes omit that outcome's counter; their nested work
+remains instrumented unless it has its own supported hint. Those same
+expressions cannot be ignored merely because they contain a nested branch.
+A whole subtree is omitted only for a node Istanbul's visitor actually skips.
 
 Seshat matches each hint to its AST target and checks the retained statements
 and branch outcomes in each setup before merging coverage. Ignored branch arms

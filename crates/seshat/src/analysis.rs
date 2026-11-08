@@ -117,11 +117,18 @@ pub struct Scope {
     pub coverage_partial_suppression: bool,
 }
 
+#[derive(PartialEq, Eq)]
+pub enum CoverageStatementKind {
+    Statement,
+    Initializer,
+    ConciseReturn,
+}
+
 pub struct CoverageStatement {
     pub span: Span,
     // Source maps may omit an initializer's enclosing parentheses.
     pub unwrapped: Span,
-    pub concise_return: bool,
+    pub kind: CoverageStatementKind,
 }
 
 pub struct BranchSite {
@@ -278,6 +285,7 @@ pub struct Analysis {
     suppression_targets: std::collections::BTreeMap<u32, u32>,
     coverage_targets: BTreeMap<u32, Span>,
     coverage_next_targets: BTreeSet<u32>,
+    coverage_expression_targets: BTreeMap<u32, Span>,
     coverage_declarations: BTreeSet<u32>,
     coverage_suppressions: Vec<Value>,
     pub coverage_ignored_file: bool,
@@ -333,6 +341,9 @@ impl<'a> Visit<'a> for Analysis {
     }
 
     fn visit_expression(&mut self, expression: &Expression<'a>) {
+        self.coverage_expression_targets
+            .entry(expression.span().start)
+            .or_insert(expression.without_parentheses().span());
         self.coverage_targets
             .entry(expression.span().start)
             .or_insert(expression.span());
@@ -681,7 +692,12 @@ impl<'a> Visit<'a> for Analysis {
             _ => false,
         };
         if coverage_target && !matches!(node, AstKind::ParenthesizedExpression(_))
-            || matches!(node, AstKind::BlockStatement(_))
+            || matches!(
+                node,
+                AstKind::BlockStatement(_)
+                    | AstKind::ConditionalExpression(_)
+                    | AstKind::LogicalExpression(_)
+            )
         {
             self.coverage_next_targets.insert(node.span().start);
         }
@@ -1066,18 +1082,18 @@ impl<'a> Visit<'a> for Analysis {
             | AstKind::DebuggerStatement(_) => Some(CoverageStatement {
                 span: node.span(),
                 unwrapped: node.span(),
-                concise_return: false,
+                kind: CoverageStatementKind::Statement,
             }),
             AstKind::VariableDeclarator(v) => v.init.as_ref().map(|value| CoverageStatement {
                 span: value.span(),
                 unwrapped: value.without_parentheses().span(),
-                concise_return: false,
+                kind: CoverageStatementKind::Initializer,
             }),
             AstKind::ArrowFunctionExpression(f) => {
                 f.body.as_expression().map(|value| CoverageStatement {
                     span: value.span(),
                     unwrapped: value.without_parentheses().span(),
-                    concise_return: true,
+                    kind: CoverageStatementKind::ConciseReturn,
                 })
             }
             _ => None,
@@ -1784,6 +1800,7 @@ impl Analysis {
                 let validate_hint = provider == "istanbul"
                     && !file_level
                     && !result.coverage_ignored_file
+                    && !result.coverage_ignored(comment.span.start)
                     && result
                         .owner(comment.span.start)
                         .is_none_or(|owner| !result.scopes[owner].coverage_suppressed);
@@ -1822,6 +1839,45 @@ impl Analysis {
                 } else {
                     attached
                 };
+                let normalized_target = target.map(|target| {
+                    result
+                        .coverage_expression_targets
+                        .get(&target.start)
+                        .copied()
+                        .unwrap_or(target)
+                });
+                let visitor_target = target
+                    .is_some_and(|target| result.coverage_next_targets.contains(&target.start))
+                    || normalized_target
+                        .is_some_and(|target| result.coverage_next_targets.contains(&target.start));
+                let ignores_subtree = file_level
+                    || matches!(kind, "if" | "else")
+                    || (kind == "next" && visitor_target);
+                let mut ignored_outcomes = Vec::new();
+                let mut outcome_owners = BTreeSet::new();
+                if kind == "next"
+                    && let Some(target) = normalized_target
+                {
+                    for branch in &result.branches {
+                        if matches!(branch.kind, "cond-expr" | "binary-expr") {
+                            for (index, outcome) in branch.outcomes.iter().enumerate() {
+                                let subtree_outcome = ignores_subtree
+                                    && outcome.is_some_and(|outcome| {
+                                        target.start <= outcome.start
+                                            && outcome.end <= target.end
+                                            && branch.span.start <= target.start
+                                            && target.end <= branch.span.end
+                                    });
+                                if *outcome == Some(target) || subtree_outcome {
+                                    ignored_outcomes.push((branch.span.start, index));
+                                    if let Some(owner) = result.owner(branch.span.start) {
+                                        outcome_owners.insert(owner);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 if validate_hint {
                     if matches!(kind, "if" | "else") {
                         if let Some(statement) = attached
@@ -1849,24 +1905,19 @@ impl Analysis {
                     .enumerate()
                     .filter(|(_, scope)| {
                         file_level
-                            || target.is_some_and(|target| {
-                                target.start <= scope.span.start && scope.span.end <= target.end
-                            })
+                            || ((provider != "istanbul" || ignores_subtree)
+                                && target.is_some_and(|target| {
+                                    target.start <= scope.span.start && scope.span.end <= target.end
+                                }))
                     })
                     .map(|(i, _)| i)
                     .collect();
                 if validate_hint
                     && kind == "next"
-                    && affected.is_empty()
                     && let Some(target) = target
                 {
-                    // Istanbul checks leaf hints explicitly; other expressions need a visitor.
-                    let branch_outcome = result.branches.iter().any(|branch| {
-                        matches!(branch.kind, "cond-expr" | "binary-expr")
-                            && branch.outcomes.iter().flatten().any(|outcome| {
-                                target.start <= outcome.start && outcome.end <= target.end
-                            })
-                    });
+                    // Istanbul checks direct leaf hints explicitly; other expressions need a visitor.
+                    let branch_outcome = !ignored_outcomes.is_empty();
                     let omitted_work = result
                         .coverage_statements
                         .iter()
@@ -1878,7 +1929,7 @@ impl Analysis {
                             target.start <= branch.span.start && branch.span.end <= target.end
                         });
                     let instrumented_target =
-                        result.coverage_next_targets.contains(&target.start) && omitted_work;
+                        visitor_target && (omitted_work || !affected.is_empty());
                     if !instrumented_target && !branch_outcome {
                         result.coverage_hint_errors.push(format!(
                             "coverage ignore next has no instrumented target at {}",
@@ -1894,16 +1945,15 @@ impl Analysis {
                             || matches!(kind, "if" | "else")
                             || target.is_some_and(|target| {
                                 result.coverage_declarations.contains(&target.start)
-                                    || result
-                                        .coverage_statements
-                                        .iter()
-                                        .map(|statement| statement.span)
-                                        .any(|statement| {
-                                            target.start < statement.start
-                                                && statement.end <= target.end
-                                                && result.statement_owner(statement.start)
-                                                    == Some(owner)
-                                        })
+                                    || result.coverage_statements.iter().any(|statement| {
+                                        target.start <= statement.span.start
+                                            && statement.span.end <= target.end
+                                            && (target.start < statement.span.start
+                                                || statement.kind
+                                                    == CoverageStatementKind::Statement)
+                                            && result.statement_owner(statement.span.start)
+                                                == Some(owner)
+                                    })
                                     || result.branches.iter().any(|branch| {
                                         target.start <= branch.span.start
                                             && branch.span.end <= target.end
@@ -1911,34 +1961,30 @@ impl Analysis {
                                     })
                             }))
                 });
+                let partial_owners: BTreeSet<_> =
+                    partial_owner.into_iter().chain(outcome_owners).collect();
+                if provider == "istanbul" && !file_level {
+                    result.coverage_ignored_outcomes.extend(ignored_outcomes);
+                }
                 if provider == "istanbul"
                     && !file_level
+                    && ignores_subtree
                     && let Some(target) = target
                 {
-                    for branch in &result.branches {
-                        if branch.span.start <= target.start && target.end <= branch.span.end {
-                            for (index, outcome) in branch.outcomes.iter().enumerate() {
-                                if outcome.is_some_and(|outcome| {
-                                    target.start <= outcome.start && outcome.end <= target.end
-                                }) {
-                                    result
-                                        .coverage_ignored_outcomes
-                                        .insert((branch.span.start, index));
-                                }
-                            }
-                        }
-                    }
                     // A function-valued initializer can retain its enclosing declaration counter.
                     // Whole-function validation already checks the ignored function's own records.
                     if affected.is_empty()
-                        || partial_owner.is_some()
+                        || !partial_owners.is_empty()
                         || matches!(kind, "if" | "else")
                     {
                         result.coverage_ignored_ranges.push(target);
                     }
                 }
-                let attributed: BTreeSet<_> =
-                    affected.iter().copied().chain(partial_owner).collect();
+                let attributed: BTreeSet<_> = affected
+                    .iter()
+                    .copied()
+                    .chain(partial_owners.iter().copied())
+                    .collect();
                 for (index, scope) in result.scopes.iter_mut().enumerate() {
                     if attributed.contains(&index) {
                         scope.coverage_suppressions += 1;
@@ -1946,7 +1992,7 @@ impl Analysis {
                     if provider == "istanbul" && affected.contains(&index) {
                         scope.coverage_suppressed = true;
                     }
-                    if provider == "istanbul" && partial_owner == Some(index) {
+                    if provider == "istanbul" && partial_owners.contains(&index) {
                         scope.coverage_partial_suppression = true;
                     }
                 }
@@ -2157,7 +2203,7 @@ impl Analysis {
         // That enclosing counter survives even when the expression's branches do not.
         self.coverage_ignored(start)
             && !self.coverage_statements.iter().any(|statement| {
-                statement.concise_return
+                statement.kind == CoverageStatementKind::ConciseReturn
                     && (statement.span.start == start || statement.unwrapped.start == start)
                     && self
                         .owner(start)
@@ -3196,6 +3242,23 @@ fn ignored_declarations_preserve_partial_suppression_in_the_enclosing_function()
             .statement_starts
             .contains(&analysis.scopes[1].span.start)
     );
+}
+
+#[test]
+fn function_valued_exclusions_also_mark_the_containing_scope_partial() {
+    for source in [
+        "function f(flag: boolean) { return flag ? /* istanbul ignore next */ (()=>1) : ()=>2; }",
+        "function f(flag: boolean) { return flag || /* istanbul ignore next */ (()=>1); }",
+        "function f(flag: boolean) { return flag || /* istanbul ignore next */ (flag && (()=>1)); }",
+        "function f() { /* istanbul ignore next */ (()=>1)(); return 2; }",
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        assert!(analysis.scopes[0].coverage_partial_suppression, "{source}");
+        assert!(!analysis.scopes[0].coverage_suppressed, "{source}");
+        assert_eq!(analysis.scopes[0].coverage_suppressions, 1);
+        assert!(analysis.scopes[1].coverage_suppressed, "{source}");
+        assert_eq!(analysis.scopes[1].coverage_suppressions, 1);
+    }
 }
 
 #[test]

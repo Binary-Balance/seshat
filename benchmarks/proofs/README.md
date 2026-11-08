@@ -967,6 +967,13 @@ records and truncated or unrelated statement ends must fail. Concise conditional
 and logical arrow hints retain their return counters on Node and Jest; Vitest
 retains the hinted branches too and must remain incomplete for that placement.
 Parenthesized retained initializers verify source-map extent normalization.
+Function-valued conditional/logical outcomes and ignored logical groups mark
+the containing function partial on Node and Jest; their before-parentheses
+placement remains incomplete on Vitest. Separate unsupported call/array/unary
+hint fixtures stay incomplete even when their branch records are deleted,
+including both merge orders. Direct call outcomes keep their nested branch
+records, and deleting those records must fail. Ignored expression statements
+containing a function also leave their parent visibly partial.
 Existing whole-suppression and transform-conflict controls
 remain in the same proof. A real Node check also verifies extreme and operator
 mutation jobs, source preservation and scratch cleanup under partial suppression.

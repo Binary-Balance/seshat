@@ -202,6 +202,13 @@ other static findings and hint counts remain. The CRAP threshold excludes these
 rows and becomes not applicable if no measured functions remain. Pseudo-testing
 still requires reliable positive statement coverage; operator mutations remain.
 Ignored arms also exclude their nested statements, branches and functions.
+An ignored nested function expression used as a conditional/logical outcome
+gives its containing function partial status and the nested function whole
+suppression. A direct
+outcome hint on a call, array or unary expression excludes that outcome's
+counter, while its descendant work retains its own instrumentation. A hint on
+such an expression outside a direct outcome cannot excuse missing descendants;
+whole-subtree exclusion requires a supported Istanbul visitor target.
 Each setup must match the expected retained shape before reports merge; a hint
 cannot excuse unrelated missing evidence or conflicting retained counters.
 Retained statement locations must match full AST extents, with the supported
