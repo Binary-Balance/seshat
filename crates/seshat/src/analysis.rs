@@ -270,9 +270,16 @@ pub struct Analysis {
     suppressions: Vec<Value>,
     suppression_targets: std::collections::BTreeMap<u32, u32>,
     coverage_targets: BTreeMap<u32, Span>,
+    coverage_next_targets: BTreeSet<u32>,
     coverage_declarations: BTreeSet<u32>,
     coverage_suppressions: Vec<Value>,
     pub coverage_ignored_file: bool,
+    coverage_ignored_ranges: Vec<Span>,
+    coverage_ignored_outcomes: BTreeSet<(u32, usize)>,
+    pub coverage_hint_errors: Vec<String>,
+    // Initializer maps can start at parentheses or at the enclosed expression.
+    pub coverage_statements: Vec<(Span, u32)>,
+    coverage_if_arms: BTreeMap<u32, (Span, Option<Span>)>,
     cognitive_owner: Option<usize>,
     cognitive_depth: u32,
     cognitive_stack: Vec<(Option<usize>, u32)>,
@@ -312,7 +319,17 @@ impl<'a> Visit<'a> for Analysis {
         walk::walk_statements(self, statements);
     }
 
+    fn visit_statement(&mut self, statement: &Statement<'a>) {
+        self.coverage_targets
+            .entry(statement.span().start)
+            .or_insert(statement.span());
+        walk::walk_statement(self, statement);
+    }
+
     fn visit_expression(&mut self, expression: &Expression<'a>) {
+        self.coverage_targets
+            .entry(expression.span().start)
+            .or_insert(expression.span());
         let boolean = match expression {
             Expression::BooleanLiteral(literal) => Some((
                 OperatorExpression::BooleanLiteral,
@@ -657,6 +674,11 @@ impl<'a> Visit<'a> for Analysis {
             }
             _ => false,
         };
+        if coverage_target && !matches!(node, AstKind::ParenthesizedExpression(_))
+            || matches!(node, AstKind::BlockStatement(_))
+        {
+            self.coverage_next_targets.insert(node.span().start);
+        }
         if coverage_target {
             self.coverage_targets
                 .entry(node.span().start)
@@ -776,6 +798,15 @@ impl<'a> Visit<'a> for Analysis {
                 }
             }
             _ => {}
+        }
+        if let AstKind::IfStatement(statement) = node {
+            self.coverage_if_arms.insert(
+                statement.span.start,
+                (
+                    statement.consequent.span(),
+                    statement.alternate.as_ref().map(GetSpan::span),
+                ),
+            );
         }
         let branch = match node {
             AstKind::IfStatement(statement) => Some(BranchSite {
@@ -1010,6 +1041,36 @@ impl<'a> Visit<'a> for Analysis {
                 }
             }
             _ => {}
+        }
+        let required_statement = match node {
+            AstKind::IfStatement(_)
+            | AstKind::ForStatement(_)
+            | AstKind::ForInStatement(_)
+            | AstKind::ForOfStatement(_)
+            | AstKind::WhileStatement(_)
+            | AstKind::DoWhileStatement(_)
+            | AstKind::SwitchStatement(_)
+            | AstKind::ReturnStatement(_)
+            | AstKind::ThrowStatement(_)
+            | AstKind::TryStatement(_)
+            | AstKind::BreakStatement(_)
+            | AstKind::ContinueStatement(_)
+            | AstKind::ExpressionStatement(_)
+            | AstKind::LabeledStatement(_)
+            | AstKind::DebuggerStatement(_) => Some((node.span(), node.span().start)),
+            AstKind::VariableDeclarator(v) => v
+                .init
+                .as_ref()
+                .map(|value| (value.span(), value.without_parentheses().span().start)),
+            AstKind::ArrowFunctionExpression(f) => f
+                .body
+                .as_expression()
+                .map(|value| (value.span(), value.without_parentheses().span().start)),
+            _ => None,
+        };
+        if let Some(statement) = required_statement {
+            self.coverage_next_targets.insert(node.span().start);
+            self.coverage_statements.push(statement);
         }
         let decision = match node {
             AstKind::IfStatement(_)
@@ -1706,7 +1767,13 @@ impl Analysis {
             let content = &source[span.start as usize..span.end as usize];
             if let Some((provider, kind)) = coverage_hint(content) {
                 let file_level = kind == "file";
-                let target = (kind == "next")
+                let validate_hint = provider == "istanbul"
+                    && !file_level
+                    && !result.coverage_ignored_file
+                    && result
+                        .owner(comment.span.start)
+                        .is_none_or(|owner| !result.scopes[owner].coverage_suppressed);
+                let attached = (kind != "file")
                     .then(|| {
                         result
                             .coverage_targets
@@ -1728,6 +1795,40 @@ impl Analysis {
                             })
                     })
                     .flatten();
+                let target = if matches!(kind, "if" | "else") {
+                    attached
+                        .and_then(|target| result.coverage_if_arms.get(&target.start))
+                        .and_then(|(consequent, alternate)| {
+                            if kind == "if" {
+                                Some(*consequent)
+                            } else {
+                                *alternate
+                            }
+                        })
+                } else {
+                    attached
+                };
+                if validate_hint {
+                    if matches!(kind, "if" | "else") {
+                        if let Some(statement) = attached
+                            .filter(|span| result.coverage_if_arms.contains_key(&span.start))
+                        {
+                            result
+                                .coverage_ignored_outcomes
+                                .insert((statement.start, usize::from(kind == "else")));
+                        } else {
+                            result.coverage_hint_errors.push(format!(
+                                "coverage ignore {kind} has no matching if statement at {}",
+                                comment.span.start
+                            ));
+                        }
+                    } else if target.is_none() {
+                        result.coverage_hint_errors.push(format!(
+                            "coverage ignore next has no matching AST target at {}",
+                            comment.span.start
+                        ));
+                    }
+                }
                 let affected: Vec<_> = result
                     .scopes
                     .iter()
@@ -1740,13 +1841,46 @@ impl Analysis {
                     })
                     .map(|(i, _)| i)
                     .collect();
+                if validate_hint
+                    && kind == "next"
+                    && affected.is_empty()
+                    && let Some(target) = target
+                {
+                    // Istanbul checks leaf hints explicitly; other expressions need a visitor.
+                    let branch_outcome = result.branches.iter().any(|branch| {
+                        matches!(branch.kind, "cond-expr" | "binary-expr")
+                            && branch.outcomes.iter().flatten().any(|outcome| {
+                                target.start <= outcome.start && outcome.end <= target.end
+                            })
+                    });
+                    let omitted_work = result.coverage_statements.iter().any(|(statement, _)| {
+                        target.start <= statement.start && statement.end <= target.end
+                    }) || result.branches.iter().any(|branch| {
+                        target.start <= branch.span.start && branch.span.end <= target.end
+                    });
+                    let instrumented_target =
+                        result.coverage_next_targets.contains(&target.start) && omitted_work;
+                    if !instrumented_target && !branch_outcome {
+                        result.coverage_hint_errors.push(format!(
+                            "coverage ignore next has no instrumented target at {}",
+                            comment.span.start
+                        ));
+                    }
+                }
                 let owner = result.owner(comment.span.start);
                 // Ignoring a declaration can also remove work outside its nested functions.
                 let partial_owner = owner.filter(|&owner| {
                     !file_level
                         && (affected.is_empty()
+                            || matches!(kind, "if" | "else")
                             || target.is_some_and(|target| {
                                 result.coverage_declarations.contains(&target.start)
+                                    || result.coverage_statements.iter().any(|(statement, _)| {
+                                        target.start < statement.start
+                                            && statement.end <= target.end
+                                            && result.statement_owner(statement.start)
+                                                == Some(owner)
+                                    })
                                     || result.branches.iter().any(|branch| {
                                         target.start <= branch.span.start
                                             && branch.span.end <= target.end
@@ -1754,6 +1888,32 @@ impl Analysis {
                                     })
                             }))
                 });
+                if provider == "istanbul"
+                    && !file_level
+                    && let Some(target) = target
+                {
+                    for branch in &result.branches {
+                        if branch.span.start <= target.start && target.end <= branch.span.end {
+                            for (index, outcome) in branch.outcomes.iter().enumerate() {
+                                if outcome.is_some_and(|outcome| {
+                                    target.start <= outcome.start && outcome.end <= target.end
+                                }) {
+                                    result
+                                        .coverage_ignored_outcomes
+                                        .insert((branch.span.start, index));
+                                }
+                            }
+                        }
+                    }
+                    // A function-valued initializer can retain its enclosing declaration counter.
+                    // Whole-function validation already checks the ignored function's own records.
+                    if affected.is_empty()
+                        || partial_owner.is_some()
+                        || matches!(kind, "if" | "else")
+                    {
+                        result.coverage_ignored_ranges.push(target);
+                    }
+                }
                 let attributed: BTreeSet<_> =
                     affected.iter().copied().chain(partial_owner).collect();
                 for (index, scope) in result.scopes.iter_mut().enumerate() {
@@ -1961,6 +2121,18 @@ impl Analysis {
 
     pub fn coverage_suppressions(&self) -> Value {
         json!({"count":self.coverage_suppressions.len(),"hints":self.coverage_suppressions})
+    }
+
+    pub fn coverage_ignored(&self, start: u32) -> bool {
+        self.coverage_ignored_ranges
+            .iter()
+            .any(|range| range.start <= start && start < range.end)
+    }
+
+    pub fn coverage_outcome_ignored(&self, site: &BranchSite, index: usize) -> bool {
+        self.coverage_ignored_outcomes
+            .contains(&(site.span.start, index))
+            || site.outcomes[index].is_some_and(|span| self.coverage_ignored(span.start))
     }
 
     pub fn count(&self) -> usize {

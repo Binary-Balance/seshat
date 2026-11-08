@@ -372,6 +372,7 @@ fn readable(report: &Value) -> String {
         for function in array(&source["result"]["functions"]) {
             let unmeasured = match text(&function["status"]) {
                 "suppressed" => "suppressed",
+                "partially-suppressed" => "partially suppressed",
                 "not-applicable" => "not applicable",
                 "complexity-only" => "not applicable (complexity only)",
                 _ => "unknown",
@@ -386,7 +387,10 @@ fn readable(report: &Value) -> String {
                 .as_f64()
                 .map(|v| format!("{v:.3}"))
                 .unwrap_or_else(|| unmeasured.into());
-            let branches = if function["coverageBasis"] == "branch" {
+            let branches = if function["coverageBasis"] == "branch"
+                || function["status"] == "partially-suppressed"
+                    && function["branchCoverage"].as_f64().is_some()
+            {
                 format!(
                     ", branches {}/{}",
                     function["branchCovered"], function["branchTotal"]
@@ -1069,11 +1073,15 @@ mod tests {
                 "sources":[{"path":"source.ts","result":{
                     "coverageSuppressions":{"count":2,"hints":[]},
                     "functions":[{"name":"ignored","complexity":1,"cognitiveComplexity":0,
-                        "status":"suppressed","coverageSuppressions":1,"crap":null,"coverage":null}]
+                        "status":"suppressed","coverageSuppressions":1,"crap":null,"coverage":null},
+                        {"name":"partial","complexity":2,"cognitiveComplexity":1,
+                        "status":"partially-suppressed","coverageSuppressions":1,"crap":null,"coverage":1,
+                        "covered":1,"total":1,"branchCovered":1,"branchTotal":2,"branchCoverage":0.5}]
                 }}]
             }}),
         );
         assert!(output.contains("statements suppressed, CRAP suppressed"));
+        assert!(output.contains("statements 1/1, branches 1/2, CRAP partially suppressed"));
         assert!(output.contains("Coverage suppression hints: 1"));
         assert!(output.contains("Coverage suppression hints in file: 2"));
     }
@@ -1340,6 +1348,39 @@ mod tests {
                 }
             );
             assert!(checks.iter().all(|c| c["actual"].is_null()));
+        }
+    }
+
+    #[test]
+    fn partial_suppression_is_excluded_only_from_crap_thresholds() {
+        for (measured, expected, actual) in [
+            (false, "not-applicable", Value::Null),
+            (true, "failed", json!(2.5)),
+        ] {
+            let mut functions = vec![
+                json!({"status":"partially-suppressed","crap":null,"coverage":1,"cognitiveComplexity":3}),
+            ];
+            if measured {
+                functions.push(json!({"status":"measured","crap":2.5,"cognitiveComplexity":0}));
+            }
+            let result = json!({"complete":true,"sources":[{"result":{"functions":functions}}]});
+            let (value, code) = report(
+                Some("crap"),
+                Value::Null,
+                result,
+                1.0,
+                None,
+                Some(Thresholds {
+                    max_crap: Some(2.0),
+                    max_cognitive_complexity: Some(2.0),
+                    ..Thresholds::default()
+                }),
+            );
+            assert_eq!(code, 1);
+            assert_eq!(value["complete"], true);
+            assert_eq!(value["quality"]["checks"][0]["state"], expected);
+            assert_eq!(value["quality"]["checks"][0]["actual"], actual);
+            assert_eq!(value["quality"]["checks"][1]["state"], "failed");
         }
     }
 

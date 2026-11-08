@@ -926,11 +926,12 @@ See the [coverage findings](../../outputs/coverage-routes.md) and the root
 
 ### Branch coverage for CRAP
 
-After the same build and dependencies, install the pinned Jest/Expo fixture
-dependencies and run:
+After the same build and dependencies, install the pinned Jest/Expo and plain
+Jest fixture dependencies and run:
 
 ```sh
 npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
+npm ci --prefix examples/jest --ignore-scripts --no-audit --no-fund
 node benchmarks/proofs/coverage-branches.mjs
 ```
 
@@ -946,14 +947,37 @@ The same routes verify whole-function and whole-file Istanbul suppression
 hints, including nested functions, arrows and methods. Suppressed functions
 retain hint counts and null scores; `c8` and `v8` hints are counted without
 changing Istanbul measurements.
-Ignored declarations with nested functions keep their enclosing function
-unknown when its own work is omitted. Parenthesized arrows are suppressed on
-Node and Jest/Expo; the verified Vitest transform still instruments that
-placement and the proof requires an incomplete result.
+Ignored declarations with nested functions report their enclosing function as
+partially suppressed when its retained coverage is valid; its CRAP remains null.
+Parenthesized arrows are suppressed on Node and Jest/Expo; the verified Vitest
+transform still instruments that placement and the proof requires an incomplete result.
 Getter/setter hints are verified on all three routes. Function-counter-only
 fixtures include executable parameters, empty arrows and nested declarations;
 retained invocation records must keep suppression incomplete without becoming
 statement coverage.
+
+### Partial coverage suppression
+
+`coverage-branches.mjs` also checks partial Istanbul statement and expression
+hints, ignored if/else arms, nested functions, and a function whose statements
+are all ignored. Actual Node/Istanbul, Vitest/Istanbul, Jest/Expo and plain Jest
+TypeScript coverage must produce `partially-suppressed` containing functions,
+retained-code fractions and null CRAP. Deleted retained statement or branch
+records must fail. Existing whole-suppression and transform-conflict controls
+remain in the same proof. A real Node check also verifies extreme and operator
+mutation jobs, source preservation and scratch cleanup under partial suppression.
+
+Install the plain Jest fixture dependencies before this proof:
+
+```sh
+npm ci --prefix examples/jest --ignore-scripts --no-audit --no-fund
+SESHAT_PROOF_BINARY=crates/seshat/target/debug/seshat-proofs node benchmarks/proofs/coverage-branches.mjs
+```
+
+The existing proof prerequisites still apply. `SESHAT_JEST_DEPS` can name another
+copy of `examples/jest` containing its pinned `node_modules`. Reports stay under
+ignored `work/assurance-proofs/coverage-branches-*` unless `SESHAT_PROOF_OUTPUT`
+is supplied.
 
 Set `SESHAT_PROOF_BINARY` for an alternate fresh proof executable and
 `SESHAT_JEST_EXPO_DEPS` for an existing copy of the pinned fixture dependencies.

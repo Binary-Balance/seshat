@@ -216,6 +216,7 @@ jobs:
         run: |
           set -euo pipefail
           proof_binary="$(node --input-type=module -e 'import {readFileSync} from "node:fs"; console.log(JSON.parse(readFileSync("work/x64/package-result.json")).proofBinary);')"
+          npm ci --prefix examples/jest --ignore-scripts --no-audit --no-fund
           SESHAT_PROOF_BINARY="$proof_binary" node benchmarks/proofs/coverage-branches.mjs \
             2>&1 | tee work/x64/coverage-branches.log
       - name: Verify installed Vitest runner

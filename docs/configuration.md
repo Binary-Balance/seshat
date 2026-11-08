@@ -814,11 +814,27 @@ the hint is between `=` and the parentheses, as in
 That form remains incomplete. Put the hint before the whole declaration for
 the supported Vitest suppression route.
 
-Partial statement and branch hints, including `istanbul ignore if` and
-`istanbul ignore else`, are counted but remain unsupported. Affected ordinary
-functions stay unknown with null coverage and CRAP and keep the assessment
-incomplete. `c8` and `v8` hint spellings are counted, but do not suppress
-Istanbul coverage or establish support for those providers.
+Partial `istanbul ignore next` hints on statements and branch expressions,
+and `istanbul ignore if` / `istanbul ignore else` hints on branch arms, report
+`status: "partially-suppressed"` for the containing function. Statement and
+branch counts and fractions describe only retained, instrumented code. A zero
+denominator gives a null fraction. `coverageBasis` and CRAP stay null because
+partial coverage cannot establish whole-function CRAP. The CRAP threshold
+checks only measured functions; it is not applicable when none remain. Static
+findings and operator mutations remain, and pseudo-testing still requires
+reliable positive statement coverage.
+
+Seshat matches each hint to its AST target and checks the retained statements
+and branch outcomes in each setup before merging coverage. Ignored branch arms
+also exclude their statements, nested branches and nested functions. A wholly
+ignored nested function uses `suppressed`. Valid partial suppression alone does
+not make the assessment incomplete. Unmatched or unsupported targets, retained
+counters inside ignored regions, unrelated missing counters and incompatible
+maps remain incomplete. Hints on expressions that Istanbul does not instrument
+or omit cannot establish a valid exclusion.
+
+`c8` and `v8` hint spellings are counted, but do not suppress Istanbul coverage
+or establish support for those providers.
 
 Branch entries must match source `if`, ternary, logical, default-value or switch
 syntax.
