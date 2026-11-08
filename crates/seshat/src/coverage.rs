@@ -380,6 +380,7 @@ pub fn attribute<'a>(
                 return Err("statement/counter mismatch".into());
             }
             let mut map = BTreeMap::new();
+            let mut retained_statements = BTreeSet::new();
             for (id, loc) in locations {
                 let start = byte_position(source, &loc["start"], false)?;
                 let mut end = byte_position(source, &loc["end"], true)?;
@@ -404,18 +405,29 @@ pub fn attribute<'a>(
                     && analysis.scopes[owner].coverage_partial_suppression
                     && !analysis.scopes[owner].coverage_suppressed
                     && !analysis.scopes[owner].implicit
-                    && !analysis.coverage_statements.iter().any(|statement| {
-                        span_matches(analysis, source, (start, end), statement.span, None)
-                            || span_matches(
-                                analysis,
-                                source,
-                                (start, end),
-                                statement.unwrapped,
-                                None,
-                            )
-                    })
                 {
-                    return Err(format!("invalid retained statement span: {start}..{end}"));
+                    let Some((index, _)) =
+                        analysis
+                            .coverage_statements
+                            .iter()
+                            .enumerate()
+                            .find(|(_, statement)| {
+                                span_matches(analysis, source, (start, end), statement.span, None)
+                                    || span_matches(
+                                        analysis,
+                                        source,
+                                        (start, end),
+                                        statement.unwrapped,
+                                        None,
+                                    )
+                            })
+                    else {
+                        return Err(format!("invalid retained statement span: {start}..{end}"));
+                    };
+                    // Source-map trivia adjustments do not create another counter target.
+                    if !retained_statements.insert(index) {
+                        return Err("duplicate retained statement mapping".into());
+                    }
                 }
                 let hits = counters
                     .get(id)
@@ -855,6 +867,52 @@ fn all_ignored_statements_are_partial_without_inventing_positive_coverage() {
         attribute(&analysis, "source.ts", &unhinted, [&report])["complete"],
         false
     );
+}
+
+#[test]
+fn partial_suppression_rejects_duplicate_normalized_statement_targets() {
+    let source = "function f() { /* istanbul ignore next */ work(); const value = (1); return value; /* tail */ }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let loc = |start, end| json!({"start":{"line":1,"column":start},"end":{"line":1,"column":end}});
+    let initializer = source.find("(1)").unwrap();
+    let returned = source.find("return value;").unwrap();
+    let report = json!({"source.ts":{"path":"source.ts","statementMap":{
+        "0":loc(initializer,initializer+3),"1":loc(returned,returned+13)},
+        "s":{"0":1,"1":0},"branchMap":{},"b":{}}});
+    let result = attribute(&analysis, "source.ts", source, [&report]);
+    assert_eq!(result["complete"], true, "{result}");
+    assert_eq!(result["functions"][0]["coverage"], 0.5);
+    let mut unwrapped = report.clone();
+    unwrapped["source.ts"]["statementMap"]["0"] = loc(initializer + 1, initializer + 2);
+    assert_eq!(
+        attribute(&analysis, "source.ts", source, [&unwrapped])["complete"],
+        true
+    );
+    for location in [
+        loc(returned, returned + 13),
+        loc(returned, returned + 14),
+        loc(initializer + 1, initializer + 2),
+    ] {
+        let mut duplicate = report.clone();
+        duplicate["source.ts"]["statementMap"]["extra"] = location;
+        duplicate["source.ts"]["s"]["extra"] = json!(1);
+        for reports in [
+            vec![&duplicate],
+            vec![&report, &duplicate],
+            vec![&duplicate, &report],
+        ] {
+            let result = attribute(&analysis, "source.ts", source, reports);
+            assert_eq!(result["complete"], false, "{result}");
+            assert_eq!(result["functions"][0]["coverage"], Value::Null);
+            assert!(
+                result["problems"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|problem| problem == "duplicate retained statement mapping")
+            );
+        }
+    }
 }
 
 #[test]

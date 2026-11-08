@@ -1415,6 +1415,20 @@
           ],
           "problems": []
         }
+      },
+      "duplicateStatements": {
+        "exact": {
+          "complete": false,
+          "problems": [
+            "duplicate retained statement mapping"
+          ]
+        },
+        "adjusted-end": {
+          "complete": false,
+          "problems": [
+            "duplicate retained statement mapping"
+          ]
+        }
       }
     },
     "vitest": {
@@ -2839,6 +2853,20 @@
           ],
           "problems": []
         }
+      },
+      "duplicateStatements": {
+        "exact": {
+          "complete": false,
+          "problems": [
+            "duplicate retained statement mapping"
+          ]
+        },
+        "adjusted-end": {
+          "complete": false,
+          "problems": [
+            "duplicate retained statement mapping"
+          ]
+        }
       }
     },
     "jest-expo": {
@@ -4246,6 +4274,20 @@
             }
           ],
           "problems": []
+        }
+      },
+      "duplicateStatements": {
+        "exact": {
+          "complete": false,
+          "problems": [
+            "duplicate retained statement mapping"
+          ]
+        },
+        "adjusted-end": {
+          "complete": false,
+          "problems": [
+            "duplicate retained statement mapping"
+          ]
         }
       }
     },
@@ -5655,6 +5697,20 @@
           ],
           "problems": []
         }
+      },
+      "duplicateStatements": {
+        "exact": {
+          "complete": false,
+          "problems": [
+            "duplicate retained statement mapping"
+          ]
+        },
+        "adjusted-end": {
+          "complete": false,
+          "problems": [
+            "duplicate retained statement mapping"
+          ]
+        }
       }
     }
   },
@@ -5699,17 +5755,17 @@
     "jobsAttempted": 6,
     "workerBaselineJobs": 0,
     "phaseTimings": {
-      "analysisMs": 0.523106,
-      "attributionMs": 0.134601,
-      "baselineMs": 169.423753,
-      "cleanupMs": 0.445461,
-      "compilerStrictnessMs": 2393.906648,
-      "coverageMs": 465.77417399999996,
-      "preparationMs": 0.529988,
+      "analysisMs": 1.4265919999999999,
+      "attributionMs": 0.250838,
+      "baselineMs": 507.88822600000003,
+      "cleanupMs": 0.651235,
+      "compilerStrictnessMs": 5098.450607,
+      "coverageMs": 1519.2434970000002,
+      "preparationMs": 0.591514,
       "typecheckMs": null
     },
-    "mutationWallMs": 324.958871,
-    "executionMs": 3518.162309,
+    "mutationWallMs": 626.81205,
+    "executionMs": 8017.082586,
     "pseudoTesting": {
       "planned": 1,
       "killed": 1
@@ -5751,7 +5807,8 @@
     "Hints across parentheses and erased type wrappers use one runtime precedence key in both directive orders; inactive hints cannot excuse deleted counters alone or in both merge orders",
     "Trailing block, line and mixed leading comment groups accepted under direct JavaScript instrumentation; their retained counters remain required alone and in both merge orders",
     "Vitest conditional/logical counter retention and incompatible typed locations remain incomplete for the wrapped-expression placements",
-    "Whole expression-statement hints remain separate from nested conditional, logical and function hints at shared starts, with and without semicolons; all four source-mapped routes and direct JavaScript accept exclusions and reject missing retained counters alone and in both merge orders"
+    "Whole expression-statement hints remain separate from nested conditional, logical and function hints at shared starts, with and without semicolons; all four source-mapped routes and direct JavaScript accept exclusions and reject missing retained counters alone and in both merge orders",
+    "Exact and adjusted-end duplicate retained statement records rejected per setup on all four routes, alone and in both merge orders; Rust controls also reject duplicate parenthesis-normalized initializer aliases while accepting either alias individually"
   ],
   "commentGroups": {
     "blocks": {

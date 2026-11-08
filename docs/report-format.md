@@ -232,6 +232,8 @@ Module-level counters such as transformed CommonJS export assignments do not
 establish function coverage.
 Each setup must match the expected retained shape before reports merge; a hint
 cannot excuse unrelated missing evidence or conflicting retained counters.
+Each retained AST counter can appear only once per setup, including when
+source-map adjustments give duplicate records different starts or ends.
 Retained statement locations must match full AST extents, with the supported
 source-map parenthesis and trivia adjustments. A mapped if-consequent may
 include the `else` delimiter, but cannot extend into the alternate arm. An ignored concise-arrow body

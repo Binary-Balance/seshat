@@ -863,6 +863,27 @@ function verifyPartial(provider, path) {
   const raw = JSON.parse(readFileSync(path, 'utf8'));
   const text = readFileSync(partialSource, 'utf8');
   const lines = text.split('\n');
+  result.duplicateStatements = {};
+  for (const kind of ['exact', 'adjusted-end']) {
+    const invalid = structuredClone(raw), file = invalid[partialSource];
+    const name = kind === 'exact' ? 'ignoredImplicitElse' : 'retainedInitializer';
+    const duplicateLine = lines.findIndex(line => line.startsWith(`export function ${name}(`)) + 4;
+    const duplicateId = Object.keys(file.statementMap)
+      .find(id => file.statementMap[id].start.line === duplicateLine);
+    assert.ok(duplicateId !== undefined);
+    assert.equal(file.s[duplicateId], kind === 'exact' ? 0 : 1);
+    file.statementMap.extra = structuredClone(file.statementMap[duplicateId]);
+    file.s.extra = 1 - file.s[duplicateId];
+    if (kind === 'adjusted-end') {
+      const end = lines[duplicateLine - 1].indexOf(';');
+      file.statementMap.extra.end.column = file.statementMap.extra.end.column === end ? end + 1 : end;
+    }
+    const invalidPath = join(work, `${provider}-duplicate-${kind}.json`); json(invalidPath, invalid);
+    const rejected = scoreSource(partialSource, invalidPath, 2);
+    assert.ok(rejected.problems.some(problem => problem.includes('duplicate retained statement')));
+    for (const reports of [[path, invalidPath], [invalidPath, path]]) scoreSource(partialSource, reports, 2);
+    result.duplicateStatements[kind] = rejected;
+  }
   const retainedLine = lines.findIndex(line => line.startsWith('export function retainedBranch(')) + 4;
   for (const kind of ['statement', 'branch', 'truncated-statement', 'extended-statement']) {
     const invalid = structuredClone(raw);

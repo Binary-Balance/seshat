@@ -28,7 +28,10 @@ exclusions did not convert either into full coverage.
 Each route rejected a deleted retained statement, a deleted retained branch,
 a statement truncated to its first character, and a statement extended to an
 unrelated end. Retained statement locations are checked at their full normalized
-AST extent before merging setups.
+AST extent before merging setups. Each setup also rejects exact duplicate
+records and records with different normalized ends for the same retained
+statement, including both merge orders. Parenthesis-normalized initializer
+aliases remain valid individually but cannot count the same initializer twice.
 
 Separate concise conditional and logical arrow fixtures retain their generated
 return counters while omitting the expression's branch records on Node, plain
@@ -96,7 +99,7 @@ statement coverage, null CRAP and checked pseudo-testing. The run attempted six
 jobs, required no additional worker baselines, preserved the original source,
 and left its scratch directory empty.
 
-Rust checks passed: 199 library tests, three CLI integration tests and twelve
+Rust checks passed: 200 library tests, three CLI integration tests and twelve
 proof-input integration tests. Formatting and Clippy with warnings denied
 passed. Focused tests cover wrong/unsupported targets, all statements omitted,
 retained ignored counters, wrong branch locations, malformed metadata,

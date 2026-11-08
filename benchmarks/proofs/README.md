@@ -963,7 +963,9 @@ hints, ignored if/else arms, nested functions, and a function whose statements
 are all ignored. Actual Node/Istanbul, Vitest/Istanbul, Jest/Expo and plain Jest
 TypeScript coverage must produce `partially-suppressed` containing functions,
 retained-code fractions and null CRAP. Deleted retained statement or branch
-records and truncated or unrelated statement ends must fail. Concise conditional
+records and truncated or unrelated statement ends must fail. Exact and
+adjusted-end duplicates of one retained statement also fail alone and in both
+merge orders, without changing the valid uncovered-statement fraction. Concise conditional
 and logical arrow hints retain their return counters on Node and Jest; Vitest
 retains the hinted branches too and must remain incomplete for that placement.
 Parenthesized retained initializers verify source-map extent normalization.

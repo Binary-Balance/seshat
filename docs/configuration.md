@@ -864,7 +864,8 @@ ordinary block/module declarations retain their supported hoisted counter;
 for-loop initializers and unbraced switch cases do not share that route.
 
 Seshat matches each hint to its AST target and checks the retained statements
-and branch outcomes in each setup before merging coverage. Ignored branch arms
+and branch outcomes in each setup before merging coverage. Two records cannot
+count the same retained AST statement, including adjusted source-map ranges. Ignored branch arms
 also exclude their statements, nested branches and nested functions. A wholly
 ignored nested function uses `suppressed`. Valid partial suppression alone does
 not make the assessment incomplete. Unmatched or unsupported targets, retained
