@@ -68,14 +68,19 @@ identity includes the branch kind, preventing suppression from leaking between
 a logical test and its enclosing ternary at the same offset.
 
 Adjacent-hint fixtures use the last recognized Istanbul directive per target,
-while retaining both comments in syntax counts. Missing retained counters are
-rejected alone and in both merge orders. A late file-level hint overrides an
+while retaining both comments in syntax counts. Precedence also follows the
+runtime expression across parentheses and erased type wrappers, in both
+directive orders. Vitest retains conditional/logical branches or incompatible
+typed locations in these placements and remains incomplete. Direct JavaScript
+instrumentation covers trailing block, line and mixed comment groups; executable
+code still prevents target recovery. Missing retained counters are rejected
+alone and in both merge orders. A late file-level hint overrides an
 earlier invalid local hint. Complete runtime spans prevent call, member and
 binary expressions from borrowing a nested function's visitor, including when
 the nested counters are removed. Erased postfix TypeScript wrappers preserve
 valid targets on Node. Vitest and both Jest transforms retain an ignored
-statement and remain incomplete for that placement. Valid mapped consequents can include the `else`
-delimiter, but cannot extend into the executable alternate arm.
+statement and remain incomplete for that placement. Valid mapped consequents
+can include the `else` delimiter, but cannot extend into the executable alternate arm.
 
 The existing ordinary branch scoring, whole-function/file suppression, c8/v8
 counting and Vitest parenthesized-arrow conflict controls also passed.
@@ -86,7 +91,7 @@ statement coverage, null CRAP and checked pseudo-testing. The run attempted six
 jobs, required no additional worker baselines, preserved the original source,
 and left its scratch directory empty.
 
-Rust checks passed: 196 library tests, three CLI integration tests and twelve
+Rust checks passed: 198 library tests, three CLI integration tests and twelve
 proof-input integration tests. Formatting and Clippy with warnings denied
 passed. Focused tests cover wrong/unsupported targets, all statements omitted,
 retained ignored counters, wrong branch locations, malformed metadata,

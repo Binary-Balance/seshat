@@ -3,7 +3,7 @@ use oxc_allocator::{Allocator, Vec as ArenaVec};
 use oxc_ast::{
     AstKind,
     ast::{
-        AccessorPropertyType, ArrowFunctionBody, ClassType, Declaration,
+        AccessorPropertyType, ArrowFunctionBody, ClassType, Comment, Declaration,
         ExportDefaultDeclarationKind, Expression, FormalParameters, FunctionType, JSXAttributeItem,
         JSXAttributeValue, JSXChild, MethodDefinitionKind, PropertyDefinitionType, PropertyKind,
         Statement, TSType, TSTypeName, VariableDeclaration, VariableDeclarationKind,
@@ -1911,9 +1911,14 @@ impl Analysis {
             {
                 if kind == "file" {
                     result.coverage_ignored_file = true;
-                } else if let Some(target) =
-                    result.coverage_comment_target(source, comment.attached_to, comment.span.end)
-                {
+                } else if let Some(target) = result.coverage_comment_target(
+                    source,
+                    &parsed.program.comments,
+                    comment.attached_to,
+                    comment.span.end,
+                ) {
+                    // Erased wrappers merge their leading comments onto one runtime node.
+                    let target = result.coverage_runtime_target(target);
                     last_coverage_hints.insert((target.start, target.end), comment.span.start);
                 }
             }
@@ -1927,12 +1932,14 @@ impl Analysis {
                     .then(|| {
                         result.coverage_comment_target(
                             source,
+                            &parsed.program.comments,
                             comment.attached_to,
                             comment.span.end,
                         )
                     })
                     .flatten();
                 let is_last = attached.is_none_or(|target| {
+                    let target = result.coverage_runtime_target(target);
                     last_coverage_hints.get(&(target.start, target.end))
                         == Some(&comment.span.start)
                 });
@@ -1973,12 +1980,7 @@ impl Analysis {
                         branch.kind == "default-arg" && branch.outcomes.contains(&Some(target))
                     })
                 });
-                let runtime_target = target.map(|target| {
-                    result
-                        .coverage_expression_targets
-                        .get(&target.start)
-                        .map_or(target, |expression| expression.runtime)
-                });
+                let runtime_target = target.map(|target| result.coverage_runtime_target(target));
                 let visitor_target = !rewritten_value
                     && [target, runtime_target].into_iter().flatten().any(|span| {
                         result
@@ -2325,6 +2327,7 @@ impl Analysis {
     fn coverage_comment_target(
         &self,
         source: &str,
+        comments: &[Comment],
         attached_to: u32,
         comment_end: u32,
     ) -> Option<Span> {
@@ -2333,17 +2336,35 @@ impl Analysis {
             .copied()
             .filter(|target| comment_end <= target.start)
             .or_else(|| {
-                // OXC can classify a line-ending hint before a node as trailing.
+                // OXC can classify the first comment in a leading group as trailing.
                 self.coverage_targets
                     .range(comment_end..)
                     .next()
                     .filter(|(start, _)| {
-                        source[comment_end as usize..**start as usize]
+                        let mut end = comment_end;
+                        for comment in comments.iter().filter(|comment| {
+                            comment.span.start >= comment_end && comment.span.end <= **start
+                        }) {
+                            if !source[end as usize..comment.span.start as usize]
+                                .chars()
+                                .all(javascript_whitespace)
+                            {
+                                return false;
+                            }
+                            end = comment.span.end;
+                        }
+                        source[end as usize..**start as usize]
                             .chars()
                             .all(javascript_whitespace)
                     })
                     .map(|(_, target)| *target)
             })
+    }
+
+    fn coverage_runtime_target(&self, target: Span) -> Span {
+        self.coverage_expression_targets
+            .get(&target.start)
+            .map_or(target, |expression| expression.runtime)
     }
 
     fn record_hoistable_declaration(&mut self, declaration: &VariableDeclaration<'_>) {
@@ -3516,6 +3537,72 @@ fn subtree_visitors_use_full_runtime_spans_instead_of_shared_starts() {
         analysis.coverage_hint_errors
     );
     assert!(analysis.scopes[1].coverage_suppressed);
+}
+
+#[test]
+fn coverage_hint_precedence_follows_erased_expression_wrappers() {
+    for expression in [
+        "n ? 1 : 2",
+        "n || false",
+        "function() { return n ? 1 : 2; }",
+    ] {
+        for suffix in ["", " as unknown", "!"] {
+            for (first, last) in [("next", "else"), ("else", "next"), ("next", "next")] {
+                let source = format!(
+                    "function f(n: boolean) {{ return /* istanbul ignore {first} */ (/* istanbul ignore {last} */ {expression}){suffix}; }}"
+                );
+                let analysis = Analysis::inspect("source.ts", &source).unwrap();
+                assert_eq!(
+                    analysis.coverage_hint_errors.is_empty(),
+                    last == "next",
+                    "{source}"
+                );
+                assert_eq!(analysis.coverage_suppressions()["count"], 2);
+                if last == "else" {
+                    assert!(analysis.coverage_ignored_ranges.is_empty(), "{source}");
+                    assert!(analysis.coverage_ignored_outcomes.is_empty(), "{source}");
+                    assert!(
+                        analysis
+                            .scopes
+                            .iter()
+                            .all(|scope| !scope.coverage_suppressed)
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn trailing_coverage_hints_recover_across_parser_comments_only() {
+    for comments in [
+        "/* istanbul ignore next */\n /* istanbul ignore if */",
+        "// istanbul ignore next\n // istanbul ignore if\n",
+        "/* istanbul ignore next */\n // explanation\n /* istanbul ignore if */",
+        "// istanbul ignore next\n /* istanbul ignore if */",
+    ] {
+        let source = format!("function f(n) {{ {comments}\n if(n) return 1; else return 2; }}");
+        let analysis = Analysis::inspect("source.js", &source).unwrap();
+        assert!(
+            analysis.coverage_hint_errors.is_empty(),
+            "{source}: {:?}",
+            analysis.coverage_hint_errors
+        );
+        assert!(analysis.coverage_ignored_outcomes.contains(&(
+            "if",
+            source.find("if(n)").unwrap() as u32,
+            0
+        )));
+        assert!(!analysis.coverage_ignored_outcomes.contains(&(
+            "if",
+            source.find("if(n)").unwrap() as u32,
+            1
+        )));
+    }
+    let source = "function f(n) { return /* istanbul ignore next */; /* explanation */ } function g() { return 1; }";
+    let analysis = Analysis::inspect("source.js", source).unwrap();
+    assert!(!analysis.coverage_hint_errors.is_empty());
+    assert!(!analysis.scopes[1].coverage_suppressed);
 }
 
 #[test]

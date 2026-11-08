@@ -842,8 +842,10 @@ Visitor targets must match the complete runtime expression. Erased postfix
 TypeScript wrappers can preserve that target; a following call, member access
 or binary operation cannot borrow a nested function's visitor.
 
-When adjacent Istanbul hints target the same node, only the last recognized
-directive controls exclusion. Every hint still contributes to syntax counts.
+When Istanbul hints target the same runtime node, including across parentheses
+and erased type wrappers, only the last recognized directive controls exclusion.
+Leading comment groups may start after code on the preceding line. Every hint
+still contributes to syntax counts.
 An `ignore file` hint applies regardless of its position and overrides local
 hint validation, while coverage jobs and reports must still succeed.
 

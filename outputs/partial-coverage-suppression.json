@@ -1012,6 +1012,236 @@
               "coverage ignore next has no instrumented target at 46"
             ]
           }
+        },
+        "wrappedPrecedence": {
+          "conditional_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "conditional_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "logical_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "logical_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "function_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    127
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": true
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "measured",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": "statement",
+                "crap": 1,
+                "complexity": 1,
+                "cognitiveComplexity": 0,
+                "coverageSuppressions": 1
+              },
+              {
+                "name": "function@127",
+                "start": 127,
+                "status": "suppressed",
+                "covered": 0,
+                "total": 0,
+                "coverage": null,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 1
+              }
+            ],
+            "problems": []
+          },
+          "function_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "typed_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "typed_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          }
         }
       }
     },
@@ -2026,6 +2256,244 @@
               "coverage ignore next has no instrumented target at 46"
             ]
           }
+        },
+        "wrappedPrecedence": {
+          "conditional_next": {
+            "complete": false,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "unknown",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": [
+              "coverage retains an ignored branch"
+            ]
+          },
+          "conditional_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "logical_next": {
+            "complete": false,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "unknown",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": [
+              "coverage retains an ignored branch"
+            ]
+          },
+          "logical_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "function_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    127
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": true
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "measured",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": "statement",
+                "crap": 1,
+                "complexity": 1,
+                "cognitiveComplexity": 0,
+                "coverageSuppressions": 1
+              },
+              {
+                "name": "function@127",
+                "start": 127,
+                "status": "suppressed",
+                "covered": 0,
+                "total": 0,
+                "coverage": null,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 1
+              }
+            ],
+            "problems": []
+          },
+          "function_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "typed_next": {
+            "complete": false,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "unknown",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": [
+              "coverage is not mapped to a cond-expr branch: 127..151"
+            ]
+          },
+          "typed_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87",
+              "coverage is not mapped to a cond-expr branch: 127..151",
+              "missing retained branch at 127"
+            ]
+          }
         }
       }
     },
@@ -3030,6 +3498,236 @@
             "complete": false,
             "problems": [
               "coverage ignore next has no instrumented target at 46"
+            ]
+          }
+        },
+        "wrappedPrecedence": {
+          "conditional_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "conditional_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "logical_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "logical_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "function_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    127
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": true
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "measured",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": "statement",
+                "crap": 1,
+                "complexity": 1,
+                "cognitiveComplexity": 0,
+                "coverageSuppressions": 1
+              },
+              {
+                "name": "function@127",
+                "start": 127,
+                "status": "suppressed",
+                "covered": 0,
+                "total": 0,
+                "coverage": null,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 1
+              }
+            ],
+            "problems": []
+          },
+          "function_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "typed_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "typed_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
             ]
           }
         }
@@ -4038,6 +4736,236 @@
               "coverage ignore next has no instrumented target at 46"
             ]
           }
+        },
+        "wrappedPrecedence": {
+          "conditional_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "conditional_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "logical_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "logical_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "function_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    127
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": true
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "measured",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": "statement",
+                "crap": 1,
+                "complexity": 1,
+                "cognitiveComplexity": 0,
+                "coverageSuppressions": 1
+              },
+              {
+                "name": "function@127",
+                "start": 127,
+                "status": "suppressed",
+                "covered": 0,
+                "total": 0,
+                "coverage": null,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 1
+              }
+            ],
+            "problems": []
+          },
+          "function_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "typed_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "typed_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          }
         }
       }
     }
@@ -4083,17 +5011,17 @@
     "jobsAttempted": 6,
     "workerBaselineJobs": 0,
     "phaseTimings": {
-      "analysisMs": 0.374369,
-      "attributionMs": 0.137256,
-      "baselineMs": 156.564239,
-      "cleanupMs": 0.44133300000000003,
-      "compilerStrictnessMs": 2432.9409800000003,
-      "coverageMs": 446.35206900000003,
-      "preparationMs": 0.347809,
+      "analysisMs": 0.342609,
+      "attributionMs": 0.13857799999999998,
+      "baselineMs": 155.428082,
+      "cleanupMs": 0.47326300000000004,
+      "compilerStrictnessMs": 2228.068461,
+      "coverageMs": 441.387401,
+      "preparationMs": 0.36468,
       "typecheckMs": null
     },
-    "mutationWallMs": 323.528138,
-    "executionMs": 3520.012709,
+    "mutationWallMs": 320.71270699999997,
+    "executionMs": 3307.0610509999997,
     "pseudoTesting": {
       "planned": 1,
       "killed": 1
@@ -4131,6 +5059,152 @@
     "Late file-level hints override earlier invalid local hints on all four routes",
     "Function-valued call, member and binary wrappers cannot borrow a nested function visitor, even after its records are removed alone or in both merge orders",
     "Erased postfix TypeScript wrappers preserve Node targets; retained ignored statements keep Vitest and both Jest transforms incomplete for that placement",
-    "Mapped if-consequents can include the else delimiter without extending into alternate-arm execution"
-  ]
+    "Mapped if-consequents can include the else delimiter without extending into alternate-arm execution",
+    "Hints across parentheses and erased type wrappers use one runtime precedence key in both directive orders; inactive hints cannot excuse deleted counters alone or in both merge orders",
+    "Trailing block, line and mixed leading comment groups accepted under direct JavaScript instrumentation; their retained counters remain required alone and in both merge orders",
+    "Vitest conditional/logical counter retention and incompatible typed locations remain incomplete for the wrapped-expression placements"
+  ],
+  "commentGroups": {
+    "blocks": {
+      "complete": true,
+      "coverageSuppressions": {
+        "count": 2,
+        "hints": [
+          {
+            "end": 42,
+            "functions": [
+              0
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 16,
+            "wholeFunction": false
+          },
+          {
+            "end": 68,
+            "functions": [
+              0
+            ],
+            "kind": "if",
+            "provider": "istanbul",
+            "start": 44,
+            "wholeFunction": false
+          }
+        ]
+      },
+      "functions": [
+        {
+          "name": "f",
+          "start": 0,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 2
+        }
+      ],
+      "problems": []
+    },
+    "lines": {
+      "complete": true,
+      "coverageSuppressions": {
+        "count": 2,
+        "hints": [
+          {
+            "end": 39,
+            "functions": [
+              0
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 16,
+            "wholeFunction": false
+          },
+          {
+            "end": 62,
+            "functions": [
+              0
+            ],
+            "kind": "if",
+            "provider": "istanbul",
+            "start": 41,
+            "wholeFunction": false
+          }
+        ]
+      },
+      "functions": [
+        {
+          "name": "f",
+          "start": 0,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 2
+        }
+      ],
+      "problems": []
+    },
+    "mixed": {
+      "complete": true,
+      "coverageSuppressions": {
+        "count": 2,
+        "hints": [
+          {
+            "end": 39,
+            "functions": [
+              0
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 16,
+            "wholeFunction": false
+          },
+          {
+            "end": 84,
+            "functions": [
+              0
+            ],
+            "kind": "if",
+            "provider": "istanbul",
+            "start": 60,
+            "wholeFunction": false
+          }
+        ]
+      },
+      "functions": [
+        {
+          "name": "f",
+          "start": 0,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 2
+        }
+      ],
+      "problems": []
+    }
+  }
 }

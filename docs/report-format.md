@@ -216,9 +216,11 @@ even when their descendant records are missing.
 
 Subtree visitor identity uses the complete runtime span, allowing erased
 postfix TypeScript wrappers but rejecting enclosing calls, member access and
-binary operations. Only the last recognized Istanbul hint on a target controls
-exclusion; overridden hints still appear in syntax counts. File-level hints
-override local hint validation regardless of source position.
+binary operations. Precedence groups comments across erased wrappers and
+parser-confirmed leading comment groups. Only the last recognized Istanbul hint
+on a runtime target controls exclusion; overridden hints still appear in syntax
+counts. File-level hints override local hint validation regardless of source
+position.
 
 Function initializers with hoisted counters and concise returns keep their
 enclosing counters when only their child expression is ignored. Ancestor

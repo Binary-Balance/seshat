@@ -980,12 +980,18 @@ the target's descendant counters are deleted, alone and in both merge orders.
 Initializer/default-value counter rewrites remain unsupported, while logical
 tests and enclosing ternaries sharing a start offset keep distinct outcomes.
 Adjacent hints verify last-directive precedence while retaining every syntax
-count. A late file-level hint overrides invalid local hints. Function-valued
+count. Both directive orders across parentheses and erased type wrappers
+verify runtime-node precedence; inactive hints cannot excuse deleted counters.
+Vitest retains conditional/logical branch counters or incompatible typed
+locations in these placements, which remain incomplete.
+Direct JavaScript instrumentation verifies trailing block, line and mixed
+comment groups, including retained-counter deletion in both merge orders.
+A late file-level hint overrides invalid local hints. Function-valued
 calls, member access and binary expressions cannot borrow the nested function's
 visitor, even after its counters are deleted in either merge order. Erased
 postfix TypeScript wrappers preserve valid targets on Node; Vitest and both
-Jest transforms retain an ignored statement and remain incomplete there. Consequent mappings may
-include an `else` delimiter without accepting executable alternate-arm code.
+Jest transforms retain an ignored statement and remain incomplete there.
+Consequent mappings may include an `else` delimiter without accepting executable alternate-arm code.
 Existing whole-suppression and transform-conflict controls
 remain in the same proof. A real Node check also verifies extreme and operator
 mutation jobs, source preservation and scratch cleanup under partial suppression.
