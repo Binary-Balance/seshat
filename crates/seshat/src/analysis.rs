@@ -3,10 +3,10 @@ use oxc_allocator::{Allocator, Vec as ArenaVec};
 use oxc_ast::{
     AstKind,
     ast::{
-        AccessorPropertyType, ArrowFunctionBody, Declaration, ExportDefaultDeclarationKind,
-        Expression, FormalParameters, FunctionType, JSXAttributeItem, JSXAttributeValue, JSXChild,
-        MethodDefinitionKind, PropertyDefinitionType, PropertyKind, Statement, TSType, TSTypeName,
-        VariableDeclarationKind,
+        AccessorPropertyType, ArrowFunctionBody, ClassType, Declaration,
+        ExportDefaultDeclarationKind, Expression, FormalParameters, FunctionType, JSXAttributeItem,
+        JSXAttributeValue, JSXChild, MethodDefinitionKind, PropertyDefinitionType, PropertyKind,
+        Statement, TSType, TSTypeName, VariableDeclaration, VariableDeclarationKind,
     },
 };
 use oxc_ast_visit::{Visit, walk};
@@ -73,6 +73,15 @@ fn initialized_function(expression: &Expression<'_>) -> Option<u32> {
     }
 }
 
+fn counter_needs_hoisting(expression: &Expression<'_>) -> bool {
+    matches!(
+        expression.without_parentheses(),
+        Expression::FunctionExpression(_)
+            | Expression::ArrowFunctionExpression(_)
+            | Expression::ClassExpression(_)
+    )
+}
+
 // JavaScript whitespace differs from Rust's Unicode set.
 fn javascript_whitespace(character: char) -> bool {
     matches!(character, '\u{0009}'..='\u{000d}' | ' ' | '\u{00a0}' | '\u{1680}'
@@ -120,7 +129,7 @@ pub struct Scope {
 #[derive(PartialEq, Eq)]
 pub enum CoverageStatementKind {
     Statement,
-    Initializer,
+    Initializer { hoisted: bool },
     ConciseReturn,
 }
 
@@ -285,12 +294,14 @@ pub struct Analysis {
     suppression_targets: std::collections::BTreeMap<u32, u32>,
     coverage_targets: BTreeMap<u32, Span>,
     coverage_next_targets: BTreeSet<u32>,
+    coverage_method_functions: BTreeSet<u32>,
+    coverage_hoisted_values: BTreeSet<u32>,
     coverage_expression_targets: BTreeMap<u32, Span>,
     coverage_declarations: BTreeSet<u32>,
     coverage_suppressions: Vec<Value>,
     pub coverage_ignored_file: bool,
     coverage_ignored_ranges: Vec<Span>,
-    coverage_ignored_outcomes: BTreeSet<(u32, usize)>,
+    coverage_ignored_outcomes: BTreeSet<(&'static str, u32, usize)>,
     pub coverage_hint_errors: Vec<String>,
     pub coverage_statements: Vec<CoverageStatement>,
     coverage_if_arms: BTreeMap<u32, (Span, Option<Span>)>,
@@ -675,6 +686,56 @@ impl<'a> Visit<'a> for Analysis {
         if let Some(target) = suppression_target {
             self.suppression_targets.insert(node.span().start, target);
         }
+        // OXC exposes method bodies as Function nodes; Istanbul visits their method wrapper.
+        match node {
+            AstKind::MethodDefinition(method) => {
+                self.coverage_method_functions
+                    .insert(method.value.span.start);
+            }
+            AstKind::ObjectProperty(property)
+                if property.method || property.kind != PropertyKind::Init =>
+            {
+                if let Some(start) = initialized_function(&property.value) {
+                    self.coverage_method_functions.insert(start);
+                }
+            }
+            _ => {}
+        }
+        let statements = match node {
+            AstKind::Program(program) => program.body.as_slice(),
+            AstKind::BlockStatement(block) => block.body.as_slice(),
+            AstKind::FunctionBody(body) => body.statements.as_slice(),
+            _ => &[],
+        };
+        for statement in statements {
+            if let Statement::VariableDeclaration(declaration) = statement {
+                self.record_hoistable_declaration(declaration);
+            }
+        }
+        // Istanbul wraps these single-statement bodies in blocks before adding counters.
+        let body = match node {
+            AstKind::IfStatement(statement) => Some(&statement.consequent),
+            AstKind::ForStatement(statement) => Some(&statement.body),
+            AstKind::ForInStatement(statement) => Some(&statement.body),
+            AstKind::ForOfStatement(statement) => Some(&statement.body),
+            AstKind::WhileStatement(statement) => Some(&statement.body),
+            AstKind::DoWhileStatement(statement) => Some(&statement.body),
+            AstKind::WithStatement(statement) => Some(&statement.body),
+            _ => None,
+        };
+        if let Some(Statement::VariableDeclaration(declaration)) = body {
+            self.record_hoistable_declaration(declaration);
+        }
+        if let AstKind::IfStatement(statement) = node
+            && let Some(Statement::VariableDeclaration(declaration)) = &statement.alternate
+        {
+            self.record_hoistable_declaration(declaration);
+        }
+        if let AstKind::ExportDeclaration(export) = node
+            && let Declaration::VariableDeclaration(declaration) = &export.declaration
+        {
+            self.record_hoistable_declaration(declaration);
+        }
         let coverage_target = match node {
             AstKind::Function(_)
             | AstKind::ArrowFunctionExpression(_)
@@ -691,14 +752,24 @@ impl<'a> Visit<'a> for Analysis {
             }
             _ => false,
         };
-        if coverage_target && !matches!(node, AstKind::ParenthesizedExpression(_))
-            || matches!(
-                node,
-                AstKind::BlockStatement(_)
-                    | AstKind::ConditionalExpression(_)
-                    | AstKind::LogicalExpression(_)
-            )
-        {
+        let subtree_target = match node {
+            AstKind::Class(class) => class.r#type == ClassType::ClassDeclaration,
+            AstKind::MethodDefinition(method) => !method.key.is_private_identifier(),
+            AstKind::Function(function) => !self
+                .coverage_method_functions
+                .contains(&function.span.start),
+            AstKind::ParenthesizedExpression(_) => false,
+            _ => {
+                coverage_target
+                    || matches!(
+                        node,
+                        AstKind::BlockStatement(_)
+                            | AstKind::ConditionalExpression(_)
+                            | AstKind::LogicalExpression(_)
+                    )
+            }
+        };
+        if subtree_target {
             self.coverage_next_targets.insert(node.span().start);
         }
         if coverage_target {
@@ -1087,8 +1158,17 @@ impl<'a> Visit<'a> for Analysis {
             AstKind::VariableDeclarator(v) => v.init.as_ref().map(|value| CoverageStatement {
                 span: value.span(),
                 unwrapped: value.without_parentheses().span(),
-                kind: CoverageStatementKind::Initializer,
+                kind: CoverageStatementKind::Initializer {
+                    hoisted: self.coverage_hoisted_values.contains(&value.span().start),
+                },
             }),
+            AstKind::PropertyDefinition(property) => {
+                property.value.as_ref().map(|value| CoverageStatement {
+                    span: value.span(),
+                    unwrapped: value.without_parentheses().span(),
+                    kind: CoverageStatementKind::Initializer { hoisted: false },
+                })
+            }
             AstKind::ArrowFunctionExpression(f) => {
                 f.body.as_expression().map(|value| CoverageStatement {
                     span: value.span(),
@@ -1846,10 +1926,22 @@ impl Analysis {
                         .copied()
                         .unwrap_or(target)
                 });
-                let visitor_target = target
-                    .is_some_and(|target| result.coverage_next_targets.contains(&target.start))
-                    || normalized_target
-                        .is_some_and(|target| result.coverage_next_targets.contains(&target.start));
+                // These counters wrap their value before its visitor runs, moving its hint
+                // to an unvisited sequence expression. Hoisted function creation is exempt.
+                let rewritten_value = normalized_target.is_some_and(|target| {
+                    result.coverage_statements.iter().any(|statement| {
+                        statement.kind == CoverageStatementKind::Initializer { hoisted: false }
+                            && statement.unwrapped == target
+                    }) || result.branches.iter().any(|branch| {
+                        branch.kind == "default-arg" && branch.outcomes.contains(&Some(target))
+                    })
+                });
+                let visitor_target = !rewritten_value
+                    && (target.is_some_and(|target| {
+                        result.coverage_next_targets.contains(&target.start)
+                    }) || normalized_target.is_some_and(|target| {
+                        result.coverage_next_targets.contains(&target.start)
+                    }));
                 let ignores_subtree = file_level
                     || matches!(kind, "if" | "else")
                     || (kind == "next" && visitor_target);
@@ -1869,7 +1961,7 @@ impl Analysis {
                                             && target.end <= branch.span.end
                                     });
                                 if *outcome == Some(target) || subtree_outcome {
-                                    ignored_outcomes.push((branch.span.start, index));
+                                    ignored_outcomes.push((branch.kind, branch.span.start, index));
                                     if let Some(owner) = result.owner(branch.span.start) {
                                         outcome_owners.insert(owner);
                                     }
@@ -1883,9 +1975,11 @@ impl Analysis {
                         if let Some(statement) = attached
                             .filter(|span| result.coverage_if_arms.contains_key(&span.start))
                         {
-                            result
-                                .coverage_ignored_outcomes
-                                .insert((statement.start, usize::from(kind == "else")));
+                            result.coverage_ignored_outcomes.insert((
+                                "if",
+                                statement.start,
+                                usize::from(kind == "else"),
+                            ));
                         } else {
                             result.coverage_hint_errors.push(format!(
                                 "coverage ignore {kind} has no matching if statement at {}",
@@ -1971,14 +2065,7 @@ impl Analysis {
                     && ignores_subtree
                     && let Some(target) = target
                 {
-                    // A function-valued initializer can retain its enclosing declaration counter.
-                    // Whole-function validation already checks the ignored function's own records.
-                    if affected.is_empty()
-                        || !partial_owners.is_empty()
-                        || matches!(kind, "if" | "else")
-                    {
-                        result.coverage_ignored_ranges.push(target);
-                    }
+                    result.coverage_ignored_ranges.push(target);
                 }
                 let attributed: BTreeSet<_> = affected
                     .iter()
@@ -2192,6 +2279,16 @@ impl Analysis {
         json!({"count":self.coverage_suppressions.len(),"hints":self.coverage_suppressions})
     }
 
+    fn record_hoistable_declaration(&mut self, declaration: &VariableDeclaration<'_>) {
+        for declarator in &declaration.declarations {
+            if let Some(value) = &declarator.init
+                && counter_needs_hoisting(value)
+            {
+                self.coverage_hoisted_values.insert(value.span().start);
+            }
+        }
+    }
+
     pub fn coverage_ignored(&self, start: u32) -> bool {
         self.coverage_ignored_ranges
             .iter()
@@ -2199,22 +2296,32 @@ impl Analysis {
     }
 
     pub fn coverage_statement_ignored(&self, start: u32) -> bool {
-        // Istanbul creates the concise return before visiting its expression's hint.
-        // That enclosing counter survives even when the expression's branches do not.
-        self.coverage_ignored(start)
-            && !self.coverage_statements.iter().any(|statement| {
-                statement.kind == CoverageStatementKind::ConciseReturn
-                    && (statement.span.start == start || statement.unwrapped.start == start)
-                    && self
-                        .owner(start)
-                        .is_some_and(|owner| !self.scopes[owner].coverage_suppressed)
-            })
+        // CommonJS export assignments can map to declarations outside function coverage.
+        if self.statement_owner(start).is_none() {
+            return false;
+        }
+        // Initializer and concise-return counters precede the child expression's visit.
+        // A hint on that expression keeps the enclosing counter; a hint on an ancestor does not.
+        self.coverage_ignored_ranges.iter().any(|range| {
+            range.start <= start
+                && start < range.end
+                && !self.coverage_statements.iter().any(|statement| {
+                    matches!(
+                        statement.kind,
+                        CoverageStatementKind::Initializer { hoisted: true }
+                            | CoverageStatementKind::ConciseReturn
+                    ) && (statement.span.start == start || statement.unwrapped.start == start)
+                        && (statement.span == *range || statement.unwrapped == *range)
+                        && self
+                            .statement_owner(start)
+                            .is_none_or(|owner| !self.scopes[owner].coverage_suppressed)
+                })
+        })
     }
 
     pub fn coverage_outcome_ignored(&self, site: &BranchSite, index: usize) -> bool {
         self.coverage_ignored_outcomes
-            .contains(&(site.span.start, index))
-            || site.outcomes[index].is_some_and(|span| self.coverage_ignored(span.start))
+            .contains(&(site.kind, site.span.start, index))
     }
 
     pub fn count(&self) -> usize {
@@ -3259,6 +3366,60 @@ fn function_valued_exclusions_also_mark_the_containing_scope_partial() {
         assert!(analysis.scopes[1].coverage_suppressed, "{source}");
         assert_eq!(analysis.scopes[1].coverage_suppressions, 1);
     }
+}
+
+#[test]
+fn coverage_subtrees_require_an_unmodified_istanbul_visitor() {
+    for source in [
+        "function f(flag: boolean) { const value = /* istanbul ignore next */ flag ? 1 : 2; return value; }",
+        "function f(fn = /* istanbul ignore next */ ()=>1) { return fn(); }",
+        "function f() { for (let value = /* istanbul ignore next */ ()=>1; false;) {} }",
+        "function f(n: number) { switch(n) { case 1: var value = /* istanbul ignore next */ ()=>1; return value; } }",
+        "class C { value = /* istanbul ignore next */ ()=>1; }",
+        "function f(flag: boolean) { return /* istanbul ignore next */ class { m() { return flag ? 1 : 2; } }; }",
+        "function f(flag: boolean) { const C = /* istanbul ignore next */ class { m() { return flag ? 1 : 2; } }; return C; }",
+        "class C { /* istanbul ignore next */ #m(flag: boolean) { return flag ? 1 : 2; } }",
+        "class C { #m /* istanbul ignore next */ (flag: boolean) { return flag ? 1 : 2; } }",
+        "class C { m /* istanbul ignore next */ (flag: boolean) { return flag ? 1 : 2; } }",
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        assert!(!analysis.coverage_hint_errors.is_empty(), "{source}");
+        assert!(
+            analysis
+                .scopes
+                .iter()
+                .all(|scope| !scope.coverage_suppressed),
+            "{source}"
+        );
+    }
+    for source in [
+        "/* istanbul ignore next */ class C { m() { return 1; } }",
+        "/* istanbul ignore next */ class C { /* istanbul ignore next */ #m() { return 1; } }",
+        "class C { /* istanbul ignore next */ m() { return 1; } }",
+        "class C { /* istanbul ignore next */ #value = () => 1; }",
+        "function f(flag: boolean) { if (flag) var value = /* istanbul ignore next */ ()=>1; return value; }",
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        assert!(
+            analysis.coverage_hint_errors.is_empty(),
+            "{source}: {:?}",
+            analysis.coverage_hint_errors
+        );
+        assert!(
+            analysis
+                .scopes
+                .iter()
+                .any(|scope| scope.coverage_suppressed && !scope.implicit),
+            "{source}"
+        );
+    }
+    let source = "function f(flag: boolean) { return flag ? /* istanbul ignore next */ class { m() { return flag ? 1 : 2; } } : null; }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    assert!(analysis.coverage_hint_errors.is_empty());
+    assert!(analysis.scopes[0].coverage_partial_suppression);
+    assert_eq!(analysis.scopes[0].coverage_suppressions, 1);
+    assert!(!analysis.scopes[1].coverage_suppressed);
+    assert_eq!(analysis.scopes[1].coverage_suppressions, 0);
 }
 
 #[test]

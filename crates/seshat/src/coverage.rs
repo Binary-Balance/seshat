@@ -570,7 +570,7 @@ pub fn attribute<'a>(
         let branch_total = branches[i].len();
         let branch_covered = branches[i].iter().filter(|&&hit| hit).count();
         let status = if s.implicit { "complexity-only" }
-            else if s.coverage_suppressed { if total == 0 && branch_total == 0 && !unreliable_suppressions.contains(&i) { "suppressed" } else { "unknown" } }
+            else if s.coverage_suppressed { if statements_reliable && total == 0 && branch_total == 0 && !unreliable_branches.contains(&i) && !unreliable_suppressions.contains(&i) { "suppressed" } else { "unknown" } }
             else if s.empty { "not-applicable" }
             else if !statements_reliable || unreliable_branches.contains(&i) { complete = false; "unknown" }
             else if s.coverage_partial_suppression { "partially-suppressed" }
@@ -811,6 +811,20 @@ fn concise_return_counter_survives_an_ignored_body_expression() {
             assert_eq!(result["functions"][0]["coverage"], Value::Null);
         }
     }
+}
+
+#[test]
+fn hoisted_function_creation_counter_survives_a_child_hint_but_not_a_declaration_hint() {
+    let source = "function f() { const value = /* istanbul ignore next */ ()=>1; return value; }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let start = source.find("()=>1").unwrap() as u32;
+    assert!(!analysis.coverage_statement_ignored(start));
+    assert!(analysis.scopes[1].coverage_suppressed);
+    assert!(analysis.coverage_statement_ignored(start + 4));
+    let declaration =
+        "function f() { /* istanbul ignore next */ const value = ()=>1; return value; }";
+    let analysis = Analysis::inspect("source.ts", declaration).unwrap();
+    assert!(analysis.coverage_statement_ignored(declaration.find("()=>1").unwrap() as u32));
 }
 
 #[test]

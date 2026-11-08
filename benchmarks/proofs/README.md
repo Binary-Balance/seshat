@@ -974,6 +974,11 @@ hint fixtures stay incomplete even when their branch records are deleted,
 including both merge orders. Direct call outcomes keep their nested branch
 records, and deleting those records must fail. Ignored expression statements
 containing a function also leave their parent visibly partial.
+Class expressions used as direct outcomes retain their measured methods.
+Separate class-expression and private-method hints remain incomplete after
+the target's descendant counters are deleted, alone and in both merge orders.
+Initializer/default-value counter rewrites remain unsupported, while logical
+tests and enclosing ternaries sharing a start offset keep distinct outcomes.
 Existing whole-suppression and transform-conflict controls
 remain in the same proof. A real Node check also verifies extreme and operator
 mutation jobs, source preservation and scratch cleanup under partial suppression.

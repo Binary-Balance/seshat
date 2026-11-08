@@ -782,7 +782,7 @@ scoring. Unknown and not-applicable rows do not become passing numbers.
 
 Seshat recognises whole-function `/* istanbul ignore next */` hints and
 `/* istanbul ignore file */`. A whole-function hint also applies to functions
-inside an ignored declaration or class, including methods and object
+inside an ignored declaration or class declaration, including methods and object
 getters/setters. These functions report
 `status: "suppressed"`, with null coverage and CRAP, and do not make the assessment
 incomplete solely because their counters are absent. A file-level hint may
@@ -837,6 +837,19 @@ call, array or unary outcomes omit that outcome's counter; their nested work
 remains instrumented unless it has its own supported hint. Those same
 expressions cannot be ignored merely because they contain a nested branch.
 A whole subtree is omitted only for a node Istanbul's visitor actually skips.
+
+Istanbul has subtree visitors for class declarations and public methods, but
+not class expressions or private methods. A class expression used directly as
+a conditional/logical outcome excludes only that outcome counter; its methods
+remain measured. A standalone hint on a class expression or private method
+cannot justify omitting its descendants and remains incomplete.
+
+Hints directly on non-hoisted variable initializers, class-field values and
+default values can be moved by Istanbul's counter insertion. These placements
+remain unsupported. Put the hint before the whole declaration, statement or
+field, or on a supported branch outcome instead. Function initializers in
+ordinary block/module declarations retain their supported hoisted counter;
+for-loop initializers and unbraced switch cases do not share that route.
 
 Seshat matches each hint to its AST target and checks the retained statements
 and branch outcomes in each setup before merging coverage. Ignored branch arms

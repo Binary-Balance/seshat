@@ -209,6 +209,17 @@ outcome hint on a call, array or unary expression excludes that outcome's
 counter, while its descendant work retains its own instrumentation. A hint on
 such an expression outside a direct outcome cannot excuse missing descendants;
 whole-subtree exclusion requires a supported Istanbul visitor target.
+Class declarations and public methods have such visitors; class expressions
+and private methods do not. A direct class-expression outcome retains its
+method instrumentation. Unsupported method/expression targets remain incomplete
+even when their descendant records are missing.
+
+Function initializers with hoisted counters and concise returns keep their
+enclosing counters when only their child expression is ignored. Ancestor
+statement/declaration hints still omit those counters. Initializer/default-value
+placements whose hints are moved by counter insertion remain unsupported.
+Module-level counters such as transformed CommonJS export assignments do not
+establish function coverage.
 Each setup must match the expected retained shape before reports merge; a hint
 cannot excuse unrelated missing evidence or conflicting retained counters.
 Retained statement locations must match full AST extents, with the supported

@@ -196,6 +196,14 @@ export function ignoredExpressionWithFunction() {
 export function ignoredCallOutcome(flag: boolean) {
   return flag ? /* istanbul ignore next -- @preserve */ Boolean(flag ? 1 : 2) : false;
 }
+export function ignoredClassOutcome(flag: boolean) {
+  return flag ? /* istanbul ignore next -- @preserve */ class {
+    method() { return flag ? 1 : 2; }
+  } : null;
+}
+export function sharedBranchStart(left: boolean, right: boolean) {
+  return left || right ? /* istanbul ignore next -- @preserve */ 1 : 2;
+}
 export function retainedInitializer(flag: boolean) {
   /* istanbul ignore next -- @preserve */
   void flag;
@@ -218,6 +226,8 @@ assert.equal(partial.ignoredTernary(false), 2);
 assert.equal(partial.ignoredLogical(true), true);
 assert.equal(partial.ignoredExpressionWithFunction(), 2);
 assert.equal(partial.ignoredCallOutcome(true), true);
+assert.equal(partial.ignoredClassOutcome(false), null);
+assert.equal(partial.sharedBranchStart(true, false), 1);
 assert.equal(partial.retainedInitializer(true), 1);
 assert.equal(partial.retainedBranch(true), 1);`;
 const functionOutcomesSource = join(work, 'function-outcomes.ts');
@@ -235,6 +245,23 @@ const functionOutcomeChecks = `assert.equal(functionOutcomes.ignoredFunctionOutc
 assert.equal(functionOutcomes.ignoredLogicalFunction(true), true);
 assert.equal(functionOutcomes.ignoredGroupedFunction(true), true);
 `;
+const classTargetsSource = join(work, 'class-targets.ts');
+writeFileSync(classTargetsSource, `export function unsupportedClass(flag: boolean) {
+  return /* istanbul ignore next -- @preserve */ class {
+    method() { return flag ? 1 : 2; }
+  };
+}
+`);
+const privateMethodSource = join(work, 'private-method.ts');
+writeFileSync(privateMethodSource, `export class UnsupportedPrivate {
+  /* istanbul ignore next -- @preserve */
+  #method(flag: boolean) { return flag ? 1 : 2; }
+  run() { return this.#method(true); }
+}
+`);
+const classTargetChecks = `const Class = classTargets.unsupportedClass(true);
+assert.equal(new Class().method(), 1);
+assert.equal(new privateMethods.UnsupportedPrivate().run(), 1);`;
 const unsupportedSource = join(work, 'unsupported.ts');
 writeFileSync(unsupportedSource, `export function unsupportedCall(flag: boolean) {
   return /* istanbul ignore next -- @preserve */ Boolean(flag ? 1 : 2);
@@ -245,6 +272,13 @@ export function unsupportedArray(flag: boolean) {
 export function unsupportedUnary(flag: boolean) {
   return /* istanbul ignore next -- @preserve */ !(flag ? 1 : 2);
 }
+export function unsupportedInitializer(flag: boolean) {
+  const value = /* istanbul ignore next -- @preserve */ flag ? 1 : 2;
+  return value;
+}
+export function unsupportedDefault(fn = /* istanbul ignore next -- @preserve */ ()=>1) {
+  return fn();
+}
 export function unsupportedFunction(flag: boolean) {
   return /* istanbul ignore next -- @preserve */ Boolean((()=>flag ? 1 : 2)());
 }
@@ -252,7 +286,9 @@ export function unsupportedFunction(flag: boolean) {
 const unsupportedChecks = `assert.equal(unsupported.unsupportedCall(true), true);
 assert.deepEqual(unsupported.unsupportedArray(true), [1]);
 assert.equal(unsupported.unsupportedUnary(true), false);
-assert.equal(unsupported.unsupportedFunction(true), true);`;
+assert.equal(unsupported.unsupportedFunction(true), true);
+assert.equal(unsupported.unsupportedInitializer(true), 1);
+assert.equal(unsupported.unsupportedDefault(), 1);`;
 const conciseSource = join(work, 'concise.ts');
 writeFileSync(conciseSource, `export const arrowConditional = (flag: boolean) => /* istanbul ignore next -- @preserve */ flag ? 1 : 2;
 export const arrowLogical = (flag: boolean) => /* istanbul ignore next -- @preserve */ flag || false;
@@ -344,6 +380,8 @@ instrumentSource(otherHintsSource, 'other-hints');
 instrumentSource(partialSource, 'partial');
 instrumentSource(conciseSource, 'concise');
 instrumentSource(unsupportedSource, 'unsupported');
+instrumentSource(classTargetsSource, 'class-targets');
+instrumentSource(privateMethodSource, 'private-method');
 instrumentSource(functionOutcomesSource, 'function-outcomes');
 instrumentSource(parenthesizedSource, 'parenthesized');
 instrumentSource(functionCountersSource, 'function-counters');
@@ -361,6 +399,9 @@ require('./ignored.instrumented.cjs').ignoredFile(true);
 require('./other-hints.instrumented.cjs').otherHints();
 const functionOutcomes = require('./function-outcomes.instrumented.cjs');
 ${functionOutcomeChecks}
+const classTargets = require('./class-targets.instrumented.cjs');
+const privateMethods = require('./private-method.instrumented.cjs');
+${classTargetChecks}
 const unsupported = require('./unsupported.instrumented.cjs');
 ${unsupportedChecks}
 const concise = require('./concise.instrumented.cjs');
@@ -380,6 +421,9 @@ import {ignoredFile} from './ignored.ts';
 import {otherHints} from './other-hints.ts';
 import * as functionOutcomes from './function-outcomes.ts';
 ${functionOutcomeChecks}
+import * as classTargets from './class-targets.ts';
+import * as privateMethods from './private-method.ts';
+${classTargetChecks}
 import * as unsupported from './unsupported.ts';
 ${unsupportedChecks}
 import * as concise from './concise.ts';
@@ -395,7 +439,7 @@ functionCounters.functionCounterWrapper(); functionCounters.emptyWrapper(); func
 test('branch coverage', () => { ${checks} });
 `);
 writeFileSync(join(work, 'vitest.config.mjs'), `export default {test: {
-include: ['checks.vitest.mjs'], coverage: {provider: 'istanbul', include: ['subject.tsx', 'ignored.ts', 'other-hints.ts', 'partial.ts', 'function-outcomes.ts', 'unsupported.ts', 'concise.ts', 'parenthesized.ts', 'function-counters.ts'],
+include: ['checks.vitest.mjs'], coverage: {provider: 'istanbul', include: ['subject.tsx', 'ignored.ts', 'other-hints.ts', 'partial.ts', 'class-targets.ts', 'private-method.ts', 'function-outcomes.ts', 'unsupported.ts', 'concise.ts', 'parenthesized.ts', 'function-counters.ts'],
 reporter: ['json'], reportsDirectory: 'coverage-vitest'}}};
 `);
 writeFileSync(join(work, 'checks.jest.test.tsx'), `import assert from 'node:assert/strict';
@@ -404,6 +448,9 @@ import {ignoredFile} from './ignored';
 import {otherHints} from './other-hints';
 import * as functionOutcomes from './function-outcomes';
 ${functionOutcomeChecks}
+import * as classTargets from './class-targets';
+import * as privateMethods from './private-method';
+${classTargetChecks}
 import * as unsupported from './unsupported';
 ${unsupportedChecks}
 import * as concise from './concise';
@@ -423,7 +470,7 @@ writeFileSync(join(work, 'babel.config.cjs'), `module.exports = {presets: [[${JS
 writeFileSync(join(work, 'jest.config.cjs'), `module.exports = {
 preset: ${JSON.stringify(join(expo, 'node_modules/jest-expo'))},
 rootDir: __dirname, moduleDirectories: ['node_modules', ${JSON.stringify(join(expo, 'node_modules'))}],
-testMatch: ['**/checks.jest.test.tsx'], coverageProvider: 'babel', collectCoverageFrom: ['subject.tsx', 'ignored.ts', 'other-hints.ts', 'partial.ts', 'function-outcomes.ts', 'unsupported.ts', 'concise.ts', 'parenthesized.ts', 'function-counters.ts'],
+testMatch: ['**/checks.jest.test.tsx'], coverageProvider: 'babel', collectCoverageFrom: ['subject.tsx', 'ignored.ts', 'other-hints.ts', 'partial.ts', 'class-targets.ts', 'private-method.ts', 'function-outcomes.ts', 'unsupported.ts', 'concise.ts', 'parenthesized.ts', 'function-counters.ts'],
 coverageReporters: ['json'], coverageDirectory: 'coverage-jest-expo'};
 `);
 run(['--test', 'checks.node.cjs']);
@@ -546,6 +593,8 @@ for (const [provider, path] of Object.entries(reports)) {
   results.routes[provider].conciseSuppression = verifyConcise(provider, path);
   results.routes[provider].unsupportedTargets = verifyUnsupported(provider, path);
   results.routes[provider].functionOutcomes = verifyFunctionOutcomes(provider, path);
+  results.routes[provider].classTargets = verifyUnsupportedSubtree(provider, path, classTargetsSource, 'method()');
+  results.routes[provider].privateMethods = verifyUnsupportedSubtree(provider, path, privateMethodSource, '#method(');
   // Vitest's transform keeps instrumenting this arrow despite the preserved hint.
   const parenthesizedResult = scoreSource(parenthesizedSource, path, provider === 'vitest' ? 2 : 0);
   assert.equal(parenthesizedResult.coverageSuppressions.count, 1);
@@ -640,7 +689,7 @@ function verifyPartial(provider, path) {
   const named = Object.fromEntries(result.functions.map(row => [row.name, row]));
   for (const name of ['partiallySuppressed', 'ignoredStatement', 'allStatementsIgnored',
     'ignoredIf', 'ignoredElse', 'ignoredImplicitElse', 'ignoredTernary', 'ignoredLogical',
-    'ignoredExpressionWithFunction', 'ignoredCallOutcome', 'retainedInitializer', 'retainedBranch']) {
+    'ignoredExpressionWithFunction', 'ignoredCallOutcome', 'ignoredClassOutcome', 'sharedBranchStart', 'retainedInitializer', 'retainedBranch']) {
     assert.equal(named[name].status, 'partially-suppressed', `${provider}/${name}: ${JSON.stringify(result)}`);
     assert.equal(named[name].crap, null);
     assert.equal(named[name].coverageBasis, null);
@@ -649,20 +698,28 @@ function verifyPartial(provider, path) {
       : name === 'ignoredImplicitElse' ? 2 / 3 : 1);
   }
   assert.equal(named.allStatementsIgnored.total, 0);
-  for (const name of ['ignoredIf', 'ignoredElse', 'ignoredImplicitElse', 'ignoredTernary', 'ignoredLogical']) {
+  for (const name of ['ignoredIf', 'ignoredElse', 'ignoredImplicitElse', 'ignoredTernary', 'ignoredLogical', 'ignoredClassOutcome']) {
     assert.equal(named[name].branchTotal, 1, `${provider}/${name}`);
     assert.equal(named[name].branchCovered, 1, `${provider}/${name}`);
     assert.equal(named[name].branchCoverage, 1);
   }
   assert.equal(named.retainedBranch.branchTotal, 2);
   assert.equal(named.retainedBranch.branchCoverage, 0.5);
-  assert.equal(result.coverageSuppressions.count, 12);
+  assert.equal(result.coverageSuppressions.count, 14);
   assert.equal(result.functions.filter(row => row.status === 'suppressed').length, 4);
   assert.equal(named.ignoredCallOutcome.branchTotal, 3);
   assert.equal(named.ignoredCallOutcome.branchCoverage, 1 / 3);
+  assert.equal(named.sharedBranchStart.branchTotal, 3);
+  assert.equal(named.sharedBranchStart.branchCoverage, 1 / 3);
+  const classMethodStart = readFileSync(partialSource, 'utf8').indexOf('method()') + 'method'.length;
+  const classMethod = result.functions.find(row => row.start === classMethodStart);
+  assert.equal(classMethod.status, 'measured');
+  assert.equal(classMethod.coverageSuppressions, 0);
+  assert.equal(classMethod.coverage, 0);
   const raw = JSON.parse(readFileSync(path, 'utf8'));
   const text = readFileSync(partialSource, 'utf8');
   const lines = text.split('\n');
+  const retainedLine = lines.findIndex(line => line.startsWith('export function retainedBranch(')) + 4;
   for (const kind of ['statement', 'branch', 'truncated-statement', 'extended-statement']) {
     const invalid = structuredClone(raw);
     const file = invalid[partialSource];
@@ -671,7 +728,7 @@ function verifyPartial(provider, path) {
     const counters = statement ? file.s : file.b;
     const id = Object.keys(map).find(id => {
       const location = statement ? map[id] : map[id].loc;
-      return lines[location.start.line - 1].includes('return flag ? 1 : 2;');
+      return location.start.line === retainedLine;
     });
     assert.ok(id !== undefined, `${provider}: retained ${kind}`);
     if (kind === 'truncated-statement') {
@@ -731,6 +788,32 @@ function verifyFunctionOutcomes(provider, path) {
   if (provider !== 'vitest') assert.ok(rejected.problems.some(problem => problem.includes('missing retained branch')));
   return result;
 }
+function verifyUnsupportedSubtree(provider, path, source, method) {
+  const result = scoreSource(source, path, 2);
+  assert.ok(result.problems.some(problem => problem.includes('no instrumented target')));
+  const altered = JSON.parse(readFileSync(path, 'utf8')), file = altered[source];
+  const line = readFileSync(source, 'utf8').split('\n').findIndex(text => text.includes(method)) + 1;
+  for (const [locations, counters] of [['statementMap', 's'], ['branchMap', 'b'], ['fnMap', 'f']]) {
+    let removed = 0;
+    for (const [id, record] of Object.entries(file[locations])) {
+      if ((record.loc ?? record).start.line === line) {
+        delete file[locations][id]; delete file[counters][id]; removed++;
+      }
+    }
+    if (provider === 'node' && (locations !== 'fnMap' || !method.startsWith('#'))) {
+      assert.ok(removed > 0, `${source}: actual retained ${locations}`);
+    }
+  }
+  const omittedPath = join(work, `${provider}-${method.startsWith('#') ? 'private-method' : 'class-target'}-omitted.json`);
+  json(omittedPath, altered);
+  for (const reports of [[omittedPath], [path, omittedPath], [omittedPath, path]]) {
+    const scored = spawnSync(binary, ['score', source, ...reports], {encoding: 'utf8', timeout: 10000});
+    assert.ifError(scored.error);
+    assert.equal(scored.status, 2, scored.stdout + scored.stderr);
+    assert.ok(JSON.parse(scored.stdout).problems.some(problem => problem.includes('no instrumented target')));
+  }
+  return result;
+}
 function verifyUnsupported(provider, path) {
   const result = scoreSource(unsupportedSource, path, 2);
   assert.equal(result.complete, false);
@@ -752,6 +835,9 @@ function verifyUnsupported(provider, path) {
 writeFileSync(join(work, 'checks.plain.test.ts'), `import assert from 'node:assert/strict';
 import * as functionOutcomes from './function-outcomes';
 ${functionOutcomeChecks}
+import * as classTargets from './class-targets';
+import * as privateMethods from './private-method';
+${classTargetChecks}
 import * as unsupported from './unsupported';
 ${unsupportedChecks}
 import * as concise from './concise';
@@ -765,14 +851,16 @@ transform: {'^.+\\.tsx?$': [${JSON.stringify(join(plain, 'node_modules/babel-jes
 configFile: false, babelrc: false,
 presets: [${JSON.stringify(join(plain, 'node_modules/@babel/preset-typescript'))}],
 plugins: [${JSON.stringify(join(plain, 'node_modules/@babel/plugin-transform-modules-commonjs'))}]}]},
-coverageProvider: 'babel', collectCoverageFrom: ['partial.ts', 'function-outcomes.ts', 'unsupported.ts', 'concise.ts'],
+coverageProvider: 'babel', collectCoverageFrom: ['partial.ts', 'class-targets.ts', 'private-method.ts', 'function-outcomes.ts', 'unsupported.ts', 'concise.ts'],
 coverageReporters: ['json'], coverageDirectory: 'coverage-jest-plain'};
 `);
 run([join(plain, 'node_modules/jest/bin/jest.js'), '--config', 'jest-plain.config.cjs', '--runInBand', '--coverage']);
 results.routes.jest = {partialSuppression: verifyPartial('jest', join(work, 'coverage-jest-plain/coverage-final.json')),
   conciseSuppression: verifyConcise('jest', join(work, 'coverage-jest-plain/coverage-final.json')),
   unsupportedTargets: verifyUnsupported('jest', join(work, 'coverage-jest-plain/coverage-final.json')),
-  functionOutcomes: verifyFunctionOutcomes('jest', join(work, 'coverage-jest-plain/coverage-final.json'))};
+  functionOutcomes: verifyFunctionOutcomes('jest', join(work, 'coverage-jest-plain/coverage-final.json')),
+  classTargets: verifyUnsupportedSubtree('jest', join(work, 'coverage-jest-plain/coverage-final.json'), classTargetsSource, 'method()'),
+  privateMethods: verifyUnsupportedSubtree('jest', join(work, 'coverage-jest-plain/coverage-final.json'), privateMethodSource, '#method(')};
 results.environment.plainJest = JSON.parse(readFileSync(join(plain, 'node_modules/jest/package.json'), 'utf8')).version;
 const project = join(work, 'mutation-input'), scratch = join(work, 'mutation-scratch');
 mkdirSync(project); mkdirSync(scratch);
