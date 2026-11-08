@@ -979,6 +979,13 @@ Separate class-expression and private-method hints remain incomplete after
 the target's descendant counters are deleted, alone and in both merge orders.
 Initializer/default-value counter rewrites remain unsupported, while logical
 tests and enclosing ternaries sharing a start offset keep distinct outcomes.
+Adjacent hints verify last-directive precedence while retaining every syntax
+count. A late file-level hint overrides invalid local hints. Function-valued
+calls, member access and binary expressions cannot borrow the nested function's
+visitor, even after its counters are deleted in either merge order. Erased
+postfix TypeScript wrappers preserve valid targets on Node; Vitest and both
+Jest transforms retain an ignored statement and remain incomplete there. Consequent mappings may
+include an `else` delimiter without accepting executable alternate-arm code.
 Existing whole-suppression and transform-conflict controls
 remain in the same proof. A real Node check also verifies extreme and operator
 mutation jobs, source preservation and scratch cleanup under partial suppression.

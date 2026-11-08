@@ -133,6 +133,25 @@ pub enum CoverageStatementKind {
     ConciseReturn,
 }
 
+struct CoverageExpressionTarget {
+    source: Span,
+    runtime: Span,
+}
+
+// Postfix TypeScript wrappers erase without adding runtime operations.
+fn coverage_runtime_expression<'e, 'a>(mut expression: &'e Expression<'a>) -> &'e Expression<'a> {
+    loop {
+        expression = match expression {
+            Expression::ParenthesizedExpression(node) => &node.expression,
+            Expression::TSAsExpression(node) => &node.expression,
+            Expression::TSSatisfiesExpression(node) => &node.expression,
+            Expression::TSNonNullExpression(node) => &node.expression,
+            Expression::TSInstantiationExpression(node) => &node.expression,
+            _ => return expression,
+        };
+    }
+}
+
 pub struct CoverageStatement {
     pub span: Span,
     // Source maps may omit an initializer's enclosing parentheses.
@@ -293,10 +312,10 @@ pub struct Analysis {
     suppressions: Vec<Value>,
     suppression_targets: std::collections::BTreeMap<u32, u32>,
     coverage_targets: BTreeMap<u32, Span>,
-    coverage_next_targets: BTreeSet<u32>,
+    coverage_next_targets: BTreeSet<(u32, u32)>,
     coverage_method_functions: BTreeSet<u32>,
     coverage_hoisted_values: BTreeSet<u32>,
-    coverage_expression_targets: BTreeMap<u32, Span>,
+    coverage_expression_targets: BTreeMap<u32, CoverageExpressionTarget>,
     coverage_declarations: BTreeSet<u32>,
     coverage_suppressions: Vec<Value>,
     pub coverage_ignored_file: bool,
@@ -354,7 +373,10 @@ impl<'a> Visit<'a> for Analysis {
     fn visit_expression(&mut self, expression: &Expression<'a>) {
         self.coverage_expression_targets
             .entry(expression.span().start)
-            .or_insert(expression.without_parentheses().span());
+            .or_insert(CoverageExpressionTarget {
+                source: expression.without_parentheses().span(),
+                runtime: coverage_runtime_expression(expression).span(),
+            });
         self.coverage_targets
             .entry(expression.span().start)
             .or_insert(expression.span());
@@ -770,7 +792,8 @@ impl<'a> Visit<'a> for Analysis {
             }
         };
         if subtree_target {
-            self.coverage_next_targets.insert(node.span().start);
+            self.coverage_next_targets
+                .insert((node.span().start, node.span().end));
         }
         if coverage_target {
             self.coverage_targets
@@ -876,6 +899,13 @@ impl<'a> Visit<'a> for Analysis {
                     statement.test.without_parentheses().span().end,
                     statement.consequent.span().start,
                 ));
+                if let Some(alternate) = &statement.alternate {
+                    // A mapped consequent can include `else`, but not its executable arm.
+                    self.branch_end_ranges.push(Span::new(
+                        statement.consequent.span().end,
+                        alternate.span().start,
+                    ));
+                }
             }
             AstKind::ObjectExpression(expression) => {
                 // A property's comma and the final closing brace evaluate no
@@ -1179,7 +1209,8 @@ impl<'a> Visit<'a> for Analysis {
             _ => None,
         };
         if let Some(statement) = required_statement {
-            self.coverage_next_targets.insert(node.span().start);
+            self.coverage_next_targets
+                .insert((node.span().start, node.span().end));
             self.coverage_statements.push(statement);
         }
         let decision = match node {
@@ -1872,40 +1903,47 @@ impl Analysis {
         for (span, escape) in std::mem::take(&mut result.escapes) {
             result.count_escape(result.owner(span.start), escape);
         }
+        let mut last_coverage_hints = BTreeMap::new();
+        for comment in &parsed.program.comments {
+            let span = comment.content_span();
+            if let Some(("istanbul", kind)) =
+                coverage_hint(&source[span.start as usize..span.end as usize])
+            {
+                if kind == "file" {
+                    result.coverage_ignored_file = true;
+                } else if let Some(target) =
+                    result.coverage_comment_target(source, comment.attached_to, comment.span.end)
+                {
+                    last_coverage_hints.insert((target.start, target.end), comment.span.start);
+                }
+            }
+        }
         for comment in &parsed.program.comments {
             let span = comment.content_span();
             let content = &source[span.start as usize..span.end as usize];
             if let Some((provider, kind)) = coverage_hint(content) {
                 let file_level = kind == "file";
-                let validate_hint = provider == "istanbul"
+                let attached = (kind != "file")
+                    .then(|| {
+                        result.coverage_comment_target(
+                            source,
+                            comment.attached_to,
+                            comment.span.end,
+                        )
+                    })
+                    .flatten();
+                let is_last = attached.is_none_or(|target| {
+                    last_coverage_hints.get(&(target.start, target.end))
+                        == Some(&comment.span.start)
+                });
+                let effective_istanbul = provider == "istanbul"
+                    && (file_level || (!result.coverage_ignored_file && is_last));
+                let validate_hint = effective_istanbul
                     && !file_level
-                    && !result.coverage_ignored_file
                     && !result.coverage_ignored(comment.span.start)
                     && result
                         .owner(comment.span.start)
                         .is_none_or(|owner| !result.scopes[owner].coverage_suppressed);
-                let attached = (kind != "file")
-                    .then(|| {
-                        result
-                            .coverage_targets
-                            .get(&comment.attached_to)
-                            .copied()
-                            .filter(|target| comment.span.end <= target.start)
-                            .or_else(|| {
-                                // OXC can classify a line-ending hint before a function as trailing.
-                                result
-                                    .coverage_targets
-                                    .range(comment.span.end..)
-                                    .next()
-                                    .filter(|(start, _)| {
-                                        source[comment.span.end as usize..**start as usize]
-                                            .chars()
-                                            .all(javascript_whitespace)
-                                    })
-                                    .map(|(_, target)| *target)
-                            })
-                    })
-                    .flatten();
                 let target = if matches!(kind, "if" | "else") {
                     attached
                         .and_then(|target| result.coverage_if_arms.get(&target.start))
@@ -1923,8 +1961,7 @@ impl Analysis {
                     result
                         .coverage_expression_targets
                         .get(&target.start)
-                        .copied()
-                        .unwrap_or(target)
+                        .map_or(target, |expression| expression.source)
                 });
                 // These counters wrap their value before its visitor runs, moving its hint
                 // to an unvisited sequence expression. Hoisted function creation is exempt.
@@ -1936,12 +1973,18 @@ impl Analysis {
                         branch.kind == "default-arg" && branch.outcomes.contains(&Some(target))
                     })
                 });
+                let runtime_target = target.map(|target| {
+                    result
+                        .coverage_expression_targets
+                        .get(&target.start)
+                        .map_or(target, |expression| expression.runtime)
+                });
                 let visitor_target = !rewritten_value
-                    && (target.is_some_and(|target| {
-                        result.coverage_next_targets.contains(&target.start)
-                    }) || normalized_target.is_some_and(|target| {
-                        result.coverage_next_targets.contains(&target.start)
-                    }));
+                    && [target, runtime_target].into_iter().flatten().any(|span| {
+                        result
+                            .coverage_next_targets
+                            .contains(&(span.start, span.end))
+                    });
                 let ignores_subtree = file_level
                     || matches!(kind, "if" | "else")
                     || (kind == "next" && visitor_target);
@@ -2057,10 +2100,10 @@ impl Analysis {
                 });
                 let partial_owners: BTreeSet<_> =
                     partial_owner.into_iter().chain(outcome_owners).collect();
-                if provider == "istanbul" && !file_level {
+                if effective_istanbul && !file_level {
                     result.coverage_ignored_outcomes.extend(ignored_outcomes);
                 }
-                if provider == "istanbul"
+                if effective_istanbul
                     && !file_level
                     && ignores_subtree
                     && let Some(target) = target
@@ -2076,10 +2119,10 @@ impl Analysis {
                     if attributed.contains(&index) {
                         scope.coverage_suppressions += 1;
                     }
-                    if provider == "istanbul" && affected.contains(&index) {
+                    if effective_istanbul && affected.contains(&index) {
                         scope.coverage_suppressed = true;
                     }
-                    if provider == "istanbul" && partial_owners.contains(&index) {
+                    if effective_istanbul && partial_owners.contains(&index) {
                         scope.coverage_partial_suppression = true;
                     }
                 }
@@ -2277,6 +2320,30 @@ impl Analysis {
 
     pub fn coverage_suppressions(&self) -> Value {
         json!({"count":self.coverage_suppressions.len(),"hints":self.coverage_suppressions})
+    }
+
+    fn coverage_comment_target(
+        &self,
+        source: &str,
+        attached_to: u32,
+        comment_end: u32,
+    ) -> Option<Span> {
+        self.coverage_targets
+            .get(&attached_to)
+            .copied()
+            .filter(|target| comment_end <= target.start)
+            .or_else(|| {
+                // OXC can classify a line-ending hint before a node as trailing.
+                self.coverage_targets
+                    .range(comment_end..)
+                    .next()
+                    .filter(|(start, _)| {
+                        source[comment_end as usize..**start as usize]
+                            .chars()
+                            .all(javascript_whitespace)
+                    })
+                    .map(|(_, target)| *target)
+            })
     }
 
     fn record_hoistable_declaration(&mut self, declaration: &VariableDeclaration<'_>) {
@@ -3420,6 +3487,35 @@ fn coverage_subtrees_require_an_unmodified_istanbul_visitor() {
     assert_eq!(analysis.scopes[0].coverage_suppressions, 1);
     assert!(!analysis.scopes[1].coverage_suppressed);
     assert_eq!(analysis.scopes[1].coverage_suppressions, 0);
+}
+
+#[test]
+fn subtree_visitors_use_full_runtime_spans_instead_of_shared_starts() {
+    for expression in [
+        "function(){ return flag ? 1 : 2; }()",
+        "function(){ return flag ? 1 : 2; }.call(null)",
+        "function(){ return flag ? 1 : 2; } === null",
+    ] {
+        let source = format!(
+            "function f(flag: boolean) {{ return /* istanbul ignore next */ {expression}; }}"
+        );
+        let analysis = Analysis::inspect("source.ts", &source).unwrap();
+        assert!(!analysis.coverage_hint_errors.is_empty(), "{source}");
+        assert!(
+            analysis
+                .scopes
+                .iter()
+                .all(|scope| !scope.coverage_suppressed)
+        );
+    }
+    let source = "function f(flag: boolean) { return /* istanbul ignore next */ function(){ return flag ? 1 : 2; } as Function; }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    assert!(
+        analysis.coverage_hint_errors.is_empty(),
+        "{:?}",
+        analysis.coverage_hint_errors
+    );
+    assert!(analysis.scopes[1].coverage_suppressed);
 }
 
 #[test]

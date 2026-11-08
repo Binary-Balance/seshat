@@ -838,6 +838,15 @@ remains instrumented unless it has its own supported hint. Those same
 expressions cannot be ignored merely because they contain a nested branch.
 A whole subtree is omitted only for a node Istanbul's visitor actually skips.
 
+Visitor targets must match the complete runtime expression. Erased postfix
+TypeScript wrappers can preserve that target; a following call, member access
+or binary operation cannot borrow a nested function's visitor.
+
+When adjacent Istanbul hints target the same node, only the last recognized
+directive controls exclusion. Every hint still contributes to syntax counts.
+An `ignore file` hint applies regardless of its position and overrides local
+hint validation, while coverage jobs and reports must still succeed.
+
 Istanbul has subtree visitors for class declarations and public methods, but
 not class expressions or private methods. A class expression used directly as
 a conditional/logical outcome excludes only that outcome counter; its methods

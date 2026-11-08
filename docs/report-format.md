@@ -214,6 +214,12 @@ and private methods do not. A direct class-expression outcome retains its
 method instrumentation. Unsupported method/expression targets remain incomplete
 even when their descendant records are missing.
 
+Subtree visitor identity uses the complete runtime span, allowing erased
+postfix TypeScript wrappers but rejecting enclosing calls, member access and
+binary operations. Only the last recognized Istanbul hint on a target controls
+exclusion; overridden hints still appear in syntax counts. File-level hints
+override local hint validation regardless of source position.
+
 Function initializers with hoisted counters and concise returns keep their
 enclosing counters when only their child expression is ignored. Ancestor
 statement/declaration hints still omit those counters. Initializer/default-value
@@ -223,7 +229,8 @@ establish function coverage.
 Each setup must match the expected retained shape before reports merge; a hint
 cannot excuse unrelated missing evidence or conflicting retained counters.
 Retained statement locations must match full AST extents, with the supported
-source-map parenthesis and trivia adjustments. An ignored concise-arrow body
+source-map parenthesis and trivia adjustments. A mapped if-consequent may
+include the `else` delimiter, but cannot extend into the alternate arm. An ignored concise-arrow body
 expression can retain its enclosing return counter. That counter describes
 retained execution; it does not restore the ignored branch evidence. Transforms
 that keep the supposedly ignored branches remain incomplete.

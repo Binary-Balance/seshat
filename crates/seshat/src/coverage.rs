@@ -722,6 +722,13 @@ fn partial_branch_suppression_checks_exact_retained_evidence_before_merging() {
     assert_eq!(result["functions"][0]["branchTotal"], 3);
     assert_eq!(result["functions"][0]["branchCoverage"], 2.0 / 3.0);
     assert_eq!(result["functions"][0]["crap"], Value::Null);
+    let mut extended_through_else = report.clone();
+    extended_through_else["source.ts"]["statementMap"]["1"] =
+        location(first_return, source.find("return 2;").unwrap());
+    assert_eq!(
+        attribute(&analysis, "source.ts", source, [&extended_through_else])["complete"],
+        true
+    );
     let mut missing_statement = report.clone();
     missing_statement["source.ts"]["statementMap"]
         .as_object_mut()
@@ -877,6 +884,97 @@ fn enclosing_nonvisitor_hints_cannot_excuse_missing_descendant_branches() {
                 .iter()
                 .any(|problem| problem.as_str().unwrap().contains("no instrumented target")),
             "{source}: {result}"
+        );
+    }
+}
+
+#[test]
+fn adjacent_hints_use_only_the_last_istanbul_directive() {
+    for (first, last) in [
+        ("if", "else"),
+        ("else", "if"),
+        ("next", "if"),
+        ("if", "next"),
+        ("else", "else"),
+    ] {
+        let source = format!(
+            "function f(flag: boolean) {{ const kept = 3; /* istanbul ignore {first} */ /* istanbul ignore {last} */ if (flag) return 1; else return 2; }}"
+        );
+        let analysis = Analysis::inspect("source.ts", &source).unwrap();
+        let loc =
+            |start, end| json!({"start":{"line":1,"column":start},"end":{"line":1,"column":end}});
+        let kept = source.find("3;").unwrap();
+        let if_start = source.find("if (flag)").unwrap();
+        let true_return = source.find("return 1;").unwrap();
+        let false_return = source.find("return 2;").unwrap();
+        let if_end = false_return + 9;
+        let mut report = json!({"source.ts":{"path":"source.ts","statementMap":{"0":loc(kept,kept+1)},"s":{"0":1},"branchMap":{},"b":{}}});
+        if last != "next" {
+            let retained = if last == "if" {
+                false_return
+            } else {
+                true_return
+            };
+            report["source.ts"]["statementMap"]["1"] = loc(if_start, if_end);
+            report["source.ts"]["statementMap"]["2"] = loc(retained, retained + 9);
+            report["source.ts"]["s"]["1"] = json!(1);
+            report["source.ts"]["s"]["2"] = json!(1);
+            let outcome = if last == "if" {
+                loc(false_return, if_end)
+            } else {
+                loc(if_start, if_end)
+            };
+            report["source.ts"]["branchMap"]["0"] =
+                json!({"type":"if","loc":loc(if_start,if_end),"locations":[outcome]});
+            report["source.ts"]["b"]["0"] = json!([1]);
+        }
+        let result = attribute(&analysis, "source.ts", &source, [&report]);
+        assert_eq!(result["complete"], true, "{source}: {result}");
+        assert_eq!(result["functions"][0]["status"], "partially-suppressed");
+        assert_eq!(result["functions"][0]["coverageSuppressions"], 2);
+        assert_eq!(result["functions"][0]["crap"], Value::Null);
+        if last != "next" {
+            let mut omitted = report.clone();
+            omitted["source.ts"]["statementMap"]
+                .as_object_mut()
+                .unwrap()
+                .remove("2");
+            omitted["source.ts"]["s"]
+                .as_object_mut()
+                .unwrap()
+                .remove("2");
+            omitted["source.ts"]["branchMap"] = json!({});
+            omitted["source.ts"]["b"] = json!({});
+            for reports in [
+                vec![&omitted],
+                vec![&report, &omitted],
+                vec![&omitted, &report],
+            ] {
+                assert_eq!(
+                    attribute(&analysis, "source.ts", &source, reports)["complete"],
+                    false,
+                    "{source}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn file_hints_override_local_hint_errors_regardless_of_position() {
+    let body = "function f() { return /* istanbul ignore next */ 1; }";
+    for source in [
+        format!("/* istanbul ignore file */ {body}"),
+        format!("{body} /* istanbul ignore file */"),
+    ] {
+        let analysis = Analysis::inspect("source.ts", &source).unwrap();
+        let result = attribute(&analysis, "source.ts", &source, [&json!({})]);
+        assert_eq!(result["complete"], true, "{source}: {result}");
+        assert_eq!(result["functions"][0]["status"], "suppressed");
+        assert_eq!(result["functions"][0]["coverageSuppressions"], 2);
+        assert_eq!(
+            attribute(&analysis, "source.ts", &source, std::iter::empty())["complete"],
+            false
         );
     }
 }
