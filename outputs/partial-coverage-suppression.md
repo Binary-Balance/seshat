@@ -74,7 +74,12 @@ directive orders. Vitest retains conditional/logical branches or incompatible
 typed locations in these placements and remains incomplete. Direct JavaScript
 instrumentation covers trailing block, line and mixed comment groups; executable
 code still prevents target recovery. Missing retained counters are rejected
-alone and in both merge orders. A late file-level hint overrides an
+alone and in both merge orders. Whole expression statements and child expressions
+keep separate hint identities even at a shared start. Duplicate `next` hints,
+invalid child directives, logical expressions and nested functions retain valid
+whole-statement exclusions on all four routes and direct JavaScript, including
+without semicolons; retained-counter deletion still fails. A late file-level
+hint overrides an
 earlier invalid local hint. Complete runtime spans prevent call, member and
 binary expressions from borrowing a nested function's visitor, including when
 the nested counters are removed. Erased postfix TypeScript wrappers preserve
@@ -91,7 +96,7 @@ statement coverage, null CRAP and checked pseudo-testing. The run attempted six
 jobs, required no additional worker baselines, preserved the original source,
 and left its scratch directory empty.
 
-Rust checks passed: 198 library tests, three CLI integration tests and twelve
+Rust checks passed: 199 library tests, three CLI integration tests and twelve
 proof-input integration tests. Formatting and Clippy with warnings denied
 passed. Focused tests cover wrong/unsupported targets, all statements omitted,
 retained ignored counters, wrong branch locations, malformed metadata,

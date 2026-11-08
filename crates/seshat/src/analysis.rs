@@ -138,6 +138,11 @@ struct CoverageExpressionTarget {
     runtime: Span,
 }
 
+struct CoverageTarget {
+    span: Span,
+    is_expression: bool,
+}
+
 // Postfix TypeScript wrappers erase without adding runtime operations.
 fn coverage_runtime_expression<'e, 'a>(mut expression: &'e Expression<'a>) -> &'e Expression<'a> {
     loop {
@@ -311,7 +316,7 @@ pub struct Analysis {
     unowned_type_safety: TypeSafety,
     suppressions: Vec<Value>,
     suppression_targets: std::collections::BTreeMap<u32, u32>,
-    coverage_targets: BTreeMap<u32, Span>,
+    coverage_targets: BTreeMap<u32, CoverageTarget>,
     coverage_next_targets: BTreeSet<(u32, u32)>,
     coverage_method_functions: BTreeSet<u32>,
     coverage_hoisted_values: BTreeSet<u32>,
@@ -366,7 +371,10 @@ impl<'a> Visit<'a> for Analysis {
     fn visit_statement(&mut self, statement: &Statement<'a>) {
         self.coverage_targets
             .entry(statement.span().start)
-            .or_insert(statement.span());
+            .or_insert(CoverageTarget {
+                span: statement.span(),
+                is_expression: false,
+            });
         walk::walk_statement(self, statement);
     }
 
@@ -379,7 +387,10 @@ impl<'a> Visit<'a> for Analysis {
             });
         self.coverage_targets
             .entry(expression.span().start)
-            .or_insert(expression.span());
+            .or_insert(CoverageTarget {
+                span: expression.span(),
+                is_expression: true,
+            });
         let boolean = match expression {
             Expression::BooleanLiteral(literal) => Some((
                 OperatorExpression::BooleanLiteral,
@@ -798,7 +809,10 @@ impl<'a> Visit<'a> for Analysis {
         if coverage_target {
             self.coverage_targets
                 .entry(node.span().start)
-                .or_insert(node.span());
+                .or_insert(CoverageTarget {
+                    span: node.span(),
+                    is_expression: false,
+                });
         }
         if matches!(
             node,
@@ -1966,8 +1980,7 @@ impl Analysis {
                 };
                 let normalized_target = target.map(|target| {
                     result
-                        .coverage_expression_targets
-                        .get(&target.start)
+                        .coverage_expression_target(target)
                         .map_or(target, |expression| expression.source)
                 });
                 // These counters wrap their value before its visitor runs, moving its hint
@@ -2333,7 +2346,7 @@ impl Analysis {
     ) -> Option<Span> {
         self.coverage_targets
             .get(&attached_to)
-            .copied()
+            .map(|target| target.span)
             .filter(|target| comment_end <= target.start)
             .or_else(|| {
                 // OXC can classify the first comment in a leading group as trailing.
@@ -2357,14 +2370,21 @@ impl Analysis {
                             .chars()
                             .all(javascript_whitespace)
                     })
-                    .map(|(_, target)| *target)
+                    .map(|(_, target)| target.span)
             })
     }
 
     fn coverage_runtime_target(&self, target: Span) -> Span {
-        self.coverage_expression_targets
-            .get(&target.start)
+        self.coverage_expression_target(target)
             .map_or(target, |expression| expression.runtime)
+    }
+
+    fn coverage_expression_target(&self, target: Span) -> Option<&CoverageExpressionTarget> {
+        // A statement and its expression remain separate visitors, even without a semicolon.
+        self.coverage_targets
+            .get(&target.start)
+            .filter(|candidate| candidate.is_expression && candidate.span == target)
+            .and_then(|_| self.coverage_expression_targets.get(&target.start))
     }
 
     fn record_hoistable_declaration(&mut self, declaration: &VariableDeclaration<'_>) {
@@ -3571,6 +3591,37 @@ fn coverage_hint_precedence_follows_erased_expression_wrappers() {
             }
         }
     }
+}
+
+#[test]
+fn statement_hints_keep_their_identity_beside_child_expression_hints() {
+    for expression in [
+        "n ? 1 : 2",
+        "n || false",
+        "function() { return n ? 1 : 2; }",
+    ] {
+        for inner in ["next", "else"] {
+            for semicolon in [";", ""] {
+                let source = format!(
+                    "function f(n) {{ const kept = 1; /* istanbul ignore next */ (/* istanbul ignore {inner} */ {expression}){semicolon}\nreturn kept; }}"
+                );
+                let analysis = Analysis::inspect("source.js", &source).unwrap();
+                assert!(
+                    analysis.coverage_hint_errors.is_empty(),
+                    "{source}: {:?}",
+                    analysis.coverage_hint_errors
+                );
+                assert_eq!(analysis.coverage_suppressions()["count"], 2);
+                assert!(analysis.scopes[0].coverage_partial_suppression);
+                let statement = source.find("(/* istanbul").unwrap() as u32;
+                assert!(analysis.coverage_statement_ignored(statement), "{source}");
+            }
+        }
+    }
+    let source =
+        "function f(n) { /* istanbul ignore else */ (/* istanbul ignore next */ n ? 1 : 2); }";
+    let analysis = Analysis::inspect("source.js", source).unwrap();
+    assert!(!analysis.coverage_hint_errors.is_empty());
 }
 
 #[test]

@@ -1242,6 +1242,178 @@
               "coverage ignore else has no matching if statement at 87"
             ]
           }
+        },
+        "statementChildren": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 8,
+            "hints": [
+              {
+                "end": 101,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 62,
+                "wholeFunction": false
+              },
+              {
+                "end": 142,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 103,
+                "wholeFunction": false
+              },
+              {
+                "end": 277,
+                "functions": [
+                  182
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 238,
+                "wholeFunction": false
+              },
+              {
+                "end": 318,
+                "functions": [
+                  182
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 279,
+                "wholeFunction": false
+              },
+              {
+                "end": 451,
+                "functions": [
+                  358
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 412,
+                "wholeFunction": false
+              },
+              {
+                "end": 492,
+                "functions": [
+                  358
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 453,
+                "wholeFunction": false
+              },
+              {
+                "end": 632,
+                "functions": [
+                  532,
+                  674
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 593,
+                "wholeFunction": true
+              },
+              {
+                "end": 673,
+                "functions": [
+                  532
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 634,
+                "wholeFunction": false
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "bothNext",
+              "start": 7,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "innerElse",
+              "start": 182,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "logical",
+              "start": 358,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "nestedFunction",
+              "start": 532,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 1,
+              "cognitiveComplexity": 0,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "function@674",
+              "start": 674,
+              "status": "suppressed",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 1
+            }
+          ],
+          "problems": []
         }
       }
     },
@@ -2494,6 +2666,178 @@
               "missing retained branch at 127"
             ]
           }
+        },
+        "statementChildren": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 8,
+            "hints": [
+              {
+                "end": 101,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 62,
+                "wholeFunction": false
+              },
+              {
+                "end": 142,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 103,
+                "wholeFunction": false
+              },
+              {
+                "end": 277,
+                "functions": [
+                  182
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 238,
+                "wholeFunction": false
+              },
+              {
+                "end": 318,
+                "functions": [
+                  182
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 279,
+                "wholeFunction": false
+              },
+              {
+                "end": 451,
+                "functions": [
+                  358
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 412,
+                "wholeFunction": false
+              },
+              {
+                "end": 492,
+                "functions": [
+                  358
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 453,
+                "wholeFunction": false
+              },
+              {
+                "end": 632,
+                "functions": [
+                  532,
+                  674
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 593,
+                "wholeFunction": true
+              },
+              {
+                "end": 673,
+                "functions": [
+                  532
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 634,
+                "wholeFunction": false
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "bothNext",
+              "start": 7,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "innerElse",
+              "start": 182,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "logical",
+              "start": 358,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "nestedFunction",
+              "start": 532,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 1,
+              "cognitiveComplexity": 0,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "function@674",
+              "start": 674,
+              "status": "suppressed",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 1
+            }
+          ],
+          "problems": []
         }
       }
     },
@@ -3730,6 +4074,178 @@
               "coverage ignore else has no matching if statement at 87"
             ]
           }
+        },
+        "statementChildren": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 8,
+            "hints": [
+              {
+                "end": 101,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 62,
+                "wholeFunction": false
+              },
+              {
+                "end": 142,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 103,
+                "wholeFunction": false
+              },
+              {
+                "end": 277,
+                "functions": [
+                  182
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 238,
+                "wholeFunction": false
+              },
+              {
+                "end": 318,
+                "functions": [
+                  182
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 279,
+                "wholeFunction": false
+              },
+              {
+                "end": 451,
+                "functions": [
+                  358
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 412,
+                "wholeFunction": false
+              },
+              {
+                "end": 492,
+                "functions": [
+                  358
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 453,
+                "wholeFunction": false
+              },
+              {
+                "end": 632,
+                "functions": [
+                  532,
+                  674
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 593,
+                "wholeFunction": true
+              },
+              {
+                "end": 673,
+                "functions": [
+                  532
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 634,
+                "wholeFunction": false
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "bothNext",
+              "start": 7,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "innerElse",
+              "start": 182,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "logical",
+              "start": 358,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "nestedFunction",
+              "start": 532,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 1,
+              "cognitiveComplexity": 0,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "function@674",
+              "start": 674,
+              "status": "suppressed",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 1
+            }
+          ],
+          "problems": []
         }
       }
     },
@@ -4966,6 +5482,178 @@
               "coverage ignore else has no matching if statement at 87"
             ]
           }
+        },
+        "statementChildren": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 8,
+            "hints": [
+              {
+                "end": 101,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 62,
+                "wholeFunction": false
+              },
+              {
+                "end": 142,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 103,
+                "wholeFunction": false
+              },
+              {
+                "end": 277,
+                "functions": [
+                  182
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 238,
+                "wholeFunction": false
+              },
+              {
+                "end": 318,
+                "functions": [
+                  182
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 279,
+                "wholeFunction": false
+              },
+              {
+                "end": 451,
+                "functions": [
+                  358
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 412,
+                "wholeFunction": false
+              },
+              {
+                "end": 492,
+                "functions": [
+                  358
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 453,
+                "wholeFunction": false
+              },
+              {
+                "end": 632,
+                "functions": [
+                  532,
+                  674
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 593,
+                "wholeFunction": true
+              },
+              {
+                "end": 673,
+                "functions": [
+                  532
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 634,
+                "wholeFunction": false
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "bothNext",
+              "start": 7,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "innerElse",
+              "start": 182,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "logical",
+              "start": 358,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "nestedFunction",
+              "start": 532,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 1,
+              "cognitiveComplexity": 0,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "function@674",
+              "start": 674,
+              "status": "suppressed",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 1
+            }
+          ],
+          "problems": []
         }
       }
     }
@@ -5011,17 +5699,17 @@
     "jobsAttempted": 6,
     "workerBaselineJobs": 0,
     "phaseTimings": {
-      "analysisMs": 0.342609,
-      "attributionMs": 0.13857799999999998,
-      "baselineMs": 155.428082,
-      "cleanupMs": 0.47326300000000004,
-      "compilerStrictnessMs": 2228.068461,
-      "coverageMs": 441.387401,
-      "preparationMs": 0.36468,
+      "analysisMs": 0.523106,
+      "attributionMs": 0.134601,
+      "baselineMs": 169.423753,
+      "cleanupMs": 0.445461,
+      "compilerStrictnessMs": 2393.906648,
+      "coverageMs": 465.77417399999996,
+      "preparationMs": 0.529988,
       "typecheckMs": null
     },
-    "mutationWallMs": 320.71270699999997,
-    "executionMs": 3307.0610509999997,
+    "mutationWallMs": 324.958871,
+    "executionMs": 3518.162309,
     "pseudoTesting": {
       "planned": 1,
       "killed": 1
@@ -5062,7 +5750,8 @@
     "Mapped if-consequents can include the else delimiter without extending into alternate-arm execution",
     "Hints across parentheses and erased type wrappers use one runtime precedence key in both directive orders; inactive hints cannot excuse deleted counters alone or in both merge orders",
     "Trailing block, line and mixed leading comment groups accepted under direct JavaScript instrumentation; their retained counters remain required alone and in both merge orders",
-    "Vitest conditional/logical counter retention and incompatible typed locations remain incomplete for the wrapped-expression placements"
+    "Vitest conditional/logical counter retention and incompatible typed locations remain incomplete for the wrapped-expression placements",
+    "Whole expression-statement hints remain separate from nested conditional, logical and function hints at shared starts, with and without semicolons; all four source-mapped routes and direct JavaScript accept exclusions and reject missing retained counters alone and in both merge orders"
   ],
   "commentGroups": {
     "blocks": {
@@ -5206,5 +5895,177 @@
       ],
       "problems": []
     }
+  },
+  "directStatementChildren": {
+    "complete": true,
+    "coverageSuppressions": {
+      "count": 8,
+      "hints": [
+        {
+          "end": 85,
+          "functions": [
+            0
+          ],
+          "kind": "next",
+          "provider": "istanbul",
+          "start": 46,
+          "wholeFunction": false
+        },
+        {
+          "end": 126,
+          "functions": [
+            0
+          ],
+          "kind": "next",
+          "provider": "istanbul",
+          "start": 87,
+          "wholeFunction": false
+        },
+        {
+          "end": 245,
+          "functions": [
+            159
+          ],
+          "kind": "next",
+          "provider": "istanbul",
+          "start": 206,
+          "wholeFunction": false
+        },
+        {
+          "end": 286,
+          "functions": [
+            159
+          ],
+          "kind": "else",
+          "provider": "istanbul",
+          "start": 247,
+          "wholeFunction": false
+        },
+        {
+          "end": 403,
+          "functions": [
+            319
+          ],
+          "kind": "next",
+          "provider": "istanbul",
+          "start": 364,
+          "wholeFunction": false
+        },
+        {
+          "end": 444,
+          "functions": [
+            319
+          ],
+          "kind": "else",
+          "provider": "istanbul",
+          "start": 405,
+          "wholeFunction": false
+        },
+        {
+          "end": 568,
+          "functions": [
+            477,
+            610
+          ],
+          "kind": "next",
+          "provider": "istanbul",
+          "start": 529,
+          "wholeFunction": true
+        },
+        {
+          "end": 609,
+          "functions": [
+            477
+          ],
+          "kind": "else",
+          "provider": "istanbul",
+          "start": 570,
+          "wholeFunction": false
+        }
+      ]
+    },
+    "functions": [
+      {
+        "name": "bothNext",
+        "start": 0,
+        "status": "partially-suppressed",
+        "covered": 2,
+        "total": 2,
+        "coverage": 1,
+        "branchCovered": 0,
+        "branchTotal": 0,
+        "branchCoverage": null,
+        "coverageBasis": null,
+        "crap": null,
+        "complexity": 2,
+        "cognitiveComplexity": 1,
+        "coverageSuppressions": 2
+      },
+      {
+        "name": "innerElse",
+        "start": 159,
+        "status": "partially-suppressed",
+        "covered": 2,
+        "total": 2,
+        "coverage": 1,
+        "branchCovered": 0,
+        "branchTotal": 0,
+        "branchCoverage": null,
+        "coverageBasis": null,
+        "crap": null,
+        "complexity": 2,
+        "cognitiveComplexity": 1,
+        "coverageSuppressions": 2
+      },
+      {
+        "name": "logical",
+        "start": 319,
+        "status": "partially-suppressed",
+        "covered": 2,
+        "total": 2,
+        "coverage": 1,
+        "branchCovered": 0,
+        "branchTotal": 0,
+        "branchCoverage": null,
+        "coverageBasis": null,
+        "crap": null,
+        "complexity": 2,
+        "cognitiveComplexity": 1,
+        "coverageSuppressions": 2
+      },
+      {
+        "name": "nestedFunction",
+        "start": 477,
+        "status": "partially-suppressed",
+        "covered": 2,
+        "total": 2,
+        "coverage": 1,
+        "branchCovered": 0,
+        "branchTotal": 0,
+        "branchCoverage": null,
+        "coverageBasis": null,
+        "crap": null,
+        "complexity": 1,
+        "cognitiveComplexity": 0,
+        "coverageSuppressions": 2
+      },
+      {
+        "name": "function@610",
+        "start": 610,
+        "status": "suppressed",
+        "covered": 0,
+        "total": 0,
+        "coverage": null,
+        "branchCovered": 0,
+        "branchTotal": 0,
+        "branchCoverage": null,
+        "coverageBasis": null,
+        "crap": null,
+        "complexity": 2,
+        "cognitiveComplexity": 1,
+        "coverageSuppressions": 1
+      }
+    ],
+    "problems": []
   }
 }

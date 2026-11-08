@@ -840,7 +840,8 @@ A whole subtree is omitted only for a node Istanbul's visitor actually skips.
 
 Visitor targets must match the complete runtime expression. Erased postfix
 TypeScript wrappers can preserve that target; a following call, member access
-or binary operation cannot borrow a nested function's visitor.
+or binary operation cannot borrow a nested function's visitor. Statements and
+their child expressions remain separate targets even when their starts match.
 
 When Istanbul hints target the same runtime node, including across parentheses
 and erased type wrappers, only the last recognized directive controls exclusion.

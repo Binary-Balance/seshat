@@ -986,6 +986,10 @@ Vitest retains conditional/logical branch counters or incompatible typed
 locations in these placements, which remain incomplete.
 Direct JavaScript instrumentation verifies trailing block, line and mixed
 comment groups, including retained-counter deletion in both merge orders.
+Whole expression statements with nested child hints retain their own exclusion,
+including duplicate `next`, invalid child `else`, logical and nested-function
+cases, with and without semicolons. Direct JavaScript and all four TypeScript
+routes verify their retained counters, including deletion in both merge orders.
 A late file-level hint overrides invalid local hints. Function-valued
 calls, member access and binary expressions cannot borrow the nested function's
 visitor, even after its counters are deleted in either merge order. Erased

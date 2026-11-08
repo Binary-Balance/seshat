@@ -216,7 +216,9 @@ even when their descendant records are missing.
 
 Subtree visitor identity uses the complete runtime span, allowing erased
 postfix TypeScript wrappers but rejecting enclosing calls, member access and
-binary operations. Precedence groups comments across erased wrappers and
+binary operations. Statements retain a separate identity from child expressions,
+including without a semicolon. Precedence groups comments across erased wrappers
+and
 parser-confirmed leading comment groups. Only the last recognized Istanbul hint
 on a runtime target controls exclusion; overridden hints still appear in syntax
 counts. File-level hints override local hint validation regardless of source
