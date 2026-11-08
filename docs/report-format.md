@@ -204,6 +204,11 @@ still requires reliable positive statement coverage; operator mutations remain.
 Ignored arms also exclude their nested statements, branches and functions.
 Each setup must match the expected retained shape before reports merge; a hint
 cannot excuse unrelated missing evidence or conflicting retained counters.
+Retained statement locations must match full AST extents, with the supported
+source-map parenthesis and trivia adjustments. An ignored concise-arrow body
+expression can retain its enclosing return counter. That counter describes
+retained execution; it does not restore the ignored branch evidence. Transforms
+that keep the supposedly ignored branches remain incomplete.
 
 Other hint forms are counted without claiming provider support. `c8` and `v8`
 hints do not suppress Istanbul instrumentation, so they leave its measurements

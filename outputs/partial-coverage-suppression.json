@@ -14,7 +14,7 @@
     "node": {
       "complete": true,
       "coverageSuppressions": {
-        "count": 9,
+        "count": 10,
         "hints": [
           {
             "end": 94,
@@ -100,13 +100,23 @@
             "wholeFunction": false
           },
           {
-            "end": 1142,
+            "end": 1147,
             "functions": [
               1060
             ],
             "kind": "next",
             "provider": "istanbul",
-            "start": 1103,
+            "start": 1108,
+            "wholeFunction": false
+          },
+          {
+            "end": 1304,
+            "functions": [
+              1222
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1265,
             "wholeFunction": false
           }
         ]
@@ -289,8 +299,24 @@
           "coverageSuppressions": 1
         },
         {
-          "name": "retainedBranch",
+          "name": "retainedInitializer",
           "start": 1060,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 2,
+          "branchCoverage": 0.5,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "retainedBranch",
+          "start": 1222,
           "status": "partially-suppressed",
           "covered": 1,
           "total": 1,
@@ -304,12 +330,76 @@
           "cognitiveComplexity": 1,
           "coverageSuppressions": 1
         }
-      ]
+      ],
+      "problems": [],
+      "conciseArrows": {
+        "complete": true,
+        "coverageSuppressions": {
+          "count": 2,
+          "hints": [
+            {
+              "end": 90,
+              "functions": [
+                32
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 51,
+              "wholeFunction": false
+            },
+            {
+              "end": 191,
+              "functions": [
+                133
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 152,
+              "wholeFunction": false
+            }
+          ]
+        },
+        "functions": [
+          {
+            "name": "arrow@32",
+            "start": 32,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@133",
+            "start": 133,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          }
+        ],
+        "problems": []
+      }
     },
     "vitest": {
       "complete": true,
       "coverageSuppressions": {
-        "count": 9,
+        "count": 10,
         "hints": [
           {
             "end": 94,
@@ -395,13 +485,23 @@
             "wholeFunction": false
           },
           {
-            "end": 1142,
+            "end": 1147,
             "functions": [
               1060
             ],
             "kind": "next",
             "provider": "istanbul",
-            "start": 1103,
+            "start": 1108,
+            "wholeFunction": false
+          },
+          {
+            "end": 1304,
+            "functions": [
+              1222
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1265,
             "wholeFunction": false
           }
         ]
@@ -584,8 +684,24 @@
           "coverageSuppressions": 1
         },
         {
-          "name": "retainedBranch",
+          "name": "retainedInitializer",
           "start": 1060,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 2,
+          "branchCoverage": 0.5,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "retainedBranch",
+          "start": 1222,
           "status": "partially-suppressed",
           "covered": 1,
           "total": 1,
@@ -599,12 +715,79 @@
           "cognitiveComplexity": 1,
           "coverageSuppressions": 1
         }
-      ]
+      ],
+      "problems": [],
+      "conciseArrows": {
+        "complete": false,
+        "coverageSuppressions": {
+          "count": 2,
+          "hints": [
+            {
+              "end": 90,
+              "functions": [
+                32
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 51,
+              "wholeFunction": false
+            },
+            {
+              "end": 191,
+              "functions": [
+                133
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 152,
+              "wholeFunction": false
+            }
+          ]
+        },
+        "functions": [
+          {
+            "name": "arrow@32",
+            "start": 32,
+            "status": "unknown",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@133",
+            "start": 133,
+            "status": "unknown",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          }
+        ],
+        "problems": [
+          "coverage retains an ignored branch",
+          "coverage retains an ignored branch"
+        ]
+      }
     },
     "jest-expo": {
       "complete": true,
       "coverageSuppressions": {
-        "count": 9,
+        "count": 10,
         "hints": [
           {
             "end": 94,
@@ -690,13 +873,23 @@
             "wholeFunction": false
           },
           {
-            "end": 1142,
+            "end": 1147,
             "functions": [
               1060
             ],
             "kind": "next",
             "provider": "istanbul",
-            "start": 1103,
+            "start": 1108,
+            "wholeFunction": false
+          },
+          {
+            "end": 1304,
+            "functions": [
+              1222
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1265,
             "wholeFunction": false
           }
         ]
@@ -879,8 +1072,24 @@
           "coverageSuppressions": 1
         },
         {
-          "name": "retainedBranch",
+          "name": "retainedInitializer",
           "start": 1060,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 2,
+          "branchCoverage": 0.5,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "retainedBranch",
+          "start": 1222,
           "status": "partially-suppressed",
           "covered": 1,
           "total": 1,
@@ -894,12 +1103,76 @@
           "cognitiveComplexity": 1,
           "coverageSuppressions": 1
         }
-      ]
+      ],
+      "problems": [],
+      "conciseArrows": {
+        "complete": true,
+        "coverageSuppressions": {
+          "count": 2,
+          "hints": [
+            {
+              "end": 90,
+              "functions": [
+                32
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 51,
+              "wholeFunction": false
+            },
+            {
+              "end": 191,
+              "functions": [
+                133
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 152,
+              "wholeFunction": false
+            }
+          ]
+        },
+        "functions": [
+          {
+            "name": "arrow@32",
+            "start": 32,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@133",
+            "start": 133,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          }
+        ],
+        "problems": []
+      }
     },
     "jest": {
       "complete": true,
       "coverageSuppressions": {
-        "count": 9,
+        "count": 10,
         "hints": [
           {
             "end": 94,
@@ -985,13 +1258,23 @@
             "wholeFunction": false
           },
           {
-            "end": 1142,
+            "end": 1147,
             "functions": [
               1060
             ],
             "kind": "next",
             "provider": "istanbul",
-            "start": 1103,
+            "start": 1108,
+            "wholeFunction": false
+          },
+          {
+            "end": 1304,
+            "functions": [
+              1222
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1265,
             "wholeFunction": false
           }
         ]
@@ -1174,8 +1457,24 @@
           "coverageSuppressions": 1
         },
         {
-          "name": "retainedBranch",
+          "name": "retainedInitializer",
           "start": 1060,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 2,
+          "branchCoverage": 0.5,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "retainedBranch",
+          "start": 1222,
           "status": "partially-suppressed",
           "covered": 1,
           "total": 1,
@@ -1189,7 +1488,71 @@
           "cognitiveComplexity": 1,
           "coverageSuppressions": 1
         }
-      ]
+      ],
+      "problems": [],
+      "conciseArrows": {
+        "complete": true,
+        "coverageSuppressions": {
+          "count": 2,
+          "hints": [
+            {
+              "end": 90,
+              "functions": [
+                32
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 51,
+              "wholeFunction": false
+            },
+            {
+              "end": 191,
+              "functions": [
+                133
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 152,
+              "wholeFunction": false
+            }
+          ]
+        },
+        "functions": [
+          {
+            "name": "arrow@32",
+            "start": 32,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@133",
+            "start": 133,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          }
+        ],
+        "problems": []
+      }
     }
   },
   "mutation": {
@@ -1233,17 +1596,17 @@
     "jobsAttempted": 6,
     "workerBaselineJobs": 0,
     "phaseTimings": {
-      "analysisMs": 0.313165,
-      "attributionMs": 0.143228,
-      "baselineMs": 152.83079,
-      "cleanupMs": 0.450011,
-      "compilerStrictnessMs": 2886.784834,
-      "coverageMs": 502.88406100000003,
-      "preparationMs": 0.397873,
+      "analysisMs": 0.308656,
+      "attributionMs": 0.135483,
+      "baselineMs": 153.124841,
+      "cleanupMs": 1.3894630000000001,
+      "compilerStrictnessMs": 2187.526251,
+      "coverageMs": 446.311216,
+      "preparationMs": 0.334415,
       "typecheckMs": null
     },
-    "mutationWallMs": 330.256324,
-    "executionMs": 4042.7753439999997,
+    "mutationWallMs": 315.631595,
+    "executionMs": 3263.585611,
     "pseudoTesting": {
       "planned": 1,
       "killed": 1
@@ -1262,7 +1625,9 @@
     ]
   },
   "controls": [
-    "Deleted retained statement and branch maps rejected on all four routes",
+    "Deleted retained statement and branch maps, truncated statement ends and unrelated statement ends rejected on all four routes",
+    "Concise return counters accepted at full AST extents on Node and Jest; Vitest retained-branch conflicts remain incomplete",
+    "Parenthesized retained initializer source-map locations accepted on all four routes",
     "Existing whole-function/file suppression, c8/v8 and parenthesized-arrow transform controls passed",
     "Rust tests reject retained ignored counters, wrong branch locations, missing counters, invalid hint targets and setup merge conflicts",
     "Original source unchanged and mutation scratch directory empty"

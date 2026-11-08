@@ -117,6 +117,13 @@ pub struct Scope {
     pub coverage_partial_suppression: bool,
 }
 
+pub struct CoverageStatement {
+    pub span: Span,
+    // Source maps may omit an initializer's enclosing parentheses.
+    pub unwrapped: Span,
+    pub concise_return: bool,
+}
+
 pub struct BranchSite {
     pub kind: &'static str,
     pub span: Span,
@@ -277,8 +284,7 @@ pub struct Analysis {
     coverage_ignored_ranges: Vec<Span>,
     coverage_ignored_outcomes: BTreeSet<(u32, usize)>,
     pub coverage_hint_errors: Vec<String>,
-    // Initializer maps can start at parentheses or at the enclosed expression.
-    pub coverage_statements: Vec<(Span, u32)>,
+    pub coverage_statements: Vec<CoverageStatement>,
     coverage_if_arms: BTreeMap<u32, (Span, Option<Span>)>,
     cognitive_owner: Option<usize>,
     cognitive_depth: u32,
@@ -1057,15 +1063,23 @@ impl<'a> Visit<'a> for Analysis {
             | AstKind::ContinueStatement(_)
             | AstKind::ExpressionStatement(_)
             | AstKind::LabeledStatement(_)
-            | AstKind::DebuggerStatement(_) => Some((node.span(), node.span().start)),
-            AstKind::VariableDeclarator(v) => v
-                .init
-                .as_ref()
-                .map(|value| (value.span(), value.without_parentheses().span().start)),
-            AstKind::ArrowFunctionExpression(f) => f
-                .body
-                .as_expression()
-                .map(|value| (value.span(), value.without_parentheses().span().start)),
+            | AstKind::DebuggerStatement(_) => Some(CoverageStatement {
+                span: node.span(),
+                unwrapped: node.span(),
+                concise_return: false,
+            }),
+            AstKind::VariableDeclarator(v) => v.init.as_ref().map(|value| CoverageStatement {
+                span: value.span(),
+                unwrapped: value.without_parentheses().span(),
+                concise_return: false,
+            }),
+            AstKind::ArrowFunctionExpression(f) => {
+                f.body.as_expression().map(|value| CoverageStatement {
+                    span: value.span(),
+                    unwrapped: value.without_parentheses().span(),
+                    concise_return: true,
+                })
+            }
             _ => None,
         };
         if let Some(statement) = required_statement {
@@ -1853,11 +1867,16 @@ impl Analysis {
                                 target.start <= outcome.start && outcome.end <= target.end
                             })
                     });
-                    let omitted_work = result.coverage_statements.iter().any(|(statement, _)| {
-                        target.start <= statement.start && statement.end <= target.end
-                    }) || result.branches.iter().any(|branch| {
-                        target.start <= branch.span.start && branch.span.end <= target.end
-                    });
+                    let omitted_work = result
+                        .coverage_statements
+                        .iter()
+                        .map(|statement| statement.span)
+                        .any(|statement| {
+                            target.start <= statement.start && statement.end <= target.end
+                        })
+                        || result.branches.iter().any(|branch| {
+                            target.start <= branch.span.start && branch.span.end <= target.end
+                        });
                     let instrumented_target =
                         result.coverage_next_targets.contains(&target.start) && omitted_work;
                     if !instrumented_target && !branch_outcome {
@@ -1875,12 +1894,16 @@ impl Analysis {
                             || matches!(kind, "if" | "else")
                             || target.is_some_and(|target| {
                                 result.coverage_declarations.contains(&target.start)
-                                    || result.coverage_statements.iter().any(|(statement, _)| {
-                                        target.start < statement.start
-                                            && statement.end <= target.end
-                                            && result.statement_owner(statement.start)
-                                                == Some(owner)
-                                    })
+                                    || result
+                                        .coverage_statements
+                                        .iter()
+                                        .map(|statement| statement.span)
+                                        .any(|statement| {
+                                            target.start < statement.start
+                                                && statement.end <= target.end
+                                                && result.statement_owner(statement.start)
+                                                    == Some(owner)
+                                        })
                                     || result.branches.iter().any(|branch| {
                                         target.start <= branch.span.start
                                             && branch.span.end <= target.end
@@ -2127,6 +2150,19 @@ impl Analysis {
         self.coverage_ignored_ranges
             .iter()
             .any(|range| range.start <= start && start < range.end)
+    }
+
+    pub fn coverage_statement_ignored(&self, start: u32) -> bool {
+        // Istanbul creates the concise return before visiting its expression's hint.
+        // That enclosing counter survives even when the expression's branches do not.
+        self.coverage_ignored(start)
+            && !self.coverage_statements.iter().any(|statement| {
+                statement.concise_return
+                    && (statement.span.start == start || statement.unwrapped.start == start)
+                    && self
+                        .owner(start)
+                        .is_some_and(|owner| !self.scopes[owner].coverage_suppressed)
+            })
     }
 
     pub fn coverage_outcome_ignored(&self, site: &BranchSite, index: usize) -> bool {

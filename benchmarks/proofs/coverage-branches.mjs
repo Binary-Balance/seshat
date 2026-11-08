@@ -188,6 +188,12 @@ export function ignoredTernary(flag: boolean) {
 export function ignoredLogical(flag: boolean) {
   return flag || /* istanbul ignore next -- @preserve */ false;
 }
+export function retainedInitializer(flag: boolean) {
+  /* istanbul ignore next -- @preserve */
+  void flag;
+  const result = ((flag ? 1 : 2));
+  return result;
+}
 export function retainedBranch(flag: boolean) {
   /* istanbul ignore next -- @preserve */
   void flag;
@@ -202,7 +208,14 @@ assert.equal(partial.ignoredElse(true), 1);
 assert.equal(partial.ignoredImplicitElse(true), 1);
 assert.equal(partial.ignoredTernary(false), 2);
 assert.equal(partial.ignoredLogical(true), true);
+assert.equal(partial.retainedInitializer(true), 1);
 assert.equal(partial.retainedBranch(true), 1);`;
+const conciseSource = join(work, 'concise.ts');
+writeFileSync(conciseSource, `export const arrowConditional = (flag: boolean) => /* istanbul ignore next -- @preserve */ flag ? 1 : 2;
+export const arrowLogical = (flag: boolean) => /* istanbul ignore next -- @preserve */ flag || false;
+`);
+const conciseChecks = `assert.equal(concise.arrowConditional(true), 1);
+assert.equal(concise.arrowLogical(true), true);`;
 const parenthesizedSource = join(work, 'parenthesized.ts');
 writeFileSync(parenthesizedSource, `export function parenthesizedWrapper() {
   const ignored = /* istanbul ignore next -- @preserve */ (() => 1);
@@ -286,6 +299,7 @@ instrumentSource(source, 'subject');
 instrumentSource(ignoredSource, 'ignored');
 instrumentSource(otherHintsSource, 'other-hints');
 instrumentSource(partialSource, 'partial');
+instrumentSource(conciseSource, 'concise');
 instrumentSource(parenthesizedSource, 'parenthesized');
 instrumentSource(functionCountersSource, 'function-counters');
 function scoreSource(source, report, status = 0) {
@@ -300,6 +314,8 @@ const assert = require('node:assert/strict');
 const subject = require('./subject.instrumented.cjs');
 require('./ignored.instrumented.cjs').ignoredFile(true);
 require('./other-hints.instrumented.cjs').otherHints();
+const concise = require('./concise.instrumented.cjs');
+${conciseChecks}
 const partial = require('./partial.instrumented.cjs');
 ${partialChecks}
 assert.equal(require('./parenthesized.instrumented.cjs').parenthesizedWrapper(), 1);
@@ -313,6 +329,8 @@ import assert from 'node:assert/strict';
 import * as subject from './subject.tsx';
 import {ignoredFile} from './ignored.ts';
 import {otherHints} from './other-hints.ts';
+import * as concise from './concise.ts';
+${conciseChecks}
 import * as partial from './partial.ts';
 import {parenthesizedWrapper} from './parenthesized.ts';
 import * as functionCounters from './function-counters.ts';
@@ -324,13 +342,15 @@ functionCounters.functionCounterWrapper(); functionCounters.emptyWrapper(); func
 test('branch coverage', () => { ${checks} });
 `);
 writeFileSync(join(work, 'vitest.config.mjs'), `export default {test: {
-include: ['checks.vitest.mjs'], coverage: {provider: 'istanbul', include: ['subject.tsx', 'ignored.ts', 'other-hints.ts', 'partial.ts', 'parenthesized.ts', 'function-counters.ts'],
+include: ['checks.vitest.mjs'], coverage: {provider: 'istanbul', include: ['subject.tsx', 'ignored.ts', 'other-hints.ts', 'partial.ts', 'concise.ts', 'parenthesized.ts', 'function-counters.ts'],
 reporter: ['json'], reportsDirectory: 'coverage-vitest'}}};
 `);
 writeFileSync(join(work, 'checks.jest.test.tsx'), `import assert from 'node:assert/strict';
 import * as subject from './subject';
 import {ignoredFile} from './ignored';
 import {otherHints} from './other-hints';
+import * as concise from './concise';
+${conciseChecks}
 import * as partial from './partial';
 import {parenthesizedWrapper} from './parenthesized';
 import * as functionCounters from './function-counters';
@@ -346,7 +366,7 @@ writeFileSync(join(work, 'babel.config.cjs'), `module.exports = {presets: [[${JS
 writeFileSync(join(work, 'jest.config.cjs'), `module.exports = {
 preset: ${JSON.stringify(join(expo, 'node_modules/jest-expo'))},
 rootDir: __dirname, moduleDirectories: ['node_modules', ${JSON.stringify(join(expo, 'node_modules'))}],
-testMatch: ['**/checks.jest.test.tsx'], coverageProvider: 'babel', collectCoverageFrom: ['subject.tsx', 'ignored.ts', 'other-hints.ts', 'partial.ts', 'parenthesized.ts', 'function-counters.ts'],
+testMatch: ['**/checks.jest.test.tsx'], coverageProvider: 'babel', collectCoverageFrom: ['subject.tsx', 'ignored.ts', 'other-hints.ts', 'partial.ts', 'concise.ts', 'parenthesized.ts', 'function-counters.ts'],
 coverageReporters: ['json'], coverageDirectory: 'coverage-jest-expo'};
 `);
 run(['--test', 'checks.node.cjs']);
@@ -466,6 +486,7 @@ for (const [provider, path] of Object.entries(reports)) {
     !hint.wholeFunction && hint.functions.length === 1));
   results.routes[provider].otherHints = otherHintsResult;
   results.routes[provider].partialSuppression = verifyPartial(provider, path);
+  results.routes[provider].conciseSuppression = verifyConcise(provider, path);
   // Vitest's transform keeps instrumenting this arrow despite the preserved hint.
   const parenthesizedResult = scoreSource(parenthesizedSource, path, provider === 'vitest' ? 2 : 0);
   assert.equal(parenthesizedResult.coverageSuppressions.count, 1);
@@ -559,7 +580,7 @@ function verifyPartial(provider, path) {
   assert.equal(result.complete, true);
   const named = Object.fromEntries(result.functions.map(row => [row.name, row]));
   for (const name of ['partiallySuppressed', 'ignoredStatement', 'allStatementsIgnored',
-    'ignoredIf', 'ignoredElse', 'ignoredImplicitElse', 'ignoredTernary', 'ignoredLogical', 'retainedBranch']) {
+    'ignoredIf', 'ignoredElse', 'ignoredImplicitElse', 'ignoredTernary', 'ignoredLogical', 'retainedInitializer', 'retainedBranch']) {
     assert.equal(named[name].status, 'partially-suppressed', `${provider}/${name}: ${JSON.stringify(result)}`);
     assert.equal(named[name].crap, null);
     assert.equal(named[name].coverageBasis, null);
@@ -575,22 +596,29 @@ function verifyPartial(provider, path) {
   }
   assert.equal(named.retainedBranch.branchTotal, 2);
   assert.equal(named.retainedBranch.branchCoverage, 0.5);
-  assert.equal(result.coverageSuppressions.count, 9);
+  assert.equal(result.coverageSuppressions.count, 10);
   assert.equal(result.functions.filter(row => row.status === 'suppressed').length, 3);
   const raw = JSON.parse(readFileSync(path, 'utf8'));
   const text = readFileSync(partialSource, 'utf8');
   const lines = text.split('\n');
-  for (const kind of ['statement', 'branch']) {
+  for (const kind of ['statement', 'branch', 'truncated-statement', 'extended-statement']) {
     const invalid = structuredClone(raw);
     const file = invalid[partialSource];
-    const map = kind === 'statement' ? file.statementMap : file.branchMap;
-    const counters = kind === 'statement' ? file.s : file.b;
+    const statement = kind !== 'branch';
+    const map = statement ? file.statementMap : file.branchMap;
+    const counters = statement ? file.s : file.b;
     const id = Object.keys(map).find(id => {
-      const location = kind === 'statement' ? map[id] : map[id].loc;
+      const location = statement ? map[id] : map[id].loc;
       return lines[location.start.line - 1].includes('return flag ? 1 : 2;');
     });
     assert.ok(id !== undefined, `${provider}: retained ${kind}`);
-    delete map[id]; delete counters[id];
+    if (kind === 'truncated-statement') {
+      map[id].end = {...map[id].start, column: map[id].start.column + 1};
+    } else if (kind === 'extended-statement') {
+      map[id].end = {line: map[id].end.line + 1, column: 1};
+    } else {
+      delete map[id]; delete counters[id];
+    }
     const invalidPath = join(work, `${provider}-missing-retained-${kind}.json`);
     json(invalidPath, invalid);
     const rejected = scoreSource(partialSource, invalidPath, 2);
@@ -598,7 +626,22 @@ function verifyPartial(provider, path) {
   }
   return result;
 }
+function verifyConcise(provider, path) {
+  const result = scoreSource(conciseSource, path, provider === 'vitest' ? 2 : 0);
+  assert.equal(result.complete, provider !== 'vitest');
+  assert.equal(result.functions.length, 2);
+  for (const row of result.functions) {
+    assert.equal(row.status, provider === 'vitest' ? 'unknown' : 'partially-suppressed');
+    assert.equal(row.coverage, 1);
+    assert.equal(row.coverageBasis, null);
+    assert.equal(row.crap, null);
+    assert.equal(row.coverageSuppressions, 1);
+  }
+  return result;
+}
 writeFileSync(join(work, 'checks.plain.test.ts'), `import assert from 'node:assert/strict';
+import * as concise from './concise';
+${conciseChecks}
 import * as partial from './partial';
 test('partial coverage hints', () => { ${partialChecks} });
 `);
@@ -608,11 +651,12 @@ transform: {'^.+\\.tsx?$': [${JSON.stringify(join(plain, 'node_modules/babel-jes
 configFile: false, babelrc: false,
 presets: [${JSON.stringify(join(plain, 'node_modules/@babel/preset-typescript'))}],
 plugins: [${JSON.stringify(join(plain, 'node_modules/@babel/plugin-transform-modules-commonjs'))}]}]},
-coverageProvider: 'babel', collectCoverageFrom: ['partial.ts'],
+coverageProvider: 'babel', collectCoverageFrom: ['partial.ts', 'concise.ts'],
 coverageReporters: ['json'], coverageDirectory: 'coverage-jest-plain'};
 `);
 run([join(plain, 'node_modules/jest/bin/jest.js'), '--config', 'jest-plain.config.cjs', '--runInBand', '--coverage']);
-results.routes.jest = {partialSuppression: verifyPartial('jest', join(work, 'coverage-jest-plain/coverage-final.json'))};
+results.routes.jest = {partialSuppression: verifyPartial('jest', join(work, 'coverage-jest-plain/coverage-final.json')),
+  conciseSuppression: verifyConcise('jest', join(work, 'coverage-jest-plain/coverage-final.json'))};
 results.environment.plainJest = JSON.parse(readFileSync(join(plain, 'node_modules/jest/package.json'), 'utf8')).version;
 const project = join(work, 'mutation-input'), scratch = join(work, 'mutation-scratch');
 mkdirSync(project); mkdirSync(scratch);

@@ -812,7 +812,12 @@ The verified Vitest transform still instruments a parenthesized arrow when
 the hint is between `=` and the parentheses, as in
 `const f = /* istanbul ignore next -- @preserve */ (() => 1);`.
 That form remains incomplete. Put the hint before the whole declaration for
-the supported Vitest suppression route.
+the supported Vitest suppression route. Vitest also retains branch counters
+when `ignore next` is immediately before a concise arrow's conditional or
+logical body. That placement remains incomplete; use a block body and a hint
+on the statement or branch outcome instead. Node and Jest retain the enclosing
+concise-return counter while omitting the hinted expression's branches; Seshat
+accepts that counter only at its full normalized AST extent.
 
 Partial `istanbul ignore next` hints on statements and branch expressions,
 and `istanbul ignore if` / `istanbul ignore else` hints on branch arms, report
