@@ -18,6 +18,8 @@ insufficiently tested code.
 - Produces readable terminal output and versioned JSON, with optional CI thresholds.
 - Supports explicit source selection, multiple test setups and parallel mutation workers.
 - Selects whole test files for verified Vitest, Jest/Expo and Node setups, with full-run fallbacks and an opt-out.
+- Honours Istanbul coverage hints and lets projects declare equivalent
+  mutants, keeping each exclusion and its reason visible in reports.
 
 ## Install
 
@@ -139,6 +141,13 @@ makes one deliberate code change, such as `>` to `>=` or `true` to `false`.
 If tests catch two
 of three mutants, the score is `66.67%`. A timeout or execution error leaves the run
 incomplete and withholds the score. Neither score proves correctness.
+
+Some mutants cannot be killed because the change behaves like the original for
+every value that can reach it. Declare one with a block comment before its
+token, such as `/* seshat-equivalent ?? -> ||: value is 1-5 or null */ ??`.
+If the tests still pass, it is reported `equivalent` and left out of the score;
+if they kill it, the declaration is reported stale. See
+[equivalent mutant declarations](https://github.com/Binary-Balance/seshat/blob/main/docs/configuration.md#equivalent-mutant-declarations).
 
 `check` and `mutate` also replace eligible function bodies to detect pseudo-tested
 functions, those whose body replacement tests miss despite positive coverage.
