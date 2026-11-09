@@ -1938,14 +1938,14 @@ impl CapturedProject {
         let cleanup_ms = cleanup_started.elapsed().as_secs_f64() * 1000.0;
         let declared: Vec<_> = outcomes
             .iter()
-            .map(|row| row.get("equivalence").is_some_and(|value| !value.is_null()))
+            .map(|row| !row["equivalence"].is_null())
             .collect();
         let assessed = assessment::mutation(baselines, plan.len(), &executions, &declared);
         let mut stale_declarations = 0;
         for (row, verdict) in outcomes.iter_mut().zip(assessed.outcomes) {
             row["verdict"] = json!(verdict.label());
             row["countedAsKilled"] = json!(verdict == assessment::Verdict::CountedTimeout);
-            if row.get("equivalence").is_some_and(Value::is_object) {
+            if !row["equivalence"].is_null() {
                 // Only a clean survivor or kill says anything about the declaration.
                 let status = match verdict {
                     assessment::Verdict::Equivalent => "equivalent",

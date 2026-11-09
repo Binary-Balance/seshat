@@ -526,15 +526,17 @@ token; adjacent declarations share it:
 
 ```ts
 const later = start /* seshat-equivalent < -> <=: never equal */
-  /* seshat-equivalent < -> >=: r */ < end;
+  /* seshat-equivalent < -> >=: end is unused when empty */ < end;
 ```
 
 Declarations apply to operator mutants only, never to extreme mutations.
 Seshat checks every declaration before running any job, including in `crap`.
 A malformed declaration, a line comment, a duplicate, or one with no eligible
 mutant of that original and replacement after it makes the source an input
-error, as a parse error does. Declarations are checked whether or not their
-family is enabled; a valid declaration for a disabled family is `inactive`.
+error, as a parse error does: that source gets no CRAP results and the run is
+incomplete. A comment starting `/**` is not a declaration. Declarations are
+checked whether or not their family is enabled; a valid declaration for a
+disabled family is `inactive`.
 
 A declared mutant runs like any other, in both mutation strategies, with the
 same baselines, selection and evidence. A setup whose coverage shows it never
@@ -544,7 +546,7 @@ declaration is a claim to check, not a reason to skip.
 - If the tests pass, the mutant is `equivalent`. It counts as resolved and is
   left out of the score.
 - If the tests fail, the mutant stays `killed` and counts normally. The
-  declaration is reported `stale`; it no longer adds a failure threshold.
+  declaration is reported `stale`. A stale declaration does not fail the run.
 - A timeout, including one counted by `countTimeoutsAsKilled`, an execution
   error, cancellation or a missing run keeps its usual verdict and scoring. The
   declaration stays `unresolved`.

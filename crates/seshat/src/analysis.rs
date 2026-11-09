@@ -373,16 +373,17 @@ fn equivalent_declarations(
         following = Some((span.start, offset));
         let error =
             |message: String| format!("seshat-equivalent at byte {}: {message}", span.start);
-        let Some((site, replacement)) = sites.iter().find_map(|site| {
-            (site.offset == offset && site.original == original)
-                .then(|| {
-                    site.replacements
-                        .iter()
-                        .position(|each| *each == replacement)
-                })
-                .flatten()
-                .map(|index| (site, index))
-        }) else {
+        let Some((site, replacement)) = sites
+            .iter()
+            .filter(|site| site.offset == offset && site.original == original)
+            .find_map(|site| {
+                let index = site
+                    .replacements
+                    .iter()
+                    .position(|each| *each == replacement)?;
+                Some((site, index))
+            })
+        else {
             return Err(error(format!(
                 "no eligible {original:?} -> {replacement:?} mutant follows it"
             )));
