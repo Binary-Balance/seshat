@@ -19,7 +19,7 @@ insufficiently tested code.
 - Supports explicit source selection, multiple test setups and parallel mutation workers.
 - Selects whole test files for verified Vitest, Jest/Expo and Node setups, with full-run fallbacks and an opt-out.
 - Honours Istanbul coverage hints and lets projects declare equivalent
-  mutants, keeping each exclusion and its reason visible in reports.
+  mutants with a reason, keeping each exclusion visible in reports.
 
 ## Install
 
