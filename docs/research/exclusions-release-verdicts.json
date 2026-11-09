@@ -352772,7 +352772,7 @@
   "interpretation": [
     "All 3333 shared outcomes keep their verdicts and counted-kill flags; all 527 full source arrays match.",
     "6821 new-field defaults were removed before comparison; no non-default value appeared.",
-    "Remaining differences are fault-injection scheduling, receipt filename numbering, Windows cancellation exit values, version text, supervision binary hashes and stderr text."
+    "Remaining differences are fault-injection scheduling, receipt filename numbering, Windows cancellation exit values, temporary Jest proof folder names, version text, supervision binary hashes and stderr text."
   ],
-  "reportGeneratorSha256": "38dc7672505fb0a7e8eee21de64b50446604fc186db900a91bc63676e852e277"
+  "reportGeneratorSha256": "8430fcdf398dc8d700a4a4a7f348dd95b1e93f932289a3266f3041c9cf4ade90"
 }

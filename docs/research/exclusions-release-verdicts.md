@@ -94,6 +94,9 @@ not by this comparison.
 | `windows-x64-package-proof` `shared-cli.json#/SIGTERM/result/setups/0/typecheck` | 1 → -1073741510 |
 | `windows-x64-package-proof` `windows-runtime-cli-evidence.json#/scenarios/consoleCancellation/result/setups/0/baseline` | -1073741510 → 1 |
 
+- **Temporary folder names.** 44 Jest environment paths in
+  macOS arm64 `node-24.22.2/jest-check.json` differ only in the proof's random
+  `jest-check-XXXXXX` folder, which the comparator does not normalise.
 - **Version text and binaries.** 25 expected payload-error
   messages name 0.16.0 instead of 0.15.0, and two supervision summaries record
   the new binary hashes.
@@ -136,15 +139,16 @@ python3 -I work/release-0.16.0/verdict-comparison/compare.py
 python3 -I work/release-0.16.0/verdict-comparison/render_comparison.py
 ```
 
-The scripts adapt the 0.15.0 comparison, adding only the default-removal step
-above. The verifier checks each artifact's ID, name, expiry, digest, size,
+The scripts adapt the 0.15.0 comparison: they add the default-removal step
+above and update the fixture lists for `examples/jest` and the changed
+`parallel.mjs`. The verifier checks each artifact's ID, name, expiry, digest, size,
 workflow run and direct head, and that every consumed JSON member matches the
 ZIP. Paths, capture prefixes and execution IDs are normalised; timings are
 separated from semantic comparison but retained. Script SHA-256 values:
 
 - verifier: `f0aadad81c254db53ff48d31cf754ae38324881297adbd2c024c4b5e0d8d3472`
 - comparator: `da54faa1a46f68b71fe6280281fa9b9e68988ae39f19d9d99bfa2a33e7819aae`
-- report renderer: `38dc7672505fb0a7e8eee21de64b50446604fc186db900a91bc63676e852e277`
+- report renderer: `8430fcdf398dc8d700a4a4a7f348dd95b1e93f932289a3266f3041c9cf4ade90`
 
 No fixtures were rerun. GitHub retention may later prevent downloads; the
 records keep coordinates, hashes and compared values. This compares retained
