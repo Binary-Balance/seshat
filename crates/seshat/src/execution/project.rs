@@ -872,7 +872,7 @@ impl CapturedProject {
             .sources
             .iter()
             .map(|(path, source)| {
-                match Analysis::inspect_with_operators(
+                match Analysis::inspect_declared(
                     &stable_path(path),
                     source,
                     &self.config.mutation_operators,
@@ -1039,7 +1039,7 @@ mod tests {
 
     pub(super) struct Fixture {
         pub(super) _directory: OwnedDirectory,
-        project: PathBuf,
+        pub(super) project: PathBuf,
         scratch: PathBuf,
         config: Value,
     }

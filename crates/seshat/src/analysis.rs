@@ -289,6 +289,128 @@ pub struct OperatorSiteCounts {
     pub excluded: usize,
 }
 
+// A project's statement that one operator mutant cannot change behaviour.
+// Seshat checks where it points, not whether the claim is true.
+pub struct EquivalentDeclaration {
+    pub start: u32,
+    pub end: u32,
+    pub offset: usize,
+    pub original: &'static str,
+    pub replacement: &'static str,
+    pub reason: String,
+    // None when the mutant's operator family is disabled.
+    pub local_id: Option<usize>,
+}
+
+const EQUIVALENT_SYNTAX: &str = "expected /* seshat-equivalent ORIGINAL -> REPLACEMENT: reason */";
+
+// None for ordinary comments; otherwise the declared original, replacement and reason.
+fn equivalent_declaration(content: &str) -> Option<Result<(&str, &str, &str), &'static str>> {
+    let rest = content
+        .trim_start_matches(javascript_whitespace)
+        .strip_prefix("seshat-equivalent")?;
+    let (head, reason) = rest.split_once(':').unwrap_or((rest, ""));
+    let reason = reason.trim_matches(javascript_whitespace);
+    let labels: Vec<_> = head
+        .split(javascript_whitespace)
+        .filter(|label| !label.is_empty())
+        .collect();
+    Some(match labels[..] {
+        [original, "->", replacement]
+            if rest.starts_with(javascript_whitespace) && !reason.is_empty() =>
+        {
+            Ok((
+                original,
+                if replacement == "\"\"" {
+                    ""
+                } else {
+                    replacement
+                },
+                reason,
+            ))
+        }
+        _ => Err(EQUIVALENT_SYNTAX),
+    })
+}
+
+// Each declaration binds to the token after it. Adjacent declarations share
+// that token, which is the only way to declare several replacements at a site.
+fn equivalent_declarations(
+    source: &str,
+    comments: &[Comment],
+    sites: &[OperatorSite],
+    enabled: &[MutationOperator],
+) -> Result<Vec<EquivalentDeclaration>, String> {
+    let mut parsed = Vec::new();
+    for comment in comments {
+        let span = comment.content_span();
+        let Some(declaration) =
+            equivalent_declaration(&source[span.start as usize..span.end as usize])
+        else {
+            continue;
+        };
+        let error = |message: &str| {
+            format!(
+                "seshat-equivalent at byte {}: {message}",
+                comment.span.start
+            )
+        };
+        if comment.is_line() {
+            return Err(error("use a block comment"));
+        }
+        parsed.push((comment.span, declaration.map_err(error)?));
+    }
+    let mut declarations = Vec::new();
+    let mut following: Option<(u32, usize)> = None;
+    for (span, (original, replacement, reason)) in parsed.into_iter().rev() {
+        let rest = &source[span.end as usize..];
+        let next =
+            span.end as usize + rest.len() - rest.trim_start_matches(javascript_whitespace).len();
+        let offset = match following {
+            Some((start, offset)) if start as usize == next => offset,
+            _ => next,
+        };
+        following = Some((span.start, offset));
+        let error =
+            |message: String| format!("seshat-equivalent at byte {}: {message}", span.start);
+        let Some((site, replacement)) = sites
+            .iter()
+            .filter(|site| site.offset == offset && site.original == original)
+            .find_map(|site| {
+                let index = site
+                    .replacements
+                    .iter()
+                    .position(|each| *each == replacement)?;
+                Some((site, index))
+            })
+        else {
+            return Err(error(format!(
+                "no eligible {original:?} -> {replacement:?} mutant follows it"
+            )));
+        };
+        if declarations.iter().any(|other: &EquivalentDeclaration| {
+            other.offset == offset
+                && other.original == original
+                && other.replacement == site.replacements[replacement]
+        }) {
+            return Err(error("duplicates another declaration".into()));
+        }
+        declarations.push(EquivalentDeclaration {
+            start: span.start,
+            end: span.end,
+            offset,
+            original: site.original,
+            replacement: site.replacements[replacement],
+            reason: reason.to_owned(),
+            local_id: enabled
+                .contains(&site.kind)
+                .then_some(site.first_id + replacement),
+        });
+    }
+    declarations.reverse();
+    Ok(declarations)
+}
+
 #[derive(Default)]
 pub struct Analysis {
     pub scopes: Vec<Scope>,
@@ -296,6 +418,8 @@ pub struct Analysis {
     pub branch_end_ranges: Vec<Span>,
     pub operators: Vec<OperatorSite>,
     pub operator_sites: BTreeMap<&'static str, OperatorSiteCounts>,
+    pub equivalences: Vec<EquivalentDeclaration>,
+    equivalence_error: Option<String>,
     non_runtime: Vec<Span>,
     expression_statements: BTreeSet<u32>,
     switching_reference_sites: BTreeSet<u32>,
@@ -2223,9 +2347,6 @@ impl Analysis {
         }
         let mut operators = std::mem::take(&mut result.operators);
         operators.retain(|site| {
-            if !enabled.contains(&site.kind) {
-                return false;
-            }
             let eligible = (!matches!(
                 site.kind,
                 MutationOperator::Boolean
@@ -2249,19 +2370,24 @@ impl Analysis {
                         && !result.super_calls.iter().any(|call| {
                             site.span.start <= call.start && call.end <= site.span.end
                         })));
-            let counts = result
-                .operator_sites
-                .entry(site.original)
-                .or_insert(OperatorSiteCounts {
-                    kind: site.kind,
-                    eligible: 0,
-                    excluded: 0,
-                });
-            if eligible {
-                counts.eligible += 1;
-            } else {
-                counts.excluded += 1;
+            if enabled.contains(&site.kind) {
+                let counts =
+                    result
+                        .operator_sites
+                        .entry(site.original)
+                        .or_insert(OperatorSiteCounts {
+                            kind: site.kind,
+                            eligible: 0,
+                            excluded: 0,
+                        });
+                if eligible {
+                    counts.eligible += 1;
+                } else {
+                    counts.excluded += 1;
+                }
             }
+            // Disabled families stay until declarations are matched, so a
+            // declaration for one is inactive rather than unmatched.
             eligible
         });
         result.operators = operators;
@@ -2305,10 +2431,33 @@ impl Analysis {
                 return Err(format!("operator mismatch at {offset}"));
             }
             c.offset = offset;
-            c.first_id = id;
-            id += c.replacements.len();
+            if enabled.contains(&c.kind) {
+                c.first_id = id;
+                id += c.replacements.len();
+            }
         }
+        // Mutated sources orphan their declarations, so only callers assessing
+        // the original source reject them; see `inspect_declared`.
+        match equivalent_declarations(source, &parsed.program.comments, &result.operators, enabled)
+        {
+            Ok(declarations) => result.equivalences = declarations,
+            Err(error) => result.equivalence_error = Some(error),
+        }
+        result.operators.retain(|site| enabled.contains(&site.kind));
         Ok(result)
+    }
+
+    // Inspects an original source, rejecting invalid equivalence declarations.
+    pub fn inspect_declared(
+        path: &str,
+        source: &str,
+        enabled: &[MutationOperator],
+    ) -> Result<Self, String> {
+        let analysis = Self::inspect_with_operators(path, source, enabled)?;
+        match analysis.equivalence_error {
+            Some(error) => Err(error),
+            None => Ok(analysis),
+        }
     }
 
     pub fn owner(&self, byte: u32) -> Option<usize> {
@@ -2331,6 +2480,21 @@ impl Analysis {
 
     pub fn type_safety(&self) -> Value {
         json!({"unowned":self.unowned_type_safety,"suppressions":self.suppressions})
+    }
+
+    // Mutation results replace `unresolved` once each declared mutant has a verdict.
+    pub fn equivalent_declarations_json(&self) -> Value {
+        json!(
+            self.equivalences
+                .iter()
+                .map(|declaration| json!({
+                    "start":declaration.start,"end":declaration.end,"offset":declaration.offset,
+                    "original":declaration.original,"replacement":declaration.replacement,
+                    "reason":declaration.reason,"localId":declaration.local_id,
+                    "status":if declaration.local_id.is_some() {"unresolved"} else {"inactive"}
+                }))
+                .collect::<Vec<_>>()
+        )
     }
 
     pub fn coverage_suppressions(&self) -> Value {
@@ -4106,5 +4270,194 @@ fn optional_switching_rejects_reference_contexts() {
         for id in 0..analysis.count() {
             Analysis::inspect("mutant.ts", &analysis.replace(source, id).unwrap()).unwrap();
         }
+    }
+}
+
+#[test]
+fn equivalent_declarations_bind_one_named_replacement_at_one_site() {
+    let source = "export function f(row: {c: number | null}, a: number, b: number, o?: {x: number, m(): void}, k?: number[]) {
+  const c = row.c /* seshat-equivalent ?? -> ||: c is 1-5 or null */ ?? undefined;
+  const lt = a < b && a /* seshat-equivalent < -> >=: second site only */ < b;
+  const both = a /* seshat-equivalent <= -> <: r1 */
+    /* seshat-equivalent <= -> >: r2 */ <= b;
+  const sum = a /* seshat-equivalent + -> -: b is 0 */ + b;
+  const flag = /* seshat-equivalent true -> false: unused */ true;
+  const not = /* seshat-equivalent ! -> \"\": already boolean */ !lt;
+  const either = lt /* seshat-equivalent || -> &&: same here */ || not;
+  const x = o/* seshat-equivalent ?. -> .: o is set */?.x;
+  const first = k /* seshat-equivalent ?. -> \"\": k is set */ ?.[0];
+  /* seshat-equivalent expression-statement -> ;: no effect */ o?.m();
+  if (a === b) {
+    /* seshat-equivalent return -> ;: last statement */ return;
+  }
+  return [c, both, sum, flag, either, x, first];
+}
+";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let declared: Vec<_> = analysis
+        .equivalences
+        .iter()
+        .map(|declaration| {
+            let id = declaration.local_id.unwrap();
+            let mutant = &analysis.json()["mutants"][id];
+            assert_eq!(mutant["original"], declaration.original);
+            assert_eq!(mutant["replacement"], declaration.replacement);
+            assert_eq!(mutant["offset"], declaration.offset);
+            assert_eq!(
+                &source[declaration.start as usize..declaration.start as usize + 2],
+                "/*"
+            );
+            assert_eq!(
+                &source[declaration.end as usize - 2..declaration.end as usize],
+                "*/"
+            );
+            (
+                declaration.original,
+                declaration.replacement,
+                declaration.reason.as_str(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        declared,
+        [
+            ("??", "||", "c is 1-5 or null"),
+            ("<", ">=", "second site only"),
+            ("<=", "<", "r1"),
+            ("<=", ">", "r2"),
+            ("+", "-", "b is 0"),
+            ("true", "false", "unused"),
+            ("!", "", "already boolean"),
+            ("||", "&&", "same here"),
+            ("?.", ".", "o is set"),
+            ("?.", "", "k is set"),
+            ("expression-statement", ";", "no effect"),
+            ("return", ";", "last statement"),
+        ]
+    );
+    // The first `<` and its other replacement stay undeclared.
+    let comparisons: Vec<_> = analysis.json()["mutants"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|mutant| mutant["original"] == "<")
+        .map(|mutant| {
+            analysis.equivalences.iter().any(|declaration| {
+                declaration.local_id == mutant["id"].as_u64().map(|id| id as usize)
+            })
+        })
+        .collect();
+    assert_eq!(comparisons, [false, false, false, true]);
+    // Declarations sit in operator gaps, so every rendering must still parse.
+    let parses = |text: &str| {
+        let allocator = Allocator::default();
+        let parsed = Parser::new(&allocator, text, SourceType::ts()).parse();
+        !parsed.panicked && parsed.diagnostics.is_empty()
+    };
+    for id in 0..analysis.count() {
+        assert!(
+            parses(&analysis.replace(source, id).unwrap()),
+            "mutant {id}"
+        );
+    }
+    assert!(parses(&analysis.switched(source).unwrap()));
+}
+
+#[test]
+fn equivalent_declarations_for_disabled_families_are_inactive_but_still_checked() {
+    let source = "export const f = (a: number, v: number | null) => a /* seshat-equivalent < -> <=: r */ < 1 && (v /* seshat-equivalent ?? -> ||: r */ ?? 2);";
+    let analysis =
+        Analysis::inspect_with_operators("source.ts", source, &[MutationOperator::Comparison])
+            .unwrap();
+    let ids: Vec<_> = analysis.equivalences.iter().map(|d| d.local_id).collect();
+    assert_eq!(ids, [Some(0), None]);
+    assert_eq!(
+        analysis.equivalent_declarations_json()[1]["status"],
+        "inactive"
+    );
+    assert_eq!(
+        analysis.equivalent_declarations_json()[0]["status"],
+        "unresolved"
+    );
+    let wrong = source.replace("?? -> ||", "?? -> &&");
+    let error = Analysis::inspect_declared("source.ts", &wrong, &[MutationOperator::Comparison])
+        .err()
+        .unwrap();
+    assert!(
+        error.contains("no eligible \"??\" -> \"&&\" mutant"),
+        "{error}"
+    );
+}
+
+#[test]
+fn invalid_equivalent_declarations_are_input_errors() {
+    for (source, expected) in [
+        (
+            "const x = 1 /* seshat-equivalent + -> -: */ + 2;",
+            "expected /*",
+        ),
+        (
+            "const x = 1 /* seshat-equivalent + to -: r */ + 2;",
+            "expected /*",
+        ),
+        (
+            "const x = 1 /* seshat-equivalent+ -> -: r */ + 2;",
+            "expected /*",
+        ),
+        (
+            "const x = 1 /* seshat-equivalent + -> - r */ + 2;",
+            "expected /*",
+        ),
+        (
+            "const x = 1 // seshat-equivalent + -> -: r\n + 2;",
+            "use a block comment",
+        ),
+        (
+            "const x = 1 /* seshat-equivalent + -> -: r */ /* seshat-equivalent + -> -: s */ + 2;",
+            "duplicates",
+        ),
+        (
+            "const x = 1 /* seshat-equivalent + -> *: r */ + 2;",
+            "no eligible",
+        ),
+        (
+            "const x = 1 /* seshat-equivalent - -> +: r */ + 2;",
+            "no eligible",
+        ),
+        (
+            "const x = /* seshat-equivalent + -> -: r */ 1 + 2;",
+            "no eligible",
+        ),
+        (
+            "const x = 1 /* seshat-equivalent + -> -: r */ /* other */ + 2;",
+            "no eligible",
+        ),
+        (
+            "/* seshat-equivalent + -> -: r */\nconst x = 1;",
+            "no eligible",
+        ),
+        // Statement removal excludes constructors; extreme mutations take no declarations.
+        (
+            "class C { constructor() { /* seshat-equivalent expression-statement -> ;: r */ work(); } }",
+            "no eligible",
+        ),
+        (
+            "function f() /* seshat-equivalent {} -> {}: r */ { work(); }",
+            "no eligible",
+        ),
+        (
+            "declare const x: boolean; type T = /* seshat-equivalent true -> false: r */ true;",
+            "no eligible",
+        ),
+    ] {
+        assert!(Analysis::inspect("source.ts", source).is_ok(), "{source}");
+        let error = Analysis::inspect_declared("source.ts", source, &default_mutation_operators())
+            .err()
+            .unwrap_or_default();
+        assert!(error.contains(expected), "{source}: {error}");
+        assert!(
+            error.starts_with("seshat-equivalent at byte "),
+            "{source}: {error}"
+        );
     }
 }

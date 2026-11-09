@@ -593,7 +593,7 @@ impl Session {
                 break;
             }
         }
-        let assessed = assessment::mutation(&[baseline.state], count, &executions);
+        let assessed = assessment::mutation(&[baseline.state], count, &executions, &[]);
         let outcomes: Vec<_> = assessed.outcomes.iter().enumerate()
             .map(|(id, verdict)| json!({"id":id,"verdict":verdict.label(),"evidence":evidence.get(id)}))
             .collect();

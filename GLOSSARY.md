@@ -60,10 +60,18 @@ _Avoid_: failing process
 A mutant under which the selected tests complete successfully.
 _Avoid_: proven equivalent mutant
 
+**Declared equivalent mutant**:
+A surviving mutant that the project has declared, with a reason, to behave like
+the original for every value that can reach it. It is left out of the mutation
+score. Seshat checks where a declaration points, not whether the claim is true.
+A killed mutant with a declaration has a stale declaration.
+_Avoid_: proven equivalent mutant
+
 **Mutation score**:
 The percentage of detected mutants in a complete run, including eligible
-runner-reported timeouts when explicitly opted in. It is not applicable when
-there are no mutants, and no final percentage is reported for an incomplete run.
+runner-reported timeouts when explicitly opted in. Declared equivalent mutants
+are excluded. It is not applicable when there are no scored mutants, and no
+final percentage is reported for an incomplete run.
 _Avoid_: percentage of bugs found
 
 **Comparison mutant**:

@@ -139,7 +139,7 @@ async function check(name,workers,mode='normal',signal,attempt=1){
         branchCovered:0,branchTotal:0,branchCoverage:null,coverageBasis:'statement',
         pseudoTested:false,pseudoTestStatus:'checked',pseudoTestReason:null,
         typeSafety:{explicitAny:0,typeAssertions:0,doubleAssertions:0,nonNullAssertions:0,tsIgnore:0,tsExpectError:0,tsNocheck:0,inferredAny}
-      }],problems:[],coverageSuppressions:{count:0,hints:[]},typeSafety:{unowned:{explicitAny:0,typeAssertions:0,doubleAssertions:0,nonNullAssertions:0,tsIgnore:0,tsExpectError:0,tsNocheck:0},suppressions:[],inferredAny}}}]);
+      }],problems:[],coverageSuppressions:{count:0,hints:[]},equivalentDeclarations:[],typeSafety:{unowned:{explicitAny:0,typeAssertions:0,doubleAssertions:0,nonNullAssertions:0,tsIgnore:0,tsExpectError:0,tsNocheck:0},suppressions:[],inferredAny}}}]);
       const count=Math.min(workers??1,4);
       assert.equal(result.mutation.workersUsed,count);assert.equal(result.mutation.workerBaselineJobs,(count-1)*2);
       // Two compiler helpers replace tsc, leaving two baselines and two coverage runs.

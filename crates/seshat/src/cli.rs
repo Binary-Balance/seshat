@@ -448,6 +448,18 @@ fn readable(report: &Value) -> String {
         {
             let _ = writeln!(output, "  Coverage suppression hints in file: {count}");
         }
+        for declaration in array(&source["result"]["equivalentDeclarations"]) {
+            let _ = writeln!(
+                output,
+                "  Declared equivalent, bytes {}-{}: {:?} -> {:?}, {}; reason {:?}",
+                declaration["start"],
+                declaration["end"],
+                text(&declaration["original"]),
+                text(&declaration["replacement"]),
+                text(&declaration["status"]),
+                text(&declaration["reason"])
+            );
+        }
         if let Some(unowned) = source["result"]["typeSafety"]["unowned"].as_object()
             && unowned
                 .values()
@@ -706,7 +718,8 @@ fn readable(report: &Value) -> String {
             .as_f64()
             .map(|v| format!("{v:.2}%"))
             .unwrap_or_else(|| {
-                if mutation["complete"] == true && mutation["planned"] == 0 {
+                // Complete with no score: no mutants, or every one declared equivalent.
+                if mutation["complete"] == true {
                     "not applicable"
                 } else {
                     "withheld (incomplete)"
@@ -722,10 +735,24 @@ fn readable(report: &Value) -> String {
         if counted_timeouts > 0 {
             let _ = writeln!(output, "Timeouts counted as killed: {counted_timeouts}.");
         }
-        for row in array(&mutation["perOperator"]) {
+        let equivalent = mutation["equivalent"].as_u64().unwrap_or(0);
+        let stale = mutation["staleDeclarations"].as_u64().unwrap_or(0);
+        if equivalent + stale > 0 {
             let _ = writeln!(
                 output,
-                "Operator {}: {} eligible site(s), {} excluded; {} planned, {} completed, {} test job(s)",
+                "Declared equivalent: {equivalent} excluded from the score, {stale} stale (killed). Equivalence is declared, not proved."
+            );
+        }
+        for row in array(&mutation["perOperator"]) {
+            let equivalent = row["equivalent"]
+                .as_u64()
+                .filter(|count| *count > 0)
+                .map_or(String::new(), |count| {
+                    format!(", {count} declared equivalent")
+                });
+            let _ = writeln!(
+                output,
+                "Operator {}: {} eligible site(s), {} excluded; {} planned, {} completed{equivalent}, {} test job(s)",
                 text(&row["operator"]),
                 row["eligibleSites"],
                 row["excludedSites"],
@@ -1528,6 +1555,60 @@ mod tests {
         assert!(rendered.contains("score not applicable"));
         assert!(rendered.contains("Capture: 0.5 ms"));
         assert!(!rendered.contains("CRAP unknown"));
+    }
+
+    #[test]
+    fn declared_equivalents_stay_visible_without_inventing_a_score() {
+        let (declared, code) = report(
+            Some("mutate"),
+            Value::Null,
+            json!({"complete":true,"sources":[{"path":"a.ts","result":{"functions":[],
+                "equivalentDeclarations":[
+                    {"start":10,"end":50,"offset":51,"original":"??","replacement":"||",
+                        "reason":"value is 1-5 or null","localId":0,"status":"equivalent"},
+                    {"start":60,"end":90,"offset":91,"original":"!","replacement":"",
+                        "reason":"always boolean","localId":1,"status":"stale"},
+                    {"start":100,"end":130,"offset":131,"original":"<","replacement":"<=",
+                        "reason":"disabled","localId":null,"status":"inactive"}]}}],
+                "mutation":{"complete":true,"planned":2,"killed":1,"survived":0,"equivalent":1,
+                    "staleDeclarations":1,"countedTimeouts":0,"score":100.0,
+                    "perOperator":[{"operator":"??","eligibleSites":1,"excludedSites":0,
+                        "planned":1,"equivalent":1,"completed":1,"jobsAttempted":1}]}}),
+            1.0,
+            None,
+            Some(Thresholds {
+                min_mutation_score: Some(95.0),
+                ..Thresholds::default()
+            }),
+        );
+        assert_eq!(code, 0);
+        let rendered = readable(&declared);
+        assert!(rendered.contains("2 planned, 1 killed, 0 survived; score 100.00%"));
+        assert!(rendered.contains(
+            "Declared equivalent: 1 excluded from the score, 1 stale (killed). Equivalence is declared, not proved."
+        ));
+        assert!(rendered.contains("1 completed, 1 declared equivalent, 1 test job(s)"));
+        assert!(rendered.contains(
+            "Declared equivalent, bytes 10-50: \"??\" -> \"||\", equivalent; reason \"value is 1-5 or null\""
+        ));
+        assert!(rendered.contains("\"!\" -> \"\", stale"));
+        assert!(rendered.contains("\"<\" -> \"<=\", inactive"));
+        // Every mutant declared equivalent: complete, but nothing to score.
+        let (all, code) = report(
+            Some("mutate"),
+            Value::Null,
+            json!({"complete":true,"mutation":{"complete":true,"planned":2,"killed":0,
+                "survived":0,"equivalent":2,"staleDeclarations":0,"score":null}}),
+            1.0,
+            None,
+            Some(Thresholds {
+                min_mutation_score: Some(95.0),
+                ..Thresholds::default()
+            }),
+        );
+        assert_eq!(code, 0);
+        assert_eq!(all["quality"]["checks"][0]["state"], "not-applicable");
+        assert!(readable(&all).contains("score not applicable"));
     }
 
     #[test]

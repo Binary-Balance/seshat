@@ -502,6 +502,60 @@ counts, including operators whose discovered sites are all excluded. Surviving
 mutants are not proof of equivalence. See the
 [operator fixture evidence](research/mutation-operators.md).
 
+### Equivalent mutant declarations
+
+Some mutants cannot be killed: the change behaves like the original for every
+value that can reach it. Declare such a mutant with a block comment directly
+before its mutation token, so it does not lower the mutation score:
+
+```ts
+const confidence = row.confidence
+  /* seshat-equivalent ?? -> ||: value is 1–5 or null */ ?? undefined;
+```
+
+The comment starts `seshat-equivalent`, then gives the original and replacement
+labels exactly as mutant reports show them, `->`, a colon and a non-empty
+reason. Only whitespace may separate the comment from the token. For statement
+removal, place it before the whole statement and use `expression-statement -> ;`
+or `return -> ;`. Write an empty replacement, such as `! -> ""`, as `""`.
+
+A declaration covers one replacement at one site. Other replacements at that
+site, and other sites on the same line, stay undeclared. To declare several
+replacements at one site, put their declarations next to each other before the
+token; adjacent declarations share it:
+
+```ts
+const later = start /* seshat-equivalent < -> <=: first reason */
+  /* seshat-equivalent < -> >=: second reason */ < end;
+```
+
+Declarations apply to operator mutants only, never to extreme mutations.
+Seshat checks every declaration before running any job, including in `crap`.
+A malformed declaration, a line comment, a duplicate, or one with no eligible
+mutant of that original and replacement after it makes the source an input
+error, as a parse error does. Seshat then runs no typecheck, baseline or
+coverage job, so no source gets CRAP results and the run is incomplete.
+A comment starting `/**` is not a declaration. Declarations are checked
+whether or not their family is enabled; a valid declaration for a disabled
+family is `inactive`.
+
+A declared mutant runs like any other, in both mutation strategies, with the
+same baselines, selection and evidence. A setup whose coverage shows it never
+reaches the mutant's source still runs the full test command for it, because a
+declaration is a claim to check, not a reason to skip.
+
+- If the tests pass, the mutant is `equivalent`. It counts as resolved and is
+  left out of the score.
+- If the tests fail, the mutant stays `killed` and counts normally. The
+  declaration is reported `stale`. A stale declaration does not fail the run.
+- A timeout, including one counted by `countTimeoutsAsKilled`, an execution
+  error, cancellation or a missing run keeps its usual verdict and scoring. The
+  declaration stays `unresolved`.
+
+Seshat does not prove equivalence; the reason is the project's. Reports show
+each declaration's location, reason and status. See the
+[report format](report-format.md#equivalent-mutant-declarations).
+
 ### Mutation execution
 
 Every mutant is assessed across all configured setups. Each baseline and mutant
@@ -573,7 +627,8 @@ passing evidence.
 
 A setup skips a mutant's job only when it proves complete, reliable zero
 coverage of the mutant's source. That setup counts as passed. A mutant skipped
-by every setup is reported as survived without coverage.
+by every setup is reported as survived without coverage. Declared equivalent
+mutants are never skipped this way.
 Unknown coverage cannot justify skipping. The existing zero-coverage skip rule
 for extreme mutations remains in effect.
 
@@ -1063,7 +1118,9 @@ not an average. `maxCognitiveComplexity` accepts a finite number at least zero
 and applies to ordinary functions in all three commands, independently of
 coverage status. Implicit class scopes are excluded. See the
 [calculation and TypeScript choices](cognitive-complexity.md).
-`minMutationScore` applies to a complete mutation run. Equality
+`minMutationScore` applies to a complete mutation run. Declared
+[equivalent mutants](#equivalent-mutant-declarations) are left out of the
+score; when every mutant is declared equivalent, the check is not applicable. Equality
 passes and comparisons use unrounded values, so a measured value exactly equal
 to its limit passes. Omit a field or set it to null to disable it. Unknown
 fields, invalid types and out-of-range values are errors.
