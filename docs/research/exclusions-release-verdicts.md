@@ -27,8 +27,8 @@ consumed JSON member was byte-checked against its exact GitHub artifact ZIP:
 Baseline: [0.15.0 audit](../releases/0.15.0-audit.json), merge source
 `8f8f2e80eed241d6276d66605a98f22bcda4de9b`, direct build head
 `e82e0b2ad8a680373598a87600494833604ae91f`. Candidate: 0.16.0 merge source
-`11e3b0673cc4df43d9dd6d888209793607e509bf`, direct build head
-`750793d99dce56dd4e51cbfdc2c8cbaa720333dd` in
+`f04d3095a8133ac9866539cd142855b41a5efbda`, direct build head
+`8c4c97c424872264ed0cbe4d6f5531096a31da1a` in
 [PR #285](https://github.com/Binary-Balance/seshat/pull/285), tracked by
 [issue #284](https://github.com/Binary-Balance/seshat/issues/284).
 
@@ -65,33 +65,31 @@ not by this comparison.
 
 - **Fault-injection scheduling.** The `source-error` case changes a captured
   source while mutants run. Which second-setup job starts before the change is
-  noticed varies by run. Six setup states move between
-  `not-run` and `execution-error` in five reports; every affected outcome
-  remains execution-error. Four of those reports run one job fewer or more;
-  in macOS arm64 `standalone.json` the attempt moves between mutants.
+  noticed varies by run. 6 setup states move between
+  `not-run` and `execution-error` in 5 reports; every
+  affected outcome remains execution-error. 4 of those reports
+  run one job more or fewer; in the others the attempt moves between mutants.
 
 | Report and setup | Setup state |
 | --- | --- |
-| `linux-x64-package-proof` `debian11.json#/parallelChecks/source-error/result/mutation/outcomes/0/setups/1` | execution-error → not-run |
-| `linux-x64-package-proof` `standalone.json#/parallelChecks/source-error/result/mutation/outcomes/1/setups/1` | execution-error → not-run |
+| `linux-x64-package-proof` `debian11.json#/parallelChecks/source-error/result/mutation/outcomes/1/setups/1` | execution-error → not-run |
+| `linux-x64-package-proof` `standalone.json#/parallelChecks/source-error/result/mutation/outcomes/0/setups/1` | execution-error → not-run |
 | `macos-arm64-package-proof` `node-24.22.2/parallel.json#/source-error/result/mutation/outcomes/1/setups/1` | execution-error → not-run |
 | `macos-arm64-package-proof` `standalone.json#/parallelChecks/source-error/result/mutation/outcomes/0/setups/1` | not-run → execution-error |
-| `macos-arm64-package-proof` `standalone.json#/parallelChecks/source-error/result/mutation/outcomes/1/setups/1` | execution-error → not-run |
-| `windows-x64-package-proof` `shared-parallel.json#/source-error/result/mutation/outcomes/0/setups/1` | not-run → execution-error |
+| `macos-x64-package-proof` `standalone.json#/parallelChecks/source-error/result/mutation/outcomes/0/setups/1` | execution-error → not-run |
+| `macos-x64-package-proof` `standalone.json#/parallelChecks/source-error/result/mutation/outcomes/1/setups/1` | not-run → execution-error |
 
-- **Receipt filenames.** In the `receipt-error` case, 8
+- **Receipt filenames.** In the `receipt-error` case, 16
   missing-receipt messages exchange `capture-N-1` and `capture-N-3`. Each stays
   execution-error with unchanged exit and flags.
-- **Windows cancellation exits.** Five child exit values change between `1`
+- **Windows cancellation exits.** 3 child exit values change between `1`
   and `-1073741510`. State, cancellation and timeout flags are unchanged, and
   so are all numeric CLI statuses.
 
 | Report and setup | Child exit |
 | --- | --- |
-| `windows-runtime-cli-evidence` `windows-runtime-cli-evidence.json#/scenarios/consoleCancellation/result/setups/0/baseline` | -1073741510 → 1 |
 | `windows-shared-fixture-evidence` `shared-cli.json#/SIGINT/result/setups/0/typecheck` | -1073741510 → 1 |
 | `windows-x64-package-proof` `shared-cli.json#/SIGINT/result/setups/0/typecheck` | 1 → -1073741510 |
-| `windows-x64-package-proof` `shared-cli.json#/SIGTERM/result/setups/0/typecheck` | 1 → -1073741510 |
 | `windows-x64-package-proof` `windows-runtime-cli-evidence.json#/scenarios/consoleCancellation/result/setups/0/baseline` | -1073741510 → 1 |
 
 - **Temporary folder names.** 44 Jest environment paths in
@@ -100,7 +98,7 @@ not by this comparison.
 - **Version text and binaries.** 25 expected payload-error
   messages name 0.16.0 instead of 0.15.0, and two supervision summaries record
   the new binary hashes.
-- **stderr.** 228 process stderr strings differ; all
+- **stderr.** 230 process stderr strings differ; all
   633 shared numeric process statuses, including
   533 CLI cases, match. Outcome diagnostic strings and
   timing-ranked `slowestExecutions` arrays keep their exact differences in the
@@ -148,7 +146,7 @@ separated from semantic comparison but retained. Script SHA-256 values:
 
 - verifier: `f0aadad81c254db53ff48d31cf754ae38324881297adbd2c024c4b5e0d8d3472`
 - comparator: `da54faa1a46f68b71fe6280281fa9b9e68988ae39f19d9d99bfa2a33e7819aae`
-- report renderer: `8430fcdf398dc8d700a4a4a7f348dd95b1e93f932289a3266f3041c9cf4ade90`
+- report renderer: `775e8e450704fa20ba156f9757cb73780d24122a5098d9c0d1827d1c74a32fc2`
 
 No fixtures were rerun. GitHub retention may later prevent downloads; the
 records keep coordinates, hashes and compared values. This compares retained
