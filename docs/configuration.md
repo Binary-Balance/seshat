@@ -533,10 +533,11 @@ Declarations apply to operator mutants only, never to extreme mutations.
 Seshat checks every declaration before running any job, including in `crap`.
 A malformed declaration, a line comment, a duplicate, or one with no eligible
 mutant of that original and replacement after it makes the source an input
-error, as a parse error does: that source gets no CRAP results and the run is
-incomplete. A comment starting `/**` is not a declaration. Declarations are
-checked whether or not their family is enabled; a valid declaration for a
-disabled family is `inactive`.
+error, as a parse error does. Seshat then runs no typecheck, baseline or
+coverage job, so no source gets CRAP results and the run is incomplete.
+A comment starting `/**` is not a declaration. Declarations are checked
+whether or not their family is enabled; a valid declaration for a disabled
+family is `inactive`.
 
 A declared mutant runs like any other, in both mutation strategies, with the
 same baselines, selection and evidence. A setup whose coverage shows it never
