@@ -353321,5 +353321,5 @@
     "6821 new-field defaults were removed before comparison; no non-default value appeared.",
     "Remaining differences are fault-injection scheduling, receipt filename numbering, Windows cancellation exit values, temporary Jest proof folder names, version text, supervision binary hashes and stderr text."
   ],
-  "reportGeneratorSha256": "775e8e450704fa20ba156f9757cb73780d24122a5098d9c0d1827d1c74a32fc2"
+  "reportGeneratorSha256": "a6965db3a72cf83990fd69f12f362426f54b3a4db66b4c57444546a8bb4856c8"
 }

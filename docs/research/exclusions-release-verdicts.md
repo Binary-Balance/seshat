@@ -100,7 +100,7 @@ not by this comparison.
   the new binary hashes.
 - **stderr.** 230 process stderr strings differ; all
   633 shared numeric process statuses, including
-  533 CLI cases, match. Outcome diagnostic strings and
+  533 CLI cases, match. Setup and outcome diagnostic strings and
   timing-ranked `slowestExecutions` arrays keep their exact differences in the
   JSON.
 
@@ -146,7 +146,7 @@ separated from semantic comparison but retained. Script SHA-256 values:
 
 - verifier: `f0aadad81c254db53ff48d31cf754ae38324881297adbd2c024c4b5e0d8d3472`
 - comparator: `da54faa1a46f68b71fe6280281fa9b9e68988ae39f19d9d99bfa2a33e7819aae`
-- report renderer: `775e8e450704fa20ba156f9757cb73780d24122a5098d9c0d1827d1c74a32fc2`
+- report renderer: `a6965db3a72cf83990fd69f12f362426f54b3a4db66b4c57444546a8bb4856c8`
 
 No fixtures were rerun. GitHub retention may later prevent downloads; the
 records keep coordinates, hashes and compared values. This compares retained
