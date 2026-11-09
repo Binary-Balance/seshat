@@ -28,6 +28,8 @@ impl TestState {
 pub enum Verdict {
     Killed,
     Survived,
+    // A survivor the project declared equivalent: resolved but not scored.
+    Equivalent,
     TimedOut,
     CountedTimeout,
     ExecutionError,
@@ -41,6 +43,7 @@ impl Verdict {
         match self {
             Self::Killed => "killed",
             Self::Survived => "survived",
+            Self::Equivalent => "equivalent",
             Self::TimedOut | Self::CountedTimeout => "timed-out",
             Self::ExecutionError => "execution-error",
             Self::Cancelled => "cancelled",
@@ -55,6 +58,7 @@ pub struct MutationAssessment {
     pub killed: usize,
     pub counted_timeouts: usize,
     pub survived: usize,
+    pub equivalent: usize,
     pub score: Option<f64>,
     pub outcomes: Vec<Verdict>,
 }
@@ -84,10 +88,12 @@ pub fn score(complexity: u32, covered: usize, total: usize) -> Option<f64> {
 // Baselines contain one slot for every configured setup, even if it did not run.
 // Missing executions stay NotRun. The caller retains the underlying evidence,
 // including mixed failures that cannot all be expressed by one verdict.
+// `declared` marks mutants declared equivalent; missing entries are undeclared.
 pub fn mutation(
     baselines: &[TestState],
     expected_mutants: usize,
     executions: &[Vec<TestState>],
+    declared: &[bool],
 ) -> MutationAssessment {
     let baseline_passed =
         !baselines.is_empty() && baselines.iter().all(|state| *state == TestState::Passed);
@@ -120,6 +126,8 @@ pub fn mutation(
                 Verdict::NotRun
             } else if states.contains(&TestState::Failed) {
                 Verdict::Killed
+            } else if declared.get(id) == Some(&true) {
+                Verdict::Equivalent
             } else {
                 Verdict::Survived
             }
@@ -127,15 +135,20 @@ pub fn mutation(
         .collect();
     let killed = outcomes.iter().filter(|v| **v == Verdict::Killed).count();
     let survived = outcomes.iter().filter(|v| **v == Verdict::Survived).count();
+    let equivalent = outcomes
+        .iter()
+        .filter(|v| **v == Verdict::Equivalent)
+        .count();
     let counted_timeouts = outcomes
         .iter()
         .filter(|v| **v == Verdict::CountedTimeout)
         .count();
     let complete = baseline_passed
         && executions.len() == expected_mutants
-        && killed + survived + counted_timeouts == expected_mutants;
-    let score = if complete && expected_mutants > 0 {
-        Some((killed + counted_timeouts) as f64 / expected_mutants as f64 * 100.0)
+        && killed + survived + counted_timeouts + equivalent == expected_mutants;
+    let scored = killed + counted_timeouts + survived;
+    let score = if complete && scored > 0 {
+        Some((killed + counted_timeouts) as f64 / scored as f64 * 100.0)
     } else {
         None
     };
@@ -144,6 +157,7 @@ pub fn mutation(
         killed,
         counted_timeouts,
         survived,
+        equivalent,
         score,
         outcomes,
     }
@@ -184,6 +198,52 @@ mod tests {
     }
 
     #[test]
+    fn declared_equivalents_resolve_without_entering_the_score() {
+        let states = [
+            vec![Failed],
+            vec![Passed],
+            vec![Passed],
+            vec![CountedTimeout],
+            vec![TimedOut],
+            vec![ExecutionError],
+            vec![Cancelled],
+            vec![NotRun],
+        ];
+        let declared = [true, true, false, true, true, true, true, true];
+        let partial = mutation(&[Passed], 8, &states, &declared);
+        assert_eq!(
+            partial.outcomes,
+            [
+                Verdict::Killed,
+                Verdict::Equivalent,
+                Verdict::Survived,
+                Verdict::CountedTimeout,
+                Verdict::TimedOut,
+                Verdict::ExecutionError,
+                Verdict::Cancelled,
+                Verdict::NotRun,
+            ]
+        );
+        assert_eq!(
+            (partial.killed, partial.survived, partial.equivalent),
+            (1, 1, 1)
+        );
+        assert_eq!(partial.counted_timeouts, 1);
+        assert!(!partial.complete);
+        assert_eq!(partial.score, None);
+        let mixed = mutation(&[Passed], 4, &states[..4], &declared);
+        assert!(mixed.complete);
+        assert_eq!(mixed.score, Some(2.0 / 3.0 * 100.0));
+        let all = mutation(&[Passed], 2, &[vec![Passed], vec![Passed]], &[true, true]);
+        assert!(all.complete);
+        assert_eq!((all.equivalent, all.survived), (2, 0));
+        assert_eq!(all.score, None);
+        let unassessed = mutation(&[Failed], 1, &[vec![Passed]], &[true]);
+        assert_eq!(unassessed.outcomes, [Verdict::Unassessed]);
+        assert_eq!(Verdict::Equivalent.label(), "equivalent");
+    }
+
+    #[test]
     fn all_setups_must_resolve_before_a_kill_counts() {
         let cases = [
             (vec![Passed, Passed], Verdict::Survived),
@@ -199,7 +259,7 @@ mod tests {
             (vec![Passed, Passed, Failed], Verdict::ExecutionError),
         ];
         for (states, verdict) in cases {
-            let result = mutation(&[Passed, Passed], 1, std::slice::from_ref(&states));
+            let result = mutation(&[Passed, Passed], 1, std::slice::from_ref(&states), &[]);
             assert_eq!(result.outcomes, [verdict], "{states:?}");
             let resolved = matches!(verdict, Verdict::Killed | Verdict::Survived);
             assert_eq!(result.complete, resolved);
@@ -207,7 +267,7 @@ mod tests {
             let mut reversed = states;
             reversed.reverse();
             assert_eq!(
-                mutation(&[Passed, Passed], 1, &[reversed]).outcomes,
+                mutation(&[Passed, Passed], 1, &[reversed], &[]).outcomes,
                 [verdict]
             );
         }
@@ -237,7 +297,7 @@ mod tests {
         ];
         for (states, verdict) in cases {
             for states in [states.clone(), states.into_iter().rev().collect()] {
-                let result = mutation(&[Passed, Passed], 1, &[states]);
+                let result = mutation(&[Passed, Passed], 1, &[states], &[]);
                 assert_eq!(result.outcomes, [verdict]);
                 let counted = verdict == Verdict::CountedTimeout;
                 assert_eq!(result.complete, counted);
@@ -251,6 +311,7 @@ mod tests {
             &[Passed],
             3,
             &[vec![Failed], vec![CountedTimeout], vec![Passed]],
+            &[],
         );
         assert!(result.complete);
         assert_eq!(
@@ -259,7 +320,7 @@ mod tests {
         );
         assert_eq!(result.score, Some(2.0 / 3.0 * 100.0));
         assert_eq!(Verdict::CountedTimeout.label(), "timed-out");
-        let partial = mutation(&[Passed], 2, &[vec![CountedTimeout]]);
+        let partial = mutation(&[Passed], 2, &[vec![CountedTimeout]], &[]);
         assert_eq!(partial.outcomes, [Verdict::CountedTimeout, Verdict::NotRun]);
         assert_eq!(partial.counted_timeouts, 1);
         assert!(!partial.complete);
@@ -278,13 +339,13 @@ mod tests {
             vec![NotRun],
             vec![Passed, Failed],
         ] {
-            let result = mutation(&baselines, 1, &[vec![Failed; baselines.len()]]);
+            let result = mutation(&baselines, 1, &[vec![Failed; baselines.len()]], &[]);
             assert!(!result.complete);
             assert_eq!(result.score, None);
             assert_eq!(result.killed, 0);
             assert_eq!(result.outcomes, [Verdict::Unassessed]);
-            assert!(!mutation(&baselines, 0, &[]).complete);
-            let result = mutation(&baselines, 1, &[vec![CountedTimeout; baselines.len()]]);
+            assert!(!mutation(&baselines, 0, &[], &[]).complete);
+            let result = mutation(&baselines, 1, &[vec![CountedTimeout; baselines.len()]], &[]);
             assert!(!result.complete);
             assert_eq!(result.counted_timeouts, 0);
             assert_eq!(result.outcomes, [Verdict::Unassessed]);
@@ -293,7 +354,12 @@ mod tests {
 
     #[test]
     fn incomplete_runs_retain_resolved_results_in_planned_order() {
-        let result = mutation(&[Passed], 4, &[vec![Failed], vec![Passed], vec![TimedOut]]);
+        let result = mutation(
+            &[Passed],
+            4,
+            &[vec![Failed], vec![Passed], vec![TimedOut]],
+            &[],
+        );
         assert_eq!(
             result.outcomes,
             [
@@ -306,17 +372,17 @@ mod tests {
         assert_eq!((result.killed, result.survived), (1, 1));
         assert!(!result.complete);
         assert_eq!(result.score, None);
-        let extra = mutation(&[Passed], 1, &[vec![Failed], vec![Passed]]);
+        let extra = mutation(&[Passed], 1, &[vec![Failed], vec![Passed]], &[]);
         assert!(!extra.complete);
         assert_eq!(extra.score, None);
     }
 
     #[test]
     fn complete_scores_and_no_mutants() {
-        let result = mutation(&[Passed], 2, &[vec![Failed], vec![Passed]]);
+        let result = mutation(&[Passed], 2, &[vec![Failed], vec![Passed]], &[]);
         assert!(result.complete);
         assert_eq!(result.score, Some(50.0));
-        let empty = mutation(&[Passed], 0, &[]);
+        let empty = mutation(&[Passed], 0, &[], &[]);
         assert!(empty.complete);
         assert!(empty.outcomes.is_empty());
         assert_eq!(empty.score, None);

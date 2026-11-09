@@ -133,8 +133,10 @@ coverage attribution ran, it also has `result`:
 | `functions` | Function and implicit-scope measurements. |
 | `problems` | Coverage mapping problems. The list is diagnostic evidence; its exact wording is not stable. |
 | `coverageSuppressions` | Static hint findings: `count` and `hints`, described below. Available even when coverage is incomplete. |
+| `equivalentDeclarations` | Equivalent mutant declarations in this source. See [Equivalent mutant declarations](#equivalent-mutant-declarations). |
 
-A source row can instead have an `error` string when source analysis failed.
+A source row can instead have an `error` string when source analysis failed,
+including an invalid equivalent mutant declaration.
 The string is diagnostic evidence. A source `result.complete: false` does not
 make a partial score complete, and report `complete` remains false when an
 in-scope source cannot be measured.
@@ -427,14 +429,15 @@ command text or free-form diagnostic nested under them remains evidence.
 | `complete` | Whether every planned mutant received a resolved verdict and mutation preparation, execution and cleanup succeeded. An incomplete extreme-mutation execution also keeps this false, even when all operator mutants resolve. |
 | `planned` | Number of generated replacements across all selected operator families. |
 | `enabledOperators` | Configured operator families, defaulting to `["comparison", "logical", "arithmetic", "boolean", "statement", "optional"]`. An empty array disables operator mutants. |
-| `perOperator` | Rows sorted by original operator text. Each has `operator`, `kind`, `eligibleSites`, `excludedSites`, `planned`, `completed`, `jobsAttempted` and `executionMs`. Site counts describe discovered AST sites before replacement expansion. Planned counts include unstarted work; completed counts include returned attempts. Times sum those attempts and can overlap under parallelism. Rows include operators whose discovered sites are all excluded. Disabled families and operators with no discovered sites have no row. |
-| `killed`, `survived` | Counts of outcomes with those resolved verdicts. |
+| `perOperator` | Rows sorted by original operator text. Each has `operator`, `kind`, `eligibleSites`, `excludedSites`, `planned`, `equivalent`, `completed`, `jobsAttempted` and `executionMs`. `equivalent` counts that operator's `equivalent` outcomes. Site counts describe discovered AST sites before replacement expansion. Planned counts include unstarted work; completed counts include returned attempts. Times sum those attempts and can overlap under parallelism. Rows include operators whose discovered sites are all excluded. Disabled families and operators with no discovered sites have no row. |
+| `killed`, `survived`, `equivalent` | Counts of outcomes with those resolved verdicts. |
+| `staleDeclarations` | Declared equivalent mutants that were killed. They stay in `killed`. |
 | `countedTimeouts` | Number of `timed-out` outcomes counted as detected by the opt-in policy. They are excluded from `killed`. Defaults to zero. |
-| `score` | `(killed + countedTimeouts) / (killed + countedTimeouts + survived) × 100` for a complete non-empty plan; otherwise `null`. The value is a percentage from `0` to `100`. |
+| `score` | `(killed + countedTimeouts) / (killed + countedTimeouts + survived) × 100` for a complete plan with at least one scored mutant; otherwise `null`. Equivalent mutants are not scored. The value is a percentage from `0` to `100`. |
 | `outcomes` | One row per planned mutant, in source and operator order. |
 | `completed` | Planned mutants with a returned attempt or a proved zero-coverage decision. Attempts include failed, timed-out and cancelled jobs. It does not mean successfully assessed. |
 | `notRun` | Planned mutants with no returned attempt. It is not the count of `not-run` verdicts. |
-| `unresolved` | `planned - killed - countedTimeouts - survived`, including incomplete attempts and unstarted work. |
+| `unresolved` | `planned - killed - countedTimeouts - survived - equivalent`, including incomplete attempts and unstarted work. |
 | `jobsAttempted` | Mutant test jobs only. Top-level `result.jobsAttempted` also includes original and worker baseline jobs. |
 | `workersRequested`, `workersUsed` | `workersRequested` is the configured Seshat worker limit. `workersUsed` is `min(workersRequested, planned)` when preparation succeeds and no cancellation was observed before scheduling, otherwise `0`. It is scheduler capacity, not observed worker activity, and is not reduced after scheduling starts for worker-start failure, cancellation or early stopping. |
 | `workerBaselineJobs`, `workerBaselines` | Additional worker baseline jobs and their evidence. Both mutation phases share the additional workers, so each worker's baseline runs once, before the extreme phase, and is reported only here. Workers are copied for the phase that needs more, so the count can exceed `(workersUsed - 1) × setups`, and can be non-zero when `workersUsed` is `0`. With switching, each worker the operator phase uses also runs a prepared baseline, marked `phase: "prepared-baseline"`. |
@@ -443,7 +446,8 @@ command text or free-form diagnostic nested under them remains evidence.
 | `error`, `restorationError` | Nullable diagnostic strings for mutation or source-restoration failures. Either failure makes mutation incomplete and withholds its score. |
 
 Every outcome has `id` (run-wide), `localId` (within its source), `path`,
-`offset`, `kind`, `original`, `replacement`, `setups` and `verdict`. `kind` is
+`offset`, `kind`, `original`, `replacement`, `equivalence`, `setups` and
+`verdict`. `equivalence` is `null` unless the mutant is declared equivalent. `kind` is
 `comparison`, `logical`, `arithmetic`, `boolean`, `statement` or `optional`.
 Boolean outcomes use `true`, `false` or `!` as `original`. Literal replacements are `false` or `true`;
 removing `!` uses an empty `replacement` string and parenthesises the operand.
@@ -489,7 +493,7 @@ Attempted or zero-covered mutant setup rows also retain `selection`:
 | --- | --- |
 | `mode` | `selected`, `full` or `no-coverage`. |
 | `basis`, `files` | Selected mode uses `source-file` attribution and lists project-relative test files. All tests in each file run. |
-| `reason` | Why the full command was used, or `verified-zero-coverage` when no job was needed. |
+| `reason` | Why the full command was used, or `verified-zero-coverage` when no job was needed. `declared-equivalent` means proved zero coverage would have skipped the job, but the mutant is declared equivalent. |
 | `requestedFiles`, `selectedAttempt` | When a selected run's executed test identities did not match the baseline, retain the requested files and first attempt before rerunning the full command. |
 
 Vitest receipts include `testFiles` and executed `tests` with file/name identities.
@@ -508,7 +512,7 @@ after an unconfirmed selection. A setup with proved zero source coverage has
 Each setup decides from its own reliable zero-coverage evidence. A skipped setup
 counts as passed, and other setups still run their jobs. A mutant skipped by
 every setup is survived without running a test job. It remains in the score
-denominator. Existing extreme-mutation zero-coverage skips remain
+denominator. Declared equivalent mutants are never skipped this way. Existing extreme-mutation zero-coverage skips remain
 separate. Missing evidence never counts as zero coverage.
 
 Original baselines must all be `passed` before any mutant can be assessed. If
@@ -522,20 +526,47 @@ the verdict rules are applied in this order:
 | `timed-out` | A setup timed out. It counts only when opted in, every timeout qualifies and every configured setup resolved. |
 | `not-run` | A setup result is missing or explicitly not run. |
 | `killed` | All configured setups returned only passed or failed states, and at least one returned failed. |
+| `equivalent` | Every configured setup returned passed, and the mutant is declared equivalent. |
 | `survived` | Every configured setup returned passed. |
 
 The precedence means an infrastructure error, cancellation, ineligible timeout
 or missing setup never becomes detected merely because another setup failed.
-A complete mutation result contains `killed`, `survived` and, when opted in,
-`timed-out` outcomes with `countedAsKilled: true`. A timeout alongside a missing
-setup retains the `timed-out` verdict but does not count. A zero-mutant complete
-result has `score: null`, meaning not applicable, not `100`.
+A complete mutation result contains `killed`, `survived`, `equivalent` and,
+when opted in, `timed-out` outcomes with `countedAsKilled: true`. A timeout
+alongside a missing setup retains the `timed-out` verdict but does not count.
+A complete result with no scored mutants, because there are none or all are
+`equivalent`, has `score: null`, meaning not applicable, not `100`.
 
 Only original source is typechecked. Operator and extreme mutants run without
 a separate typecheck, so even a mutation TypeScript would reject can receive a
 runtime verdict. Type-invalid operator mutants remain in the score denominator
 when they are killed or survive. There is no `compile-error` verdict or option
 to exclude them in this release.
+
+### Equivalent mutant declarations
+
+Each source's `result.equivalentDeclarations` lists its
+[declarations](configuration.md#equivalent-mutant-declarations) in source order:
+
+| Field | Meaning |
+| --- | --- |
+| `start`, `end` | UTF-8 byte offsets of the comment, including its delimiters, in the original source. |
+| `offset` | Byte offset of the declared mutant's token, matching the outcome's `offset`. |
+| `original`, `replacement` | The declared labels. An empty replacement is the empty string. |
+| `reason` | The declared reason, without surrounding whitespace. |
+| `localId` | The declared mutant's `localId`, or `null` when its family is disabled. |
+| `status` | `equivalent`, `stale`, `inactive` or `unresolved`. |
+
+`equivalent` means the declared mutant survived and was left out of the score.
+`stale` means it was killed; it keeps its `killed` verdict and score
+contribution. `inactive` means its operator family is disabled, so no mutant
+was planned. `unresolved` covers every other outcome, including counted
+timeouts, and runs without mutation, such as `crap`.
+
+A declared outcome's `equivalence` has the declaration's `start`, `end`,
+`reason` and `status`. Equivalence is declared by the project, not proved by
+Seshat. The readable report lists each declaration's byte range, labels,
+status and reason, and the equivalent and stale totals.
 
 `mutation.diagnostics.unresolvedBreakdown` counts `timedOut`, `executionError`,
 `cancelled`, `notRun` and `unassessed` verdicts. Its `throughput` values are

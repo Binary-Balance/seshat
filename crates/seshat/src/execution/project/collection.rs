@@ -1334,11 +1334,19 @@ impl CapturedProject {
                 && u64::from(scope.body.start) <= offset
                 && offset < u64::from(scope.body.end)
         });
+        let declared = !row["equivalence"].is_null();
         let selections: Vec<_> = self
             .test_selection
             .iter()
             .map(|evidence| match evidence {
-                Ok(evidence) => evidence.select(&self.directory.0, source_index, runtime),
+                Ok(evidence) => match evidence.select(&self.directory.0, source_index, runtime) {
+                    // A declaration claims no test can detect this mutant. Skipping
+                    // uncovered code would accept that claim without any evidence.
+                    selection::Selection::NoCoverage if declared => {
+                        selection::Selection::Full("declared-equivalent".into())
+                    }
+                    selection => selection,
+                },
                 Err(fallback) => selection::Selection::Full(fallback.reason.clone()),
             })
             .collect();
@@ -1587,9 +1595,18 @@ impl CapturedProject {
                 for operator in &analysis.operators {
                     for (alternative, replacement) in operator.replacements.iter().enumerate() {
                         let local_id = operator.first_id + alternative;
+                        let equivalence = analysis
+                            .equivalences
+                            .iter()
+                            .find(|declaration| declaration.local_id == Some(local_id))
+                            .map(|declaration| {
+                                json!({"start":declaration.start,"end":declaration.end,
+                                "reason":declaration.reason,"status":"unresolved"})
+                            });
                         let row = json!({"id":plan.len(),"localId":local_id,
                             "kind":operator.kind,"offset":operator.offset,"original":operator.original,
-                            "replacement":replacement,"path":stable_path(&self.sources[source_index].0),
+                            "replacement":replacement,"equivalence":equivalence,
+                            "path":stable_path(&self.sources[source_index].0),
                             "setups":self.config.setups.iter()
                                 .map(|setup| json!({"name":setup.name,"state":"not-run"}))
                                 .collect::<Vec<_>>()});
@@ -1919,10 +1936,25 @@ impl CapturedProject {
             }
         }
         let cleanup_ms = cleanup_started.elapsed().as_secs_f64() * 1000.0;
-        let assessed = assessment::mutation(baselines, plan.len(), &executions);
+        let declared: Vec<_> = outcomes
+            .iter()
+            .map(|row| row.get("equivalence").is_some_and(|value| !value.is_null()))
+            .collect();
+        let assessed = assessment::mutation(baselines, plan.len(), &executions, &declared);
+        let mut stale_declarations = 0;
         for (row, verdict) in outcomes.iter_mut().zip(assessed.outcomes) {
             row["verdict"] = json!(verdict.label());
             row["countedAsKilled"] = json!(verdict == assessment::Verdict::CountedTimeout);
+            if row.get("equivalence").is_some_and(Value::is_object) {
+                // Only a clean survivor or kill says anything about the declaration.
+                let status = match verdict {
+                    assessment::Verdict::Equivalent => "equivalent",
+                    assessment::Verdict::Killed => "stale",
+                    _ => "unresolved",
+                };
+                stale_declarations += usize::from(status == "stale");
+                row["equivalence"]["status"] = json!(status);
+            }
             if row["kind"] == "extreme" {
                 row["pseudoTested"] =
                     json!(assessment::pseudo_tested(row["coverage"].as_f64(), verdict));
@@ -1935,7 +1967,8 @@ impl CapturedProject {
             .iter()
             .filter(|row| row.get("executionMs").is_some())
             .count();
-        let resolved = assessed.killed + assessed.survived + assessed.counted_timeouts;
+        let resolved =
+            assessed.killed + assessed.survived + assessed.counted_timeouts + assessed.equivalent;
         let diagnostics = mutation_diagnostics(&outcomes, completed, jobs_attempted, scheduling_ms);
         progress.phase(format_args!(
             "{label} finished: completed {}/{}, running 0, not run {}, resolved {}, unresolved {} (timed-out {}, execution-error {}, cancelled {}, not-run {}, unassessed {})",
@@ -1974,13 +2007,15 @@ impl CapturedProject {
             result["preparedBaselineMs"] = json!(prepared_baseline_ms);
         }
         if operators {
+            result["equivalent"] = json!(assessed.equivalent);
+            result["staleDeclarations"] = json!(stale_declarations);
             result["enabledOperators"] = json!(self.config.mutation_operators);
             let mut counts = BTreeMap::<String, Value>::new();
             for analysis in facts.iter().flatten() {
                 for (operator, sites) in &analysis.operator_sites {
                     let count = counts.entry((*operator).into()).or_insert_with(|| json!({
                         "operator":operator,"kind":sites.kind,"eligibleSites":0,"excludedSites":0,
-                        "planned":0,"completed":0,"jobsAttempted":0,"executionMs":0.0
+                        "planned":0,"equivalent":0,"completed":0,"jobsAttempted":0,"executionMs":0.0
                     }));
                     count["eligibleSites"] =
                         json!(count["eligibleSites"].as_u64().unwrap() + sites.eligible as u64);
@@ -1992,6 +2027,9 @@ impl CapturedProject {
                 let operator = row["original"].as_str().unwrap();
                 let count = counts.get_mut(operator).unwrap();
                 count["planned"] = json!(count["planned"].as_u64().unwrap() + 1);
+                if row["verdict"] == "equivalent" {
+                    count["equivalent"] = json!(count["equivalent"].as_u64().unwrap() + 1);
+                }
                 if let Some(ms) = row["executionMs"].as_f64() {
                     count["completed"] = json!(count["completed"].as_u64().unwrap() + 1);
                     count["executionMs"] = json!(count["executionMs"].as_f64().unwrap() + ms);
@@ -2419,6 +2457,23 @@ impl CapturedProject {
         commands_run += measured["jobsAttempted"].as_u64().unwrap();
         commands_run += measured["workerBaselineJobs"].as_u64().unwrap();
         commands_run += measured["preparedBaselineJobs"].as_u64().unwrap_or(0);
+        for outcome in measured["outcomes"].as_array().unwrap() {
+            if outcome["equivalence"].is_null() {
+                continue;
+            }
+            let source = sources
+                .iter_mut()
+                .find(|source| source["path"] == outcome["path"])
+                .unwrap();
+            for declaration in source["result"]["equivalentDeclarations"]
+                .as_array_mut()
+                .unwrap()
+            {
+                if declaration["localId"] == outcome["localId"] {
+                    declaration["status"] = outcome["equivalence"]["status"].clone();
+                }
+            }
+        }
         let mutation = measured;
         // Report a limit only for setups where a mutant job ran under it.
         for (index, (setup, config)) in setups.iter_mut().zip(&self.config.setups).enumerate() {
@@ -2471,7 +2526,7 @@ impl CapturedProject {
             .sources
             .iter()
             .map(|(path, source)| {
-                Analysis::inspect_with_operators(
+                Analysis::inspect_declared(
                     &stable_path(path),
                     source,
                     &self.config.mutation_operators,
@@ -2752,6 +2807,179 @@ mod tests {
     }
 
     #[test]
+    fn declared_zero_coverage_mutants_still_run_their_tests() {
+        let fixture = super::super::tests::Fixture::new();
+        let mut captured = fixture.capture().unwrap();
+        captured
+            .sources
+            .retain(|(path, _)| path == Path::new("src/calc.ts"));
+        captured.config.setups[0].test = vec![
+            "node".into(),
+            "-e".into(),
+            r#"
+            require('fs').writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({version:1,
+                executionId:process.env.SESHAT_EXECUTION_ID, node:process.versions.node,
+                complete:true, passed:1, failed:0, errors:0}));
+        "#
+            .into(),
+        ];
+        captured.test_selection = vec![Ok(selection::SetupEvidence::unexecuted(1))];
+        let (path, source) = &captured.sources[0];
+        let analysis = Analysis::inspect(&stable_path(path), source).unwrap();
+        let operator = &analysis.operators[0];
+        let evidence = captured.prepare_evidence().unwrap();
+        for (equivalence, jobs, selection) in [
+            (
+                Value::Null,
+                0,
+                json!({"mode":"no-coverage","reason":"verified-zero-coverage"}),
+            ),
+            (
+                json!({"start":0,"end":1,"reason":"r","status":"unresolved"}),
+                1,
+                json!({"mode":"full","reason":"declared-equivalent"}),
+            ),
+        ] {
+            let row = json!({"id":0,"kind":operator.kind,"offset":operator.offset,
+                "equivalence":equivalence,"setups":[{"name":"unit","state":"not-run"}]});
+            let result = captured.run_mutant(
+                &analysis,
+                0,
+                operator.first_id,
+                row,
+                &MutantJob {
+                    evidence: &evidence.0,
+                    switching: false,
+                    mutant_timeouts: &[30_000],
+                    stopped: &AtomicBool::new(false),
+                },
+            );
+            assert_eq!(result.states, [TestState::Passed]);
+            assert_eq!(result.jobs, jobs, "{}", result.row);
+            assert_eq!(result.row["setups"][0]["selection"], selection);
+            assert!(result.restoration_error.is_none());
+        }
+        evidence.close().unwrap();
+        drop(captured);
+        fixture.assert_clean();
+    }
+
+    #[test]
+    fn invalid_declarations_stop_assessment_before_mutation() {
+        let fixture = super::super::tests::Fixture::new();
+        fs::write(
+            fixture.project.join("src/calc.ts"),
+            "export const below = (value: number) => value /* seshat-equivalent < -> >: r */ < 3;\n",
+        )
+        .unwrap();
+        let mut captured = fixture.capture().unwrap();
+        captured.config.setups[0].typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
+        let result = captured.assess(AssessmentMode::Mutate, false).unwrap();
+        let source = result["sources"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|source| source["path"] == "src/calc.ts")
+            .unwrap();
+        assert!(
+            source["error"]
+                .as_str()
+                .unwrap()
+                .starts_with("seshat-equivalent at byte 46: no eligible"),
+            "{result}"
+        );
+        assert_eq!(result["complete"], false);
+        assert_eq!(result["setups"][0]["baseline"]["state"], "not-run");
+        assert_eq!(result["mutation"]["jobsAttempted"], 0);
+        fixture.assert_clean();
+    }
+
+    #[test]
+    fn declared_equivalents_follow_verdicts_in_both_strategies() {
+        for switching in [false, true] {
+            for (behaviour, verdict, status) in [
+                ("pass", "equivalent", "equivalent"),
+                ("fail", "killed", "stale"),
+                ("runner-error", "execution-error", "unresolved"),
+                ("hang", "timed-out", "unresolved"),
+            ] {
+                let fixture = super::super::tests::Fixture::new();
+                let source = "export const below = (value: number) => value /* seshat-equivalent < -> <=: never 3 */ < 3;\n";
+                fs::write(fixture.project.join("src/calc.ts"), source).unwrap();
+                let mut captured = fixture.capture().unwrap();
+                captured
+                    .sources
+                    .retain(|(path, _)| path == Path::new("src/calc.ts"));
+                captured.config.count_timeouts_as_killed = true;
+                let setup = &mut captured.config.setups[0];
+                setup.mutant_timeout_min_ms = 3000;
+                setup.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
+                // Mutant 0 is the declared `<` -> `<=`; mutant 1 is always killed.
+                setup.test = vec![
+                    "node".into(),
+                    "-e".into(),
+                    format!(
+                        r#"
+                    const fs = require('fs'), id = process.env.SESHAT_EXECUTION_ID;
+                    const report = {{version:1, executionId:id, node:process.versions.node,
+                        complete:true, passed:1, failed:0, errors:0}};
+                    let failed = id.includes('-mutant-1-');
+                    if (id.includes('-mutant-0-')) {{
+                        if ('{behaviour}' === 'hang') while (true) {{}}
+                        if ('{behaviour}' === 'runner-error') report.errors = 1;
+                        failed = '{behaviour}' !== 'pass';
+                    }}
+                    if (failed) {{ report.passed = 0; report.failed = 1; process.exitCode = 1; }}
+                    fs.writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify(report));
+                "#
+                    ),
+                ];
+                let result = captured
+                    .assess_with_strategy(AssessmentMode::Mutate, false, switching)
+                    .unwrap();
+                let context = format!("{switching} {behaviour}: {result}");
+                let mutation = &result["mutation"];
+                let outcome = &mutation["outcomes"][0];
+                let start = source.find("/*").unwrap();
+                let end = source.find("*/").unwrap() + 2;
+                assert_eq!(outcome["verdict"], verdict, "{context}");
+                assert_eq!(
+                    outcome["equivalence"],
+                    json!({"start":start,"end":end,"reason":"never 3","status":status})
+                );
+                assert!(mutation["outcomes"][1]["equivalence"].is_null());
+                assert_eq!(mutation["outcomes"][1]["verdict"], "killed");
+                assert_eq!(
+                    result["sources"][0]["result"]["equivalentDeclarations"],
+                    json!([{"start":start,"end":end,"offset":source.find("< 3").unwrap(),
+                        "original":"<","replacement":"<=","reason":"never 3","localId":0,
+                        "status":status}])
+                );
+                let equivalent = usize::from(verdict == "equivalent");
+                let counted = usize::from(behaviour == "hang");
+                assert_eq!(mutation["equivalent"], equivalent);
+                assert_eq!(mutation["perOperator"][0]["equivalent"], equivalent);
+                assert_eq!(
+                    mutation["staleDeclarations"],
+                    usize::from(status == "stale")
+                );
+                assert_eq!(mutation["survived"], 0);
+                assert_eq!(mutation["killed"], 1 + usize::from(verdict == "killed"));
+                assert_eq!(mutation["countedTimeouts"], counted);
+                assert_eq!(outcome["countedAsKilled"], counted == 1);
+                let resolved = behaviour != "runner-error";
+                assert_eq!(mutation["complete"], resolved, "{context}");
+                assert_eq!(mutation["unresolved"], usize::from(!resolved));
+                assert_eq!(
+                    mutation["score"],
+                    if resolved { json!(100.0) } else { Value::Null }
+                );
+                fixture.assert_clean();
+            }
+        }
+    }
+
+    #[test]
     fn mutation_plan_preserves_analysis_ids_and_report_metadata() {
         let fixture = super::super::tests::Fixture::new();
         let mut captured = fixture.capture().unwrap();
@@ -2798,10 +3026,10 @@ mod tests {
         assert_eq!(
             result["perOperator"],
             json!([
-                {"operator":"<","kind":"comparison","eligibleSites":1,"excludedSites":0,"planned":2,"completed":0,"jobsAttempted":0,"executionMs":0.0},
-                {"operator":"===","kind":"comparison","eligibleSites":1,"excludedSites":0,"planned":1,"completed":0,"jobsAttempted":0,"executionMs":0.0},
-                {"operator":">","kind":"comparison","eligibleSites":1,"excludedSites":0,"planned":2,"completed":0,"jobsAttempted":0,"executionMs":0.0},
-                {"operator":"expression-statement","kind":"statement","eligibleSites":0,"excludedSites":1,"planned":0,"completed":0,"jobsAttempted":0,"executionMs":0.0}
+                {"operator":"<","kind":"comparison","eligibleSites":1,"excludedSites":0,"planned":2,"equivalent":0,"completed":0,"jobsAttempted":0,"executionMs":0.0},
+                {"operator":"===","kind":"comparison","eligibleSites":1,"excludedSites":0,"planned":1,"equivalent":0,"completed":0,"jobsAttempted":0,"executionMs":0.0},
+                {"operator":">","kind":"comparison","eligibleSites":1,"excludedSites":0,"planned":2,"equivalent":0,"completed":0,"jobsAttempted":0,"executionMs":0.0},
+                {"operator":"expression-statement","kind":"statement","eligibleSites":0,"excludedSites":1,"planned":0,"equivalent":0,"completed":0,"jobsAttempted":0,"executionMs":0.0}
             ])
         );
         let outcomes = result["outcomes"].as_array().unwrap();

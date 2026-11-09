@@ -596,7 +596,8 @@ pub fn attribute<'a>(
             "coverageBasis":if status=="measured" {Some(if branch_total > 0 {"branch"} else {"statement"})}else{None},
             "crap":if status=="measured" {if branch_total > 0 {assessment::score(s.complexity,branch_covered,branch_total)} else {assessment::score(s.complexity,covered,total)}}else{None}})
     }).collect();
-    json!({"complete":complete,"functions":rows,"problems":problems,"typeSafety":analysis.type_safety(),"coverageSuppressions":analysis.coverage_suppressions()})
+    json!({"complete":complete,"functions":rows,"problems":problems,"typeSafety":analysis.type_safety(),"coverageSuppressions":analysis.coverage_suppressions(),
+        "equivalentDeclarations":analysis.equivalent_declarations_json()})
 }
 
 #[test]
