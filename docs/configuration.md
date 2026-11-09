@@ -525,8 +525,8 @@ replacements at one site, put their declarations next to each other before the
 token; adjacent declarations share it:
 
 ```ts
-const later = start /* seshat-equivalent < -> <=: never equal */
-  /* seshat-equivalent < -> >=: end is unused when empty */ < end;
+const later = start /* seshat-equivalent < -> <=: first reason */
+  /* seshat-equivalent < -> >=: second reason */ < end;
 ```
 
 Declarations apply to operator mutants only, never to extreme mutations.
