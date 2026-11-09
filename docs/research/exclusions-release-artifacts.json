@@ -1,0 +1,673 @@
+{
+  "kind": "release-verdict-artifact-verification",
+  "audits": {
+    "baseline": {
+      "path": "docs/releases/0.15.0-audit.json",
+      "sha256": "88957bc35362167ac7d3090a62d6ff450c4b1d89d55d338f83ee19584f3f242d"
+    },
+    "candidate": {
+      "path": "work/release-0.16.0/audit/release-notice-audit.json",
+      "sha256": "abda5bb44524f33d32cb4264c2f880fb321a0b4002bf7bbb1aca4ed0b4e98f1e"
+    }
+  },
+  "artifacts": [
+    {
+      "build": "baseline",
+      "root": "work/release-0.15.0/audit/native-evidence/linux-x64",
+      "name": "linux-x64-package-proof",
+      "artifactId": 13604821721,
+      "digest": "sha256:a8b8ff1f0953df39ab4dc7336bd3bc2bfb2ba019dfa5d3bd8e69b4d110c4dd52",
+      "size": 3740634,
+      "runId": 42446561222,
+      "head": "e82e0b2ad8a680373598a87600494833604ae91f",
+      "metadataVerified": {
+        "id": 13604821721,
+        "name": "linux-x64-package-proof",
+        "digest": "sha256:a8b8ff1f0953df39ab4dc7336bd3bc2bfb2ba019dfa5d3bd8e69b4d110c4dd52",
+        "sizeBytes": 3740634,
+        "expired": false,
+        "workflowRun": {
+          "id": 42446561222,
+          "repository_id": 1358090153,
+          "head_repository_id": 1358090153,
+          "head_branch": "codex/release-0.15.0",
+          "head_sha": "e82e0b2ad8a680373598a87600494833604ae91f"
+        }
+      },
+      "zipSha256": "a8b8ff1f0953df39ab4dc7336bd3bc2bfb2ba019dfa5d3bd8e69b4d110c4dd52",
+      "members": 45,
+      "jsonFilesMatched": 17,
+      "jsonSha256": {
+        "crash-continuation.json": "2b1ee403dc8542451bcaaaef9cd0f4102431f0b55cdf4705443b3f29a093e718",
+        "debian11.json": "4d2fb6181af4fa38fdab9fd18880bea6e44cbc794e8a4d09065cbd8dbd9e7889",
+        "execute-cancellation.json": "d244bdca1bd6a157b7b5551efa00ede4f18ab8106f78cf4ee74b504246c02e9f",
+        "jest-expo-check.json": "196642cc92c72ea8a681192e8069e4860b26fb98f9e1abe68b0f3d78dd638b08",
+        "jest-node-selection.json": "4f0e308fa8e1aed5b6dd3ef58f45ed15e250447c41245935306af98f5e100df0",
+        "lifecycle.json": "2cc7c33c454b0d736d6bb417baa56b7948fdfc55ba6294bab5eb88784d277232",
+        "npm-package.json": "9f2fedcf3f33e6c2210d9f7e899fc0c879be8a0c8295e9e000ada9a9c8eea2db",
+        "package-result.json": "96482bcec1aa247a842bdc90eb01f671dab013779c718b2b2f4e3fdd479f4bbc",
+        "package-result.json.work.json": "0a2b67f830e341dabdda66d55968c7ff26611c16fe5da155efa48dc20c5ee2f6",
+        "preflight.json": "eb986d07bacc576383686da627348a35331212521ec3ab7b7981c5c80c95cb72",
+        "public-consumer-examples.json": "0b66b87342d9bc94fa93a6d599aeb197adf3d08d32208a59eeaba5b297846696",
+        "release.json": "07f62ccbd3061396339f6698f7220d9fb815d7d9c78b061462582247c803062b",
+        "selection-cancellation.json": "f8349dde5fe756bea6b8573ae7cc3ab1f975d9f0fae4a460ad5e1aa872ad9ae7",
+        "standalone.json": "391dfd36204b66fe9d7f67f71ec88d1c566b2310decff4eb8f28fe9bf938a388",
+        "summary.json": "96a27cd4dc137344c4ce9cfd69c69b63ae8c8f70ce8f2ae8403dafc185dc30e2",
+        "unix-supervision.json": "ace1440a88ccd3a9cef4512903697faa81ce605e47a57955484488776f1fac1c",
+        "vitest-check.json": "9abd83ecb532bc73601c443c7138616a51a7458c9ad1a22af8e5aeb0a4e1c249"
+      },
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/42446561222/artifacts/13604821721"
+    },
+    {
+      "build": "baseline",
+      "root": "work/release-0.15.0/audit/native-evidence/linux-arm64",
+      "name": "linux-arm64-package-proof",
+      "artifactId": 13603844597,
+      "digest": "sha256:90cdfe77249eeaf58b6df039f288f131c88f932330e73c6f6e2729fbba448d4a",
+      "size": 3461478,
+      "runId": 42446561219,
+      "head": "e82e0b2ad8a680373598a87600494833604ae91f",
+      "metadataVerified": {
+        "id": 13603844597,
+        "name": "linux-arm64-package-proof",
+        "digest": "sha256:90cdfe77249eeaf58b6df039f288f131c88f932330e73c6f6e2729fbba448d4a",
+        "sizeBytes": 3461478,
+        "expired": false,
+        "workflowRun": {
+          "id": 42446561219,
+          "repository_id": 1358090153,
+          "head_repository_id": 1358090153,
+          "head_branch": "codex/release-0.15.0",
+          "head_sha": "e82e0b2ad8a680373598a87600494833604ae91f"
+        }
+      },
+      "zipSha256": "90cdfe77249eeaf58b6df039f288f131c88f932330e73c6f6e2729fbba448d4a",
+      "members": 41,
+      "jsonFilesMatched": 14,
+      "jsonSha256": {
+        "BUILD.json": "70c4599b169426bde1de57ca6cc6c45cb9dec148f40149e13e54cb31b88bbafc",
+        "execute-cancellation.json": "d244bdca1bd6a157b7b5551efa00ede4f18ab8106f78cf4ee74b504246c02e9f",
+        "jest-expo-check.json": "2217df3ca978c88346fc48fd7ca239365389525411bd6e6cc0ce67403efaef2b",
+        "lifecycle.json": "1bf08a8ab7c739ebfe0d5159d2448d9846be41566b3659414face220ce04dc61",
+        "npm-package.json": "cccaded8b6824e6d216b58217acd9fd483c567d4ad94b2f76b4a48c96cfb73eb",
+        "package-result.json": "d93d9a0cb0be96823afa9e8da1a3120c6b3f4a7b626f4575be2c3240b09a265f",
+        "package-result.json.work.json": "081581342e9088f329bc0048ba556fb8c2f0c88dd46ecfdb14f8998cde25666c",
+        "preflight.json": "84d88f8b07d3593e367eef09dc36949e1aa58aad6f58ce20ea6b9aefc4522f1d",
+        "public-consumer-examples.json": "f6f2f524df564b3bb3aa2b9ad682de96bf38fb37758f3069953568e12c35477f",
+        "release.json": "473dd384ed2b0d51a91451ffb9110a5a2f96667eaa28c161d4a8141db2c7ba94",
+        "standalone.json": "5d135540ebd3fef6d8ed3ada620954ed6e00a3ae947c51403c850d25ca96035c",
+        "summary.json": "f9c16925005ec617b5a8193216e12bcd200ed7c61e996a22b09246d544c491d3",
+        "unix-supervision.json": "ef1a53955bf3d490519c894f6a7df3ff2c63e7db1421274ad1a743a950c510c8",
+        "vitest-check.json": "c9a5b1206b6cbeccb77eef1cac609bf7a92a45f14c7b65639a89323bdb3c16f4"
+      },
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/42446561219/artifacts/13603844597"
+    },
+    {
+      "build": "baseline",
+      "root": "work/release-0.15.0/audit/native-evidence/darwin-x64",
+      "name": "macos-x64-package-proof",
+      "artifactId": 13603909493,
+      "digest": "sha256:a8abfd06ca34dfa8d9a8c7abd93d733373d1758d0a116896be5aa14971f2382b",
+      "size": 3475451,
+      "runId": 42446561253,
+      "head": "e82e0b2ad8a680373598a87600494833604ae91f",
+      "metadataVerified": {
+        "id": 13603909493,
+        "name": "macos-x64-package-proof",
+        "digest": "sha256:a8abfd06ca34dfa8d9a8c7abd93d733373d1758d0a116896be5aa14971f2382b",
+        "sizeBytes": 3475451,
+        "expired": false,
+        "workflowRun": {
+          "id": 42446561253,
+          "repository_id": 1358090153,
+          "head_repository_id": 1358090153,
+          "head_branch": "codex/release-0.15.0",
+          "head_sha": "e82e0b2ad8a680373598a87600494833604ae91f"
+        }
+      },
+      "zipSha256": "a8abfd06ca34dfa8d9a8c7abd93d733373d1758d0a116896be5aa14971f2382b",
+      "members": 39,
+      "jsonFilesMatched": 13,
+      "jsonSha256": {
+        "BUILD.json": "39bc65f126358bee1ff01b7318b069edb605430c341f9a5931aca7133b8fd535",
+        "execute-cancellation.json": "d244bdca1bd6a157b7b5551efa00ede4f18ab8106f78cf4ee74b504246c02e9f",
+        "jest-expo-check.json": "5e98957be88a1aef60c3b5ab4be7d0a4810228364f200d609e889c564b58eabe",
+        "lifecycle.json": "920481bab3a23afea768b46ac884804799d6678da8de23d5c04ca7fe03d5fc4e",
+        "npm-package.json": "e779295dd4ce2137f43e351157fdbf898fe49679bcdba07f3a8e139f2b1670c1",
+        "package-result.json": "4712e22245e4048a17f8114634fec236be93fa78c854410b3dfd5b7591424944",
+        "package-result.json.work.json": "5be2b4182274167781ec5a0cc019c07fe84436d5e9f962a6608a05c133b8190f",
+        "preflight.json": "460d31479df0d58ecef1d4fcdb483c4b611a78640c5f4506cde2564801d6a1e7",
+        "public-consumer-examples.json": "3d048c0bea5f7c9fdd3a9d348730e1d42554179b5c393251748280a7860ae003",
+        "release.json": "11a949798024b8f383e900c576e9780717ffb2981f9e67a80e0a0ec629612152",
+        "standalone.json": "13906277c12edddd41ebebb5a97cdf8ccdbee17c2f9455f1ee99078c5be78ffd",
+        "summary.json": "735ac5d2605dbc3957f53920300cf31d1e88873e2d2cb147761fd46ab2c88d85",
+        "vitest-check.json": "02bd358273283438c99a9b60a2699cce2843316b303c7d6f6ef3959b7d09f6ae"
+      },
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/42446561253/artifacts/13603909493"
+    },
+    {
+      "build": "baseline",
+      "root": "work/release-0.15.0/audit/native-evidence/darwin-arm64",
+      "name": "macos-arm64-package-proof",
+      "artifactId": 13605222684,
+      "digest": "sha256:19e07c3219bd12d60edddd6140f1fcc5e886c20f43083b10fa9169190fa6c885",
+      "size": 3528924,
+      "runId": 42446561253,
+      "head": "e82e0b2ad8a680373598a87600494833604ae91f",
+      "metadataVerified": {
+        "id": 13605222684,
+        "name": "macos-arm64-package-proof",
+        "digest": "sha256:19e07c3219bd12d60edddd6140f1fcc5e886c20f43083b10fa9169190fa6c885",
+        "sizeBytes": 3528924,
+        "expired": false,
+        "workflowRun": {
+          "id": 42446561253,
+          "repository_id": 1358090153,
+          "head_repository_id": 1358090153,
+          "head_branch": "codex/release-0.15.0",
+          "head_sha": "e82e0b2ad8a680373598a87600494833604ae91f"
+        }
+      },
+      "zipSha256": "19e07c3219bd12d60edddd6140f1fcc5e886c20f43083b10fa9169190fa6c885",
+      "members": 55,
+      "jsonFilesMatched": 21,
+      "jsonSha256": {
+        "BUILD.json": "39982187aa652bdd2bbb69c427ef152599483e21c8d4bedc4f0c6ccd44ea879b",
+        "execute-cancellation.json": "d244bdca1bd6a157b7b5551efa00ede4f18ab8106f78cf4ee74b504246c02e9f",
+        "jest-expo-check.json": "b39b6711ad34d22e7fa2a7fa5fcd0ca3de0e11a52bb1986cc7c85e41c80b283a",
+        "lifecycle.json": "89d537e3fc47185fbdff575b315b789f09f319f9e1f2cde5e6c6e7942fb5426c",
+        "node-24.22.2/cli.json": "3dc34d517d1dcc5cf3a967e28a3a56eb9691f5d9b6895e3d9e639ca3103cc66c",
+        "node-24.22.2/jest-check.json": "ca8622451f8bb3a2fdbcd6c771231bef24bd757628fc7f0b44740278f77226c5",
+        "node-24.22.2/jest-expo-check.json": "b6ca341242d561ebc4c6b5406512d6e13eefe76ecb7c07bdd1e81c336b21540c",
+        "node-24.22.2/jest-node-selection.json": "a32bc4002b0a722f0519329a924fe8b3b09a22e64cae9b58b651d75ded71f7e4",
+        "node-24.22.2/node-load-failure.json": "c76f677f66a0cb08d2d89020c523498b431ddcc0e83f2448bc0cc7a5e00d5b92",
+        "node-24.22.2/parallel.json": "03d70c802c5fe6e3e8f81d5174bb9e1962dea129ad03602fd64e6d82cf69feb9",
+        "node-24.22.2/summary.json": "f398653da7acf94f8c48881e39d7b8981eaf4704909df214b90b6377b8911806",
+        "node-24.22.2/vitest-check.json": "350bcab0e39c53d37247ce702fa46a38cf0c2009dc353d9def260c34837b6e9c",
+        "npm-package.json": "845acda47e9b2f1464c0a08e81548b08bafdccc32d12f41b1335c0f5a24e528b",
+        "package-result.json": "34cf5b20ee448f5a03a30fc3a23ff022a498284dd2b2bde451d2cc905e4d8164",
+        "package-result.json.work.json": "8d309b6ef9019e6dcb0bb7c5f58a9649601a05a852fcda8ff601e56c1c9900c7",
+        "preflight.json": "cb3568828cfaeff40aadda5c51c76de8b53ec5049de8e190c57d87d6a33df7d7",
+        "public-consumer-examples.json": "795ee1535684c93f5a6b7ccd9c4b49a3f3dfd873d093f87239af8080d134f748",
+        "release.json": "0231cfc62b991f770d33cf416f932760926f7b016cf425697c42bb2c83262350",
+        "standalone.json": "37e6dd4573cb4a9f30fae22a6a29ffa52dd80eccbf83f927c124e2984a743c48",
+        "summary.json": "bf5dfac313d9d9beeafb2a5d8dab8af3253edb2fd26ed5de3c65b0b4d4e82ff0",
+        "vitest-check.json": "0c5c7f9191bf63b9d7615102bd4a4add334770ebb904c54be923ed02f2931bea"
+      },
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/42446561253/artifacts/13605222684"
+    },
+    {
+      "build": "baseline",
+      "root": "work/release-0.15.0/audit/native-evidence/win32-x64",
+      "name": "windows-x64-package-proof",
+      "artifactId": 13604587258,
+      "digest": "sha256:7f8cf43a16a3297dbec66fc0e641757ee154b17306b04716097002cf41c609ff",
+      "size": 4627796,
+      "runId": 42446561182,
+      "head": "e82e0b2ad8a680373598a87600494833604ae91f",
+      "metadataVerified": {
+        "id": 13604587258,
+        "name": "windows-x64-package-proof",
+        "digest": "sha256:7f8cf43a16a3297dbec66fc0e641757ee154b17306b04716097002cf41c609ff",
+        "sizeBytes": 4627796,
+        "expired": false,
+        "workflowRun": {
+          "id": 42446561182,
+          "repository_id": 1358090153,
+          "head_repository_id": 1358090153,
+          "head_branch": "codex/release-0.15.0",
+          "head_sha": "e82e0b2ad8a680373598a87600494833604ae91f"
+        }
+      },
+      "zipSha256": "7f8cf43a16a3297dbec66fc0e641757ee154b17306b04716097002cf41c609ff",
+      "members": 46,
+      "jsonFilesMatched": 16,
+      "jsonSha256": {
+        "BUILD.json": "b8278f9c215cd22f426d76dc80a1b738a7f6932390e9f930edaec0ac9af92910",
+        "execute-cancellation.json": "8401a7a881328400ea26952e89646964b7784ceeeff0d720ed41ee2be00843c4",
+        "jest-expo-check.json": "c1c2b359cc8453eb1f41dff7eb235a4677d69994b8e66013c39db02a2e9e39a6",
+        "npm-package.json": "b754ef9c5ec84bd24d7143ff8b93156a0a4872cf2d837b2fef0c6e7bfa7e133f",
+        "operators.json": "a85f0185ea0a041e08cb2d1797ffa946bc18110f68960e60a8e9d87627be1911",
+        "package-result.json": "d34cbd25a7197124801ae9fd79ff4b3e8d595ac02cebc851f4bdab30d773d7a7",
+        "package-result.json.work.json": "e742b2be7924985c73b41be88e8c3d155b3565a6a3b5b934a36eaa3a8d7ed0f2",
+        "preflight.json": "c5b11e5d5b7106cefe19d68e55b071b10ea039725ac27ded1d81387b31327d77",
+        "public-consumer-examples.json": "a1349dddb460c39daf0f89acd009c45a9c664ca6d90350711eeb922285c89988",
+        "release.json": "bfd30eb8f275975e8f59df8fb73cbf52d72502adf71152216db8e710baaa448a",
+        "shared-cli.json": "0981303907af501c1c274f07b5acd373d450be5812bf23e3fc81237a5604a8d6",
+        "shared-parallel.json": "2084304d7a08c29ca95a103717c002fabc3f9c7d87dcaefe015954a79dee71c7",
+        "summary.json": "3cbdeff795bcd755d654f72c77f32cbf983bae26ad7f73c21bc28acb408fbfde",
+        "vitest-check.json": "f34a16eff0d888e60d8383d143578962ef3f711e0fb1b30e78fdc71fdff7c7d8",
+        "windows-package-install.json": "8810a58f422f82e165e8f711d187eed1c2a81bba966ec452f31f83cdd4b3245d",
+        "windows-runtime-cli-evidence.json": "483c0f00221551ef517be34a8dff2b2cffa5925d86534cb8585e079eb75789bf"
+      },
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/42446561182/artifacts/13604587258"
+    },
+    {
+      "build": "baseline",
+      "root": "work/release-0.15.0/audit/native-evidence/windows-runtime/windows-runtime-preflight",
+      "name": "windows-runtime-preflight",
+      "artifactId": 13604370792,
+      "digest": "sha256:88c799aab4123350dda409e0a7cac37bfd82a7259b57f2e19d43ec3edc2ffdab",
+      "size": 1028,
+      "runId": 42446561144,
+      "head": "e82e0b2ad8a680373598a87600494833604ae91f",
+      "metadataVerified": {
+        "id": 13604370792,
+        "name": "windows-runtime-preflight",
+        "digest": "sha256:88c799aab4123350dda409e0a7cac37bfd82a7259b57f2e19d43ec3edc2ffdab",
+        "sizeBytes": 1028,
+        "expired": false,
+        "workflowRun": {
+          "id": 42446561144,
+          "repository_id": 1358090153,
+          "head_repository_id": 1358090153,
+          "head_branch": "codex/release-0.15.0",
+          "head_sha": "e82e0b2ad8a680373598a87600494833604ae91f"
+        }
+      },
+      "zipSha256": "88c799aab4123350dda409e0a7cac37bfd82a7259b57f2e19d43ec3edc2ffdab",
+      "members": 1,
+      "jsonFilesMatched": 1,
+      "jsonSha256": {
+        "windows-runtime-preflight.json": "52211cd5a4071b7398f57b6085399fd2f37b4a4cb269b618818dd328c9a3aa5a"
+      },
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/42446561144/artifacts/13604370792"
+    },
+    {
+      "build": "baseline",
+      "root": "work/release-0.15.0/audit/native-evidence/windows-runtime/windows-shared-fixture-evidence",
+      "name": "windows-shared-fixture-evidence",
+      "artifactId": 13604247122,
+      "digest": "sha256:dc586ab8e478b592e49af6dee2352abd856c75a6bcc34f1744f2435e28965494",
+      "size": 142420,
+      "runId": 42446561144,
+      "head": "e82e0b2ad8a680373598a87600494833604ae91f",
+      "metadataVerified": {
+        "id": 13604247122,
+        "name": "windows-shared-fixture-evidence",
+        "digest": "sha256:dc586ab8e478b592e49af6dee2352abd856c75a6bcc34f1744f2435e28965494",
+        "sizeBytes": 142420,
+        "expired": false,
+        "workflowRun": {
+          "id": 42446561144,
+          "repository_id": 1358090153,
+          "head_repository_id": 1358090153,
+          "head_branch": "codex/release-0.15.0",
+          "head_sha": "e82e0b2ad8a680373598a87600494833604ae91f"
+        }
+      },
+      "zipSha256": "dc586ab8e478b592e49af6dee2352abd856c75a6bcc34f1744f2435e28965494",
+      "members": 11,
+      "jsonFilesMatched": 5,
+      "jsonSha256": {
+        "jest-expo-check.json": "1265f2e2590d69b795270e567bed5d458fc8c5a0140c0cfe1a2f68d81bc64ee1",
+        "shared-cli.json": "6dd77fbdb2a075a0f54116605c6f9c28c3cd845a368f27a4743b353368790e48",
+        "shared-parallel.json": "f6bc3816ef24671c2763eb20fffb26d8525734b04623d6f387b2f8255c5b1023",
+        "vitest-check.json": "61931883b0fdecebb8ca0350ae2e66c6252e00e9d9a68cd5da421e995c8bc943",
+        "vitest-timeouts.json": "fcdb05fa05b032f95f360ea853796a86242d4d031b8e9fb0e06df00f7612dcb9"
+      },
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/42446561144/artifacts/13604247122"
+    },
+    {
+      "build": "baseline",
+      "root": "work/release-0.15.0/audit/native-evidence/windows-runtime/windows-runtime-cli-evidence",
+      "name": "windows-runtime-cli-evidence",
+      "artifactId": 13603643907,
+      "digest": "sha256:02226799c07164c04555171eca4b45c199e87fb59d42b4fb8f0bef28a69e5175",
+      "size": 4912,
+      "runId": 42446561144,
+      "head": "e82e0b2ad8a680373598a87600494833604ae91f",
+      "metadataVerified": {
+        "id": 13603643907,
+        "name": "windows-runtime-cli-evidence",
+        "digest": "sha256:02226799c07164c04555171eca4b45c199e87fb59d42b4fb8f0bef28a69e5175",
+        "sizeBytes": 4912,
+        "expired": false,
+        "workflowRun": {
+          "id": 42446561144,
+          "repository_id": 1358090153,
+          "head_repository_id": 1358090153,
+          "head_branch": "codex/release-0.15.0",
+          "head_sha": "e82e0b2ad8a680373598a87600494833604ae91f"
+        }
+      },
+      "zipSha256": "02226799c07164c04555171eca4b45c199e87fb59d42b4fb8f0bef28a69e5175",
+      "members": 1,
+      "jsonFilesMatched": 1,
+      "jsonSha256": {
+        "windows-runtime-cli-evidence.json": "2c21d5fdaef96a1c3e9c2c34a1cda7e41737849d59656cec5a0f2022a9e2427f"
+      },
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/42446561144/artifacts/13603643907"
+    },
+    {
+      "build": "candidate",
+      "root": "work/release-0.16.0/audit/native-evidence/linux-x64",
+      "name": "linux-x64-package-proof",
+      "artifactId": 13647798214,
+      "digest": "sha256:6271b7eb314f0ce1781d08823e27ef2104ca5d9c004c5173b714ec81e52c2435",
+      "size": 3832782,
+      "runId": 42553712895,
+      "head": "750793d99dce56dd4e51cbfdc2c8cbaa720333dd",
+      "metadataVerified": {
+        "id": 13647798214,
+        "name": "linux-x64-package-proof",
+        "digest": "sha256:6271b7eb314f0ce1781d08823e27ef2104ca5d9c004c5173b714ec81e52c2435",
+        "sizeBytes": 3832782,
+        "expired": false,
+        "workflowRun": {
+          "id": 42553712895,
+          "repository_id": 1358090153,
+          "head_repository_id": 1358090153,
+          "head_branch": "codex/prepare-0.16.0",
+          "head_sha": "750793d99dce56dd4e51cbfdc2c8cbaa720333dd"
+        }
+      },
+      "zipSha256": "6271b7eb314f0ce1781d08823e27ef2104ca5d9c004c5173b714ec81e52c2435",
+      "members": 45,
+      "jsonFilesMatched": 17,
+      "jsonSha256": {
+        "crash-continuation.json": "a0e18362cd78e53cdb2dfbfe4e22a8fbe75fa2d2e3f97d6f8df6671b549cc139",
+        "debian11.json": "3d8b5a2026e3de2187940dad8303383518c1832478ac7ee4469e23cec22bbaf0",
+        "execute-cancellation.json": "d244bdca1bd6a157b7b5551efa00ede4f18ab8106f78cf4ee74b504246c02e9f",
+        "jest-expo-check.json": "54eeae6ef7dc598b55daa2683fa2e521aa6f5887a92ff7db451473e31669d0e3",
+        "jest-node-selection.json": "5f4d7bba71ad1759699692b6d5ede38e701a25bfb086c3eedfc38d371ab5e307",
+        "lifecycle.json": "ed79649e76fd82db2bcb5b28de81c4035bf30876c42e5fddad06b68f30093aa3",
+        "npm-package.json": "2827e647cafa68acba807d4419d32a758542ebee01015abcdc89efa1538b3d74",
+        "package-result.json": "cea7b7c7644f6363abb05e26e76a35fd2502271be2a2579d7831acede688d4f6",
+        "package-result.json.work.json": "8b897759024ba5699658c080bf9a49a15914b39c5c94158f6a40e152ccebaa5b",
+        "preflight.json": "8a9867a8538dfdbbc8500a3e26b56b0bfd162b587977d19b0759424e1331fe97",
+        "public-consumer-examples.json": "106b8465bb77c968b67f3af727b45c56a5c1d9ebf4d761f59da1c529c741d2d7",
+        "release.json": "72c97ca1128c469d4eb7a642fc0a078b1aa4ff7d8d241cf1cdff595293b0f99b",
+        "selection-cancellation.json": "f8349dde5fe756bea6b8573ae7cc3ab1f975d9f0fae4a460ad5e1aa872ad9ae7",
+        "standalone.json": "233d75defe05371eba1fc0f867ab453c4ab49eca107a3d5479edd266d311a550",
+        "summary.json": "aa2242638433dd983ed80b8bd2b91a6ad53aa9b4614dba99c608529c574bb271",
+        "unix-supervision.json": "df255a27f87286b034fcff87197c9461b993b5cbbd013ec80d2871759e8f697d",
+        "vitest-check.json": "9686507c3a74db092fb103660e0d8f0390f323b6ae371f9f7b1b177c3057ae4e"
+      },
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/42553712895/artifacts/13647798214"
+    },
+    {
+      "build": "candidate",
+      "root": "work/release-0.16.0/audit/native-evidence/linux-arm64",
+      "name": "linux-arm64-package-proof",
+      "artifactId": 13646653889,
+      "digest": "sha256:e17e71e1412f2787dd57c65d88e495a7474efffd5bc29c803151cbf96979becd",
+      "size": 3538287,
+      "runId": 42553712832,
+      "head": "750793d99dce56dd4e51cbfdc2c8cbaa720333dd",
+      "metadataVerified": {
+        "id": 13646653889,
+        "name": "linux-arm64-package-proof",
+        "digest": "sha256:e17e71e1412f2787dd57c65d88e495a7474efffd5bc29c803151cbf96979becd",
+        "sizeBytes": 3538287,
+        "expired": false,
+        "workflowRun": {
+          "id": 42553712832,
+          "repository_id": 1358090153,
+          "head_repository_id": 1358090153,
+          "head_branch": "codex/prepare-0.16.0",
+          "head_sha": "750793d99dce56dd4e51cbfdc2c8cbaa720333dd"
+        }
+      },
+      "zipSha256": "e17e71e1412f2787dd57c65d88e495a7474efffd5bc29c803151cbf96979becd",
+      "members": 41,
+      "jsonFilesMatched": 14,
+      "jsonSha256": {
+        "BUILD.json": "813e1a588304706c0c643ff935335e8d9b0b366e64a311ed29df443ef6d22b0b",
+        "execute-cancellation.json": "d244bdca1bd6a157b7b5551efa00ede4f18ab8106f78cf4ee74b504246c02e9f",
+        "jest-expo-check.json": "6ef6d0bb4c8caae1b348201596c2b3a2ec6154c08aacbbbe8fcd30663410820a",
+        "lifecycle.json": "9f65e37b4a6e5d22bfe8dc55312a38beb3987feb4dcc3b609f6653f05372569d",
+        "npm-package.json": "747ca156b3abcb71b91555fd6c574ee83757b382c05e9a6a2d00435925f42f90",
+        "package-result.json": "e05a27e1e2a585c77cd789ecd6abb9be8425ef0c39aa455e305bd0c22b8e7bc9",
+        "package-result.json.work.json": "1a4dfe517d189ee4f1a89fa4400949f7e9e58c3eb8c56696b56250ec27d4abd1",
+        "preflight.json": "4f667f4d4630ed982fea858ef564d80347c4827b9df8b1ee2ff95158cee41e02",
+        "public-consumer-examples.json": "6383024603f61b4ed99fc5a6d1c7b6e3882d6fd2ac4dc5f2d985577fda121376",
+        "release.json": "52167afddf505bd97ba221d0157117f2aa6643a490ac75e7d8221f5a61ba4dfa",
+        "standalone.json": "3f4caf36755defcbbd532545c28f8476c34f4714f742464f261cfbcbbcb4aff2",
+        "summary.json": "d41aec21c584b9b7fb332143adac85185b48a8daab89f2791a4afa7fe4b29d55",
+        "unix-supervision.json": "3ea29faee8628712af1f50484df0618fd5add894d424c68e0c1bf58b7064f605",
+        "vitest-check.json": "ed300e27c66f926df438d9ad22172a0ea4955f22a39a2b17b0fff30d2bd267ff"
+      },
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/42553712832/artifacts/13646653889"
+    },
+    {
+      "build": "candidate",
+      "root": "work/release-0.16.0/audit/native-evidence/darwin-x64",
+      "name": "macos-x64-package-proof",
+      "artifactId": 13648547021,
+      "digest": "sha256:9a7be4ed91db2f781aa2440085cef7b0708d165933a1ce0c7face60e9930b336",
+      "size": 3565236,
+      "runId": 42553712797,
+      "head": "750793d99dce56dd4e51cbfdc2c8cbaa720333dd",
+      "metadataVerified": {
+        "id": 13648547021,
+        "name": "macos-x64-package-proof",
+        "digest": "sha256:9a7be4ed91db2f781aa2440085cef7b0708d165933a1ce0c7face60e9930b336",
+        "sizeBytes": 3565236,
+        "expired": false,
+        "workflowRun": {
+          "id": 42553712797,
+          "repository_id": 1358090153,
+          "head_repository_id": 1358090153,
+          "head_branch": "codex/prepare-0.16.0",
+          "head_sha": "750793d99dce56dd4e51cbfdc2c8cbaa720333dd"
+        }
+      },
+      "zipSha256": "9a7be4ed91db2f781aa2440085cef7b0708d165933a1ce0c7face60e9930b336",
+      "members": 39,
+      "jsonFilesMatched": 13,
+      "jsonSha256": {
+        "BUILD.json": "ebd545a5aee87a9e89f897f00835434444a3a9c4930855ffb18df4114dc22718",
+        "execute-cancellation.json": "d244bdca1bd6a157b7b5551efa00ede4f18ab8106f78cf4ee74b504246c02e9f",
+        "jest-expo-check.json": "7c2b96b0db20c35482327b811a4f9f8681c1413e456ede41d2370444ea7b4f21",
+        "lifecycle.json": "5030ed0808b709cdd22e83726ef1349410bcef9b12f3a9624145bd176a7e86f9",
+        "npm-package.json": "67eeca36620b9d32ce3c279efc18eb1b057c5b1759a7cd1c6e709b297a75c5de",
+        "package-result.json": "34d9a2566591b3e59e935ba5c3f8f2195a7155ed6425aa7f6862e4c5d6faa56f",
+        "package-result.json.work.json": "34f4d2193d98598ece9905557eb913c620e1b5f689502645ac4124db522b491d",
+        "preflight.json": "1bab74daa62cba1483d71bf6828540596c3bbebda7bc9ba19d342be95620c254",
+        "public-consumer-examples.json": "24247031a1e071ab5eefdd7e15cd1539f7623f89e300288c141da432d2d8a1b8",
+        "release.json": "3dedd74c07b602c010ddc7b919636fb6121658880d801abc55d5e40278cd0ee1",
+        "standalone.json": "4f7e3aef3f59b20f9240e7f648b206c4ea7b666d8c4206bdc6a18e69e0a9e87e",
+        "summary.json": "88375090c9e1097ce443fbb7f2b0a39938c16a77957cfc9f16f4643d5d7429d4",
+        "vitest-check.json": "2f9eb0e3911ffc7fe64ad584c248e2ef0d5489a19a4701c8ff4265114c62ec55"
+      },
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/42553712797/artifacts/13648547021"
+    },
+    {
+      "build": "candidate",
+      "root": "work/release-0.16.0/audit/native-evidence/darwin-arm64",
+      "name": "macos-arm64-package-proof",
+      "artifactId": 13648166006,
+      "digest": "sha256:b0fcf02465880e9ffd31c0cbecab66a583ae654c91d7c1d4d9c929fed7e17c20",
+      "size": 3616620,
+      "runId": 42553712797,
+      "head": "750793d99dce56dd4e51cbfdc2c8cbaa720333dd",
+      "metadataVerified": {
+        "id": 13648166006,
+        "name": "macos-arm64-package-proof",
+        "digest": "sha256:b0fcf02465880e9ffd31c0cbecab66a583ae654c91d7c1d4d9c929fed7e17c20",
+        "sizeBytes": 3616620,
+        "expired": false,
+        "workflowRun": {
+          "id": 42553712797,
+          "repository_id": 1358090153,
+          "head_repository_id": 1358090153,
+          "head_branch": "codex/prepare-0.16.0",
+          "head_sha": "750793d99dce56dd4e51cbfdc2c8cbaa720333dd"
+        }
+      },
+      "zipSha256": "b0fcf02465880e9ffd31c0cbecab66a583ae654c91d7c1d4d9c929fed7e17c20",
+      "members": 55,
+      "jsonFilesMatched": 21,
+      "jsonSha256": {
+        "BUILD.json": "6c4cc22da696212e9e8108de6c67b073a211469bd40ba40efd18753d455c331d",
+        "execute-cancellation.json": "d244bdca1bd6a157b7b5551efa00ede4f18ab8106f78cf4ee74b504246c02e9f",
+        "jest-expo-check.json": "4219689efb5119f82f99786e2488e021e418788ae4af8bb2efb77a3c2c2fda4b",
+        "lifecycle.json": "e798106c60776f05f5feb740b76d3e08d2c2f1df92acee01f59a171e672289a9",
+        "node-24.22.2/cli.json": "88f5b835ce8e598b0db97ff27f3054ee5dce5f394d3d698095c096da5593ea38",
+        "node-24.22.2/jest-check.json": "2b26839765e4a8122a78101ed361ea108bafab8d3b1efbef8dd441880f498b17",
+        "node-24.22.2/jest-expo-check.json": "b77e61dc8ec74d485b0e2d4dd9dec8e5611062825afbcfbfebe90bf37e9208bd",
+        "node-24.22.2/jest-node-selection.json": "58a500c27e36eac6657950cd9de8c7cd846af4d33fb09afe5af4c9b0b8829599",
+        "node-24.22.2/node-load-failure.json": "6ff246ce7c5d4de78f17a21d62a0605dfb966c0d2a7e3aad782022603a227858",
+        "node-24.22.2/parallel.json": "0077696699ea6d1ee17db4c590c4bc4fad61c97fb6ea4e5b3f14a320ec5e7089",
+        "node-24.22.2/summary.json": "9cbdb72bc2daee3bba4448ab2ae4853b0c39fd67ad071175bf191ddc3db4835e",
+        "node-24.22.2/vitest-check.json": "ac2bb87eb7613389efff18e9214796c1b2007dac2c5cf4b9775accebbeacd75c",
+        "npm-package.json": "99b31272f08c1f49c11e4caf92eb6f168a66975d0ebcddb89fb3a4bd8dd21a68",
+        "package-result.json": "ceac9bf7c38213b631076ffa1867e01d13b55ad0c3e8ff0f28b93794b6742ed1",
+        "package-result.json.work.json": "3228cb0204f6dbf660c57283c65450fde71347a83508e6549cb57fab08980b69",
+        "preflight.json": "2b9077f049b84cdb7ee3efec38af9ee1f6f00caec232cfcb19c38d4ab2265f72",
+        "public-consumer-examples.json": "141f156282398a5a7de163cea20247ef737d2daacd358b11d6bd41f6d4d1442b",
+        "release.json": "579650ed6f48739cf420b48b9c8408ada2cbf87e267793b7c3e55a0e89dea01d",
+        "standalone.json": "26da54f9425184cc0a3586633ecbed64192fd0c2986c0ffda695e72d9c11363c",
+        "summary.json": "b94a13b8573e7d820bcd89e1d0d034482694ac0fde598b3fc0f323ea353bcb10",
+        "vitest-check.json": "f13f0a49400231205e35fa3b8b543b1daf0e44c41637cc5cf5c1d8b64595eb7a"
+      },
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/42553712797/artifacts/13648166006"
+    },
+    {
+      "build": "candidate",
+      "root": "work/release-0.16.0/audit/native-evidence/win32-x64",
+      "name": "windows-x64-package-proof",
+      "artifactId": 13648160270,
+      "digest": "sha256:6ee698a4fa2e616774203fa956f61da37dc6c8da65c59f8908a6d2371f477495",
+      "size": 4757295,
+      "runId": 42553712925,
+      "head": "750793d99dce56dd4e51cbfdc2c8cbaa720333dd",
+      "metadataVerified": {
+        "id": 13648160270,
+        "name": "windows-x64-package-proof",
+        "digest": "sha256:6ee698a4fa2e616774203fa956f61da37dc6c8da65c59f8908a6d2371f477495",
+        "sizeBytes": 4757295,
+        "expired": false,
+        "workflowRun": {
+          "id": 42553712925,
+          "repository_id": 1358090153,
+          "head_repository_id": 1358090153,
+          "head_branch": "codex/prepare-0.16.0",
+          "head_sha": "750793d99dce56dd4e51cbfdc2c8cbaa720333dd"
+        }
+      },
+      "zipSha256": "6ee698a4fa2e616774203fa956f61da37dc6c8da65c59f8908a6d2371f477495",
+      "members": 46,
+      "jsonFilesMatched": 16,
+      "jsonSha256": {
+        "BUILD.json": "5f992884307fa68f16d5a2d1498c6e51abdd7f8058fdea9fdb742b389ed79eef",
+        "execute-cancellation.json": "8401a7a881328400ea26952e89646964b7784ceeeff0d720ed41ee2be00843c4",
+        "jest-expo-check.json": "4d93aaf4430e34a801cc30c50d3b896e3f0c3ba33bfcf9246e7678b237f71977",
+        "npm-package.json": "5fa8ae1fe79dcf3f3f3d3ecca4d3495ebd4e7c6de132f1e0e19d2b0c04cd5b7e",
+        "operators.json": "825f2d7739755408e8d7672344249bf58e74eba27ab667af195e575336aefe97",
+        "package-result.json": "87ed812e942fbf499470a1b786d200017aefaa3b88eee17895082f010cfe92b6",
+        "package-result.json.work.json": "4038c416d8933f680d8408d4a529fc36e254b8b241eb9a72f787c405f44a3105",
+        "preflight.json": "f39c9f7df5561a8eb73a972f9de21d78a50fe6f58bb7bac1b0a3e9180322d9b7",
+        "public-consumer-examples.json": "ea069ea618b4ea9fa1693354dc76dcb41fff77b2a4609bfd65395e3369c201c1",
+        "release.json": "d6196b9447c3f3f318ac76f735033932271582f65ee99dc91eeb1b81d29b503c",
+        "shared-cli.json": "bf4263759c7475b6288bcdd1e9a07f781a9eb1dc8de33bd8e4af4385bf6aaa42",
+        "shared-parallel.json": "3520460740120babc2316f4d4ad56de212cd382b88cc85158e2d5da6b4fc288e",
+        "summary.json": "d8116a4a6608307b146e7a612c26ee1e3b6ef7c951a9ec735295b2d5e2677e53",
+        "vitest-check.json": "9c7fca987d17fe6931d1968d8a5c7f484d0b57279598710dc4bc7c9974091c61",
+        "windows-package-install.json": "5adeae60e290521ef01d262464891985198644032a602aa077f6b0605a941419",
+        "windows-runtime-cli-evidence.json": "7e2f17e3d6eacbbb489e206c8cea745606b31842511036b79322ee0c7fd9fd13"
+      },
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/42553712925/artifacts/13648160270"
+    },
+    {
+      "build": "candidate",
+      "root": "work/release-0.16.0/audit/native-evidence/windows-runtime/windows-shared-fixture-evidence",
+      "name": "windows-shared-fixture-evidence",
+      "artifactId": 13647385018,
+      "digest": "sha256:d8f882e6c24023ba9cd4dc3c4f47efc1e2efe93fde25f194f2adf42fb633ff55",
+      "size": 143643,
+      "runId": 42553712784,
+      "head": "750793d99dce56dd4e51cbfdc2c8cbaa720333dd",
+      "metadataVerified": {
+        "id": 13647385018,
+        "name": "windows-shared-fixture-evidence",
+        "digest": "sha256:d8f882e6c24023ba9cd4dc3c4f47efc1e2efe93fde25f194f2adf42fb633ff55",
+        "sizeBytes": 143643,
+        "expired": false,
+        "workflowRun": {
+          "id": 42553712784,
+          "repository_id": 1358090153,
+          "head_repository_id": 1358090153,
+          "head_branch": "codex/prepare-0.16.0",
+          "head_sha": "750793d99dce56dd4e51cbfdc2c8cbaa720333dd"
+        }
+      },
+      "zipSha256": "d8f882e6c24023ba9cd4dc3c4f47efc1e2efe93fde25f194f2adf42fb633ff55",
+      "members": 11,
+      "jsonFilesMatched": 5,
+      "jsonSha256": {
+        "jest-expo-check.json": "8e4140bc1d5ba2fb0e521e9217116220cd715d5623db8848d215301ebbee0276",
+        "shared-cli.json": "a10537ce188e959d4522cfd814daa13373b5d47b213f68eb74bae43612043b92",
+        "shared-parallel.json": "5b3cf5533b0c8a60d24756e5048db7fc7ac01de702869838cb008139d446fd81",
+        "vitest-check.json": "2ccda9faa19fd8c4683d5a0cc20b1db54478151b4d794302b19a5f97d53aa945",
+        "vitest-timeouts.json": "51d078f2158aba38c5bb0928e95c937af056db71db22ffe8fc87211e57f2c56f"
+      },
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/42553712784/artifacts/13647385018"
+    },
+    {
+      "build": "candidate",
+      "root": "work/release-0.16.0/audit/native-evidence/windows-runtime/windows-runtime-preflight",
+      "name": "windows-runtime-preflight",
+      "artifactId": 13646945249,
+      "digest": "sha256:78cc08b12c0a9836e9196abca9ad4ef429ec8a283e666ecbe94b837ed4f04099",
+      "size": 1027,
+      "runId": 42553712784,
+      "head": "750793d99dce56dd4e51cbfdc2c8cbaa720333dd",
+      "metadataVerified": {
+        "id": 13646945249,
+        "name": "windows-runtime-preflight",
+        "digest": "sha256:78cc08b12c0a9836e9196abca9ad4ef429ec8a283e666ecbe94b837ed4f04099",
+        "sizeBytes": 1027,
+        "expired": false,
+        "workflowRun": {
+          "id": 42553712784,
+          "repository_id": 1358090153,
+          "head_repository_id": 1358090153,
+          "head_branch": "codex/prepare-0.16.0",
+          "head_sha": "750793d99dce56dd4e51cbfdc2c8cbaa720333dd"
+        }
+      },
+      "zipSha256": "78cc08b12c0a9836e9196abca9ad4ef429ec8a283e666ecbe94b837ed4f04099",
+      "members": 1,
+      "jsonFilesMatched": 1,
+      "jsonSha256": {
+        "windows-runtime-preflight.json": "dd54704ffb48dc5c948fb07d7bfc5e1fa030f2d0c28e859fae63adcaeb8e6063"
+      },
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/42553712784/artifacts/13646945249"
+    },
+    {
+      "build": "candidate",
+      "root": "work/release-0.16.0/audit/native-evidence/windows-runtime/windows-runtime-cli-evidence",
+      "name": "windows-runtime-cli-evidence",
+      "artifactId": 13646576657,
+      "digest": "sha256:1a371038a3238f09feb4db080a765da50c64a0cb3b55290025f5dbf27a5a953e",
+      "size": 4948,
+      "runId": 42553712784,
+      "head": "750793d99dce56dd4e51cbfdc2c8cbaa720333dd",
+      "metadataVerified": {
+        "id": 13646576657,
+        "name": "windows-runtime-cli-evidence",
+        "digest": "sha256:1a371038a3238f09feb4db080a765da50c64a0cb3b55290025f5dbf27a5a953e",
+        "sizeBytes": 4948,
+        "expired": false,
+        "workflowRun": {
+          "id": 42553712784,
+          "repository_id": 1358090153,
+          "head_repository_id": 1358090153,
+          "head_branch": "codex/prepare-0.16.0",
+          "head_sha": "750793d99dce56dd4e51cbfdc2c8cbaa720333dd"
+        }
+      },
+      "zipSha256": "1a371038a3238f09feb4db080a765da50c64a0cb3b55290025f5dbf27a5a953e",
+      "members": 1,
+      "jsonFilesMatched": 1,
+      "jsonSha256": {
+        "windows-runtime-cli-evidence.json": "961e85781bd0363bfb07527c2617901e07e83b4e6e9eddd24377f850004af42b"
+      },
+      "artifactUrl": "https://github.com/Binary-Balance/seshat/actions/runs/42553712784/artifacts/13646576657"
+    }
+  ],
+  "excludedMembers": "repeat-pack JSON files (duplicate packaging output); no consumed JSON excluded",
+  "verifierSha256": "f0aadad81c254db53ff48d31cf754ae38324881297adbd2c024c4b5e0d8d3472"
+}
