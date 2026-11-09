@@ -926,11 +926,12 @@ See the [coverage findings](../../outputs/coverage-routes.md) and the root
 
 ### Branch coverage for CRAP
 
-After the same build and dependencies, install the pinned Jest/Expo fixture
-dependencies and run:
+After the same build and dependencies, install the pinned Jest/Expo and plain
+Jest fixture dependencies and run:
 
 ```sh
 npm ci --prefix benchmarks/proofs/fixtures/jest-expo --ignore-scripts --no-audit --no-fund
+npm ci --prefix examples/jest --ignore-scripts --no-audit --no-fund
 node benchmarks/proofs/coverage-branches.mjs
 ```
 
@@ -946,14 +947,72 @@ The same routes verify whole-function and whole-file Istanbul suppression
 hints, including nested functions, arrows and methods. Suppressed functions
 retain hint counts and null scores; `c8` and `v8` hints are counted without
 changing Istanbul measurements.
-Ignored declarations with nested functions keep their enclosing function
-unknown when its own work is omitted. Parenthesized arrows are suppressed on
-Node and Jest/Expo; the verified Vitest transform still instruments that
-placement and the proof requires an incomplete result.
+Ignored declarations with nested functions report their enclosing function as
+partially suppressed when its retained coverage is valid; its CRAP remains null.
+Parenthesized arrows are suppressed on Node and Jest/Expo; the verified Vitest
+transform still instruments that placement and the proof requires an incomplete result.
 Getter/setter hints are verified on all three routes. Function-counter-only
 fixtures include executable parameters, empty arrows and nested declarations;
 retained invocation records must keep suppression incomplete without becoming
 statement coverage.
+
+### Partial coverage suppression
+
+`coverage-branches.mjs` also checks partial Istanbul statement and expression
+hints, ignored if/else arms, nested functions, and a function whose statements
+are all ignored. Actual Node/Istanbul, Vitest/Istanbul, Jest/Expo and plain Jest
+TypeScript coverage must produce `partially-suppressed` containing functions,
+retained-code fractions and null CRAP. Deleted retained statement or branch
+records and truncated or unrelated statement ends must fail. Exact and
+adjusted-end duplicates of one retained statement also fail alone and in both
+merge orders, without changing the valid uncovered-statement fraction. Concise conditional
+and logical arrow hints retain their return counters on Node and Jest; Vitest
+retains the hinted branches too and must remain incomplete for that placement.
+Parenthesized retained initializers verify source-map extent normalization.
+Function-valued conditional/logical outcomes and ignored logical groups mark
+the containing function partial on Node and Jest; their before-parentheses
+placement remains incomplete on Vitest. Separate unsupported call/array/unary
+hint fixtures stay incomplete even when their branch records are deleted,
+including both merge orders. Direct call outcomes keep their nested branch
+records, and deleting those records must fail. Ignored expression statements
+containing a function also leave their parent visibly partial.
+Class expressions used as direct outcomes retain their measured methods.
+Separate class-expression and private-method hints remain incomplete after
+the target's descendant counters are deleted, alone and in both merge orders.
+Initializer/default-value counter rewrites remain unsupported, while logical
+tests and enclosing ternaries sharing a start offset keep distinct outcomes.
+Adjacent hints verify last-directive precedence while retaining every syntax
+count. Both directive orders across parentheses and erased type wrappers
+verify runtime-node precedence; inactive hints cannot excuse deleted counters.
+Vitest retains conditional/logical branch counters or incompatible typed
+locations in these placements, which remain incomplete.
+Direct JavaScript instrumentation verifies trailing block, line and mixed
+comment groups, including retained-counter deletion in both merge orders.
+Whole expression statements with nested child hints retain their own exclusion,
+including duplicate `next`, invalid child `else`, logical and nested-function
+cases, with and without semicolons. Direct JavaScript and all four TypeScript
+routes verify their retained counters, including deletion in both merge orders.
+A late file-level hint overrides invalid local hints. Function-valued
+calls, member access and binary expressions cannot borrow the nested function's
+visitor, even after its counters are deleted in either merge order. Erased
+postfix TypeScript wrappers preserve valid targets on Node; Vitest and both
+Jest transforms retain an ignored statement and remain incomplete there.
+Consequent mappings may include an `else` delimiter without accepting executable alternate-arm code.
+Existing whole-suppression and transform-conflict controls
+remain in the same proof. A real Node check also verifies extreme and operator
+mutation jobs, source preservation and scratch cleanup under partial suppression.
+
+Install the plain Jest fixture dependencies before this proof:
+
+```sh
+npm ci --prefix examples/jest --ignore-scripts --no-audit --no-fund
+SESHAT_PROOF_BINARY=crates/seshat/target/debug/seshat-proofs node benchmarks/proofs/coverage-branches.mjs
+```
+
+The existing proof prerequisites still apply. `SESHAT_JEST_DEPS` can name another
+copy of `examples/jest` containing its pinned `node_modules`. Reports stay under
+ignored `work/assurance-proofs/coverage-branches-*` unless `SESHAT_PROOF_OUTPUT`
+is supplied.
 
 Set `SESHAT_PROOF_BINARY` for an alternate fresh proof executable and
 `SESHAT_JEST_EXPO_DEPS` for an existing copy of the pinned fixture dependencies.

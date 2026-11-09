@@ -152,10 +152,10 @@ Function rows produced by coverage attribution have these fields:
 | `coverage` | `covered / total` as a fraction from `0` to `1` when statement evidence is reliable for a non-empty ordinary function. It is not a percentage. |
 | `branchCovered` | Number of mapped branch outcomes with at least one hit. |
 | `branchTotal` | Number of mapped branch outcomes. An `if` usually has two outcomes; a default argument usually has one. |
-| `branchCoverage` | `branchCovered / branchTotal` as a fraction from `0` to `1`, only for `measured` rows with recorded branches. Otherwise `null`. |
+| `branchCoverage` | `branchCovered / branchTotal` as a fraction from `0` to `1`, for `measured` and `partially-suppressed` rows with reliable recorded branches. Otherwise `null`. |
 | `coverageBasis` | `"branch"` when CRAP uses `branchCoverage`, `"statement"` when the function has no recorded branches and CRAP uses `coverage`, or `null` when unscored. |
 | `crap` | `complexity² × (1 − input)³ + complexity`, using the coverage selected by `coverageBasis`, only for `measured` rows. |
-| `status` | `measured`, `unknown`, `suppressed`, `not-applicable` or `complexity-only`. |
+| `status` | `measured`, `unknown`, `suppressed`, `partially-suppressed`, `not-applicable` or `complexity-only`. |
 | `pseudoTested` | Additive boolean or `null` for `check`/`mutate`. True when an extreme replacement survives with reliable positive statement coverage; false when it is killed or its timeout counts as killed with that coverage; otherwise null. |
 | `pseudoTestStatus` | `pseudo-tested`, `checked`, `unknown` or `not-applicable`, for `check`/`mutate`. |
 | `pseudoTestReason` | Skip reason `empty`, `constructor`, `accessor`, `generator`, `implicit-scope`, `coverage-suppressed` or `zero-coverage`; otherwise `null`, for `check`/`mutate`. |
@@ -189,16 +189,63 @@ Istanbul hint targets whole scopes or a file. It records the directive's
 recognised scope, not proof that instrumentation was omitted; the validated
 function status determines whether suppression is accepted.
 An ignored declaration can also partially suppress its enclosing function;
-that function appears in `functions` but stays unknown.
+that function appears in `functions` with `status: "partially-suppressed"` when
+its retained coverage is valid.
 The source count counts each comment once; function counts can include the
 same inherited comment, so their sum need not equal the source count.
 
-Other hint forms are counted without claiming support. Partial Istanbul hints
-leave an affected ordinary function `unknown`, with null coverage and CRAP and
-a diagnostic. `c8` and `v8` hints do not suppress Istanbul instrumentation, so
-they leave its measurements unchanged. Missing or malformed evidence remains
-incomplete. An Istanbul `ignore file` hint allows the source entry to be absent
-from an otherwise successful coverage report; it does not excuse a failed
+`partially-suppressed` identifies an ordinary function with a validated partial
+Istanbul statement, expression or branch-arm exclusion. Its statement and branch
+counts and fractions describe retained instrumented code only; fractions with
+zero denominators are null. `coverageBasis` and `crap` remain null. Complexity,
+other static findings and hint counts remain. The CRAP threshold excludes these
+rows and becomes not applicable if no measured functions remain. Pseudo-testing
+still requires reliable positive statement coverage; operator mutations remain.
+Ignored arms also exclude their nested statements, branches and functions.
+An ignored nested function expression used as a conditional/logical outcome
+gives its containing function partial status and the nested function whole
+suppression. A direct
+outcome hint on a call, array or unary expression excludes that outcome's
+counter, while its descendant work retains its own instrumentation. A hint on
+such an expression outside a direct outcome cannot excuse missing descendants;
+whole-subtree exclusion requires a supported Istanbul visitor target.
+Class declarations and public methods have such visitors; class expressions
+and private methods do not. A direct class-expression outcome retains its
+method instrumentation. Unsupported method/expression targets remain incomplete
+even when their descendant records are missing.
+
+Subtree visitor identity uses the complete runtime span, allowing erased
+postfix TypeScript wrappers but rejecting enclosing calls, member access and
+binary operations. Statements retain a separate identity from child expressions,
+including without a semicolon. Precedence groups comments across erased wrappers
+and
+parser-confirmed leading comment groups. Only the last recognized Istanbul hint
+on a runtime target controls exclusion; overridden hints still appear in syntax
+counts. File-level hints override local hint validation regardless of source
+position.
+
+Function initializers with hoisted counters and concise returns keep their
+enclosing counters when only their child expression is ignored. Ancestor
+statement/declaration hints still omit those counters. Initializer/default-value
+placements whose hints are moved by counter insertion remain unsupported.
+Module-level counters such as transformed CommonJS export assignments do not
+establish function coverage.
+Each setup must match the expected retained shape before reports merge; a hint
+cannot excuse unrelated missing evidence or conflicting retained counters.
+Each retained AST counter can appear only once per setup, including when
+source-map adjustments give duplicate records different starts or ends.
+Retained statement locations must match full AST extents, with the supported
+source-map parenthesis and trivia adjustments. A mapped if-consequent may
+include the `else` delimiter, but cannot extend into the alternate arm. An ignored concise-arrow body
+expression can retain its enclosing return counter. That counter describes
+retained execution; it does not restore the ignored branch evidence. Transforms
+that keep the supposedly ignored branches remain incomplete.
+
+Other hint forms are counted without claiming provider support. `c8` and `v8`
+hints do not suppress Istanbul instrumentation, so they leave its measurements
+unchanged. Invalid partial targets and missing, malformed or contradictory
+evidence remain incomplete. An Istanbul `ignore file` hint allows the source
+entry to be absent from an otherwise successful coverage report; it does not excuse a failed
 coverage job or the absence of all reports.
 Statement, branch or function records remaining inside a supposedly wholly
 suppressed ordinary function also leave it unknown and incomplete, including

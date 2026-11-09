@@ -175,18 +175,30 @@ fn decode_branch(
             span.0, span.1
         ));
     };
+    if analysis.coverage_ignored(site.span.start) {
+        return Err("coverage retains an ignored branch".into());
+    }
+    let expected_outcomes: Vec<_> = site
+        .outcomes
+        .iter()
+        .enumerate()
+        .filter(|(index, _)| !analysis.coverage_outcome_ignored(site, *index))
+        .map(|(_, outcome)| outcome)
+        .collect();
     let outcomes = branch["locations"]
         .as_array()
         .ok_or("missing branch locations")?;
     let hits = counter
         .and_then(Value::as_array)
         .ok_or("invalid branch counters")?;
-    if outcomes.len() != hits.len() || outcomes.len() != site.outcomes.len() || outcomes.is_empty()
+    if outcomes.len() != hits.len()
+        || outcomes.len() != expected_outcomes.len()
+        || outcomes.is_empty()
     {
         return Err("branch outcome/counter mismatch".into());
     }
     let mut covered = Vec::new();
-    for ((location, hits), expected) in outcomes.iter().zip(hits).zip(&site.outcomes) {
+    for ((location, hits), expected) in outcomes.iter().zip(hits).zip(&expected_outcomes) {
         match expected {
             Some(expected) => {
                 let mapped = branch_span(source, location)?;
@@ -210,8 +222,7 @@ fn decode_branch(
     let key = BranchKey {
         kind: kind.into(),
         span: (site.span.start, site.span.end),
-        outcomes: site
-            .outcomes
+        outcomes: expected_outcomes
             .iter()
             .map(|span| span.map(|s| (s.start, s.end)))
             .collect(),
@@ -259,7 +270,9 @@ fn decode_branches(analysis: &Analysis, source: &str, file: &Value) -> BranchCov
                                         && (analysis.owner(outcome.0) == Some(i)
                                         // Creating a function-valued outcome
                                         // belongs to the containing branch.
-                                        || site.outcomes.get(index).and_then(|span| *span)
+                                        || site.outcomes.iter().enumerate()
+                                            .filter(|(index, _)| !analysis.coverage_outcome_ignored(site, *index))
+                                            .nth(index).and_then(|(_, span)| *span)
                                             .is_some_and(|span| span.start == outcome.0))
                                 })
                             })
@@ -274,6 +287,24 @@ fn decode_branches(analysis: &Analysis, source: &str, file: &Value) -> BranchCov
                     result.invalidate(analysis, owner(), "duplicate branch mapping".into());
                 }
             }
+        }
+    }
+    for site in &analysis.branches {
+        if let Some(owner) = analysis.owner(site.span.start)
+            && analysis.scopes[owner].coverage_partial_suppression
+            && !analysis.scopes[owner].coverage_suppressed
+            && !analysis.coverage_ignored(site.span.start)
+            && (0..site.outcomes.len()).any(|index| !analysis.coverage_outcome_ignored(site, index))
+            && !result
+                .map
+                .keys()
+                .any(|key| key.kind == site.kind && key.span.0 == site.span.start)
+        {
+            result.invalidate(
+                analysis,
+                Some(owner),
+                format!("missing retained branch at {}", site.span.start),
+            );
         }
     }
     result
@@ -314,8 +345,8 @@ pub fn attribute<'a>(
     reports: impl IntoIterator<Item = &'a Value>,
 ) -> Value {
     let mut merged: Option<Coverage> = None;
-    let mut problems = Vec::new();
-    let mut statements_reliable = true;
+    let mut problems = analysis.coverage_hint_errors.clone();
+    let mut statements_reliable = analysis.coverage_hint_errors.is_empty();
     let mut unreliable_branches = BTreeSet::new();
     let mut unreliable_suppressions = BTreeSet::new();
     let mut report_count = 0;
@@ -349,6 +380,7 @@ pub fn attribute<'a>(
                 return Err("statement/counter mismatch".into());
             }
             let mut map = BTreeMap::new();
+            let mut retained_statements = BTreeSet::new();
             for (id, loc) in locations {
                 let start = byte_position(source, &loc["start"], false)?;
                 let mut end = byte_position(source, &loc["end"], true)?;
@@ -366,12 +398,58 @@ pub fn attribute<'a>(
                 if start >= end {
                     return Err("empty or reversed statement span".into());
                 }
+                if analysis.coverage_statement_ignored(start) {
+                    return Err(format!("coverage retains an ignored statement at {start}"));
+                }
+                if let Some(owner) = analysis.statement_owner(start)
+                    && analysis.scopes[owner].coverage_partial_suppression
+                    && !analysis.scopes[owner].coverage_suppressed
+                    && !analysis.scopes[owner].implicit
+                {
+                    let Some((index, _)) =
+                        analysis
+                            .coverage_statements
+                            .iter()
+                            .enumerate()
+                            .find(|(_, statement)| {
+                                span_matches(analysis, source, (start, end), statement.span, None)
+                                    || span_matches(
+                                        analysis,
+                                        source,
+                                        (start, end),
+                                        statement.unwrapped,
+                                        None,
+                                    )
+                            })
+                    else {
+                        return Err(format!("invalid retained statement span: {start}..{end}"));
+                    };
+                    // Source-map trivia adjustments do not create another counter target.
+                    if !retained_statements.insert(index) {
+                        return Err("duplicate retained statement mapping".into());
+                    }
+                }
                 let hits = counters
                     .get(id)
                     .and_then(Value::as_u64)
                     .ok_or("invalid statement count")?;
                 if map.insert((start, end), hits > 0).is_some() {
                     return Err("duplicate statement span".into());
+                }
+            }
+            for statement in &analysis.coverage_statements {
+                if let Some(owner) = analysis.statement_owner(statement.span.start)
+                    && analysis.scopes[owner].coverage_partial_suppression
+                    && !analysis.scopes[owner].coverage_suppressed
+                    && !analysis.coverage_statement_ignored(statement.span.start)
+                    && !map.keys().any(|&(start, _)| {
+                        start == statement.span.start || start == statement.unwrapped.start
+                    })
+                {
+                    return Err(format!(
+                        "missing retained statement at {}",
+                        statement.span.start
+                    ));
                 }
             }
             Ok(map)
@@ -382,11 +460,10 @@ pub fn attribute<'a>(
                 problems.push(e);
             }
             Ok(statements) => {
-                if analysis
-                    .scopes
-                    .iter()
-                    .any(|scope| scope.coverage_suppressed && !scope.implicit)
-                {
+                if analysis.scopes.iter().any(|scope| {
+                    (scope.coverage_suppressed || scope.coverage_partial_suppression)
+                        && !scope.implicit
+                }) {
                     match function_suppression_conflicts(analysis, source, file) {
                         Ok(conflicts) => unreliable_suppressions.extend(conflicts),
                         Err(error) => {
@@ -486,16 +563,6 @@ pub fn attribute<'a>(
         }
     }
     for (index, scope) in analysis.scopes.iter().enumerate() {
-        if scope.coverage_partial_suppression
-            && !scope.coverage_suppressed
-            && !scope.implicit
-            && !scope.empty
-        {
-            problems.push(format!(
-                "partial coverage suppression is not supported: {}",
-                scope.name
-            ));
-        }
         if scope.coverage_suppressed
             && !scope.implicit
             && (!statements[index].is_empty()
@@ -515,15 +582,17 @@ pub fn attribute<'a>(
         let branch_total = branches[i].len();
         let branch_covered = branches[i].iter().filter(|&&hit| hit).count();
         let status = if s.implicit { "complexity-only" }
-            else if s.coverage_suppressed { if total == 0 && branch_total == 0 && !unreliable_suppressions.contains(&i) { "suppressed" } else { "unknown" } }
+            else if s.coverage_suppressed { if statements_reliable && total == 0 && branch_total == 0 && !unreliable_branches.contains(&i) && !unreliable_suppressions.contains(&i) { "suppressed" } else { "unknown" } }
             else if s.empty { "not-applicable" }
-            else if s.coverage_partial_suppression || !statements_reliable || unreliable_branches.contains(&i) || total == 0 { complete = false; "unknown" } else { "measured" };
+            else if !statements_reliable || unreliable_branches.contains(&i) { complete = false; "unknown" }
+            else if s.coverage_partial_suppression { "partially-suppressed" }
+            else if total == 0 { complete = false; "unknown" } else { "measured" };
         json!({"name":s.name,"start":s.span.start,"complexity":s.complexity,"cognitiveComplexity":s.cognitive_complexity,"status":status,
             "typeSafety":s.type_safety,
             "coverageSuppressions":s.coverage_suppressions,
-            "covered":covered,"total":total,"coverage":if statements_reliable && !s.coverage_suppressed && !s.coverage_partial_suppression && !s.implicit && !s.empty && total > 0 {Some(covered as f64/total as f64)}else{None},
+            "covered":covered,"total":total,"coverage":if statements_reliable && !s.coverage_suppressed && !s.implicit && !s.empty && total > 0 {Some(covered as f64/total as f64)}else{None},
             "branchCovered":branch_covered,"branchTotal":branch_total,
-            "branchCoverage":if status=="measured" && branch_total > 0 {Some(branch_covered as f64/branch_total as f64)}else{None},
+            "branchCoverage":if matches!(status, "measured" | "partially-suppressed") && branch_total > 0 {Some(branch_covered as f64/branch_total as f64)}else{None},
             "coverageBasis":if status=="measured" {Some(if branch_total > 0 {"branch"} else {"statement"})}else{None},
             "crap":if status=="measured" {if branch_total > 0 {assessment::score(s.complexity,branch_covered,branch_total)} else {assessment::score(s.complexity,covered,total)}}else{None}})
     }).collect();
@@ -625,7 +694,7 @@ fn file_suppression_allows_an_omitted_entry_but_never_hides_bad_evidence() {
 }
 
 #[test]
-fn partial_suppression_cannot_become_full_statement_coverage() {
+fn partial_suppression_reports_retained_coverage_without_whole_function_crap() {
     let source = "function f() { /* istanbul ignore next */ work(); return 1; }";
     let analysis = Analysis::inspect("source.ts", source).unwrap();
     let start = source.find("return").unwrap();
@@ -633,11 +702,355 @@ fn partial_suppression_cannot_become_full_statement_coverage() {
         "start":{"line":1,"column":start},"end":{"line":1,"column":start+9}}},
         "s":{"0":1},"branchMap":{},"b":{}}});
     let result = attribute(&analysis, "source.ts", source, [&report]);
-    assert_eq!(result["complete"], false, "{result}");
-    assert_eq!(result["functions"][0]["status"], "unknown");
+    assert_eq!(result["complete"], true, "{result}");
+    assert_eq!(result["functions"][0]["status"], "partially-suppressed");
     assert_eq!(result["functions"][0]["coverageSuppressions"], 1);
+    assert_eq!(result["functions"][0]["coverage"], 1.0);
+    assert_eq!(result["functions"][0]["crap"], Value::Null);
+}
+
+#[test]
+fn partial_branch_suppression_checks_exact_retained_evidence_before_merging() {
+    let source = "function f(flag: boolean) { /* istanbul ignore else */ if (flag) return 1; else return 2; return flag ? 3 : 4; }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let location = |start: usize, end: usize| json!({"start":{"line":1,"column":start},"end":{"line":1,"column":end}});
+    let if_start = source.find("if (").unwrap();
+    let if_end = source.find("return 2;").unwrap() + "return 2;".len();
+    let first_return = source.find("return 1;").unwrap();
+    let last_return = source.find("return flag").unwrap();
+    let conditional = source.find("flag ?").unwrap();
+    let three = source.find("3 :").unwrap();
+    let four = source.find("4;").unwrap();
+    let report = json!({"source.ts":{"path":"source.ts",
+        "statementMap":{"0":location(if_start,if_end),"1":location(first_return,first_return+9),"2":location(last_return,four+2)},
+        "s":{"0":1,"1":1,"2":1},
+        "branchMap":{
+            "0":{"type":"if","loc":location(if_start,if_end),"locations":[location(if_start,if_end)]},
+            "1":{"type":"cond-expr","loc":location(conditional,four+1),"locations":[location(three,three+1),location(four,four+1)]}},
+        "b":{"0":[1],"1":[1,0]}}});
+    let result = attribute(&analysis, "source.ts", source, [&report]);
+    assert_eq!(result["complete"], true, "{result}");
+    assert_eq!(result["functions"][0]["status"], "partially-suppressed");
+    assert_eq!(result["functions"][0]["branchTotal"], 3);
+    assert_eq!(result["functions"][0]["branchCoverage"], 2.0 / 3.0);
+    assert_eq!(result["functions"][0]["crap"], Value::Null);
+    let mut extended_through_else = report.clone();
+    extended_through_else["source.ts"]["statementMap"]["1"] =
+        location(first_return, source.find("return 2;").unwrap());
+    assert_eq!(
+        attribute(&analysis, "source.ts", source, [&extended_through_else])["complete"],
+        true
+    );
+    let mut missing_statement = report.clone();
+    missing_statement["source.ts"]["statementMap"]
+        .as_object_mut()
+        .unwrap()
+        .remove("2");
+    missing_statement["source.ts"]["s"]
+        .as_object_mut()
+        .unwrap()
+        .remove("2");
+    let mut missing_branch = report.clone();
+    missing_branch["source.ts"]["branchMap"]
+        .as_object_mut()
+        .unwrap()
+        .remove("1");
+    missing_branch["source.ts"]["b"]
+        .as_object_mut()
+        .unwrap()
+        .remove("1");
+    let mut retained_ignored = report.clone();
+    let ignored = source.find("return 2;").unwrap();
+    retained_ignored["source.ts"]["statementMap"]["3"] = location(ignored, ignored + 9);
+    retained_ignored["source.ts"]["s"]["3"] = json!(0);
+    let mut wrong_outcome = report.clone();
+    wrong_outcome["source.ts"]["branchMap"]["0"]["locations"][0] = location(ignored, ignored + 9);
+    let mut full_branch = report.clone();
+    full_branch["source.ts"]["branchMap"]["0"]["locations"]
+        .as_array_mut()
+        .unwrap()
+        .push(location(ignored, ignored + 9));
+    full_branch["source.ts"]["b"]["0"]
+        .as_array_mut()
+        .unwrap()
+        .push(json!(0));
+    let mut truncated_statement = report.clone();
+    truncated_statement["source.ts"]["statementMap"]["2"] = location(last_return, last_return + 1);
+    let mut unrelated_end = report.clone();
+    unrelated_end["source.ts"]["statementMap"]["1"] = location(first_return, four + 1);
+    let mut invalid_function = report.clone();
+    invalid_function["source.ts"]["fnMap"] = json!({});
+    for invalid in [
+        missing_statement,
+        missing_branch,
+        retained_ignored,
+        wrong_outcome,
+        full_branch,
+        truncated_statement,
+        unrelated_end,
+        invalid_function,
+    ] {
+        for reports in [
+            vec![&invalid],
+            vec![&report, &invalid],
+            vec![&invalid, &report],
+        ] {
+            let result = attribute(&analysis, "source.ts", source, reports);
+            assert_eq!(result["complete"], false, "{invalid}: {result}");
+            assert!(!result["problems"].as_array().unwrap().is_empty());
+        }
+    }
+}
+
+#[test]
+fn concise_return_counter_survives_an_ignored_body_expression() {
+    for expression in ["flag ? 1 : 2", "flag || false", "((flag ? 1 : 2))"] {
+        let source =
+            format!("const f = (flag: boolean) => /* istanbul ignore next */ {expression};");
+        let analysis = Analysis::inspect("source.ts", &source).unwrap();
+        let start = source.find(expression).unwrap();
+        let end = start + expression.len();
+        let report = json!({"source.ts":{"path":"source.ts", "statementMap":{"0":{
+            "start":{"line":1,"column":start},"end":{"line":1,"column":end}}},
+            "s":{"0":1},"branchMap":{},"b":{}}});
+        let result = attribute(&analysis, "source.ts", &source, [&report]);
+        assert_eq!(result["complete"], true, "{source}: {result}");
+        assert_eq!(result["functions"][0]["status"], "partially-suppressed");
+        assert_eq!(result["functions"][0]["coverage"], 1.0);
+        assert_eq!(result["functions"][0]["crap"], Value::Null);
+        let mut truncated = report.clone();
+        truncated["source.ts"]["statementMap"]["0"]["end"]["column"] = json!(start + 1);
+        for reports in [
+            vec![&truncated],
+            vec![&report, &truncated],
+            vec![&truncated, &report],
+        ] {
+            let result = attribute(&analysis, "source.ts", &source, reports);
+            assert_eq!(result["complete"], false, "{source}: {result}");
+            assert_eq!(result["functions"][0]["coverage"], Value::Null);
+        }
+    }
+}
+
+#[test]
+fn hoisted_function_creation_counter_survives_a_child_hint_but_not_a_declaration_hint() {
+    let source = "function f() { const value = /* istanbul ignore next */ ()=>1; return value; }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let start = source.find("()=>1").unwrap() as u32;
+    assert!(!analysis.coverage_statement_ignored(start));
+    assert!(analysis.scopes[1].coverage_suppressed);
+    assert!(analysis.coverage_statement_ignored(start + 4));
+    let declaration =
+        "function f() { /* istanbul ignore next */ const value = ()=>1; return value; }";
+    let analysis = Analysis::inspect("source.ts", declaration).unwrap();
+    assert!(analysis.coverage_statement_ignored(declaration.find("()=>1").unwrap() as u32));
+}
+
+#[test]
+fn all_ignored_statements_are_partial_without_inventing_positive_coverage() {
+    let source = "function f() { /* istanbul ignore next */ return 1; }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let report =
+        json!({"source.ts":{"path":"source.ts","statementMap":{},"s":{},"branchMap":{},"b":{}}});
+    let result = attribute(&analysis, "source.ts", source, [&report]);
+    assert_eq!(result["complete"], true, "{result}");
+    assert_eq!(result["functions"][0]["status"], "partially-suppressed");
     assert_eq!(result["functions"][0]["coverage"], Value::Null);
     assert_eq!(result["functions"][0]["crap"], Value::Null);
+    assert_eq!(
+        attribute(&analysis, "source.ts", source, [&json!({})])["complete"],
+        false
+    );
+    let unhinted = source.replace("/* istanbul ignore next */", "");
+    let analysis = Analysis::inspect("source.ts", &unhinted).unwrap();
+    assert_eq!(
+        attribute(&analysis, "source.ts", &unhinted, [&report])["complete"],
+        false
+    );
+}
+
+#[test]
+fn partial_suppression_rejects_duplicate_normalized_statement_targets() {
+    let source = "function f() { /* istanbul ignore next */ work(); const value = (1); return value; /* tail */ }";
+    let analysis = Analysis::inspect("source.ts", source).unwrap();
+    let loc = |start, end| json!({"start":{"line":1,"column":start},"end":{"line":1,"column":end}});
+    let initializer = source.find("(1)").unwrap();
+    let returned = source.find("return value;").unwrap();
+    let report = json!({"source.ts":{"path":"source.ts","statementMap":{
+        "0":loc(initializer,initializer+3),"1":loc(returned,returned+13)},
+        "s":{"0":1,"1":0},"branchMap":{},"b":{}}});
+    let result = attribute(&analysis, "source.ts", source, [&report]);
+    assert_eq!(result["complete"], true, "{result}");
+    assert_eq!(result["functions"][0]["coverage"], 0.5);
+    let mut unwrapped = report.clone();
+    unwrapped["source.ts"]["statementMap"]["0"] = loc(initializer + 1, initializer + 2);
+    assert_eq!(
+        attribute(&analysis, "source.ts", source, [&unwrapped])["complete"],
+        true
+    );
+    for location in [
+        loc(returned, returned + 13),
+        loc(returned, returned + 14),
+        loc(initializer + 1, initializer + 2),
+    ] {
+        let mut duplicate = report.clone();
+        duplicate["source.ts"]["statementMap"]["extra"] = location;
+        duplicate["source.ts"]["s"]["extra"] = json!(1);
+        for reports in [
+            vec![&duplicate],
+            vec![&report, &duplicate],
+            vec![&duplicate, &report],
+        ] {
+            let result = attribute(&analysis, "source.ts", source, reports);
+            assert_eq!(result["complete"], false, "{result}");
+            assert_eq!(result["functions"][0]["coverage"], Value::Null);
+            assert!(
+                result["problems"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|problem| problem == "duplicate retained statement mapping")
+            );
+        }
+    }
+}
+
+#[test]
+fn enclosing_nonvisitor_hints_cannot_excuse_missing_descendant_branches() {
+    for expression in [
+        "Boolean(flag ? 1 : 2)",
+        "[flag ? 1 : 2]",
+        "!(flag ? 1 : 2)",
+        "Boolean((()=>flag ? 1 : 2)())",
+    ] {
+        let source = format!(
+            "function f(flag: boolean) {{ return /* istanbul ignore next */ {expression}; }}"
+        );
+        let analysis = Analysis::inspect("source.ts", &source).unwrap();
+        let start = source.find("return").unwrap();
+        let end = source.rfind(';').unwrap() + 1;
+        let report = json!({"source.ts":{"path":"source.ts","statementMap":{"0":{
+            "start":{"line":1,"column":start},"end":{"line":1,"column":end}}},
+            "s":{"0":1},"branchMap":{},"b":{}}});
+        let result = attribute(&analysis, "source.ts", &source, [&report]);
+        assert_eq!(result["complete"], false, "{source}: {result}");
+        assert_eq!(result["functions"][0]["status"], "unknown");
+        assert!(
+            result["problems"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|problem| problem.as_str().unwrap().contains("no instrumented target")),
+            "{source}: {result}"
+        );
+    }
+}
+
+#[test]
+fn adjacent_hints_use_only_the_last_istanbul_directive() {
+    for (first, last) in [
+        ("if", "else"),
+        ("else", "if"),
+        ("next", "if"),
+        ("if", "next"),
+        ("else", "else"),
+    ] {
+        let source = format!(
+            "function f(flag: boolean) {{ const kept = 3; /* istanbul ignore {first} */ /* istanbul ignore {last} */ if (flag) return 1; else return 2; }}"
+        );
+        let analysis = Analysis::inspect("source.ts", &source).unwrap();
+        let loc =
+            |start, end| json!({"start":{"line":1,"column":start},"end":{"line":1,"column":end}});
+        let kept = source.find("3;").unwrap();
+        let if_start = source.find("if (flag)").unwrap();
+        let true_return = source.find("return 1;").unwrap();
+        let false_return = source.find("return 2;").unwrap();
+        let if_end = false_return + 9;
+        let mut report = json!({"source.ts":{"path":"source.ts","statementMap":{"0":loc(kept,kept+1)},"s":{"0":1},"branchMap":{},"b":{}}});
+        if last != "next" {
+            let retained = if last == "if" {
+                false_return
+            } else {
+                true_return
+            };
+            report["source.ts"]["statementMap"]["1"] = loc(if_start, if_end);
+            report["source.ts"]["statementMap"]["2"] = loc(retained, retained + 9);
+            report["source.ts"]["s"]["1"] = json!(1);
+            report["source.ts"]["s"]["2"] = json!(1);
+            let outcome = if last == "if" {
+                loc(false_return, if_end)
+            } else {
+                loc(if_start, if_end)
+            };
+            report["source.ts"]["branchMap"]["0"] =
+                json!({"type":"if","loc":loc(if_start,if_end),"locations":[outcome]});
+            report["source.ts"]["b"]["0"] = json!([1]);
+        }
+        let result = attribute(&analysis, "source.ts", &source, [&report]);
+        assert_eq!(result["complete"], true, "{source}: {result}");
+        assert_eq!(result["functions"][0]["status"], "partially-suppressed");
+        assert_eq!(result["functions"][0]["coverageSuppressions"], 2);
+        assert_eq!(result["functions"][0]["crap"], Value::Null);
+        if last != "next" {
+            let mut omitted = report.clone();
+            omitted["source.ts"]["statementMap"]
+                .as_object_mut()
+                .unwrap()
+                .remove("2");
+            omitted["source.ts"]["s"]
+                .as_object_mut()
+                .unwrap()
+                .remove("2");
+            omitted["source.ts"]["branchMap"] = json!({});
+            omitted["source.ts"]["b"] = json!({});
+            for reports in [
+                vec![&omitted],
+                vec![&report, &omitted],
+                vec![&omitted, &report],
+            ] {
+                assert_eq!(
+                    attribute(&analysis, "source.ts", &source, reports)["complete"],
+                    false,
+                    "{source}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn file_hints_override_local_hint_errors_regardless_of_position() {
+    let body = "function f() { return /* istanbul ignore next */ 1; }";
+    for source in [
+        format!("/* istanbul ignore file */ {body}"),
+        format!("{body} /* istanbul ignore file */"),
+    ] {
+        let analysis = Analysis::inspect("source.ts", &source).unwrap();
+        let result = attribute(&analysis, "source.ts", &source, [&json!({})]);
+        assert_eq!(result["complete"], true, "{source}: {result}");
+        assert_eq!(result["functions"][0]["status"], "suppressed");
+        assert_eq!(result["functions"][0]["coverageSuppressions"], 2);
+        assert_eq!(
+            attribute(&analysis, "source.ts", &source, std::iter::empty())["complete"],
+            false
+        );
+    }
+}
+
+#[test]
+fn invalid_partial_hint_targets_cannot_excuse_missing_coverage() {
+    for source in [
+        "function f() { /* istanbul ignore if */ return 1; }",
+        "function f() { return /* istanbul ignore next */ 1; }",
+        "function f() { const x = /* istanbul ignore next */ work(); return x; }",
+        "function f() { return 1; /* istanbul ignore next */ }",
+    ] {
+        let analysis = Analysis::inspect("source.ts", source).unwrap();
+        let report = json!({"source.ts":{"path":"source.ts","statementMap":{},"s":{},"branchMap":{},"b":{}}});
+        let result = attribute(&analysis, "source.ts", source, [&report]);
+        assert_eq!(result["complete"], false, "{source}: {result}");
+        assert_eq!(result["functions"][0]["status"], "unknown");
+    }
 }
 
 #[test]

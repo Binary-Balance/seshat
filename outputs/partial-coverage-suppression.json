@@ -1,0 +1,6128 @@
+{
+  "scope": "Local Linux x64 implementation proof for issue #215; not release/platform certification",
+  "environment": {
+    "node": "v24.22.2",
+    "typescript": "6.0.3",
+    "vitest": "5.0.0",
+    "vite": "8.2.2",
+    "coverage-istanbul": "5.0.0",
+    "jest": "29.7.0",
+    "jest-expo": "57.0.6",
+    "plainJest": "29.7.0"
+  },
+  "routes": {
+    "node": {
+      "complete": true,
+      "coverageSuppressions": {
+        "count": 14,
+        "hints": [
+          {
+            "end": 94,
+            "functions": [
+              7,
+              118,
+              128
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 55,
+            "wholeFunction": true
+          },
+          {
+            "end": 242,
+            "functions": [
+              158
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 203,
+            "wholeFunction": false
+          },
+          {
+            "end": 352,
+            "functions": [
+              277
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 313,
+            "wholeFunction": false
+          },
+          {
+            "end": 449,
+            "functions": [
+              374,
+              468
+            ],
+            "kind": "if",
+            "provider": "istanbul",
+            "start": 412,
+            "wholeFunction": true
+          },
+          {
+            "end": 643,
+            "functions": [
+              564
+            ],
+            "kind": "else",
+            "provider": "istanbul",
+            "start": 604,
+            "wholeFunction": false
+          },
+          {
+            "end": 785,
+            "functions": [
+              698
+            ],
+            "kind": "else",
+            "provider": "istanbul",
+            "start": 746,
+            "wholeFunction": false
+          },
+          {
+            "end": 929,
+            "functions": [
+              833
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 890,
+            "wholeFunction": false
+          },
+          {
+            "end": 1043,
+            "functions": [
+              946
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1004,
+            "wholeFunction": false
+          },
+          {
+            "end": 1144,
+            "functions": [
+              1060,
+              1148
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1105,
+            "wholeFunction": true
+          },
+          {
+            "end": 1279,
+            "functions": [
+              1179
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1240,
+            "wholeFunction": false
+          },
+          {
+            "end": 1421,
+            "functions": [
+              1320
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1382,
+            "wholeFunction": false
+          },
+          {
+            "end": 1613,
+            "functions": [
+              1489
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1574,
+            "wholeFunction": false
+          },
+          {
+            "end": 1717,
+            "functions": [
+              1630
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1678,
+            "wholeFunction": false
+          },
+          {
+            "end": 1874,
+            "functions": [
+              1792
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1835,
+            "wholeFunction": false
+          }
+        ]
+      },
+      "functions": [
+        {
+          "name": "partiallySuppressed",
+          "start": 7,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "arrow@118",
+          "start": 118,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "arrow@128",
+          "start": 128,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredStatement",
+          "start": 158,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "allStatementsIgnored",
+          "start": 277,
+          "status": "partially-suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredIf",
+          "start": 374,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "hidden",
+          "start": 468,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredElse",
+          "start": 564,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredImplicitElse",
+          "start": 698,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 3,
+          "coverage": 0.6666666666666666,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredTernary",
+          "start": 833,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredLogical",
+          "start": 946,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredExpressionWithFunction",
+          "start": 1060,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "arrow@1148",
+          "start": 1148,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredCallOutcome",
+          "start": 1179,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 3,
+          "branchCoverage": 0.3333333333333333,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 3,
+          "cognitiveComplexity": 3,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredClassOutcome",
+          "start": 1320,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "function@1440",
+          "start": 1440,
+          "status": "measured",
+          "covered": 0,
+          "total": 1,
+          "coverage": 0,
+          "branchCovered": 0,
+          "branchTotal": 2,
+          "branchCoverage": 0,
+          "coverageBasis": "branch",
+          "crap": 6,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 0
+        },
+        {
+          "name": "sharedBranchStart",
+          "start": 1489,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 3,
+          "branchCoverage": 0.3333333333333333,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 3,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "retainedInitializer",
+          "start": 1630,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 2,
+          "branchCoverage": 0.5,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "retainedBranch",
+          "start": 1792,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 2,
+          "branchCoverage": 0.5,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        }
+      ],
+      "problems": [],
+      "conciseArrows": {
+        "complete": true,
+        "coverageSuppressions": {
+          "count": 2,
+          "hints": [
+            {
+              "end": 90,
+              "functions": [
+                32
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 51,
+              "wholeFunction": false
+            },
+            {
+              "end": 191,
+              "functions": [
+                133
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 152,
+              "wholeFunction": false
+            }
+          ]
+        },
+        "functions": [
+          {
+            "name": "arrow@32",
+            "start": 32,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@133",
+            "start": 133,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          }
+        ],
+        "problems": []
+      },
+      "functionOutcomes": {
+        "complete": true,
+        "coverageSuppressions": {
+          "count": 3,
+          "hints": [
+            {
+              "end": 111,
+              "functions": [
+                7,
+                113
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 72,
+              "wholeFunction": true
+            },
+            {
+              "end": 245,
+              "functions": [
+                140,
+                247
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 206,
+              "wholeFunction": true
+            },
+            {
+              "end": 369,
+              "functions": [
+                264,
+                380
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 330,
+              "wholeFunction": true
+            }
+          ]
+        },
+        "functions": [
+          {
+            "name": "ignoredFunctionOutcome",
+            "start": 7,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@113",
+            "start": 113,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@123",
+            "start": 123,
+            "status": "measured",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": "statement",
+            "crap": 1,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 0
+          },
+          {
+            "name": "ignoredLogicalFunction",
+            "start": 140,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@247",
+            "start": 247,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "ignoredGroupedFunction",
+            "start": 264,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 3,
+            "cognitiveComplexity": 2,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@380",
+            "start": 380,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          }
+        ],
+        "problems": []
+      },
+      "unsupportedTargets": {
+        "complete": false,
+        "problems": [
+          "coverage ignore next has no instrumented target at 58",
+          "coverage ignore next has no instrumented target at 182",
+          "coverage ignore next has no instrumented target at 299",
+          "coverage ignore next has no instrumented target at 430",
+          "coverage ignore next has no instrumented target at 542",
+          "coverage ignore next has no instrumented target at 670"
+        ]
+      },
+      "classTargets": {
+        "complete": false,
+        "problems": [
+          "coverage ignore next has no instrumented target at 59"
+        ]
+      },
+      "privateMethods": {
+        "complete": false,
+        "problems": [
+          "coverage ignore next has no instrumented target at 36"
+        ]
+      },
+      "boundaries": {
+        "precedence": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 8,
+            "hints": [
+              {
+                "end": 99,
+                "functions": [
+                  7
+                ],
+                "kind": "if",
+                "provider": "istanbul",
+                "start": 62,
+                "wholeFunction": false
+              },
+              {
+                "end": 141,
+                "functions": [
+                  7
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 102,
+                "wholeFunction": false
+              },
+              {
+                "end": 280,
+                "functions": [
+                  188
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 241,
+                "wholeFunction": false
+              },
+              {
+                "end": 320,
+                "functions": [
+                  188
+                ],
+                "kind": "if",
+                "provider": "istanbul",
+                "start": 283,
+                "wholeFunction": false
+              },
+              {
+                "end": 459,
+                "functions": [
+                  367
+                ],
+                "kind": "if",
+                "provider": "istanbul",
+                "start": 422,
+                "wholeFunction": false
+              },
+              {
+                "end": 501,
+                "functions": [
+                  367
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 462,
+                "wholeFunction": false
+              },
+              {
+                "end": 647,
+                "functions": [
+                  548
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 608,
+                "wholeFunction": false
+              },
+              {
+                "end": 689,
+                "functions": [
+                  548
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 650,
+                "wholeFunction": false
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "elseWins",
+              "start": 7,
+              "status": "partially-suppressed",
+              "covered": 3,
+              "total": 3,
+              "coverage": 1,
+              "branchCovered": 1,
+              "branchTotal": 1,
+              "branchCoverage": 1,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 2,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "ifWins",
+              "start": 188,
+              "status": "partially-suppressed",
+              "covered": 3,
+              "total": 3,
+              "coverage": 1,
+              "branchCovered": 1,
+              "branchTotal": 1,
+              "branchCoverage": 1,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 2,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "nextWins",
+              "start": 367,
+              "status": "partially-suppressed",
+              "covered": 1,
+              "total": 1,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 2,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "sameDirective",
+              "start": 548,
+              "status": "partially-suppressed",
+              "covered": 3,
+              "total": 3,
+              "coverage": 1,
+              "branchCovered": 1,
+              "branchTotal": 1,
+              "branchCoverage": 1,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 2,
+              "coverageSuppressions": 2
+            }
+          ],
+          "problems": []
+        },
+        "typed": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 2,
+            "hints": [
+              {
+                "end": 119,
+                "functions": [
+                  120
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 80,
+                "wholeFunction": true
+              },
+              {
+                "end": 275,
+                "functions": [
+                  172
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 236,
+                "wholeFunction": false
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "typedFunction",
+              "start": 31,
+              "status": "measured",
+              "covered": 1,
+              "total": 1,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": "statement",
+              "crap": 1,
+              "complexity": 1,
+              "cognitiveComplexity": 0,
+              "coverageSuppressions": 0
+            },
+            {
+              "name": "function@120",
+              "start": 120,
+              "status": "suppressed",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 1
+            },
+            {
+              "name": "typedLogical",
+              "start": 172,
+              "status": "partially-suppressed",
+              "covered": 1,
+              "total": 1,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 1
+            }
+          ],
+          "problems": []
+        },
+        "lateFile": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 2,
+            "hints": [
+              {
+                "end": 80,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 41,
+                "wholeFunction": false
+              },
+              {
+                "end": 125,
+                "functions": [
+                  7
+                ],
+                "kind": "file",
+                "provider": "istanbul",
+                "start": 86,
+                "wholeFunction": true
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "ignoredLate",
+              "start": 7,
+              "status": "suppressed",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 1,
+              "cognitiveComplexity": 0,
+              "coverageSuppressions": 2
+            }
+          ],
+          "problems": []
+        },
+        "wrappers": {
+          "call": {
+            "complete": false,
+            "problems": [
+              "coverage ignore next has no instrumented target at 46"
+            ]
+          },
+          "member": {
+            "complete": false,
+            "problems": [
+              "coverage ignore next has no instrumented target at 46"
+            ]
+          },
+          "binary": {
+            "complete": false,
+            "problems": [
+              "coverage ignore next has no instrumented target at 46"
+            ]
+          }
+        },
+        "wrappedPrecedence": {
+          "conditional_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "conditional_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "logical_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "logical_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "function_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    127
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": true
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "measured",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": "statement",
+                "crap": 1,
+                "complexity": 1,
+                "cognitiveComplexity": 0,
+                "coverageSuppressions": 1
+              },
+              {
+                "name": "function@127",
+                "start": 127,
+                "status": "suppressed",
+                "covered": 0,
+                "total": 0,
+                "coverage": null,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 1
+              }
+            ],
+            "problems": []
+          },
+          "function_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "typed_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "typed_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          }
+        },
+        "statementChildren": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 8,
+            "hints": [
+              {
+                "end": 101,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 62,
+                "wholeFunction": false
+              },
+              {
+                "end": 142,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 103,
+                "wholeFunction": false
+              },
+              {
+                "end": 277,
+                "functions": [
+                  182
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 238,
+                "wholeFunction": false
+              },
+              {
+                "end": 318,
+                "functions": [
+                  182
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 279,
+                "wholeFunction": false
+              },
+              {
+                "end": 451,
+                "functions": [
+                  358
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 412,
+                "wholeFunction": false
+              },
+              {
+                "end": 492,
+                "functions": [
+                  358
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 453,
+                "wholeFunction": false
+              },
+              {
+                "end": 632,
+                "functions": [
+                  532,
+                  674
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 593,
+                "wholeFunction": true
+              },
+              {
+                "end": 673,
+                "functions": [
+                  532
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 634,
+                "wholeFunction": false
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "bothNext",
+              "start": 7,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "innerElse",
+              "start": 182,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "logical",
+              "start": 358,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "nestedFunction",
+              "start": 532,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 1,
+              "cognitiveComplexity": 0,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "function@674",
+              "start": 674,
+              "status": "suppressed",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 1
+            }
+          ],
+          "problems": []
+        }
+      },
+      "duplicateStatements": {
+        "exact": {
+          "complete": false,
+          "problems": [
+            "duplicate retained statement mapping"
+          ]
+        },
+        "adjusted-end": {
+          "complete": false,
+          "problems": [
+            "duplicate retained statement mapping"
+          ]
+        }
+      }
+    },
+    "vitest": {
+      "complete": true,
+      "coverageSuppressions": {
+        "count": 14,
+        "hints": [
+          {
+            "end": 94,
+            "functions": [
+              7,
+              118,
+              128
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 55,
+            "wholeFunction": true
+          },
+          {
+            "end": 242,
+            "functions": [
+              158
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 203,
+            "wholeFunction": false
+          },
+          {
+            "end": 352,
+            "functions": [
+              277
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 313,
+            "wholeFunction": false
+          },
+          {
+            "end": 449,
+            "functions": [
+              374,
+              468
+            ],
+            "kind": "if",
+            "provider": "istanbul",
+            "start": 412,
+            "wholeFunction": true
+          },
+          {
+            "end": 643,
+            "functions": [
+              564
+            ],
+            "kind": "else",
+            "provider": "istanbul",
+            "start": 604,
+            "wholeFunction": false
+          },
+          {
+            "end": 785,
+            "functions": [
+              698
+            ],
+            "kind": "else",
+            "provider": "istanbul",
+            "start": 746,
+            "wholeFunction": false
+          },
+          {
+            "end": 929,
+            "functions": [
+              833
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 890,
+            "wholeFunction": false
+          },
+          {
+            "end": 1043,
+            "functions": [
+              946
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1004,
+            "wholeFunction": false
+          },
+          {
+            "end": 1144,
+            "functions": [
+              1060,
+              1148
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1105,
+            "wholeFunction": true
+          },
+          {
+            "end": 1279,
+            "functions": [
+              1179
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1240,
+            "wholeFunction": false
+          },
+          {
+            "end": 1421,
+            "functions": [
+              1320
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1382,
+            "wholeFunction": false
+          },
+          {
+            "end": 1613,
+            "functions": [
+              1489
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1574,
+            "wholeFunction": false
+          },
+          {
+            "end": 1717,
+            "functions": [
+              1630
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1678,
+            "wholeFunction": false
+          },
+          {
+            "end": 1874,
+            "functions": [
+              1792
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1835,
+            "wholeFunction": false
+          }
+        ]
+      },
+      "functions": [
+        {
+          "name": "partiallySuppressed",
+          "start": 7,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "arrow@118",
+          "start": 118,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "arrow@128",
+          "start": 128,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredStatement",
+          "start": 158,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "allStatementsIgnored",
+          "start": 277,
+          "status": "partially-suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredIf",
+          "start": 374,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "hidden",
+          "start": 468,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredElse",
+          "start": 564,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredImplicitElse",
+          "start": 698,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 3,
+          "coverage": 0.6666666666666666,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredTernary",
+          "start": 833,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredLogical",
+          "start": 946,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredExpressionWithFunction",
+          "start": 1060,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "arrow@1148",
+          "start": 1148,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredCallOutcome",
+          "start": 1179,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 3,
+          "branchCoverage": 0.3333333333333333,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 3,
+          "cognitiveComplexity": 3,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredClassOutcome",
+          "start": 1320,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "function@1440",
+          "start": 1440,
+          "status": "measured",
+          "covered": 0,
+          "total": 1,
+          "coverage": 0,
+          "branchCovered": 0,
+          "branchTotal": 2,
+          "branchCoverage": 0,
+          "coverageBasis": "branch",
+          "crap": 6,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 0
+        },
+        {
+          "name": "sharedBranchStart",
+          "start": 1489,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 3,
+          "branchCoverage": 0.3333333333333333,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 3,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "retainedInitializer",
+          "start": 1630,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 2,
+          "branchCoverage": 0.5,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "retainedBranch",
+          "start": 1792,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 2,
+          "branchCoverage": 0.5,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        }
+      ],
+      "problems": [],
+      "conciseArrows": {
+        "complete": false,
+        "coverageSuppressions": {
+          "count": 2,
+          "hints": [
+            {
+              "end": 90,
+              "functions": [
+                32
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 51,
+              "wholeFunction": false
+            },
+            {
+              "end": 191,
+              "functions": [
+                133
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 152,
+              "wholeFunction": false
+            }
+          ]
+        },
+        "functions": [
+          {
+            "name": "arrow@32",
+            "start": 32,
+            "status": "unknown",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@133",
+            "start": 133,
+            "status": "unknown",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          }
+        ],
+        "problems": [
+          "coverage retains an ignored branch",
+          "coverage retains an ignored branch"
+        ]
+      },
+      "functionOutcomes": {
+        "complete": false,
+        "coverageSuppressions": {
+          "count": 3,
+          "hints": [
+            {
+              "end": 111,
+              "functions": [
+                7,
+                113
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 72,
+              "wholeFunction": true
+            },
+            {
+              "end": 245,
+              "functions": [
+                140,
+                247
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 206,
+              "wholeFunction": true
+            },
+            {
+              "end": 369,
+              "functions": [
+                264,
+                380
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 330,
+              "wholeFunction": true
+            }
+          ]
+        },
+        "functions": [
+          {
+            "name": "ignoredFunctionOutcome",
+            "start": 7,
+            "status": "unknown",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@113",
+            "start": 113,
+            "status": "unknown",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@123",
+            "start": 123,
+            "status": "unknown",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 0
+          },
+          {
+            "name": "ignoredLogicalFunction",
+            "start": 140,
+            "status": "unknown",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@247",
+            "start": 247,
+            "status": "unknown",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "ignoredGroupedFunction",
+            "start": 264,
+            "status": "unknown",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 3,
+            "cognitiveComplexity": 2,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@380",
+            "start": 380,
+            "status": "unknown",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          }
+        ],
+        "problems": [
+          "coverage retains an ignored statement at 117"
+        ]
+      },
+      "unsupportedTargets": {
+        "complete": false,
+        "problems": [
+          "coverage ignore next has no instrumented target at 58",
+          "coverage ignore next has no instrumented target at 182",
+          "coverage ignore next has no instrumented target at 299",
+          "coverage ignore next has no instrumented target at 430",
+          "coverage ignore next has no instrumented target at 542",
+          "coverage ignore next has no instrumented target at 670",
+          "coverage is not mapped to a default-arg outcome: 537..589",
+          "missing retained branch at 537",
+          "statement escapes owning scope: 586..589"
+        ]
+      },
+      "classTargets": {
+        "complete": false,
+        "problems": [
+          "coverage ignore next has no instrumented target at 59"
+        ]
+      },
+      "privateMethods": {
+        "complete": false,
+        "problems": [
+          "coverage ignore next has no instrumented target at 36"
+        ]
+      },
+      "boundaries": {
+        "precedence": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 8,
+            "hints": [
+              {
+                "end": 99,
+                "functions": [
+                  7
+                ],
+                "kind": "if",
+                "provider": "istanbul",
+                "start": 62,
+                "wholeFunction": false
+              },
+              {
+                "end": 141,
+                "functions": [
+                  7
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 102,
+                "wholeFunction": false
+              },
+              {
+                "end": 280,
+                "functions": [
+                  188
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 241,
+                "wholeFunction": false
+              },
+              {
+                "end": 320,
+                "functions": [
+                  188
+                ],
+                "kind": "if",
+                "provider": "istanbul",
+                "start": 283,
+                "wholeFunction": false
+              },
+              {
+                "end": 459,
+                "functions": [
+                  367
+                ],
+                "kind": "if",
+                "provider": "istanbul",
+                "start": 422,
+                "wholeFunction": false
+              },
+              {
+                "end": 501,
+                "functions": [
+                  367
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 462,
+                "wholeFunction": false
+              },
+              {
+                "end": 647,
+                "functions": [
+                  548
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 608,
+                "wholeFunction": false
+              },
+              {
+                "end": 689,
+                "functions": [
+                  548
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 650,
+                "wholeFunction": false
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "elseWins",
+              "start": 7,
+              "status": "partially-suppressed",
+              "covered": 3,
+              "total": 3,
+              "coverage": 1,
+              "branchCovered": 1,
+              "branchTotal": 1,
+              "branchCoverage": 1,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 2,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "ifWins",
+              "start": 188,
+              "status": "partially-suppressed",
+              "covered": 3,
+              "total": 3,
+              "coverage": 1,
+              "branchCovered": 1,
+              "branchTotal": 1,
+              "branchCoverage": 1,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 2,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "nextWins",
+              "start": 367,
+              "status": "partially-suppressed",
+              "covered": 1,
+              "total": 1,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 2,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "sameDirective",
+              "start": 548,
+              "status": "partially-suppressed",
+              "covered": 3,
+              "total": 3,
+              "coverage": 1,
+              "branchCovered": 1,
+              "branchTotal": 1,
+              "branchCoverage": 1,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 2,
+              "coverageSuppressions": 2
+            }
+          ],
+          "problems": []
+        },
+        "typed": {
+          "complete": false,
+          "coverageSuppressions": {
+            "count": 2,
+            "hints": [
+              {
+                "end": 119,
+                "functions": [
+                  120
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 80,
+                "wholeFunction": true
+              },
+              {
+                "end": 275,
+                "functions": [
+                  172
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 236,
+                "wholeFunction": false
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "typedFunction",
+              "start": 31,
+              "status": "unknown",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 1,
+              "cognitiveComplexity": 0,
+              "coverageSuppressions": 0
+            },
+            {
+              "name": "function@120",
+              "start": 120,
+              "status": "unknown",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 1
+            },
+            {
+              "name": "typedLogical",
+              "start": 172,
+              "status": "unknown",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 1
+            }
+          ],
+          "problems": [
+            "coverage retains an ignored statement at 133"
+          ]
+        },
+        "lateFile": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 2,
+            "hints": [
+              {
+                "end": 80,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 41,
+                "wholeFunction": false
+              },
+              {
+                "end": 125,
+                "functions": [
+                  7
+                ],
+                "kind": "file",
+                "provider": "istanbul",
+                "start": 86,
+                "wholeFunction": true
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "ignoredLate",
+              "start": 7,
+              "status": "suppressed",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 1,
+              "cognitiveComplexity": 0,
+              "coverageSuppressions": 2
+            }
+          ],
+          "problems": []
+        },
+        "wrappers": {
+          "call": {
+            "complete": false,
+            "problems": [
+              "coverage ignore next has no instrumented target at 46"
+            ]
+          },
+          "member": {
+            "complete": false,
+            "problems": [
+              "coverage ignore next has no instrumented target at 46"
+            ]
+          },
+          "binary": {
+            "complete": false,
+            "problems": [
+              "coverage ignore next has no instrumented target at 46"
+            ]
+          }
+        },
+        "wrappedPrecedence": {
+          "conditional_next": {
+            "complete": false,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "unknown",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": [
+              "coverage retains an ignored branch"
+            ]
+          },
+          "conditional_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "logical_next": {
+            "complete": false,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "unknown",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": [
+              "coverage retains an ignored branch"
+            ]
+          },
+          "logical_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "function_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    127
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": true
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "measured",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": "statement",
+                "crap": 1,
+                "complexity": 1,
+                "cognitiveComplexity": 0,
+                "coverageSuppressions": 1
+              },
+              {
+                "name": "function@127",
+                "start": 127,
+                "status": "suppressed",
+                "covered": 0,
+                "total": 0,
+                "coverage": null,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 1
+              }
+            ],
+            "problems": []
+          },
+          "function_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "typed_next": {
+            "complete": false,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "unknown",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": [
+              "coverage is not mapped to a cond-expr branch: 127..151"
+            ]
+          },
+          "typed_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87",
+              "coverage is not mapped to a cond-expr branch: 127..151",
+              "missing retained branch at 127"
+            ]
+          }
+        },
+        "statementChildren": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 8,
+            "hints": [
+              {
+                "end": 101,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 62,
+                "wholeFunction": false
+              },
+              {
+                "end": 142,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 103,
+                "wholeFunction": false
+              },
+              {
+                "end": 277,
+                "functions": [
+                  182
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 238,
+                "wholeFunction": false
+              },
+              {
+                "end": 318,
+                "functions": [
+                  182
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 279,
+                "wholeFunction": false
+              },
+              {
+                "end": 451,
+                "functions": [
+                  358
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 412,
+                "wholeFunction": false
+              },
+              {
+                "end": 492,
+                "functions": [
+                  358
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 453,
+                "wholeFunction": false
+              },
+              {
+                "end": 632,
+                "functions": [
+                  532,
+                  674
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 593,
+                "wholeFunction": true
+              },
+              {
+                "end": 673,
+                "functions": [
+                  532
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 634,
+                "wholeFunction": false
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "bothNext",
+              "start": 7,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "innerElse",
+              "start": 182,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "logical",
+              "start": 358,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "nestedFunction",
+              "start": 532,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 1,
+              "cognitiveComplexity": 0,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "function@674",
+              "start": 674,
+              "status": "suppressed",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 1
+            }
+          ],
+          "problems": []
+        }
+      },
+      "duplicateStatements": {
+        "exact": {
+          "complete": false,
+          "problems": [
+            "duplicate retained statement mapping"
+          ]
+        },
+        "adjusted-end": {
+          "complete": false,
+          "problems": [
+            "duplicate retained statement mapping"
+          ]
+        }
+      }
+    },
+    "jest-expo": {
+      "complete": true,
+      "coverageSuppressions": {
+        "count": 14,
+        "hints": [
+          {
+            "end": 94,
+            "functions": [
+              7,
+              118,
+              128
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 55,
+            "wholeFunction": true
+          },
+          {
+            "end": 242,
+            "functions": [
+              158
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 203,
+            "wholeFunction": false
+          },
+          {
+            "end": 352,
+            "functions": [
+              277
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 313,
+            "wholeFunction": false
+          },
+          {
+            "end": 449,
+            "functions": [
+              374,
+              468
+            ],
+            "kind": "if",
+            "provider": "istanbul",
+            "start": 412,
+            "wholeFunction": true
+          },
+          {
+            "end": 643,
+            "functions": [
+              564
+            ],
+            "kind": "else",
+            "provider": "istanbul",
+            "start": 604,
+            "wholeFunction": false
+          },
+          {
+            "end": 785,
+            "functions": [
+              698
+            ],
+            "kind": "else",
+            "provider": "istanbul",
+            "start": 746,
+            "wholeFunction": false
+          },
+          {
+            "end": 929,
+            "functions": [
+              833
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 890,
+            "wholeFunction": false
+          },
+          {
+            "end": 1043,
+            "functions": [
+              946
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1004,
+            "wholeFunction": false
+          },
+          {
+            "end": 1144,
+            "functions": [
+              1060,
+              1148
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1105,
+            "wholeFunction": true
+          },
+          {
+            "end": 1279,
+            "functions": [
+              1179
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1240,
+            "wholeFunction": false
+          },
+          {
+            "end": 1421,
+            "functions": [
+              1320
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1382,
+            "wholeFunction": false
+          },
+          {
+            "end": 1613,
+            "functions": [
+              1489
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1574,
+            "wholeFunction": false
+          },
+          {
+            "end": 1717,
+            "functions": [
+              1630
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1678,
+            "wholeFunction": false
+          },
+          {
+            "end": 1874,
+            "functions": [
+              1792
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1835,
+            "wholeFunction": false
+          }
+        ]
+      },
+      "functions": [
+        {
+          "name": "partiallySuppressed",
+          "start": 7,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "arrow@118",
+          "start": 118,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "arrow@128",
+          "start": 128,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredStatement",
+          "start": 158,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "allStatementsIgnored",
+          "start": 277,
+          "status": "partially-suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredIf",
+          "start": 374,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "hidden",
+          "start": 468,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredElse",
+          "start": 564,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredImplicitElse",
+          "start": 698,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 3,
+          "coverage": 0.6666666666666666,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredTernary",
+          "start": 833,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredLogical",
+          "start": 946,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredExpressionWithFunction",
+          "start": 1060,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "arrow@1148",
+          "start": 1148,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredCallOutcome",
+          "start": 1179,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 3,
+          "branchCoverage": 0.3333333333333333,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 3,
+          "cognitiveComplexity": 3,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredClassOutcome",
+          "start": 1320,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "function@1440",
+          "start": 1440,
+          "status": "measured",
+          "covered": 0,
+          "total": 1,
+          "coverage": 0,
+          "branchCovered": 0,
+          "branchTotal": 2,
+          "branchCoverage": 0,
+          "coverageBasis": "branch",
+          "crap": 6,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 0
+        },
+        {
+          "name": "sharedBranchStart",
+          "start": 1489,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 3,
+          "branchCoverage": 0.3333333333333333,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 3,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "retainedInitializer",
+          "start": 1630,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 2,
+          "branchCoverage": 0.5,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "retainedBranch",
+          "start": 1792,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 2,
+          "branchCoverage": 0.5,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        }
+      ],
+      "problems": [],
+      "conciseArrows": {
+        "complete": true,
+        "coverageSuppressions": {
+          "count": 2,
+          "hints": [
+            {
+              "end": 90,
+              "functions": [
+                32
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 51,
+              "wholeFunction": false
+            },
+            {
+              "end": 191,
+              "functions": [
+                133
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 152,
+              "wholeFunction": false
+            }
+          ]
+        },
+        "functions": [
+          {
+            "name": "arrow@32",
+            "start": 32,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@133",
+            "start": 133,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          }
+        ],
+        "problems": []
+      },
+      "functionOutcomes": {
+        "complete": true,
+        "coverageSuppressions": {
+          "count": 3,
+          "hints": [
+            {
+              "end": 111,
+              "functions": [
+                7,
+                113
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 72,
+              "wholeFunction": true
+            },
+            {
+              "end": 245,
+              "functions": [
+                140,
+                247
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 206,
+              "wholeFunction": true
+            },
+            {
+              "end": 369,
+              "functions": [
+                264,
+                380
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 330,
+              "wholeFunction": true
+            }
+          ]
+        },
+        "functions": [
+          {
+            "name": "ignoredFunctionOutcome",
+            "start": 7,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@113",
+            "start": 113,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@123",
+            "start": 123,
+            "status": "measured",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": "statement",
+            "crap": 1,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 0
+          },
+          {
+            "name": "ignoredLogicalFunction",
+            "start": 140,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@247",
+            "start": 247,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "ignoredGroupedFunction",
+            "start": 264,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 3,
+            "cognitiveComplexity": 2,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@380",
+            "start": 380,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          }
+        ],
+        "problems": []
+      },
+      "unsupportedTargets": {
+        "complete": false,
+        "problems": [
+          "coverage ignore next has no instrumented target at 58",
+          "coverage ignore next has no instrumented target at 182",
+          "coverage ignore next has no instrumented target at 299",
+          "coverage ignore next has no instrumented target at 430",
+          "coverage ignore next has no instrumented target at 542",
+          "coverage ignore next has no instrumented target at 670"
+        ]
+      },
+      "classTargets": {
+        "complete": false,
+        "problems": [
+          "coverage ignore next has no instrumented target at 59"
+        ]
+      },
+      "privateMethods": {
+        "complete": false,
+        "problems": [
+          "coverage ignore next has no instrumented target at 36"
+        ]
+      },
+      "boundaries": {
+        "precedence": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 8,
+            "hints": [
+              {
+                "end": 99,
+                "functions": [
+                  7
+                ],
+                "kind": "if",
+                "provider": "istanbul",
+                "start": 62,
+                "wholeFunction": false
+              },
+              {
+                "end": 141,
+                "functions": [
+                  7
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 102,
+                "wholeFunction": false
+              },
+              {
+                "end": 280,
+                "functions": [
+                  188
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 241,
+                "wholeFunction": false
+              },
+              {
+                "end": 320,
+                "functions": [
+                  188
+                ],
+                "kind": "if",
+                "provider": "istanbul",
+                "start": 283,
+                "wholeFunction": false
+              },
+              {
+                "end": 459,
+                "functions": [
+                  367
+                ],
+                "kind": "if",
+                "provider": "istanbul",
+                "start": 422,
+                "wholeFunction": false
+              },
+              {
+                "end": 501,
+                "functions": [
+                  367
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 462,
+                "wholeFunction": false
+              },
+              {
+                "end": 647,
+                "functions": [
+                  548
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 608,
+                "wholeFunction": false
+              },
+              {
+                "end": 689,
+                "functions": [
+                  548
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 650,
+                "wholeFunction": false
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "elseWins",
+              "start": 7,
+              "status": "partially-suppressed",
+              "covered": 3,
+              "total": 3,
+              "coverage": 1,
+              "branchCovered": 1,
+              "branchTotal": 1,
+              "branchCoverage": 1,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 2,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "ifWins",
+              "start": 188,
+              "status": "partially-suppressed",
+              "covered": 3,
+              "total": 3,
+              "coverage": 1,
+              "branchCovered": 1,
+              "branchTotal": 1,
+              "branchCoverage": 1,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 2,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "nextWins",
+              "start": 367,
+              "status": "partially-suppressed",
+              "covered": 1,
+              "total": 1,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 2,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "sameDirective",
+              "start": 548,
+              "status": "partially-suppressed",
+              "covered": 3,
+              "total": 3,
+              "coverage": 1,
+              "branchCovered": 1,
+              "branchTotal": 1,
+              "branchCoverage": 1,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 2,
+              "coverageSuppressions": 2
+            }
+          ],
+          "problems": []
+        },
+        "typed": {
+          "complete": false,
+          "coverageSuppressions": {
+            "count": 2,
+            "hints": [
+              {
+                "end": 119,
+                "functions": [
+                  120
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 80,
+                "wholeFunction": true
+              },
+              {
+                "end": 275,
+                "functions": [
+                  172
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 236,
+                "wholeFunction": false
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "typedFunction",
+              "start": 31,
+              "status": "unknown",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 1,
+              "cognitiveComplexity": 0,
+              "coverageSuppressions": 0
+            },
+            {
+              "name": "function@120",
+              "start": 120,
+              "status": "unknown",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 1
+            },
+            {
+              "name": "typedLogical",
+              "start": 172,
+              "status": "unknown",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 1
+            }
+          ],
+          "problems": [
+            "coverage retains an ignored statement at 133"
+          ]
+        },
+        "lateFile": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 2,
+            "hints": [
+              {
+                "end": 80,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 41,
+                "wholeFunction": false
+              },
+              {
+                "end": 125,
+                "functions": [
+                  7
+                ],
+                "kind": "file",
+                "provider": "istanbul",
+                "start": 86,
+                "wholeFunction": true
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "ignoredLate",
+              "start": 7,
+              "status": "suppressed",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 1,
+              "cognitiveComplexity": 0,
+              "coverageSuppressions": 2
+            }
+          ],
+          "problems": []
+        },
+        "wrappers": {
+          "call": {
+            "complete": false,
+            "problems": [
+              "coverage ignore next has no instrumented target at 46"
+            ]
+          },
+          "member": {
+            "complete": false,
+            "problems": [
+              "coverage ignore next has no instrumented target at 46"
+            ]
+          },
+          "binary": {
+            "complete": false,
+            "problems": [
+              "coverage ignore next has no instrumented target at 46"
+            ]
+          }
+        },
+        "wrappedPrecedence": {
+          "conditional_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "conditional_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "logical_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "logical_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "function_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    127
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": true
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "measured",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": "statement",
+                "crap": 1,
+                "complexity": 1,
+                "cognitiveComplexity": 0,
+                "coverageSuppressions": 1
+              },
+              {
+                "name": "function@127",
+                "start": 127,
+                "status": "suppressed",
+                "covered": 0,
+                "total": 0,
+                "coverage": null,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 1
+              }
+            ],
+            "problems": []
+          },
+          "function_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "typed_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "typed_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          }
+        },
+        "statementChildren": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 8,
+            "hints": [
+              {
+                "end": 101,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 62,
+                "wholeFunction": false
+              },
+              {
+                "end": 142,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 103,
+                "wholeFunction": false
+              },
+              {
+                "end": 277,
+                "functions": [
+                  182
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 238,
+                "wholeFunction": false
+              },
+              {
+                "end": 318,
+                "functions": [
+                  182
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 279,
+                "wholeFunction": false
+              },
+              {
+                "end": 451,
+                "functions": [
+                  358
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 412,
+                "wholeFunction": false
+              },
+              {
+                "end": 492,
+                "functions": [
+                  358
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 453,
+                "wholeFunction": false
+              },
+              {
+                "end": 632,
+                "functions": [
+                  532,
+                  674
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 593,
+                "wholeFunction": true
+              },
+              {
+                "end": 673,
+                "functions": [
+                  532
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 634,
+                "wholeFunction": false
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "bothNext",
+              "start": 7,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "innerElse",
+              "start": 182,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "logical",
+              "start": 358,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "nestedFunction",
+              "start": 532,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 1,
+              "cognitiveComplexity": 0,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "function@674",
+              "start": 674,
+              "status": "suppressed",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 1
+            }
+          ],
+          "problems": []
+        }
+      },
+      "duplicateStatements": {
+        "exact": {
+          "complete": false,
+          "problems": [
+            "duplicate retained statement mapping"
+          ]
+        },
+        "adjusted-end": {
+          "complete": false,
+          "problems": [
+            "duplicate retained statement mapping"
+          ]
+        }
+      }
+    },
+    "jest": {
+      "complete": true,
+      "coverageSuppressions": {
+        "count": 14,
+        "hints": [
+          {
+            "end": 94,
+            "functions": [
+              7,
+              118,
+              128
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 55,
+            "wholeFunction": true
+          },
+          {
+            "end": 242,
+            "functions": [
+              158
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 203,
+            "wholeFunction": false
+          },
+          {
+            "end": 352,
+            "functions": [
+              277
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 313,
+            "wholeFunction": false
+          },
+          {
+            "end": 449,
+            "functions": [
+              374,
+              468
+            ],
+            "kind": "if",
+            "provider": "istanbul",
+            "start": 412,
+            "wholeFunction": true
+          },
+          {
+            "end": 643,
+            "functions": [
+              564
+            ],
+            "kind": "else",
+            "provider": "istanbul",
+            "start": 604,
+            "wholeFunction": false
+          },
+          {
+            "end": 785,
+            "functions": [
+              698
+            ],
+            "kind": "else",
+            "provider": "istanbul",
+            "start": 746,
+            "wholeFunction": false
+          },
+          {
+            "end": 929,
+            "functions": [
+              833
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 890,
+            "wholeFunction": false
+          },
+          {
+            "end": 1043,
+            "functions": [
+              946
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1004,
+            "wholeFunction": false
+          },
+          {
+            "end": 1144,
+            "functions": [
+              1060,
+              1148
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1105,
+            "wholeFunction": true
+          },
+          {
+            "end": 1279,
+            "functions": [
+              1179
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1240,
+            "wholeFunction": false
+          },
+          {
+            "end": 1421,
+            "functions": [
+              1320
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1382,
+            "wholeFunction": false
+          },
+          {
+            "end": 1613,
+            "functions": [
+              1489
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1574,
+            "wholeFunction": false
+          },
+          {
+            "end": 1717,
+            "functions": [
+              1630
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1678,
+            "wholeFunction": false
+          },
+          {
+            "end": 1874,
+            "functions": [
+              1792
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 1835,
+            "wholeFunction": false
+          }
+        ]
+      },
+      "functions": [
+        {
+          "name": "partiallySuppressed",
+          "start": 7,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "arrow@118",
+          "start": 118,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "arrow@128",
+          "start": 128,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredStatement",
+          "start": 158,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "allStatementsIgnored",
+          "start": 277,
+          "status": "partially-suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredIf",
+          "start": 374,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "hidden",
+          "start": 468,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredElse",
+          "start": 564,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredImplicitElse",
+          "start": 698,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 3,
+          "coverage": 0.6666666666666666,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredTernary",
+          "start": 833,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredLogical",
+          "start": 946,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredExpressionWithFunction",
+          "start": 1060,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "arrow@1148",
+          "start": 1148,
+          "status": "suppressed",
+          "covered": 0,
+          "total": 0,
+          "coverage": null,
+          "branchCovered": 0,
+          "branchTotal": 0,
+          "branchCoverage": null,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 1,
+          "cognitiveComplexity": 0,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredCallOutcome",
+          "start": 1179,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 3,
+          "branchCoverage": 0.3333333333333333,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 3,
+          "cognitiveComplexity": 3,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "ignoredClassOutcome",
+          "start": 1320,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "function@1440",
+          "start": 1440,
+          "status": "measured",
+          "covered": 0,
+          "total": 1,
+          "coverage": 0,
+          "branchCovered": 0,
+          "branchTotal": 2,
+          "branchCoverage": 0,
+          "coverageBasis": "branch",
+          "crap": 6,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 0
+        },
+        {
+          "name": "sharedBranchStart",
+          "start": 1489,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 3,
+          "branchCoverage": 0.3333333333333333,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 3,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "retainedInitializer",
+          "start": 1630,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 2,
+          "branchCoverage": 0.5,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        },
+        {
+          "name": "retainedBranch",
+          "start": 1792,
+          "status": "partially-suppressed",
+          "covered": 1,
+          "total": 1,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 2,
+          "branchCoverage": 0.5,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 1,
+          "coverageSuppressions": 1
+        }
+      ],
+      "problems": [],
+      "conciseArrows": {
+        "complete": true,
+        "coverageSuppressions": {
+          "count": 2,
+          "hints": [
+            {
+              "end": 90,
+              "functions": [
+                32
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 51,
+              "wholeFunction": false
+            },
+            {
+              "end": 191,
+              "functions": [
+                133
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 152,
+              "wholeFunction": false
+            }
+          ]
+        },
+        "functions": [
+          {
+            "name": "arrow@32",
+            "start": 32,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@133",
+            "start": 133,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          }
+        ],
+        "problems": []
+      },
+      "functionOutcomes": {
+        "complete": true,
+        "coverageSuppressions": {
+          "count": 3,
+          "hints": [
+            {
+              "end": 111,
+              "functions": [
+                7,
+                113
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 72,
+              "wholeFunction": true
+            },
+            {
+              "end": 245,
+              "functions": [
+                140,
+                247
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 206,
+              "wholeFunction": true
+            },
+            {
+              "end": 369,
+              "functions": [
+                264,
+                380
+              ],
+              "kind": "next",
+              "provider": "istanbul",
+              "start": 330,
+              "wholeFunction": true
+            }
+          ]
+        },
+        "functions": [
+          {
+            "name": "ignoredFunctionOutcome",
+            "start": 7,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@113",
+            "start": 113,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@123",
+            "start": 123,
+            "status": "measured",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": "statement",
+            "crap": 1,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 0
+          },
+          {
+            "name": "ignoredLogicalFunction",
+            "start": 140,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 2,
+            "cognitiveComplexity": 1,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@247",
+            "start": 247,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "ignoredGroupedFunction",
+            "start": 264,
+            "status": "partially-suppressed",
+            "covered": 1,
+            "total": 1,
+            "coverage": 1,
+            "branchCovered": 1,
+            "branchTotal": 1,
+            "branchCoverage": 1,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 3,
+            "cognitiveComplexity": 2,
+            "coverageSuppressions": 1
+          },
+          {
+            "name": "arrow@380",
+            "start": 380,
+            "status": "suppressed",
+            "covered": 0,
+            "total": 0,
+            "coverage": null,
+            "branchCovered": 0,
+            "branchTotal": 0,
+            "branchCoverage": null,
+            "coverageBasis": null,
+            "crap": null,
+            "complexity": 1,
+            "cognitiveComplexity": 0,
+            "coverageSuppressions": 1
+          }
+        ],
+        "problems": []
+      },
+      "unsupportedTargets": {
+        "complete": false,
+        "problems": [
+          "coverage ignore next has no instrumented target at 58",
+          "coverage ignore next has no instrumented target at 182",
+          "coverage ignore next has no instrumented target at 299",
+          "coverage ignore next has no instrumented target at 430",
+          "coverage ignore next has no instrumented target at 542",
+          "coverage ignore next has no instrumented target at 670"
+        ]
+      },
+      "classTargets": {
+        "complete": false,
+        "problems": [
+          "coverage ignore next has no instrumented target at 59"
+        ]
+      },
+      "privateMethods": {
+        "complete": false,
+        "problems": [
+          "coverage ignore next has no instrumented target at 36"
+        ]
+      },
+      "boundaries": {
+        "precedence": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 8,
+            "hints": [
+              {
+                "end": 99,
+                "functions": [
+                  7
+                ],
+                "kind": "if",
+                "provider": "istanbul",
+                "start": 62,
+                "wholeFunction": false
+              },
+              {
+                "end": 141,
+                "functions": [
+                  7
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 102,
+                "wholeFunction": false
+              },
+              {
+                "end": 280,
+                "functions": [
+                  188
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 241,
+                "wholeFunction": false
+              },
+              {
+                "end": 320,
+                "functions": [
+                  188
+                ],
+                "kind": "if",
+                "provider": "istanbul",
+                "start": 283,
+                "wholeFunction": false
+              },
+              {
+                "end": 459,
+                "functions": [
+                  367
+                ],
+                "kind": "if",
+                "provider": "istanbul",
+                "start": 422,
+                "wholeFunction": false
+              },
+              {
+                "end": 501,
+                "functions": [
+                  367
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 462,
+                "wholeFunction": false
+              },
+              {
+                "end": 647,
+                "functions": [
+                  548
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 608,
+                "wholeFunction": false
+              },
+              {
+                "end": 689,
+                "functions": [
+                  548
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 650,
+                "wholeFunction": false
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "elseWins",
+              "start": 7,
+              "status": "partially-suppressed",
+              "covered": 3,
+              "total": 3,
+              "coverage": 1,
+              "branchCovered": 1,
+              "branchTotal": 1,
+              "branchCoverage": 1,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 2,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "ifWins",
+              "start": 188,
+              "status": "partially-suppressed",
+              "covered": 3,
+              "total": 3,
+              "coverage": 1,
+              "branchCovered": 1,
+              "branchTotal": 1,
+              "branchCoverage": 1,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 2,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "nextWins",
+              "start": 367,
+              "status": "partially-suppressed",
+              "covered": 1,
+              "total": 1,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 2,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "sameDirective",
+              "start": 548,
+              "status": "partially-suppressed",
+              "covered": 3,
+              "total": 3,
+              "coverage": 1,
+              "branchCovered": 1,
+              "branchTotal": 1,
+              "branchCoverage": 1,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 2,
+              "coverageSuppressions": 2
+            }
+          ],
+          "problems": []
+        },
+        "typed": {
+          "complete": false,
+          "coverageSuppressions": {
+            "count": 2,
+            "hints": [
+              {
+                "end": 119,
+                "functions": [
+                  120
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 80,
+                "wholeFunction": true
+              },
+              {
+                "end": 275,
+                "functions": [
+                  172
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 236,
+                "wholeFunction": false
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "typedFunction",
+              "start": 31,
+              "status": "unknown",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 1,
+              "cognitiveComplexity": 0,
+              "coverageSuppressions": 0
+            },
+            {
+              "name": "function@120",
+              "start": 120,
+              "status": "unknown",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 1
+            },
+            {
+              "name": "typedLogical",
+              "start": 172,
+              "status": "unknown",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 1
+            }
+          ],
+          "problems": [
+            "coverage retains an ignored statement at 133"
+          ]
+        },
+        "lateFile": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 2,
+            "hints": [
+              {
+                "end": 80,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 41,
+                "wholeFunction": false
+              },
+              {
+                "end": 125,
+                "functions": [
+                  7
+                ],
+                "kind": "file",
+                "provider": "istanbul",
+                "start": 86,
+                "wholeFunction": true
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "ignoredLate",
+              "start": 7,
+              "status": "suppressed",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 1,
+              "cognitiveComplexity": 0,
+              "coverageSuppressions": 2
+            }
+          ],
+          "problems": []
+        },
+        "wrappers": {
+          "call": {
+            "complete": false,
+            "problems": [
+              "coverage ignore next has no instrumented target at 46"
+            ]
+          },
+          "member": {
+            "complete": false,
+            "problems": [
+              "coverage ignore next has no instrumented target at 46"
+            ]
+          },
+          "binary": {
+            "complete": false,
+            "problems": [
+              "coverage ignore next has no instrumented target at 46"
+            ]
+          }
+        },
+        "wrappedPrecedence": {
+          "conditional_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "conditional_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "logical_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "logical_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "function_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    127
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": true
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "measured",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": "statement",
+                "crap": 1,
+                "complexity": 1,
+                "cognitiveComplexity": 0,
+                "coverageSuppressions": 1
+              },
+              {
+                "name": "function@127",
+                "start": 127,
+                "status": "suppressed",
+                "covered": 0,
+                "total": 0,
+                "coverage": null,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 1
+              }
+            ],
+            "problems": []
+          },
+          "function_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          },
+          "typed_next": {
+            "complete": true,
+            "coverageSuppressions": {
+              "count": 2,
+              "hints": [
+                {
+                  "end": 85,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "else",
+                  "provider": "istanbul",
+                  "start": 46,
+                  "wholeFunction": false
+                },
+                {
+                  "end": 126,
+                  "functions": [
+                    7
+                  ],
+                  "kind": "next",
+                  "provider": "istanbul",
+                  "start": 87,
+                  "wholeFunction": false
+                }
+              ]
+            },
+            "functions": [
+              {
+                "name": "run",
+                "start": 7,
+                "status": "partially-suppressed",
+                "covered": 1,
+                "total": 1,
+                "coverage": 1,
+                "branchCovered": 0,
+                "branchTotal": 0,
+                "branchCoverage": null,
+                "coverageBasis": null,
+                "crap": null,
+                "complexity": 2,
+                "cognitiveComplexity": 1,
+                "coverageSuppressions": 2
+              }
+            ],
+            "problems": []
+          },
+          "typed_else": {
+            "complete": false,
+            "problems": [
+              "coverage ignore else has no matching if statement at 87"
+            ]
+          }
+        },
+        "statementChildren": {
+          "complete": true,
+          "coverageSuppressions": {
+            "count": 8,
+            "hints": [
+              {
+                "end": 101,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 62,
+                "wholeFunction": false
+              },
+              {
+                "end": 142,
+                "functions": [
+                  7
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 103,
+                "wholeFunction": false
+              },
+              {
+                "end": 277,
+                "functions": [
+                  182
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 238,
+                "wholeFunction": false
+              },
+              {
+                "end": 318,
+                "functions": [
+                  182
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 279,
+                "wholeFunction": false
+              },
+              {
+                "end": 451,
+                "functions": [
+                  358
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 412,
+                "wholeFunction": false
+              },
+              {
+                "end": 492,
+                "functions": [
+                  358
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 453,
+                "wholeFunction": false
+              },
+              {
+                "end": 632,
+                "functions": [
+                  532,
+                  674
+                ],
+                "kind": "next",
+                "provider": "istanbul",
+                "start": 593,
+                "wholeFunction": true
+              },
+              {
+                "end": 673,
+                "functions": [
+                  532
+                ],
+                "kind": "else",
+                "provider": "istanbul",
+                "start": 634,
+                "wholeFunction": false
+              }
+            ]
+          },
+          "functions": [
+            {
+              "name": "bothNext",
+              "start": 7,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "innerElse",
+              "start": 182,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "logical",
+              "start": 358,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "nestedFunction",
+              "start": 532,
+              "status": "partially-suppressed",
+              "covered": 2,
+              "total": 2,
+              "coverage": 1,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 1,
+              "cognitiveComplexity": 0,
+              "coverageSuppressions": 2
+            },
+            {
+              "name": "function@674",
+              "start": 674,
+              "status": "suppressed",
+              "covered": 0,
+              "total": 0,
+              "coverage": null,
+              "branchCovered": 0,
+              "branchTotal": 0,
+              "branchCoverage": null,
+              "coverageBasis": null,
+              "crap": null,
+              "complexity": 2,
+              "cognitiveComplexity": 1,
+              "coverageSuppressions": 1
+            }
+          ],
+          "problems": []
+        }
+      },
+      "duplicateStatements": {
+        "exact": {
+          "complete": false,
+          "problems": [
+            "duplicate retained statement mapping"
+          ]
+        },
+        "adjusted-end": {
+          "complete": false,
+          "problems": [
+            "duplicate retained statement mapping"
+          ]
+        }
+      }
+    }
+  },
+  "mutation": {
+    "complete": true,
+    "function": {
+      "branchCoverage": null,
+      "branchCovered": 0,
+      "branchTotal": 0,
+      "cognitiveComplexity": 0,
+      "complexity": 1,
+      "coverage": 1,
+      "coverageBasis": null,
+      "coverageSuppressions": 1,
+      "covered": 1,
+      "crap": null,
+      "name": "below",
+      "pseudoTestReason": null,
+      "pseudoTestStatus": "checked",
+      "pseudoTested": false,
+      "start": 7,
+      "status": "partially-suppressed",
+      "total": 1,
+      "typeSafety": {
+        "doubleAssertions": 0,
+        "explicitAny": 0,
+        "inferredAny": [
+          {
+            "count": 0,
+            "locations": [],
+            "setup": "node",
+            "state": "known"
+          }
+        ],
+        "nonNullAssertions": 0,
+        "tsExpectError": 0,
+        "tsIgnore": 0,
+        "tsNocheck": 0,
+        "typeAssertions": 0
+      }
+    },
+    "jobsAttempted": 6,
+    "workerBaselineJobs": 0,
+    "phaseTimings": {
+      "analysisMs": 1.4265919999999999,
+      "attributionMs": 0.250838,
+      "baselineMs": 507.88822600000003,
+      "cleanupMs": 0.651235,
+      "compilerStrictnessMs": 5098.450607,
+      "coverageMs": 1519.2434970000002,
+      "preparationMs": 0.591514,
+      "typecheckMs": null
+    },
+    "mutationWallMs": 626.81205,
+    "executionMs": 8017.082586,
+    "pseudoTesting": {
+      "planned": 1,
+      "killed": 1
+    },
+    "operators": [
+      {
+        "original": "<",
+        "replacement": "<=",
+        "verdict": "killed"
+      },
+      {
+        "original": "<",
+        "replacement": ">=",
+        "verdict": "killed"
+      }
+    ]
+  },
+  "controls": [
+    "Deleted retained statement and branch maps, truncated statement ends and unrelated statement ends rejected on all four routes",
+    "Concise return counters accepted at full AST extents on Node and Jest; Vitest retained-branch conflicts remain incomplete",
+    "Function-valued conditional/logical outcomes and grouped logical subtree exclusions mark the containing scope partial on Node and Jest; Vitest transform conflicts remain incomplete",
+    "Missing retained branches from function-valued outcomes remain incomplete",
+    "Unsupported enclosing calls, arrays, unary expressions and calls containing functions remain incomplete with branches deleted and in both merge orders",
+    "Initializer and default-value hints rewritten by counter insertion remain unsupported",
+    "Class-expression and private-method hints independently remain incomplete after deleting their descendant statement, branch and available function records, alone and in both merge orders",
+    "Class expressions used as direct outcomes retain their measured methods while the parent stays partial",
+    "Logical tests and enclosing ternaries sharing a start offset retain distinct outcome identities",
+    "Direct call outcomes retain their descendant conditional branch; deleting it fails on all four routes",
+    "Ignored expression statements containing functions mark the enclosing scope partial",
+    "Parenthesized retained initializer source-map locations accepted on all four routes",
+    "Existing whole-function/file suppression, c8/v8 and parenthesized-arrow transform controls passed",
+    "Original source unchanged and mutation scratch directory empty",
+    "Adjacent Istanbul hints use only the last recognized directive; all hints retain their syntax counts",
+    "Deleted counters from retained adjacent-hint arms rejected alone and in both merge orders on all four routes",
+    "Late file-level hints override earlier invalid local hints on all four routes",
+    "Function-valued call, member and binary wrappers cannot borrow a nested function visitor, even after its records are removed alone or in both merge orders",
+    "Erased postfix TypeScript wrappers preserve Node targets; retained ignored statements keep Vitest and both Jest transforms incomplete for that placement",
+    "Mapped if-consequents can include the else delimiter without extending into alternate-arm execution",
+    "Hints across parentheses and erased type wrappers use one runtime precedence key in both directive orders; inactive hints cannot excuse deleted counters alone or in both merge orders",
+    "Trailing block, line and mixed leading comment groups accepted under direct JavaScript instrumentation; their retained counters remain required alone and in both merge orders",
+    "Vitest conditional/logical counter retention and incompatible typed locations remain incomplete for the wrapped-expression placements",
+    "Whole expression-statement hints remain separate from nested conditional, logical and function hints at shared starts, with and without semicolons; all four source-mapped routes and direct JavaScript accept exclusions and reject missing retained counters alone and in both merge orders",
+    "Exact and adjusted-end duplicate retained statement records rejected per setup on all four routes, alone and in both merge orders; Rust controls also reject duplicate parenthesis-normalized initializer aliases while accepting either alias individually"
+  ],
+  "commentGroups": {
+    "blocks": {
+      "complete": true,
+      "coverageSuppressions": {
+        "count": 2,
+        "hints": [
+          {
+            "end": 42,
+            "functions": [
+              0
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 16,
+            "wholeFunction": false
+          },
+          {
+            "end": 68,
+            "functions": [
+              0
+            ],
+            "kind": "if",
+            "provider": "istanbul",
+            "start": 44,
+            "wholeFunction": false
+          }
+        ]
+      },
+      "functions": [
+        {
+          "name": "f",
+          "start": 0,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 2
+        }
+      ],
+      "problems": []
+    },
+    "lines": {
+      "complete": true,
+      "coverageSuppressions": {
+        "count": 2,
+        "hints": [
+          {
+            "end": 39,
+            "functions": [
+              0
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 16,
+            "wholeFunction": false
+          },
+          {
+            "end": 62,
+            "functions": [
+              0
+            ],
+            "kind": "if",
+            "provider": "istanbul",
+            "start": 41,
+            "wholeFunction": false
+          }
+        ]
+      },
+      "functions": [
+        {
+          "name": "f",
+          "start": 0,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 2
+        }
+      ],
+      "problems": []
+    },
+    "mixed": {
+      "complete": true,
+      "coverageSuppressions": {
+        "count": 2,
+        "hints": [
+          {
+            "end": 39,
+            "functions": [
+              0
+            ],
+            "kind": "next",
+            "provider": "istanbul",
+            "start": 16,
+            "wholeFunction": false
+          },
+          {
+            "end": 84,
+            "functions": [
+              0
+            ],
+            "kind": "if",
+            "provider": "istanbul",
+            "start": 60,
+            "wholeFunction": false
+          }
+        ]
+      },
+      "functions": [
+        {
+          "name": "f",
+          "start": 0,
+          "status": "partially-suppressed",
+          "covered": 2,
+          "total": 2,
+          "coverage": 1,
+          "branchCovered": 1,
+          "branchTotal": 1,
+          "branchCoverage": 1,
+          "coverageBasis": null,
+          "crap": null,
+          "complexity": 2,
+          "cognitiveComplexity": 2,
+          "coverageSuppressions": 2
+        }
+      ],
+      "problems": []
+    }
+  },
+  "directStatementChildren": {
+    "complete": true,
+    "coverageSuppressions": {
+      "count": 8,
+      "hints": [
+        {
+          "end": 85,
+          "functions": [
+            0
+          ],
+          "kind": "next",
+          "provider": "istanbul",
+          "start": 46,
+          "wholeFunction": false
+        },
+        {
+          "end": 126,
+          "functions": [
+            0
+          ],
+          "kind": "next",
+          "provider": "istanbul",
+          "start": 87,
+          "wholeFunction": false
+        },
+        {
+          "end": 245,
+          "functions": [
+            159
+          ],
+          "kind": "next",
+          "provider": "istanbul",
+          "start": 206,
+          "wholeFunction": false
+        },
+        {
+          "end": 286,
+          "functions": [
+            159
+          ],
+          "kind": "else",
+          "provider": "istanbul",
+          "start": 247,
+          "wholeFunction": false
+        },
+        {
+          "end": 403,
+          "functions": [
+            319
+          ],
+          "kind": "next",
+          "provider": "istanbul",
+          "start": 364,
+          "wholeFunction": false
+        },
+        {
+          "end": 444,
+          "functions": [
+            319
+          ],
+          "kind": "else",
+          "provider": "istanbul",
+          "start": 405,
+          "wholeFunction": false
+        },
+        {
+          "end": 568,
+          "functions": [
+            477,
+            610
+          ],
+          "kind": "next",
+          "provider": "istanbul",
+          "start": 529,
+          "wholeFunction": true
+        },
+        {
+          "end": 609,
+          "functions": [
+            477
+          ],
+          "kind": "else",
+          "provider": "istanbul",
+          "start": 570,
+          "wholeFunction": false
+        }
+      ]
+    },
+    "functions": [
+      {
+        "name": "bothNext",
+        "start": 0,
+        "status": "partially-suppressed",
+        "covered": 2,
+        "total": 2,
+        "coverage": 1,
+        "branchCovered": 0,
+        "branchTotal": 0,
+        "branchCoverage": null,
+        "coverageBasis": null,
+        "crap": null,
+        "complexity": 2,
+        "cognitiveComplexity": 1,
+        "coverageSuppressions": 2
+      },
+      {
+        "name": "innerElse",
+        "start": 159,
+        "status": "partially-suppressed",
+        "covered": 2,
+        "total": 2,
+        "coverage": 1,
+        "branchCovered": 0,
+        "branchTotal": 0,
+        "branchCoverage": null,
+        "coverageBasis": null,
+        "crap": null,
+        "complexity": 2,
+        "cognitiveComplexity": 1,
+        "coverageSuppressions": 2
+      },
+      {
+        "name": "logical",
+        "start": 319,
+        "status": "partially-suppressed",
+        "covered": 2,
+        "total": 2,
+        "coverage": 1,
+        "branchCovered": 0,
+        "branchTotal": 0,
+        "branchCoverage": null,
+        "coverageBasis": null,
+        "crap": null,
+        "complexity": 2,
+        "cognitiveComplexity": 1,
+        "coverageSuppressions": 2
+      },
+      {
+        "name": "nestedFunction",
+        "start": 477,
+        "status": "partially-suppressed",
+        "covered": 2,
+        "total": 2,
+        "coverage": 1,
+        "branchCovered": 0,
+        "branchTotal": 0,
+        "branchCoverage": null,
+        "coverageBasis": null,
+        "crap": null,
+        "complexity": 1,
+        "cognitiveComplexity": 0,
+        "coverageSuppressions": 2
+      },
+      {
+        "name": "function@610",
+        "start": 610,
+        "status": "suppressed",
+        "covered": 0,
+        "total": 0,
+        "coverage": null,
+        "branchCovered": 0,
+        "branchTotal": 0,
+        "branchCoverage": null,
+        "coverageBasis": null,
+        "crap": null,
+        "complexity": 2,
+        "cognitiveComplexity": 1,
+        "coverageSuppressions": 1
+      }
+    ],
+    "problems": []
+  }
+}

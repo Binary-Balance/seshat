@@ -782,7 +782,7 @@ scoring. Unknown and not-applicable rows do not become passing numbers.
 
 Seshat recognises whole-function `/* istanbul ignore next */` hints and
 `/* istanbul ignore file */`. A whole-function hint also applies to functions
-inside an ignored declaration or class, including methods and object
+inside an ignored declaration or class declaration, including methods and object
 getters/setters. These functions report
 `status: "suppressed"`, with null coverage and CRAP, and do not make the assessment
 incomplete solely because their counters are absent. A file-level hint may
@@ -812,13 +812,69 @@ The verified Vitest transform still instruments a parenthesized arrow when
 the hint is between `=` and the parentheses, as in
 `const f = /* istanbul ignore next -- @preserve */ (() => 1);`.
 That form remains incomplete. Put the hint before the whole declaration for
-the supported Vitest suppression route.
+the supported Vitest suppression route. Vitest also retains branch counters
+when `ignore next` is immediately before a concise arrow's conditional or
+logical body. That placement remains incomplete; use a block body and a hint
+on the statement or branch outcome instead. Hints before parentheses around
+function-valued outcomes or logical groups share this Vitest transform limit:
+retained counters or unreliable source locations keep the assessment incomplete. Node and Jest retain the enclosing
+concise-return counter while omitting the hinted expression's branches; Seshat
+accepts that counter only at its full normalized AST extent.
 
-Partial statement and branch hints, including `istanbul ignore if` and
-`istanbul ignore else`, are counted but remain unsupported. Affected ordinary
-functions stay unknown with null coverage and CRAP and keep the assessment
-incomplete. `c8` and `v8` hint spellings are counted, but do not suppress
-Istanbul coverage or establish support for those providers.
+Partial `istanbul ignore next` hints on statements and branch expressions,
+and `istanbul ignore if` / `istanbul ignore else` hints on branch arms, report
+`status: "partially-suppressed"` for the containing function. Statement and
+branch counts and fractions describe only retained, instrumented code. A zero
+denominator gives a null fraction. `coverageBasis` and CRAP stay null because
+partial coverage cannot establish whole-function CRAP. The CRAP threshold
+checks only measured functions; it is not applicable when none remain. Static
+findings and operator mutations remain, and pseudo-testing still requires
+reliable positive statement coverage.
+
+A hint on a conditional or logical outcome also marks the containing function
+partially suppressed when that outcome is a nested function. Hints on direct
+call, array or unary outcomes omit that outcome's counter; their nested work
+remains instrumented unless it has its own supported hint. Those same
+expressions cannot be ignored merely because they contain a nested branch.
+A whole subtree is omitted only for a node Istanbul's visitor actually skips.
+
+Visitor targets must match the complete runtime expression. Erased postfix
+TypeScript wrappers can preserve that target; a following call, member access
+or binary operation cannot borrow a nested function's visitor. Statements and
+their child expressions remain separate targets even when their starts match.
+
+When Istanbul hints target the same runtime node, including across parentheses
+and erased type wrappers, only the last recognized directive controls exclusion.
+Leading comment groups may start after code on the preceding line. Every hint
+still contributes to syntax counts.
+An `ignore file` hint applies regardless of its position and overrides local
+hint validation, while coverage jobs and reports must still succeed.
+
+Istanbul has subtree visitors for class declarations and public methods, but
+not class expressions or private methods. A class expression used directly as
+a conditional/logical outcome excludes only that outcome counter; its methods
+remain measured. A standalone hint on a class expression or private method
+cannot justify omitting its descendants and remains incomplete.
+
+Hints directly on non-hoisted variable initializers, class-field values and
+default values can be moved by Istanbul's counter insertion. These placements
+remain unsupported. Put the hint before the whole declaration, statement or
+field, or on a supported branch outcome instead. Function initializers in
+ordinary block/module declarations retain their supported hoisted counter;
+for-loop initializers and unbraced switch cases do not share that route.
+
+Seshat matches each hint to its AST target and checks the retained statements
+and branch outcomes in each setup before merging coverage. Two records cannot
+count the same retained AST statement, including adjusted source-map ranges. Ignored branch arms
+also exclude their statements, nested branches and nested functions. A wholly
+ignored nested function uses `suppressed`. Valid partial suppression alone does
+not make the assessment incomplete. Unmatched or unsupported targets, retained
+counters inside ignored regions, unrelated missing counters and incompatible
+maps remain incomplete. Hints on expressions that Istanbul does not instrument
+or omit cannot establish a valid exclusion.
+
+`c8` and `v8` hint spellings are counted, but do not suppress Istanbul coverage
+or establish support for those providers.
 
 Branch entries must match source `if`, ternary, logical, default-value or switch
 syntax.
