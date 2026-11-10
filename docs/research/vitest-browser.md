@@ -187,9 +187,8 @@ browser setups without affecting replacement.
 
 These numbers come from the recorded 5.0.0 run on a shared 2-vCPU host. Other
 projects' work was running; `uptime` showed load averages between 2 and 6 at
-the end. Treat them as rough proportions, not benchmarks. The 5.1.0 subset ran
-earlier, while the load average was 14 to 19, and took 2 to 7 times as long;
-its timings say nothing about 5.1.0 itself.
+the end. Treat them as rough proportions, not benchmarks. The 5.1.0 subset ran next,
+under similar load, and each case took between 0.6 and 1.0 times as long.
 
 - The same one-test control took 2.3 s per mutant job in browser mode and
   0.6 s in Vitest's Node mode (`assertion` against `node-reference`), almost

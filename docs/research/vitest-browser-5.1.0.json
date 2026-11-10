@@ -41,14 +41,14 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 719854,
+      "wallMs": 80663,
       "cost": {
-        "baselineMs": 32791.40629,
-        "coverageMs": 48107.983658000005,
-        "meanMutantJobMs": 20944.517533631577,
+        "baselineMs": 3666.525289,
+        "coverageMs": 2949.5576149999997,
+        "meanMutantJobMs": 2745.0075138947363,
         "mutants": 19
       },
-      "concurrentBrowserJobs": 1
+      "concurrentJobs": 1
     },
     "switching": {
       "complete": true,
@@ -63,7 +63,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 511583
+      "wallMs": 81221
     },
     "coverage-maps": {
       "files": {
@@ -93,7 +93,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 32340
+      "wallMs": 9040
     },
     "missing-evidence": {
       "complete": false,
@@ -108,7 +108,7 @@
       "deadlineReached": null,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 22354
+      "wallMs": 4035
     }
   }
 }
