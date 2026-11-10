@@ -448,8 +448,14 @@ to retain the scope of 0.8.x.
 | `optional` | Remove one runtime `?.` segment, or replace `left ?? right` with `(left) \|\| (right)`. |
 
 Expression rewrites exclude unary signs, increments, assignments and
-operators in comments, strings or type syntax. Arithmetic preserves JavaScript's
-coercion and BigInt rules; a mutation can therefore change string concatenation or throw.
+operators in comments, strings or type syntax. Every family excludes
+declaration-only code, such as `declare` blocks and `.d.ts` files, because it
+emits no JavaScript. Arithmetic preserves JavaScript's coercion and BigInt
+rules; a mutation can therefore change string concatenation or throw.
+As in Stryker, arithmetic sites with a string or template literal operand are
+excluded: `'total: ' + n` would become `NaN`, which any check of the result
+kills. The left operand's right side also counts, so `a + 'x' + b` is excluded,
+but the outer `+` in `'a' + b + c` is still mutated.
 Logical mutations preserve short-circuiting and return operand values.
 Removing `!` also removes its boolean conversion, so `!7` becomes `(7)`.
 Nested negations have one candidate per prefix. Type-level boolean literals,

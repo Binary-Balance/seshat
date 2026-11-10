@@ -41,6 +41,24 @@ Their replacements have the same value and no side effects. The other fixture
 mutants demonstrably change results. These deliberately chosen rates are not
 population estimates. Seshat does not infer equivalence from survival.
 
+## String-literal operands
+
+From 0.17.0, arithmetic sites with a string or template literal operand,
+ignoring parentheses, are excluded and counted in `excludedSites`
+([#219](https://github.com/Binary-Balance/seshat/issues/219)). The rule copies
+Stryker 10's arithmetic mutator, including its check of the left operand's
+right side, so `a + 'x' + b` is excluded and `'a' + b + c` keeps its outer `+`.
+Such mutants turn concatenation into `NaN` or a numeric coercion, which any
+check of the result kills, so they inflate the score without testing anything.
+
+Before adopting the rule, Seshat 0.11.0 reports from a real TypeScript
+project's scheduled assessment were checked. That run planned 130 arithmetic mutants
+across 58 assessed files, and all were killed. None of its 16 `+` sites had a
+string or template literal operand, because the project builds strings with
+template literals. The proof fixtures have no such sites in assessed sources
+either. The rule therefore changes no recorded verdict; it is a borrowed
+default for code that concatenates with `+`.
+
 ## Measured execution cost
 
 Three sequential samples per family and strategy use one worker and one setup.

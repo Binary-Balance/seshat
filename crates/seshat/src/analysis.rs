@@ -3,7 +3,7 @@ use oxc_allocator::{Allocator, Vec as ArenaVec};
 use oxc_ast::{
     AstKind,
     ast::{
-        AccessorPropertyType, ArrowFunctionBody, ClassType, Comment, Declaration,
+        AccessorPropertyType, ArrowFunctionBody, BinaryExpression, ClassType, Comment, Declaration,
         ExportDefaultDeclarationKind, Expression, FormalParameters, FunctionType, JSXAttributeItem,
         JSXAttributeValue, JSXChild, MethodDefinitionKind, PropertyDefinitionType, PropertyKind,
         Statement, TSType, TSTypeName, VariableDeclaration, VariableDeclarationKind,
@@ -421,6 +421,7 @@ pub struct Analysis {
     pub equivalences: Vec<EquivalentDeclaration>,
     equivalence_error: Option<String>,
     non_runtime: Vec<Span>,
+    string_operands: Vec<Span>,
     expression_statements: BTreeSet<u32>,
     switching_reference_sites: BTreeSet<u32>,
     switching_chain_references: BTreeSet<u32>,
@@ -1378,6 +1379,9 @@ impl<'a> Visit<'a> for Analysis {
         }
         let (span, left, right, original) = match node {
             AstKind::BinaryExpression(b) => {
+                if has_string_operand(b) {
+                    self.string_operands.push(b.span);
+                }
                 (b.span, b.left.span(), b.right.span(), b.operator.as_str())
             }
             AstKind::LogicalExpression(b) => {
@@ -1425,6 +1429,24 @@ impl<'a> Visit<'a> for Analysis {
         }
         (self.cognitive_owner, self.cognitive_depth) = self.cognitive_stack.pop().unwrap();
     }
+}
+
+// Follows Stryker: arithmetic on a string literal is concatenation or
+// coercion, and turning `'total: ' + n` into NaN is killed by any assertion
+// on the result. Checking the left operand's right side also covers chains
+// such as `a + 'x' + b`.
+fn has_string_operand(b: &BinaryExpression<'_>) -> bool {
+    let string = |e: &Expression<'_>| {
+        matches!(
+            e.without_parentheses(),
+            Expression::StringLiteral(_) | Expression::TemplateLiteral(_)
+        )
+    };
+    let left = match b.left.without_parentheses() {
+        Expression::BinaryExpression(inner) => &inner.right,
+        left => left,
+    };
+    string(left) || string(&b.right)
 }
 
 fn lexical_boundary(node: AstKind<'_>) -> bool {
@@ -2347,16 +2369,13 @@ impl Analysis {
         }
         let mut operators = std::mem::take(&mut result.operators);
         operators.retain(|site| {
-            let eligible = (!matches!(
-                site.kind,
-                MutationOperator::Boolean
-                    | MutationOperator::Statement
-                    | MutationOperator::Optional
-            ) || (!source_type.is_typescript_definition()
+            let eligible = !source_type.is_typescript_definition()
                 && !result
                     .non_runtime
                     .iter()
-                    .any(|range| range.start <= site.span.start && site.span.end <= range.end)))
+                    .any(|range| range.start <= site.span.start && site.span.end <= range.end)
+                && !(site.kind == MutationOperator::Arithmetic
+                    && result.string_operands.contains(&site.span))
                 && (site.kind != MutationOperator::Statement
                     || (result
                         .statement_owner(site.span.start)
@@ -4245,6 +4264,61 @@ fn optional_candidates_exclude_non_runtime_syntax() {
             0
         );
     }
+}
+
+#[test]
+fn arithmetic_candidates_exclude_string_operands() {
+    let only = [MutationOperator::Arithmetic];
+    for source in [
+        "'a' + b;",
+        "`a${x}` + b;",
+        "b + ('a');",
+        "b - `a`;",
+        "'2' * b;",
+        "a + 'x' + b;",
+    ] {
+        let analysis = Analysis::inspect_with_operators("source.ts", source, &only).unwrap();
+        assert_eq!(analysis.count(), 0, "{source}");
+    }
+    // Stryker looks one level into the left operand, so the outer `+` of a
+    // chain that starts with a string is still mutated.
+    for (source, mutants) in [("a + b;", 1), ("'a' + b + c;", 1), ("a + b + 'c';", 1)] {
+        let analysis = Analysis::inspect_with_operators("source.ts", source, &only).unwrap();
+        assert_eq!(analysis.count(), mutants, "{source}");
+    }
+    let counts = &Analysis::inspect_with_operators("source.ts", "'a' + b + c;", &only)
+        .unwrap()
+        .operator_sites["+"];
+    assert_eq!((counts.eligible, counts.excluded), (1, 1));
+}
+
+#[test]
+fn binary_candidates_exclude_non_runtime_syntax() {
+    // Ambient enums emit no JavaScript, so a mutant in one can never be killed.
+    for (path, source) in [
+        ("source.ts", "declare namespace N { const v = 1 < 2; }"),
+        ("source.ts", "declare enum E { A = 1 + 2, B = A * 2 }"),
+        (
+            "source.ts",
+            "declare namespace N { enum E { A = 1 - 2, B = 1 / 2 } }",
+        ),
+        (
+            "source.d.ts",
+            "enum E { A = 1 + 2, B = A > 1 || A < 0 ? 1 : 0 }",
+        ),
+    ] {
+        assert_eq!(
+            Analysis::inspect(path, source).unwrap().count(),
+            0,
+            "{source}"
+        );
+    }
+    assert_eq!(
+        Analysis::inspect("source.ts", "enum E { A = 1 + 2 }")
+            .unwrap()
+            .count(),
+        1
+    );
 }
 
 #[test]
