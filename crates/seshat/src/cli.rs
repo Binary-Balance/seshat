@@ -735,6 +735,13 @@ fn readable(report: &Value) -> String {
         if counted_timeouts > 0 {
             let _ = writeln!(output, "Timeouts counted as killed: {counted_timeouts}.");
         }
+        let compile_errors = mutation["compileErrors"].as_u64().unwrap_or(0);
+        if compile_errors > 0 {
+            let _ = writeln!(
+                output,
+                "Compile errors: {compile_errors} rejected by typecheck, excluded from the score."
+            );
+        }
         let equivalent = mutation["equivalent"].as_u64().unwrap_or(0);
         let stale = mutation["staleDeclarations"].as_u64().unwrap_or(0);
         if equivalent + stale > 0 {
@@ -750,9 +757,13 @@ fn readable(report: &Value) -> String {
                 .map_or(String::new(), |count| {
                     format!(", {count} declared equivalent")
                 });
+            let compile_errors = row["compileErrors"]
+                .as_u64()
+                .filter(|count| *count > 0)
+                .map_or(String::new(), |count| format!(", {count} compile-error"));
             let _ = writeln!(
                 output,
-                "Operator {}: {} eligible site(s), {} excluded; {} planned, {} completed{equivalent}, {} test job(s)",
+                "Operator {}: {} eligible site(s), {} excluded; {} planned, {} completed{equivalent}{compile_errors}, {} job(s)",
                 text(&row["operator"]),
                 row["eligibleSites"],
                 row["excludedSites"],
@@ -1067,7 +1078,7 @@ mod tests {
             "perOperator":[{"operator":"expression-statement","eligibleSites":0,"excludedSites":2,
                 "planned":0,"completed":0,"jobsAttempted":0}]
         }}}));
-        assert!(output.contains("Operator expression-statement: 0 eligible site(s), 2 excluded; 0 planned, 0 completed, 0 test job(s)"));
+        assert!(output.contains("Operator expression-statement: 0 eligible site(s), 2 excluded; 0 planned, 0 completed, 0 job(s)"));
     }
 
     #[test]
@@ -1587,7 +1598,15 @@ mod tests {
         assert!(rendered.contains(
             "Declared equivalent: 1 excluded from the score, 1 stale (killed). Equivalence is declared, not proved."
         ));
-        assert!(rendered.contains("1 completed, 1 declared equivalent, 1 test job(s)"));
+        assert!(rendered.contains("1 completed, 1 declared equivalent, 1 job(s)"));
+        let mut typed = declared.clone();
+        typed["result"]["mutation"]["compileErrors"] = json!(2);
+        typed["result"]["mutation"]["perOperator"][0]["compileErrors"] = json!(2);
+        let rendered = readable(&typed);
+        assert!(
+            rendered.contains("Compile errors: 2 rejected by typecheck, excluded from the score.")
+        );
+        assert!(rendered.contains("1 declared equivalent, 2 compile-error, 1 job(s)"));
         assert!(rendered.contains(
             "Declared equivalent, bytes 10-50: \"??\" -> \"||\", equivalent; reason \"value is 1-5 or null\""
         ));

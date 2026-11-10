@@ -271,6 +271,9 @@ struct Setup {
     test: Vec<String>,
     #[serde(default)]
     typecheck: Option<Vec<String>>,
+    // Runs `typecheck` against each operator mutant before its tests.
+    #[serde(default, rename = "typecheckMutants")]
+    typecheck_mutants: bool,
     coverage: CoverageCommand,
     #[serde(default = "default_timeout", rename = "timeoutMs")]
     timeout_ms: u64,
@@ -449,6 +452,11 @@ impl Config {
             super::validate_command(&setup.test, &format!("{}.test", setup.name))?;
             if let Some(args) = &setup.typecheck {
                 super::validate_command(args, &format!("{}.typecheck", setup.name))?;
+            } else if setup.typecheck_mutants {
+                return Err(format!(
+                    "{}.typecheckMutants requires typecheck",
+                    setup.name
+                ));
             }
             super::validate_command(
                 &setup.coverage.command,
@@ -1559,6 +1567,23 @@ mod tests {
             config["setups"][0]["typecheck"] = value;
             assert!(Config::parse(&serde_json::to_vec(&config).unwrap()).is_err());
         }
+        let mut config = fixture.config.clone();
+        config["setups"][0]["typecheckMutants"] = json!(true);
+        config["setups"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("typecheck");
+        let error = Config::parse(&serde_json::to_vec(&config).unwrap())
+            .err()
+            .unwrap();
+        assert!(
+            error.contains("typecheckMutants requires typecheck"),
+            "{error}"
+        );
+        config["setups"][0]["typecheck"] = json!(["node", "-e", ""]);
+        assert!(Config::parse(&serde_json::to_vec(&config).unwrap()).is_ok());
+        config["setups"][0]["typecheckMutants"] = json!("yes");
+        assert!(Config::parse(&serde_json::to_vec(&config).unwrap()).is_err());
         let duplicate = raw.replacen("\"capture\":", "\"capture\":[],\"capture\":", 1);
         assert!(Config::parse(duplicate.as_bytes()).is_err());
         let mut repeated = fixture.config.clone();

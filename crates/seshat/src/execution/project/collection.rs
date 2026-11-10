@@ -64,6 +64,8 @@ impl MutationProgress {
                 self.execution_errors += 1;
             } else if states.contains(&TestState::Cancelled) {
                 self.cancelled += 1;
+            } else if states.contains(&TestState::CompileError) {
+                // Resolved: later setups are skipped, not missing.
             } else if states.contains(&TestState::TimedOut)
                 || states.contains(&TestState::CountedTimeout) && missing_setup
             {
@@ -1350,8 +1352,17 @@ impl CapturedProject {
                 Err(fallback) => selection::Selection::Full(fallback.reason.clone()),
             })
             .collect();
+        // Extreme body replacements rarely fit the declared return type, so
+        // checking them would hide pseudo-tested functions.
+        let check_types = row["kind"] != "extreme"
+            && self
+                .config
+                .setups
+                .iter()
+                .any(|setup| setup.typecheck_mutants);
         // With no job to run, skip writing and restoring the mutant source.
-        if !selections.is_empty()
+        if !check_types
+            && !selections.is_empty()
             && selections
                 .iter()
                 .all(|choice| matches!(choice, selection::Selection::NoCoverage))
@@ -1407,7 +1418,57 @@ impl CapturedProject {
         let mut states = Vec::new();
         let mut jobs = 0;
         let mut can_continue = true;
+        let mut typechecks = vec![Value::Null; self.config.setups.len()];
         for (index, setup) in self.config.setups.iter().enumerate() {
+            if !check_types || !setup.typecheck_mutants {
+                continue;
+            }
+            if stopped.load(Ordering::Relaxed) || cancellation_signal() != 0 {
+                states = vec![TestState::NotRun; self.config.setups.len()];
+                break;
+            }
+            let id = format!(
+                "{}-mutant-{}-{index}-typecheck",
+                evidence.file_name().unwrap().to_str().unwrap(),
+                row["id"]
+            );
+            let mut checked = self
+                .run_job(
+                    setup,
+                    setup.typecheck.as_ref().unwrap(),
+                    evidence,
+                    &id,
+                    JobKind::Typecheck,
+                )
+                .unwrap_or_else(CommandEvidence::error);
+            jobs += 1;
+            // The original source passed this typecheck, so a clean rejection
+            // now is the mutant's doing. Infrastructure failures stay errors.
+            if checked.state == TestState::ExecutionError
+                && checked.details["exit"]
+                    .as_i64()
+                    .is_some_and(|exit| exit != 0)
+                && checked.details["sourceError"].is_null()
+                && checked.can_continue_mutation()
+            {
+                checked.state = TestState::CompileError;
+            }
+            if checked.state != TestState::Passed {
+                can_continue &= checked.can_continue_mutation();
+                states = vec![TestState::NotRun; self.config.setups.len()];
+                states[index] = checked.state;
+                row["setups"][index] = json!({"name":setup.name,"state":checked.state.label(),
+                    "jobsAttempted":1,"typecheck":checked.into_json()});
+                break;
+            }
+            typechecks[index] = checked.into_json();
+        }
+        // A typecheck rejected the mutant or did not finish, so its tests do not run.
+        let skip_tests = !states.is_empty();
+        for (index, setup) in self.config.setups.iter().enumerate() {
+            if skip_tests {
+                break;
+            }
             let args = match &selections[index] {
                 selection::Selection::Files { command, .. } => command,
                 selection::Selection::Full(_) => &setup.test,
@@ -1482,6 +1543,13 @@ impl CapturedProject {
                 // Preserve pending setup rows and prevent other workers starting more jobs.
                 stopped.store(true, Ordering::Relaxed);
                 break;
+            }
+        }
+        for (index, typecheck) in typechecks.into_iter().enumerate() {
+            if !typecheck.is_null() {
+                let setup = &mut row["setups"][index];
+                setup["jobsAttempted"] = json!(setup["jobsAttempted"].as_u64().unwrap_or(0) + 1);
+                setup["typecheck"] = typecheck;
             }
         }
         // Restore after every outcome, but never follow a rewritten source link.
@@ -1967,8 +2035,11 @@ impl CapturedProject {
             .iter()
             .filter(|row| row.get("executionMs").is_some())
             .count();
-        let resolved =
-            assessed.killed + assessed.survived + assessed.counted_timeouts + assessed.equivalent;
+        let resolved = assessed.killed
+            + assessed.survived
+            + assessed.counted_timeouts
+            + assessed.equivalent
+            + assessed.compile_errors;
         let diagnostics = mutation_diagnostics(&outcomes, completed, jobs_attempted, scheduling_ms);
         progress.phase(format_args!(
             "{label} finished: completed {}/{}, running 0, not run {}, resolved {}, unresolved {} (timed-out {}, execution-error {}, cancelled {}, not-run {}, unassessed {})",
@@ -2008,6 +2079,7 @@ impl CapturedProject {
         }
         if operators {
             result["equivalent"] = json!(assessed.equivalent);
+            result["compileErrors"] = json!(assessed.compile_errors);
             result["staleDeclarations"] = json!(stale_declarations);
             result["enabledOperators"] = json!(self.config.mutation_operators);
             let mut counts = BTreeMap::<String, Value>::new();
@@ -2015,7 +2087,7 @@ impl CapturedProject {
                 for (operator, sites) in &analysis.operator_sites {
                     let count = counts.entry((*operator).into()).or_insert_with(|| json!({
                         "operator":operator,"kind":sites.kind,"eligibleSites":0,"excludedSites":0,
-                        "planned":0,"equivalent":0,"completed":0,"jobsAttempted":0,"executionMs":0.0
+                        "planned":0,"equivalent":0,"compileErrors":0,"completed":0,"jobsAttempted":0,"executionMs":0.0
                     }));
                     count["eligibleSites"] =
                         json!(count["eligibleSites"].as_u64().unwrap() + sites.eligible as u64);
@@ -2029,6 +2101,9 @@ impl CapturedProject {
                 count["planned"] = json!(count["planned"].as_u64().unwrap() + 1);
                 if row["verdict"] == "equivalent" {
                     count["equivalent"] = json!(count["equivalent"].as_u64().unwrap() + 1);
+                }
+                if row["verdict"] == "compile-error" {
+                    count["compileErrors"] = json!(count["compileErrors"].as_u64().unwrap() + 1);
                 }
                 if let Some(ms) = row["executionMs"].as_f64() {
                     count["completed"] = json!(count["completed"].as_u64().unwrap() + 1);
@@ -2512,6 +2587,17 @@ impl CapturedProject {
     ) -> Result<Value, String> {
         let mutate = mode != AssessmentMode::Crap;
         self.config.validate_mode(mode)?;
+        // Switching writes every mutant into one prepared source, so a
+        // typecheck would never see the active mutant on its own.
+        if switching
+            && self
+                .config
+                .setups
+                .iter()
+                .any(|setup| setup.typecheck_mutants)
+        {
+            return Err("typecheckMutants is not available with --experimental-switching".into());
+        }
         self.test_selection = vec![Err("attribution-unavailable".into()); self.config.setups.len()];
         let started = Instant::now();
         let progress = Progress {
@@ -2980,6 +3066,88 @@ mod tests {
     }
 
     #[test]
+    fn typechecked_mutants_resolve_as_compile_errors_outside_the_score() {
+        for checked in [false, true] {
+            let fixture = super::super::tests::Fixture::new();
+            fs::write(
+                fixture.project.join("src/calc.ts"),
+                "export const below = (value: number) => value < 3;\n",
+            )
+            .unwrap();
+            let mut captured = fixture.capture().unwrap();
+            captured
+                .sources
+                .retain(|(path, _)| path == Path::new("src/calc.ts"));
+            let setup = &mut captured.config.setups[0];
+            setup.typecheck_mutants = checked;
+            // Rejects the `>=` mutant, as tsc rejects a type-invalid one.
+            setup.typecheck = Some(vec![
+                "node".into(),
+                "-e".into(),
+                "process.exitCode = require('fs').readFileSync('src/calc.ts', 'utf8').includes('>=') ? 2 : 0".into(),
+            ]);
+            // Mutant 0 (`<=`) survives; mutant 1 (`>=`) fails its tests.
+            setup.test = vec![
+                "node".into(),
+                "-e".into(),
+                r#"
+                    const fs = require('fs'), id = process.env.SESHAT_EXECUTION_ID;
+                    const failed = id.includes('-mutant-1-');
+                    fs.writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({version:1,
+                        executionId:id, node:process.versions.node, complete:true,
+                        passed:failed ? 0 : 1, failed:failed ? 1 : 0, errors:0}));
+                    if (failed) process.exitCode = 1;
+                "#
+                .into(),
+            ];
+            let mut switched = fixture.capture().unwrap();
+            switched.config.setups = captured.config.setups.clone();
+            let error = switched.assess_with_strategy(AssessmentMode::Mutate, false, true);
+            assert_eq!(error.is_err(), checked, "{error:?}");
+            let result = captured
+                .assess_with_strategy(AssessmentMode::Mutate, false, false)
+                .unwrap();
+            let mutation = &result["mutation"];
+            let [survivor, rejected] = [&mutation["outcomes"][0], &mutation["outcomes"][1]];
+            assert_eq!(survivor["verdict"], "survived", "{result}");
+            assert_eq!(
+                survivor["setups"][0]["jobsAttempted"],
+                1 + usize::from(checked)
+            );
+            assert_eq!(
+                survivor["setups"][0]["typecheck"]["state"],
+                if checked {
+                    json!("passed")
+                } else {
+                    Value::Null
+                }
+            );
+            if checked {
+                assert_eq!(rejected["verdict"], "compile-error");
+                assert_eq!(rejected["setups"][0]["state"], "compile-error");
+                assert_eq!(rejected["setups"][0]["jobsAttempted"], 1);
+                assert_eq!(rejected["setups"][0]["typecheck"]["exit"], 2);
+            } else {
+                assert_eq!(rejected["verdict"], "killed");
+            }
+            assert_eq!(mutation["compileErrors"], usize::from(checked));
+            assert_eq!(
+                mutation["perOperator"][0]["compileErrors"],
+                usize::from(checked)
+            );
+            assert_eq!(mutation["killed"], usize::from(!checked));
+            assert_eq!(mutation["complete"], true);
+            assert_eq!(mutation["unresolved"], 0);
+            assert_eq!(mutation["score"], if checked { 0.0 } else { 50.0 });
+            // Extreme bodies are not typechecked, so pseudo-testing is unchanged.
+            for row in result["pseudoTesting"]["outcomes"].as_array().unwrap() {
+                assert!(row["setups"][0]["typecheck"].is_null(), "{row}");
+            }
+            fixture.assert_clean();
+        }
+    }
+
+    #[test]
     fn mutation_plan_preserves_analysis_ids_and_report_metadata() {
         let fixture = super::super::tests::Fixture::new();
         let mut captured = fixture.capture().unwrap();
@@ -3026,10 +3194,10 @@ mod tests {
         assert_eq!(
             result["perOperator"],
             json!([
-                {"operator":"<","kind":"comparison","eligibleSites":1,"excludedSites":0,"planned":2,"equivalent":0,"completed":0,"jobsAttempted":0,"executionMs":0.0},
-                {"operator":"===","kind":"comparison","eligibleSites":1,"excludedSites":0,"planned":1,"equivalent":0,"completed":0,"jobsAttempted":0,"executionMs":0.0},
-                {"operator":">","kind":"comparison","eligibleSites":1,"excludedSites":0,"planned":2,"equivalent":0,"completed":0,"jobsAttempted":0,"executionMs":0.0},
-                {"operator":"expression-statement","kind":"statement","eligibleSites":0,"excludedSites":1,"planned":0,"equivalent":0,"completed":0,"jobsAttempted":0,"executionMs":0.0}
+                {"operator":"<","kind":"comparison","eligibleSites":1,"excludedSites":0,"planned":2,"equivalent":0,"compileErrors":0,"completed":0,"jobsAttempted":0,"executionMs":0.0},
+                {"operator":"===","kind":"comparison","eligibleSites":1,"excludedSites":0,"planned":1,"equivalent":0,"compileErrors":0,"completed":0,"jobsAttempted":0,"executionMs":0.0},
+                {"operator":">","kind":"comparison","eligibleSites":1,"excludedSites":0,"planned":2,"equivalent":0,"compileErrors":0,"completed":0,"jobsAttempted":0,"executionMs":0.0},
+                {"operator":"expression-statement","kind":"statement","eligibleSites":0,"excludedSites":1,"planned":0,"equivalent":0,"compileErrors":0,"completed":0,"jobsAttempted":0,"executionMs":0.0}
             ])
         );
         let outcomes = result["outcomes"].as_array().unwrap();
@@ -4327,6 +4495,7 @@ mod tests {
                 "--runInBand".into(),
             ],
             typecheck: None,
+            typecheck_mutants: false,
             coverage: CoverageCommand {
                 command: vec!["node".into(), "coverage.mjs".into()],
                 report: "coverage.json".into(),

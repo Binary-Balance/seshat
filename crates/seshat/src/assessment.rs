@@ -7,6 +7,8 @@ pub enum TestState {
     // Opted-in, clean runner timeout. The caller retains the raw timeout evidence.
     CountedTimeout,
     ExecutionError,
+    // The mutant failed its opted-in typecheck, so its tests did not run.
+    CompileError,
     Cancelled,
     NotRun,
 }
@@ -18,6 +20,7 @@ impl TestState {
             Self::Failed => "failed",
             Self::TimedOut | Self::CountedTimeout => "timed-out",
             Self::ExecutionError => "execution-error",
+            Self::CompileError => "compile-error",
             Self::Cancelled => "cancelled",
             Self::NotRun => "not-run",
         }
@@ -30,6 +33,8 @@ pub enum Verdict {
     Survived,
     // A survivor the project declared equivalent: resolved but not scored.
     Equivalent,
+    // Type-invalid, so it could never ship: resolved but not scored.
+    CompileError,
     TimedOut,
     CountedTimeout,
     ExecutionError,
@@ -44,6 +49,7 @@ impl Verdict {
             Self::Killed => "killed",
             Self::Survived => "survived",
             Self::Equivalent => "equivalent",
+            Self::CompileError => "compile-error",
             Self::TimedOut | Self::CountedTimeout => "timed-out",
             Self::ExecutionError => "execution-error",
             Self::Cancelled => "cancelled",
@@ -59,6 +65,7 @@ pub struct MutationAssessment {
     pub counted_timeouts: usize,
     pub survived: usize,
     pub equivalent: usize,
+    pub compile_errors: usize,
     pub score: Option<f64>,
     pub outcomes: Vec<Verdict>,
 }
@@ -111,6 +118,9 @@ pub fn mutation(
                 Verdict::ExecutionError
             } else if states.contains(&TestState::Cancelled) {
                 Verdict::Cancelled
+            } else if states.contains(&TestState::CompileError) {
+                // Later setups do not run once a typecheck rejects the mutant.
+                Verdict::CompileError
             } else if states.contains(&TestState::TimedOut)
                 || states.contains(&TestState::CountedTimeout)
             {
@@ -143,9 +153,13 @@ pub fn mutation(
         .iter()
         .filter(|v| **v == Verdict::CountedTimeout)
         .count();
+    let compile_errors = outcomes
+        .iter()
+        .filter(|v| **v == Verdict::CompileError)
+        .count();
     let complete = baseline_passed
         && executions.len() == expected_mutants
-        && killed + survived + counted_timeouts + equivalent == expected_mutants;
+        && killed + survived + counted_timeouts + equivalent + compile_errors == expected_mutants;
     let scored = killed + counted_timeouts + survived;
     let score = if complete && scored > 0 {
         Some((killed + counted_timeouts) as f64 / scored as f64 * 100.0)
@@ -158,6 +172,7 @@ pub fn mutation(
         counted_timeouts,
         survived,
         equivalent,
+        compile_errors,
         score,
         outcomes,
     }
@@ -241,6 +256,38 @@ mod tests {
         let unassessed = mutation(&[Failed], 1, &[vec![Passed]], &[true]);
         assert_eq!(unassessed.outcomes, [Verdict::Unassessed]);
         assert_eq!(Verdict::Equivalent.label(), "equivalent");
+    }
+
+    #[test]
+    fn compile_errors_resolve_without_entering_the_score() {
+        let cases = [
+            (vec![CompileError, NotRun], Verdict::CompileError),
+            (vec![Passed, CompileError], Verdict::CompileError),
+            (vec![CompileError, ExecutionError], Verdict::ExecutionError),
+            (vec![CompileError, Cancelled], Verdict::Cancelled),
+        ];
+        for (states, verdict) in cases {
+            let result = mutation(&[Passed, Passed], 1, &[states], &[true]);
+            assert_eq!(result.outcomes, [verdict]);
+            assert_eq!(result.complete, verdict == Verdict::CompileError);
+        }
+        let result = mutation(
+            &[Passed],
+            3,
+            &[vec![Failed], vec![CompileError], vec![Passed]],
+            &[],
+        );
+        assert!(result.complete);
+        assert_eq!(
+            (result.killed, result.survived, result.compile_errors),
+            (1, 1, 1)
+        );
+        assert_eq!(result.score, Some(50.0));
+        let only = mutation(&[Passed], 1, &[vec![CompileError]], &[]);
+        assert!(only.complete);
+        assert_eq!(only.score, None);
+        assert_eq!(pseudo_tested(Some(1.0), Verdict::CompileError), None);
+        assert_eq!(Verdict::CompileError.label(), "compile-error");
     }
 
     #[test]

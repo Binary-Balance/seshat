@@ -67,10 +67,15 @@ score. Seshat checks where a declaration points, not whether the claim is true.
 A killed mutant with a declaration has a stale declaration.
 _Avoid_: proven equivalent mutant
 
+**Compile-error mutant**:
+A mutant rejected by the project's typecheck when `typecheckMutants` is set.
+Its tests do not run, and it is left out of the mutation score.
+_Avoid_: killed mutant
+
 **Mutation score**:
 The percentage of detected mutants in a complete run, including eligible
-runner-reported timeouts when explicitly opted in. Declared equivalent mutants
-are excluded. It is not applicable when there are no scored mutants, and no
+runner-reported timeouts when explicitly opted in. Declared equivalent and
+compile-error mutants are excluded. It is not applicable when there are no scored mutants, and no
 final percentage is reported for an incomplete run.
 _Avoid_: percentage of bugs found
 

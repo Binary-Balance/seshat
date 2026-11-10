@@ -151,10 +151,12 @@ Seshat assumes deterministic tests. It does not repeat baselines to detect flaky
 tests or rerun killed mutants to confirm their failures. An intermittent failure
 can kill a mutant by chance and make scores vary between identical runs.
 
-Only the original source is typechecked. Mutants run without a separate
-typecheck, so a change TypeScript would reject can still count as killed or
-survived in the mutation score. The score measures runtime test detection,
-including these type-invalid changes.
+By default only the original source is typechecked, so a mutant TypeScript
+would reject can still count as killed or survived. Set
+[`typecheckMutants`](docs/configuration.md#typecheck-mutants) on a setup to
+typecheck each operator mutant first. Rejected mutants get a separate
+`compile-error` verdict and are left out of the score, at the cost of one
+typecheck per mutant.
 
 `check` and `mutate` also replace eligible function bodies to detect pseudo-tested
 functions, those whose body replacement tests miss despite positive coverage.
