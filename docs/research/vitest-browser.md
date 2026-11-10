@@ -147,8 +147,9 @@ one setup. A test timeout or a page crash on the first of three mutants left
 the other two runnable: both were killed, none was skipped, and the score was
 withheld.
 
-`missing-evidence`, `replayed-identity`, `retry`, `repeat`, `expected-failure`
-and `concurrent` failed the baseline, so no mutant ran. Malformed evidence in
+`missing-evidence` (the Node proof's `missing-runner`), `replayed-identity`
+(no Node counterpart), `retry`, `repeat`, `expected-failure` and `concurrent`
+failed the baseline, so no mutant ran. Malformed evidence in
 the page, such as a wrongly typed `test.meta`, was not tested. The reporter
 code that checks it is the same as on the Node route.
 
@@ -187,8 +188,9 @@ browser setups without affecting replacement.
 
 These numbers come from the recorded 5.0.0 run on a shared 2-vCPU host. Other
 projects' work was running; `uptime` showed load averages between 2 and 6 at
-the end. Treat them as rough proportions, not benchmarks. The 5.1.0 subset ran next,
-under similar load, and each case took between 0.6 and 1.0 times as long.
+the end. Treat them as rough proportions, not benchmarks. The 5.1.0 subset ran next;
+`uptime` showed load averages between 3 and 4 at its end. Each of its cases
+took 60% to 100% of the 5.0.0 time.
 
 - The same one-test control took 2.3 s per mutant job in browser mode and
   0.6 s in Vitest's Node mode (`assertion` against `node-reference`), almost
