@@ -149,6 +149,12 @@ If the tests still pass, it is reported `equivalent` and left out of the score;
 if they kill it, the declaration is reported stale. See
 [equivalent mutant declarations](https://github.com/Binary-Balance/seshat/blob/main/docs/configuration.md#equivalent-mutant-declarations).
 
+Set `"typecheckMutants": true` in a setup to typecheck each operator mutant
+before its tests. A mutant TypeScript rejects is reported `compile-error` and
+left out of the score. It is off by default because each mutant gets one more
+typecheck. See
+[typecheck mutants](https://github.com/Binary-Balance/seshat/blob/main/docs/configuration.md#typecheck-mutants).
+
 `check` and `mutate` also replace eligible function bodies to detect pseudo-tested
 functions, those whose body replacement tests miss despite positive coverage.
 These flags and counts are separate from the operator mutation score. `mutate`
