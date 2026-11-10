@@ -253,7 +253,10 @@ impl CommandEvidence {
     }
 
     fn can_continue_mutation(&self) -> bool {
-        matches!(self.state, TestState::Passed | TestState::Failed)
+        matches!(
+            self.state,
+            TestState::Passed | TestState::Failed | TestState::CompileError
+        )
             // A cleaned-up unresolved job does not prevent another fresh, isolated job.
             || (((self.state == TestState::ExecutionError && self.details["timedOut"] == false)
                 || (self.state == TestState::TimedOut && self.details["timedOut"] == true))
