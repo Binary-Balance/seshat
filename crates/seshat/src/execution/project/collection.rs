@@ -1615,12 +1615,13 @@ impl CapturedProject {
                     .typecheck
                     .as_ref()
                     .filter(|_| setup.typecheck_mutants)
-                    .map(|args| (args, JobKind::Typecheck, format!("{id}-typecheck")));
-                for (args, kind, job_id) in
+                    .map(|args| (args, JobKind::Typecheck, Some("typecheck")));
+                for (args, kind, phase) in
                     typecheck
                         .into_iter()
-                        .chain([(&setup.test, JobKind::Test, id.clone())])
+                        .chain([(&setup.test, JobKind::Test, None)])
                 {
+                    let job_id = phase.map_or(id.clone(), |phase| format!("{id}-{phase}"));
                     let checked = worker
                         .run_job(setup, args, &receipts.0, &job_id, kind)
                         .unwrap_or_else(CommandEvidence::error);
@@ -1628,8 +1629,8 @@ impl CapturedProject {
                     let mut row = checked.into_json();
                     row["worker"] = json!(worker_id);
                     row["name"] = json!(setup.name);
-                    if job_id != id {
-                        row["phase"] = json!("typecheck");
+                    if let Some(phase) = phase {
+                        row["phase"] = json!(phase);
                     }
                     workers.baselines.push(row);
                     if !workers.ready {
@@ -3176,6 +3177,45 @@ mod tests {
             }
             fixture.assert_clean();
         }
+    }
+
+    #[test]
+    fn failed_mutant_typechecks_stay_unresolved() {
+        let fixture = super::super::tests::Fixture::new();
+        fs::write(
+            fixture.project.join("src/calc.ts"),
+            "export const below = (value: number) => value < 3;\n",
+        )
+        .unwrap();
+        let mut captured = fixture.capture().unwrap();
+        captured
+            .sources
+            .retain(|(path, _)| path == Path::new("src/calc.ts"));
+        let setup = &mut captured.config.setups[0];
+        setup.typecheck_mutants = true;
+        // A non-zero exit after changing the source is not the mutant's rejection.
+        setup.typecheck = Some(vec![
+            "node".into(),
+            "-e".into(),
+            "const fs = require('fs'); if (fs.readFileSync('src/calc.ts', 'utf8').includes('>=')) { fs.writeFileSync('src/calc.ts', ''); process.exitCode = 2; }".into(),
+        ]);
+        setup.test = vec![
+            "node".into(),
+            "-e".into(),
+            r#"require('fs').writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({version:1,
+                executionId:process.env.SESHAT_EXECUTION_ID, node:process.versions.node,
+                complete:true, passed:1, failed:0, errors:0}));"#
+                .into(),
+        ];
+        let result = captured
+            .assess_with_strategy(AssessmentMode::Mutate, false, false)
+            .unwrap();
+        let rejected = &result["mutation"]["outcomes"][1];
+        assert_eq!(rejected["verdict"], "execution-error", "{result}");
+        assert!(!rejected["setups"][0]["typecheck"]["sourceError"].is_null());
+        assert_eq!(result["mutation"]["compileErrors"], 0);
+        assert_eq!(result["mutation"]["complete"], false);
+        fixture.assert_clean();
     }
 
     #[test]
