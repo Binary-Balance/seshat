@@ -442,7 +442,7 @@ command text or free-form diagnostic nested under them remains evidence.
 | `unresolved` | `planned - killed - countedTimeouts - survived - equivalent - compileErrors`, including incomplete attempts and unstarted work. |
 | `jobsAttempted` | Mutant test and mutant typecheck jobs only. Top-level `result.jobsAttempted` also includes original and worker baseline jobs. |
 | `workersRequested`, `workersUsed` | `workersRequested` is the configured Seshat worker limit. `workersUsed` is `min(workersRequested, planned)` when preparation succeeds and no cancellation was observed before scheduling, otherwise `0`. It is scheduler capacity, not observed worker activity, and is not reduced after scheduling starts for worker-start failure, cancellation or early stopping. |
-| `workerBaselineJobs`, `workerBaselines` | Additional worker baseline jobs and their evidence. Both mutation phases share the additional workers, so each worker's baseline runs once, before the extreme phase, and is reported only here. Workers are copied for the phase that needs more, so the count can exceed `(workersUsed - 1) × setups`, and can be non-zero when `workersUsed` is `0`. With switching, each worker the operator phase uses also runs a prepared baseline, marked `phase: "prepared-baseline"`. |
+| `workerBaselineJobs`, `workerBaselines` | Additional worker baseline jobs and their evidence. With `typecheckMutants`, each worker first typechecks its unchanged copy; those rows have `phase: "typecheck"`. Both mutation phases share the additional workers, so each worker's baseline runs once, before the extreme phase, and is reported only here. Workers are copied for the phase that needs more, so the count can exceed `(workersUsed - 1) × setups`, and can be non-zero when `workersUsed` is `0`. With switching, each worker the operator phase uses also runs a prepared baseline, marked `phase: "prepared-baseline"`. |
 | `workerPreparationMs`, `mutationWallMs`, `workerCleanupMs` | Mutation preparation, scheduling and additional-worker cleanup timings. Preparation includes the shared worker copies and baselines. |
 | `diagnostics` | Unresolved counts, throughput, cumulative worker time and up to five slow executions. |
 | `error`, `restorationError` | Nullable diagnostic strings for mutation or source-restoration failures. Either failure makes mutation incomplete and withholds its score. |
@@ -509,12 +509,13 @@ The selected set covers any executed code in the source file, rather than only
 the exact mutant. Module-level and module-load coverage use full commands.
 
 Setup `jobsAttempted` counts actual mutant job attempts, including a full rerun
-after an unconfirmed selection and any mutant typecheck. A setup with proved zero source coverage has
-`state: "no-coverage"`, selection mode `no-coverage` and `jobsAttempted: 0`.
+after an unconfirmed selection and any mutant typecheck. A setup with proved
+zero source coverage has `state: "no-coverage"`, selection mode `no-coverage`
+and `jobsAttempted: 0`, or `1` after a passing mutant typecheck.
 Each setup decides from its own reliable zero-coverage evidence. A skipped setup
 counts as passed, and other setups still run their jobs. A mutant skipped by
-every setup is survived without running a test job. It remains in the score
-denominator. Declared equivalent mutants are never skipped this way. Existing extreme-mutation zero-coverage skips remain
+every setup is survived without running a test job, unless a mutant typecheck
+rejects it first. A survivor remains in the score denominator. Declared equivalent mutants are never skipped this way. Existing extreme-mutation zero-coverage skips remain
 separate. Missing evidence never counts as zero coverage.
 
 Original baselines must all be `passed` before any mutant can be assessed. If
@@ -534,8 +535,8 @@ the verdict rules are applied in this order:
 
 The precedence means an infrastructure error, cancellation, ineligible timeout
 or missing setup never becomes detected merely because another setup failed.
-A complete mutation result contains `killed`, `survived`, `equivalent`, `compile-error` and,
-when opted in, `timed-out` outcomes with `countedAsKilled: true`. A timeout
+A complete mutation result contains `killed`, `survived`, `equivalent`,
+`compile-error` and, when opted in, `timed-out` outcomes with `countedAsKilled: true`. A timeout
 alongside a missing setup retains the `timed-out` verdict but does not count.
 A complete result with no scored mutants, because there are none or all are
 `equivalent` or `compile-error`, has `score: null`, meaning not applicable, not `100`.

@@ -718,7 +718,7 @@ fn readable(report: &Value) -> String {
             .as_f64()
             .map(|v| format!("{v:.2}%"))
             .unwrap_or_else(|| {
-                // Complete with no score: no mutants, or every one declared equivalent.
+                // Complete with no score: no mutants, or every one equivalent or a compile error.
                 if mutation["complete"] == true {
                     "not applicable"
                 } else {

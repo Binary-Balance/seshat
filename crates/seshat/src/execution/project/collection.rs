@@ -1448,7 +1448,6 @@ impl CapturedProject {
                 && checked.details["exit"]
                     .as_i64()
                     .is_some_and(|exit| exit != 0)
-                && checked.details["sourceError"].is_null()
                 && checked.can_continue_mutation()
             {
                 checked.state = TestState::CompileError;
@@ -1610,14 +1609,33 @@ impl CapturedProject {
                     receipts.0.file_name().unwrap().to_str().unwrap()
                 );
                 progress.phase(format_args!("worker {worker_id} baseline {:?}", setup.name));
-                let checked = worker
-                    .run_job(setup, &setup.test, &receipts.0, &id, JobKind::Test)
-                    .unwrap_or_else(CommandEvidence::error);
-                workers.ready &= checked.state == TestState::Passed;
-                let mut row = checked.into_json();
-                row["worker"] = json!(worker_id);
-                row["name"] = json!(setup.name);
-                workers.baselines.push(row);
+                // A mutant typecheck failure counts as the mutant's only if this
+                // copy's unchanged source passes the same command.
+                let typecheck = setup
+                    .typecheck
+                    .as_ref()
+                    .filter(|_| setup.typecheck_mutants)
+                    .map(|args| (args, JobKind::Typecheck, format!("{id}-typecheck")));
+                for (args, kind, job_id) in
+                    typecheck
+                        .into_iter()
+                        .chain([(&setup.test, JobKind::Test, id.clone())])
+                {
+                    let checked = worker
+                        .run_job(setup, args, &receipts.0, &job_id, kind)
+                        .unwrap_or_else(CommandEvidence::error);
+                    workers.ready &= checked.state == TestState::Passed;
+                    let mut row = checked.into_json();
+                    row["worker"] = json!(worker_id);
+                    row["name"] = json!(setup.name);
+                    if job_id != id {
+                        row["phase"] = json!("typecheck");
+                    }
+                    workers.baselines.push(row);
+                    if !workers.ready {
+                        break;
+                    }
+                }
                 if !workers.ready {
                     break;
                 }
@@ -3078,6 +3096,8 @@ mod tests {
             captured
                 .sources
                 .retain(|(path, _)| path == Path::new("src/calc.ts"));
+            // A second worker must typecheck its own unchanged copy first.
+            captured.config.workers = 2;
             let setup = &mut captured.config.setups[0];
             setup.typecheck_mutants = checked;
             // Rejects the `>=` mutant, as tsc rejects a type-invalid one.
@@ -3130,6 +3150,17 @@ mod tests {
             } else {
                 assert_eq!(rejected["verdict"], "killed");
             }
+            let phases: Vec<_> = mutation["workerBaselines"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|row| (row["phase"].clone(), row["state"].clone()))
+                .collect();
+            let mut expected = vec![(Value::Null, json!("passed"))];
+            if checked {
+                expected.insert(0, (json!("typecheck"), json!("passed")));
+            }
+            assert_eq!(phases, expected);
             assert_eq!(mutation["compileErrors"], usize::from(checked));
             assert_eq!(
                 mutation["perOperator"][0]["compileErrors"],

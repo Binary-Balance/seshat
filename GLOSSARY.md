@@ -75,8 +75,8 @@ _Avoid_: killed mutant
 **Mutation score**:
 The percentage of detected mutants in a complete run, including eligible
 runner-reported timeouts when explicitly opted in. Declared equivalent and
-compile-error mutants are excluded. It is not applicable when there are no scored mutants, and no
-final percentage is reported for an incomplete run.
+compile-error mutants are excluded. It is not applicable when there are no
+scored mutants, and no final percentage is reported for an incomplete run.
 _Avoid_: percentage of bugs found
 
 **Comparison mutant**:

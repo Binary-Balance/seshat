@@ -43,7 +43,7 @@ const results = [];
 for (const typecheckMutants of [false, true]) {
   const config = {source:{include:['subject.ts']}, capture:Object.keys(inputs), setups:[{
     name:'node', runner:'node', cwd:'.', timeoutMs:30000, typecheckMutants,
-    typecheck:[process.execPath, join(repo, 'benchmarks/proofs/node_modules/typescript/bin/tsc'), '--project', 'tsconfig.json'],
+    typecheck:[process.execPath, join(repo, 'benchmarks/node_modules/typescript/bin/tsc'), '--project', 'tsconfig.json'],
     test:[process.execPath, '--test', '--test-concurrency=1', '--test-reporter={seshatReporter}', 'test.mjs'],
     coverage:{command:[process.execPath, join(repo, 'benchmarks/proofs/collect-node.mjs'), 'test.mjs'],
       report:'coverage/final.json'},

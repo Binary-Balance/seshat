@@ -434,7 +434,9 @@ against each operator mutant before any tests.
 A non-zero exit without an execution error gives the `compile-error` verdict.
 The mutant's tests do not run, and it is left out of the score. Timeouts,
 cancellation and commands that fail to run remain unresolved, as for test jobs.
-The setting requires `typecheck`, applies only to operator mutants and is
+Each additional worker first typechecks its unchanged copy, so a rejection is
+attributable to the mutant. The setting requires `typecheck`, applies only to
+operator mutants and is
 rejected with `--experimental-switching`, whose prepared source holds every
 mutant at once. Extreme mutants are never typechecked: most body replacements
 would not match the declared return type, so checking them would hide
@@ -1154,7 +1156,8 @@ coverage status. Implicit class scopes are excluded. See the
 [calculation and TypeScript choices](cognitive-complexity.md).
 `minMutationScore` applies to a complete mutation run. Declared
 [equivalent mutants](#equivalent-mutant-declarations) are left out of the
-score; when every mutant is declared equivalent, the check is not applicable. Equality
+score, as are `compile-error` mutants; when no scored mutant remains, the
+check is not applicable. Equality
 passes and comparisons use unrounded values, so a measured value exactly equal
 to its limit passes. Omit a field or set it to null to disable it. Unknown
 fields, invalid types and out-of-range values are errors.

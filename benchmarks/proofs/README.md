@@ -7,7 +7,7 @@ The earlier benchmark under `benchmarks/rust/` is unchanged.
 ## Run
 
 `node benchmarks/proofs/typecheck-mutants.mjs --cli PATH` runs `mutate` on a
-small Node fixture with `typecheckMutants` off and on, using the proof
+small Node fixture with `typecheckMutants` off and on, using the benchmark
 dependencies' TypeScript. With it on, the four type-invalid cases from issue
 217 are `compile-error` and leave the score; with it off they keep their
 runtime verdicts. A type-valid control is killed either way. CI runs it on
