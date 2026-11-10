@@ -41,14 +41,14 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 124132,
+      "wallMs": 130885,
       "cost": {
-        "baselineMs": 5504.784135999999,
-        "coverageMs": 5973.596291,
-        "meanMutantJobMs": 4070.835843421052,
+        "baselineMs": 5825.834128,
+        "coverageMs": 5758.32117,
+        "meanMutantJobMs": 4487.109379842105,
         "mutants": 19
       },
-      "concurrentBrowserJobs": 1
+      "concurrentJobs": 1
     },
     "workers": {
       "complete": true,
@@ -63,12 +63,12 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 75552,
+      "wallMs": 126988,
       "cost": {
-        "mutationWallMs": 46470.745361,
-        "singleWorkerMutationWallMs": 77397.381135
+        "mutationWallMs": 77405.420481,
+        "singleWorkerMutationWallMs": 85309.164131
       },
-      "concurrentBrowserJobs": 2
+      "concurrentJobs": 2
     },
     "switching-closed": {
       "complete": false,
@@ -83,7 +83,7 @@
       "deadlineReached": null,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 28588
+      "wallMs": 63268
     },
     "switching": {
       "complete": true,
@@ -98,7 +98,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 77505
+      "wallMs": 96722
     },
     "coverage-maps": {
       "files": {
@@ -128,7 +128,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 8918
+      "wallMs": 9075
     },
     "survived": {
       "complete": true,
@@ -143,7 +143,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 8895
+      "wallMs": 8783
     },
     "clean-hooks": {
       "complete": true,
@@ -158,7 +158,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 9417
+      "wallMs": 9883
     },
     "assertion-count": {
       "complete": true,
@@ -173,7 +173,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 10280
+      "wallMs": 9847
     },
     "before-all": {
       "complete": false,
@@ -188,7 +188,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 13677
+      "wallMs": 8951
     },
     "before-each": {
       "complete": false,
@@ -203,7 +203,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 9885
+      "wallMs": 8801
     },
     "after-each": {
       "complete": false,
@@ -218,7 +218,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 10159
+      "wallMs": 8606
     },
     "cleanup": {
       "complete": false,
@@ -233,7 +233,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 15061
+      "wallMs": 8685
     },
     "mixed": {
       "complete": false,
@@ -248,7 +248,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 12972
+      "wallMs": 8725
     },
     "timeout": {
       "complete": false,
@@ -263,7 +263,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 15261
+      "wallMs": 8920
     },
     "hook-timeout": {
       "complete": false,
@@ -278,7 +278,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 9674
+      "wallMs": 8924
     },
     "import-error": {
       "complete": false,
@@ -293,7 +293,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 9958
+      "wallMs": 8609
     },
     "around-each": {
       "complete": false,
@@ -308,7 +308,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 9711
+      "wallMs": 8591
     },
     "unhandled": {
       "complete": false,
@@ -323,7 +323,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 10544
+      "wallMs": 8592
     },
     "application-error": {
       "complete": true,
@@ -338,7 +338,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 13288
+      "wallMs": 8902
     },
     "page-crash": {
       "complete": false,
@@ -353,7 +353,7 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 12835
+      "wallMs": 8637
     },
     "node-reference": {
       "complete": true,
@@ -368,10 +368,10 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 4479,
+      "wallMs": 4129,
       "cost": {
-        "nodeMutantJobMs": 639.73811,
-        "browserMutantJobMs": 2188.235623
+        "nodeMutantJobMs": 606.252231,
+        "browserMutantJobMs": 2321.6850139999997
       }
     },
     "missing-evidence": {
@@ -387,7 +387,7 @@
       "deadlineReached": null,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 6801
+      "wallMs": 4211
     },
     "replayed-identity": {
       "complete": false,
@@ -402,7 +402,7 @@
       "deadlineReached": null,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 7557
+      "wallMs": 4376
     },
     "retry": {
       "complete": false,
@@ -417,7 +417,7 @@
       "deadlineReached": null,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 6787
+      "wallMs": 4185
     },
     "repeat": {
       "complete": false,
@@ -432,7 +432,7 @@
       "deadlineReached": null,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 7043
+      "wallMs": 4187
     },
     "expected-failure": {
       "complete": false,
@@ -447,7 +447,7 @@
       "deadlineReached": null,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 7588
+      "wallMs": 4280
     },
     "concurrent": {
       "complete": false,
@@ -462,9 +462,9 @@
       "deadlineReached": null,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 6146
+      "wallMs": 4195
     },
-    "timeout-continues": {
+    "continue-after-timeout": {
       "complete": false,
       "score": null,
       "baseline": "passed",
@@ -477,7 +477,22 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [],
-      "wallMs": 17837
+      "wallMs": 13039
+    },
+    "continue-after-crash": {
+      "complete": false,
+      "score": null,
+      "baseline": "passed",
+      "planned": 3,
+      "killed": 2,
+      "survived": 0,
+      "unresolved": 1,
+      "firstVerdict": "execution-error",
+      "testTimedOut": null,
+      "deadlineReached": false,
+      "leftoverProcesses": 0,
+      "leftoverBrowserFiles": [],
+      "wallMs": 12870
     },
     "deadline": {
       "complete": false,
@@ -492,10 +507,10 @@
       "deadlineReached": true,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [
-        "playwright-artifacts-a3Hhu7",
-        "playwright_chromiumdev_profile-cmhUIv"
+        "playwright-artifacts-h9SqNv",
+        "playwright_chromiumdev_profile-Sqfk4Q"
       ],
-      "wallMs": 29876
+      "wallMs": 26632
     },
     "blocked-page": {
       "complete": false,
@@ -510,10 +525,10 @@
       "deadlineReached": true,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [
-        "playwright-artifacts-dBiycs",
-        "playwright_chromiumdev_profile-6YO98V"
+        "playwright-artifacts-1AWrbc",
+        "playwright_chromiumdev_profile-mjTYTm"
       ],
-      "wallMs": 28000
+      "wallMs": 26632
     },
     "cancellation": {
       "complete": false,
@@ -528,10 +543,10 @@
       "deadlineReached": false,
       "leftoverProcesses": 0,
       "leftoverBrowserFiles": [
-        "playwright-artifacts-xKltnl",
-        "playwright_chromiumdev_profile-ANLwzB"
+        "playwright-artifacts-ljH0OC",
+        "playwright_chromiumdev_profile-U4u70M"
       ],
-      "wallMs": 15692
+      "wallMs": 9591
     }
   }
 }

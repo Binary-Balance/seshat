@@ -139,9 +139,12 @@ rules.
 
 Every result other than killed or survived withheld the score. Browser
 timeout messages match the reporter's existing `Test|Hook timed out` pattern,
-and no timeout counted as a kill, as the post-#156 policy requires. In
-`timeout-continues`, a test timeout on the first of three mutants left the
-other two runnable: they were killed, none was skipped, and the score was
+and no timeout counted as a kill, as the post-#156 policy requires.
+
+`continue-after-timeout` and `continue-after-crash` check the same rule as the
+Node proof's `operator-timeout-continues` and `operator-crash-continues`, with
+one setup. A test timeout or a page crash on the first of three mutants left
+the other two runnable: both were killed, none was skipped, and the score was
 withheld.
 
 `missing-evidence`, `replayed-identity`, `retry`, `repeat`, `expected-failure`
@@ -162,9 +165,9 @@ A killed job cannot run Playwright's Node-side cleanup, so each deadline or
 cancellation leaves one Chromium profile and one artifacts directory in
 `TMPDIR`, about 230 KB in a manual check. Normal runs leave none.
 
-Each job starts its own Vitest server. Concurrent runs take the next free API
-port (63315, then 63316), and `workers` saw two jobs running browsers at the
-same time with identical verdicts.
+Each job starts its own Vitest server. In a manual check, two concurrent runs
+took the next free API port (63315, then 63316). `workers` saw two jobs
+running at the same time, with identical verdicts.
 
 Vitest captures a screenshot of each failed test by default in headless mode,
 writing PNG files into the job's copy. Killed mutants pay that cost. It was
@@ -182,15 +185,18 @@ browser setups without affecting replacement.
 
 ### Cost
 
-These numbers come from the recorded run on a shared 2-vCPU host whose load
-average was about 5 to 7 from other projects' work. Treat them as rough
-proportions, not benchmarks.
+These numbers come from the recorded 5.0.0 run on a shared 2-vCPU host. Other
+projects' work was running; `uptime` showed load averages between 2 and 6 at
+the end. Treat them as rough proportions, not benchmarks. The 5.1.0 subset ran
+earlier, while the load average was 14 to 19, and took 2 to 7 times as long;
+its timings say nothing about 5.1.0 itself.
 
-- The same one-test control took 2.2 s per mutant job in browser mode and
-  0.6 s in Vitest's Node mode (`assertion` against `node-reference`), about
-  3.4 times as long. The difference is mostly starting Vite and Chromium.
-- `stack` averaged 4.1 s per mutant job across 19 mutants.
-- Two workers cut `stack`'s mutation time from 77 s to 46 s.
+- The same one-test control took 2.3 s per mutant job in browser mode and
+  0.6 s in Vitest's Node mode (`assertion` against `node-reference`), almost
+  4 times as long. The difference is mostly starting Vite and Chromium.
+- `stack` averaged 4.5 s per mutant job across 19 mutants.
+- Two workers cut `stack`'s mutation time only from 85 s to 77 s. Each job
+  runs a Vite server and a browser, so two at once compete for the 2 vCPUs.
 
 Scope and evidence were not reduced to improve these numbers. Measuring on a
 quiet host belongs with the implementation work.

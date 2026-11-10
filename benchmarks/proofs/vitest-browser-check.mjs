@@ -42,6 +42,13 @@ const controls = {
   'page-crash': ["import {commands} from 'vitest/browser';test('crash',async()=>{if(!ready){await (commands as any).crashPage();await new Promise(r=>setTimeout(r,5000));}});",
     'execution-error', {crash: true}],
 };
+// An unresolved first mutant must not stop the next two (#156). Same rule as
+// the Node proof's operator-timeout-continues and operator-crash-continues.
+const continuations = {
+  'continue-after-timeout': ["test('first',()=>ready?Promise.resolve():new Promise(()=>{}),50);", 'timed-out', {}],
+  'continue-after-crash': ["import {commands} from 'vitest/browser';test('first',async()=>{if(!ready){await (commands as any).crashPage();await new Promise(r=>setTimeout(r,5000));}});",
+    'execution-error', {crash: true}],
+};
 // The mutant runs past the job deadline: asynchronously, or by blocking the page
 // so that no in-page timeout can fire.
 const deadlines = {
@@ -58,7 +65,7 @@ const baselineRejections = {
   concurrent: {body: "test.concurrent('concurrent',()=>{});"},
 };
 const allCases = ['stack', 'workers', 'switching-closed', 'switching', 'coverage-maps', 'node-reference',
-  ...Object.keys(controls), ...Object.keys(baselineRejections), 'timeout-continues', ...Object.keys(deadlines), 'cancellation'];
+  ...Object.keys(controls), ...Object.keys(baselineRejections), ...Object.keys(continuations), ...Object.keys(deadlines), 'cancellation'];
 const cases = values.cases?.split(',').map(name => name.trim()) ?? allCases;
 assert.ok(cases.every(name => allCases.includes(name)), `--cases must name: ${allCases.join(', ')}`);
 
@@ -123,12 +130,12 @@ function owned() {
 function processCommand(pid) {
   try { return readlinkSync(`/proc/${pid}/exe`); } catch { return null; }
 }
-// Execution IDs of jobs that currently have Chromium running.
-function browserJobs() {
+// Execution IDs of running jobs, or of those with Chromium running.
+function runningJobs(browserOnly = false) {
   const ids = new Set();
   for (const pid of owned()) {
     try {
-      if (!/chrom/i.test(processCommand(pid) ?? '')) continue;
+      if (browserOnly && !/chrom/i.test(processCommand(pid) ?? '')) continue;
       const id = readFileSync(`/proc/${pid}/environ`, 'utf8').split('\0').find(entry => entry.startsWith('SESHAT_EXECUTION_ID='));
       if (id) ids.add(id);
     } catch {}
@@ -170,13 +177,14 @@ async function check(name, config, flags = [], killedJobs = 0) {
   console.log(`${name}: complete=${result.complete}, score=${result.mutation?.score}, ${Math.round(run.ms)}ms`);
   return result;
 }
-// Records the most jobs that had Chromium running at the same moment.
+// Records the most jobs running at the same moment. Chromium is up for only part
+// of each job, so counting browsers alone can miss real overlap.
 async function sampled(name, run) {
   let peak = 0;
-  const sampler = setInterval(() => { peak = Math.max(peak, browserJobs().size); }, 200);
+  const sampler = setInterval(() => { peak = Math.max(peak, runningJobs().size); }, 200);
   try { return await run(); } finally {
     clearInterval(sampler);
-    if (results.runs[name]) { results.runs[name].concurrentBrowserJobs = peak; save(); }
+    if (results.runs[name]) { results.runs[name].concurrentJobs = peak; save(); }
   }
 }
 const definitions = result => result.mutation.outcomes.map(({setups, executionMs, ...row}) => row);
@@ -186,8 +194,8 @@ const mean = numbers => numbers.reduce((a, b) => a + b, 0) / numbers.length;
 if (cases.includes('stack')) {
   vitestConfig();
   const result = await sampled('stack', () => check('stack', baseConfig));
-  // One worker: no job's browser may still run when the next job starts.
-  assert.equal(results.runs.stack.concurrentBrowserJobs, 1);
+  // One worker: no job may still run when the next one starts.
+  assert.equal(results.runs.stack.concurrentJobs, 1);
   assert.equal(result.complete, true);
   assert.deepEqual(result.diagnostics.runnerVersions[0].importFailureObserver, {state: 'inactive', reason: 'runner'});
   assert.equal(result.setups[0].baseline.report.passed, 3);
@@ -211,7 +219,7 @@ if (cases.includes('workers')) {
   assert.equal(result.mutation.workersUsed, 2);
   if (results.runs.stack) assert.deepEqual(definitions(result), definitions(results.runs.stack.result));
   // Each job starts its own Vitest server and browser; both workers must have run at once.
-  assert.equal(results.runs.workers.concurrentBrowserJobs, 2, 'the two workers never ran browsers at the same time');
+  assert.equal(results.runs.workers.concurrentJobs, 2, 'the two workers never ran jobs at the same time');
   results.runs.workers.cost = {mutationWallMs: result.mutation.mutationWallMs,
     singleWorkerMutationWallMs: results.runs.stack?.result.mutation.mutationWallMs ?? null};
   save();
@@ -299,16 +307,16 @@ for (const [name, options] of Object.entries(baselineRejections)) {
   assert.equal(result.setups[0].baseline.state, 'execution-error', JSON.stringify(result.setups[0].baseline));
   assert.equal(result.mutation.jobsAttempted, 0);
 }
-if (cases.includes('timeout-continues')) {
-  // A runner-reported timeout must not stop later mutants (#156).
-  const config = controlConfig('timeout-continues', "test('completion',()=>ready?Promise.resolve():new Promise(()=>{}),50);test('comparisons',()=>{expect(later).toBe(true);expect(last).toBe(true);});");
+for (const [name, [body, first, options]] of Object.entries(continuations)) {
+  if (!cases.includes(name)) continue;
+  const config = controlConfig(name, `${body}test('later',()=>{expect(later).toBe(true);expect(last).toBe(true);});`);
   writeFileSync(join(project, 'control.ts'), 'export const ready = 1 === 1;\nexport const later = 2 === 2;\nexport const last = 3 === 3;\n');
   writeFileSync(join(project, 'control.test.ts'), readFileSync(join(project, 'control.test.ts'), 'utf8')
     .replace('import {ready}', 'import {ready,later,last}'));
-  vitestConfig({include: ['control.test.ts'], sources: ['control.ts']});
-  const result = await check('timeout-continues', config);
-  assert.deepEqual(result.mutation.outcomes.map(row => row.verdict), ['timed-out', 'killed', 'killed']);
-  assert.equal(result.mutation.outcomes[0].setups[0].testTimedOut, true);
+  vitestConfig({include: ['control.test.ts'], sources: ['control.ts'], ...options});
+  const result = await check(name, config);
+  assert.deepEqual(result.mutation.outcomes.map(row => row.verdict), [first, 'killed', 'killed']);
+  if (first === 'timed-out') assert.equal(result.mutation.outcomes[0].setups[0].testTimedOut, true);
   assert.equal(result.mutation.notRun, 0);
   assert.equal(result.complete, false);
   assert.equal(result.mutation.score, null);
@@ -340,7 +348,7 @@ if (cases.includes('cancellation')) {
   const closed = new Promise(done => child.once('close', (status, signal) => { exit = {status, signal}; done(); }));
   try {
     // Wait for Chromium inside the mutant job, then let the test enter its wait.
-    const mutantBrowser = () => [...browserJobs()].some(id => id.includes('-mutant-'));
+    const mutantBrowser = () => [...runningJobs(true)].some(id => id.includes('-mutant-'));
     const deadline = performance.now() + 120000;
     while (!mutantBrowser()) {
       assert.equal(exit, undefined, `cancellation ended early: ${stderr}`);
@@ -374,7 +382,7 @@ const summary = {version: 1, environment, platform: `${process.platform}-${proce
       leftoverProcesses: run.cleanup?.processes.length ?? null,
       leftoverBrowserFiles: run.cleanup?.temporary.filter(entry => entry.startsWith('playwright')) ?? null,
       wallMs: Math.round(run.wallMs ?? 0), ...(run.cost ? {cost: run.cost} : {}),
-      ...(run.concurrentBrowserJobs ? {concurrentBrowserJobs: run.concurrentBrowserJobs} : {})}
+      ...(run.concurrentJobs ? {concurrentJobs: run.concurrentJobs} : {})}
       : {files: run.files, identical: run.identical}];
   }))};
 writeFileSync(join(work, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
