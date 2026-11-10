@@ -1,0 +1,17 @@
+{
+  "name": "seshat-vitest-browser-proof",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@vitest/browser-playwright": "5.0.0",
+    "@vitest/coverage-istanbul": "5.0.0",
+    "playwright": "1.63.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "typescript": "6.0.3",
+    "vitest": "5.0.0"
+  }
+}

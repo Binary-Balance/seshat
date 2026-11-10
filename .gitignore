@@ -5,6 +5,7 @@ benchmarks/stryker/node_modules/
 benchmarks/generated/
 benchmarks/proofs/node_modules/
 benchmarks/proofs/fixtures/jest-expo/node_modules/
+benchmarks/proofs/fixtures/vitest-browser/node_modules/
 benchmarks/proofs/target/
 crates/seshat/target/
 examples/jest/node_modules/
