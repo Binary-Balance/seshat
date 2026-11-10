@@ -26,6 +26,7 @@ const controls = {
   assertion: ["test('assertion',()=>expect(ready).toBe(true));", 'killed'],
   survived: ["test('unchanged',()=>expect(typeof ready).toBe('boolean'));", 'survived'],
   'clean-hooks': ["beforeEach(()=>{});afterEach(()=>{});test('assertion',()=>expect(ready).toBe(true));", 'killed'],
+  'assertion-count': ["test('count',()=>{expect.assertions(1);if(ready)expect(ready).toBe(true);});", 'killed'],
   'before-all': ["beforeAll(()=>{if(!ready)throw Error('setup');});test('blocked',()=>{});", 'execution-error'],
   'before-each': ["beforeEach(()=>{if(!ready)throw Error('setup');});test('blocked',()=>{});", 'execution-error'],
   'after-each': ["afterEach(()=>{if(!ready)throw Error('cleanup');});test('passed',()=>{});", 'execution-error'],
@@ -34,6 +35,7 @@ const controls = {
   timeout: ["test('timeout',()=>ready?Promise.resolve():new Promise(()=>{}),50);", 'timed-out'],
   'hook-timeout': ["beforeEach(()=>ready?Promise.resolve():new Promise(()=>{}),50);test('blocked',()=>{});", 'timed-out'],
   'import-error': ["if(!ready)throw Error('load');test('blocked',()=>{});", 'execution-error'],
+  'around-each': ["aroundEach(async(run)=>{await run();if(!ready)throw Error('around cleanup');});test('passed',()=>{});", 'execution-error'],
   unhandled: ["test('background',async()=>{if(!ready)void Promise.reject(Error('background'));await new Promise(r=>setTimeout(r,10));});", 'execution-error'],
   'application-error': ["test('application',()=>{if(!ready)throw new TypeError('application');});", 'killed'],
   // A renderer crash closes Vitest's connection to the page mid-test.
@@ -51,10 +53,12 @@ const baselineRejections = {
   'missing-evidence': {setup: false, runner: true},
   'replayed-identity': {identity: "'replayed-execution'"},
   retry: {body: "test('retry',{retry:1},()=>{});"},
+  repeat: {body: "test('repeat',{repeats:1},()=>{});"},
   'expected-failure': {body: "test.fails('expected',()=>{throw Error('expected');});"},
+  concurrent: {body: "test.concurrent('concurrent',()=>{});"},
 };
 const allCases = ['stack', 'workers', 'switching-closed', 'switching', 'coverage-maps', 'node-reference',
-  ...Object.keys(controls), ...Object.keys(baselineRejections), ...Object.keys(deadlines), 'cancellation'];
+  ...Object.keys(controls), ...Object.keys(baselineRejections), 'timeout-continues', ...Object.keys(deadlines), 'cancellation'];
 const cases = values.cases?.split(',').map(name => name.trim()) ?? allCases;
 assert.ok(cases.every(name => allCases.includes(name)), `--cases must name: ${allCases.join(', ')}`);
 
@@ -98,7 +102,7 @@ const baseConfig = {source: {include: ['meter.tsx', 'gain.ts']},
     test: vitest, coverage: {command: [...vitest, '--coverage'], report: 'coverage/coverage-final.json'}}]};
 function controlConfig(name, body) {
   writeFileSync(join(project, 'control.ts'), 'export const ready = 1 === 1;\n');
-  writeFileSync(join(project, 'control.test.ts'), `import {test,expect,beforeAll,beforeEach,afterEach} from 'vitest';import {ready} from './control.ts';\n${body}\n`);
+  writeFileSync(join(project, 'control.test.ts'), `import {test,expect,beforeAll,beforeEach,afterEach,aroundEach} from 'vitest';import {ready} from './control.ts';\n${body}\n`);
   const config = structuredClone(baseConfig);
   config.source.include = ['control.ts'];
   config.mutationOperators = ['comparison'];
@@ -295,6 +299,20 @@ for (const [name, options] of Object.entries(baselineRejections)) {
   assert.equal(result.setups[0].baseline.state, 'execution-error', JSON.stringify(result.setups[0].baseline));
   assert.equal(result.mutation.jobsAttempted, 0);
 }
+if (cases.includes('timeout-continues')) {
+  // A runner-reported timeout must not stop later mutants (#156).
+  const config = controlConfig('timeout-continues', "test('completion',()=>ready?Promise.resolve():new Promise(()=>{}),50);test('comparisons',()=>{expect(later).toBe(true);expect(last).toBe(true);});");
+  writeFileSync(join(project, 'control.ts'), 'export const ready = 1 === 1;\nexport const later = 2 === 2;\nexport const last = 3 === 3;\n');
+  writeFileSync(join(project, 'control.test.ts'), readFileSync(join(project, 'control.test.ts'), 'utf8')
+    .replace('import {ready}', 'import {ready,later,last}'));
+  vitestConfig({include: ['control.test.ts'], sources: ['control.ts']});
+  const result = await check('timeout-continues', config);
+  assert.deepEqual(result.mutation.outcomes.map(row => row.verdict), ['timed-out', 'killed', 'killed']);
+  assert.equal(result.mutation.outcomes[0].setups[0].testTimedOut, true);
+  assert.equal(result.mutation.notRun, 0);
+  assert.equal(result.complete, false);
+  assert.equal(result.mutation.score, null);
+}
 for (const [name, body] of Object.entries(deadlines)) {
   if (!cases.includes(name)) continue;
   // Chromium runs in its own process group, so Seshat's group kill cannot reach
@@ -314,6 +332,7 @@ if (cases.includes('cancellation')) {
   config.setups[0].timeoutMs = 180000;
   vitestConfig({include: ['control.test.ts'], sources: ['control.ts']});
   writeFileSync(join(project, 'seshat.json'), JSON.stringify(config));
+  const started = performance.now();
   const child = spawn(cli, ['check', '--config', join(project, 'seshat.json'), '--scratch', scratch, '--json', '--no-progress'],
     {cwd: project, env: {...process.env, TMPDIR: tmp}, stdio: ['ignore', 'pipe', 'pipe']});
   let stdout = '', stderr = '', exit;
@@ -335,7 +354,7 @@ if (cases.includes('cancellation')) {
     if (!exit) { child.kill('SIGKILL'); await closed; }
   }
   const {result} = JSON.parse(stdout);
-  results.runs.cancellation = {config, status: exit.status, stderr, result: sanitize(result)};
+  results.runs.cancellation = {config, status: exit.status, stderr, wallMs: performance.now() - started, result: sanitize(result)};
   assert.equal(exit.status, 130, stderr);
   assert.equal(result.mutation.outcomes[0].verdict, 'cancelled');
   assert.equal(result.mutation.score, null);

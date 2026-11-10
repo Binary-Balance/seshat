@@ -48,8 +48,9 @@ summaries come from one [full 5.0.0 run](vitest-browser.json) and one
 
 ### Custom runners are ignored
 
-Browser mode silently ignores `test.runner`. A runner module that throws on
-import still produced a passing run, with no warning. In the installed code,
+Browser mode silently ignores `test.runner`. In a manual check, a runner
+module that throws on import still produced a passing run, with no warning.
+In the installed code,
 `@vitest/browser`'s tester builds its runner class directly from `vitest`'s
 `TestRunner`; only the Node pools read `config.runner`. The
 [`runner` option docs](https://vitest.dev/config/runner) and the
@@ -107,8 +108,8 @@ hand from the fixture and match both Vitest versions:
 `>` to `>=` mutants: three boundaries the tests never reach (a gain of exactly
 1, and a zero level in `describeLevel` and `band`) and the peak comparison,
 where `>=` gives the same peak. The other two are the `?.` and `??` in
-`mountMeter`, where the element always exists. Replacement, two workers and switching gave identical
-verdicts.
+`mountMeter`, where the element always exists. Replacement, two workers and
+switching gave identical verdicts.
 
 The reporter rejects whole-file attribution when `browser.enabled` is set, so
 every mutant ran the full command (`attribution-unavailable`). That is the
@@ -117,29 +118,36 @@ safe fallback; browser test-file selection is not proposed here.
 ### Failure classification
 
 Each control has one comparison mutant on `1 === 1`, as in
-[`vitest-check.mjs`](../../benchmarks/proofs/vitest-check.mjs). All matched
-the Node route's verdicts:
+[`vitest-check.mjs`](../../benchmarks/proofs/vitest-check.mjs). Cases that
+share a name with that Node proof gave the same verdict there. Cases marked *
+have no Node counterpart; they gave the verdict expected from the reporter's
+rules.
 
 | Case | Mutant behaviour | Verdict |
 | --- | --- | --- |
-| `assertion`, `clean-hooks` | Assertion fails | killed |
-| `application-error` | Test body throws a `TypeError` | killed |
+| `assertion`, `clean-hooks`, `assertion-count` | Assertion fails | killed |
+| `application-error` * | Test body throws a `TypeError` | killed |
 | `survived` | No test notices | survived |
 | `before-all`, `before-each` | Setup hook throws | execution error |
-| `after-each`, `cleanup`, `mixed` | Cleanup throws | execution error |
+| `after-each`, `cleanup`, `mixed`, `around-each` | Cleanup throws | execution error |
 | `import-error` | Module throws on load | execution error |
 | `unhandled` | Unhandled rejection | execution error |
-| `page-crash` | Renderer crashes mid-test (`Page.crash`) | execution error |
+| `page-crash` * | Renderer crashes mid-test (`Page.crash`) | execution error |
 | `timeout`, `hook-timeout` | Test or hook times out in the page | timed out, test timeout |
-| `deadline` | Test waits past the job deadline | timed out, deadline |
-| `blocked-page` | Test blocks the page with a busy loop | timed out, deadline |
+| `deadline` * | Test waits past the job deadline | timed out, deadline |
+| `blocked-page` * | Test blocks the page with a busy loop | timed out, deadline |
 
 Every result other than killed or survived withheld the score. Browser
 timeout messages match the reporter's existing `Test|Hook timed out` pattern,
-and no timeout counted as a kill, as the post-#156 policy requires.
+and no timeout counted as a kill, as the post-#156 policy requires. In
+`timeout-continues`, a test timeout on the first of three mutants left the
+other two runnable: they were killed, none was skipped, and the score was
+withheld.
 
-`missing-evidence`, `replayed-identity`, `retry` and `expected-failure` failed
-the baseline, so no mutant ran.
+`missing-evidence`, `replayed-identity`, `retry`, `repeat`, `expected-failure`
+and `concurrent` failed the baseline, so no mutant ran. Malformed evidence in
+the page, such as a wrongly typed `test.meta`, was not tested. The reporter
+code that checks it is the same as on the Node route.
 
 ### Lifecycle and cleanup
 
@@ -152,7 +160,7 @@ mutant job).
 
 A killed job cannot run Playwright's Node-side cleanup, so each deadline or
 cancellation leaves one Chromium profile and one artifacts directory in
-`TMPDIR`, about 230 KB. Normal runs leave none.
+`TMPDIR`, about 230 KB in a manual check. Normal runs leave none.
 
 Each job starts its own Vitest server. Concurrent runs take the next free API
 port (63315, then 63316), and `workers` saw two jobs running browsers at the
@@ -174,16 +182,15 @@ browser setups without affecting replacement.
 
 ### Cost
 
-These numbers come from a shared 2-vCPU host whose load average stayed between
-9 and 19 while other projects' builds, an Android emulator and other browser
-tests ran. Treat them as rough proportions, not benchmarks.
+These numbers come from the recorded run on a shared 2-vCPU host whose load
+average was about 5 to 7 from other projects' work. Treat them as rough
+proportions, not benchmarks.
 
-- The same one-test control took 5.6 s per mutant job in browser mode and
-  1.8 s in Vitest's Node mode (`assertion` against `node-reference`), about
-  3 times as long. The difference is mostly starting Vite and Chromium.
-- `stack` averaged 10.0 s per mutant job across 19 mutants. An earlier, less
-  loaded run of the same case averaged 2.7 s.
-- Two workers cut `stack`'s mutation time from 190 s to 108 s.
+- The same one-test control took 2.2 s per mutant job in browser mode and
+  0.6 s in Vitest's Node mode (`assertion` against `node-reference`), about
+  3.4 times as long. The difference is mostly starting Vite and Chromium.
+- `stack` averaged 4.1 s per mutant job across 19 mutants.
+- Two workers cut `stack`'s mutation time from 77 s to 46 s.
 
 Scope and evidence were not reduced to improve these numbers. Measuring on a
 quiet host belongs with the implementation work.
