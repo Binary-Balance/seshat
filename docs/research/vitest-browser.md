@@ -78,12 +78,14 @@ the baseline fails (`missing-evidence`), so the failure is closed, not silent.
 ### Public hooks as a fallback
 
 Public hooks alone can also produce the evidence. In an experimental copy of
-the proof, this setup file passed all 33 cases on 5.0.0. It also passed three
-cases added to that copy: a throwing `beforeEach` in a nested `describe`
-(`nested-before-each`), a throwing `afterEach` there (`nested-after-each`), and
-a kill there (`nested-kill`). On 5.1.0 it passed `stack`, `switching`,
+the proof, this setup file gave the expected verdict in all 33 cases on 5.0.0.
+It did the same in three cases added to that copy: a throwing `beforeEach` in
+a nested `describe` (`nested-before-each`), a throwing `afterEach` there
+(`nested-after-each`), and a kill with passing hooks at both levels
+(`nested-kill`). On 5.1.0 it did the same for `stack`, `switching`,
 `before-each`, `after-each`, `cleanup`, `mixed`, `timeout`, `around-each`,
-`missing-evidence` and the three nested cases.
+`missing-evidence` and the three nested cases. These runs' summaries are not
+recorded.
 
 ```ts
 import {afterEach, beforeEach, inject} from 'vitest';
@@ -113,16 +115,16 @@ It relies on two undocumented behaviours of Vitest's test loop:
   file's hook runs last, so a throwing cleanup hook skips the snapshot. If
   Vitest ran the remaining hooks and added each error at once, a cleanup
   failure would count as a kill (fail open); `after-each`, `mixed` and the
-  experiment's `nested-after-each` would catch that.
+  experiment's `nested-after-each` would catch that. Other `sequence.hooks`
+  orders were not tested.
 
 Because both behaviours can fail open, public hooks are the fallback if the
 global moves, not the chosen route.
 
-Wrapping the body instead does not work: Vitest 5.0 and 5.1 assign
-`TestRunner.setTestFn` and `setSuiteHooks` the getters `getFn` and `getHooks`,
-so they set nothing
+Marking entry by wrapping the test body does not work: in Vitest 5.0 and 5.1,
+`TestRunner.setTestFn` and `setSuiteHooks` are the lookup functions `getFn`
+and `getHooks`, so they set nothing
 ([vitest#11639](https://github.com/vitest-dev/vitest/issues/11639)).
-`sequence.hooks` orders other than the default `stack` were not tested.
 
 ### Execution identity
 
