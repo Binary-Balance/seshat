@@ -74,10 +74,44 @@ documented `runner` option and extends Vitest's runner class; this one patches
 an undocumented global. If the global moves, the hooks are not installed and
 the baseline fails (`missing-evidence`), so the failure is closed, not silent.
 
-Public hooks alone were not tested. By reasoning, they are not enough: a
-setup file's `beforeEach` runs before the test file's own hooks, so it cannot
-record that the test body was entered, and `onTestFinished` runs after cleanup
-has changed the error list.
+### Public hooks as a fallback
+
+Public hooks alone can also produce the evidence, but with a weaker failure
+mode, so they are the fallback if the global moves rather than the chosen
+route. In an experimental copy of the proof, this setup file passed all 33
+cases on 5.0.0, plus three nested `describe` cases (a throwing `beforeEach`, a
+throwing `afterEach`, and a kill), and a 12-case subset on 5.1.0:
+
+```ts
+import {afterEach, beforeEach, inject} from 'vitest';
+const executionId = inject('seshatExecutionId' as never);
+// The tested copy also kept the prototype's mutant ID shim for switching.
+beforeEach(({task}: any) => {
+  task.meta.seshat = {executionId, entered: false,
+    unsupported: Boolean(task.fails || task.concurrent || task.retry || task.repeats)};
+});
+afterEach(({task}: any) => {
+  task.meta.seshat.entered = task.result?.hooks?.beforeEach === 'pass';
+  task.meta.seshat.beforeCleanup = JSON.stringify((task.result?.errors ?? [])
+    .map((e: any) => [e.name, e.message, e.stack]));
+});
+```
+
+It relies on two undocumented behaviours of Vitest's test loop:
+
+- `task.result.hooks.beforeEach` becomes `'pass'` only after every
+  `beforeEach` hook passed, and the body runs next. If that changes, no test
+  counts as entered and the baseline fails, which is closed.
+- `afterEach` errors are added to the list only after the hooks stop, and a
+  throwing hook skips the rest, so this snapshot never includes cleanup
+  errors. If Vitest ran the remaining hooks and added each error at once, a
+  cleanup failure would count as a kill, which is open. The `after-each` and
+  `mixed` cases would catch that change.
+
+Wrapping the body instead does not work: Vitest 5.0 and 5.1 define
+`TestRunner.setTestFn` and `setSuiteHooks` as the getters
+([vitest#11639](https://github.com/vitest-dev/vitest/issues/11639)).
+`sequence.hooks` values other than the default were not tested.
 
 ### Execution identity
 
