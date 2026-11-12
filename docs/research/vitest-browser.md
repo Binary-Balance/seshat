@@ -5,7 +5,8 @@ code that needs a real browser can get Seshat's runner evidence and
 source-mapped coverage through Vitest browser mode. This note records the
 bounded investigation. It does not add browser support.
 
-**Verdict: feasible, but only through an undocumented Vitest internal.**
+**Verdict: feasible through an undocumented Vitest internal, with public
+hooks as a weaker fallback.**
 Browser mode has no supported way to install a custom runner, so the shipped
 Vitest adapter cannot work there. A setup file that wraps the live browser
 runner can install the same evidence hooks. With it, the unchanged native CLI
@@ -76,9 +77,9 @@ the baseline fails (`missing-evidence`), so the failure is closed, not silent.
 
 ### Public hooks as a fallback
 
-Public hooks alone can also produce the evidence, but with a weaker failure
-mode, so they are the fallback if the global moves rather than the chosen
-route. In an experimental copy of the proof, this setup file passed all 33
+Public hooks alone can also produce the evidence. Changes to either Vitest
+behaviour they rely on could fail open, so they are the fallback if the global
+moves, not the chosen route. In an experimental copy of the proof, this setup file passed all 33
 cases on 5.0.0, plus three nested `describe` cases (a throwing `beforeEach`, a
 throwing `afterEach`, and a kill), and a 12-case subset on 5.1.0:
 
@@ -99,19 +100,23 @@ afterEach(({task}: any) => {
 
 It relies on two undocumented behaviours of Vitest's test loop:
 
-- `task.result.hooks.beforeEach` becomes `'pass'` only after every
-  `beforeEach` hook passed, and the body runs next. If that changes, no test
-  counts as entered and the baseline fails, which is closed.
+- `task.result.hooks.beforeEach` ends as `'pass'` only if every `beforeEach`
+  hook passed, and the body runs next. If it stopped being set, no test would
+  count as entered and the baseline would fail, which is closed. If it read
+  `'pass'` after a failed hook, a setup failure would count as a kill, which
+  is open; `before-each` and `nested-before-each` would catch that.
 - `afterEach` errors are added to the list only after the hooks stop, and a
-  throwing hook skips the rest, so this snapshot never includes cleanup
-  errors. If Vitest ran the remaining hooks and added each error at once, a
-  cleanup failure would count as a kill, which is open. The `after-each` and
-  `mixed` cases would catch that change.
+  throwing hook skips the rest. Under the default `stack` order the setup
+  file's hook runs last, so a throwing cleanup hook skips the snapshot. If
+  Vitest ran the remaining hooks and added each error at once, a cleanup
+  failure would count as a kill, which is open; `after-each`, `mixed` and
+  `nested-after-each` would catch that.
 
-Wrapping the body instead does not work: Vitest 5.0 and 5.1 define
-`TestRunner.setTestFn` and `setSuiteHooks` as the getters
+Wrapping the body instead does not work: Vitest 5.0 and 5.1 assign
+`TestRunner.setTestFn` and `setSuiteHooks` the getters `getFn` and `getHooks`,
+so they set nothing
 ([vitest#11639](https://github.com/vitest-dev/vitest/issues/11639)).
-`sequence.hooks` values other than the default were not tested.
+`sequence.hooks` orders other than the default `stack` were not tested.
 
 ### Execution identity
 
