@@ -84,8 +84,9 @@ on 5.0.0. It also passed three cases added to that copy: a throwing
 `beforeEach` in a nested `describe` (`nested-before-each`), a throwing
 `afterEach` there (`nested-after-each`), and a kill with passing hooks at both
 levels (`nested-kill`). On 5.1.0 it passed `stack`, `switching`,
-`before-each`, `after-each`, `cleanup`, `mixed`, `timeout`, `around-each` and
-the three nested cases. These runs' summaries are not recorded.
+`before-each`, `after-each`, `cleanup`, `mixed`, `timeout`, `around-each`, the
+three nested cases and `missing-evidence`, which runs without the setup file.
+These runs' summaries are not recorded.
 
 ```ts
 import {afterEach, beforeEach, inject} from 'vitest';
