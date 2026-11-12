@@ -5,8 +5,7 @@ code that needs a real browser can get Seshat's runner evidence and
 source-mapped coverage through Vitest browser mode. This note records the
 bounded investigation. It does not add browser support.
 
-**Verdict: feasible through an undocumented Vitest internal, with public
-hooks as a weaker fallback.**
+**Verdict: feasible, but only through an undocumented Vitest internal.**
 Browser mode has no supported way to install a custom runner, so the shipped
 Vitest adapter cannot work there. A setup file that wraps the live browser
 runner can install the same evidence hooks. With it, the unchanged native CLI
@@ -75,23 +74,14 @@ documented `runner` option and extends Vitest's runner class; this one patches
 an undocumented global. If the global moves, the hooks are not installed and
 the baseline fails (`missing-evidence`), so the failure is closed, not silent.
 
-### Public hooks as a fallback
+### Public hooks are not enough
 
-Public hooks alone (`beforeEach` and `afterEach` in the setup file, without
-the runner global) can also produce the evidence. With this setup file in
-place of the prototype, an experimental copy of the proof passed all 33 cases
-on 5.0.0. It also passed three cases added to that copy: a throwing
-`beforeEach` in a nested `describe` (`nested-before-each`), a throwing
-`afterEach` there (`nested-after-each`), and a kill with passing hooks at both
-levels (`nested-kill`). On 5.1.0 it passed `stack`, `switching`,
-`before-each`, `after-each`, `cleanup`, `mixed`, `timeout`, `around-each`, the
-three nested cases and `missing-evidence`, which runs without the setup file.
-These runs' summaries are not recorded.
+A setup file using only public hooks (`beforeEach` and `afterEach`, without
+the runner global) was tried in an experimental copy of the proof:
 
 ```ts
 import {afterEach, beforeEach, inject} from 'vitest';
 const executionId = inject('seshatExecutionId' as never);
-// The tested copy also kept the prototype's mutant ID shim for switching.
 beforeEach(({task}: any) => {
   task.meta.seshat = {executionId, entered: false, unsupported:
     Boolean(task.fails || task.concurrent || task.retry || task.repeats)};
@@ -103,29 +93,23 @@ afterEach(({task}: any) => {
 });
 ```
 
-It relies on two undocumented parts of Vitest's test loop:
+With the prototype's mutant ID shim added, it gave the expected verdict in all
+33 cases on 5.0.0, three nested `describe` cases and a 5.1.0 subset; these
+runs are not recorded. It still gives a wrong verdict. Its error snapshot must be taken before cleanup, but
+the setup file's `afterEach` runs after the test file's own. A failing
+`expect.soft` in a test file's `afterEach` records its error without throwing,
+so the snapshot includes it and the mutant counts as killed. The prototype
+takes its snapshot in `onTaskFinished`, before any `afterEach`, and gives an
+execution error for the same case (`soft-after-each` in the experiment).
 
-- `task.result.hooks.beforeEach` ends as `'pass'` only if every `beforeEach`
-  hook passed, and the body runs next. If it stopped being set, no test would
-  count as entered and the baseline would stop with an error (fail closed).
-  If it read `'pass'` after a failed hook, a setup failure would count as a
-  kill, a wrong verdict (fail open); `before-each` and the experiment's
-  `nested-before-each` would catch that.
-- The snapshot excludes every cleanup error. Under the default `stack`
-  order, `afterEach` errors are added to the list only after the hooks stop,
-  and a throwing hook skips the rest, including the setup file's, which runs
-  last. Cleanup functions returned by `beforeEach` and `aroundEach` teardown
-  run after all `afterEach` hooks. If Vitest added `afterEach` errors at once
-  and kept running hooks, or ran those cleanups first, a cleanup failure would
-  count as a kill (fail open); `after-each`, `mixed`, `cleanup`,
-  `around-each` and the experiment's `nested-after-each` would catch that.
-  Other `sequence.hooks` orders were not tested.
+It also relies on undocumented details of Vitest's test loop: that
+`task.result.hooks.beforeEach` reads `'pass'` only if every `beforeEach` hook
+passed, and that thrown `afterEach` errors are added only after the hooks
+stop. Changes to either could also turn a setup or cleanup failure into a
+kill.
 
-Because both can fail open, public hooks are the route to switch to if the
-global moves, not the chosen route.
-
-`TestRunner.setTestFn` cannot wrap the test body to mark entry: in Vitest 5.0
-and 5.1, `setTestFn` and `setSuiteHooks` are the lookup functions `getFn` and
+`TestRunner.setTestFn` cannot wrap the test body instead: in Vitest 5.0 and
+5.1, `setTestFn` and `setSuiteHooks` are the lookup functions `getFn` and
 `getHooks`, so they set nothing
 ([vitest#11639](https://github.com/vitest-dev/vitest/issues/11639)).
 Adding `runTask` to the exported `TestRunner.prototype`, which the browser
