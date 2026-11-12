@@ -117,18 +117,20 @@ It relies on two undocumented parts of Vitest's test loop:
   last. Cleanup functions returned by `beforeEach` and `aroundEach` teardown
   run after all `afterEach` hooks. If Vitest added `afterEach` errors at once
   and kept running hooks, or ran those cleanups first, a cleanup failure would
-  count as a kill (fail open); `after-each`, `mixed`, `cleanup` and the
-  experiment's `nested-after-each` would catch that. Other `sequence.hooks`
-  orders were not tested.
+  count as a kill (fail open); `after-each`, `mixed`, `cleanup`,
+  `around-each` and the experiment's `nested-after-each` would catch that.
+  Other `sequence.hooks` orders were not tested.
 
-Because both can fail open, public hooks are the route to switch
-to if the global moves, not the chosen route.
+Because both can fail open, public hooks are the route to switch to if the
+global moves, not the chosen route.
 
-Without the runner global, a setup file cannot wrap the test body to mark
-entry: in Vitest 5.0 and 5.1,
-`TestRunner.setTestFn` and `setSuiteHooks` are the lookup functions `getFn`
-and `getHooks`, so they set nothing
+`TestRunner.setTestFn` cannot wrap the test body to mark entry: in Vitest 5.0
+and 5.1, `setTestFn` and `setSuiteHooks` are the lookup functions `getFn` and
+`getHooks`, so they set nothing
 ([vitest#11639](https://github.com/vitest-dev/vitest/issues/11639)).
+Adding `runTask` to the exported `TestRunner.prototype`, which the browser
+runner inherits from, was not tried; it would be as undocumented as the
+global.
 
 ### Execution identity
 
