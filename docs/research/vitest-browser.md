@@ -77,15 +77,15 @@ the baseline fails (`missing-evidence`), so the failure is closed, not silent.
 
 ### Public hooks as a fallback
 
-Public hooks alone can also produce the evidence. In an experimental copy of
-the proof, this setup file gave the expected verdict in all 33 cases on 5.0.0.
-It did the same in three cases added to that copy: a throwing `beforeEach` in
-a nested `describe` (`nested-before-each`), a throwing `afterEach` there
-(`nested-after-each`), and a kill with passing hooks at both levels
-(`nested-kill`). On 5.1.0 it did the same for `stack`, `switching`,
-`before-each`, `after-each`, `cleanup`, `mixed`, `timeout`, `around-each`,
-`missing-evidence` and the three nested cases. These runs' summaries are not
-recorded.
+Public hooks alone (`beforeEach` and `afterEach` in the setup file, without
+the runner global) can also produce the evidence. With this setup file in
+place of the prototype, an experimental copy of the proof passed all 33 cases
+on 5.0.0. It also passed three cases added to that copy: a throwing
+`beforeEach` in a nested `describe` (`nested-before-each`), a throwing
+`afterEach` there (`nested-after-each`), and a kill with passing hooks at both
+levels (`nested-kill`). On 5.1.0 it passed `stack`, `switching`,
+`before-each`, `after-each`, `cleanup`, `mixed`, `timeout`, `around-each` and
+the three nested cases. These runs' summaries are not recorded.
 
 ```ts
 import {afterEach, beforeEach, inject} from 'vitest';
@@ -110,18 +110,19 @@ It relies on two undocumented behaviours of Vitest's test loop:
   If it read `'pass'` after a failed hook, a setup failure would count as a
   kill, a wrong verdict (fail open); `before-each` and the experiment's
   `nested-before-each` would catch that.
-- `afterEach` errors are added to the list only after the hooks stop, and a
-  throwing hook skips the rest. Under the default `stack` order the setup
+- Under the default `stack` order, `afterEach` errors are added to the list
+  only after the hooks stop, and a throwing hook skips the rest. The setup
   file's hook runs last, so a throwing cleanup hook skips the snapshot. If
   Vitest ran the remaining hooks and added each error at once, a cleanup
   failure would count as a kill (fail open); `after-each`, `mixed` and the
   experiment's `nested-after-each` would catch that. Other `sequence.hooks`
   orders were not tested.
 
-Because both behaviours can fail open, public hooks are the fallback if the
-global moves, not the chosen route.
+Because both behaviours can fail open, public hooks are the route to switch
+to if the global moves, not the chosen route.
 
-Marking entry by wrapping the test body does not work: in Vitest 5.0 and 5.1,
+Without the runner global, a setup file cannot wrap the test body to mark
+entry: in Vitest 5.0 and 5.1,
 `TestRunner.setTestFn` and `setSuiteHooks` are the lookup functions `getFn`
 and `getHooks`, so they set nothing
 ([vitest#11639](https://github.com/vitest-dev/vitest/issues/11639)).
