@@ -103,7 +103,7 @@ afterEach(({task}: any) => {
 });
 ```
 
-It relies on two undocumented behaviours of Vitest's test loop:
+It relies on two undocumented parts of Vitest's test loop:
 
 - `task.result.hooks.beforeEach` ends as `'pass'` only if every `beforeEach`
   hook passed, and the body runs next. If it stopped being set, no test would
@@ -111,15 +111,17 @@ It relies on two undocumented behaviours of Vitest's test loop:
   If it read `'pass'` after a failed hook, a setup failure would count as a
   kill, a wrong verdict (fail open); `before-each` and the experiment's
   `nested-before-each` would catch that.
-- Under the default `stack` order, `afterEach` errors are added to the list
-  only after the hooks stop, and a throwing hook skips the rest. The setup
-  file's hook runs last, so a throwing cleanup hook skips the snapshot. If
-  Vitest ran the remaining hooks and added each error at once, a cleanup
-  failure would count as a kill (fail open); `after-each`, `mixed` and the
+- The snapshot excludes every cleanup error. Under the default `stack`
+  order, `afterEach` errors are added to the list only after the hooks stop,
+  and a throwing hook skips the rest, including the setup file's, which runs
+  last. Cleanup functions returned by `beforeEach` and `aroundEach` teardown
+  run after all `afterEach` hooks. If Vitest added `afterEach` errors at once
+  and kept running hooks, or ran those cleanups first, a cleanup failure would
+  count as a kill (fail open); `after-each`, `mixed`, `cleanup` and the
   experiment's `nested-after-each` would catch that. Other `sequence.hooks`
   orders were not tested.
 
-Because both behaviours can fail open, public hooks are the route to switch
+Because both can fail open, public hooks are the route to switch
 to if the global moves, not the chosen route.
 
 Without the runner global, a setup file cannot wrap the test body to mark
