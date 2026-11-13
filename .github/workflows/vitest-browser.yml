@@ -1,0 +1,104 @@
+name: Vitest browser proof
+
+# Runs the Vitest browser mode proof on each supported host (#293). The
+# lifecycle cases were first observed on Linux only.
+on:
+  pull_request:
+    paths:
+      - .github/workflows/vitest-browser.yml
+      - benchmarks/proofs/vitest-browser-check.mjs
+      - benchmarks/proofs/process.mjs
+      - benchmarks/proofs/fixtures/vitest-browser/**
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
+
+jobs:
+  proof:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: linux-x64
+            runner: ubuntu-22.04
+          - host: linux-arm64
+            runner: ubuntu-22.04-arm
+          - host: macos-x64
+            runner: macos-15-intel
+          - host: macos-arm64
+            runner: macos-15
+          - host: windows-x64
+            runner: windows-2022
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.20.0
+      - name: Set up Rust
+        run: |
+          rustup toolchain install 1.98.1 --profile minimal --no-self-update
+          rustup default 1.98.1
+      - name: Build CLI
+        run: |
+          cargo build --release --locked --manifest-path crates/seshat/Cargo.toml \
+            --bin seshat --bin windows-console-helper
+      - name: Install fixture and Chromium
+        run: |
+          npm ci --prefix benchmarks/proofs/fixtures/vitest-browser --ignore-scripts --no-audit --no-fund
+          deps=""
+          if [ "$RUNNER_OS" = Linux ]; then deps=--with-deps; fi
+          npx --prefix benchmarks/proofs/fixtures/vitest-browser playwright install $deps chromium-headless-shell
+      # Each group runs separately so that one failure still records the rest.
+      - name: Run browser proof
+        env:
+          VERDICTS: >-
+            stack,workers,switching-closed,switching,coverage-maps,node-reference,
+            assertion,survived,clean-hooks,assertion-count,before-all,before-each,
+            after-each,cleanup,mixed,timeout,hook-timeout,import-error,around-each,
+            unhandled,application-error,missing-evidence,replayed-identity,retry,
+            repeat,expected-failure,concurrent,continue-after-timeout
+        run: |
+          mkdir -p work/browser
+          cli=crates/seshat/target/release/seshat
+          if [ "$RUNNER_OS" = Windows ]; then cli="$cli.exe"; fi
+          failed=""
+          for group in verdicts deadline blocked-page cancellation crash; do
+            case "$group" in
+              verdicts) cases="${VERDICTS// /}" ;;
+              crash) cases=page-crash,continue-after-crash ;;
+              *) cases="$group" ;;
+            esac
+            if ! SESHAT_PROOF_OUTPUT="work/browser/$group.json" \
+              node benchmarks/proofs/vitest-browser-check.mjs --cli "$cli" --cases "$cases" \
+              2>&1 | tee "work/browser/$group.log"; then
+              failed="$failed $group"
+            fi
+          done
+          if [ -n "$failed" ]; then
+            echo "failed groups:$failed"
+            exit 1
+          fi
+      - name: Upload proof evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: vitest-browser-${{ matrix.host }}
+          path: |
+            work/browser/**
+            work/assurance-proofs/vitest-browser-check-*/result.json
+          if-no-files-found: error
