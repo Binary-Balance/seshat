@@ -166,10 +166,10 @@ below.
   cannot fetch the setup file and every test file fails to load. Vitest still
   adds the project root after plugins run, so the entry only widens access.
 - The setup file's bare `vitest` import resolves although the evidence
-  directory has no `node_modules`: browser mode sets Vite's `resolve.dedupe`
-  for `vitest`, which resolves it from the project root. That setting is
-  Vitest's own, not documented; if it goes, the import fails and so does the
-  baseline.
+  directory has no `node_modules`: browser mode pre-bundles `vitest` for the
+  page, and Vite serves that copy to any importer by name. This is Vitest's
+  own setup, not documented; if it changes, the import can fail, and so does
+  the baseline.
 
 This was checked by hand on Vitest 5.0.0 and 5.1.0, and the proof now runs
 through the embedded adapter. The existing reporter could add the same three
