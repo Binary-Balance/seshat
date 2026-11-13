@@ -47,7 +47,7 @@ export default class EvidenceReporter {
   onTestRunEnd(modules, unhandled, reason) {
     let passed = 0, failed = 0, errors = unhandled.length, timeouts = 0;
     const testFiles = [], tests = [];
-    let identitiesComplete = true;
+    let identitiesComplete = true, adapterError;
     const inspect = items => {
       // Verified Vitest 5 diagnostic. Unknown errors never become timeouts by exit code.
       timeouts += items.filter(e => /^(Test|Hook) timed out in \d+ms(?:\.| while waiting for )/.test(e.message ?? '')).length;
@@ -61,22 +61,30 @@ export default class EvidenceReporter {
       for (const suite of [module, ...module.children.allSuites()]) {
         errors += suite.errors().length;
         inspect(suite.errors());
+        // The browser setup file's own failure, which Vitest wraps as the cause of a
+        // file import error. Command output is cut to 1,000 characters per stream,
+        // which Vite's warnings can fill, so keep the message here.
+        adapterError ??= suite.errors().flatMap(e => [e.message, e.cause?.message])
+          .find(message => message?.startsWith?.('Seshat cannot record evidence'));
       }
       for (const test of module.children.allTests()) {
         const result = test.result(), details = test.meta().seshat;
         const issues = result.errors ?? [];
         inspect(issues);
-        if (details?.executionId === process.env.SESHAT_EXECUTION_ID && details.entered
+        if (details?.executionId === process.env.SESHAT_EXECUTION_ID && details.entered === true
           && ['passed', 'failed'].includes(result.state)) {
           const id = test.fullName;
           if (!validFile || typeof id !== 'string' || !id.length || test.module.moduleId !== file) identitiesComplete = false;
           else tests.push({file, id});
         }
-        if (!details || details.executionId !== process.env.SESHAT_EXECUTION_ID || details.unsupported
-          || test.diagnostic()?.retryCount || test.diagnostic()?.repeatCount) { errors++; continue; }
-        if (result.state === 'passed' && issues.length === 0 && details.entered) passed++;
-        else if (result.state === 'failed' && details.entered && issues.length > 0
-          && details.beforeCleanup === JSON.stringify(issues.map(e => [e.name,e.message,e.stack]))) failed++;
+        // Browser evidence comes from the page, so accept only the exact values the
+        // adapters write. A partial or mistyped record is an error, never a default.
+        const valid = details?.executionId === process.env.SESHAT_EXECUTION_ID && details.entered === true
+          && details.unsupported === false
+          && details.beforeCleanup === JSON.stringify(issues.map(e => [e.name,e.message,e.stack]));
+        if (!valid || test.diagnostic()?.retryCount || test.diagnostic()?.repeatCount) { errors++; continue; }
+        if (result.state === 'passed' && issues.length === 0) passed++;
+        else if (result.state === 'failed' && issues.length > 0) failed++;
         else errors++;
       }
     }
@@ -86,7 +94,7 @@ export default class EvidenceReporter {
       executionId:process.env.SESHAT_EXECUTION_ID, runner:'vitest', vitest:this.context.version,
       actual:{vitest:this.context.version}, maxWorkers,
       node:process.versions.node, complete:modules.length > 0 && reason !== 'interrupted',
-      passed, failed, errors, timeouts, testFiles:testFiles.sort(),
+      passed, failed, errors, timeouts, ...(adapterError ? {adapterError} : {}), testFiles:testFiles.sort(),
       tests:tests.sort((a, b) => compare(a.file, b.file) || compare(a.id, b.id)),
       ...(selection ? {fileCoverage:fileCoverage(modules, this.context,
         identitiesComplete && errors === 0 && timeouts === 0, reason)} : {})}), {flag:'wx'});

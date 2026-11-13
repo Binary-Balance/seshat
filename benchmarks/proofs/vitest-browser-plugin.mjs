@@ -13,4 +13,10 @@ export default {
     server: {fs: {allow: [setup]}},
     test: {setupFiles: [setup], provide: {seshatExecutionId: process.env.SESHAT_EXECUTION_ID}},
   }),
+  // Seshat passes the plugin to every Vitest job, so a config shared with Node
+  // mode loads it there too. Only browser projects get the version, which tells
+  // the setup file to wrap the runner and lets it name the version on failure.
+  configureVitest: ({vitest, project}) => {
+    if (project.config.browser.enabled) project.provide('seshatBrowserVitest', vitest.version);
+  },
 };

@@ -79,8 +79,10 @@ reporter needed no changes.
 
 This is a weaker dependency than the Node adapter's. That adapter uses the
 documented `runner` option and extends Vitest's runner class; this one patches
-an undocumented global. If the global moves, the hooks are not installed and
-the baseline fails (`missing-evidence`), so the failure is closed, not silent.
+an undocumented global. In the prototype, a moved global meant no hooks and a
+failed baseline (`missing-evidence`), so the failure was closed, not silent.
+The embedded adapter now names the missing piece; see
+[Runner shape and page evidence](#runner-shape-and-page-evidence).
 
 ### Public hooks are not enough
 
@@ -110,8 +112,9 @@ test file's own: always for hooks inside a `describe`, and by default
 test file's `afterEach` records its error without throwing, so the snapshot
 includes it and the mutant counts as killed. The prototype takes its snapshot in
 `onTaskFinished`, before any `afterEach`, and gives an execution error for the
-same case (`soft-after-each`). None of these experiment runs or cases is
-committed.
+same case (`soft-after-each`). The public-hooks experiment itself is not
+committed. #293 added `soft-after-each` and nested `describe` cases to the
+proof; see [Runner shape and page evidence](#runner-shape-and-page-evidence).
 
 It also relies on undocumented details of Vitest's test loop: that
 `task.result.hooks.beforeEach` reads `'pass'` only if every `beforeEach` hook
@@ -151,9 +154,10 @@ plugins: [process.env.SESHAT_VITEST_BROWSER
   && import(process.env.SESHAT_VITEST_BROWSER).then(m => m.default)],
 ```
 
-The plugin uses only Vite's documented `config` hook. It adds the setup file
+The plugin uses only documented hooks. Vite's `config` hook adds the setup file
 to `test.setupFiles`, the job identity to `test.provide` and the setup file to
-`server.fs.allow`. Unlike the reporter route below, it adds no dependency on
+`server.fs.allow`. Vitest's `configureVitest` hook passes the Vitest version to
+browser projects (see below). Unlike the reporter route below, it adds no dependency on
 Vitest internals beyond the runner global and the `vitest` resolution noted
 below.
 
@@ -177,6 +181,46 @@ settings when Vitest starts, with no config line, but only by changing
 Vitest's resolved project config and the live Vite server's allow list, two
 more undocumented internals. The maintainer chose the plugin line on
 2026-11-13.
+
+### Runner shape and page evidence
+
+The setup file checks the runner before wrapping it: the global must exist,
+`onBeforeRunTask` and `onTaskFinished` must be functions, `runTask` must be
+absent (replacing one of Vitest's own would drop what it does) and
+`TestRunner.getTestFn` must be a function. Otherwise it throws an error naming
+the missing piece and the Vitest version:
+
+```text
+Seshat cannot record evidence in Vitest 5.0.0 browser mode: runner.onTaskFinished is not a function
+```
+
+Every test file then fails to load and the baseline is an execution error.
+The plugin provides the version through Vitest's `configureVitest` hook, and
+only to browser projects, so the setup file does nothing when a config shared
+with Node mode loads it (`node-reference`).
+
+Command diagnostics keep only the first 1,000 characters of each stream, and
+Vite's warnings fill stderr before Vitest prints that error. So the reporter
+also copies the message into its receipt as `adapterError`, which appears in
+the baseline's `report` and in the readable output.
+
+The setup file marks the runner once wrapped. A second run on the same runner
+skips the wrap; without the mark it would find its own `runTask` and fail
+(`setup-twice`).
+
+The reporter now accepts page evidence only with the exact values the adapters
+write: `entered` must be `true`, `unsupported` must be `false`, and a passed
+test must carry the empty error snapshot. A mistyped `entered`, a missing `unsupported`
+or a missing snapshot fails the baseline (`mistyped-evidence`,
+`partial-evidence`, `missing-snapshot`); with the earlier reporter all three
+passed. The Node adapter writes the same record, so the Node-mode Vitest proofs
+keep their verdicts.
+
+The proof also covers a failing `expect.soft` in `afterEach`
+(`soft-after-each`, an execution error, as the
+[public hooks experiment](#public-hooks-are-not-enough) predicted) and hooks
+in nested `describe` blocks (`nested-hooks`, `nested-before-each`,
+`nested-after-each`).
 
 ### Coverage
 
@@ -240,9 +284,10 @@ withheld.
 
 `missing-evidence` (the Node proof's `missing-runner`), `replayed-identity`
 (no Node counterpart), `retry`, `repeat`, `expected-failure` and `concurrent`
-failed the baseline, so no mutant ran. Malformed evidence in
-the page, such as a wrongly typed `test.meta`, was not tested. The reporter
-code that checks it is the same as on the Node route.
+failed the baseline, so no mutant ran. #159 did not test malformed evidence
+from the page, such as a wrongly typed `test.meta`. #293 added those cases and
+a stricter reporter check; see
+[Runner shape and page evidence](#runner-shape-and-page-evidence).
 
 ### Lifecycle and cleanup
 
@@ -325,7 +370,8 @@ A follow-up issue in the 0.18.0 milestone should:
 2. Detect browser mode in the reporter, record the provider, browser and
    browser version in the receipt, and validate the supported versions in Rust.
    Detect the internal runner global explicitly so a Vitest change gives a
-   clear error.
+   clear error. The runner check is done in #293; see
+   [Runner shape and page evidence](#runner-shape-and-page-evidence).
 3. Give each job a private `TMPDIR` inside its scratch copy, so profiles left
    by killed jobs are removed with it.
 4. Decide whether to support switching; if so, ship the mutant ID shim.
