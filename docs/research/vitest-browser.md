@@ -115,8 +115,9 @@ kill.
 `getHooks`, so they set nothing
 ([vitest#11639](https://github.com/vitest-dev/vitest/issues/11639)).
 Adding `runTask` to the exported `TestRunner.prototype`, which the browser
-runner inherits from, was not tried; it would be as undocumented as the
-global.
+runner inherits from, was not tried. It would cover only entry: the browser
+runner sets its own `onTaskFinished` on each instance, so the snapshot before
+cleanup would still need the global.
 
 ### Execution identity
 
