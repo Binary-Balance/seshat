@@ -79,8 +79,10 @@ reporter needed no changes.
 
 This is a weaker dependency than the Node adapter's. That adapter uses the
 documented `runner` option and extends Vitest's runner class; this one patches
-an undocumented global. If the global moves, the hooks are not installed and
-the baseline fails (`missing-evidence`), so the failure is closed, not silent.
+an undocumented global. In the prototype, a moved global meant no hooks and a
+failed baseline (`missing-evidence`), so the failure was closed, not silent.
+The embedded adapter now names the missing piece; see
+[Runner shape and page evidence](#runner-shape-and-page-evidence).
 
 ### Public hooks are not enough
 
@@ -279,9 +281,10 @@ withheld.
 
 `missing-evidence` (the Node proof's `missing-runner`), `replayed-identity`
 (no Node counterpart), `retry`, `repeat`, `expected-failure` and `concurrent`
-failed the baseline, so no mutant ran. Malformed evidence in
-the page, such as a wrongly typed `test.meta`, was not tested. The reporter
-code that checks it is the same as on the Node route.
+failed the baseline, so no mutant ran. #159 did not test malformed evidence
+from the page, such as a wrongly typed `test.meta`. #293 added those cases and
+a stricter reporter check; see
+[Runner shape and page evidence](#runner-shape-and-page-evidence).
 
 ### Lifecycle and cleanup
 
