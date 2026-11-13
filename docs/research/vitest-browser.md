@@ -102,7 +102,8 @@ test file's own: always for hooks inside a `describe`, and by default
 test file's `afterEach` records its error without throwing, so the snapshot
 includes it and the mutant counts as killed. The prototype takes its snapshot in
 `onTaskFinished`, before any `afterEach`, and gives an execution error for the
-same case (`soft-after-each`). None of these experiment runs is recorded.
+same case (`soft-after-each`). None of these experiment runs or cases is
+committed.
 
 It also relies on undocumented details of Vitest's test loop: that
 `task.result.hooks.beforeEach` reads `'pass'` only if every `beforeEach` hook
@@ -110,14 +111,14 @@ passed, and that thrown `afterEach` errors are added only after the hooks
 stop. Changes to either could also turn a setup or cleanup failure into a
 kill.
 
-`TestRunner.setTestFn` cannot wrap the test body instead: in Vitest 5.0 and
-5.1, `setTestFn` and `setSuiteHooks` are the lookup functions `getFn` and
-`getHooks`, so they set nothing
-([vitest#11639](https://github.com/vitest-dev/vitest/issues/11639)).
-Adding `runTask` to the exported `TestRunner.prototype`, which the browser
-runner inherits from, was not tried. It would cover only entry: the browser
-runner sets its own `onTaskFinished` on each instance, so the snapshot before
-cleanup would still need the global.
+`TestRunner.setTestFn` cannot wrap the test body instead: in Vitest 5.0 and 5.1,
+`setTestFn` and `setSuiteHooks` are the lookup functions `getFn` and `getHooks`,
+so they set nothing
+([vitest#11639](https://github.com/vitest-dev/vitest/issues/11639)). Adding
+`runTask` to the exported `TestRunner.prototype`, which the browser runner
+inherits from, was not tried. Of the two gaps, it would cover only entry: the
+browser runner sets its own `onTaskFinished` on each instance, so the snapshot
+before cleanup would still need the global.
 
 ### Execution identity
 
