@@ -219,7 +219,9 @@ leftover browser there.
 Linux matches leftover processes by the proof's private `TMPDIR`. macOS and
 Windows cannot read another process's environment, so the proof matches the
 commands a job runs (`chrome-headless-shell`, `vitest.mjs`, `esbuild`), which
-assumes no other Vitest or Playwright browser runs on the host.
+assumes no other Vitest or Playwright browser runs on the host. On every host
+the same check saw two to eight browser processes during `stack` and `workers`,
+so a missed match would show.
 
 A killed job cannot run Playwright's Node-side cleanup, so each deadline or
 cancellation leaves one Chromium profile and one artifacts directory in
@@ -259,9 +261,10 @@ cases took 60% to 100% of the 5.0.0 time.
 - Two workers cut `stack`'s mutation time only from 85 s to 77 s. Each job
   runs a Vite server and a browser, so two at once compete for the 2 vCPUs.
 
-On the CI runners the same comparison gave 1.0 s against 0.3 s on Linux x64.
-Across the five hosts, browser mode took 2.4 (macOS ARM64) to 3.5 (macOS x64)
-times as long. Scope and evidence were not reduced to improve these numbers.
+Two CI runs on the five hosts gave 1.0 s and 1.4 s against 0.3 s and 0.4 s
+on Linux x64. On every host but macOS x64, browser mode took 2.4 to 3.2 times
+as long; on macOS x64 it took 3.5 times in one run and 6.1 in the other, so its
+runner is too noisy to compare. Scope and evidence were not reduced to improve these numbers.
 Measuring on a quiet host belongs with the implementation work.
 
 ## Implementation work

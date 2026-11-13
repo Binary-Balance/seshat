@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "commit": "042abcd",
-  "run": "https://github.com/Binary-Balance/seshat/actions/runs/43366513571",
+  "commit": "e197b67",
+  "run": "https://github.com/Binary-Balance/seshat/actions/runs/43373505992",
   "hosts": {
     "linux-arm64": {
       "platform": "linux-arm64",
@@ -45,14 +45,15 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 52408,
+          "wallMs": 51824,
           "cost": {
-            "baselineMs": 2600.5655779999997,
-            "coverageMs": 2207.327805,
-            "meanMutantJobMs": 1784.673048263158,
+            "baselineMs": 1827.868348,
+            "coverageMs": 2050.148173,
+            "meanMutantJobMs": 1800.6747496842102,
             "mutants": 19
           },
-          "concurrentJobs": 1
+          "concurrentJobs": 1,
+          "browserProcesses": 3
         },
         "workers": {
           "complete": true,
@@ -67,12 +68,13 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 35256,
+          "wallMs": 35957,
           "cost": {
-            "mutationWallMs": 20440.662271,
-            "singleWorkerMutationWallMs": 33928.274606
+            "mutationWallMs": 20859.176441,
+            "singleWorkerMutationWallMs": 34268.184172
           },
-          "concurrentJobs": 2
+          "concurrentJobs": 2,
+          "browserProcesses": 2
         },
         "switching-closed": {
           "complete": false,
@@ -87,7 +89,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 18452
+          "wallMs": 18816
         },
         "switching": {
           "complete": true,
@@ -102,7 +104,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 51636
+          "wallMs": 52936
         },
         "coverage-maps": {
           "files": {
@@ -132,7 +134,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5544
+          "wallMs": 5630
         },
         "survived": {
           "complete": true,
@@ -147,7 +149,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5513
+          "wallMs": 5519
         },
         "clean-hooks": {
           "complete": true,
@@ -162,7 +164,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5613
+          "wallMs": 5659
         },
         "assertion-count": {
           "complete": true,
@@ -177,7 +179,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5637
+          "wallMs": 5641
         },
         "before-all": {
           "complete": false,
@@ -192,7 +194,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5502
+          "wallMs": 5476
         },
         "before-each": {
           "complete": false,
@@ -207,7 +209,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5629
+          "wallMs": 5634
         },
         "after-each": {
           "complete": false,
@@ -222,7 +224,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5482
+          "wallMs": 5557
         },
         "cleanup": {
           "complete": false,
@@ -237,7 +239,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5408
+          "wallMs": 5524
         },
         "mixed": {
           "complete": false,
@@ -252,7 +254,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5525
+          "wallMs": 5647
         },
         "timeout": {
           "complete": false,
@@ -267,7 +269,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5637
+          "wallMs": 5739
         },
         "hook-timeout": {
           "complete": false,
@@ -282,7 +284,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5584
+          "wallMs": 5708
         },
         "import-error": {
           "complete": false,
@@ -297,7 +299,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5410
+          "wallMs": 5518
         },
         "around-each": {
           "complete": false,
@@ -312,7 +314,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5477
+          "wallMs": 5559
         },
         "unhandled": {
           "complete": false,
@@ -327,7 +329,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5457
+          "wallMs": 5608
         },
         "application-error": {
           "complete": true,
@@ -342,7 +344,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5576
+          "wallMs": 5662
         },
         "node-reference": {
           "complete": true,
@@ -357,10 +359,10 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 2784,
+          "wallMs": 2840,
           "cost": {
-            "nodeMutantJobMs": 494.67826199999996,
-            "browserMutantJobMs": 1485.310379
+            "nodeMutantJobMs": 500.49781400000006,
+            "browserMutantJobMs": 1530.4438839999998
           }
         },
         "missing-evidence": {
@@ -376,7 +378,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 2483
+          "wallMs": 2552
         },
         "replayed-identity": {
           "complete": false,
@@ -391,7 +393,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 2506
+          "wallMs": 2517
         },
         "retry": {
           "complete": false,
@@ -406,7 +408,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 2493
+          "wallMs": 2542
         },
         "repeat": {
           "complete": false,
@@ -421,7 +423,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 2501
+          "wallMs": 2543
         },
         "expected-failure": {
           "complete": false,
@@ -436,7 +438,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 2601
+          "wallMs": 2639
         },
         "concurrent": {
           "complete": false,
@@ -451,7 +453,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 2491
+          "wallMs": 2532
         },
         "continue-after-timeout": {
           "complete": false,
@@ -466,7 +468,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 8395
+          "wallMs": 8697
         },
         "deadline": {
           "complete": false,
@@ -481,10 +483,10 @@
           "deadlineReached": true,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [
-            "playwright-artifacts-nku53b",
-            "playwright_chromiumdev_profile-OuWbGN"
+            "playwright-artifacts-rOUc4M",
+            "playwright_chromiumdev_profile-1uKLsv"
           ],
-          "wallMs": 24035
+          "wallMs": 24230
         },
         "blocked-page": {
           "complete": false,
@@ -499,8 +501,8 @@
           "deadlineReached": true,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [
-            "playwright-artifacts-9sL1Ee",
-            "playwright_chromiumdev_profile-IrufUd"
+            "playwright-artifacts-zDISqv",
+            "playwright_chromiumdev_profile-7pfJbN"
           ],
           "wallMs": 24088
         },
@@ -517,10 +519,10 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [
-            "playwright-artifacts-SamuOl",
-            "playwright_chromiumdev_profile-DgMhGn"
+            "playwright-artifacts-LicEaY",
+            "playwright_chromiumdev_profile-FbEaRG"
           ],
-          "wallMs": 5450
+          "wallMs": 5508
         },
         "page-crash": {
           "complete": false,
@@ -535,7 +537,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 6098
+          "wallMs": 6213
         },
         "continue-after-crash": {
           "complete": false,
@@ -550,7 +552,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 8990
+          "wallMs": 9075
         }
       }
     },
@@ -596,14 +598,15 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 33864,
+          "wallMs": 50739,
           "cost": {
-            "baselineMs": 1208.562672,
-            "coverageMs": 1276.134206,
-            "meanMutantJobMs": 1161.922297105263,
+            "baselineMs": 2575.4742,
+            "coverageMs": 1856.025338,
+            "meanMutantJobMs": 1728.344445315789,
             "mutants": 19
           },
-          "concurrentJobs": 1
+          "concurrentJobs": 1,
+          "browserProcesses": 3
         },
         "workers": {
           "complete": true,
@@ -618,12 +621,13 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 25376,
+          "wallMs": 38742,
           "cost": {
-            "mutationWallMs": 15220.784288,
-            "singleWorkerMutationWallMs": 22209.351452
+            "mutationWallMs": 22470.171613000002,
+            "singleWorkerMutationWallMs": 32947.641722
           },
-          "concurrentJobs": 2
+          "concurrentJobs": 2,
+          "browserProcesses": 4
         },
         "switching-closed": {
           "complete": false,
@@ -638,7 +642,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 12175
+          "wallMs": 18065
         },
         "switching": {
           "complete": true,
@@ -653,7 +657,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 33813
+          "wallMs": 50425
         },
         "coverage-maps": {
           "files": {
@@ -683,7 +687,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3707
+          "wallMs": 5465
         },
         "survived": {
           "complete": true,
@@ -698,7 +702,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3599
+          "wallMs": 5365
         },
         "clean-hooks": {
           "complete": true,
@@ -713,7 +717,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3634
+          "wallMs": 5462
         },
         "assertion-count": {
           "complete": true,
@@ -728,7 +732,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3737
+          "wallMs": 5500
         },
         "before-all": {
           "complete": false,
@@ -743,7 +747,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3587
+          "wallMs": 5344
         },
         "before-each": {
           "complete": false,
@@ -758,7 +762,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3692
+          "wallMs": 5448
         },
         "after-each": {
           "complete": false,
@@ -773,7 +777,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3605
+          "wallMs": 5361
         },
         "cleanup": {
           "complete": false,
@@ -788,7 +792,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3617
+          "wallMs": 5308
         },
         "mixed": {
           "complete": false,
@@ -803,7 +807,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3656
+          "wallMs": 5472
         },
         "timeout": {
           "complete": false,
@@ -818,7 +822,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3729
+          "wallMs": 5509
         },
         "hook-timeout": {
           "complete": false,
@@ -833,7 +837,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3717
+          "wallMs": 5511
         },
         "import-error": {
           "complete": false,
@@ -848,7 +852,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3590
+          "wallMs": 5386
         },
         "around-each": {
           "complete": false,
@@ -863,7 +867,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3607
+          "wallMs": 5392
         },
         "unhandled": {
           "complete": false,
@@ -878,7 +882,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3591
+          "wallMs": 5444
         },
         "application-error": {
           "complete": true,
@@ -893,7 +897,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3677
+          "wallMs": 5500
         },
         "node-reference": {
           "complete": true,
@@ -908,10 +912,10 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 1856,
+          "wallMs": 2829,
           "cost": {
-            "nodeMutantJobMs": 327.289326,
-            "browserMutantJobMs": 964.847571
+            "nodeMutantJobMs": 440.40947400000005,
+            "browserMutantJobMs": 1404.6845660000001
           }
         },
         "missing-evidence": {
@@ -927,7 +931,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 1656
+          "wallMs": 2727
         },
         "replayed-identity": {
           "complete": false,
@@ -942,7 +946,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 1667
+          "wallMs": 2826
         },
         "retry": {
           "complete": false,
@@ -957,7 +961,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 1677
+          "wallMs": 2610
         },
         "repeat": {
           "complete": false,
@@ -972,7 +976,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 1652
+          "wallMs": 2617
         },
         "expected-failure": {
           "complete": false,
@@ -987,7 +991,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 1728
+          "wallMs": 2715
         },
         "concurrent": {
           "complete": false,
@@ -1002,7 +1006,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 1666
+          "wallMs": 2643
         },
         "continue-after-timeout": {
           "complete": false,
@@ -1017,7 +1021,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5560
+          "wallMs": 8235
         },
         "deadline": {
           "complete": false,
@@ -1032,10 +1036,10 @@
           "deadlineReached": true,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [
-            "playwright-artifacts-T3tzF6",
-            "playwright_chromiumdev_profile-SbzUPe"
+            "playwright-artifacts-eZxTOQ",
+            "playwright_chromiumdev_profile-uMpnhO"
           ],
-          "wallMs": 22743
+          "wallMs": 24081
         },
         "blocked-page": {
           "complete": false,
@@ -1050,10 +1054,10 @@
           "deadlineReached": true,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [
-            "playwright-artifacts-dn3Qbz",
-            "playwright_chromiumdev_profile-SLU0PR"
+            "playwright-artifacts-GQWYl4",
+            "playwright_chromiumdev_profile-3TkRrM"
           ],
-          "wallMs": 22669
+          "wallMs": 24115
         },
         "cancellation": {
           "complete": false,
@@ -1068,10 +1072,10 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [
-            "playwright-artifacts-5iy2g8",
-            "playwright_chromiumdev_profile-GYZ8PM"
+            "playwright-artifacts-LZioQW",
+            "playwright_chromiumdev_profile-VYoI0Y"
           ],
-          "wallMs": 3621
+          "wallMs": 5542
         },
         "page-crash": {
           "complete": false,
@@ -1086,7 +1090,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 4170
+          "wallMs": 6791
         },
         "continue-after-crash": {
           "complete": false,
@@ -1101,7 +1105,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 6106
+          "wallMs": 9321
         }
       }
     },
@@ -1147,14 +1151,15 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 57736,
+          "wallMs": 43787,
           "cost": {
-            "baselineMs": 2928.011167,
-            "coverageMs": 2440.655292,
-            "meanMutantJobMs": 1869.4787499999998,
+            "baselineMs": 2092.425459,
+            "coverageMs": 1488.021125,
+            "meanMutantJobMs": 1413.858456263158,
             "mutants": 19
           },
-          "concurrentJobs": 1
+          "concurrentJobs": 1,
+          "browserProcesses": 4
         },
         "workers": {
           "complete": true,
@@ -1169,12 +1174,13 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 56543,
+          "wallMs": 36395,
           "cost": {
-            "mutationWallMs": 31497.490292,
-            "singleWorkerMutationWallMs": 35594.28470800001
+            "mutationWallMs": 20547.789125000003,
+            "singleWorkerMutationWallMs": 26901.653792
           },
-          "concurrentJobs": 2
+          "concurrentJobs": 2,
+          "browserProcesses": 8
         },
         "switching-closed": {
           "complete": false,
@@ -1189,7 +1195,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 24338
+          "wallMs": 17172
         },
         "switching": {
           "complete": true,
@@ -1204,7 +1210,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 57029
+          "wallMs": 45061
         },
         "coverage-maps": {
           "files": {
@@ -1234,7 +1240,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 6488
+          "wallMs": 4882
         },
         "survived": {
           "complete": true,
@@ -1249,7 +1255,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5566
+          "wallMs": 4648
         },
         "clean-hooks": {
           "complete": true,
@@ -1264,7 +1270,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 6557
+          "wallMs": 4830
         },
         "assertion-count": {
           "complete": true,
@@ -1279,7 +1285,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7112
+          "wallMs": 5015
         },
         "before-all": {
           "complete": false,
@@ -1294,7 +1300,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 6165
+          "wallMs": 4485
         },
         "before-each": {
           "complete": false,
@@ -1309,7 +1315,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 6520
+          "wallMs": 5254
         },
         "after-each": {
           "complete": false,
@@ -1324,7 +1330,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5944
+          "wallMs": 5074
         },
         "cleanup": {
           "complete": false,
@@ -1339,7 +1345,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5792
+          "wallMs": 4866
         },
         "mixed": {
           "complete": false,
@@ -1354,7 +1360,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7093
+          "wallMs": 5700
         },
         "timeout": {
           "complete": false,
@@ -1369,7 +1375,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 6111
+          "wallMs": 5577
         },
         "hook-timeout": {
           "complete": false,
@@ -1384,7 +1390,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5931
+          "wallMs": 4832
         },
         "import-error": {
           "complete": false,
@@ -1399,7 +1405,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5754
+          "wallMs": 5164
         },
         "around-each": {
           "complete": false,
@@ -1414,7 +1420,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7044
+          "wallMs": 5098
         },
         "unhandled": {
           "complete": false,
@@ -1429,7 +1435,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 5662
+          "wallMs": 5479
         },
         "application-error": {
           "complete": true,
@@ -1444,7 +1450,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7858
+          "wallMs": 5389
         },
         "node-reference": {
           "complete": true,
@@ -1459,10 +1465,10 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 4037,
+          "wallMs": 3265,
           "cost": {
-            "nodeMutantJobMs": 624.8785829999999,
-            "browserMutantJobMs": 1511.092459
+            "nodeMutantJobMs": 481.930917,
+            "browserMutantJobMs": 1138.386417
           }
         },
         "missing-evidence": {
@@ -1478,7 +1484,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 4238
+          "wallMs": 2696
         },
         "replayed-identity": {
           "complete": false,
@@ -1493,7 +1499,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3886
+          "wallMs": 2630
         },
         "retry": {
           "complete": false,
@@ -1508,7 +1514,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 4030
+          "wallMs": 2634
         },
         "repeat": {
           "complete": false,
@@ -1523,7 +1529,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3808
+          "wallMs": 2463
         },
         "expected-failure": {
           "complete": false,
@@ -1538,7 +1544,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3897
+          "wallMs": 3189
         },
         "concurrent": {
           "complete": false,
@@ -1553,7 +1559,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3618
+          "wallMs": 2779
         },
         "continue-after-timeout": {
           "complete": false,
@@ -1568,7 +1574,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 11312
+          "wallMs": 8384
         },
         "deadline": {
           "complete": false,
@@ -1583,10 +1589,10 @@
           "deadlineReached": true,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [
-            "playwright-artifacts-O3QFyH",
-            "playwright_chromiumdev_profile-Ca8Gqg"
+            "playwright-artifacts-Zvsks6",
+            "playwright_chromiumdev_profile-80WWo1"
           ],
-          "wallMs": 24845
+          "wallMs": 24237
         },
         "blocked-page": {
           "complete": false,
@@ -1601,10 +1607,10 @@
           "deadlineReached": true,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [
-            "playwright-artifacts-kLTTOU",
-            "playwright_chromiumdev_profile-hbjkRh"
+            "playwright-artifacts-k588Ke",
+            "playwright_chromiumdev_profile-BM8xYD"
           ],
-          "wallMs": 25955
+          "wallMs": 24095
         },
         "cancellation": {
           "complete": false,
@@ -1619,10 +1625,10 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [
-            "playwright-artifacts-ZTbekh",
-            "playwright_chromiumdev_profile-S820pc"
+            "playwright-artifacts-F7b7mM",
+            "playwright_chromiumdev_profile-yybAvV"
           ],
-          "wallMs": 6850
+          "wallMs": 5749
         },
         "page-crash": {
           "complete": false,
@@ -1637,7 +1643,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 8074
+          "wallMs": 5262
         },
         "continue-after-crash": {
           "complete": false,
@@ -1652,7 +1658,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 16608
+          "wallMs": 9670
         }
       }
     },
@@ -1698,14 +1704,15 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 160263,
+          "wallMs": 218035,
           "cost": {
-            "baselineMs": 5963.414415,
-            "coverageMs": 6717.134543,
-            "meanMutantJobMs": 5416.0262760000005,
+            "baselineMs": 8832.332074,
+            "coverageMs": 7961.963210000001,
+            "meanMutantJobMs": 6863.6113680526305,
             "mutants": 19
           },
-          "concurrentJobs": 1
+          "concurrentJobs": 1,
+          "browserProcesses": 4
         },
         "workers": {
           "complete": true,
@@ -1720,12 +1727,13 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 157098,
+          "wallMs": 178834,
           "cost": {
-            "mutationWallMs": 85241.759153,
-            "singleWorkerMutationWallMs": 103147.05886599999
+            "mutationWallMs": 105006.135844,
+            "singleWorkerMutationWallMs": 130631.768634
           },
-          "concurrentJobs": 2
+          "concurrentJobs": 2,
+          "browserProcesses": 8
         },
         "switching-closed": {
           "complete": false,
@@ -1740,7 +1748,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 50639
+          "wallMs": 52579
         },
         "switching": {
           "complete": true,
@@ -1755,7 +1763,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 125265
+          "wallMs": 137920
         },
         "coverage-maps": {
           "files": {
@@ -1785,7 +1793,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 14609
+          "wallMs": 21998
         },
         "survived": {
           "complete": true,
@@ -1800,7 +1808,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 16123
+          "wallMs": 19089
         },
         "clean-hooks": {
           "complete": true,
@@ -1815,7 +1823,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 16007
+          "wallMs": 21007
         },
         "assertion-count": {
           "complete": true,
@@ -1830,7 +1838,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 16255
+          "wallMs": 20110
         },
         "before-all": {
           "complete": false,
@@ -1845,7 +1853,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 14725
+          "wallMs": 20146
         },
         "before-each": {
           "complete": false,
@@ -1860,7 +1868,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 14341
+          "wallMs": 19541
         },
         "after-each": {
           "complete": false,
@@ -1875,7 +1883,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 13116
+          "wallMs": 16321
         },
         "cleanup": {
           "complete": false,
@@ -1890,7 +1898,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 15193
+          "wallMs": 19261
         },
         "mixed": {
           "complete": false,
@@ -1905,7 +1913,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 14764
+          "wallMs": 17373
         },
         "timeout": {
           "complete": false,
@@ -1920,7 +1928,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 16103
+          "wallMs": 15627
         },
         "hook-timeout": {
           "complete": false,
@@ -1935,7 +1943,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 15560
+          "wallMs": 15016
         },
         "import-error": {
           "complete": false,
@@ -1950,7 +1958,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 15547
+          "wallMs": 14198
         },
         "around-each": {
           "complete": false,
@@ -1965,7 +1973,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 14801
+          "wallMs": 15403
         },
         "unhandled": {
           "complete": false,
@@ -1980,7 +1988,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 16123
+          "wallMs": 13304
         },
         "application-error": {
           "complete": true,
@@ -1995,7 +2003,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 14455
+          "wallMs": 14653
         },
         "node-reference": {
           "complete": true,
@@ -2010,10 +2018,10 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7628,
+          "wallMs": 6862,
           "cost": {
-            "nodeMutantJobMs": 929.943184,
-            "browserMutantJobMs": 3260.8049060000003
+            "nodeMutantJobMs": 896.668479,
+            "browserMutantJobMs": 5488.841759
           }
         },
         "missing-evidence": {
@@ -2029,7 +2037,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 6753
+          "wallMs": 6214
         },
         "replayed-identity": {
           "complete": false,
@@ -2044,7 +2052,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7298
+          "wallMs": 6320
         },
         "retry": {
           "complete": false,
@@ -2059,7 +2067,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7636
+          "wallMs": 6357
         },
         "repeat": {
           "complete": false,
@@ -2074,7 +2082,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 6528
+          "wallMs": 6797
         },
         "expected-failure": {
           "complete": false,
@@ -2089,7 +2097,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 6759
+          "wallMs": 6742
         },
         "concurrent": {
           "complete": false,
@@ -2104,7 +2112,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 8245
+          "wallMs": 6361
         },
         "continue-after-timeout": {
           "complete": false,
@@ -2119,7 +2127,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 19991
+          "wallMs": 19032
         },
         "deadline": {
           "complete": false,
@@ -2134,10 +2142,10 @@
           "deadlineReached": true,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [
-            "playwright-artifacts-FXwiop",
-            "playwright_chromiumdev_profile-gR2wuW"
+            "playwright-artifacts-JLojuz",
+            "playwright_chromiumdev_profile-T16UlU"
           ],
-          "wallMs": 29887
+          "wallMs": 30278
         },
         "blocked-page": {
           "complete": false,
@@ -2152,10 +2160,10 @@
           "deadlineReached": true,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [
-            "playwright-artifacts-cffAxL",
-            "playwright_chromiumdev_profile-Sik8o3"
+            "playwright-artifacts-Kiz1od",
+            "playwright_chromiumdev_profile-knzzGb"
           ],
-          "wallMs": 33329
+          "wallMs": 30181
         },
         "cancellation": {
           "complete": false,
@@ -2170,10 +2178,10 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [
-            "playwright-artifacts-LI4VmZ",
-            "playwright_chromiumdev_profile-mjPwse"
+            "playwright-artifacts-uMhBgy",
+            "playwright_chromiumdev_profile-dpsiIq"
           ],
-          "wallMs": 17159
+          "wallMs": 12817
         },
         "page-crash": {
           "complete": false,
@@ -2188,7 +2196,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 14972
+          "wallMs": 12900
         },
         "continue-after-crash": {
           "complete": false,
@@ -2203,7 +2211,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 37762
+          "wallMs": 34976
         }
       }
     },
@@ -2249,14 +2257,15 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 62387,
+          "wallMs": 82874,
           "cost": {
-            "baselineMs": 2137.0065999999997,
-            "coverageMs": 2136.7215,
-            "meanMutantJobMs": 2132.369284210526,
+            "baselineMs": 2524.6845000000003,
+            "coverageMs": 3165.8369,
+            "meanMutantJobMs": 2772.882705263158,
             "mutants": 19
           },
-          "concurrentJobs": 1
+          "concurrentJobs": 1,
+          "browserProcesses": 4
         },
         "workers": {
           "complete": true,
@@ -2271,12 +2280,13 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 47979,
+          "wallMs": 64597,
           "cost": {
-            "mutationWallMs": 26172.2439,
-            "singleWorkerMutationWallMs": 40592.9326
+            "mutationWallMs": 36115.491,
+            "singleWorkerMutationWallMs": 52785.1705
           },
-          "concurrentJobs": 2
+          "concurrentJobs": 2,
+          "browserProcesses": 8
         },
         "switching-closed": {
           "complete": false,
@@ -2291,7 +2301,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 20134
+          "wallMs": 26205
         },
         "switching": {
           "complete": true,
@@ -2306,7 +2316,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 54722
+          "wallMs": 69946
         },
         "coverage-maps": {
           "files": {
@@ -2336,7 +2346,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7354
+          "wallMs": 8997
         },
         "survived": {
           "complete": true,
@@ -2351,7 +2361,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7271
+          "wallMs": 8817
         },
         "clean-hooks": {
           "complete": true,
@@ -2366,7 +2376,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7431
+          "wallMs": 8951
         },
         "assertion-count": {
           "complete": true,
@@ -2381,7 +2391,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7452
+          "wallMs": 8996
         },
         "before-all": {
           "complete": false,
@@ -2396,7 +2406,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7283
+          "wallMs": 8845
         },
         "before-each": {
           "complete": false,
@@ -2411,7 +2421,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7315
+          "wallMs": 8933
         },
         "after-each": {
           "complete": false,
@@ -2426,7 +2436,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7289
+          "wallMs": 8866
         },
         "cleanup": {
           "complete": false,
@@ -2441,7 +2451,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7250
+          "wallMs": 8961
         },
         "mixed": {
           "complete": false,
@@ -2456,7 +2466,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7358
+          "wallMs": 8934
         },
         "timeout": {
           "complete": false,
@@ -2471,7 +2481,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7510
+          "wallMs": 9290
         },
         "hook-timeout": {
           "complete": false,
@@ -2486,7 +2496,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7481
+          "wallMs": 8955
         },
         "import-error": {
           "complete": false,
@@ -2501,7 +2511,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7335
+          "wallMs": 8837
         },
         "around-each": {
           "complete": false,
@@ -2516,7 +2526,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7270
+          "wallMs": 8871
         },
         "unhandled": {
           "complete": false,
@@ -2531,7 +2541,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7332
+          "wallMs": 8849
         },
         "application-error": {
           "complete": true,
@@ -2546,7 +2556,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7371
+          "wallMs": 8961
         },
         "node-reference": {
           "complete": true,
@@ -2561,10 +2571,10 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 4565,
+          "wallMs": 5372,
           "cost": {
-            "nodeMutantJobMs": 653.7764999999999,
-            "browserMutantJobMs": 1651.5161
+            "nodeMutantJobMs": 780.3686,
+            "browserMutantJobMs": 2029.3085999999998
           }
         },
         "missing-evidence": {
@@ -2580,7 +2590,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3927
+          "wallMs": 4710
         },
         "replayed-identity": {
           "complete": false,
@@ -2595,7 +2605,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 4012
+          "wallMs": 4686
         },
         "retry": {
           "complete": false,
@@ -2610,7 +2620,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3975
+          "wallMs": 4685
         },
         "repeat": {
           "complete": false,
@@ -2625,7 +2635,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 4013
+          "wallMs": 4698
         },
         "expected-failure": {
           "complete": false,
@@ -2640,7 +2650,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 4113
+          "wallMs": 4889
         },
         "concurrent": {
           "complete": false,
@@ -2655,7 +2665,7 @@
           "deadlineReached": null,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 3992
+          "wallMs": 4727
         },
         "continue-after-timeout": {
           "complete": false,
@@ -2670,7 +2680,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 10762
+          "wallMs": 12950
         },
         "deadline": {
           "complete": false,
@@ -2685,10 +2695,10 @@
           "deadlineReached": true,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [
-            "playwright-artifacts-Y1YV9S",
-            "playwright_chromiumdev_profile-0NJSnn"
+            "playwright-artifacts-6hr3f1",
+            "playwright_chromiumdev_profile-SjMxo5"
           ],
-          "wallMs": 25796
+          "wallMs": 26945
         },
         "blocked-page": {
           "complete": false,
@@ -2703,10 +2713,10 @@
           "deadlineReached": true,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [
-            "playwright-artifacts-8fUGzg",
-            "playwright_chromiumdev_profile-JdrNBi"
+            "playwright-artifacts-byDcjL",
+            "playwright_chromiumdev_profile-nWTVW9"
           ],
-          "wallMs": 25701
+          "wallMs": 26946
         },
         "cancellation": {
           "complete": false,
@@ -2721,10 +2731,10 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [
-            "playwright-artifacts-aV9EnW",
-            "playwright_chromiumdev_profile-6Twpv4"
+            "playwright-artifacts-8eHDhV",
+            "playwright_chromiumdev_profile-MFKdqJ"
           ],
-          "wallMs": 7021
+          "wallMs": 8571
         },
         "page-crash": {
           "complete": false,
@@ -2739,7 +2749,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 7527
+          "wallMs": 8906
         },
         "continue-after-crash": {
           "complete": false,
@@ -2754,7 +2764,7 @@
           "deadlineReached": false,
           "leftoverProcesses": 0,
           "leftoverBrowserFiles": [],
-          "wallMs": 10580
+          "wallMs": 13812
         }
       }
     }
