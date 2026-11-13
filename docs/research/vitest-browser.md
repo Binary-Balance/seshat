@@ -112,8 +112,9 @@ test file's own: always for hooks inside a `describe`, and by default
 test file's `afterEach` records its error without throwing, so the snapshot
 includes it and the mutant counts as killed. The prototype takes its snapshot in
 `onTaskFinished`, before any `afterEach`, and gives an execution error for the
-same case (`soft-after-each`). None of these experiment runs or cases is
-committed.
+same case (`soft-after-each`). The public-hooks experiment itself is not
+committed. #293 added `soft-after-each` and nested `describe` cases to the
+proof; see [Runner shape and page evidence](#runner-shape-and-page-evidence).
 
 It also relies on undocumented details of Vitest's test loop: that
 `task.result.hooks.beforeEach` reads `'pass'` only if every `beforeEach` hook
@@ -153,9 +154,10 @@ plugins: [process.env.SESHAT_VITEST_BROWSER
   && import(process.env.SESHAT_VITEST_BROWSER).then(m => m.default)],
 ```
 
-The plugin uses only Vite's documented `config` hook. It adds the setup file
+The plugin uses only documented hooks. Vite's `config` hook adds the setup file
 to `test.setupFiles`, the job identity to `test.provide` and the setup file to
-`server.fs.allow`. Unlike the reporter route below, it adds no dependency on
+`server.fs.allow`. Vitest's `configureVitest` hook passes the Vitest version to
+browser projects (see below). Unlike the reporter route below, it adds no dependency on
 Vitest internals beyond the runner global and the `vitest` resolution noted
 below.
 

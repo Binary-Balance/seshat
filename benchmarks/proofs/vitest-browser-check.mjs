@@ -77,7 +77,7 @@ const baselineRejections = {
   'missing-snapshot': {body: "afterEach(({task})=>{delete (task.meta as any).seshat.beforeCleanup;});test('passed',()=>{});"},
   // A user setup file runs before Seshat's and changes the runner the way a
   // Vitest release could. The baseline must name the missing piece.
-  'missing-runner': {runnerChange: "Object.defineProperty(browser,'runner',{value:undefined});",
+  'missing-runner-global': {runnerChange: "Object.defineProperty(browser,'runner',{value:undefined});",
     problem: 'window.__vitest_browser_runner__.runner is missing'},
   'missing-before-run-task': {runnerChange: 'browser.runner.onBeforeRunTask=undefined;', problem: 'runner.onBeforeRunTask is not a function'},
   'missing-task-finished': {runnerChange: 'browser.runner.onTaskFinished=undefined;', problem: 'runner.onTaskFinished is not a function'},
