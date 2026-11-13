@@ -212,9 +212,8 @@ browser process after any case, including `deadline`, `blocked-page` and
 `cancellation` (SIGINT during a mutant job). On Windows, Playwright does not
 detach Chromium, so it stays in the job's process tree; no browser process
 survived there either. The Windows `cancellation` case sends Ctrl+Break
-through the console helper, whose own
-cleanup ends any process still in its job, so that case alone cannot show a
-leftover browser there.
+through the console helper, whose own cleanup ends any process still in its
+job, so that case alone cannot show a leftover browser there.
 
 Linux matches leftover processes by the proof's private `TMPDIR`. macOS and
 Windows cannot read another process's environment, so the proof matches the
@@ -261,11 +260,16 @@ cases took 60% to 100% of the 5.0.0 time.
 - Two workers cut `stack`'s mutation time only from 85 s to 77 s. Each job
   runs a Vite server and a browser, so two at once compete for the 2 vCPUs.
 
-Two CI runs on the five hosts gave 1.0 s and 1.4 s against 0.3 s and 0.4 s
-on Linux x64. On every host but macOS x64, browser mode took 2.4 to 3.2 times
-as long; on macOS x64 it took 3.5 times in one run and 6.1 in the other, so its
-runner is too noisy to compare. Scope and evidence were not reduced to improve these numbers.
-Measuring on a quiet host belongs with the implementation work.
+The same mean mutant job times (`assertion` against `node-reference`) from two
+CI runs on the five hosts,
+[43366513571](https://github.com/Binary-Balance/seshat/actions/runs/43366513571)
+and [43373505992](https://github.com/Binary-Balance/seshat/actions/runs/43373505992)
+(the second is in `vitest-browser-hosts.json`), gave 1.0 s and 1.4 s against 0.3 s
+and 0.4 s on Linux x64. On every host but macOS x64, browser mode took 2.4 to
+3.2 times as long; on macOS x64 it took 3.5 times in one run and 6.1 in the
+other, so its runner is too noisy to compare. Scope and evidence were not
+reduced to improve these numbers. Measuring on a quiet host belongs with the
+implementation work.
 
 ## Implementation work
 

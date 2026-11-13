@@ -363,8 +363,9 @@ if (cases.includes('cancellation')) {
   writeFileSync(join(project, 'seshat.json'), JSON.stringify(config));
   const ready = join(work, 'cancellation-ready');
   const args = ['check', '--config', join(project, 'seshat.json'), '--scratch', scratch, '--json', '--no-progress'];
-  // Node cannot send Ctrl+Break on Windows. The console helper sends it to its
-  // own process group once the marker exists, and forwards the CLI's output.
+  // Node cannot send Ctrl+Break on Windows. The console helper starts the CLI in
+  // a new process group, sends it Ctrl+Break once the marker exists, and
+  // forwards the CLI's output.
   const helper = join(dirname(cli), 'windows-console-helper.exe');
   const started = performance.now();
   const child = windows
