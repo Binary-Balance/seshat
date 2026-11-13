@@ -153,7 +153,9 @@ plugins: [process.env.SESHAT_VITEST_BROWSER
 
 The plugin uses only Vite's documented `config` hook. It adds the setup file
 to `test.setupFiles`, the job identity to `test.provide` and the setup file to
-`server.fs.allow`. The runner global stays the only undocumented dependency.
+`server.fs.allow`. Unlike the reporter route below, it adds no dependency on
+Vitest internals beyond the runner global and the `vitest` resolution noted
+below.
 
 - The user's own setup files still run, before Seshat's.
 - The plugin's identity replaces one from the user's `provide`. A plugin listed
@@ -165,7 +167,9 @@ to `test.setupFiles`, the job identity to `test.provide` and the setup file to
   adds the project root after plugins run, so the entry only widens access.
 - The setup file's bare `vitest` import resolves although the evidence
   directory has no `node_modules`: browser mode sets Vite's `resolve.dedupe`
-  for `vitest`, which resolves it from the project root.
+  for `vitest`, which resolves it from the project root. That setting is
+  Vitest's own, not documented; if it goes, the import fails and so does the
+  baseline.
 
 This was checked by hand on Vitest 5.0.0 and 5.1.0, and the proof now runs
 through the embedded adapter. The existing reporter could add the same three

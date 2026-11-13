@@ -3957,7 +3957,7 @@ mod tests {
                 .unwrap();
             assert_eq!(result.state, TestState::Passed, "{}", result.details);
             assert_eq!(result.details["report"]["executionId"], id);
-            assert_eq!(fs::read_dir(&evidence.0).unwrap().count(), 10);
+            assert_eq!(fs::read_dir(&evidence.0).unwrap().count(), 12);
         }
         evidence.close().unwrap();
         let config = captured.config.clone();
