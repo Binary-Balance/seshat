@@ -1684,8 +1684,9 @@ use the verified version's diagnostic and remain unresolved timeouts.
 This proof verifies the default Node environment and fork pool with sequential
 tests. Retries, repeats, expected-failure tests and concurrent test declarations
 are rejected through observation rather than used to produce a preferred result.
-Skipped or unfinished tests leave incomplete evidence. Other pools, custom runners,
-browser mode and broader versions still need verification.
+Skipped or unfinished tests leave incomplete evidence. Other pools, custom runners
+and broader versions still need verification. Browser mode ignores the runner;
+see [Vitest browser mode feasibility](#vitest-browser-mode-feasibility).
 
 For hosts with short command limits, run the same cases in batches:
 
@@ -1743,6 +1744,25 @@ Results remain under ignored `work/assurance-proofs/vitest-check-*`. Wall times
 include native capture, validation, baseline, coverage, mutations and cleanup,
 but exclude preliminary fixture staging. These correctness runs are not repeated
 performance benchmarks.
+
+## Vitest browser mode feasibility
+
+`vitest-browser-check.mjs` is the #159 feasibility proof, not a supported
+route. It runs `check` on the self-contained
+[`fixtures/vitest-browser`](fixtures/vitest-browser) project in headless
+Chromium, using the unchanged native CLI and Vitest reporter plus the fixture's
+prototype `evidence-setup.ts`. Linux only: it reads `/proc` to find browser
+processes that outlive a job.
+
+```sh
+npm ci --prefix benchmarks/proofs/fixtures/vitest-browser
+npx --prefix benchmarks/proofs/fixtures/vitest-browser playwright install chromium-headless-shell
+node benchmarks/proofs/vitest-browser-check.mjs --cli crates/seshat/target/release/seshat
+```
+
+`--cases` runs a subset and `--deps DIR` uses another installed dependency set.
+`SESHAT_PROOF_OUTPUT` receives the portable summary. See the
+[findings](../../docs/research/vitest-browser.md).
 
 ## Parallel mutation workers
 

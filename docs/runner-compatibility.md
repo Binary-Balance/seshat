@@ -82,6 +82,11 @@ tested set is distinct from the supported range. The 5.0.3 run was on Linux x64
 with Node 24.21.0; the package workflows keep the fixtures locked to 5.0.0 on
 every platform.
 
+Vitest browser mode is unsupported. It silently ignores the runner, so a
+browser configuration produces no evidence and Seshat stops at the baseline.
+The [feasibility findings](research/vitest-browser.md) record what support
+would need.
+
 To check another Vitest 5 release, install the proof dependencies with that
 version into a separate directory and pass it with `--deps`:
 

@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "environment": {
+    "node": "v24.22.2",
+    "cli": "seshat 0.17.0",
+    "tools": {
+      "vitest": "5.1.0",
+      "@vitest/browser": "5.1.0",
+      "@vitest/browser-playwright": "5.1.0",
+      "@vitest/coverage-istanbul": "5.1.0",
+      "playwright": "1.63.0",
+      "react": "19.2.8",
+      "react-dom": "19.2.8",
+      "typescript": "6.0.3"
+    },
+    "browser": [
+      {
+        "name": "chromium",
+        "revision": "1243",
+        "browserVersion": "153.0.8010.12"
+      },
+      {
+        "name": "chromium-headless-shell",
+        "revision": "1243",
+        "browserVersion": "153.0.8010.12"
+      }
+    ]
+  },
+  "platform": "linux-x64",
+  "cases": {
+    "stack": {
+      "complete": true,
+      "score": 68.42105263157895,
+      "baseline": "passed",
+      "planned": 19,
+      "killed": 13,
+      "survived": 6,
+      "unresolved": 0,
+      "firstVerdict": "survived",
+      "testTimedOut": null,
+      "deadlineReached": false,
+      "leftoverProcesses": 0,
+      "leftoverBrowserFiles": [],
+      "wallMs": 80663,
+      "cost": {
+        "baselineMs": 3666.525289,
+        "coverageMs": 2949.5576149999997,
+        "meanMutantJobMs": 2745.0075138947363,
+        "mutants": 19
+      },
+      "concurrentJobs": 1
+    },
+    "switching": {
+      "complete": true,
+      "score": 68.42105263157895,
+      "baseline": "passed",
+      "planned": 19,
+      "killed": 13,
+      "survived": 6,
+      "unresolved": 0,
+      "firstVerdict": "survived",
+      "testTimedOut": null,
+      "deadlineReached": false,
+      "leftoverProcesses": 0,
+      "leftoverBrowserFiles": [],
+      "wallMs": 81221
+    },
+    "coverage-maps": {
+      "files": {
+        "gain.ts": {
+          "statements": 12,
+          "branches": 4,
+          "functions": 2
+        },
+        "meter.tsx": {
+          "statements": 9,
+          "branches": 4,
+          "functions": 5
+        }
+      },
+      "identical": true
+    },
+    "timeout": {
+      "complete": false,
+      "score": null,
+      "baseline": "passed",
+      "planned": 1,
+      "killed": 0,
+      "survived": 0,
+      "unresolved": 1,
+      "firstVerdict": "timed-out",
+      "testTimedOut": true,
+      "deadlineReached": false,
+      "leftoverProcesses": 0,
+      "leftoverBrowserFiles": [],
+      "wallMs": 9040
+    },
+    "missing-evidence": {
+      "complete": false,
+      "score": null,
+      "baseline": "execution-error",
+      "planned": 1,
+      "killed": 0,
+      "survived": 0,
+      "unresolved": 1,
+      "firstVerdict": "unassessed",
+      "testTimedOut": null,
+      "deadlineReached": null,
+      "leftoverProcesses": 0,
+      "leftoverBrowserFiles": [],
+      "wallMs": 4035
+    }
+  }
+}
