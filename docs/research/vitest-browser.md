@@ -23,8 +23,15 @@ Linux x64, Node 24.22.2, Playwright 1.63.0 with Chrome Headless Shell
 - Subset (`stack`, `switching`, `coverage-maps`, `missing-evidence`,
   `timeout`): the same four packages at 5.1.0, the latest release.
 
-Firefox, WebKit, headed browsers, the WebdriverIO and preview providers, other
-Vitest 5 releases, macOS and Windows are untested.
+Firefox, WebKit, headed browsers, the WebdriverIO and preview providers and
+other Vitest 5 releases are untested.
+
+For [#293](https://github.com/Binary-Balance/seshat/issues/293), the full 5.0.0
+matrix also ran in CI on all five supported hosts: Linux x64 and ARM64
+(Ubuntu 22.04), macOS x64 and ARM64 (macOS 15) and Windows x64 (Windows Server
+2022), with Node 24.20.0 and the same browser build. Every case gave the same
+result as the Linux run, including the leftover counts below. The per-host
+summaries are in [`vitest-browser-hosts.json`](vitest-browser-hosts.json).
 
 ## Fixture
 
@@ -197,16 +204,28 @@ code that checks it is the same as on the Node route.
 
 ### Lifecycle and cleanup
 
-Playwright starts Chromium in its own session and process group, so Seshat's
-process-group kill does not reach it. Chromium exits by itself when its pipe
-to the killed Vitest process closes; one manual measurement took 480 ms. The
-proof waits up to 5 s and found no surviving browser process after any case,
-including `deadline`, `blocked-page` and `cancellation` (SIGINT during a
-mutant job).
+On Linux and macOS, Playwright starts Chromium in its own session and process
+group, so Seshat's process-group kill does not reach it. Chromium exits by
+itself when its pipe to the killed Vitest process closes; one manual
+measurement took 480 ms. The proof waits up to 5 s and found no surviving
+browser process after any case, including `deadline`, `blocked-page` and
+`cancellation` (SIGINT during a mutant job). On Windows, Playwright does not
+detach Chromium, so it stays in the job's process tree; no browser process
+survived there either. The Windows `cancellation` case sends Ctrl+Break
+through the console helper, whose own cleanup ends any process still in its
+job, so that case alone cannot show a leftover browser there.
+
+Linux matches leftover processes by the proof's private `TMPDIR`. macOS and
+Windows cannot read another process's environment, so the proof matches the
+commands a job runs (`chrome-headless-shell`, `vitest.mjs`, `esbuild`), which
+assumes no other Vitest or Playwright browser runs on the host. On every host
+the same check saw two to eight browser processes during `stack` and `workers`,
+so a missed match would show.
 
 A killed job cannot run Playwright's Node-side cleanup, so each deadline or
 cancellation leaves one Chromium profile and one artifacts directory in
-`TMPDIR`, about 230 KB in a manual check. Normal runs leave none.
+the temporary directory (`TMPDIR`, or `TEMP`/`TMP` on Windows), about 230 KB
+in a manual check. Every host showed this. Normal runs leave none.
 
 Each job starts its own Vitest server. In a manual check, two concurrent runs
 took the next free API port (63315, then 63316). `workers` saw two jobs
@@ -241,8 +260,16 @@ cases took 60% to 100% of the 5.0.0 time.
 - Two workers cut `stack`'s mutation time only from 85 s to 77 s. Each job
   runs a Vite server and a browser, so two at once compete for the 2 vCPUs.
 
-Scope and evidence were not reduced to improve these numbers. Measuring on a
-quiet host belongs with the implementation work.
+The same mean mutant job times (`assertion` against `node-reference`) from two
+CI runs on the five hosts,
+[43366513571](https://github.com/Binary-Balance/seshat/actions/runs/43366513571)
+and [43373505992](https://github.com/Binary-Balance/seshat/actions/runs/43373505992)
+(the second is in `vitest-browser-hosts.json`), gave 1.0 s and 1.4 s against 0.3 s
+and 0.4 s on Linux x64. On every host but macOS x64, browser mode took 2.4 to
+3.2 times as long; on macOS x64 it took 3.5 times in one run and 6.1 in the
+other, so its runner is too noisy to compare. Scope and evidence were not
+reduced to improve these numbers. Measuring on a quiet host belongs with the
+implementation work.
 
 ## Implementation work
 
@@ -270,6 +297,9 @@ npx --prefix benchmarks/proofs/fixtures/vitest-browser playwright install chromi
 node benchmarks/proofs/vitest-browser-check.mjs --cli crates/seshat/target/release/seshat
 ```
 
-`--cases` runs a subset and `--deps DIR` uses another installed dependency
-set. `SESHAT_PROOF_OUTPUT` receives the portable summary; the full report with
-raw receipts stays in `work/assurance-proofs/vitest-browser-check-*`.
+`--cases` runs a subset, `--skip` leaves cases out and `--deps DIR` uses
+another installed dependency set. `SESHAT_PROOF_OUTPUT` receives the portable
+summary; the full report with raw receipts stays in
+`work/assurance-proofs/vitest-browser-check-*`. The
+[Vitest browser proof workflow](../../.github/workflows/vitest-browser.yml)
+runs it on each supported host.

@@ -1,23 +1,23 @@
 // Feasibility proof for Vitest 5 browser mode (#159). It drives the unchanged
 // native CLI and Vitest reporter; the fixture's evidence-setup.ts stands in for
-// the runner adapter that browser mode cannot load. Linux only: orphan checks
-// read /proc.
+// the runner adapter that browser mode cannot load.
 import assert from 'node:assert/strict';
-import {spawn} from 'node:child_process';
+import {spawn, spawnSync} from 'node:child_process';
 import {cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, realpathSync,
   rmSync, writeFileSync} from 'node:fs';
 import {dirname, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {parseArgs} from 'node:util';
 import {setTimeout as delay} from 'node:timers/promises';
-import {nodeCommand, runProcess} from './process.mjs';
+import {killTree, nodeCommand, runProcess} from './process.mjs';
 
-assert.equal(process.platform, 'linux', 'the orphan and profile checks read /proc');
+const windows = process.platform === 'win32';
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
 const fixture = join(here, 'fixtures/vitest-browser');
-const {values} = parseArgs({options: {cli: {type: 'string'}, deps: {type: 'string'}, cases: {type: 'string'}}});
-assert.ok(values.cli, 'usage: node benchmarks/proofs/vitest-browser-check.mjs --cli PATH [--deps DIR] [--cases LIST]');
+const {values} = parseArgs({options: {cli: {type: 'string'}, deps: {type: 'string'}, cases: {type: 'string'},
+  skip: {type: 'string'}}});
+assert.ok(values.cli, 'usage: node benchmarks/proofs/vitest-browser-check.mjs --cli PATH [--deps DIR] [--cases LIST] [--skip LIST]');
 const cli = realpathSync(resolve(values.cli));
 const dependencies = join(resolve(values.deps ?? fixture), 'node_modules');
 assert.ok(existsSync(join(dependencies, '@vitest/browser-playwright')), `install the fixture first: npm ci --prefix ${relative(repo, fixture)}`);
@@ -66,15 +66,19 @@ const baselineRejections = {
 };
 const allCases = ['stack', 'workers', 'switching-closed', 'switching', 'coverage-maps', 'node-reference',
   ...Object.keys(controls), ...Object.keys(baselineRejections), ...Object.keys(continuations), ...Object.keys(deadlines), 'cancellation'];
-const cases = values.cases?.split(',').map(name => name.trim()) ?? allCases;
-assert.ok(cases.every(name => allCases.includes(name)), `--cases must name: ${allCases.join(', ')}`);
+const list = option => option?.split(',').map(name => name.trim());
+const skipped = list(values.skip) ?? [];
+const cases = (list(values.cases) ?? allCases).filter(name => !skipped.includes(name));
+assert.ok([...cases, ...skipped].every(name => allCases.includes(name)), `--cases and --skip must name: ${allCases.join(', ')}`);
 
 mkdirSync(join(repo, 'work/assurance-proofs'), {recursive: true});
 const work = mkdtempSync(join(repo, 'work/assurance-proofs/vitest-browser-check-'));
 const project = join(work, 'input');
 const scratch = join(work, 'scratch');
 // Playwright creates Chromium profiles under TMPDIR; a private one makes leaks visible.
+// Windows reads TEMP and TMP instead of TMPDIR.
 const tmp = join(work, 'tmp');
+const temporaryEnv = {TMPDIR: tmp, TEMP: tmp, TMP: tmp};
 for (const path of [project, scratch, tmp]) mkdirSync(path);
 const fixtureFiles = ['package.json', 'tsconfig.json', 'evidence-setup.ts', 'meter.tsx', 'gain.ts', 'meter.test.tsx', 'gain.test.ts'];
 for (const name of fixtureFiles) cpSync(join(fixture, name), join(project, name));
@@ -86,17 +90,24 @@ const environment = {node: process.version, cli: (await runProcess(cli, ['--vers
   browser: JSON.parse(readFileSync(join(project, 'node_modules/playwright-core/browsers.json'), 'utf8')).browsers
     .filter(({name}) => name.startsWith('chromium')).map(({name, revision, browserVersion}) => ({name, revision, browserVersion}))};
 const results = {version: 1, environment, work: relative(repo, work), cases, runs: {}};
-const sanitize = value => JSON.parse(JSON.stringify(value).replaceAll(work, '<work>'));
+// JSON escapes Windows path separators, and Vite prints them as forward
+// slashes, so replace those forms too.
+const sanitize = value => JSON.parse([JSON.stringify(work).slice(1, -1), work.replaceAll('\\', '/'), work]
+  .reduce((text, path) => text.replaceAll(path, '<work>'), JSON.stringify(value)));
 const save = () => writeFileSync(join(work, 'result.json'), JSON.stringify(sanitize(results), null, 2) + '\n');
 
 function vitestConfig({include = ['meter.test.tsx', 'gain.test.ts'], sources = ['meter.tsx', 'gain.ts'],
-  setup = true, identity = 'process.env.SESHAT_EXECUTION_ID', switching = false, browser = true, crash = false, runner = false} = {}) {
+  setup = true, identity = 'process.env.SESHAT_EXECUTION_ID', switching = false, browser = true, crash = false, entered = false,
+  runner = false} = {}) {
   const provide = `{seshatExecutionId:${identity}${switching ? ",seshatMutantId:process.env.SESHAT_MUTANT_ID ?? '-1'" : ''}}`;
-  writeFileSync(join(project, 'vitest.config.mjs'), `import {playwright} from '@vitest/browser-playwright';
+  const commands = [crash && 'crashPage', entered && 'entered'].filter(Boolean);
+  writeFileSync(join(project, 'vitest.config.mjs'), `import {writeFileSync} from 'node:fs';
+import {playwright} from '@vitest/browser-playwright';
 ${crash ? "const crashPage=async({page})=>{const cdp=await page.context().newCDPSession(page);await cdp.send('Page.crash').catch(()=>{});};" : ''}
+${entered ? "const entered=async()=>{writeFileSync(process.env.SESHAT_CONSOLE_READY,'entered');};" : ''}
 export default {cacheDir:'.vite',test:{${runner ? 'runner:process.env.SESHAT_VITEST_RUNNER,' : ''}include:${JSON.stringify(include)},provide:${provide},
   ${setup ? "setupFiles:['./evidence-setup.ts']," : ''}
-  ${browser ? `browser:{enabled:true,headless:true,provider:playwright(),${crash ? 'commands:{crashPage},' : ''}instances:[{browser:'chromium'}]},` : ''}
+  ${browser ? `browser:{enabled:true,headless:true,provider:playwright(),${commands.length ? `commands:{${commands}},` : ''}instances:[{browser:'chromium'}]},` : ''}
   coverage:{provider:'istanbul',include:${JSON.stringify(sources)},reporter:['json'],reportsDirectory:'coverage'}}};
 `);
 }
@@ -117,37 +128,39 @@ function controlConfig(name, body) {
   return config;
 }
 
-// Any process still carrying this proof's TMPDIR outlived its job.
+// Processes a job started that are still running. Linux matches this proof's
+// private TMPDIR. macOS and Windows cannot read another process's environment,
+// so they match the job's commands, which assumes no other Vitest or Playwright
+// browser runs on the host, as on a CI runner. `job` identifies a running job.
 function owned() {
-  const pids = [];
-  for (const pid of readdirSync('/proc').filter(name => /^\d+$/.test(name))) {
-    try {
-      if (readFileSync(`/proc/${pid}/environ`, 'utf8').split('\0').includes(`TMPDIR=${tmp}`)) pids.push(Number(pid));
-    } catch {}
+  if (process.platform === 'linux') {
+    const found = [];
+    for (const pid of readdirSync('/proc').filter(name => /^\d+$/.test(name))) {
+      try {
+        const environment = readFileSync(`/proc/${pid}/environ`, 'utf8').split('\0');
+        if (!environment.includes(`TMPDIR=${tmp}`)) continue;
+        let command = null;
+        try { command = readlinkSync(`/proc/${pid}/exe`); } catch {}
+        found.push({pid: Number(pid), command, job: environment.find(entry => entry.startsWith('SESHAT_EXECUTION_ID='))});
+      } catch {}
+    }
+    return found;
   }
-  return pids;
-}
-function processCommand(pid) {
-  try { return readlinkSync(`/proc/${pid}/exe`); } catch { return null; }
-}
-// Execution IDs of running jobs, or of those with Chromium running.
-function runningJobs(browserOnly = false) {
-  const ids = new Set();
-  for (const pid of owned()) {
-    try {
-      if (browserOnly && !/chrom/i.test(processCommand(pid) ?? '')) continue;
-      const id = readFileSync(`/proc/${pid}/environ`, 'utf8').split('\0').find(entry => entry.startsWith('SESHAT_EXECUTION_ID='));
-      if (id) ids.add(id);
-    } catch {}
-  }
-  return ids;
+  const listing = windows
+    ? spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
+      'Get-CimInstance Win32_Process | ForEach-Object { "$($_.ProcessId) $($_.CommandLine)" }'], {encoding: 'utf8'})
+    : spawnSync('ps', ['-axww', '-o', 'pid=,args='], {encoding: 'utf8'});
+  assert.equal(listing.status, 0, listing.stderr);
+  return listing.stdout.split(/\r?\n/).map(line => line.match(/^\s*(\d+)\s+(.*)$/)).filter(Boolean)
+    .filter(([, , command]) => /chrome-headless-shell|vitest\.mjs|esbuild/i.test(command))
+    .map(([, pid, command]) => ({pid: Number(pid), command, job: /vitest\.mjs/.test(command) ? pid : undefined}));
 }
 // A killed job cannot run Playwright's Node-side cleanup, so each one leaves
 // a Chromium profile and an artifacts directory. Record and then remove them.
 async function assertCleanedUp(name, killedJobs = 0) {
   // Chromium exits on its own when its pipe to Playwright closes; allow it a moment.
   for (let attempt = 0; attempt < 50 && owned().length; attempt++) await delay(100);
-  const leftovers = owned().map(pid => ({pid, command: processCommand(pid)}));
+  const leftovers = owned().map(({pid, command}) => ({pid, command}));
   // Vitest's Node mode can leave its own temporary directory; only browser
   // profiles are in scope here, but every leftover is recorded.
   const temporary = readdirSync(tmp);
@@ -166,7 +179,7 @@ async function assertCleanedUp(name, killedJobs = 0) {
 async function check(name, config, flags = [], killedJobs = 0) {
   writeFileSync(join(project, 'seshat.json'), JSON.stringify(config));
   const run = await runProcess(cli, ['check', '--config', join(project, 'seshat.json'), '--scratch', scratch,
-    '--json', '--no-progress', ...flags], project, {TMPDIR: tmp}, 900000);
+    '--json', '--no-progress', ...flags], project, temporaryEnv, 900000);
   assert.equal(run.timedOut, false); assert.equal(run.overflow, false);
   const {result} = JSON.parse(run.stdout);
   results.runs[name] = {config, flags, status: run.status, stderr: run.stderr, wallMs: run.ms, result: sanitize(result)};
@@ -178,13 +191,18 @@ async function check(name, config, flags = [], killedJobs = 0) {
   return result;
 }
 // Records the most jobs running at the same moment. Chromium is up for only part
-// of each job, so counting browsers alone can miss real overlap.
+// of each job, so counting browsers alone can miss real overlap. Browsers are
+// counted too, to show the leftover check can see one.
 async function sampled(name, run) {
-  let peak = 0;
-  const sampler = setInterval(() => { peak = Math.max(peak, runningJobs().size); }, 200);
+  let jobs = 0, browsers = 0;
+  const sampler = setInterval(() => {
+    const processes = owned();
+    jobs = Math.max(jobs, new Set(processes.map(({job}) => job).filter(Boolean)).size);
+    browsers = Math.max(browsers, processes.filter(({command}) => /chrome-headless-shell/i.test(command ?? '')).length);
+  }, 200);
   try { return await run(); } finally {
     clearInterval(sampler);
-    if (results.runs[name]) { results.runs[name].concurrentJobs = peak; save(); }
+    if (results.runs[name]) { Object.assign(results.runs[name], {concurrentJobs: jobs, browserProcesses: browsers}); save(); }
   }
 }
 const definitions = result => result.mutation.outcomes.map(({setups, executionMs, ...row}) => row);
@@ -196,6 +214,7 @@ if (cases.includes('stack')) {
   const result = await sampled('stack', () => check('stack', baseConfig));
   // One worker: no job may still run when the next one starts.
   assert.equal(results.runs.stack.concurrentJobs, 1);
+  assert.ok(results.runs.stack.browserProcesses > 0, 'the process check never saw a browser');
   assert.equal(result.complete, true);
   assert.deepEqual(result.diagnostics.runnerVersions[0].importFailureObserver, {state: 'inactive', reason: 'runner'});
   assert.equal(result.setups[0].baseline.report.passed, 3);
@@ -258,7 +277,7 @@ if (cases.includes('coverage-maps')) {
     vitestConfig({include: ['maps.test.ts'], setup: false, browser});
     rmSync(join(project, 'coverage'), {recursive: true, force: true});
     const run = await runProcess(nodeCommand, ['node_modules/vitest/vitest.mjs', 'run', '--config', 'vitest.config.mjs', '--coverage'],
-      project, {TMPDIR: tmp}, 120000);
+      project, temporaryEnv, 120000);
     assert.equal(run.status, 0, run.stdout + run.stderr);
     const report = JSON.parse(readFileSync(join(project, 'coverage/coverage-final.json'), 'utf8'));
     maps[browser ? 'browser' : 'node'] = Object.fromEntries(Object.entries(report).map(([path, entry]) =>
@@ -323,8 +342,9 @@ for (const [name, [body, first, options]] of Object.entries(continuations)) {
 }
 for (const [name, body] of Object.entries(deadlines)) {
   if (!cases.includes(name)) continue;
-  // Chromium runs in its own process group, so Seshat's group kill cannot reach
-  // it; it must exit when its pipe to the killed Vitest process closes.
+  // On Linux and macOS Chromium runs in its own process group, so Seshat's group
+  // kill cannot reach it; it must exit when its pipe to the killed Vitest process
+  // closes. On Windows Playwright does not detach it.
   const config = controlConfig(name, body);
   config.setups[0].timeoutMs = 20000;
   vitestConfig({include: ['control.test.ts'], sources: ['control.ts']});
@@ -336,34 +356,44 @@ for (const [name, body] of Object.entries(deadlines)) {
   assert.equal(result.mutation.score, null);
 }
 if (cases.includes('cancellation')) {
-  const config = controlConfig('cancellation', "test('slow',async()=>{if(!ready)await new Promise(r=>setTimeout(r,120000));},180000);");
+  // The mutant's test writes the ready marker through a browser command, then waits.
+  const config = controlConfig('cancellation', "import {commands} from 'vitest/browser';test('slow',async()=>{if(!ready){await (commands as any).entered();await new Promise(r=>setTimeout(r,120000));}},180000);");
   config.setups[0].timeoutMs = 180000;
-  vitestConfig({include: ['control.test.ts'], sources: ['control.ts']});
+  vitestConfig({include: ['control.test.ts'], sources: ['control.ts'], entered: true});
   writeFileSync(join(project, 'seshat.json'), JSON.stringify(config));
+  const ready = join(work, 'cancellation-ready');
+  const args = ['check', '--config', join(project, 'seshat.json'), '--scratch', scratch, '--json', '--no-progress'];
+  // Node cannot send Ctrl+Break on Windows. The console helper starts the CLI in
+  // a new process group, sends it Ctrl+Break once the marker exists, and
+  // forwards the CLI's output.
+  const helper = join(dirname(cli), 'windows-console-helper.exe');
   const started = performance.now();
-  const child = spawn(cli, ['check', '--config', join(project, 'seshat.json'), '--scratch', scratch, '--json', '--no-progress'],
-    {cwd: project, env: {...process.env, TMPDIR: tmp}, stdio: ['ignore', 'pipe', 'pipe']});
+  const child = windows
+    ? spawn(helper, [ready, join(work, 'cancellation.stdout'), join(work, 'cancellation.stderr'), cli, ...args],
+      {cwd: project, env: {...process.env, ...temporaryEnv}, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true})
+    : spawn(cli, args, {cwd: project, env: {...process.env, ...temporaryEnv, SESHAT_CONSOLE_READY: ready},
+      stdio: ['ignore', 'pipe', 'pipe']});
   let stdout = '', stderr = '', exit;
   child.stdout.on('data', chunk => stdout += chunk); child.stderr.on('data', chunk => stderr += chunk);
   const closed = new Promise(done => child.once('close', (status, signal) => { exit = {status, signal}; done(); }));
   try {
-    // Wait for Chromium inside the mutant job, then let the test enter its wait.
-    const mutantBrowser = () => [...runningJobs(true)].some(id => id.includes('-mutant-'));
-    const deadline = performance.now() + 120000;
-    while (!mutantBrowser()) {
-      assert.equal(exit, undefined, `cancellation ended early: ${stderr}`);
-      assert.ok(performance.now() < deadline, 'mutant browser did not start');
-      await delay(50);
+    if (!windows) {
+      const deadline = performance.now() + 120000;
+      while (!existsSync(ready)) {
+        assert.equal(exit, undefined, `cancellation ended early: ${stderr}`);
+        assert.ok(performance.now() < deadline, 'mutant test did not start');
+        await delay(50);
+      }
+      child.kill('SIGINT');
     }
-    await delay(2000);
-    child.kill('SIGINT');
     await closed;
   } finally {
-    if (!exit) { child.kill('SIGKILL'); await closed; }
+    if (!exit) { if (windows) killTree(child.pid); else child.kill('SIGKILL'); await closed; }
   }
+  assert.ok(existsSync(ready), `the mutant test never started: ${stderr}`);
   const {result} = JSON.parse(stdout);
   results.runs.cancellation = {config, status: exit.status, stderr, wallMs: performance.now() - started, result: sanitize(result)};
-  assert.equal(exit.status, 130, stderr);
+  assert.equal(exit.status, windows ? 2 : 130, stderr);
   assert.equal(result.mutation.outcomes[0].verdict, 'cancelled');
   assert.equal(result.mutation.score, null);
   await assertCleanedUp('cancellation', 1);
@@ -382,7 +412,7 @@ const summary = {version: 1, environment, platform: `${process.platform}-${proce
       leftoverProcesses: run.cleanup?.processes.length ?? null,
       leftoverBrowserFiles: run.cleanup?.temporary.filter(entry => entry.startsWith('playwright')) ?? null,
       wallMs: Math.round(run.wallMs ?? 0), ...(run.cost ? {cost: run.cost} : {}),
-      ...(run.concurrentJobs ? {concurrentJobs: run.concurrentJobs} : {})}
+      ...(run.concurrentJobs ? {concurrentJobs: run.concurrentJobs, browserProcesses: run.browserProcesses} : {})}
       : {files: run.files, identical: run.identical}];
   }))};
 writeFileSync(join(work, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
