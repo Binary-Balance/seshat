@@ -1,6 +1,5 @@
-// Feasibility proof for Vitest 5 browser mode (#159). It drives the unchanged
-// native CLI and Vitest reporter; the fixture's evidence-setup.ts stands in for
-// the runner adapter that browser mode cannot load.
+// Proof for Vitest 5 browser mode (#159, #293). It drives the native CLI with
+// the embedded browser plugin, which browser mode needs instead of the runner.
 import assert from 'node:assert/strict';
 import {spawn, spawnSync} from 'node:child_process';
 import {cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, realpathSync,
@@ -58,13 +57,14 @@ const deadlines = {
 const baselineRejections = {
   // A user's Node-mode runner setting, which browser mode silently ignores.
   'missing-evidence': {setup: false, runner: true},
-  'replayed-identity': {identity: "'replayed-execution'"},
+  // A later plugin replaces the identity the page receives.
+  'replayed-identity': {replayed: true},
   retry: {body: "test('retry',{retry:1},()=>{});"},
   repeat: {body: "test('repeat',{repeats:1},()=>{});"},
   'expected-failure': {body: "test.fails('expected',()=>{throw Error('expected');});"},
   concurrent: {body: "test.concurrent('concurrent',()=>{});"},
 };
-const allCases = ['stack', 'workers', 'switching-closed', 'switching', 'coverage-maps', 'node-reference',
+const allCases = ['stack', 'workers', 'switching-closed', 'coverage-maps', 'node-reference',
   ...Object.keys(controls), ...Object.keys(baselineRejections), ...Object.keys(continuations), ...Object.keys(deadlines), 'cancellation'];
 const list = option => option?.split(',').map(name => name.trim());
 const skipped = list(values.skip) ?? [];
@@ -80,7 +80,7 @@ const scratch = join(work, 'scratch');
 const tmp = join(work, 'tmp');
 const temporaryEnv = {TMPDIR: tmp, TEMP: tmp, TMP: tmp};
 for (const path of [project, scratch, tmp]) mkdirSync(path);
-const fixtureFiles = ['package.json', 'tsconfig.json', 'evidence-setup.ts', 'meter.tsx', 'gain.ts', 'meter.test.tsx', 'gain.test.ts'];
+const fixtureFiles = ['package.json', 'tsconfig.json', 'meter.tsx', 'gain.ts', 'meter.test.tsx', 'gain.test.ts'];
 for (const name of fixtureFiles) cpSync(join(fixture, name), join(project, name));
 cpSync(dependencies, join(project, 'node_modules'), {recursive: true, verbatimSymlinks: true});
 const version = name => JSON.parse(readFileSync(join(project, 'node_modules', name, 'package.json'), 'utf8')).version;
@@ -97,16 +97,15 @@ const sanitize = value => JSON.parse([JSON.stringify(work).slice(1, -1), work.re
 const save = () => writeFileSync(join(work, 'result.json'), JSON.stringify(sanitize(results), null, 2) + '\n');
 
 function vitestConfig({include = ['meter.test.tsx', 'gain.test.ts'], sources = ['meter.tsx', 'gain.ts'],
-  setup = true, identity = 'process.env.SESHAT_EXECUTION_ID', switching = false, browser = true, crash = false, entered = false,
-  runner = false} = {}) {
-  const provide = `{seshatExecutionId:${identity}${switching ? ",seshatMutantId:process.env.SESHAT_MUTANT_ID ?? '-1'" : ''}}`;
+  setup = true, replayed = false, browser = true, crash = false, entered = false, runner = false} = {}) {
+  const plugins = [setup && 'process.env.SESHAT_VITEST_BROWSER&&import(process.env.SESHAT_VITEST_BROWSER).then(m=>m.default)',
+    replayed && "{name:'replay',config:()=>({test:{provide:{seshatExecutionId:'replayed-execution'}}})}"].filter(Boolean);
   const commands = [crash && 'crashPage', entered && 'entered'].filter(Boolean);
   writeFileSync(join(project, 'vitest.config.mjs'), `import {writeFileSync} from 'node:fs';
 import {playwright} from '@vitest/browser-playwright';
 ${crash ? "const crashPage=async({page})=>{const cdp=await page.context().newCDPSession(page);await cdp.send('Page.crash').catch(()=>{});};" : ''}
 ${entered ? "const entered=async()=>{writeFileSync(process.env.SESHAT_CONSOLE_READY,'entered');};" : ''}
-export default {cacheDir:'.vite',test:{${runner ? 'runner:process.env.SESHAT_VITEST_RUNNER,' : ''}include:${JSON.stringify(include)},provide:${provide},
-  ${setup ? "setupFiles:['./evidence-setup.ts']," : ''}
+export default {cacheDir:'.vite',plugins:[${plugins}],test:{${runner ? 'runner:process.env.SESHAT_VITEST_RUNNER,' : ''}include:${JSON.stringify(include)},
   ${browser ? `browser:{enabled:true,headless:true,provider:playwright(),${commands.length ? `commands:{${commands}},` : ''}instances:[{browser:'chromium'}]},` : ''}
   coverage:{provider:'istanbul',include:${JSON.stringify(sources)},reporter:['json'],reportsDirectory:'coverage'}}};
 `);
@@ -244,30 +243,19 @@ if (cases.includes('workers')) {
   save();
 }
 if (cases.includes('switching-closed')) {
-  // Without the forwarded mutant ID, the switching guard throws on load, so the
-  // prepared baseline fails and no mutant runs.
+  // The page has no process.env, so the switching guard throws on load, the
+  // prepared baseline fails and no mutant runs. Switching stays unsupported.
   vitestConfig();
   const result = await check('switching-closed', baseConfig, ['--experimental-switching']);
   assert.equal(result.complete, false);
   assert.equal(result.setups[0].baseline.state, 'passed');
   assert.equal(result.mutation.preparedBaselines.length, 1);
-  // The 'switching' case differs only by forwarding the ID, and passes.
   const prepared = result.mutation.preparedBaselines[0];
   assert.equal(prepared.state, 'execution-error');
   assert.equal(prepared.report.passed, 0);
   assert.ok(prepared.report.errors > 0);
   assert.equal(result.mutation.jobsAttempted, 0);
   assert.ok(result.mutation.outcomes.every(row => row.verdict === 'not-run'));
-}
-if (cases.includes('switching')) {
-  vitestConfig({switching: true});
-  const result = await check('switching', baseConfig, ['--experimental-switching']);
-  assert.equal(result.complete, true);
-  assert.equal(result.mutation.strategy, 'switch');
-  if (results.runs.stack) {
-    const verdicts = r => r.mutation.outcomes.map(({path, offset, kind, replacement, verdict}) => ({path, offset, kind, replacement, verdict}));
-    assert.deepEqual(verdicts(result), verdicts(results.runs.stack.result));
-  }
 }
 if (cases.includes('coverage-maps')) {
   // Instrumentation maps must match the Node route for the same sources.

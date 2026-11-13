@@ -917,6 +917,14 @@ impl CapturedProject {
                 include_str!("../../../../../benchmarks/proofs/vitest-runner.mjs"),
             ),
             (
+                "vitest-browser-plugin.mjs",
+                include_str!("../../../../../benchmarks/proofs/vitest-browser-plugin.mjs"),
+            ),
+            (
+                "vitest-browser-setup.mjs",
+                include_str!("../../../../../benchmarks/proofs/vitest-browser-setup.mjs"),
+            ),
+            (
                 "jest-reporter.cjs",
                 include_str!("../../../../../benchmarks/proofs/jest-reporter.cjs"),
             ),
@@ -1008,6 +1016,8 @@ impl CapturedProject {
         };
         let environment = module_path(&evidence.join("jest-expo-environment.cjs"))?;
         let vitest_runner = module_path(&evidence.join("vitest-runner.mjs"))?;
+        // The config loads the plugin with import(), which needs a file URL on Windows.
+        let vitest_browser = module_file_url(&evidence.join("vitest-browser-plugin.mjs"))?;
         let receipt = evidence.join(format!("{id}.json"));
         let arguments: Vec<_> = args[1..]
             .iter()
@@ -1038,6 +1048,7 @@ impl CapturedProject {
             )
             .env("SESHAT_NODE_REPORTER", &reporter)
             .env("SESHAT_VITEST_RUNNER", &vitest_runner)
+            .env("SESHAT_VITEST_BROWSER", &vitest_browser)
             .env("SESHAT_SOURCES", evidence.join("sources.json"));
         if matches!(setup.runner, Runner::Jest)
             && !matches!(kind, JobKind::Typecheck)

@@ -44,7 +44,8 @@ is self-contained:
 - `gain.ts` renders a gain stage with `OfflineAudioContext`. Autoplay rules
   can start a live `AudioContext` suspended; offline rendering does not depend
   on them.
-- `evidence-setup.ts` is the prototype adapter described below.
+- `evidence-setup.ts` was the prototype adapter described below. #293 replaced
+  it with the [embedded adapter](#embedded-adapter).
 
 [`vitest-browser-check.mjs`](../../benchmarks/proofs/vitest-browser-check.mjs)
 copies the fixture and runs `seshat check` for each case. The recorded
@@ -131,10 +132,47 @@ undocumented as the global.
 ### Execution identity
 
 The page has no `process.env` (`globalThis.process` is `undefined`), so the
-job identity cannot be read there. The config forwards it with
+job identity cannot be read there. The prototype config forwarded it with
 `provide: {seshatExecutionId: process.env.SESHAT_EXECUTION_ID}` and the setup
-file reads it with `inject`. A missing adapter and a fixed, replayed identity
+file read it with `inject`. A missing adapter and a fixed, replayed identity
 both stop at the baseline as execution errors.
+
+### Embedded adapter
+
+For #293, Seshat embeds the setup file as
+[`vitest-browser-setup.mjs`](../../benchmarks/proofs/vitest-browser-setup.mjs)
+and adds it with a small Vite plugin,
+[`vitest-browser-plugin.mjs`](../../benchmarks/proofs/vitest-browser-plugin.mjs).
+Each job gets the plugin's file URL in `SESHAT_VITEST_BROWSER`, so the user's
+config needs one line, which does nothing outside Seshat:
+
+```js
+plugins: [process.env.SESHAT_VITEST_BROWSER
+  && import(process.env.SESHAT_VITEST_BROWSER).then(m => m.default)],
+```
+
+The plugin uses only Vite's documented `config` hook. It adds the setup file
+to `test.setupFiles`, the job identity to `test.provide` and the setup file to
+`server.fs.allow`. The runner global stays the only undocumented dependency.
+
+- The user's own setup files still run, before Seshat's.
+- The plugin's identity replaces one from the user's `provide`. A plugin listed
+  after it can still replace the identity; the baseline then fails
+  (`replayed-identity`).
+- Seshat's evidence directory is outside the project copy, where Vite's
+  `server.fs.strict` refuses to serve files. Without the allow entry the page
+  cannot fetch the setup file and every test file fails to load. Vitest still
+  adds the project root after plugins run, so the entry only widens access.
+- The setup file's bare `vitest` import resolves although the evidence
+  directory has no `node_modules`: browser mode sets Vite's `resolve.dedupe`
+  for `vitest`, which resolves it from the project root.
+
+This was checked by hand on Vitest 5.0.0 and 5.1.0, and the proof now runs
+through the embedded adapter. The existing reporter could add the same three
+settings when Vitest starts, with no config line, but only by changing
+Vitest's resolved project config and the live Vite server's allow list, two
+more undocumented internals. The maintainer chose the plugin line on
+2026-11-13.
 
 ### Coverage
 
@@ -243,7 +281,8 @@ fails, no mutant runs and the score is withheld (`switching-closed`). When the
 config also forwards `SESHAT_MUTANT_ID` and the setup file exposes it as
 `globalThis.process.env`, switching gives the same verdicts as replacement
 (`switching`). Both routes are feasible; switching can stay unsupported for
-browser setups without affecting replacement.
+browser setups without affecting replacement. The embedded adapter does not
+ship the shim, so the proof no longer has a `switching` case.
 
 ### Cost
 
@@ -277,7 +316,8 @@ A follow-up issue in the 0.18.0 milestone should:
 
 1. Ship the setup file as an embedded adapter, referenced like the runner and
    reporter, and decide how the identity reaches the page. The prototype needs
-   the user's config to forward it.
+   the user's config to forward it. Done in #293; see
+   [Embedded adapter](#embedded-adapter).
 2. Detect browser mode in the reporter, record the provider, browser and
    browser version in the receipt, and validate the supported versions in Rust.
    Detect the internal runner global explicitly so a Vitest change gives a

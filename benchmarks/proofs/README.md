@@ -1224,6 +1224,7 @@ then write full original-source-mapped Istanbul JSON. These variables are suppli
 | --- | --- |
 | `SESHAT_NODE_REPORTER` | Reporter path for the coverage subprocess's `--test-reporter` argument |
 | `SESHAT_VITEST_RUNNER` | Private runner path for Vitest's `test.runner` configuration |
+| `SESHAT_VITEST_BROWSER` | Private plugin file URL for a Vitest browser mode configuration (#293) |
 | `SESHAT_RECEIPT` | Fresh receipt destination, written by the reporter |
 | `SESHAT_EXECUTION_ID` | Current job identity, recorded by the reporter |
 | `SESHAT_SOURCES` | JSON file listing absolute assessment-source paths in the copy |
@@ -1747,12 +1748,14 @@ performance benchmarks.
 
 ## Vitest browser mode feasibility
 
-`vitest-browser-check.mjs` is the #159 feasibility proof, not a supported
-route. It runs `check` on the self-contained
-[`fixtures/vitest-browser`](fixtures/vitest-browser) project in headless
-Chromium, using the unchanged native CLI and Vitest reporter plus the fixture's
-prototype `evidence-setup.ts`. Linux only: it reads `/proc` to find browser
-processes that outlive a job.
+`vitest-browser-check.mjs` is the #159 feasibility proof, now run against the
+adapter being built in #293; browser mode is not yet supported. It runs `check`
+on the self-contained [`fixtures/vitest-browser`](fixtures/vitest-browser)
+project in headless Chromium. The project's config loads the embedded
+[`vitest-browser-plugin.mjs`](vitest-browser-plugin.mjs), which adds
+[`vitest-browser-setup.mjs`](vitest-browser-setup.mjs) to the page. The
+[browser proof workflow](../../.github/workflows/vitest-browser.yml) runs it on
+each supported host.
 
 ```sh
 npm ci --prefix benchmarks/proofs/fixtures/vitest-browser
@@ -1760,7 +1763,8 @@ npx --prefix benchmarks/proofs/fixtures/vitest-browser playwright install chromi
 node benchmarks/proofs/vitest-browser-check.mjs --cli crates/seshat/target/release/seshat
 ```
 
-`--cases` runs a subset and `--deps DIR` uses another installed dependency set.
+`--cases` runs a subset, `--skip` leaves cases out and `--deps DIR` uses another
+installed dependency set.
 `SESHAT_PROOF_OUTPUT` receives the portable summary. See the
 [findings](../../docs/research/vitest-browser.md).
 
