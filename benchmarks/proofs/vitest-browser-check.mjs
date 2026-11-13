@@ -15,8 +15,9 @@ const windows = process.platform === 'win32';
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
 const fixture = join(here, 'fixtures/vitest-browser');
-const {values} = parseArgs({options: {cli: {type: 'string'}, deps: {type: 'string'}, cases: {type: 'string'}}});
-assert.ok(values.cli, 'usage: node benchmarks/proofs/vitest-browser-check.mjs --cli PATH [--deps DIR] [--cases LIST]');
+const {values} = parseArgs({options: {cli: {type: 'string'}, deps: {type: 'string'}, cases: {type: 'string'},
+  skip: {type: 'string'}}});
+assert.ok(values.cli, 'usage: node benchmarks/proofs/vitest-browser-check.mjs --cli PATH [--deps DIR] [--cases LIST] [--skip LIST]');
 const cli = realpathSync(resolve(values.cli));
 const dependencies = join(resolve(values.deps ?? fixture), 'node_modules');
 assert.ok(existsSync(join(dependencies, '@vitest/browser-playwright')), `install the fixture first: npm ci --prefix ${relative(repo, fixture)}`);
@@ -65,8 +66,10 @@ const baselineRejections = {
 };
 const allCases = ['stack', 'workers', 'switching-closed', 'switching', 'coverage-maps', 'node-reference',
   ...Object.keys(controls), ...Object.keys(baselineRejections), ...Object.keys(continuations), ...Object.keys(deadlines), 'cancellation'];
-const cases = values.cases?.split(',').map(name => name.trim()) ?? allCases;
-assert.ok(cases.every(name => allCases.includes(name)), `--cases must name: ${allCases.join(', ')}`);
+const list = option => option?.split(',').map(name => name.trim());
+const skipped = list(values.skip) ?? [];
+const cases = (list(values.cases) ?? allCases).filter(name => !skipped.includes(name));
+assert.ok([...cases, ...skipped].every(name => allCases.includes(name)), `--cases and --skip must name: ${allCases.join(', ')}`);
 
 mkdirSync(join(repo, 'work/assurance-proofs'), {recursive: true});
 const work = mkdtempSync(join(repo, 'work/assurance-proofs/vitest-browser-check-'));
@@ -87,9 +90,10 @@ const environment = {node: process.version, cli: (await runProcess(cli, ['--vers
   browser: JSON.parse(readFileSync(join(project, 'node_modules/playwright-core/browsers.json'), 'utf8')).browsers
     .filter(({name}) => name.startsWith('chromium')).map(({name, revision, browserVersion}) => ({name, revision, browserVersion}))};
 const results = {version: 1, environment, work: relative(repo, work), cases, runs: {}};
-// JSON escapes Windows path separators, so replace the escaped form too.
-const sanitize = value => JSON.parse(JSON.stringify(value).replaceAll(JSON.stringify(work).slice(1, -1), '<work>')
-  .replaceAll(work, '<work>'));
+// JSON escapes Windows path separators, and Vite prints them as forward
+// slashes, so replace those forms too.
+const sanitize = value => JSON.parse([JSON.stringify(work).slice(1, -1), work.replaceAll('\\', '/'), work]
+  .reduce((text, path) => text.replaceAll(path, '<work>'), JSON.stringify(value)));
 const save = () => writeFileSync(join(work, 'result.json'), JSON.stringify(sanitize(results), null, 2) + '\n');
 
 function vitestConfig({include = ['meter.test.tsx', 'gain.test.ts'], sources = ['meter.tsx', 'gain.ts'],
@@ -151,7 +155,6 @@ function owned() {
     .filter(([, , command]) => /chrome-headless-shell|vitest\.mjs|esbuild/i.test(command))
     .map(([, pid, command]) => ({pid: Number(pid), command, job: /vitest\.mjs/.test(command) ? pid : undefined}));
 }
-const runningJobs = () => new Set(owned().map(({job}) => job).filter(Boolean)).size;
 // A killed job cannot run Playwright's Node-side cleanup, so each one leaves
 // a Chromium profile and an artifacts directory. Record and then remove them.
 async function assertCleanedUp(name, killedJobs = 0) {
@@ -188,13 +191,18 @@ async function check(name, config, flags = [], killedJobs = 0) {
   return result;
 }
 // Records the most jobs running at the same moment. Chromium is up for only part
-// of each job, so counting browsers alone can miss real overlap.
+// of each job, so counting browsers alone can miss real overlap. Browsers are
+// counted too, to show the leftover check can see one.
 async function sampled(name, run) {
-  let peak = 0;
-  const sampler = setInterval(() => { peak = Math.max(peak, runningJobs()); }, 200);
+  let jobs = 0, browsers = 0;
+  const sampler = setInterval(() => {
+    const processes = owned();
+    jobs = Math.max(jobs, new Set(processes.map(({job}) => job).filter(Boolean)).size);
+    browsers = Math.max(browsers, processes.filter(({command}) => /chrome-headless-shell/i.test(command ?? '')).length);
+  }, 200);
   try { return await run(); } finally {
     clearInterval(sampler);
-    if (results.runs[name]) { results.runs[name].concurrentJobs = peak; save(); }
+    if (results.runs[name]) { Object.assign(results.runs[name], {concurrentJobs: jobs, browserProcesses: browsers}); save(); }
   }
 }
 const definitions = result => result.mutation.outcomes.map(({setups, executionMs, ...row}) => row);
@@ -206,6 +214,7 @@ if (cases.includes('stack')) {
   const result = await sampled('stack', () => check('stack', baseConfig));
   // One worker: no job may still run when the next one starts.
   assert.equal(results.runs.stack.concurrentJobs, 1);
+  assert.ok(results.runs.stack.browserProcesses > 0, 'the process check never saw a browser');
   assert.equal(result.complete, true);
   assert.deepEqual(result.diagnostics.runnerVersions[0].importFailureObserver, {state: 'inactive', reason: 'runner'});
   assert.equal(result.setups[0].baseline.report.passed, 3);
@@ -402,7 +411,7 @@ const summary = {version: 1, environment, platform: `${process.platform}-${proce
       leftoverProcesses: run.cleanup?.processes.length ?? null,
       leftoverBrowserFiles: run.cleanup?.temporary.filter(entry => entry.startsWith('playwright')) ?? null,
       wallMs: Math.round(run.wallMs ?? 0), ...(run.cost ? {cost: run.cost} : {}),
-      ...(run.concurrentJobs ? {concurrentJobs: run.concurrentJobs} : {})}
+      ...(run.concurrentJobs ? {concurrentJobs: run.concurrentJobs, browserProcesses: run.browserProcesses} : {})}
       : {files: run.files, identical: run.identical}];
   }))};
 writeFileSync(join(work, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');

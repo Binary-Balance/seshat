@@ -9,6 +9,15 @@ on:
       - benchmarks/proofs/vitest-browser-check.mjs
       - benchmarks/proofs/process.mjs
       - benchmarks/proofs/fixtures/vitest-browser/**
+      - crates/seshat/**
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/vitest-browser.yml
+      - benchmarks/proofs/vitest-browser-check.mjs
+      - benchmarks/proofs/process.mjs
+      - benchmarks/proofs/fixtures/vitest-browser/**
+      - crates/seshat/**
   workflow_dispatch:
 
 concurrency:
@@ -66,12 +75,7 @@ jobs:
       # Each group runs separately so that one failure still records the rest.
       - name: Run browser proof
         env:
-          VERDICTS: >-
-            stack,workers,switching-closed,switching,coverage-maps,node-reference,
-            assertion,survived,clean-hooks,assertion-count,before-all,before-each,
-            after-each,cleanup,mixed,timeout,hook-timeout,import-error,around-each,
-            unhandled,application-error,missing-evidence,replayed-identity,retry,
-            repeat,expected-failure,concurrent,continue-after-timeout
+          LIFECYCLE: deadline,blocked-page,cancellation,page-crash,continue-after-crash
         run: |
           mkdir -p work/browser
           cli=crates/seshat/target/release/seshat
@@ -79,12 +83,12 @@ jobs:
           failed=""
           for group in verdicts deadline blocked-page cancellation crash; do
             case "$group" in
-              verdicts) cases="${VERDICTS// /}" ;;
-              crash) cases=page-crash,continue-after-crash ;;
-              *) cases="$group" ;;
+              verdicts) select="--skip $LIFECYCLE" ;;
+              crash) select="--cases page-crash,continue-after-crash" ;;
+              *) select="--cases $group" ;;
             esac
             if ! SESHAT_PROOF_OUTPUT="work/browser/$group.json" \
-              node benchmarks/proofs/vitest-browser-check.mjs --cli "$cli" --cases "$cases" \
+              node benchmarks/proofs/vitest-browser-check.mjs --cli "$cli" $select \
               2>&1 | tee "work/browser/$group.log"; then
               failed="$failed $group"
             fi

@@ -209,9 +209,10 @@ group, so Seshat's process-group kill does not reach it. Chromium exits by
 itself when its pipe to the killed Vitest process closes; one manual
 measurement took 480 ms. The proof waits up to 5 s and found no surviving
 browser process after any case, including `deadline`, `blocked-page` and
-`cancellation` (SIGINT during a mutant job). On Windows, Playwright does not detach Chromium, so it stays in
-the job's process tree; no browser process survived there either. The Windows
-`cancellation` case sends Ctrl+Break through the console helper, whose own
+`cancellation` (SIGINT during a mutant job). On Windows, Playwright does not
+detach Chromium, so it stays in the job's process tree; no browser process
+survived there either. The Windows `cancellation` case sends Ctrl+Break
+through the console helper, whose own
 cleanup ends any process still in its job, so that case alone cannot show a
 leftover browser there.
 
@@ -289,8 +290,9 @@ npx --prefix benchmarks/proofs/fixtures/vitest-browser playwright install chromi
 node benchmarks/proofs/vitest-browser-check.mjs --cli crates/seshat/target/release/seshat
 ```
 
-`--cases` runs a subset and `--deps DIR` uses another installed dependency
-set. `SESHAT_PROOF_OUTPUT` receives the portable summary; the full report with
-raw receipts stays in `work/assurance-proofs/vitest-browser-check-*`. The
+`--cases` runs a subset, `--skip` leaves cases out and `--deps DIR` uses
+another installed dependency set. `SESHAT_PROOF_OUTPUT` receives the portable
+summary; the full report with raw receipts stays in
+`work/assurance-proofs/vitest-browser-check-*`. The
 [Vitest browser proof workflow](../../.github/workflows/vitest-browser.yml)
 runs it on each supported host.
