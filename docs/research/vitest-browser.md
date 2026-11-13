@@ -178,6 +178,44 @@ Vitest's resolved project config and the live Vite server's allow list, two
 more undocumented internals. The maintainer chose the plugin line on
 2026-11-13.
 
+### Runner shape and page evidence
+
+The setup file checks the runner before wrapping it: the global must exist,
+`onBeforeRunTask` and `onTaskFinished` must be functions, `runTask` must be
+absent (replacing one of Vitest's own would drop what it does) and
+`TestRunner.getTestFn` must be a function. Otherwise it throws an error naming
+the missing piece and the Vitest version, which the plugin provides through
+Vitest's `configureVitest` hook:
+
+```text
+Seshat cannot record evidence in Vitest 5.0.0 browser mode: runner.onTaskFinished is not a function
+```
+
+Every test file then fails to load and the baseline is an execution error.
+
+Command diagnostics keep only the first 1,000 characters of each stream, and
+Vite's warnings fill stderr before Vitest prints that error. So the reporter
+also copies the message into its receipt as `adapterError`, which appears in
+the baseline's `report`.
+
+The setup file marks the runner once wrapped. A second run on the same runner
+skips the wrap; without the mark it would find its own `runTask` and fail
+(`setup-twice`).
+
+The reporter now accepts page evidence only with the exact values the adapters
+write: `entered` and `unsupported` must be booleans, and a passed test must
+carry the empty error snapshot. A mistyped `entered`, a missing `unsupported`
+or a missing snapshot fails the baseline (`mistyped-evidence`,
+`partial-evidence`, `missing-snapshot`); with the earlier reporter all three
+passed. The Node adapter writes the same record, so the Node-mode Vitest proofs
+keep their verdicts.
+
+The proof also covers a failing `expect.soft` in `afterEach`
+(`soft-after-each`, an execution error, as the
+[public hooks experiment](#public-hooks-are-not-enough) predicted) and hooks
+in nested `describe` blocks (`nested-hooks`, `nested-before-each`,
+`nested-after-each`).
+
 ### Coverage
 
 Browser-mode Istanbul produced statement, branch and function maps identical
@@ -325,7 +363,8 @@ A follow-up issue in the 0.18.0 milestone should:
 2. Detect browser mode in the reporter, record the provider, browser and
    browser version in the receipt, and validate the supported versions in Rust.
    Detect the internal runner global explicitly so a Vitest change gives a
-   clear error.
+   clear error. The runner check is done in #293; see
+   [Runner shape and page evidence](#runner-shape-and-page-evidence).
 3. Give each job a private `TMPDIR` inside its scratch copy, so profiles left
    by killed jobs are removed with it.
 4. Decide whether to support switching; if so, ship the mutant ID shim.

@@ -13,4 +13,6 @@ export default {
     server: {fs: {allow: [setup]}},
     test: {setupFiles: [setup], provide: {seshatExecutionId: process.env.SESHAT_EXECUTION_ID}},
   }),
+  // Lets the setup file name the version when the runner's shape is wrong.
+  configureVitest: ({vitest, project}) => project.provide('seshatVitestVersion', vitest.version),
 };

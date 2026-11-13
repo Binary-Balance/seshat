@@ -37,6 +37,14 @@ const controls = {
   'around-each': ["aroundEach(async(run)=>{await run();if(!ready)throw Error('around cleanup');});test('passed',()=>{});", 'execution-error'],
   unhandled: ["test('background',async()=>{if(!ready)void Promise.reject(Error('background'));await new Promise(r=>setTimeout(r,10));});", 'execution-error'],
   'application-error': ["test('application',()=>{if(!ready)throw new TypeError('application');});", 'killed'],
+  // A soft failure in afterEach records an error without throwing. The adapter's
+  // snapshot is taken before cleanup, so it is a cleanup failure, not a kill.
+  'soft-after-each': ["afterEach(()=>{expect.soft(ready).toBe(true);});test('passed',()=>{});", 'execution-error'],
+  'nested-hooks': ["describe('outer',()=>{beforeEach(()=>{});describe('inner',()=>{afterEach(()=>{});test('assertion',()=>expect(ready).toBe(true));});});", 'killed'],
+  'nested-before-each': ["describe('outer',()=>{describe('inner',()=>{beforeEach(()=>{if(!ready)throw Error('setup');});test('blocked',()=>{});});});", 'execution-error'],
+  'nested-after-each': ["describe('outer',()=>{describe('inner',()=>{afterEach(()=>{if(!ready)throw Error('cleanup');});test('passed',()=>{});});});", 'execution-error'],
+  // The setup file runs twice on one runner; the second run must not wrap again.
+  'setup-twice': ["test('assertion',()=>expect(ready).toBe(true));", 'killed', {twice: true}],
   // A renderer crash closes Vitest's connection to the page mid-test.
   'page-crash': ["import {commands} from 'vitest/browser';test('crash',async()=>{if(!ready){await (commands as any).crashPage();await new Promise(r=>setTimeout(r,5000));}});",
     'execution-error', {crash: true}],
@@ -63,6 +71,18 @@ const baselineRejections = {
   repeat: {body: "test('repeat',{repeats:1},()=>{});"},
   'expected-failure': {body: "test.fails('expected',()=>{throw Error('expected');});"},
   concurrent: {body: "test.concurrent('concurrent',()=>{});"},
+  // The page's evidence must have exactly the types the adapter writes.
+  'mistyped-evidence': {body: "test('mistyped',({task})=>{(task.meta as any).seshat.entered='yes';});"},
+  'partial-evidence': {body: "test('partial',({task})=>{delete (task.meta as any).seshat.unsupported;});"},
+  'missing-snapshot': {body: "afterEach(({task})=>{delete (task.meta as any).seshat.beforeCleanup;});test('passed',()=>{});"},
+  // A user setup file runs before Seshat's and changes the runner the way a
+  // Vitest release could. The baseline must name the missing piece.
+  'missing-runner': {runnerChange: "Object.defineProperty(browser,'runner',{value:undefined});",
+    problem: 'window.__vitest_browser_runner__.runner is missing'},
+  'missing-before-run-task': {runnerChange: 'browser.runner.onBeforeRunTask=undefined;', problem: 'runner.onBeforeRunTask is not a function'},
+  'missing-task-finished': {runnerChange: 'browser.runner.onTaskFinished=undefined;', problem: 'runner.onTaskFinished is not a function'},
+  'existing-run-task': {runnerChange: 'browser.runner.runTask=async()=>{};', problem: 'runner.runTask already exists'},
+  'missing-get-test-fn': {runnerChange: '(TestRunner as any).getTestFn=undefined;', problem: 'TestRunner.getTestFn is not a function'},
 };
 const allCases = ['stack', 'workers', 'switching-closed', 'coverage-maps', 'node-reference',
   ...Object.keys(controls), ...Object.keys(baselineRejections), ...Object.keys(continuations), ...Object.keys(deadlines), 'cancellation'];
@@ -97,15 +117,22 @@ const sanitize = value => JSON.parse([JSON.stringify(work).slice(1, -1), work.re
 const save = () => writeFileSync(join(work, 'result.json'), JSON.stringify(sanitize(results), null, 2) + '\n');
 
 function vitestConfig({include = ['meter.test.tsx', 'gain.test.ts'], sources = ['meter.tsx', 'gain.ts'],
-  setup = true, replayed = false, browser = true, crash = false, entered = false, runner = false} = {}) {
+  setup = true, replayed = false, twice = false, runnerChange, browser = true, crash = false, entered = false, runner = false} = {}) {
   const plugins = [setup && 'process.env.SESHAT_VITEST_BROWSER&&import(process.env.SESHAT_VITEST_BROWSER).then(m=>m.default)',
-    replayed && "{name:'replay',config:()=>({test:{provide:{seshatExecutionId:'replayed-execution'}}})}"].filter(Boolean);
+    replayed && "{name:'replay',config:()=>({test:{provide:{seshatExecutionId:'replayed-execution'}}})}",
+    // A query makes Vite evaluate the same setup file a second time.
+    twice && "{name:'twice',config:()=>({test:{setupFiles:[fileURLToPath(new URL('vitest-browser-setup.mjs',process.env.SESHAT_VITEST_BROWSER))+'?twice']}})}",
+  ].filter(Boolean);
+  if (runnerChange) writeFileSync(join(project, 'user-setup.ts'),
+    `import {TestRunner} from 'vitest';\nconst browser = (window as any).__vitest_browser_runner__;\n${runnerChange}\n`);
   const commands = [crash && 'crashPage', entered && 'entered'].filter(Boolean);
   writeFileSync(join(project, 'vitest.config.mjs'), `import {writeFileSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
 import {playwright} from '@vitest/browser-playwright';
 ${crash ? "const crashPage=async({page})=>{const cdp=await page.context().newCDPSession(page);await cdp.send('Page.crash').catch(()=>{});};" : ''}
 ${entered ? "const entered=async()=>{writeFileSync(process.env.SESHAT_CONSOLE_READY,'entered');};" : ''}
 export default {cacheDir:'.vite',plugins:[${plugins}],test:{${runner ? 'runner:process.env.SESHAT_VITEST_RUNNER,' : ''}include:${JSON.stringify(include)},
+  ${runnerChange ? "setupFiles:['./user-setup.ts']," : ''}
   ${browser ? `browser:{enabled:true,headless:true,provider:playwright(),${commands.length ? `commands:{${commands}},` : ''}instances:[{browser:'chromium'}]},` : ''}
   coverage:{provider:'istanbul',include:${JSON.stringify(sources)},reporter:['json'],reportsDirectory:'coverage'}}};
 `);
@@ -119,7 +146,7 @@ const baseConfig = {source: {include: ['meter.tsx', 'gain.ts']},
     test: vitest, coverage: {command: [...vitest, '--coverage'], report: 'coverage/coverage-final.json'}}]};
 function controlConfig(name, body) {
   writeFileSync(join(project, 'control.ts'), 'export const ready = 1 === 1;\n');
-  writeFileSync(join(project, 'control.test.ts'), `import {test,expect,beforeAll,beforeEach,afterEach,aroundEach} from 'vitest';import {ready} from './control.ts';\n${body}\n`);
+  writeFileSync(join(project, 'control.test.ts'), `import {test,expect,describe,beforeAll,beforeEach,afterEach,aroundEach} from 'vitest';import {ready} from './control.ts';\n${body}\n`);
   const config = structuredClone(baseConfig);
   config.source.include = ['control.ts'];
   config.mutationOperators = ['comparison'];
@@ -308,10 +335,17 @@ if (cases.includes('node-reference')) {
 for (const [name, options] of Object.entries(baselineRejections)) {
   if (!cases.includes(name)) continue;
   const config = controlConfig(name, options.body ?? controls.assertion[0]);
+  if (options.runnerChange) config.capture.push('user-setup.ts');
   vitestConfig({include: ['control.test.ts'], sources: ['control.ts'], ...options});
   const result = await check(name, config);
   assert.equal(result.complete, false);
-  assert.equal(result.setups[0].baseline.state, 'execution-error', JSON.stringify(result.setups[0].baseline));
+  const baseline = result.setups[0].baseline;
+  assert.equal(baseline.state, 'execution-error', JSON.stringify(baseline));
+  if (options.problem) {
+    assert.equal(baseline.report.adapterError,
+      `Seshat cannot record evidence in Vitest ${environment.tools.vitest} browser mode: ${options.problem}`, JSON.stringify(baseline));
+    rmSync(join(project, 'user-setup.ts'));
+  }
   assert.equal(result.mutation.jobsAttempted, 0);
 }
 for (const [name, [body, first, options]] of Object.entries(continuations)) {
