@@ -150,6 +150,7 @@ export default class EvidenceRunner extends TestRunner {
     this.activeCoverage = undefined;
     await super.onAfterRunFiles(files);
   }
+  // vitest-browser-setup.mjs repeats these three hooks for browser mode; change both together.
   async onBeforeRunTask(test) {
     await super.onBeforeRunTask(test);
     test.meta.seshat = {executionId:process.env.SESHAT_EXECUTION_ID, entered:false,
