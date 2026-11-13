@@ -322,9 +322,10 @@ for (const [name, [body, expected, options]] of Object.entries(controls)) {
   if (expected === 'timed-out') assert.equal(result.mutation.outcomes[0].setups[0].testTimedOut, true);
 }
 if (cases.includes('node-reference')) {
-  // The same control in Vitest's Node mode isolates the browser launch cost.
+  // The same control in Vitest's Node mode isolates the browser launch cost. It
+  // keeps the plugin line, which must not affect a Node project.
   const config = controlConfig('node-reference', controls.assertion[0]);
-  vitestConfig({include: ['control.test.ts'], sources: ['control.ts'], setup: false, browser: false, runner: true});
+  vitestConfig({include: ['control.test.ts'], sources: ['control.ts'], browser: false, runner: true});
   const result = await check('node-reference', config);
   assert.equal(result.mutation.outcomes[0].verdict, 'killed');
   const browser = results.runs.assertion?.result;

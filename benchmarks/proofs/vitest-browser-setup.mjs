@@ -13,11 +13,13 @@ function shapeProblem(runner) {
   if (typeof TestRunner.getTestFn !== 'function') return 'TestRunner.getTestFn is not a function';
 }
 
+const version = inject('seshatBrowserVitest');
 const runner = globalThis.__vitest_browser_runner__?.runner;
-// A second run on the same runner would find its own runTask and stop.
-if (!runner?.seshatEvidence) {
+// In Node mode the runner adapter records evidence instead. A second run on the
+// same runner would find its own runTask and stop.
+if (version !== undefined && !runner?.seshatEvidence) {
   const problem = shapeProblem(runner);
-  if (problem) throw new Error(`Seshat cannot record evidence in Vitest ${inject('seshatVitestVersion')} browser mode: ${problem}`);
+  if (problem) throw new Error(`Seshat cannot record evidence in Vitest ${version} browser mode: ${problem}`);
   const executionId = inject('seshatExecutionId');
   runner.seshatEvidence = true;
   const before = runner.onBeforeRunTask.bind(runner);
