@@ -6,7 +6,8 @@ on:
   pull_request:
     paths:
       - .github/workflows/vitest-browser.yml
-      - benchmarks/proofs/vitest-browser-check.mjs
+      - benchmarks/proofs/vitest-browser-*.mjs
+      - benchmarks/proofs/vitest-reporter.mjs
       - benchmarks/proofs/process.mjs
       - benchmarks/proofs/fixtures/vitest-browser/**
       - crates/seshat/**
@@ -14,7 +15,8 @@ on:
     branches: [main]
     paths:
       - .github/workflows/vitest-browser.yml
-      - benchmarks/proofs/vitest-browser-check.mjs
+      - benchmarks/proofs/vitest-browser-*.mjs
+      - benchmarks/proofs/vitest-reporter.mjs
       - benchmarks/proofs/process.mjs
       - benchmarks/proofs/fixtures/vitest-browser/**
       - crates/seshat/**
