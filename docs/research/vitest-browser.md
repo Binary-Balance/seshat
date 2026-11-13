@@ -94,13 +94,14 @@ afterEach(({task}: any) => {
 ```
 
 With the prototype's mutant ID shim added, it gave the expected verdict in all
-33 cases on 5.0.0, three nested `describe` cases and a 5.1.0 subset; these
-runs are not recorded. It still gives a wrong verdict. Its error snapshot must be taken before cleanup, but
-the setup file's `afterEach` runs after the test file's own. A failing
-`expect.soft` in a test file's `afterEach` records its error without throwing,
-so the snapshot includes it and the mutant counts as killed. The prototype
-takes its snapshot in `onTaskFinished`, before any `afterEach`, and gives an
-execution error for the same case (`soft-after-each` in the experiment).
+33 cases on 5.0.0, three nested `describe` cases and a 5.1.0 subset; these runs
+are not recorded. It still gives a wrong verdict. Its error snapshot must be
+taken before cleanup, but the setup file's `afterEach` runs after the test
+file's own. A failing `expect.soft` in a test file's `afterEach` records its
+error without throwing, so the snapshot includes it and the mutant counts as
+killed. The prototype takes its snapshot in `onTaskFinished`, before any
+`afterEach`, and gives an execution error for the same case (`soft-after-each`
+in the experiment).
 
 It also relies on undocumented details of Vitest's test loop: that
 `task.result.hooks.beforeEach` reads `'pass'` only if every `beforeEach` hook
