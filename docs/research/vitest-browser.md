@@ -114,11 +114,12 @@ kill.
 `TestRunner.setTestFn` cannot wrap the test body instead: in Vitest 5.0 and 5.1,
 `setTestFn` and `setSuiteHooks` are the lookup functions `getFn` and `getHooks`,
 so they set nothing
-([vitest#11639](https://github.com/vitest-dev/vitest/issues/11639)). Adding
-`runTask` to the exported `TestRunner.prototype`, which the browser runner
-inherits from, was not tried. Of the two gaps, it would cover only entry: the
-browser runner sets its own `onTaskFinished` on each instance, so the snapshot
-before cleanup would still need the global.
+([vitest#11639](https://github.com/vitest-dev/vitest/issues/11639)). Patching
+the exported `TestRunner.prototype`, which the browser runner inherits from, was
+not tried. The browser runner sets its own `onTaskFinished` on each instance, so
+a prototype `runTask` alone would cover only entry. A prototype hook could still
+reach the instance through `this` and wrap its `onTaskFinished`, but that is as
+undocumented as the global.
 
 ### Execution identity
 
