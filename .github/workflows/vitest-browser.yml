@@ -33,6 +33,10 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  # Process and cleanup cases, run separately on each host.
+  LIFECYCLE: deadline,blocked-page,cancellation,page-crash,continue-after-crash
+
 defaults:
   run:
     shell: bash --noprofile --norc -euo pipefail {0}
@@ -81,8 +85,6 @@ jobs:
           npx --prefix benchmarks/proofs/fixtures/vitest-browser playwright install $deps chromium-headless-shell
       # Each group runs separately so that one failure still records the rest.
       - name: Run browser proof
-        env:
-          LIFECYCLE: deadline,blocked-page,cancellation,page-crash,continue-after-crash
         run: |
           mkdir -p work/browser
           cli=crates/seshat/target/release/seshat
@@ -152,7 +154,7 @@ jobs:
           mkdir -p work/browser
           SESHAT_PROOF_OUTPUT=work/browser/latest-vitest.json \
             node benchmarks/proofs/vitest-browser-check.mjs --cli crates/seshat/target/release/seshat \
-            --skip deadline,blocked-page,cancellation,page-crash,continue-after-crash \
+            --skip "$LIFECYCLE" \
             2>&1 | tee work/browser/latest-vitest.log
       - name: Upload proof evidence
         if: ${{ !cancelled() }}

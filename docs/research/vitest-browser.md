@@ -232,9 +232,10 @@ project per browser instance:
   "version": "153.0.8010.12", "isolate": true}]
 ```
 
-The page reads the version from `navigator.userAgentData`, a standard web API
-whose full version list survives Chromium's shortened user agent. Browsers
-without it record `null`. The version is recorded, not checked. The proof
+The page reads the version from `navigator.userAgentData`, Chromium's
+User-Agent Client Hints API, whose full version list survives Chromium's
+shortened user agent. Browsers without it record `null`, as does a malformed
+value from the page. The version is recorded, not checked. The proof
 compares it with the Chrome Headless Shell version Playwright installs
 (`stack`). Node-mode receipts have no `browser` entry (`node-reference`).
 

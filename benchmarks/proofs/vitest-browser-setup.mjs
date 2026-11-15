@@ -20,12 +20,14 @@ const runner = globalThis.__vitest_browser_runner__?.runner;
 if (version !== undefined && !runner?.seshatEvidence) {
   const problem = shapeProblem(runner);
   if (problem) throw new Error(`Seshat cannot record evidence in Vitest ${version} browser mode: ${problem}`);
+  // Mark before the await below, so a second setup run cannot also wrap.
+  runner.seshatEvidence = true;
   const executionId = inject('seshatExecutionId');
   // Recorded, not checked: the version a support report needs. Chromium's
-  // reduced user agent may hide the full version, but this standard API does not.
+  // reduced user agent may hide the full version; its User-Agent Client Hints
+  // API (Chromium only) does not.
   const browserVersion = (await navigator.userAgentData?.getHighEntropyValues(['fullVersionList']))
     ?.fullVersionList.find(({brand}) => brand === 'Chromium')?.version ?? null;
-  runner.seshatEvidence = true;
   const before = runner.onBeforeRunTask.bind(runner);
   runner.onBeforeRunTask = async test => {
     await before(test);

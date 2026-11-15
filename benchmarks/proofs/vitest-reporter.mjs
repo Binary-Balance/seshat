@@ -83,6 +83,8 @@ export default class EvidenceReporter {
         const valid = details?.executionId === process.env.SESHAT_EXECUTION_ID && details.entered === true
           && details.unsupported === false
           && details.beforeCleanup === JSON.stringify(issues.map(e => [e.name,e.message,e.stack]));
+        // The version is only recorded, never checked, so a malformed one is recorded
+        // as unknown rather than failing the run.
         if (valid && typeof details.browserVersion === 'string') browserVersions.set(test.project, details.browserVersion);
         if (!valid || test.diagnostic()?.retryCount || test.diagnostic()?.repeatCount) { errors++; continue; }
         if (result.state === 'passed' && issues.length === 0) passed++;
