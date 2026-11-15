@@ -617,8 +617,15 @@ fn readable(report: &Value) -> String {
             }
         }
         for phase in ["baseline", "coverage"] {
-            if let Some(error) = setup[phase]["evidenceError"].as_str() {
-                let _ = writeln!(output, "  {phase}: {error:?}");
+            // adapterError is the Vitest browser setup file's own failure. Command
+            // diagnostics are cut before Vitest prints it.
+            for error in [
+                &setup[phase]["evidenceError"],
+                &setup[phase]["report"]["adapterError"],
+            ] {
+                if let Some(error) = error.as_str() {
+                    let _ = writeln!(output, "  {phase}: {error:?}");
+                }
             }
         }
         for key in [
@@ -1046,6 +1053,13 @@ pub fn main() -> ExitCode {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn browser_adapter_errors_are_readable() {
+        let report = json!({"timings":{"wallMs":1},"result":{"setups":[{"name":"browser",
+            "baseline":{"state":"execution-error","report":{"adapterError":"runner.runTask already exists"}}}]}});
+        assert!(readable(&report).contains("  baseline: \"runner.runTask already exists\"\n"));
+    }
 
     #[test]
     fn selection_fallback_is_reported_once_per_setup() {
