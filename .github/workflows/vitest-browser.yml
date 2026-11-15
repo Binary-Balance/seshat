@@ -1,7 +1,9 @@
 name: Vitest browser proof
 
 # Runs the Vitest browser mode proof on each supported host (#293). The
-# lifecycle cases were first observed on Linux only.
+# lifecycle cases were first observed on Linux only. Each week, and on manual
+# runs, the verdict cases also run against the latest Vitest 5, because the
+# browser adapter relies on an undocumented Vitest global.
 on:
   pull_request:
     paths:
@@ -20,6 +22,8 @@ on:
       - benchmarks/proofs/process.mjs
       - benchmarks/proofs/fixtures/vitest-browser/**
       - crates/seshat/**
+  schedule:
+    - cron: '41 4 * * 1'
   workflow_dispatch:
 
 concurrency:
@@ -35,6 +39,7 @@ defaults:
 
 jobs:
   proof:
+    if: ${{ github.event_name != 'schedule' }}
     strategy:
       fail-fast: false
       matrix:
@@ -104,6 +109,56 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: vitest-browser-${{ matrix.host }}
+          path: |
+            work/browser/**
+            work/assurance-proofs/vitest-browser-check-*/result.json
+          if-no-files-found: error
+
+  latest-vitest:
+    # Pull requests keep the pinned versions, so a new Vitest release cannot
+    # fail an unrelated change.
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.20.0
+      - name: Set up Rust
+        run: |
+          rustup toolchain install 1.98.1 --profile minimal --no-self-update
+          rustup default 1.98.1
+      - name: Build CLI
+        run: cargo build --release --locked --manifest-path crates/seshat/Cargo.toml --bin seshat
+      - name: Install fixture with the latest Vitest 5 and Chromium
+        env:
+          FIXTURE: benchmarks/proofs/fixtures/vitest-browser
+        run: |
+          npm ci --prefix "$FIXTURE" --ignore-scripts --no-audit --no-fund
+          # The packages pin each other exactly, so install one version of all three.
+          version=$(npm view vitest@5 version --json | node -e "const versions = [].concat(JSON.parse(require('fs').readFileSync(0)));
+            console.log(versions.sort((a, b) => a.localeCompare(b, 'en', {numeric: true})).at(-1))")
+          echo "Vitest $version"
+          npm install --prefix "$FIXTURE" --no-save --ignore-scripts --no-audit --no-fund \
+            "vitest@$version" "@vitest/browser-playwright@$version" "@vitest/coverage-istanbul@$version"
+          npx --prefix "$FIXTURE" playwright install --with-deps chromium-headless-shell
+      - name: Run browser proof verdict cases
+        run: |
+          mkdir -p work/browser
+          SESHAT_PROOF_OUTPUT=work/browser/latest-vitest.json \
+            node benchmarks/proofs/vitest-browser-check.mjs --cli crates/seshat/target/release/seshat \
+            --skip deadline,blocked-page,cancellation,page-crash,continue-after-crash \
+            2>&1 | tee work/browser/latest-vitest.log
+      - name: Upload proof evidence
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: vitest-browser-latest-vitest
           path: |
             work/browser/**
             work/assurance-proofs/vitest-browser-check-*/result.json

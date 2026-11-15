@@ -48,6 +48,7 @@ export default class EvidenceReporter {
     let passed = 0, failed = 0, errors = unhandled.length, timeouts = 0;
     const testFiles = [], tests = [];
     let identitiesComplete = true, adapterError;
+    const browserVersions = new Map();
     const inspect = items => {
       // Verified Vitest 5 diagnostic. Unknown errors never become timeouts by exit code.
       timeouts += items.filter(e => /^(Test|Hook) timed out in \d+ms(?:\.| while waiting for )/.test(e.message ?? '')).length;
@@ -82,6 +83,7 @@ export default class EvidenceReporter {
         const valid = details?.executionId === process.env.SESHAT_EXECUTION_ID && details.entered === true
           && details.unsupported === false
           && details.beforeCleanup === JSON.stringify(issues.map(e => [e.name,e.message,e.stack]));
+        if (valid && typeof details.browserVersion === 'string') browserVersions.set(test.project, details.browserVersion);
         if (!valid || test.diagnostic()?.retryCount || test.diagnostic()?.repeatCount) { errors++; continue; }
         if (result.state === 'passed' && issues.length === 0) passed++;
         else if (result.state === 'failed' && issues.length > 0) failed++;
@@ -89,12 +91,18 @@ export default class EvidenceReporter {
       }
     }
     const maxWorkers = resolvedMaxWorkers(modules);
+    // One entry per browser project, as Vitest makes one per browser instance.
+    // Seshat decides which setups it supports; Node-mode receipts have none.
+    const browser = this.context.projects.filter(project => project.config.browser.enabled).map(project => ({
+      provider:project.config.browser.provider?.name ?? null, name:project.config.browser.name ?? null,
+      version:browserVersions.get(project) ?? null, isolate:project.config.isolate}));
     const selection = Boolean(process.env.SESHAT_COVERAGE_REPORT) && process.env.SESHAT_TEST_SELECTION === '1';
     writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({version:1,
       executionId:process.env.SESHAT_EXECUTION_ID, runner:'vitest', vitest:this.context.version,
       actual:{vitest:this.context.version}, maxWorkers,
       node:process.versions.node, complete:modules.length > 0 && reason !== 'interrupted',
-      passed, failed, errors, timeouts, ...(adapterError ? {adapterError} : {}), testFiles:testFiles.sort(),
+      passed, failed, errors, timeouts, ...(adapterError ? {adapterError} : {}),
+      ...(browser.length ? {browser} : {}), testFiles:testFiles.sort(),
       tests:tests.sort((a, b) => compare(a.file, b.file) || compare(a.id, b.id)),
       ...(selection ? {fileCoverage:fileCoverage(modules, this.context,
         identitiesComplete && errors === 0 && timeouts === 0, reason)} : {})}), {flag:'wx'});
