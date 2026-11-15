@@ -15,7 +15,11 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
 const fixture = join(here, 'fixtures/vitest-browser');
 const {values} = parseArgs({options: {cli: {type: 'string'}, deps: {type: 'string'}, cases: {type: 'string'},
-  skip: {type: 'string'}}});
+  skip: {type: 'string'}, browser: {type: 'string', default: 'chromium'}}});
+// Playwright's install name for each browser.
+const builds = {chromium: 'chromium-headless-shell', firefox: 'firefox'};
+const browserName = values.browser, build = builds[browserName];
+assert.ok(build, `--browser must be one of: ${Object.keys(builds).join(', ')}`);
 assert.ok(values.cli, 'usage: node benchmarks/proofs/vitest-browser-check.mjs --cli PATH [--deps DIR] [--cases LIST] [--skip LIST]');
 const cli = realpathSync(resolve(values.cli));
 const dependencies = join(resolve(values.deps ?? fixture), 'node_modules');
@@ -111,7 +115,10 @@ const environment = {node: process.version, cli: (await runProcess(cli, ['--vers
   tools: Object.fromEntries(['vitest', '@vitest/browser', '@vitest/browser-playwright', '@vitest/coverage-istanbul',
     'playwright', 'react', 'react-dom', 'typescript'].map(name => [name, version(name)])),
   browser: JSON.parse(readFileSync(join(project, 'node_modules/playwright-core/browsers.json'), 'utf8')).browsers
-    .filter(({name}) => name.startsWith('chromium')).map(({name, revision, browserVersion}) => ({name, revision, browserVersion}))};
+    .filter(({name}) => name === build).map(({name, revision, browserVersion}) => ({name, revision, browserVersion}))};
+// The install directory is in every browser process's path, and not in this
+// proof's own arguments.
+const browserDirectory = `${build.replaceAll('-', '_')}-${environment.browser[0].revision}`;
 const results = {version: 1, environment, work: relative(repo, work), cases, runs: {}};
 // JSON escapes Windows path separators, and Vite prints them as forward
 // slashes, so replace those forms too.
@@ -133,12 +140,14 @@ function vitestConfig({include = ['meter.test.tsx', 'gain.test.ts'], sources = [
   writeFileSync(join(project, 'vitest.config.mjs'), `import {writeFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {playwright} from '@vitest/browser-playwright';
-${crash ? "const crashPage=async({page})=>{const cdp=await page.context().newCDPSession(page);await cdp.send('Page.crash').catch(()=>{});};" : ''}
+${crash ? (browserName === 'chromium'
+    ? "const crashPage=async({page})=>{const cdp=await page.context().newCDPSession(page);await cdp.send('Page.crash').catch(()=>{});};"
+    : "const crashPage=async({page})=>{await page.goto('about:crashcontent').catch(()=>{});};") : ''}
 ${entered ? "const entered=async()=>{writeFileSync(process.env.SESHAT_CONSOLE_READY,'entered');};" : ''}
 export default {cacheDir:'.vite',plugins:[${plugins}],test:{${runner ? 'runner:process.env.SESHAT_VITEST_RUNNER,' : ''}include:${JSON.stringify(include)},
   ${runnerChange ? "setupFiles:['./user-setup.ts']," : ''}${isolate ? '' : 'isolate:false,'}
   ${browser ? `browser:{enabled:true,headless:true,provider:playwright(),${commands.length ? `commands:{${commands}},` : ''}instances:${
-    JSON.stringify(Array.from({length: instances}, (_, index) => ({browser: 'chromium', name: `chromium-${index + 1}`})))}},` : ''}
+    JSON.stringify(Array.from({length: instances}, (_, index) => ({browser: browserName, name: `${browserName}-${index + 1}`})))}},` : ''}
   coverage:{provider:'istanbul',include:${JSON.stringify(sources)},reporter:['json'],reportsDirectory:'coverage'}}};
 `);
 }
@@ -183,7 +192,7 @@ function owned() {
     : spawnSync('ps', ['-axww', '-o', 'pid=,args='], {encoding: 'utf8'});
   assert.equal(listing.status, 0, listing.stderr);
   return listing.stdout.split(/\r?\n/).map(line => line.match(/^\s*(\d+)\s+(.*)$/)).filter(Boolean)
-    .filter(([, , command]) => /chrome-headless-shell|vitest\.mjs|esbuild/i.test(command))
+    .filter(([, , command]) => command.includes(browserDirectory) || /vitest\.mjs|esbuild/i.test(command))
     .map(([, pid, command]) => ({pid: Number(pid), command, job: /vitest\.mjs/.test(command) ? pid : undefined}));
 }
 // A killed job cannot run Playwright's Node-side cleanup, so each one leaves
@@ -200,7 +209,7 @@ async function assertCleanedUp(name, killedJobs = 0) {
   save();
   assert.deepEqual(leftovers, [], `${name}: processes outlived the run`);
   const leaked = prefix => profiles.filter(entry => entry.startsWith(prefix)).length;
-  assert.equal(leaked('playwright_chromiumdev_profile-'), killedJobs, `${name}: unexpected browser profiles ${profiles}`);
+  assert.equal(leaked(`playwright_${browserName}dev_profile-`), killedJobs, `${name}: unexpected browser profiles ${profiles}`);
   assert.equal(leaked('playwright-artifacts-'), killedJobs, `${name}: unexpected browser artifacts ${profiles}`);
   assert.equal(profiles.length, 2 * killedJobs, `${name}: unexpected Playwright files ${profiles}`);
   for (const entry of profiles) rmSync(join(tmp, entry), {recursive: true});
@@ -229,7 +238,7 @@ async function sampled(name, run) {
   const sampler = setInterval(() => {
     const processes = owned();
     jobs = Math.max(jobs, new Set(processes.map(({job}) => job).filter(Boolean)).size);
-    browsers = Math.max(browsers, processes.filter(({command}) => /chrome-headless-shell/i.test(command ?? '')).length);
+    browsers = Math.max(browsers, processes.filter(({command}) => command?.includes(browserDirectory)).length);
   }, 200);
   try { return await run(); } finally {
     clearInterval(sampler);
@@ -249,9 +258,8 @@ if (cases.includes('stack')) {
   assert.equal(result.complete, true);
   assert.deepEqual(result.diagnostics.runnerVersions[0].importFailureObserver, {state: 'inactive', reason: 'runner'});
   assert.equal(result.setups[0].baseline.report.passed, 3);
-  const headlessShell = environment.browser.find(({name}) => name === 'chromium-headless-shell').browserVersion;
   assert.deepEqual(result.setups[0].baseline.report.browser,
-    [{provider: 'playwright', name: 'chromium', version: headlessShell, isolate: true}]);
+    [{provider: 'playwright', name: browserName, version: environment.browser[0].browserVersion, isolate: true}]);
   assert.deepEqual(result.sources.map(source => [source.path, source.result.complete,
     source.result.functions.map(f => [f.name, f.complexity, f.coverageBasis, f.covered, f.crap])]), [
     ['gain.ts', true, [['renderPeak', 4, 'branch', 11, 4], ['describeLevel', 3, 'branch', 1, 3.140625]]],

@@ -25,9 +25,10 @@ if (version !== undefined && !runner?.seshatEvidence) {
   const executionId = inject('seshatExecutionId');
   // Recorded, not checked: the version a support report needs. Chromium's
   // reduced user agent may hide the full version; its User-Agent Client Hints
-  // API (Chromium only) does not.
+  // API (Chromium only) does not. Firefox's gives major and minor, as Playwright does.
   const browserVersion = (await navigator.userAgentData?.getHighEntropyValues(['fullVersionList']))
-    ?.fullVersionList.find(({brand}) => brand === 'Chromium')?.version ?? null;
+    ?.fullVersionList.find(({brand}) => brand === 'Chromium')?.version
+    ?? navigator.userAgent.match(/ Firefox\/(\d+(?:\.\d+)+)$/)?.[1] ?? null;
   const before = runner.onBeforeRunTask.bind(runner);
   runner.onBeforeRunTask = async test => {
     await before(test);
