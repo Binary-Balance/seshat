@@ -23,8 +23,9 @@ Linux x64, Node 24.22.2, Playwright 1.63.0 with Chrome Headless Shell
 - Subset (`stack`, `switching`, `coverage-maps`, `missing-evidence`,
   `timeout`): the same four packages at 5.1.0, the latest release.
 
-Firefox, WebKit, headed browsers, the WebdriverIO and preview providers and
-other Vitest 5 releases are untested.
+WebKit, headed browsers, the WebdriverIO and preview providers and other
+Vitest 5 releases are untested. Firefox was added later; see
+[Firefox](#firefox).
 
 For [#293](https://github.com/Binary-Balance/seshat/issues/293), the full 5.0.0
 matrix also ran in CI on all five supported hosts: Linux x64 and ARM64
@@ -229,13 +230,15 @@ project per browser instance:
 
 ```json
 "browser": [{"provider": "playwright", "name": "chromium",
-  "version": "153.0.8010.12", "isolate": true}]
+  "version": "153.0.8010.12", "isolate": true, "headless": true}]
 ```
 
 The page reads the version from `navigator.userAgentData`, Chromium's
 User-Agent Client Hints API, whose full version list survives Chromium's
 shortened user agent. Browsers without it record `null`, as does a malformed
-value from the page. The version is recorded, not checked. The proof
+value from the page. Firefox has no such API; its user agent gives the major
+and minor version (`155.0`), the same as Playwright reports. The version is
+recorded, not checked. The proof
 compares it with the Chrome Headless Shell version Playwright installs
 (`stack`). Node-mode receipts have no `browser` entry (`node-reference`).
 
@@ -248,7 +251,39 @@ an `evidenceError`:
   isolate false; supported: true`.
 
 Vitest stays `>=5.0.0 <6`, checked in Rust as before. A weekly CI job runs the
-verdict cases against the latest Vitest 5 release.
+verdict cases against the latest Vitest 5 release, with both browsers.
+
+### Firefox
+
+Added to #293's scope on 2026-11-16. This is the Firefox build Playwright
+installs (155.0, revision 1543), not stock Firefox. On Linux x64 the proof
+gave the Chromium result in every case (`--browser firefox`): all 42 verdict
+cases, identical coverage maps, and the deadline, blocked-page and
+cancellation cases with no browser process left behind. Each killed job left
+one `playwright_firefoxdev_profile-*` and one artifacts directory, as Chromium
+does. Job times were close to Chromium's.
+
+Firefox has no Chrome DevTools Protocol, so `page-crash` and
+`continue-after-crash` load `about:crashcontent` instead. Playwright then
+reports the page as closed, not crashed, and navigating to `about:blank` gives
+the same Vitest error, so these cases do not prove a content-process crash.
+They do show that a page lost mid-test is an execution error and the next
+mutant still runs.
+
+### Unverified browser setups
+
+Playwright with headless Chromium or Firefox is what the proof covers. Any
+other provider, browser or a headed browser still runs, but the setup's
+`diagnostics.runnerVersions` entry carries the receipt's browser entry with
+`"supported": false`, and the readable output warns:
+
+```text
+Warning: setup "browser" uses Vitest browser mode with "playwright" "webkit", which Seshat has not verified. Results and cleanup after killed jobs may be unreliable.
+```
+
+The warning does not change verdicts, the score or completeness. Cleanup is the
+main risk: the lifecycle cases were run only for Playwright's Chromium and
+Firefox.
 
 ### Coverage
 
@@ -412,11 +447,11 @@ A follow-up issue in the 0.18.0 milestone should:
 
 ```sh
 npm ci --prefix benchmarks/proofs/fixtures/vitest-browser
-npx --prefix benchmarks/proofs/fixtures/vitest-browser playwright install chromium-headless-shell
+npx --prefix benchmarks/proofs/fixtures/vitest-browser playwright install chromium-headless-shell firefox
 node benchmarks/proofs/vitest-browser-check.mjs --cli crates/seshat/target/release/seshat
 ```
 
-`--cases` runs a subset, `--skip` leaves cases out and `--deps DIR` uses
+`--browser firefox` runs it with Firefox (default `chromium`). `--cases` runs a subset, `--skip` leaves cases out and `--deps DIR` uses
 another installed dependency set. `SESHAT_PROOF_OUTPUT` receives the portable
 summary; the full report with raw receipts stays in
 `work/assurance-proofs/vitest-browser-check-*`. The

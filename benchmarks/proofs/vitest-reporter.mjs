@@ -97,7 +97,8 @@ export default class EvidenceReporter {
     // Seshat decides which setups it supports; Node-mode receipts have none.
     const browser = this.context.projects.filter(project => project.config.browser.enabled).map(project => ({
       provider:project.config.browser.provider?.name ?? null, name:project.config.browser.name ?? null,
-      version:browserVersions.get(project) ?? null, isolate:project.config.isolate}));
+      version:browserVersions.get(project) ?? null, isolate:project.config.isolate,
+      headless:project.config.browser.headless}));
     const selection = Boolean(process.env.SESHAT_COVERAGE_REPORT) && process.env.SESHAT_TEST_SELECTION === '1';
     writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({version:1,
       executionId:process.env.SESHAT_EXECUTION_ID, runner:'vitest', vitest:this.context.version,

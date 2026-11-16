@@ -1759,12 +1759,13 @@ each supported host.
 
 ```sh
 npm ci --prefix benchmarks/proofs/fixtures/vitest-browser
-npx --prefix benchmarks/proofs/fixtures/vitest-browser playwright install chromium-headless-shell
+npx --prefix benchmarks/proofs/fixtures/vitest-browser playwright install chromium-headless-shell firefox
 node benchmarks/proofs/vitest-browser-check.mjs --cli crates/seshat/target/release/seshat
 ```
 
-`--cases` runs a subset, `--skip` leaves cases out and `--deps DIR` uses another
-installed dependency set.
+`--browser firefox` runs it with Firefox (default `chromium`). `--cases` runs a
+subset, `--skip` leaves cases out and `--deps DIR` uses another installed
+dependency set.
 `SESHAT_PROOF_OUTPUT` receives the portable summary. See the
 [findings](../../docs/research/vitest-browser.md).
 

@@ -259,7 +259,8 @@ if (cases.includes('stack')) {
   assert.deepEqual(result.diagnostics.runnerVersions[0].importFailureObserver, {state: 'inactive', reason: 'runner'});
   assert.equal(result.setups[0].baseline.report.passed, 3);
   assert.deepEqual(result.setups[0].baseline.report.browser,
-    [{provider: 'playwright', name: browserName, version: environment.browser[0].browserVersion, isolate: true}]);
+    [{provider: 'playwright', name: browserName, version: environment.browser[0].browserVersion, isolate: true, headless: true}]);
+  assert.equal(result.diagnostics.runnerVersions[0].browser.supported, true);
   assert.deepEqual(result.sources.map(source => [source.path, source.result.complete,
     source.result.functions.map(f => [f.name, f.complexity, f.coverageBasis, f.covered, f.crap])]), [
     ['gain.ts', true, [['renderPeak', 4, 'branch', 11, 4], ['describeLevel', 3, 'branch', 1, 3.140625]]],

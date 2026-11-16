@@ -704,6 +704,21 @@ fn readable(report: &Value) -> String {
                     text(&observer["reason"])
                 );
             }
+            let browser = &version["browser"];
+            if browser["supported"] == false {
+                let _ = writeln!(
+                    output,
+                    "Warning: setup {:?} uses Vitest browser mode with {:?} {:?}{}, which Seshat has not verified. Results and cleanup after killed jobs may be unreliable.",
+                    text(&version["setup"]),
+                    text(&browser["provider"]),
+                    text(&browser["name"]),
+                    if browser["headless"] == true {
+                        ""
+                    } else {
+                        " (headed)"
+                    }
+                );
+            }
         }
         for runner in array(&diagnostics["concurrency"]["runners"]) {
             let _ = writeln!(
@@ -1093,6 +1108,21 @@ mod tests {
                 "planned":0,"completed":0,"jobsAttempted":0}]
         }}}));
         assert!(output.contains("Operator expression-statement: 0 eligible site(s), 2 excluded; 0 planned, 0 completed, 0 job(s)"));
+    }
+
+    #[test]
+    fn readable_warns_about_unverified_browser_setups() {
+        let browser = |name: &str, headless: bool, supported: bool| {
+            json!({"setup":name,"browser":{"provider":"playwright","name":name,
+                "headless":headless,"supported":supported}})
+        };
+        let output = readable(&json!({"timings":{"wallMs":1},"result":{"diagnostics":{
+            "runnerVersions":[browser("chromium", true, true), browser("webkit", true, false),
+                browser("firefox", false, false), {"setup":"node"}]
+        }}}));
+        assert_eq!(output.matches("Warning:").count(), 2);
+        assert!(output.contains("Warning: setup \"webkit\" uses Vitest browser mode with \"playwright\" \"webkit\", which Seshat has not verified."));
+        assert!(output.contains("with \"playwright\" \"firefox\" (headed), which"));
     }
 
     #[test]

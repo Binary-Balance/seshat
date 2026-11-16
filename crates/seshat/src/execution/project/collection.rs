@@ -610,6 +610,21 @@ fn runner_packages(runner: Runner, report: Option<&Value>) -> &'static [&'static
     }
 }
 
+/// Flags browser setups outside the ones the browser proof covers (#293).
+/// They still run; the flag is their warning.
+fn browser_support(report: Option<&Value>) -> Value {
+    let Some(browser) = report.and_then(|report| report["browser"].get(0)) else {
+        return Value::Null;
+    };
+    let mut browser = browser.clone();
+    browser["supported"] = json!(
+        browser["provider"] == "playwright"
+            && matches!(browser["name"].as_str(), Some("chromium" | "firefox"))
+            && browser["headless"] == true
+    );
+    browser
+}
+
 fn import_failure_observer(runner: Runner, node: Option<&str>) -> Value {
     // Match node-load-observer.mjs; latest-node CI verifies the attribution route.
     let reason = if !matches!(runner, Runner::Node) {
@@ -888,6 +903,7 @@ impl CapturedProject {
                     "declaredComparison":version_comparison(node,node_declared)},
                 "packages":packages,
                 "importFailureObserver":import_failure_observer(config.runner.clone(), node),
+                "browser":browser_support(report),
             }));
             concurrency.push(runner_concurrency(
                 config,
@@ -4329,6 +4345,31 @@ mod tests {
             assert_eq!(
                 validate_runner_receipt(&receipt, &Runner::Jest, "current").unwrap_err(),
                 format!("runner receipt has missing or invalid {component} version")
+            );
+        }
+    }
+
+    #[test]
+    fn unverified_browser_setups_are_flagged_not_rejected() {
+        assert_eq!(browser_support(None), Value::Null);
+        assert_eq!(
+            browser_support(Some(&json!({"node":"24.21.0"}))),
+            Value::Null
+        );
+        for (provider, name, headless, supported) in [
+            ("playwright", "chromium", true, true),
+            ("playwright", "firefox", true, true),
+            ("playwright", "webkit", true, false),
+            ("webdriverio", "chromium", true, false),
+            ("playwright", "chromium", false, false),
+        ] {
+            let browser = json!({"provider":provider,"name":name,"version":null,
+                "isolate":true,"headless":headless});
+            let mut expected = browser.clone();
+            expected["supported"] = json!(supported);
+            assert_eq!(
+                browser_support(Some(&json!({"browser":[browser]}))),
+                expected
             );
         }
     }

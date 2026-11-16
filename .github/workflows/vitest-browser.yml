@@ -1,7 +1,8 @@
 name: Vitest browser proof
 
-# Runs the Vitest browser mode proof on each supported host (#293). The
-# lifecycle cases were first observed on Linux only. Each week, and on manual
+# Runs the Vitest browser mode proof on each supported host (#293), with
+# Chromium and Firefox. The lifecycle cases were first observed on Linux only.
+# Each week, and on manual
 # runs, the verdict cases also run against the latest Vitest 5, because the
 # browser adapter relies on an undocumented Vitest global.
 on:
@@ -47,18 +48,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - host: linux-x64
-            runner: ubuntu-22.04
-          - host: linux-arm64
-            runner: ubuntu-22.04-arm
-          - host: macos-x64
-            runner: macos-15-intel
-          - host: macos-arm64
-            runner: macos-15
-          - host: windows-x64
-            runner: windows-2022
-    runs-on: ${{ matrix.runner }}
+        browser: [chromium, firefox]
+        platform:
+          - {host: linux-x64, runner: ubuntu-22.04}
+          - {host: linux-arm64, runner: ubuntu-22.04-arm}
+          - {host: macos-x64, runner: macos-15-intel}
+          - {host: macos-arm64, runner: macos-15}
+          - {host: windows-x64, runner: windows-2022}
+    runs-on: ${{ matrix.platform.runner }}
+    env:
+      BROWSER: ${{ matrix.browser }}
     timeout-minutes: 120
     steps:
       - name: Check out source
@@ -77,12 +76,14 @@ jobs:
         run: |
           cargo build --release --locked --manifest-path crates/seshat/Cargo.toml \
             --bin seshat --bin windows-console-helper
-      - name: Install fixture and Chromium
+      - name: Install fixture and browser
         run: |
           npm ci --prefix benchmarks/proofs/fixtures/vitest-browser --ignore-scripts --no-audit --no-fund
           deps=""
           if [ "$RUNNER_OS" = Linux ]; then deps=--with-deps; fi
-          npx --prefix benchmarks/proofs/fixtures/vitest-browser playwright install $deps chromium-headless-shell
+          build=chromium-headless-shell
+          if [ "$BROWSER" = firefox ]; then build=firefox; fi
+          npx --prefix benchmarks/proofs/fixtures/vitest-browser playwright install $deps "$build"
       # Each group runs separately so that one failure still records the rest.
       - name: Run browser proof
         run: |
@@ -97,7 +98,7 @@ jobs:
               *) select="--cases $group" ;;
             esac
             if ! SESHAT_PROOF_OUTPUT="work/browser/$group.json" \
-              node benchmarks/proofs/vitest-browser-check.mjs --cli "$cli" $select \
+              node benchmarks/proofs/vitest-browser-check.mjs --cli "$cli" --browser "$BROWSER" $select \
               2>&1 | tee "work/browser/$group.log"; then
               failed="$failed $group"
             fi
@@ -110,7 +111,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: vitest-browser-${{ matrix.host }}
+          name: vitest-browser-${{ matrix.platform.host }}-${{ matrix.browser }}
           path: |
             work/browser/**
             work/assurance-proofs/vitest-browser-check-*/result.json
@@ -148,14 +149,23 @@ jobs:
           echo "Vitest $version"
           npm install --prefix "$FIXTURE" --no-save --ignore-scripts --no-audit --no-fund \
             "vitest@$version" "@vitest/browser-playwright@$version" "@vitest/coverage-istanbul@$version"
-          npx --prefix "$FIXTURE" playwright install --with-deps chromium-headless-shell
+          npx --prefix "$FIXTURE" playwright install --with-deps chromium-headless-shell firefox
       - name: Run browser proof verdict cases
         run: |
           mkdir -p work/browser
-          SESHAT_PROOF_OUTPUT=work/browser/latest-vitest.json \
-            node benchmarks/proofs/vitest-browser-check.mjs --cli crates/seshat/target/release/seshat \
-            --skip "$LIFECYCLE" \
-            2>&1 | tee work/browser/latest-vitest.log
+          failed=""
+          for browser in chromium firefox; do
+            if ! SESHAT_PROOF_OUTPUT="work/browser/latest-vitest-$browser.json" \
+              node benchmarks/proofs/vitest-browser-check.mjs --cli crates/seshat/target/release/seshat \
+              --browser "$browser" --skip "$LIFECYCLE" \
+              2>&1 | tee "work/browser/latest-vitest-$browser.log"; then
+              failed="$failed $browser"
+            fi
+          done
+          if [ -n "$failed" ]; then
+            echo "failed browsers:$failed"
+            exit 1
+          fi
       - name: Upload proof evidence
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

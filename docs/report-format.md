@@ -402,6 +402,11 @@ concurrency sections. Unavailable values use `null` or the states below:
   versions produce `inactive` with reason `node-version`; Jest and Vitest
   produce `inactive` with reason `runner`. This uses the same validated receipt
   as `runtime.node`, preferring the baseline and falling back to coverage.
+  Vitest browser-mode setups also have `browser`: the receipt's `provider`,
+  `name`, `version`, `isolate` and `headless`, plus `supported`. `supported`
+  is `false` for any setup other than Playwright with headless Chromium or
+  Firefox; the run continues and the readable output prints a warning. Other
+  setups have `browser: null`.
   It describes the Node adapter's runtime gate, not proof that a particular
   crash can be attributed. The observer requires the verified default process
   isolation and loader configuration described in
