@@ -392,9 +392,33 @@ fn validate_runner_receipt(report: &Value, runner: &Runner, id: &str) -> Result<
         }
         Runner::Vitest => {
             vitest(&report["actual"]["vitest"], "Vitest")?;
-            vitest(&report["vitest"], "reported Vitest")
+            vitest(&report["vitest"], "reported Vitest")?;
+            browser_setup(&report["browser"])
         }
     }
+}
+
+/// Browser mode was proved with one browser instance and Vitest's default
+/// isolation (#293). Node-mode receipts have no `browser` entry.
+fn browser_setup(browser: &Value) -> Result<(), String> {
+    let projects = match browser {
+        Value::Null => return Ok(()),
+        Value::Array(projects) => projects,
+        _ => return Err("runner receipt has invalid browser projects".into()),
+    };
+    if projects.len() != 1 {
+        return Err(format!(
+            "unsupported Vitest browser setup: {} browser instances; supported: 1",
+            projects.len()
+        ));
+    }
+    if projects[0]["isolate"] != true {
+        return Err(format!(
+            "unsupported Vitest browser setup: isolate {}; supported: true",
+            projects[0]["isolate"]
+        ));
+    }
+    Ok(())
 }
 
 fn per_second(count: usize, wall_ms: f64) -> Value {
@@ -4378,6 +4402,42 @@ mod tests {
             assert_eq!(
                 vitest("5.0.0", version).unwrap_err(),
                 format!("unsupported reported Vitest version {version:?}; supported: >=5.0.0 <6")
+            );
+        }
+        let browser = |projects: Value| {
+            let mut receipt = base.clone();
+            receipt["runner"] = json!("vitest");
+            receipt["vitest"] = json!("5.0.0");
+            receipt["actual"] = json!({"vitest":"5.0.0"});
+            receipt["browser"] = projects;
+            validate_runner_receipt(&receipt, &Runner::Vitest, "current")
+        };
+        let chromium = json!({"provider":"playwright","name":"chromium",
+            "version":"153.0.8010.12","isolate":true});
+        assert!(browser(json!([chromium])).is_ok());
+        // The version is recorded, not checked.
+        let mut unknown = chromium.clone();
+        unknown["version"] = Value::Null;
+        assert!(browser(json!([unknown])).is_ok());
+        for (projects, error) in [
+            (
+                json!([]),
+                "unsupported Vitest browser setup: 0 browser instances; supported: 1",
+            ),
+            (
+                json!([chromium, chromium]),
+                "unsupported Vitest browser setup: 2 browser instances; supported: 1",
+            ),
+            (json!({}), "runner receipt has invalid browser projects"),
+        ] {
+            assert_eq!(browser(projects).unwrap_err(), error);
+        }
+        for isolate in [json!(false), Value::Null, json!("true")] {
+            let mut project = chromium.clone();
+            project["isolate"] = isolate.clone();
+            assert_eq!(
+                browser(json!([project])).unwrap_err(),
+                format!("unsupported Vitest browser setup: isolate {isolate}; supported: true")
             );
         }
         for node in [

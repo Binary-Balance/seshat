@@ -83,6 +83,9 @@ const baselineRejections = {
   'missing-task-finished': {runnerChange: 'browser.runner.onTaskFinished=undefined;', problem: 'runner.onTaskFinished is not a function'},
   'existing-run-task': {runnerChange: 'browser.runner.runTask=async()=>{};', problem: 'runner.runTask already exists'},
   'missing-get-test-fn': {runnerChange: '(TestRunner as any).getTestFn=undefined;', problem: 'TestRunner.getTestFn is not a function'},
+  // Setups the proof has not covered. Two Chromium instances need no second browser install.
+  'two-instances': {instances: 2, unsupported: 'unsupported Vitest browser setup: 2 browser instances; supported: 1'},
+  'no-isolation': {isolate: false, unsupported: 'unsupported Vitest browser setup: isolate false; supported: true'},
 };
 const allCases = ['stack', 'workers', 'switching-closed', 'coverage-maps', 'node-reference',
   ...Object.keys(controls), ...Object.keys(baselineRejections), ...Object.keys(continuations), ...Object.keys(deadlines), 'cancellation'];
@@ -117,7 +120,8 @@ const sanitize = value => JSON.parse([JSON.stringify(work).slice(1, -1), work.re
 const save = () => writeFileSync(join(work, 'result.json'), JSON.stringify(sanitize(results), null, 2) + '\n');
 
 function vitestConfig({include = ['meter.test.tsx', 'gain.test.ts'], sources = ['meter.tsx', 'gain.ts'],
-  setup = true, replayed = false, twice = false, runnerChange, browser = true, crash = false, entered = false, runner = false} = {}) {
+  setup = true, replayed = false, twice = false, runnerChange, browser = true, crash = false, entered = false, runner = false,
+  instances = 1, isolate = true} = {}) {
   const plugins = [setup && 'process.env.SESHAT_VITEST_BROWSER&&import(process.env.SESHAT_VITEST_BROWSER).then(m=>m.default)',
     replayed && "{name:'replay',config:()=>({test:{provide:{seshatExecutionId:'replayed-execution'}}})}",
     // A query makes Vite evaluate the same setup file a second time.
@@ -132,8 +136,9 @@ import {playwright} from '@vitest/browser-playwright';
 ${crash ? "const crashPage=async({page})=>{const cdp=await page.context().newCDPSession(page);await cdp.send('Page.crash').catch(()=>{});};" : ''}
 ${entered ? "const entered=async()=>{writeFileSync(process.env.SESHAT_CONSOLE_READY,'entered');};" : ''}
 export default {cacheDir:'.vite',plugins:[${plugins}],test:{${runner ? 'runner:process.env.SESHAT_VITEST_RUNNER,' : ''}include:${JSON.stringify(include)},
-  ${runnerChange ? "setupFiles:['./user-setup.ts']," : ''}
-  ${browser ? `browser:{enabled:true,headless:true,provider:playwright(),${commands.length ? `commands:{${commands}},` : ''}instances:[{browser:'chromium'}]},` : ''}
+  ${runnerChange ? "setupFiles:['./user-setup.ts']," : ''}${isolate ? '' : 'isolate:false,'}
+  ${browser ? `browser:{enabled:true,headless:true,provider:playwright(),${commands.length ? `commands:{${commands}},` : ''}instances:${
+    JSON.stringify(Array.from({length: instances}, (_, index) => ({browser: 'chromium', name: `chromium-${index + 1}`})))}},` : ''}
   coverage:{provider:'istanbul',include:${JSON.stringify(sources)},reporter:['json'],reportsDirectory:'coverage'}}};
 `);
 }
@@ -244,6 +249,9 @@ if (cases.includes('stack')) {
   assert.equal(result.complete, true);
   assert.deepEqual(result.diagnostics.runnerVersions[0].importFailureObserver, {state: 'inactive', reason: 'runner'});
   assert.equal(result.setups[0].baseline.report.passed, 3);
+  const headlessShell = environment.browser.find(({name}) => name === 'chromium-headless-shell').browserVersion;
+  assert.deepEqual(result.setups[0].baseline.report.browser,
+    [{provider: 'playwright', name: 'chromium', version: headlessShell, isolate: true}]);
   assert.deepEqual(result.sources.map(source => [source.path, source.result.complete,
     source.result.functions.map(f => [f.name, f.complexity, f.coverageBasis, f.covered, f.crap])]), [
     ['gain.ts', true, [['renderPeak', 4, 'branch', 11, 4], ['describeLevel', 3, 'branch', 1, 3.140625]]],
@@ -328,6 +336,7 @@ if (cases.includes('node-reference')) {
   vitestConfig({include: ['control.test.ts'], sources: ['control.ts'], browser: false, runner: true});
   const result = await check('node-reference', config);
   assert.equal(result.mutation.outcomes[0].verdict, 'killed');
+  assert.equal(result.setups[0].baseline.report.browser, undefined);
   const browser = results.runs.assertion?.result;
   results.runs['node-reference'].cost = {nodeMutantJobMs: mean(jobMs(result.mutation)),
     browserMutantJobMs: browser ? mean(jobMs(browser.mutation)) : null};
@@ -347,6 +356,7 @@ for (const [name, options] of Object.entries(baselineRejections)) {
       `Seshat cannot record evidence in Vitest ${environment.tools.vitest} browser mode: ${options.problem}`, JSON.stringify(baseline));
     rmSync(join(project, 'user-setup.ts'));
   }
+  if (options.unsupported) assert.equal(baseline.evidenceError, options.unsupported, JSON.stringify(baseline));
   assert.equal(result.mutation.jobsAttempted, 0);
 }
 for (const [name, [body, first, options]] of Object.entries(continuations)) {

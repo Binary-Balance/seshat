@@ -222,6 +222,34 @@ The proof also covers a failing `expect.soft` in `afterEach`
 in nested `describe` blocks (`nested-hooks`, `nested-before-each`,
 `nested-after-each`).
 
+### Browser setup in the receipt
+
+The reporter records each browser project in the receipt. Vitest makes one
+project per browser instance:
+
+```json
+"browser": [{"provider": "playwright", "name": "chromium",
+  "version": "153.0.8010.12", "isolate": true}]
+```
+
+The page reads the version from `navigator.userAgentData`, Chromium's
+User-Agent Client Hints API, whose full version list survives Chromium's
+shortened user agent. Browsers without it record `null`, as does a malformed
+value from the page. The version is recorded, not checked. The proof
+compares it with the Chrome Headless Shell version Playwright installs
+(`stack`). Node-mode receipts have no `browser` entry (`node-reference`).
+
+Seshat rejects setups the proof has not covered. Each fails the baseline with
+an `evidenceError`:
+
+- More than one browser instance (`two-instances`): `unsupported Vitest
+  browser setup: 2 browser instances; supported: 1`.
+- Non-default isolation (`no-isolation`): `unsupported Vitest browser setup:
+  isolate false; supported: true`.
+
+Vitest stays `>=5.0.0 <6`, checked in Rust as before. A weekly CI job runs the
+verdict cases against the latest Vitest 5 release.
+
 ### Coverage
 
 Browser-mode Istanbul produced statement, branch and function maps identical
@@ -370,8 +398,9 @@ A follow-up issue in the 0.18.0 milestone should:
 2. Detect browser mode in the reporter, record the provider, browser and
    browser version in the receipt, and validate the supported versions in Rust.
    Detect the internal runner global explicitly so a Vitest change gives a
-   clear error. The runner check is done in #293; see
-   [Runner shape and page evidence](#runner-shape-and-page-evidence).
+   clear error. Done in #293; see
+   [Runner shape and page evidence](#runner-shape-and-page-evidence) and
+   [Browser setup in the receipt](#browser-setup-in-the-receipt).
 3. Give each job a private `TMPDIR` inside its scratch copy, so profiles left
    by killed jobs are removed with it.
 4. Decide whether to support switching; if so, ship the mutant ID shim.
