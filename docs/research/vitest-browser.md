@@ -271,6 +271,21 @@ the same Vitest error, so these cases do not prove a content-process crash.
 They do show that a page lost mid-test is an execution error and the next
 mutant still runs.
 
+On Windows x64, `workers` (two jobs at once) hit an open Vitest bug,
+[vitest-dev/vitest#10166](https://github.com/vitest-dev/vitest/issues/10166).
+When the page's first websocket attempt to Vitest fails, the client
+reconnects, but the page keeps waiting on the failed attempt and never tells
+Vitest it is ready. The job then waits until a timeout. A Windows CI
+experiment on 2026-11-16 found it in 11 of 150 plain Vitest runs with two
+Firefox runs at once (no Seshat), in 10 of 208 Seshat jobs while the proof
+sampled processes every 200 ms, and in 1 of 208 without sampling. The faulty
+code is not Firefox-specific, and the issue reports it with Chromium on
+Windows, but this proof has seen it only with Firefox on Windows. Such a job
+runs no test, so it ends `timed-out` or `execution-error` (unresolved), never
+a wrong verdict. The proof sets `connectTimeout` to 20 s so Vitest reports the
+failure before Seshat's deadline, samples processes once a second on Windows,
+and accepts up to two such jobs in `workers`.
+
 ### Unverified browser setups
 
 Playwright with headless Chromium or Firefox and its default launch (its own
