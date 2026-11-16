@@ -1751,7 +1751,7 @@ performance benchmarks.
 `vitest-browser-check.mjs` is the #159 feasibility proof, now run against the
 adapter being built in #293; browser mode is not yet supported. It runs `check`
 on the self-contained [`fixtures/vitest-browser`](fixtures/vitest-browser)
-project in headless Chromium. The project's config loads the embedded
+project in headless Chromium or Firefox. The project's config loads the embedded
 [`vitest-browser-plugin.mjs`](vitest-browser-plugin.mjs), which adds
 [`vitest-browser-setup.mjs`](vitest-browser-setup.mjs) to the page. The
 [browser proof workflow](../../.github/workflows/vitest-browser.yml) runs it on
