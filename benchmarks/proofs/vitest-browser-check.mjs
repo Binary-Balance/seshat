@@ -93,7 +93,7 @@ const baselineRejections = {
   'two-instances': {instances: 2, unsupported: 'unsupported Vitest browser setup: 2 browser instances; supported: 1'},
   'no-isolation': {isolate: false, unsupported: 'unsupported Vitest browser setup: isolate false; supported: true'},
 };
-const allCases = ['stack', 'workers', 'switching-closed', 'coverage-maps', 'node-reference',
+const allCases = ['stack', 'workers', 'switching-closed', 'coverage-maps', 'node-reference', 'custom-launch',
   ...Object.keys(controls), ...Object.keys(baselineRejections), ...Object.keys(continuations), ...Object.keys(deadlines), 'cancellation'];
 const list = option => option?.split(',').map(name => name.trim());
 const skipped = list(values.skip) ?? [];
@@ -130,7 +130,7 @@ const save = () => writeFileSync(join(work, 'result.json'), JSON.stringify(sanit
 
 function vitestConfig({include = ['meter.test.tsx', 'gain.test.ts'], sources = ['meter.tsx', 'gain.ts'],
   setup = true, replayed = false, twice = false, runnerChange, browser = true, crash = false, entered = false, runner = false,
-  instances = 1, isolate = true} = {}) {
+  instances = 1, isolate = true, providerOptions = ''} = {}) {
   const plugins = [setup && 'process.env.SESHAT_VITEST_BROWSER&&import(process.env.SESHAT_VITEST_BROWSER).then(m=>m.default)',
     replayed && "{name:'replay',config:()=>({test:{provide:{seshatExecutionId:'replayed-execution'}}})}",
     // A query makes Vite evaluate the same setup file a second time.
@@ -148,7 +148,7 @@ ${crash ? (browserName === 'chromium'
 ${entered ? "const entered=async()=>{writeFileSync(process.env.SESHAT_CONSOLE_READY,'entered');};" : ''}
 export default {cacheDir:'.vite',plugins:[${plugins}],test:{${runner ? 'runner:process.env.SESHAT_VITEST_RUNNER,' : ''}include:${JSON.stringify(include)},
   ${runnerChange ? "setupFiles:['./user-setup.ts']," : ''}${isolate ? '' : 'isolate:false,'}
-  ${browser ? `browser:{enabled:true,headless:true,provider:playwright(),${commands.length ? `commands:{${commands}},` : ''}instances:${
+  ${browser ? `browser:{enabled:true,headless:true,provider:playwright(${providerOptions}),${commands.length ? `commands:{${commands}},` : ''}instances:${
     JSON.stringify(Array.from({length: instances}, (_, index) => ({browser: browserName, name: `${browserName}-${index + 1}`})))}},` : ''}
   coverage:{provider:'istanbul',include:${JSON.stringify(sources)},reporter:['json'],reportsDirectory:'coverage'}}};
 `);
@@ -200,7 +200,7 @@ function owned() {
 // A killed job cannot run Playwright's Node-side cleanup, so each one leaves
 // a browser profile and an artifacts directory. Record and then remove them.
 async function assertCleanedUp(name, killedJobs = 0) {
-  // Chromium exits on its own when its pipe to Playwright closes; allow it a moment.
+  // The browser exits on its own when its pipe to Playwright closes; allow it a moment.
   for (let attempt = 0; attempt < 50 && owned().length; attempt++) await delay(100);
   const leftovers = owned().map(({pid, command}) => ({pid, command}));
   // Vitest's Node mode can leave its own temporary directory; only browser
@@ -340,6 +340,16 @@ for (const [name, [body, expected, options]] of Object.entries(controls)) {
   assert.equal(result.complete, complete);
   assert.equal(result.mutation.score, complete ? (expected === 'killed' ? 100 : 0) : null);
   if (expected === 'timed-out') assert.equal(result.mutation.outcomes[0].setups[0].testTimedOut, true);
+}
+if (cases.includes('custom-launch')) {
+  // A persistent profile is outside the proved launch. It still runs, with a warning.
+  const config = controlConfig('custom-launch', controls.assertion[0]);
+  vitestConfig({include: ['control.test.ts'], sources: ['control.ts'], providerOptions: '{persistentContext:true}'});
+  const result = await check('custom-launch', config);
+  assert.equal(result.complete, true);
+  assert.equal(result.mutation.outcomes[0].verdict, 'killed');
+  const {defaultLaunch, supported} = result.diagnostics.runnerVersions[0].browser;
+  assert.deepEqual({defaultLaunch, supported}, {defaultLaunch: false, supported: false});
 }
 if (cases.includes('node-reference')) {
   // The same control in Vitest's Node mode isolates the browser launch cost. It

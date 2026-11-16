@@ -276,9 +276,9 @@ mutant still runs.
 Playwright with headless Chromium or Firefox and its default launch (its own
 browser build and a fresh profile) is what the proof covers. Any other
 provider or browser, a headed browser, or a custom launch (`channel`,
-`executablePath`, `persistentContext` or `connectOptions`) still runs, but the setup's
-`diagnostics.runnerVersions` entry carries the receipt's browser entry with
-`"supported": false`, and the readable output warns:
+`executablePath`, `persistentContext` or `connectOptions`) still runs. The
+setup's `diagnostics.runnerVersions` entry then carries the receipt's browser
+entry with `"supported": false`, and the readable output warns:
 
 ```text
 Warning: setup "browser" uses Vitest browser mode with "playwright" "webkit", which Seshat has not verified. Results and cleanup after killed jobs may be unreliable.
@@ -370,15 +370,18 @@ job, so that case alone cannot show a leftover browser there.
 
 Linux matches leftover processes by the proof's private `TMPDIR`. macOS and
 Windows cannot read another process's environment, so the proof matches the
-commands a job runs (`chrome-headless-shell`, `vitest.mjs`, `esbuild`), which
-assumes no other Vitest or Playwright browser runs on the host. On every host
+commands a job runs (Playwright's browser install directory, `vitest.mjs`,
+`esbuild`), which assumes no other Vitest or Playwright browser runs on the
+host. On every host
 the same check saw two to eight browser processes during `stack` and `workers`,
 so a missed match would show.
 
 A killed job cannot run Playwright's Node-side cleanup, so each deadline or
 cancellation leaves one Chromium profile and one artifacts directory in
 the temporary directory (`TMPDIR`, or `TEMP`/`TMP` on Windows), about 230 KB
-in a manual check. Every host showed this. Normal runs leave none.
+in a manual check. Every host showed this. Normal Chromium runs leave none;
+Firefox on Windows also leaves a `mozilla-temp-files` directory after normal
+runs.
 
 Each job starts its own Vitest server. In a manual check, two concurrent runs
 took the next free API port (63315, then 63316). `workers` saw two jobs
@@ -454,9 +457,9 @@ npx --prefix benchmarks/proofs/fixtures/vitest-browser playwright install chromi
 node benchmarks/proofs/vitest-browser-check.mjs --cli crates/seshat/target/release/seshat
 ```
 
-`--browser firefox` runs it with Firefox (default `chromium`). `--cases` runs a subset, `--skip` leaves cases out and `--deps DIR` uses
-another installed dependency set. `SESHAT_PROOF_OUTPUT` receives the portable
-summary; the full report with raw receipts stays in
+`--browser firefox` runs it with Firefox (default `chromium`). `--cases` runs
+a subset, `--skip` leaves cases out and `--deps DIR` uses another installed
+dependency set. `SESHAT_PROOF_OUTPUT` receives the portable summary; the full report with raw receipts stays in
 `work/assurance-proofs/vitest-browser-check-*`. The
 [Vitest browser proof workflow](../../.github/workflows/vitest-browser.yml)
 runs it on each supported host.

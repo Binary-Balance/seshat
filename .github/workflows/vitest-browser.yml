@@ -2,9 +2,8 @@ name: Vitest browser proof
 
 # Runs the Vitest browser mode proof on each supported host (#293), with
 # Chromium and Firefox. The lifecycle cases were first observed on Linux only.
-# Each week, and on manual
-# runs, the verdict cases also run against the latest Vitest 5, because the
-# browser adapter relies on an undocumented Vitest global.
+# Each week, and on manual runs, the verdict cases also run against the latest
+# Vitest 5, because the browser adapter relies on an undocumented Vitest global.
 on:
   pull_request:
     paths:
