@@ -205,8 +205,9 @@ async function assertCleanedUp(name, killedJobs = 0) {
   // The browser exits on its own when its pipe to Playwright closes; allow it a moment.
   for (let attempt = 0; attempt < 50 && owned().length; attempt++) await delay(100);
   const leftovers = owned().map(({pid, command}) => ({pid, command}));
-  // Vitest's Node mode can leave its own temporary directory; only browser
-  // profiles are in scope here, but every leftover is recorded.
+  // Vitest's Node mode, and Firefox on Windows (mozilla-temp-files), can leave
+  // other temporary files; only browser profiles are in scope here, but every
+  // leftover is recorded.
   const temporary = readdirSync(tmp);
   const profiles = temporary.filter(entry => entry.startsWith('playwright'));
   results.runs[name].cleanup = {processes: leftovers, temporary};
@@ -483,7 +484,8 @@ const summary = {version: 1, environment, platform: `${process.platform}-${proce
       leftoverProcesses: run.cleanup?.processes.length ?? null,
       leftoverBrowserFiles: run.cleanup?.temporary.filter(entry => entry.startsWith('playwright')) ?? null,
       wallMs: Math.round(run.wallMs ?? 0), ...(run.cost ? {cost: run.cost} : {}),
-      ...(run.concurrentJobs ? {concurrentJobs: run.concurrentJobs, browserProcesses: run.browserProcesses} : {})}
+      ...(run.concurrentJobs ? {concurrentJobs: run.concurrentJobs, browserProcesses: run.browserProcesses} : {}),
+      ...(run.connectFailures === undefined ? {} : {connectFailures: run.connectFailures})}
       : {files: run.files, identical: run.identical}];
   }))};
 writeFileSync(join(work, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');

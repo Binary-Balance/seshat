@@ -257,12 +257,16 @@ verdict cases against the latest Vitest 5 release, with both browsers.
 ### Firefox
 
 Added to #293's scope on 2026-11-16. This is the Firefox build Playwright
-installs (155.0, revision 1543), not stock Firefox. On Linux x64 the proof
-gave the Chromium result in every case (`--browser firefox`): all 42 verdict
-cases, identical coverage maps, and the deadline, blocked-page and
-cancellation cases with no browser process left behind. Each killed job left
-one `playwright_firefoxdev_profile-*` and one artifacts directory, as Chromium
-does. Job times were close to Chromium's.
+installs (155.0, revision 1543), not stock Firefox. In CI on all five hosts
+(run 43856617259, commit `7bffefc`), the proof (`--browser firefox`) gave the
+Chromium result in every case: all verdict cases, identical coverage maps,
+and the deadline, blocked-page and cancellation cases with no browser process
+left behind. The one exception is a tolerated `workers` stall on Windows,
+described below. Each killed job left one `playwright_firefoxdev_profile-*`
+and one artifacts directory, as Chromium does. Mean mutant jobs in `stack`
+took 1.4 to 3.6 times Chromium's: 2.5 s against 1.8 s on Linux x64, 6.1 s
+against 1.7 s on macOS ARM64. The per-host summaries are in
+[`vitest-browser-firefox-hosts.json`](vitest-browser-firefox-hosts.json).
 
 Firefox has no Chrome DevTools Protocol, so `page-crash` and
 `continue-after-crash` load `about:crashcontent` instead. Playwright then
