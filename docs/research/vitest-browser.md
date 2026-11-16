@@ -493,5 +493,6 @@ node benchmarks/proofs/vitest-browser-check.mjs --cli crates/seshat/target/relea
 a subset, `--skip` leaves cases out and `--deps DIR` uses another installed
 dependency set. `SESHAT_PROOF_OUTPUT` receives the portable summary; the full
 report with raw receipts stays in
-`work/assurance-proofs/vitest-browser-check-*`. The [Vitest browser proof workflow](../../.github/workflows/vitest-browser.yml)
+`work/assurance-proofs/vitest-browser-check-*`. The
+[Vitest browser proof workflow](../../.github/workflows/vitest-browser.yml)
 runs it on each supported host.
