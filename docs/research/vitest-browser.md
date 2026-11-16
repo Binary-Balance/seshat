@@ -292,9 +292,10 @@ Such a job runs no test. When Vitest's `browser.connectTimeout` (default 60 s)
 fires first, the job is an `execution-error`. When Seshat's mutant limit
 (default 30 s) comes first, it is `timed-out`. Both are unresolved, except
 that with `countTimeoutsAsKilled` a deadline at the mutant limit counts the
-mutant as killed although no test ran. Browser-mode users should set
-`browser.connectTimeout` below the mutant limit; runner documentation (#293
-item 10) should say so.
+mutant as killed although no test ran. Vitest starts that timer only once
+its own start-up is done, so browser-mode users should set
+`browser.connectTimeout` well below the mutant limit (the proof uses 20 s
+against 30 s); runner documentation (#293 item 10) should say so.
 
 The proof sets `connectTimeout` to 20 s, samples processes once a second on
 Windows and accepts up to two such jobs in Windows `workers`. Sixteen repeated
@@ -491,6 +492,6 @@ node benchmarks/proofs/vitest-browser-check.mjs --cli crates/seshat/target/relea
 `--browser firefox` runs it with Firefox (default `chromium`). `--cases` runs
 a subset, `--skip` leaves cases out and `--deps DIR` uses another installed
 dependency set. `SESHAT_PROOF_OUTPUT` receives the portable summary; the full
-report with raw receipts stays in `work/assurance-proofs/vitest-browser-check-*`.
-The [Vitest browser proof workflow](../../.github/workflows/vitest-browser.yml)
+report with raw receipts stays in
+`work/assurance-proofs/vitest-browser-check-*`. The [Vitest browser proof workflow](../../.github/workflows/vitest-browser.yml)
 runs it on each supported host.
