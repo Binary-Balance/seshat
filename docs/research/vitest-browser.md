@@ -243,8 +243,8 @@ recorded, not checked. The proof
 compares it with the browser version Playwright installs
 (`stack`). Node-mode receipts have no `browser` entry (`node-reference`).
 
-Seshat rejects setups the proof has not covered. Each fails the baseline with
-an `evidenceError`:
+Seshat rejects two setups that change how tests run. Each fails the baseline
+with an `evidenceError`:
 
 - More than one browser instance (`two-instances`): `unsupported Vitest
   browser setup: 2 browser instances; supported: 1`.
