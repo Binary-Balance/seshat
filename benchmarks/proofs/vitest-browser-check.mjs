@@ -20,7 +20,7 @@ const {values} = parseArgs({options: {cli: {type: 'string'}, deps: {type: 'strin
 const builds = {chromium: 'chromium-headless-shell', firefox: 'firefox'};
 const browserName = values.browser, build = builds[browserName];
 assert.ok(build, `--browser must be one of: ${Object.keys(builds).join(', ')}`);
-assert.ok(values.cli, 'usage: node benchmarks/proofs/vitest-browser-check.mjs --cli PATH [--deps DIR] [--cases LIST] [--skip LIST]');
+assert.ok(values.cli, 'usage: node benchmarks/proofs/vitest-browser-check.mjs --cli PATH [--browser chromium|firefox] [--deps DIR] [--cases LIST] [--skip LIST]');
 const cli = realpathSync(resolve(values.cli));
 const dependencies = join(resolve(values.deps ?? fixture), 'node_modules');
 assert.ok(existsSync(join(dependencies, '@vitest/browser-playwright')), `install the fixture first: npm ci --prefix ${relative(repo, fixture)}`);
@@ -49,7 +49,9 @@ const controls = {
   'nested-after-each': ["describe('outer',()=>{describe('inner',()=>{afterEach(()=>{if(!ready)throw Error('cleanup');});test('passed',()=>{});});});", 'execution-error'],
   // The setup file runs twice on one runner; the second run must not wrap again.
   'setup-twice': ["test('assertion',()=>expect(ready).toBe(true));", 'killed', {twice: true}],
-  // A renderer crash closes Vitest's connection to the page mid-test.
+  // A renderer crash closes Vitest's connection to the page mid-test. Firefox has
+  // no DevTools Protocol, and its crash page is reported as a close, so for
+  // Firefox this shows only that a page lost mid-test is handled.
   'page-crash': ["import {commands} from 'vitest/browser';test('crash',async()=>{if(!ready){await (commands as any).crashPage();await new Promise(r=>setTimeout(r,5000));}});",
     'execution-error', {crash: true}],
 };
@@ -102,7 +104,7 @@ mkdirSync(join(repo, 'work/assurance-proofs'), {recursive: true});
 const work = mkdtempSync(join(repo, 'work/assurance-proofs/vitest-browser-check-'));
 const project = join(work, 'input');
 const scratch = join(work, 'scratch');
-// Playwright creates Chromium profiles under TMPDIR; a private one makes leaks visible.
+// Playwright creates browser profiles under TMPDIR; a private one makes leaks visible.
 // Windows reads TEMP and TMP instead of TMPDIR.
 const tmp = join(work, 'tmp');
 const temporaryEnv = {TMPDIR: tmp, TEMP: tmp, TMP: tmp};
@@ -196,7 +198,7 @@ function owned() {
     .map(([, pid, command]) => ({pid: Number(pid), command, job: /vitest\.mjs/.test(command) ? pid : undefined}));
 }
 // A killed job cannot run Playwright's Node-side cleanup, so each one leaves
-// a Chromium profile and an artifacts directory. Record and then remove them.
+// a browser profile and an artifacts directory. Record and then remove them.
 async function assertCleanedUp(name, killedJobs = 0) {
   // Chromium exits on its own when its pipe to Playwright closes; allow it a moment.
   for (let attempt = 0; attempt < 50 && owned().length; attempt++) await delay(100);
@@ -259,7 +261,8 @@ if (cases.includes('stack')) {
   assert.deepEqual(result.diagnostics.runnerVersions[0].importFailureObserver, {state: 'inactive', reason: 'runner'});
   assert.equal(result.setups[0].baseline.report.passed, 3);
   assert.deepEqual(result.setups[0].baseline.report.browser,
-    [{provider: 'playwright', name: browserName, version: environment.browser[0].browserVersion, isolate: true, headless: true}]);
+    [{provider: 'playwright', name: browserName, version: environment.browser[0].browserVersion, isolate: true, headless: true,
+      defaultLaunch: true}]);
   assert.equal(result.diagnostics.runnerVersions[0].browser.supported, true);
   assert.deepEqual(result.sources.map(source => [source.path, source.result.complete,
     source.result.functions.map(f => [f.name, f.complexity, f.coverageBasis, f.covered, f.crap])]), [

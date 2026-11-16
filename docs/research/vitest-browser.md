@@ -230,7 +230,8 @@ project per browser instance:
 
 ```json
 "browser": [{"provider": "playwright", "name": "chromium",
-  "version": "153.0.8010.12", "isolate": true, "headless": true}]
+  "version": "153.0.8010.12", "isolate": true, "headless": true,
+  "defaultLaunch": true}]
 ```
 
 The page reads the version from `navigator.userAgentData`, Chromium's
@@ -239,7 +240,7 @@ shortened user agent. Browsers without it record `null`, as does a malformed
 value from the page. Firefox has no such API; its user agent gives the major
 and minor version (`155.0`), the same as Playwright reports. The version is
 recorded, not checked. The proof
-compares it with the Chrome Headless Shell version Playwright installs
+compares it with the browser version Playwright installs
 (`stack`). Node-mode receipts have no `browser` entry (`node-reference`).
 
 Seshat rejects setups the proof has not covered. Each fails the baseline with
@@ -272,8 +273,10 @@ mutant still runs.
 
 ### Unverified browser setups
 
-Playwright with headless Chromium or Firefox is what the proof covers. Any
-other provider, browser or a headed browser still runs, but the setup's
+Playwright with headless Chromium or Firefox and its default launch (its own
+browser build and a fresh profile) is what the proof covers. Any other
+provider or browser, a headed browser, or a custom launch (`channel`,
+`executablePath`, `persistentContext` or `connectOptions`) still runs, but the setup's
 `diagnostics.runnerVersions` entry carries the receipt's browser entry with
 `"supported": false`, and the readable output warns:
 

@@ -621,6 +621,7 @@ fn browser_support(report: Option<&Value>) -> Value {
         browser["provider"] == "playwright"
             && matches!(browser["name"].as_str(), Some("chromium" | "firefox"))
             && browser["headless"] == true
+            && browser["defaultLaunch"] == true
     );
     browser
 }
@@ -4356,15 +4357,16 @@ mod tests {
             browser_support(Some(&json!({"node":"24.21.0"}))),
             Value::Null
         );
-        for (provider, name, headless, supported) in [
-            ("playwright", "chromium", true, true),
-            ("playwright", "firefox", true, true),
-            ("playwright", "webkit", true, false),
-            ("webdriverio", "chromium", true, false),
-            ("playwright", "chromium", false, false),
+        for (provider, name, headless, default_launch, supported) in [
+            ("playwright", "chromium", true, true, true),
+            ("playwright", "firefox", true, true, true),
+            ("playwright", "webkit", true, true, false),
+            ("webdriverio", "chromium", true, true, false),
+            ("playwright", "chromium", false, true, false),
+            ("playwright", "chromium", true, false, false),
         ] {
             let browser = json!({"provider":provider,"name":name,"version":null,
-                "isolate":true,"headless":headless});
+                "isolate":true,"headless":headless,"defaultLaunch":default_launch});
             let mut expected = browser.clone();
             expected["supported"] = json!(supported);
             assert_eq!(
