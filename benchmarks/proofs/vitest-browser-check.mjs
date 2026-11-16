@@ -287,13 +287,14 @@ if (cases.includes('workers')) {
   const result = await sampled('workers', () => check('workers', {...baseConfig, workers: 2}));
   // Vitest's browser client can miss its ready signal when its first websocket
   // attempt fails, and the job then fails to connect (vitest-dev/vitest#10166).
-  // Seen here only with two Firefox instances on Windows. Such a job runs no
-  // test, so it is unresolved, never a wrong verdict. Allow at most two.
+  // Seen here only with two Firefox instances on Windows, so only Windows allows
+  // it, at most twice. Such a job runs no test. With the 20 s connectTimeout it
+  // is an execution error, which the checks below keep apart from verdicts.
   const connectFailures = [...result.mutation.outcomes, ...result.pseudoTesting.outcomes].filter(row => row.setups
     .some(setup => setup.state === 'execution-error' && setup.diagnostic.includes('Failed to connect to the browser session')));
   results.runs.workers.connectFailures = connectFailures.length;
   save();
-  assert.ok(connectFailures.length <= 2, `workers: ${connectFailures.length} jobs failed to connect`);
+  assert.ok(connectFailures.length <= (windows ? 2 : 0), `workers: ${connectFailures.length} jobs failed to connect`);
   assert.equal(result.mutation.unresolved + result.pseudoTesting.unresolved, connectFailures.length);
   assert.equal(result.complete, connectFailures.length === 0);
   assert.equal(result.mutation.workersUsed, 2);

@@ -280,15 +280,27 @@ On Windows x64, `workers` (two jobs at once) hit an open Vitest bug,
 When the page's first websocket attempt to Vitest fails, the client
 reconnects, but the page keeps waiting on the failed attempt and never tells
 Vitest it is ready. The job then waits until a timeout. A Windows CI
-experiment on 2026-11-16 found it in 11 of 150 plain Vitest runs with two
-Firefox runs at once (no Seshat), in 10 of 208 Seshat jobs while the proof
+experiment on 2026-11-16
+([run 43847760667](https://github.com/Binary-Balance/seshat/actions/runs/43847760667))
+found it in 11 of 150 plain Vitest runs (no Seshat; two lanes at once, each
+starting Firefox runs back to back), in 10 of 208 Seshat jobs while the proof
 sampled processes every 200 ms, and in 1 of 208 without sampling. The faulty
 code is not Firefox-specific, and the issue reports it with Chromium on
-Windows, but this proof has seen it only with Firefox on Windows. Such a job
-runs no test, so it ends `timed-out` or `execution-error` (unresolved), never
-a wrong verdict. The proof sets `connectTimeout` to 20 s so Vitest reports the
-failure before Seshat's deadline, samples processes once a second on Windows,
-and accepts up to two such jobs in `workers`.
+Windows, but this proof has seen it only with Firefox on Windows.
+
+Such a job runs no test. When Vitest's `browser.connectTimeout` (default 60 s)
+fires first, the job is an `execution-error`. When Seshat's mutant limit
+(default 30 s) comes first, it is `timed-out`. Both are unresolved, except
+that with `countTimeoutsAsKilled` a deadline at the mutant limit counts the
+mutant as killed although no test ran. Browser-mode users should set
+`browser.connectTimeout` below the mutant limit; runner documentation (#293
+item 10) should say so.
+
+The proof sets `connectTimeout` to 20 s, samples processes once a second on
+Windows and accepts up to two such jobs in Windows `workers`. Sixteen repeated
+Windows `workers` rounds with these settings
+([run 43853866908](https://github.com/Binary-Balance/seshat/actions/runs/43853866908))
+all passed, with 7 stalls in about 400 jobs and at most two in one round.
 
 ### Unverified browser setups
 
@@ -391,9 +403,9 @@ Linux matches leftover processes by the proof's private `TMPDIR`. macOS and
 Windows cannot read another process's environment, so the proof matches the
 commands a job runs (Playwright's browser install directory, `vitest.mjs`,
 `esbuild`), which assumes no other Vitest or Playwright browser runs on the
-host. On every host
-the same check saw two to eight browser processes during `stack` and `workers`,
-so a missed match would show.
+host. On every host the same check saw two to eight Chromium processes during
+`stack` and `workers`, and 6 to 8 Firefox processes in `stack` and 12 to 15 in
+`workers`, so a missed match would show.
 
 A killed job cannot run Playwright's Node-side cleanup, so each deadline or
 cancellation leaves one Chromium profile and one artifacts directory in
@@ -478,7 +490,7 @@ node benchmarks/proofs/vitest-browser-check.mjs --cli crates/seshat/target/relea
 
 `--browser firefox` runs it with Firefox (default `chromium`). `--cases` runs
 a subset, `--skip` leaves cases out and `--deps DIR` uses another installed
-dependency set. `SESHAT_PROOF_OUTPUT` receives the portable summary; the full report with raw receipts stays in
-`work/assurance-proofs/vitest-browser-check-*`. The
-[Vitest browser proof workflow](../../.github/workflows/vitest-browser.yml)
+dependency set. `SESHAT_PROOF_OUTPUT` receives the portable summary; the full
+report with raw receipts stays in `work/assurance-proofs/vitest-browser-check-*`.
+The [Vitest browser proof workflow](../../.github/workflows/vitest-browser.yml)
 runs it on each supported host.
