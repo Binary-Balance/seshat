@@ -451,7 +451,7 @@ function countedConfig(name, body) {
 }
 if (cases.includes('connect-retry')) {
   const config = controlConfig('connect-retry', controls.assertion[0]);
-  vitestConfig({include: ['control.test.ts'], sources: ['control.ts'], refuse: 'first', connectTimeout: 5000});
+  vitestConfig({include: ['control.test.ts'], sources: ['control.ts'], refuse: 'first'});
   const job = (await check('connect-retry', config)).mutation.outcomes[0].setups[0];
   assert.equal(job.state, 'failed', JSON.stringify(job));
   assert.equal(job.jobsAttempted, 2);
