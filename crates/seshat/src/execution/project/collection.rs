@@ -204,10 +204,12 @@ enum MutationKind<'a> {
     Extreme { sources: &'a [Value] },
 }
 
+#[derive(Clone, Copy)]
 enum JobKind<'a> {
     Test,
-    // A mutant's test job, stopped at its setup's mutant limit.
-    Mutant(Duration),
+    // A mutant's test job, stopped at its setup's mutant limit. The flag is
+    // set when other workers must not start more jobs.
+    Mutant(Duration, &'a AtomicBool),
     Coverage(&'a Path),
     Typecheck,
 }
@@ -419,6 +421,11 @@ fn browser_setup(browser: &Value) -> Result<(), String> {
         ));
     }
     Ok(())
+}
+
+// A job's runs, including a browser retry.
+fn attempts(job: &Value) -> usize {
+    1 + usize::from(job["browserRetry"].is_object())
 }
 
 fn per_second(count: usize, wall_ms: f64) -> Value {
@@ -1032,6 +1039,33 @@ impl CapturedProject {
         id: &str,
         kind: JobKind<'_>,
     ) -> Result<CommandEvidence, String> {
+        let first = self.run_attempt(setup, args, evidence, id, kind)?;
+        // A browser page that never ran a test file tested nothing, and Vitest
+        // causes this itself now and then (vitest-dev/vitest#10166), so try once
+        // more. Only after a clean stop, as before any further job. Remove the
+        // retry once Vitest fixes the bug (#299).
+        let stopped =
+            matches!(kind, JobKind::Mutant(_, stopped) if stopped.load(Ordering::Relaxed));
+        if first.details["browserConnected"] != false
+            || !first.can_continue_mutation()
+            || stopped
+            || cancellation_signal() != 0
+        {
+            return Ok(first);
+        }
+        let mut retried = self.run_attempt(setup, args, evidence, &format!("{id}-retry"), kind)?;
+        retried.details["browserRetry"] = first.into_json();
+        Ok(retried)
+    }
+
+    fn run_attempt(
+        &self,
+        setup: &Setup,
+        args: &[String],
+        evidence: &Path,
+        id: &str,
+        kind: JobKind<'_>,
+    ) -> Result<CommandEvidence, String> {
         if cancellation_signal() != 0 {
             return Ok(CommandEvidence {
                 state: TestState::Cancelled,
@@ -1158,10 +1192,14 @@ impl CapturedProject {
             );
         }
         let timeout = match kind {
-            JobKind::Mutant(limit) => limit,
+            JobKind::Mutant(limit, _) => limit,
             _ => Duration::from_millis(setup.timeout_ms),
         };
         let mut result = job::run(&mut command, timeout)?;
+        // The Vitest reporter removes this once the page queues a test file.
+        if fs::symlink_metadata(evidence.join(format!("{id}.json.browser-waiting"))).is_ok() {
+            result["browserConnected"] = json!(false);
+        }
         let mut state = if matches!(kind, JobKind::Typecheck) {
             // A compiler's exit code is validation evidence, never a mutant kill.
             if result["cancelled"] == true {
@@ -1553,9 +1591,9 @@ impl CapturedProject {
             let at_mutant_limit = mutant_timeouts[index] <= setup.timeout_ms;
             let limit = Duration::from_millis(mutant_timeouts[index].min(setup.timeout_ms));
             let mut observed = self
-                .run_job(setup, args, evidence, &id, JobKind::Mutant(limit))
+                .run_job(setup, args, evidence, &id, JobKind::Mutant(limit, stopped))
                 .unwrap_or_else(CommandEvidence::error);
-            jobs += 1;
+            jobs += attempts(&observed.details);
             if let selection::Selection::Files { files, .. } = &selections[index]
                 && observed.state != TestState::ExecutionError
                 && observed.details["timedOut"] == false
@@ -1575,10 +1613,10 @@ impl CapturedProject {
                         &setup.test,
                         evidence,
                         &format!("{id}-full"),
-                        JobKind::Mutant(limit),
+                        JobKind::Mutant(limit, stopped),
                     )
                     .unwrap_or_else(CommandEvidence::error);
-                jobs += 1;
+                jobs += attempts(&observed.details);
             }
             states.push(
                 observed.assessment_state(self.config.count_timeouts_as_killed, at_mutant_limit),
@@ -1864,7 +1902,7 @@ impl CapturedProject {
                 let (rows, ready) =
                     self.run_prepared_baselines(evidence, "primary", None, progress);
                 worker_ready &= ready;
-                prepared_baseline_jobs = rows.len();
+                prepared_baseline_jobs = rows.iter().map(attempts).sum();
                 prepared_baselines = rows;
                 prepared_baseline_ms =
                     Some(prepared_baseline_started.elapsed().as_secs_f64() * 1000.0);
@@ -2137,7 +2175,7 @@ impl CapturedProject {
             "score":if complete {assessed.score} else {None},"outcomes":outcomes,
             "jobsAttempted":jobs_attempted,"executionMs":started.elapsed().as_secs_f64()*1000.0,
             "workersRequested":self.config.workers,"workersUsed":workers_used,
-            "workerBaselineJobs":worker_baselines.len(),"workerBaselines":worker_baselines,
+            "workerBaselineJobs":worker_baselines.iter().map(attempts).sum::<usize>(),"workerBaselines":worker_baselines,
             "workerPreparationMs":preparation_ms,"mutationWallMs":scheduling_ms,
             "workerCleanupMs":cleanup_ms,"completed":completed,"notRun":plan.len()-completed,"unresolved":plan.len()-resolved,
             "diagnostics":diagnostics,
@@ -2311,7 +2349,6 @@ impl CapturedProject {
                 );
                 self.run_job(setup, &setup.test, evidence, &id, JobKind::Test)
             };
-            commands_run += 1;
             progress.phase(format_args!("baseline {:?}", setup.name));
             let phase_started = Instant::now();
             let baseline = run().unwrap_or_else(CommandEvidence::error);
@@ -2319,6 +2356,7 @@ impl CapturedProject {
                 json!(phase_started.elapsed().as_secs_f64() * 1000.0);
             baselines[index] = baseline.state;
             setups[index]["baseline"] = baseline.into_json();
+            commands_run += attempts(&setups[index]["baseline"]) as u64;
             if setups[index]["baseline"]["state"] != "passed" {
                 complete = false;
                 break;
@@ -2363,7 +2401,6 @@ impl CapturedProject {
                         }
                     }
                 };
-            commands_run += 1;
             progress.phase(format_args!("coverage {:?}", setup.name));
             let phase_started = Instant::now();
             match collect() {
@@ -2392,6 +2429,7 @@ impl CapturedProject {
                     setups[index]["coverage"] = json!({"state":"execution-error","error":error});
                 }
             }
+            commands_run += attempts(&setups[index]["coverage"]) as u64;
             setups[index]["timings"]["coverageMs"] =
                 json!(phase_started.elapsed().as_secs_f64() * 1000.0);
         }
@@ -2637,7 +2675,9 @@ impl CapturedProject {
             // Tell opted-in users which timeoutMs would let these deadlines count.
             if self.config.count_timeouts_as_killed
                 && mutant_timeouts[index] > config.timeout_ms
-                && jobs.iter().any(|job| job["timedOut"] == true)
+                && jobs
+                    .iter()
+                    .any(|job| job["timedOut"] == true && job["browserConnected"] != false)
             {
                 setup["uncappedMutantTimeoutMs"] = json!(mutant_timeouts[index]);
             }
@@ -3634,6 +3674,66 @@ mod tests {
             for setup in result["setups"].as_array().unwrap() {
                 assert!(setup["uncappedMutantTimeoutMs"].is_null(), "{result}");
             }
+            fixture.assert_clean();
+        }
+    }
+
+    #[test]
+    fn browser_jobs_that_never_connect_run_again_and_never_count() {
+        // Each job's first attempt leaves the reporter's waiting file: a baseline
+        // then fails fast and a mutant hangs to its deadline. The retry connects,
+        // or for mutants it may not.
+        for (connects, verdict) in [(true, "killed"), (false, "timed-out")] {
+            let fixture = super::super::tests::Fixture::new();
+            let mut captured = fixture.capture().unwrap();
+            captured
+                .sources
+                .retain(|(path, _)| path == Path::new("src/calc.ts"));
+            captured.config.count_timeouts_as_killed = true;
+            let setup = &mut captured.config.setups[0];
+            setup.mutant_timeout_min_ms = 3000;
+            setup.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
+            setup.test = vec![
+                "node".into(),
+                "-e".into(),
+                format!(
+                    r#"
+                const fs = require('fs'), path = process.env.SESHAT_RECEIPT;
+                const id = process.env.SESHAT_EXECUTION_ID, mutant = id.includes('-mutant-');
+                if (fs.readdirSync(require('path').dirname(path)).some(n => n.endsWith('.browser-waiting')))
+                    throw Error('waiting file retained');
+                if (!id.endsWith('-retry') || (mutant && !{connects})) {{
+                    fs.writeFileSync(path + '.browser-waiting', '');
+                    while (mutant) {{}}
+                    process.exit(1);
+                }}
+                fs.writeFileSync(path, JSON.stringify({{version:1, executionId:id, node:process.versions.node,
+                    complete:true, passed:mutant ? 0 : 1, failed:mutant ? 1 : 0, errors:0}}));
+                process.exitCode = mutant ? 1 : 0;
+            "#
+                ),
+            ];
+            let result = captured.assess(AssessmentMode::Mutate, false).unwrap();
+            let baseline = &result["setups"][0]["baseline"];
+            assert_eq!(baseline["state"], "passed", "{result}");
+            assert_eq!(baseline["browserRetry"]["browserConnected"], false);
+            assert_eq!(baseline["browserRetry"]["state"], "execution-error");
+            let mutation = &result["mutation"];
+            assert_eq!(mutation["planned"], 2);
+            for outcome in mutation["outcomes"].as_array().unwrap() {
+                let job = &outcome["setups"][0];
+                assert_eq!(outcome["verdict"], verdict, "{result}");
+                assert_eq!(outcome["countedAsKilled"], false);
+                assert_eq!(job["jobsAttempted"], 2);
+                assert_eq!(job["browserRetry"]["browserConnected"], false);
+                assert_eq!(job["browserRetry"]["timedOut"], true);
+                assert_eq!(job["browserConnected"].is_null(), connects);
+            }
+            assert_eq!(mutation["jobsAttempted"], 4);
+            assert_eq!(mutation["countedTimeouts"], 0);
+            assert_eq!(mutation["complete"], connects);
+            // The limit hint is for deadlines that could count.
+            assert!(result["setups"][0]["uncappedMutantTimeoutMs"].is_null());
             fixture.assert_clean();
         }
     }

@@ -290,18 +290,36 @@ Windows, but this proof has seen it only with Firefox on Windows.
 
 Such a job runs no test. When Vitest's `browser.connectTimeout` (default 60 s)
 fires first, the job is an `execution-error`. When Seshat's mutant limit
-(default 30 s) comes first, it is `timed-out`. Both are unresolved, except
-that with `countTimeoutsAsKilled` a deadline at the mutant limit counts the
-mutant as killed although no test ran. Vitest starts that timer only once
-its own start-up is done, so browser-mode users should set
-`browser.connectTimeout` well below the mutant limit (the proof uses 20 s
-against 30 s); runner documentation (#293 item 10) should say so.
+(default 30 s) comes first, it is `timed-out`, and with `countTimeoutsAsKilled`
+that deadline counted the mutant as killed although no test ran.
 
-The proof sets `connectTimeout` to 20 s, samples processes once a second on
-Windows and accepts up to two such jobs in Windows `workers`. Sixteen repeated
+Seshat now detects such a job and runs it once more. The Vitest reporter
+writes `<receipt>.browser-waiting` when a browser run starts and removes it
+when Vitest first reports a test file as queued. The page sends that report
+before it runs setup files or imports the test file (Vitest 5.0.0 and 5.1.0),
+so a mutant that blocks the page while loading still removes it. A job that
+leaves the file is marked `browserConnected: false`; Seshat runs it again, keeps
+the first attempt under `browserRetry` and counts both in `jobsAttempted`. Its
+deadline never counts as a kill. A lower `browser.connectTimeout` (the proof
+uses 20 s) only makes such a job fail sooner. The retry goes once Vitest fixes
+the bug (#299).
+
+The proof stands in for the bug with a plugin that refuses Vitest's browser
+websocket, which gives the same "Failed to connect to the browser session"
+error. In `connect-retry` only a mutant's first attempt is refused, and the
+retry kills the mutant. In `never-connects` every attempt is refused, with
+`countTimeoutsAsKilled` on and `connectTimeout` beyond the deadline; the
+mutant stays `timed-out` and is not counted. In `counted-load-hang` the
+mutant blocks the page while its test file loads, and its deadline counts.
+All three passed with Chromium and Firefox on Linux x64 on 2026-11-17.
+
+Before the retry, the proof sampled processes once a second on Windows and
+accepted up to two stalled jobs in Windows `workers`. Sixteen repeated
 Windows `workers` rounds with these settings
 ([run 43853866908](https://github.com/Binary-Balance/seshat/actions/runs/43853866908))
 all passed, with 7 stalls in about 400 jobs and at most two in one round.
+`workers` now records retries (`connectRetries`) and accepts up to two
+Windows jobs whose retry also failed (`connectFailures`).
 
 ### Unverified browser setups
 

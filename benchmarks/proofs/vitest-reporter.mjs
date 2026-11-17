@@ -1,4 +1,4 @@
-import {readFileSync, writeFileSync} from 'node:fs';
+import {readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {isAbsolute} from 'node:path';
 
 function fileCoverage(modules, context, identitiesComplete, reason) {
@@ -42,8 +42,21 @@ function resolvedMaxWorkers(modules) {
   return values.every(value => value === values[0]) ? values[0] : undefined;
 }
 
+// Vitest's browser client can miss its ready signal after a failed first
+// websocket attempt, and then the page never runs a test (vitest-dev/vitest#10166).
+// This file stays only if no test file reached the page, which tells Seshat
+// the job tested nothing. Vitest queues a file before importing it, so a
+// mutant that hangs while loading still removes it.
+const waiting = () => `${process.env.SESHAT_RECEIPT}.browser-waiting`;
+
 export default class EvidenceReporter {
-  onInit(context) { this.context = context; }
+  onInit(context) {
+    this.context = context;
+    if (context.projects.some(project => project.config.browser.enabled)) writeFileSync(waiting(), '');
+  }
+  onTestModuleQueued(module) {
+    if (module.project.config.browser.enabled) rmSync(waiting(), {force:true});
+  }
   onTestRunEnd(modules, unhandled, reason) {
     let passed = 0, failed = 0, errors = unhandled.length, timeouts = 0;
     const testFiles = [], tests = [];

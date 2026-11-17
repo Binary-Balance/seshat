@@ -276,9 +276,11 @@ impl CommandEvidence {
     // A mutant that ran to its derived limit took far longer than the slowest
     // baseline, so a clean deadline there is evidence of a hang. A deadline
     // set by a lower timeoutMs is not: a slow mutant could still have finished.
+    // Nor is one where the browser page never ran a test file.
     fn assessment_state(&self, count_timeouts_as_killed: bool, at_mutant_limit: bool) -> TestState {
         let job_deadline = self.state == TestState::TimedOut
             && self.details["timedOut"] == true
+            && self.details["browserConnected"] != false
             && at_mutant_limit;
         if count_timeouts_as_killed
             && (self.test_timed_out() || job_deadline)
@@ -299,11 +301,14 @@ impl CommandEvidence {
             let name = receipt.file_name().unwrap().to_str().unwrap();
             let load_prefix = format!("{name}.load-");
             let event_prefix = format!("{name}.events-");
+            let browser_waiting = format!("{name}.browser-waiting");
             for entry in fs::read_dir(receipt.parent().unwrap()).map_err(|e| e.to_string())? {
                 let entry = entry.map_err(|e| e.to_string())?;
                 let path = entry.path();
                 let sidecar = entry.file_name().to_str().is_some_and(|name| {
-                    name.starts_with(&load_prefix) || name.starts_with(&event_prefix)
+                    name.starts_with(&load_prefix)
+                        || name.starts_with(&event_prefix)
+                        || name == browser_waiting
                 });
                 if path == receipt || observer.is_some_and(|paths| paths.contains(&path)) || sidecar
                 {

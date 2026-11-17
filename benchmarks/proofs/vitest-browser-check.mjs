@@ -94,7 +94,8 @@ const baselineRejections = {
   'no-isolation': {isolate: false, unsupported: 'unsupported Vitest browser setup: isolate false; supported: true'},
 };
 const allCases = ['stack', 'workers', 'switching-closed', 'coverage-maps', 'node-reference', 'custom-launch',
-  ...Object.keys(controls), ...Object.keys(baselineRejections), ...Object.keys(continuations), ...Object.keys(deadlines), 'cancellation'];
+  ...Object.keys(controls), ...Object.keys(baselineRejections), ...Object.keys(continuations), ...Object.keys(deadlines),
+  'connect-retry', 'never-connects', 'counted-load-hang', 'cancellation'];
 const list = option => option?.split(',').map(name => name.trim());
 const skipped = list(values.skip) ?? [];
 const cases = (list(values.cases) ?? allCases).filter(name => !skipped.includes(name));
@@ -130,11 +131,16 @@ const save = () => writeFileSync(join(work, 'result.json'), JSON.stringify(sanit
 
 function vitestConfig({include = ['meter.test.tsx', 'gain.test.ts'], sources = ['meter.tsx', 'gain.ts'],
   setup = true, replayed = false, twice = false, runnerChange, browser = true, crash = false, entered = false, runner = false,
-  instances = 1, isolate = true, providerOptions = ''} = {}) {
+  instances = 1, isolate = true, providerOptions = '', connectTimeout = 20000, refuse} = {}) {
   const plugins = [setup && 'process.env.SESHAT_VITEST_BROWSER&&import(process.env.SESHAT_VITEST_BROWSER).then(m=>m.default)',
     replayed && "{name:'replay',config:()=>({test:{provide:{seshatExecutionId:'replayed-execution'}}})}",
     // A query makes Vite evaluate the same setup file a second time.
     twice && "{name:'twice',config:()=>({test:{setupFiles:[fileURLToPath(new URL('vitest-browser-setup.mjs',process.env.SESHAT_VITEST_BROWSER))+'?twice']}})}",
+    // Refusing Vitest's browser websocket stands in for vitest-dev/vitest#10166:
+    // the page never runs a test file. 'first' refuses only a mutant's first attempt.
+    refuse && `{name:'refuse',configureServer(server){const id=process.env.SESHAT_EXECUTION_ID??'';
+  if(id.includes('-mutant-')&&(${refuse === 'always'}||!id.endsWith('-retry')))server.httpServer.prependListener('upgrade',(request,socket)=>{
+    if(request.url.includes('__vitest_browser_api__'))socket.destroy();});}}`,
   ].filter(Boolean);
   if (runnerChange) writeFileSync(join(project, 'user-setup.ts'),
     `import {TestRunner} from 'vitest';\nconst browser = (window as any).__vitest_browser_runner__;\n${runnerChange}\n`);
@@ -150,7 +156,7 @@ ${crash ? (browserName === 'chromium'
 ${entered ? "const entered=async()=>{writeFileSync(process.env.SESHAT_CONSOLE_READY,'entered');};" : ''}
 export default {cacheDir:'.vite',plugins:[${plugins}],test:{${runner ? 'runner:process.env.SESHAT_VITEST_RUNNER,' : ''}include:${JSON.stringify(include)},
   ${runnerChange ? "setupFiles:['./user-setup.ts']," : ''}${isolate ? '' : 'isolate:false,'}
-  ${browser ? `browser:{enabled:true,headless:true,connectTimeout:20000,provider:playwright(${providerOptions}),${commands.length ? `commands:{${commands}},` : ''}instances:${
+  ${browser ? `browser:{enabled:true,headless:true,connectTimeout:${connectTimeout},provider:playwright(${providerOptions}),${commands.length ? `commands:{${commands}},` : ''}instances:${
     JSON.stringify(Array.from({length: instances}, (_, index) => ({browser: browserName, name: `${browserName}-${index + 1}`})))}},` : ''}
   coverage:{provider:'istanbul',include:${JSON.stringify(sources)},reporter:['json'],reportsDirectory:'coverage'}}};
 `);
@@ -286,15 +292,18 @@ if (cases.includes('workers')) {
   vitestConfig();
   const result = await sampled('workers', () => check('workers', {...baseConfig, workers: 2}));
   // Vitest's browser client can miss its ready signal when its first websocket
-  // attempt fails, and the job then fails to connect (vitest-dev/vitest#10166).
-  // Seen here only with two Firefox instances on Windows, so only Windows allows
-  // it, at most twice. Such a job runs no test. With the 20 s connectTimeout it
-  // is an execution error, which the checks below keep apart from verdicts.
-  const connectFailures = [...result.mutation.outcomes, ...result.pseudoTesting.outcomes].filter(row => row.setups
-    .some(setup => setup.state === 'execution-error' && setup.diagnostic.includes('Failed to connect to the browser session')));
-  results.runs.workers.connectFailures = connectFailures.length;
+  // attempt fails, and the page then runs no test (vitest-dev/vitest#10166).
+  // Seshat runs such a job once more. Seen here only with two Firefox instances
+  // on Windows, so only Windows allows a job whose retry failed too, at most
+  // twice. Remove this allowance once Vitest fixes the bug (#299).
+  const rows = [...result.mutation.outcomes, ...result.pseudoTesting.outcomes];
+  const jobs = [result.setups[0].baseline, result.setups[0].coverage, ...result.mutation.workerBaselines,
+    ...rows.flatMap(row => row.setups)];
+  const connectFailures = rows.filter(row => row.setups.some(setup => setup.browserConnected === false));
+  Object.assign(results.runs.workers, {connectRetries: jobs.filter(job => job.browserRetry).length,
+    connectFailures: connectFailures.length});
   save();
-  assert.ok(connectFailures.length <= (windows ? 2 : 0), `workers: ${connectFailures.length} jobs failed to connect`);
+  assert.ok(connectFailures.length <= (windows ? 2 : 0), `workers: ${connectFailures.length} jobs failed to connect twice`);
   assert.equal(result.mutation.unresolved + result.pseudoTesting.unresolved, connectFailures.length);
   assert.equal(result.complete, connectFailures.length === 0);
   assert.equal(result.mutation.workersUsed, 2);
@@ -428,6 +437,53 @@ for (const [name, body] of Object.entries(deadlines)) {
   assert.equal(result.complete, false);
   assert.equal(result.mutation.score, null);
 }
+// A page that never runs a test file tested nothing: Seshat runs the job once
+// more, and never counts its deadline as a kill. A mutant that blocks the page
+// while its test file loads has reached the page, so its deadline counts.
+function countedConfig(name, body) {
+  const config = controlConfig(name, body);
+  config.countTimeoutsAsKilled = true;
+  // The limit, 5 times the baseline or 15 s, stays under timeoutMs, so deadlines can count.
+  Object.assign(config.setups[0], {timeoutMs: 60000, mutantTimeoutMinMs: 15000});
+  return config;
+}
+if (cases.includes('connect-retry')) {
+  const config = controlConfig('connect-retry', controls.assertion[0]);
+  vitestConfig({include: ['control.test.ts'], sources: ['control.ts'], refuse: 'first', connectTimeout: 5000});
+  const job = (await check('connect-retry', config)).mutation.outcomes[0].setups[0];
+  assert.equal(job.state, 'failed', JSON.stringify(job));
+  assert.equal(job.jobsAttempted, 2);
+  assert.equal(job.browserConnected, undefined);
+  assert.equal(job.browserRetry.browserConnected, false);
+  assert.equal(job.browserRetry.state, 'execution-error');
+  assert.ok(job.browserRetry.diagnostic.includes('Failed to connect to the browser session'), job.browserRetry.diagnostic);
+}
+if (cases.includes('never-connects')) {
+  // Vitest's own wait outlasts the job deadline, as with its 60 s default.
+  const config = countedConfig('never-connects', controls.assertion[0]);
+  vitestConfig({include: ['control.test.ts'], sources: ['control.ts'], refuse: 'always', connectTimeout: 120000});
+  const result = await check('never-connects', config, [], 2);
+  const row = result.mutation.outcomes[0], job = row.setups[0];
+  assert.equal(row.verdict, 'timed-out', JSON.stringify(row));
+  assert.equal(row.countedAsKilled, false);
+  assert.equal(job.jobsAttempted, 2);
+  for (const attempt of [job, job.browserRetry]) {
+    assert.equal(attempt.browserConnected, false);
+    assert.equal(attempt.timedOut, true);
+  }
+  assert.equal(result.complete, false);
+}
+if (cases.includes('counted-load-hang')) {
+  const config = countedConfig('counted-load-hang', "while(!ready){}\ntest('loaded',()=>{});");
+  vitestConfig({include: ['control.test.ts'], sources: ['control.ts']});
+  const result = await check('counted-load-hang', config, [], 1);
+  const row = result.mutation.outcomes[0], job = row.setups[0];
+  assert.equal(row.verdict, 'timed-out', JSON.stringify(row));
+  assert.equal(row.countedAsKilled, true);
+  assert.equal(job.timedOut, true);
+  assert.equal(job.browserConnected, undefined);
+  assert.equal(job.browserRetry, undefined);
+}
 if (cases.includes('cancellation')) {
   // The mutant's test writes the ready marker through a browser command, then waits.
   const config = controlConfig('cancellation', "import {commands} from 'vitest/browser';test('slow',async()=>{if(!ready){await (commands as any).entered();await new Promise(r=>setTimeout(r,120000));}},180000);");
@@ -486,7 +542,7 @@ const summary = {version: 1, environment, platform: `${process.platform}-${proce
       leftoverBrowserFiles: run.cleanup?.temporary.filter(entry => entry.startsWith('playwright')) ?? null,
       wallMs: Math.round(run.wallMs ?? 0), ...(run.cost ? {cost: run.cost} : {}),
       ...(run.concurrentJobs ? {concurrentJobs: run.concurrentJobs, browserProcesses: run.browserProcesses} : {}),
-      ...(run.connectFailures === undefined ? {} : {connectFailures: run.connectFailures})}
+      ...(run.connectFailures === undefined ? {} : {connectRetries: run.connectRetries, connectFailures: run.connectFailures})}
       : {files: run.files, identical: run.identical}];
   }))};
 writeFileSync(join(work, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
