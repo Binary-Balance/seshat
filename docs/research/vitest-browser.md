@@ -299,19 +299,19 @@ covers that wait, so the job runs to Seshat's deadline.
 
 Seshat now detects such a job and runs it once more. The Vitest reporter keeps
 `<receipt>.browser-waiting` present while a browser run has no test file in
-progress, in any project: it writes the file when a run with browser test files starts and
-whenever the last running file ends, removes it when Vitest reports a file as
-queued, and removes it when a run that started a file ends. The page reports a
-file as queued before it runs setup files or imports the test file (Vitest
-5.0.0 and 5.1.0), so a mutant that blocks the page while loading still counts
-as running. Vitest reports a file as finished before the page's cleanup
-(unmounting components, for example), so a mutant that hangs there looks like
-a stall: it is retried and never counted, which can miss a kill but not invent
-one. A job that leaves the file is marked `browserConnected: false`; Seshat
-runs it again, keeps the first attempt under `browserRetry` and counts both in
-`jobsAttempted`. Its deadline never counts as a kill. A lower
-`browser.connectTimeout` (the proof uses 20 s) only makes such a job fail
-sooner. The retry goes once Vitest fixes the bug (#299).
+progress, in any project: it writes the file when a run with browser test
+files starts and whenever the last running file ends, removes it when Vitest
+reports a file as queued, and removes it when a run that started a browser
+test file ends. The page reports a file as queued before it runs setup files
+or imports the test file (Vitest 5.0.0 and 5.1.0), so a mutant that blocks the
+page while loading still counts as running. Vitest reports a file as finished
+before the page's cleanup (unmounting components, for example), so a mutant
+that hangs there looks like a stall: it is retried and never counted, which
+can miss a kill but not invent one. A job that leaves the file is marked
+`browserConnected: false`; Seshat runs it again, keeps the first attempt under
+`browserRetry` and counts both in `jobsAttempted`. Its deadline never counts
+as a kill. A lower `browser.connectTimeout` (the proof uses 20 s) only makes
+such a job fail sooner. The retry goes once Vitest fixes the bug (#299).
 
 The proof stands in for the bug with a plugin that refuses Vitest's browser
 websocket, which gives the same "Failed to connect to the browser session"
