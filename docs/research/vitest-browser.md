@@ -299,7 +299,7 @@ covers that wait, so the job runs to Seshat's deadline.
 
 Seshat now detects such a job and runs it once more. The Vitest reporter keeps
 `<receipt>.browser-waiting` present while a browser run has no test file in
-progress: it writes the file when a run with browser test files starts and
+progress, in any project: it writes the file when a run with browser test files starts and
 whenever the last running file ends, removes it when Vitest reports a file as
 queued, and removes it when a run that started a file ends. The page reports a
 file as queued before it runs setup files or imports the test file (Vitest
