@@ -95,7 +95,7 @@ const baselineRejections = {
 };
 const allCases = ['stack', 'workers', 'switching-closed', 'coverage-maps', 'node-reference', 'custom-launch',
   ...Object.keys(controls), ...Object.keys(baselineRejections), ...Object.keys(continuations), ...Object.keys(deadlines),
-  'connect-retry', 'never-connects', 'counted-load-hang', 'cancellation'];
+  'connect-retry', 'never-connects', 'later-file-stall', 'counted-load-hang', 'cancellation'];
 const list = option => option?.split(',').map(name => name.trim());
 const skipped = list(values.skip) ?? [];
 const cases = (list(values.cases) ?? allCases).filter(name => !skipped.includes(name));
@@ -137,10 +137,12 @@ function vitestConfig({include = ['meter.test.tsx', 'gain.test.ts'], sources = [
     // A query makes Vite evaluate the same setup file a second time.
     twice && "{name:'twice',config:()=>({test:{setupFiles:[fileURLToPath(new URL('vitest-browser-setup.mjs',process.env.SESHAT_VITEST_BROWSER))+'?twice']}})}",
     // Refusing Vitest's browser websocket stands in for vitest-dev/vitest#10166:
-    // the page never runs a test file. 'first' refuses only a mutant's first attempt.
-    refuse && `{name:'refuse',configureServer(server){const id=process.env.SESHAT_EXECUTION_ID??'';
+    // the page never runs a test file. 'first' refuses only a mutant's first
+    // attempt; 'later-file' refuses only the frames of its second and later files.
+    refuse && `{name:'refuse',configureServer(server){const id=process.env.SESHAT_EXECUTION_ID??'';let testers=0;
   if(id.includes('-mutant-')&&(${refuse === 'always'}||!id.endsWith('-retry')))server.httpServer.prependListener('upgrade',(request,socket)=>{
-    if(request.url.includes('__vitest_browser_api__'))socket.destroy();});}}`,
+    if(request.url.includes('__vitest_browser_api__')&&(${refuse !== 'later-file'}||request.url.includes('type=tester')&&++testers>1))
+      socket.destroy();});}}`,
   ].filter(Boolean);
   if (runnerChange) writeFileSync(join(project, 'user-setup.ts'),
     `import {TestRunner} from 'vitest';\nconst browser = (window as any).__vitest_browser_runner__;\n${runnerChange}\n`);
@@ -472,6 +474,22 @@ if (cases.includes('never-connects')) {
     assert.equal(attempt.timedOut, true);
   }
   assert.equal(result.complete, false);
+}
+if (cases.includes('later-file-stall')) {
+  // The first file runs; the second file's frame never connects, and no Vitest
+  // timeout covers it, so the attempt runs to the deadline.
+  const config = countedConfig('later-file-stall', controls.assertion[0]);
+  writeFileSync(join(project, 'later.test.ts'), "import {test} from 'vitest';test('later',()=>{});\n");
+  config.capture.push('later.test.ts');
+  vitestConfig({include: ['control.test.ts', 'later.test.ts'], sources: ['control.ts'], refuse: 'later-file'});
+  const result = await check('later-file-stall', config, [], 1);
+  rmSync(join(project, 'later.test.ts'));
+  const row = result.mutation.outcomes[0], job = row.setups[0];
+  assert.equal(row.verdict, 'killed', JSON.stringify(row));
+  assert.equal(row.countedAsKilled, false);
+  assert.equal(job.jobsAttempted, 2);
+  assert.equal(job.browserRetry.browserConnected, false);
+  assert.equal(job.browserRetry.timedOut, true);
 }
 if (cases.includes('counted-load-hang')) {
   const config = countedConfig('counted-load-hang', "while(!ready){}\ntest('loaded',()=>{});");

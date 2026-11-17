@@ -43,21 +43,33 @@ function resolvedMaxWorkers(modules) {
 }
 
 // Vitest's browser client can miss its ready signal after a failed first
-// websocket attempt, and then the page never runs a test (vitest-dev/vitest#10166).
-// This file stays only if no test file reached the page, which tells Seshat
-// the job tested nothing. Vitest queues a file before importing it, so a
-// mutant that hangs while loading still removes it.
+// websocket attempt, in the page or in a test file's frame, and the job then
+// waits with no test file running (vitest-dev/vitest#10166). This file exists
+// while a browser run has no test file in progress, so a job stopped with it
+// present was waiting on Vitest, not on the code. Vitest queues a file before
+// importing it, so a mutant that hangs while loading still removes it.
 const waiting = () => `${process.env.SESHAT_RECEIPT}.browser-waiting`;
+const inBrowser = module => module.project.config.browser.enabled;
 
 export default class EvidenceReporter {
   onInit(context) {
     this.context = context;
+    this.running = 0;
+    this.started = false;
     if (context.projects.some(project => project.config.browser.enabled)) writeFileSync(waiting(), '');
   }
   onTestModuleQueued(module) {
-    if (module.project.config.browser.enabled) rmSync(waiting(), {force:true});
+    if (!inBrowser(module)) return;
+    this.started = true;
+    if (this.running++ === 0) rmSync(waiting(), {force:true});
+  }
+  onTestModuleEnd(module) {
+    if (inBrowser(module) && --this.running === 0) writeFileSync(waiting(), '');
   }
   onTestRunEnd(modules, unhandled, reason) {
+    // A run that ended was not left waiting, unless no test file ever reached
+    // the page, as when Vitest's own connectTimeout ends it.
+    if (this.started) rmSync(waiting(), {force:true});
     let passed = 0, failed = 0, errors = unhandled.length, timeouts = 0;
     const testFiles = [], tests = [];
     let identitiesComplete = true, adapterError;

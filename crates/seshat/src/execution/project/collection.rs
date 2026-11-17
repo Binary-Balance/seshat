@@ -3682,8 +3682,13 @@ mod tests {
     fn browser_jobs_that_never_connect_run_again_and_never_count() {
         // Each job's first attempt leaves the reporter's waiting file: a baseline
         // then fails fast and a mutant hangs to its deadline. The retry connects,
-        // or for mutants it may not.
-        for (connects, verdict) in [(true, "killed"), (false, "timed-out")] {
+        // or for mutants it may not. A capped run sets timeoutMs below the
+        // mutant limit, where a deadline that could count would get a hint.
+        for (connects, capped, verdict) in [
+            (true, false, "killed"),
+            (false, false, "timed-out"),
+            (false, true, "timed-out"),
+        ] {
             let fixture = super::super::tests::Fixture::new();
             let mut captured = fixture.capture().unwrap();
             captured
@@ -3692,6 +3697,9 @@ mod tests {
             captured.config.count_timeouts_as_killed = true;
             let setup = &mut captured.config.setups[0];
             setup.mutant_timeout_min_ms = 3000;
+            if capped {
+                setup.timeout_ms = 2000;
+            }
             setup.typecheck = Some(vec!["node".into(), "-e".into(), "".into()]);
             setup.test = vec![
                 "node".into(),
@@ -3732,7 +3740,7 @@ mod tests {
             assert_eq!(mutation["jobsAttempted"], 4);
             assert_eq!(mutation["countedTimeouts"], 0);
             assert_eq!(mutation["complete"], connects);
-            // The limit hint is for deadlines that could count.
+            // The limit hint is only for deadlines that could count.
             assert!(result["setups"][0]["uncappedMutantTimeoutMs"].is_null());
             fixture.assert_clean();
         }

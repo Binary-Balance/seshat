@@ -293,11 +293,17 @@ fires first, the job is an `execution-error`. When Seshat's mutant limit
 (default 30 s) comes first, it is `timed-out`, and with `countTimeoutsAsKilled`
 that deadline counted the mutant as killed although no test ran.
 
-Seshat now detects such a job and runs it once more. The Vitest reporter
-writes `<receipt>.browser-waiting` when a browser run starts and removes it
-when Vitest first reports a test file as queued. The page sends that report
-before it runs setup files or imports the test file (Vitest 5.0.0 and 5.1.0),
-so a mutant that blocks the page while loading still removes it. A job that
+Each test file's frame has its own websocket client with the same flaw, so a
+later file can stall the same way after earlier files ran. No Vitest timeout
+covers that wait, so the job runs to Seshat's deadline.
+
+Seshat now detects such a job and runs it once more. The Vitest reporter keeps
+`<receipt>.browser-waiting` present while a browser run has no test file in
+progress: it writes the file when the run starts and whenever the last running
+file ends, removes it when Vitest reports a file as queued, and removes it when
+a run that started a file ends. The page reports a file as queued before it
+runs setup files or imports the test file (Vitest 5.0.0 and 5.1.0), so a
+mutant that blocks the page while loading still counts as running. A job that
 leaves the file is marked `browserConnected: false`; Seshat runs it again, keeps
 the first attempt under `browserRetry` and counts both in `jobsAttempted`. Its
 deadline never counts as a kill. A lower `browser.connectTimeout` (the proof
@@ -309,9 +315,13 @@ websocket, which gives the same "Failed to connect to the browser session"
 error. In `connect-retry` only a mutant's first attempt is refused, and the
 retry kills the mutant. In `never-connects` every attempt is refused, with
 `countTimeoutsAsKilled` on and `connectTimeout` beyond the deadline; the
-mutant stays `timed-out` and is not counted. In `counted-load-hang` the
-mutant blocks the page while its test file loads, and its deadline counts.
-All three passed with Chromium and Firefox on Linux x64 on 2026-11-17.
+mutant stays `timed-out` and is not counted. In `later-file-stall` only the
+second test file's frame is refused, on the first attempt, so it runs to the
+deadline without counting and the retry kills the mutant. In
+`counted-load-hang` the mutant blocks the page while its test file loads, and
+its deadline counts. With these cases the full proof (all but `cancellation`)
+passed with Chromium and Firefox on Linux x64 on 2026-11-17, and no `workers`
+job needed a retry.
 
 Before the retry, the proof sampled processes once a second on Windows and
 accepted up to two stalled jobs in Windows `workers`. Sixteen repeated
