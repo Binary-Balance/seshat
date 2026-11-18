@@ -1,4 +1,4 @@
-import {readFileSync, writeFileSync} from 'node:fs';
+import {readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {isAbsolute} from 'node:path';
 
 function fileCoverage(modules, context, identitiesComplete, reason) {
@@ -42,9 +42,39 @@ function resolvedMaxWorkers(modules) {
   return values.every(value => value === values[0]) ? values[0] : undefined;
 }
 
+// Vitest's browser client can miss its ready signal after a failed first
+// websocket attempt, in the page or in a test file's frame, and the job then
+// waits with no test file running (vitest-dev/vitest#10166). This file exists
+// while a browser run has no test file in progress (in any project, as a Node
+// project's file can run alongside), so a job stopped with it present was
+// waiting on Vitest, not on the code. Vitest queues a file before importing it,
+// so a mutant that hangs while loading still removes it. One that hangs in the
+// cleanup after a file ends, such as unmounting components, looks like a stall:
+// it is retried and never counted, so a kill can be missed but not invented.
+const waiting = () => `${process.env.SESHAT_RECEIPT}.browser-waiting`;
+
 export default class EvidenceReporter {
-  onInit(context) { this.context = context; }
+  onInit(context) {
+    this.context = context;
+    this.running = 0;
+    this.started = false;
+  }
+  onTestRunStart(specifications) {
+    this.browser = specifications.some(spec => spec.project.config.browser.enabled);
+    if (this.browser) writeFileSync(waiting(), '');
+  }
+  onTestModuleQueued(module) {
+    if (!this.browser) return;
+    if (module.project.config.browser.enabled) this.started = true;
+    if (this.running++ === 0) rmSync(waiting(), {force:true});
+  }
+  onTestModuleEnd() {
+    if (this.browser && --this.running === 0) writeFileSync(waiting(), '');
+  }
   onTestRunEnd(modules, unhandled, reason) {
+    // A run that ended was not left waiting, unless no browser test file ever
+    // reached the page, as when Vitest's own connectTimeout ends it.
+    if (this.started) rmSync(waiting(), {force:true});
     let passed = 0, failed = 0, errors = unhandled.length, timeouts = 0;
     const testFiles = [], tests = [];
     let identitiesComplete = true, adapterError;
