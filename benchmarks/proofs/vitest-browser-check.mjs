@@ -220,6 +220,16 @@ async function assertCleanedUp(name) {
   const profiles = temporary.filter(entry => entry.startsWith('playwright'));
   results.runs[name].cleanup = {processes: leftovers, temporary};
   save();
+  const result = results.runs[name].result;
+  if (result) {
+    assert.equal(result.cleanupError ?? null, null, `${name}: execution copy cleanup failed`);
+    for (const row of [...(result.mutation?.outcomes ?? []), ...(result.pseudoTesting?.outcomes ?? [])]) {
+      for (const job of row.setups ?? []) {
+        assert.equal(job.cleanupError ?? null, null, `${name}: job cleanup failed`);
+        assert.equal(job.browserRetry?.cleanupError ?? null, null, `${name}: retry cleanup failed`);
+      }
+    }
+  }
   assert.deepEqual(leftovers, [], `${name}: processes outlived the run`);
   assert.deepEqual(profiles, [], `${name}: browser files escaped the job's temp directory`);
   assert.deepEqual(readdirSync(scratch), [], `${name}: scratch retained`);
@@ -432,6 +442,7 @@ for (const [name, body] of Object.entries(deadlines)) {
   const row = result.mutation.outcomes[0];
   assert.equal(row.verdict, 'timed-out', JSON.stringify(row));
   assert.equal(row.setups[0].timedOut, true);
+  if (!windows) assert.ok(row.setups[0].detachedProcesses > 0, `${name}: browser PID was not tracked`);
   assert.equal(result.complete, false);
   assert.equal(result.mutation.score, null);
 }

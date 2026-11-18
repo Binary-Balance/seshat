@@ -683,6 +683,23 @@ fn runner_option_args(args: &[String]) -> &[String] {
     args.split(|arg| arg == "--").next().unwrap_or(args)
 }
 
+#[cfg(unix)]
+fn wait_for_browser_processes(evidence: &Path, receipt: &Path) -> Result<usize, String> {
+    let path = receipt.with_file_name(format!(
+        "{}.browser-processes",
+        receipt.file_name().unwrap().to_str().unwrap()
+    ));
+    match fs::symlink_metadata(&path) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(0),
+        Err(error) => return Err(error.to_string()),
+        Ok(_) => {}
+    }
+    let pids: Vec<u32> = serde_json::from_value(read_report(evidence, &path)?)
+        .map_err(|error| format!("invalid browser process evidence: {error}"))?;
+    crate::execution::platform::wait_for_detached_processes(&pids)?;
+    Ok(pids.len())
+}
+
 fn direct_typescript(args: &[String]) -> Option<(&str, &[String])> {
     let program = Path::new(args.first()?)
         .file_name()?
@@ -1201,6 +1218,12 @@ impl CapturedProject {
             _ => Duration::from_millis(setup.timeout_ms),
         };
         let mut result = job::run(&mut command, timeout)?;
+        #[cfg(unix)]
+        match wait_for_browser_processes(evidence, &receipt) {
+            Ok(count) if count > 0 => result["detachedProcesses"] = json!(count),
+            Err(error) if result["cleanupError"].is_null() => result["cleanupError"] = json!(error),
+            _ => {}
+        }
         if let Err(error) = temporary.close()
             && result["cleanupError"].is_null()
         {
@@ -4139,6 +4162,56 @@ mod tests {
             assert!(!temporary.exists());
             previous = Some(temporary);
         }
+        evidence.close().unwrap();
+        drop(captured);
+        fixture.assert_clean();
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn detached_browser_shutdown_finishes_before_removing_temporary_files() {
+        let fixture = super::super::tests::Fixture::new();
+        let captured = fixture.capture().unwrap();
+        let evidence = captured.prepare_evidence().unwrap();
+        let record = fixture._directory.0.join("temporary-path");
+        let args = vec!["node".into(), "-e".into(), r#"
+            const fs = require('fs'), path = require('path'), tmp = require('os').tmpdir();
+            fs.writeFileSync(process.argv[1], tmp);
+            const child = require('child_process').spawn(process.execPath, ['-e', `
+                setTimeout(() => {
+                    const fs = require('fs');
+                    fs.mkdirSync(process.env.TMPDIR, {recursive:true});
+                    fs.writeFileSync(require('path').join(process.env.TMPDIR, 'shutdown'), 'late write');
+                }, 1000);
+            `], {detached:true, stdio:'ignore'});
+            fs.writeFileSync(process.env.SESHAT_RECEIPT + '.browser-processes', JSON.stringify([child.pid]));
+            setInterval(() => {}, 1000);
+        "#.into(), record.to_string_lossy().into_owned()];
+        let stopped = AtomicBool::new(false);
+        let result = captured
+            .run_job(
+                &captured.config.setups[0],
+                &args,
+                &evidence.0,
+                "late-writer",
+                JobKind::Mutant(Duration::from_millis(500), &stopped),
+            )
+            .unwrap();
+        assert_eq!(result.state, TestState::TimedOut, "{}", result.details);
+        assert!(
+            result.details["cleanupError"].is_null(),
+            "{}",
+            result.details
+        );
+        // The writer must have had time to run even with the exit-wait removed.
+        thread::sleep(Duration::from_millis(1500));
+        assert!(!Path::new(&fs::read_to_string(record).unwrap()).exists());
+        assert!(
+            !evidence
+                .0
+                .join("late-writer.json.browser-processes")
+                .exists()
+        );
         evidence.close().unwrap();
         drop(captured);
         fixture.assert_clean();

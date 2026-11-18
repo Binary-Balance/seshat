@@ -455,6 +455,14 @@ directory and no execution copies after any case, including deadlines,
 cancellation and browser retries. Cleanup errors remain visible and prevent a
 deadline from counting as a kill.
 
+Firefox exposed a shutdown race: deleting its profile as soon as Vitest stops
+lets Firefox recreate it with shutdown telemetry. For Unix browser jobs the
+plugin records detached child PIDs through Node's `spawn` API. Seshat waits up
+to five seconds for them to disappear before removing temporary files, without
+sending signals to those PIDs. A reused PID can cause a conservative cleanup
+failure. Successful waits record `detachedProcesses` in the job details. Windows
+already stops these browsers in the job's process tree.
+
 Each job starts its own Vitest server. In a manual check, two concurrent runs
 took the next free API port (63315, then 63316). `workers` saw two jobs
 running at the same time, with identical verdicts.
