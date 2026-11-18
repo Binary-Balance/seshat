@@ -1120,14 +1120,15 @@ impl CapturedProject {
             .collect();
         // Killed runners cannot remove browser profiles and other temporary files.
         let temporary = OwnedDirectory::create(&self.directory.0)?;
+        let temporary_path = module_path(&temporary.0)?;
         let mut command = Command::new(&args[0]);
         command
             .args(&arguments)
             .current_dir(&cwd)
             .env("PWD", &cwd)
-            .env("TMPDIR", &temporary.0)
-            .env("TEMP", &temporary.0)
-            .env("TMP", &temporary.0)
+            .env("TMPDIR", &temporary_path)
+            .env("TEMP", &temporary_path)
+            .env("TMP", &temporary_path)
             .env_remove("NODE_OPTIONS")
             .env_remove("NODE_PATH")
             .env_remove("SESHAT_MUTANT_ID")
@@ -1337,6 +1338,7 @@ impl CapturedProject {
             )
             .map_err(|error| error.to_string())?;
             let temporary = OwnedDirectory::create(&self.directory.0)?;
+            let temporary_path = module_path(&temporary.0)?;
             let mut command = Command::new(&setup.typecheck.as_ref().unwrap()[0]);
             command
                 .args([
@@ -1346,9 +1348,9 @@ impl CapturedProject {
                 ])
                 .current_dir(&cwd)
                 .env("PWD", &cwd)
-                .env("TMPDIR", &temporary.0)
-                .env("TEMP", &temporary.0)
-                .env("TMP", &temporary.0)
+                .env("TMPDIR", &temporary_path)
+                .env("TEMP", &temporary_path)
+                .env("TMP", &temporary_path)
                 .env_remove("NODE_OPTIONS")
                 .env_remove("NODE_PATH");
             attempted = true;
@@ -4157,7 +4159,8 @@ mod tests {
                 result.details
             );
             let temporary = PathBuf::from(fs::read_to_string(&record).unwrap());
-            assert_eq!(temporary.parent(), Some(captured.directory.0.as_path()));
+            let root = PathBuf::from(module_path(&captured.directory.0).unwrap());
+            assert_eq!(temporary.parent(), Some(root.as_path()));
             assert_ne!(previous.as_ref(), Some(&temporary));
             assert!(!temporary.exists());
             previous = Some(temporary);
