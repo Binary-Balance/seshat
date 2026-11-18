@@ -431,7 +431,8 @@ survived there either. The Windows `cancellation` case sends Ctrl+Break
 through the console helper, whose own cleanup ends any process still in its
 job, so that case alone cannot show a leftover browser there.
 
-Linux matches leftover processes by the proof's private `TMPDIR`. macOS and
+Linux matches leftover processes by the proof's private `TMPDIR` or a job's
+temporary directory inside scratch. macOS and
 Windows cannot read another process's environment, so the proof matches the
 commands a job runs (Playwright's browser install directory, `vitest.mjs`,
 `esbuild`), which assumes no other Vitest or Playwright browser runs on the
@@ -439,12 +440,20 @@ host. On every host the same check saw two to eight Chromium processes during
 `stack` and `workers`, and 6 to 8 Firefox processes in `stack` and 12 to 15 in
 `workers`, so a missed match would show.
 
-A killed job cannot run Playwright's Node-side cleanup, so each deadline or
-cancellation leaves one Chromium profile and one artifacts directory in
-the temporary directory (`TMPDIR`, or `TEMP`/`TMP` on Windows), about 230 KB
+A killed job cannot run Playwright's Node-side cleanup. Before per-job temporary
+directories, each deadline or cancellation left one Chromium profile and one
+artifacts directory in the temporary directory (`TMPDIR`, or `TEMP`/`TMP` on
+Windows), about 230 KB
 in a manual check. Every host showed this. Normal Chromium runs leave none;
 Firefox on Windows also leaves a `mozilla-temp-files` directory after normal
 runs.
+
+Seshat now gives each job attempt a fresh temporary directory inside its
+execution copy, setting `TMPDIR`, `TEMP` and `TMP`, and removes it after the
+attempt. The proof requires no Playwright files in the inherited temporary
+directory and no execution copies after any case, including deadlines,
+cancellation and browser retries. Cleanup errors remain visible and prevent a
+deadline from counting as a kill.
 
 Each job starts its own Vitest server. In a manual check, two concurrent runs
 took the next free API port (63315, then 63316). `workers` saw two jobs
@@ -506,7 +515,8 @@ A follow-up issue in the 0.18.0 milestone should:
    [Runner shape and page evidence](#runner-shape-and-page-evidence) and
    [Browser setup in the receipt](#browser-setup-in-the-receipt).
 3. Give each job a private `TMPDIR` inside its scratch copy, so profiles left
-   by killed jobs are removed with it.
+   by killed jobs are removed with it. Implemented; see
+   [Lifecycle and cleanup](#lifecycle-and-cleanup).
 4. Decide whether to support switching; if so, ship the mutant ID shim.
 5. Consider recommending `screenshotFailures: false` after measuring it.
 6. Add the proof to the release checks on each supported host, including the

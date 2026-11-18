@@ -996,6 +996,12 @@ SIGTERM cancellation removes owned execution copies and stops owned child
 processes. Windows console cancellation is handled separately and reports
 `signal: 2`. A forced kill such as SIGKILL cannot perform cleanup.
 
+Each job gets a fresh temporary directory inside its execution copy, exposed
+through `TMPDIR`, `TEMP` and `TMP`. Seshat removes it after the job, including
+after a deadline or handled cancellation. Commands that ignore these variables
+must manage their own temporary files. Temporary files cannot be shared between
+jobs through these directories.
+
 Budget scratch space as the total size of the configured `capture` inputs,
 including dependencies, multiplied by configured `workers`, which defaults to
 one, plus generated files. Every run needs the initial capture, even when no
