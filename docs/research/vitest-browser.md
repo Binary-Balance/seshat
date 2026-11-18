@@ -23,8 +23,9 @@ Linux x64, Node 24.22.2, Playwright 1.63.0 with Chrome Headless Shell
 - Subset (`stack`, `switching`, `coverage-maps`, `missing-evidence`,
   `timeout`): the same four packages at 5.1.0, the latest release.
 
-Firefox, WebKit, headed browsers, the WebdriverIO and preview providers and
-other Vitest 5 releases are untested.
+WebKit, headed browsers, the WebdriverIO and preview providers and other
+Vitest 5 releases are untested. Firefox was added later; see
+[Firefox](#firefox).
 
 For [#293](https://github.com/Binary-Balance/seshat/issues/293), the full 5.0.0
 matrix also ran in CI on all five supported hosts: Linux x64 and ARM64
@@ -229,18 +230,21 @@ project per browser instance:
 
 ```json
 "browser": [{"provider": "playwright", "name": "chromium",
-  "version": "153.0.8010.12", "isolate": true}]
+  "version": "153.0.8010.12", "isolate": true, "headless": true,
+  "defaultLaunch": true}]
 ```
 
 The page reads the version from `navigator.userAgentData`, Chromium's
 User-Agent Client Hints API, whose full version list survives Chromium's
 shortened user agent. Browsers without it record `null`, as does a malformed
-value from the page. The version is recorded, not checked. The proof
-compares it with the Chrome Headless Shell version Playwright installs
+value from the page. Firefox has no such API; its user agent gives the major
+and minor version (`155.0`), the same as Playwright reports. The version is
+recorded, not checked. The proof
+compares it with the browser version Playwright installs
 (`stack`). Node-mode receipts have no `browser` entry (`node-reference`).
 
-Seshat rejects setups the proof has not covered. Each fails the baseline with
-an `evidenceError`:
+Seshat rejects two setups that change how tests run. Each fails the baseline
+with an `evidenceError`:
 
 - More than one browser instance (`two-instances`): `unsupported Vitest
   browser setup: 2 browser instances; supported: 1`.
@@ -248,7 +252,73 @@ an `evidenceError`:
   isolate false; supported: true`.
 
 Vitest stays `>=5.0.0 <6`, checked in Rust as before. A weekly CI job runs the
-verdict cases against the latest Vitest 5 release.
+verdict cases against the latest Vitest 5 release, with both browsers.
+
+### Firefox
+
+Added to #293's scope on 2026-11-16. This is the Firefox build Playwright
+installs (155.0, revision 1543), not stock Firefox. In CI on all five hosts
+(run 43856617259, commit `7bffefc`), the proof (`--browser firefox`) gave the
+Chromium result in every case: all verdict cases, identical coverage maps,
+and the deadline, blocked-page and cancellation cases with no browser process
+left behind. The one exception is a tolerated `workers` stall on Windows,
+described below. Each killed job left one `playwright_firefoxdev_profile-*`
+and one artifacts directory, as Chromium does. Mean mutant jobs in `stack`
+took 1.4 to 3.6 times Chromium's: 2.5 s against 1.8 s on Linux x64, 6.1 s
+against 1.7 s on macOS ARM64. The per-host summaries are in
+[`vitest-browser-firefox-hosts.json`](vitest-browser-firefox-hosts.json).
+
+Firefox has no Chrome DevTools Protocol, so `page-crash` and
+`continue-after-crash` load `about:crashcontent` instead. Playwright then
+reports the page as closed, not crashed, and navigating to `about:blank` gives
+the same Vitest error, so these cases do not prove a content-process crash.
+They do show that a page lost mid-test is an execution error and the next
+mutant still runs.
+
+On Windows x64, `workers` (two jobs at once) hit an open Vitest bug,
+[vitest-dev/vitest#10166](https://github.com/vitest-dev/vitest/issues/10166).
+When the page's first websocket attempt to Vitest fails, the client
+reconnects, but the page keeps waiting on the failed attempt and never tells
+Vitest it is ready. The job then waits until a timeout. A Windows CI
+experiment on 2026-11-16
+([run 43847760667](https://github.com/Binary-Balance/seshat/actions/runs/43847760667))
+found it in 11 of 150 plain Vitest runs (no Seshat; two lanes at once, each
+starting Firefox runs back to back), in 10 of 208 Seshat jobs while the proof
+sampled processes every 200 ms, and in 1 of 208 without sampling. The faulty
+code is not Firefox-specific, and the issue reports it with Chromium on
+Windows, but this proof has seen it only with Firefox on Windows.
+
+Such a job runs no test. When Vitest's `browser.connectTimeout` (default 60 s)
+fires first, the job is an `execution-error`. When Seshat's mutant limit
+(default 30 s) comes first, it is `timed-out`. Both are unresolved, except
+that with `countTimeoutsAsKilled` a deadline at the mutant limit counts the
+mutant as killed although no test ran. Vitest starts that timer only once
+its own start-up is done, so browser-mode users should set
+`browser.connectTimeout` well below the mutant limit (the proof uses 20 s
+against 30 s); runner documentation (#293 item 10) should say so.
+
+The proof sets `connectTimeout` to 20 s, samples processes once a second on
+Windows and accepts up to two such jobs in Windows `workers`. Sixteen repeated
+Windows `workers` rounds with these settings
+([run 43853866908](https://github.com/Binary-Balance/seshat/actions/runs/43853866908))
+all passed, with 7 stalls in about 400 jobs and at most two in one round.
+
+### Unverified browser setups
+
+Playwright with headless Chromium or Firefox and its default launch (its own
+browser build and a fresh profile) is what the proof covers. Any other
+provider or browser, a headed browser, or a custom launch (`channel`,
+`executablePath`, `persistentContext` or `connectOptions`) still runs. The
+setup's `diagnostics.runnerVersions` entry then carries the receipt's browser
+entry with `"supported": false`, and the readable output warns:
+
+```text
+Warning: setup "browser" uses Vitest browser mode with "playwright" "webkit", which Seshat has not verified. Results and cleanup after killed jobs may be unreliable.
+```
+
+The warning does not change verdicts, the score or completeness. Cleanup is the
+main risk: the lifecycle cases were run only for Playwright's Chromium and
+Firefox.
 
 ### Coverage
 
@@ -332,15 +402,18 @@ job, so that case alone cannot show a leftover browser there.
 
 Linux matches leftover processes by the proof's private `TMPDIR`. macOS and
 Windows cannot read another process's environment, so the proof matches the
-commands a job runs (`chrome-headless-shell`, `vitest.mjs`, `esbuild`), which
-assumes no other Vitest or Playwright browser runs on the host. On every host
-the same check saw two to eight browser processes during `stack` and `workers`,
-so a missed match would show.
+commands a job runs (Playwright's browser install directory, `vitest.mjs`,
+`esbuild`), which assumes no other Vitest or Playwright browser runs on the
+host. On every host the same check saw two to eight Chromium processes during
+`stack` and `workers`, and 6 to 8 Firefox processes in `stack` and 12 to 15 in
+`workers`, so a missed match would show.
 
 A killed job cannot run Playwright's Node-side cleanup, so each deadline or
 cancellation leaves one Chromium profile and one artifacts directory in
 the temporary directory (`TMPDIR`, or `TEMP`/`TMP` on Windows), about 230 KB
-in a manual check. Every host showed this. Normal runs leave none.
+in a manual check. Every host showed this. Normal Chromium runs leave none;
+Firefox on Windows also leaves a `mozilla-temp-files` directory after normal
+runs.
 
 Each job starts its own Vitest server. In a manual check, two concurrent runs
 took the next free API port (63315, then 63316). `workers` saw two jobs
@@ -412,13 +485,14 @@ A follow-up issue in the 0.18.0 milestone should:
 
 ```sh
 npm ci --prefix benchmarks/proofs/fixtures/vitest-browser
-npx --prefix benchmarks/proofs/fixtures/vitest-browser playwright install chromium-headless-shell
+npx --prefix benchmarks/proofs/fixtures/vitest-browser playwright install chromium-headless-shell firefox
 node benchmarks/proofs/vitest-browser-check.mjs --cli crates/seshat/target/release/seshat
 ```
 
-`--cases` runs a subset, `--skip` leaves cases out and `--deps DIR` uses
-another installed dependency set. `SESHAT_PROOF_OUTPUT` receives the portable
-summary; the full report with raw receipts stays in
+`--browser firefox` runs it with Firefox (default `chromium`). `--cases` runs
+a subset, `--skip` leaves cases out and `--deps DIR` uses another installed
+dependency set. `SESHAT_PROOF_OUTPUT` receives the portable summary; the full
+report with raw receipts stays in
 `work/assurance-proofs/vitest-browser-check-*`. The
 [Vitest browser proof workflow](../../.github/workflows/vitest-browser.yml)
 runs it on each supported host.

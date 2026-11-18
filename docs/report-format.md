@@ -407,6 +407,16 @@ concurrency sections. Unavailable values use `null` or the states below:
   isolation and loader configuration described in
   [runner compatibility](runner-compatibility.md#import-failure-observer).
   Readable output includes an explanation for every inactive entry.
+* Each `runnerVersions` entry also has `browser`, `null` outside Vitest
+  browser mode. In browser mode it has the receipt's `provider`, `name`,
+  `version`, `isolate`, `headless` and `defaultLaunch`, plus `supported`.
+  `supported` is `true` only for Playwright running headless Chromium or
+  Firefox with its default launch: Playwright's own browser build and a fresh
+  profile, without `launchOptions.channel` or `executablePath`,
+  `persistentContext` or `connectOptions`. Other setups still run; the
+  readable output prints a warning naming the setup. Vitest runs headed by
+  default outside CI, so set `browser.headless: true` to get the same result
+  locally and in CI.
 * `concurrency.seshat` always has numeric `configuredWorkers`,
   `effectiveWorkers` as a number or `null`, and `state` as `known` or
   `not-requested`. For mutation, `effectiveWorkers` reports the same scheduler

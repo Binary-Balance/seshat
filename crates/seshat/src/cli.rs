@@ -704,6 +704,30 @@ fn readable(report: &Value) -> String {
                     text(&observer["reason"])
                 );
             }
+            let browser = &version["browser"];
+            if browser["supported"] == false {
+                let mut notes = Vec::new();
+                // Vitest runs headed by default outside CI, so the same config
+                // can pass in CI and warn locally.
+                if browser["headless"] != true {
+                    notes.push("headed; set browser.headless to true");
+                }
+                if browser["defaultLaunch"] != true {
+                    notes.push("custom Playwright launch");
+                }
+                let notes = if notes.is_empty() {
+                    String::new()
+                } else {
+                    format!(" ({})", notes.join(", "))
+                };
+                let _ = writeln!(
+                    output,
+                    "Warning: setup {:?} uses Vitest browser mode with {:?} {:?}{notes}, which Seshat has not verified. Results and cleanup after killed jobs may be unreliable.",
+                    text(&version["setup"]),
+                    text(&browser["provider"]),
+                    text(&browser["name"]),
+                );
+            }
         }
         for runner in array(&diagnostics["concurrency"]["runners"]) {
             let _ = writeln!(
@@ -1093,6 +1117,27 @@ mod tests {
                 "planned":0,"completed":0,"jobsAttempted":0}]
         }}}));
         assert!(output.contains("Operator expression-statement: 0 eligible site(s), 2 excluded; 0 planned, 0 completed, 0 job(s)"));
+    }
+
+    #[test]
+    fn readable_warns_about_unverified_browser_setups() {
+        let browser =
+            |setup: &str, name: &str, headless: bool, default_launch: bool, supported: bool| {
+                json!({"setup":setup,"browser":{"provider":"playwright","name":name,
+                "headless":headless,"defaultLaunch":default_launch,"supported":supported}})
+            };
+        let output = readable(&json!({"timings":{"wallMs":1},"result":{"diagnostics":{
+            "runnerVersions":[browser("verified", "chromium", true, true, true),
+                browser("webkit", "webkit", true, true, false),
+                browser("headed", "firefox", false, true, false),
+                browser("both", "chromium", false, false, false), {"setup":"node"}]
+        }}}));
+        assert_eq!(output.matches("Warning:").count(), 3);
+        assert!(output.contains("Warning: setup \"webkit\" uses Vitest browser mode with \"playwright\" \"webkit\", which Seshat has not verified."));
+        assert!(output.contains("\"firefox\" (headed; set browser.headless to true), which"));
+        assert!(output.contains(
+            "\"chromium\" (headed; set browser.headless to true, custom Playwright launch), which"
+        ));
     }
 
     #[test]

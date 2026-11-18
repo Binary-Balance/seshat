@@ -15,8 +15,12 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
 const fixture = join(here, 'fixtures/vitest-browser');
 const {values} = parseArgs({options: {cli: {type: 'string'}, deps: {type: 'string'}, cases: {type: 'string'},
-  skip: {type: 'string'}}});
-assert.ok(values.cli, 'usage: node benchmarks/proofs/vitest-browser-check.mjs --cli PATH [--deps DIR] [--cases LIST] [--skip LIST]');
+  skip: {type: 'string'}, browser: {type: 'string', default: 'chromium'}}});
+// Playwright's install name for each browser.
+const builds = {chromium: 'chromium-headless-shell', firefox: 'firefox'};
+const browserName = values.browser, build = builds[browserName];
+assert.ok(build, `--browser must be one of: ${Object.keys(builds).join(', ')}`);
+assert.ok(values.cli, 'usage: node benchmarks/proofs/vitest-browser-check.mjs --cli PATH [--browser chromium|firefox] [--deps DIR] [--cases LIST] [--skip LIST]');
 const cli = realpathSync(resolve(values.cli));
 const dependencies = join(resolve(values.deps ?? fixture), 'node_modules');
 assert.ok(existsSync(join(dependencies, '@vitest/browser-playwright')), `install the fixture first: npm ci --prefix ${relative(repo, fixture)}`);
@@ -45,7 +49,9 @@ const controls = {
   'nested-after-each': ["describe('outer',()=>{describe('inner',()=>{afterEach(()=>{if(!ready)throw Error('cleanup');});test('passed',()=>{});});});", 'execution-error'],
   // The setup file runs twice on one runner; the second run must not wrap again.
   'setup-twice': ["test('assertion',()=>expect(ready).toBe(true));", 'killed', {twice: true}],
-  // A renderer crash closes Vitest's connection to the page mid-test.
+  // A renderer crash closes Vitest's connection to the page mid-test. Firefox has
+  // no DevTools Protocol, and its crash page is reported as a close, so for
+  // Firefox this shows only that a page lost mid-test is handled.
   'page-crash': ["import {commands} from 'vitest/browser';test('crash',async()=>{if(!ready){await (commands as any).crashPage();await new Promise(r=>setTimeout(r,5000));}});",
     'execution-error', {crash: true}],
 };
@@ -87,7 +93,7 @@ const baselineRejections = {
   'two-instances': {instances: 2, unsupported: 'unsupported Vitest browser setup: 2 browser instances; supported: 1'},
   'no-isolation': {isolate: false, unsupported: 'unsupported Vitest browser setup: isolate false; supported: true'},
 };
-const allCases = ['stack', 'workers', 'switching-closed', 'coverage-maps', 'node-reference',
+const allCases = ['stack', 'workers', 'switching-closed', 'coverage-maps', 'node-reference', 'custom-launch',
   ...Object.keys(controls), ...Object.keys(baselineRejections), ...Object.keys(continuations), ...Object.keys(deadlines), 'cancellation'];
 const list = option => option?.split(',').map(name => name.trim());
 const skipped = list(values.skip) ?? [];
@@ -98,7 +104,7 @@ mkdirSync(join(repo, 'work/assurance-proofs'), {recursive: true});
 const work = mkdtempSync(join(repo, 'work/assurance-proofs/vitest-browser-check-'));
 const project = join(work, 'input');
 const scratch = join(work, 'scratch');
-// Playwright creates Chromium profiles under TMPDIR; a private one makes leaks visible.
+// Playwright creates browser profiles under TMPDIR; a private one makes leaks visible.
 // Windows reads TEMP and TMP instead of TMPDIR.
 const tmp = join(work, 'tmp');
 const temporaryEnv = {TMPDIR: tmp, TEMP: tmp, TMP: tmp};
@@ -111,7 +117,10 @@ const environment = {node: process.version, cli: (await runProcess(cli, ['--vers
   tools: Object.fromEntries(['vitest', '@vitest/browser', '@vitest/browser-playwright', '@vitest/coverage-istanbul',
     'playwright', 'react', 'react-dom', 'typescript'].map(name => [name, version(name)])),
   browser: JSON.parse(readFileSync(join(project, 'node_modules/playwright-core/browsers.json'), 'utf8')).browsers
-    .filter(({name}) => name.startsWith('chromium')).map(({name, revision, browserVersion}) => ({name, revision, browserVersion}))};
+    .filter(({name}) => name === build).map(({name, revision, browserVersion}) => ({name, revision, browserVersion}))};
+// The install directory is in every browser process's path, and not in this
+// proof's own arguments.
+const browserDirectory = `${build.replaceAll('-', '_')}-${environment.browser[0].revision}`;
 const results = {version: 1, environment, work: relative(repo, work), cases, runs: {}};
 // JSON escapes Windows path separators, and Vite prints them as forward
 // slashes, so replace those forms too.
@@ -121,7 +130,7 @@ const save = () => writeFileSync(join(work, 'result.json'), JSON.stringify(sanit
 
 function vitestConfig({include = ['meter.test.tsx', 'gain.test.ts'], sources = ['meter.tsx', 'gain.ts'],
   setup = true, replayed = false, twice = false, runnerChange, browser = true, crash = false, entered = false, runner = false,
-  instances = 1, isolate = true} = {}) {
+  instances = 1, isolate = true, providerOptions = ''} = {}) {
   const plugins = [setup && 'process.env.SESHAT_VITEST_BROWSER&&import(process.env.SESHAT_VITEST_BROWSER).then(m=>m.default)',
     replayed && "{name:'replay',config:()=>({test:{provide:{seshatExecutionId:'replayed-execution'}}})}",
     // A query makes Vite evaluate the same setup file a second time.
@@ -130,15 +139,19 @@ function vitestConfig({include = ['meter.test.tsx', 'gain.test.ts'], sources = [
   if (runnerChange) writeFileSync(join(project, 'user-setup.ts'),
     `import {TestRunner} from 'vitest';\nconst browser = (window as any).__vitest_browser_runner__;\n${runnerChange}\n`);
   const commands = [crash && 'crashPage', entered && 'entered'].filter(Boolean);
+  // A short connectTimeout makes a stalled connection (vitest-dev/vitest#10166)
+  // fail with Vitest's own message before Seshat's job deadline.
   writeFileSync(join(project, 'vitest.config.mjs'), `import {writeFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {playwright} from '@vitest/browser-playwright';
-${crash ? "const crashPage=async({page})=>{const cdp=await page.context().newCDPSession(page);await cdp.send('Page.crash').catch(()=>{});};" : ''}
+${crash ? (browserName === 'chromium'
+    ? "const crashPage=async({page})=>{const cdp=await page.context().newCDPSession(page);await cdp.send('Page.crash').catch(()=>{});};"
+    : "const crashPage=async({page})=>{await page.goto('about:crashcontent').catch(()=>{});};") : ''}
 ${entered ? "const entered=async()=>{writeFileSync(process.env.SESHAT_CONSOLE_READY,'entered');};" : ''}
 export default {cacheDir:'.vite',plugins:[${plugins}],test:{${runner ? 'runner:process.env.SESHAT_VITEST_RUNNER,' : ''}include:${JSON.stringify(include)},
   ${runnerChange ? "setupFiles:['./user-setup.ts']," : ''}${isolate ? '' : 'isolate:false,'}
-  ${browser ? `browser:{enabled:true,headless:true,provider:playwright(),${commands.length ? `commands:{${commands}},` : ''}instances:${
-    JSON.stringify(Array.from({length: instances}, (_, index) => ({browser: 'chromium', name: `chromium-${index + 1}`})))}},` : ''}
+  ${browser ? `browser:{enabled:true,headless:true,connectTimeout:20000,provider:playwright(${providerOptions}),${commands.length ? `commands:{${commands}},` : ''}instances:${
+    JSON.stringify(Array.from({length: instances}, (_, index) => ({browser: browserName, name: `${browserName}-${index + 1}`})))}},` : ''}
   coverage:{provider:'istanbul',include:${JSON.stringify(sources)},reporter:['json'],reportsDirectory:'coverage'}}};
 `);
 }
@@ -183,24 +196,25 @@ function owned() {
     : spawnSync('ps', ['-axww', '-o', 'pid=,args='], {encoding: 'utf8'});
   assert.equal(listing.status, 0, listing.stderr);
   return listing.stdout.split(/\r?\n/).map(line => line.match(/^\s*(\d+)\s+(.*)$/)).filter(Boolean)
-    .filter(([, , command]) => /chrome-headless-shell|vitest\.mjs|esbuild/i.test(command))
+    .filter(([, , command]) => command.includes(browserDirectory) || /vitest\.mjs|esbuild/i.test(command))
     .map(([, pid, command]) => ({pid: Number(pid), command, job: /vitest\.mjs/.test(command) ? pid : undefined}));
 }
 // A killed job cannot run Playwright's Node-side cleanup, so each one leaves
-// a Chromium profile and an artifacts directory. Record and then remove them.
+// a browser profile and an artifacts directory. Record and then remove them.
 async function assertCleanedUp(name, killedJobs = 0) {
-  // Chromium exits on its own when its pipe to Playwright closes; allow it a moment.
+  // The browser exits on its own when its pipe to Playwright closes; allow it a moment.
   for (let attempt = 0; attempt < 50 && owned().length; attempt++) await delay(100);
   const leftovers = owned().map(({pid, command}) => ({pid, command}));
-  // Vitest's Node mode can leave its own temporary directory; only browser
-  // profiles are in scope here, but every leftover is recorded.
+  // Vitest's Node mode, and Firefox on Windows (mozilla-temp-files), can leave
+  // other temporary files; only browser profiles are in scope here, but every
+  // leftover is recorded.
   const temporary = readdirSync(tmp);
   const profiles = temporary.filter(entry => entry.startsWith('playwright'));
   results.runs[name].cleanup = {processes: leftovers, temporary};
   save();
   assert.deepEqual(leftovers, [], `${name}: processes outlived the run`);
   const leaked = prefix => profiles.filter(entry => entry.startsWith(prefix)).length;
-  assert.equal(leaked('playwright_chromiumdev_profile-'), killedJobs, `${name}: unexpected browser profiles ${profiles}`);
+  assert.equal(leaked(`playwright_${browserName}dev_profile-`), killedJobs, `${name}: unexpected browser profiles ${profiles}`);
   assert.equal(leaked('playwright-artifacts-'), killedJobs, `${name}: unexpected browser artifacts ${profiles}`);
   assert.equal(profiles.length, 2 * killedJobs, `${name}: unexpected Playwright files ${profiles}`);
   for (const entry of profiles) rmSync(join(tmp, entry), {recursive: true});
@@ -223,14 +237,16 @@ async function check(name, config, flags = [], killedJobs = 0) {
 }
 // Records the most jobs running at the same moment. Chromium is up for only part
 // of each job, so counting browsers alone can miss real overlap. Browsers are
-// counted too, to show the leftover check can see one.
+// counted too, to show the leftover check can see one. On Windows each sample
+// runs PowerShell; every 200 ms loaded the runner enough to make the stalled
+// connection in the workers case far more common.
 async function sampled(name, run) {
   let jobs = 0, browsers = 0;
   const sampler = setInterval(() => {
     const processes = owned();
     jobs = Math.max(jobs, new Set(processes.map(({job}) => job).filter(Boolean)).size);
-    browsers = Math.max(browsers, processes.filter(({command}) => /chrome-headless-shell/i.test(command ?? '')).length);
-  }, 200);
+    browsers = Math.max(browsers, processes.filter(({command}) => command?.includes(browserDirectory)).length);
+  }, windows ? 1000 : 200);
   try { return await run(); } finally {
     clearInterval(sampler);
     if (results.runs[name]) { Object.assign(results.runs[name], {concurrentJobs: jobs, browserProcesses: browsers}); save(); }
@@ -249,9 +265,10 @@ if (cases.includes('stack')) {
   assert.equal(result.complete, true);
   assert.deepEqual(result.diagnostics.runnerVersions[0].importFailureObserver, {state: 'inactive', reason: 'runner'});
   assert.equal(result.setups[0].baseline.report.passed, 3);
-  const headlessShell = environment.browser.find(({name}) => name === 'chromium-headless-shell').browserVersion;
   assert.deepEqual(result.setups[0].baseline.report.browser,
-    [{provider: 'playwright', name: 'chromium', version: headlessShell, isolate: true}]);
+    [{provider: 'playwright', name: browserName, version: environment.browser[0].browserVersion, isolate: true, headless: true,
+      defaultLaunch: true}]);
+  assert.equal(result.diagnostics.runnerVersions[0].browser.supported, true);
   assert.deepEqual(result.sources.map(source => [source.path, source.result.complete,
     source.result.functions.map(f => [f.name, f.complexity, f.coverageBasis, f.covered, f.crap])]), [
     ['gain.ts', true, [['renderPeak', 4, 'branch', 11, 4], ['describeLevel', 3, 'branch', 1, 3.140625]]],
@@ -268,9 +285,22 @@ if (cases.includes('stack')) {
 if (cases.includes('workers')) {
   vitestConfig();
   const result = await sampled('workers', () => check('workers', {...baseConfig, workers: 2}));
-  assert.equal(result.complete, true);
+  // Vitest's browser client can miss its ready signal when its first websocket
+  // attempt fails, and the job then fails to connect (vitest-dev/vitest#10166).
+  // Seen here only with two Firefox instances on Windows, so only Windows allows
+  // it, at most twice. Such a job runs no test. With the 20 s connectTimeout it
+  // is an execution error, which the checks below keep apart from verdicts.
+  const connectFailures = [...result.mutation.outcomes, ...result.pseudoTesting.outcomes].filter(row => row.setups
+    .some(setup => setup.state === 'execution-error' && setup.diagnostic.includes('Failed to connect to the browser session')));
+  results.runs.workers.connectFailures = connectFailures.length;
+  save();
+  assert.ok(connectFailures.length <= (windows ? 2 : 0), `workers: ${connectFailures.length} jobs failed to connect`);
+  assert.equal(result.mutation.unresolved + result.pseudoTesting.unresolved, connectFailures.length);
+  assert.equal(result.complete, connectFailures.length === 0);
   assert.equal(result.mutation.workersUsed, 2);
-  if (results.runs.stack) assert.deepEqual(definitions(result), definitions(results.runs.stack.result));
+  const failed = new Set(result.mutation.outcomes.filter(row => connectFailures.includes(row)).map(row => row.id));
+  const resolved = run => definitions(run).filter(row => !failed.has(row.id));
+  if (results.runs.stack) assert.deepEqual(resolved(result), resolved(results.runs.stack.result));
   // Each job starts its own Vitest server and browser; both workers must have run at once.
   assert.equal(results.runs.workers.concurrentJobs, 2, 'the two workers never ran jobs at the same time');
   results.runs.workers.cost = {mutationWallMs: result.mutation.mutationWallMs,
@@ -328,6 +358,16 @@ for (const [name, [body, expected, options]] of Object.entries(controls)) {
   assert.equal(result.complete, complete);
   assert.equal(result.mutation.score, complete ? (expected === 'killed' ? 100 : 0) : null);
   if (expected === 'timed-out') assert.equal(result.mutation.outcomes[0].setups[0].testTimedOut, true);
+}
+if (cases.includes('custom-launch')) {
+  // A persistent profile is outside the proved launch. It still runs, with a warning.
+  const config = controlConfig('custom-launch', controls.assertion[0]);
+  vitestConfig({include: ['control.test.ts'], sources: ['control.ts'], providerOptions: '{persistentContext:true}'});
+  const result = await check('custom-launch', config);
+  assert.equal(result.complete, true);
+  assert.equal(result.mutation.outcomes[0].verdict, 'killed');
+  const {defaultLaunch, supported} = result.diagnostics.runnerVersions[0].browser;
+  assert.deepEqual({defaultLaunch, supported}, {defaultLaunch: false, supported: false});
 }
 if (cases.includes('node-reference')) {
   // The same control in Vitest's Node mode isolates the browser launch cost. It
@@ -445,7 +485,8 @@ const summary = {version: 1, environment, platform: `${process.platform}-${proce
       leftoverProcesses: run.cleanup?.processes.length ?? null,
       leftoverBrowserFiles: run.cleanup?.temporary.filter(entry => entry.startsWith('playwright')) ?? null,
       wallMs: Math.round(run.wallMs ?? 0), ...(run.cost ? {cost: run.cost} : {}),
-      ...(run.concurrentJobs ? {concurrentJobs: run.concurrentJobs, browserProcesses: run.browserProcesses} : {})}
+      ...(run.concurrentJobs ? {concurrentJobs: run.concurrentJobs, browserProcesses: run.browserProcesses} : {}),
+      ...(run.connectFailures === undefined ? {} : {connectFailures: run.connectFailures})}
       : {files: run.files, identical: run.identical}];
   }))};
 writeFileSync(join(work, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
