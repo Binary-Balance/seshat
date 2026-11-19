@@ -21,6 +21,34 @@ use std::{
 // Cleanup retries, fallback reaping and Drop share this budget.
 const CLEANUP_TIMEOUT: Duration = Duration::from_secs(5);
 
+#[cfg(unix)]
+pub(super) fn wait_for_detached_processes(pids: &[u32]) -> Result<(), String> {
+    let deadline = Instant::now() + CLEANUP_TIMEOUT;
+    for &pid in pids {
+        let pid = i32::try_from(pid)
+            .ok()
+            .filter(|pid| *pid > 0)
+            .ok_or("invalid detached process PID")?;
+        loop {
+            // Probe only: a reused PID can delay cleanup, but must never receive a signal.
+            if unsafe { libc::kill(pid, 0) } == -1 {
+                let error = io::Error::last_os_error();
+                if error.raw_os_error() == Some(libc::ESRCH) {
+                    break;
+                }
+                return Err(format!("check detached process {pid}: {error}"));
+            }
+            if Instant::now() >= deadline {
+                return Err(format!(
+                    "detached process {pid} exit is unconfirmed after cleanup deadline"
+                ));
+            }
+            thread::sleep(Duration::from_millis(10));
+        }
+    }
+    Ok(())
+}
+
 fn wait_until(child: &mut Child, deadline: Instant) -> io::Result<ExitStatus> {
     loop {
         if let Some(status) = child.try_wait()? {
@@ -1335,6 +1363,18 @@ pub(super) use windows::test_spawn_lock;
 mod unix_tests {
     use super::*;
     use std::process::Command;
+
+    #[test]
+    fn detached_process_wait_is_read_only_bounded_and_validates_pids() {
+        assert!(wait_for_detached_processes(&[]).is_ok());
+        assert!(wait_for_detached_processes(&[0]).is_err());
+        assert!(wait_for_detached_processes(&[u32::MAX]).is_err());
+        let started = Instant::now();
+        let error = wait_for_detached_processes(&[std::process::id()]).unwrap_err();
+        assert!(error.contains("exit is unconfirmed"));
+        assert!(started.elapsed() >= CLEANUP_TIMEOUT);
+        assert!(started.elapsed() < CLEANUP_TIMEOUT + Duration::from_secs(5));
+    }
 
     #[test]
     fn kill_tree_settles_stop_error_without_retrying_group_signal() {

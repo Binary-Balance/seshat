@@ -302,6 +302,7 @@ impl CommandEvidence {
             let load_prefix = format!("{name}.load-");
             let event_prefix = format!("{name}.events-");
             let browser_waiting = format!("{name}.browser-waiting");
+            let browser_processes = format!("{name}.browser-processes");
             for entry in fs::read_dir(receipt.parent().unwrap()).map_err(|e| e.to_string())? {
                 let entry = entry.map_err(|e| e.to_string())?;
                 let path = entry.path();
@@ -309,6 +310,7 @@ impl CommandEvidence {
                     name.starts_with(&load_prefix)
                         || name.starts_with(&event_prefix)
                         || name == browser_waiting
+                        || name == browser_processes
                 });
                 if path == receipt || observer.is_some_and(|paths| paths.contains(&path)) || sidecar
                 {

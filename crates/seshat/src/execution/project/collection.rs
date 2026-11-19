@@ -683,6 +683,23 @@ fn runner_option_args(args: &[String]) -> &[String] {
     args.split(|arg| arg == "--").next().unwrap_or(args)
 }
 
+#[cfg(unix)]
+fn wait_for_browser_processes(evidence: &Path, receipt: &Path) -> Result<usize, String> {
+    let path = receipt.with_file_name(format!(
+        "{}.browser-processes",
+        receipt.file_name().unwrap().to_str().unwrap()
+    ));
+    match fs::symlink_metadata(&path) {
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(0),
+        Err(error) => return Err(error.to_string()),
+        Ok(_) => {}
+    }
+    let pids: Vec<u32> = serde_json::from_value(read_report(evidence, &path)?)
+        .map_err(|error| format!("invalid browser process evidence: {error}"))?;
+    crate::execution::platform::wait_for_detached_processes(&pids)?;
+    Ok(pids.len())
+}
+
 fn direct_typescript(args: &[String]) -> Option<(&str, &[String])> {
     let program = Path::new(args.first()?)
         .file_name()?
@@ -1101,11 +1118,17 @@ impl CapturedProject {
                     .replace("{seshatEnvironment}", &environment)
             })
             .collect();
+        // Killed runners cannot remove browser profiles and other temporary files.
+        let temporary = OwnedDirectory::create(&self.directory.0)?;
+        let temporary_path = module_path(&temporary.0)?;
         let mut command = Command::new(&args[0]);
         command
             .args(&arguments)
             .current_dir(&cwd)
             .env("PWD", &cwd)
+            .env("TMPDIR", &temporary_path)
+            .env("TEMP", &temporary_path)
+            .env("TMP", &temporary_path)
             .env_remove("NODE_OPTIONS")
             .env_remove("NODE_PATH")
             .env_remove("SESHAT_MUTANT_ID")
@@ -1196,6 +1219,17 @@ impl CapturedProject {
             _ => Duration::from_millis(setup.timeout_ms),
         };
         let mut result = job::run(&mut command, timeout)?;
+        #[cfg(unix)]
+        match wait_for_browser_processes(evidence, &receipt) {
+            Ok(count) if count > 0 => result["detachedProcesses"] = json!(count),
+            Err(error) if result["cleanupError"].is_null() => result["cleanupError"] = json!(error),
+            _ => {}
+        }
+        if let Err(error) = temporary.close()
+            && result["cleanupError"].is_null()
+        {
+            result["cleanupError"] = json!(error);
+        }
         // The Vitest reporter removes this once the page queues a test file.
         if fs::symlink_metadata(evidence.join(format!("{id}.json.browser-waiting"))).is_ok() {
             result["browserConnected"] = json!(false);
@@ -1303,6 +1337,8 @@ impl CapturedProject {
                 .unwrap(),
             )
             .map_err(|error| error.to_string())?;
+            let temporary = OwnedDirectory::create(&self.directory.0)?;
+            let temporary_path = module_path(&temporary.0)?;
             let mut command = Command::new(&setup.typecheck.as_ref().unwrap()[0]);
             command
                 .args([
@@ -1312,10 +1348,14 @@ impl CapturedProject {
                 ])
                 .current_dir(&cwd)
                 .env("PWD", &cwd)
+                .env("TMPDIR", &temporary_path)
+                .env("TEMP", &temporary_path)
+                .env("TMP", &temporary_path)
                 .env_remove("NODE_OPTIONS")
                 .env_remove("NODE_PATH");
             attempted = true;
             let job = job::run(&mut command, Duration::from_millis(setup.timeout_ms))?;
+            temporary.close()?;
             self.unchanged()?;
             let mut result = if job["exit"] == 0
                 && job["cancelled"] == false
@@ -4073,6 +4113,151 @@ mod tests {
             "{}"
         );
         directory.close().unwrap();
+    }
+
+    #[test]
+    fn jobs_use_fresh_temporary_directories_and_remove_them() {
+        let fixture = super::super::tests::Fixture::new();
+        let captured = fixture.capture().unwrap();
+        let evidence = captured.prepare_evidence().unwrap();
+        let record = fixture._directory.0.join("temporary-path");
+        let stopped = AtomicBool::new(false);
+        let mut previous = None;
+        for (id, kind, hang) in [
+            ("typecheck", JobKind::Typecheck, false),
+            ("test", JobKind::Test, false),
+            ("coverage", JobKind::Coverage(Path::new("unused")), false),
+            (
+                "mutant",
+                JobKind::Mutant(Duration::from_secs(2), &stopped),
+                true,
+            ),
+        ] {
+            let args = vec!["node".into(), "-e".into(), r#"
+                const fs = require('fs'), os = require('os'), path = require('path');
+                const tmp = os.tmpdir();
+                fs.writeFileSync(process.argv[1], tmp);
+                if (![process.env.TMPDIR, process.env.TEMP, process.env.TMP].every(p => p === tmp)) throw Error('temp variables differ');
+                if (path.dirname(tmp) !== process.cwd()) throw Error('temp directory outside copy');
+                fs.writeFileSync(path.join(tmp, 'leftover'), 'job artifact');
+                fs.writeFileSync(process.env.SESHAT_RECEIPT, JSON.stringify({version:1,
+                    executionId:process.env.SESHAT_EXECUTION_ID, node:process.versions.node,
+                    complete:true, passed:1, failed:0, errors:0}));
+                if (process.argv[2] === 'hang') setInterval(() => {}, 1000);
+            "#.into(), record.to_string_lossy().into_owned(), if hang { "hang" } else { "exit" }.into()];
+            let result = captured
+                .run_job(&captured.config.setups[0], &args, &evidence.0, id, kind)
+                .unwrap();
+            assert_eq!(
+                result.state,
+                if hang {
+                    TestState::TimedOut
+                } else {
+                    TestState::Passed
+                },
+                "{}",
+                result.details
+            );
+            let temporary = PathBuf::from(fs::read_to_string(&record).unwrap());
+            let root = PathBuf::from(module_path(&captured.directory.0).unwrap());
+            assert_eq!(temporary.parent(), Some(root.as_path()));
+            assert_ne!(previous.as_ref(), Some(&temporary));
+            assert!(!temporary.exists());
+            previous = Some(temporary);
+        }
+        evidence.close().unwrap();
+        drop(captured);
+        fixture.assert_clean();
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn detached_browser_shutdown_finishes_before_removing_temporary_files() {
+        let fixture = super::super::tests::Fixture::new();
+        let captured = fixture.capture().unwrap();
+        let evidence = captured.prepare_evidence().unwrap();
+        let record = fixture._directory.0.join("temporary-path");
+        let args = vec!["node".into(), "-e".into(), r#"
+            const fs = require('fs'), path = require('path'), tmp = require('os').tmpdir();
+            fs.writeFileSync(process.argv[1], tmp);
+            const child = require('child_process').spawn(process.execPath, ['-e', `
+                setTimeout(() => {
+                    const fs = require('fs');
+                    fs.mkdirSync(process.env.TMPDIR, {recursive:true});
+                    fs.writeFileSync(require('path').join(process.env.TMPDIR, 'shutdown'), 'late write');
+                }, 1000);
+            `], {detached:true, stdio:'ignore'});
+            fs.writeFileSync(process.env.SESHAT_RECEIPT + '.browser-processes', JSON.stringify([child.pid]));
+            setInterval(() => {}, 1000);
+        "#.into(), record.to_string_lossy().into_owned()];
+        let stopped = AtomicBool::new(false);
+        let result = captured
+            .run_job(
+                &captured.config.setups[0],
+                &args,
+                &evidence.0,
+                "late-writer",
+                JobKind::Mutant(Duration::from_millis(500), &stopped),
+            )
+            .unwrap();
+        assert_eq!(result.state, TestState::TimedOut, "{}", result.details);
+        assert!(
+            result.details["cleanupError"].is_null(),
+            "{}",
+            result.details
+        );
+        // The writer must have had time to run even with the exit-wait removed.
+        thread::sleep(Duration::from_millis(1500));
+        assert!(!Path::new(&fs::read_to_string(record).unwrap()).exists());
+        assert!(
+            !evidence
+                .0
+                .join("late-writer.json.browser-processes")
+                .exists()
+        );
+        evidence.close().unwrap();
+        drop(captured);
+        fixture.assert_clean();
+    }
+
+    #[test]
+    fn temporary_cleanup_errors_prevent_counting_deadlines() {
+        let fixture = super::super::tests::Fixture::new();
+        let captured = fixture.capture().unwrap();
+        let evidence = captured.prepare_evidence().unwrap();
+        let args = vec![
+            "node".into(),
+            "-e".into(),
+            r#"
+            const fs = require('fs'), tmp = require('os').tmpdir();
+            fs.rmSync(tmp, {recursive:true});
+            fs.writeFileSync(tmp, 'directory replaced by a file');
+            setInterval(() => {}, 1000);
+        "#
+            .into(),
+        ];
+        let stopped = AtomicBool::new(false);
+        let result = captured
+            .run_job(
+                &captured.config.setups[0],
+                &args,
+                &evidence.0,
+                "cleanup-failure",
+                JobKind::Mutant(Duration::from_secs(2), &stopped),
+            )
+            .unwrap();
+        assert_eq!(result.state, TestState::TimedOut);
+        assert!(
+            result.details["cleanupError"]
+                .as_str()
+                .unwrap()
+                .contains("cleanup")
+        );
+        assert!(!result.can_continue_mutation());
+        assert_eq!(result.assessment_state(true, true), TestState::TimedOut);
+        evidence.close().unwrap();
+        drop(captured);
+        fixture.assert_clean();
     }
 
     #[test]

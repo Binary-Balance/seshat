@@ -181,7 +181,8 @@ function controlConfig(name, body) {
 }
 
 // Processes a job started that are still running. Linux matches this proof's
-// private TMPDIR. macOS and Windows cannot read another process's environment,
+// temp directory or a job's private one inside scratch. macOS and Windows cannot
+// read another process's environment,
 // so they match the job's commands, which assumes no other Vitest or Playwright
 // browser runs on the host, as on a CI runner. `job` identifies a running job.
 function owned() {
@@ -190,7 +191,7 @@ function owned() {
     for (const pid of readdirSync('/proc').filter(name => /^\d+$/.test(name))) {
       try {
         const environment = readFileSync(`/proc/${pid}/environ`, 'utf8').split('\0');
-        if (!environment.includes(`TMPDIR=${tmp}`)) continue;
+        if (!environment.some(entry => entry === `TMPDIR=${tmp}` || entry.startsWith(`TMPDIR=${scratch}/`))) continue;
         let command = null;
         try { command = readlinkSync(`/proc/${pid}/exe`); } catch {}
         found.push({pid: Number(pid), command, job: environment.find(entry => entry.startsWith('SESHAT_EXECUTION_ID='))});
@@ -207,9 +208,8 @@ function owned() {
     .filter(([, , command]) => command.includes(browserDirectory) || /vitest\.mjs|esbuild/i.test(command))
     .map(([, pid, command]) => ({pid: Number(pid), command, job: /vitest\.mjs/.test(command) ? pid : undefined}));
 }
-// A killed job cannot run Playwright's Node-side cleanup, so each one leaves
-// a browser profile and an artifacts directory. Record and then remove them.
-async function assertCleanedUp(name, killedJobs = 0) {
+// Seshat must remove the job's temporary files even when Playwright cannot.
+async function assertCleanedUp(name) {
   // The browser exits on its own when its pipe to Playwright closes; allow it a moment.
   for (let attempt = 0; attempt < 50 && owned().length; attempt++) await delay(100);
   const leftovers = owned().map(({pid, command}) => ({pid, command}));
@@ -220,16 +220,22 @@ async function assertCleanedUp(name, killedJobs = 0) {
   const profiles = temporary.filter(entry => entry.startsWith('playwright'));
   results.runs[name].cleanup = {processes: leftovers, temporary};
   save();
+  const result = results.runs[name].result;
+  if (result) {
+    assert.equal(result.cleanupError ?? null, null, `${name}: execution copy cleanup failed`);
+    for (const row of [...(result.mutation?.outcomes ?? []), ...(result.pseudoTesting?.outcomes ?? [])]) {
+      for (const job of row.setups ?? []) {
+        assert.equal(job.cleanupError ?? null, null, `${name}: job cleanup failed`);
+        assert.equal(job.browserRetry?.cleanupError ?? null, null, `${name}: retry cleanup failed`);
+      }
+    }
+  }
   assert.deepEqual(leftovers, [], `${name}: processes outlived the run`);
-  const leaked = prefix => profiles.filter(entry => entry.startsWith(prefix)).length;
-  assert.equal(leaked(`playwright_${browserName}dev_profile-`), killedJobs, `${name}: unexpected browser profiles ${profiles}`);
-  assert.equal(leaked('playwright-artifacts-'), killedJobs, `${name}: unexpected browser artifacts ${profiles}`);
-  assert.equal(profiles.length, 2 * killedJobs, `${name}: unexpected Playwright files ${profiles}`);
-  for (const entry of profiles) rmSync(join(tmp, entry), {recursive: true});
+  assert.deepEqual(profiles, [], `${name}: browser files escaped the job's temp directory`);
   assert.deepEqual(readdirSync(scratch), [], `${name}: scratch retained`);
 }
 
-async function check(name, config, flags = [], killedJobs = 0) {
+async function check(name, config, flags = []) {
   writeFileSync(join(project, 'seshat.json'), JSON.stringify(config));
   const run = await runProcess(cli, ['check', '--config', join(project, 'seshat.json'), '--scratch', scratch,
     '--json', '--no-progress', ...flags], project, temporaryEnv, 900000);
@@ -238,7 +244,7 @@ async function check(name, config, flags = [], killedJobs = 0) {
   results.runs[name] = {config, flags, status: run.status, stderr: run.stderr, wallMs: run.ms, result: sanitize(result)};
   save();
   assert.equal(run.status, result.complete ? 0 : 2, run.stderr);
-  await assertCleanedUp(name, killedJobs);
+  await assertCleanedUp(name);
   for (const file of fixtureFiles) assert.equal(readFileSync(join(project, file), 'utf8'), readFileSync(join(fixture, file), 'utf8'));
   console.log(`${name}: complete=${result.complete}, score=${result.mutation?.score}, ${Math.round(run.ms)}ms`);
   return result;
@@ -432,10 +438,11 @@ for (const [name, body] of Object.entries(deadlines)) {
   const config = controlConfig(name, body);
   config.setups[0].timeoutMs = 20000;
   vitestConfig({include: ['control.test.ts'], sources: ['control.ts']});
-  const result = await check(name, config, [], 1);
+  const result = await check(name, config);
   const row = result.mutation.outcomes[0];
   assert.equal(row.verdict, 'timed-out', JSON.stringify(row));
   assert.equal(row.setups[0].timedOut, true);
+  if (!windows) assert.ok(row.setups[0].detachedProcesses > 0, `${name}: browser PID was not tracked`);
   assert.equal(result.complete, false);
   assert.equal(result.mutation.score, null);
 }
@@ -464,7 +471,7 @@ if (cases.includes('never-connects')) {
   // Vitest's own wait outlasts the job deadline, as with its 60 s default.
   const config = countedConfig('never-connects', controls.assertion[0]);
   vitestConfig({include: ['control.test.ts'], sources: ['control.ts'], refuse: 'always', connectTimeout: 120000});
-  const result = await check('never-connects', config, [], 2);
+  const result = await check('never-connects', config);
   const row = result.mutation.outcomes[0], job = row.setups[0];
   assert.equal(row.verdict, 'timed-out', JSON.stringify(row));
   assert.equal(row.countedAsKilled, false);
@@ -482,7 +489,7 @@ if (cases.includes('later-file-stall')) {
   writeFileSync(join(project, 'later.test.ts'), "import {test} from 'vitest';test('later',()=>{});\n");
   config.capture.push('later.test.ts');
   vitestConfig({include: ['control.test.ts', 'later.test.ts'], sources: ['control.ts'], refuse: 'later-file'});
-  const result = await check('later-file-stall', config, [], 1);
+  const result = await check('later-file-stall', config);
   rmSync(join(project, 'later.test.ts'));
   const row = result.mutation.outcomes[0], job = row.setups[0];
   assert.equal(row.verdict, 'killed', JSON.stringify(row));
@@ -494,7 +501,7 @@ if (cases.includes('later-file-stall')) {
 if (cases.includes('counted-load-hang')) {
   const config = countedConfig('counted-load-hang', "while(!ready){}\ntest('loaded',()=>{});");
   vitestConfig({include: ['control.test.ts'], sources: ['control.ts']});
-  const result = await check('counted-load-hang', config, [], 1);
+  const result = await check('counted-load-hang', config);
   const row = result.mutation.outcomes[0], job = row.setups[0];
   assert.equal(row.verdict, 'timed-out', JSON.stringify(row));
   assert.equal(row.countedAsKilled, true);
@@ -543,7 +550,7 @@ if (cases.includes('cancellation')) {
   assert.equal(exit.status, windows ? 2 : 130, stderr);
   assert.equal(result.mutation.outcomes[0].verdict, 'cancelled');
   assert.equal(result.mutation.score, null);
-  await assertCleanedUp('cancellation', 1);
+  await assertCleanedUp('cancellation');
   console.log('cancellation: cancelled cleanly');
 }
 save();
