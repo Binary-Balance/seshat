@@ -44,7 +44,7 @@ for (let sample = 0; sample < samples; sample++) {
       assert.equal(run.status, 0, run.stdout + run.stderr);
       assert.equal(run.timedOut, false);
       assert.equal(run.overflow, false);
-      const match = run.stdout.match(/vitest-browser-check: .*; (work\/assurance-proofs\/vitest-browser-check-\S+)/);
+      const match = run.stdout.match(/vitest-browser-check: .*; ([^\r\n]+)/);
       assert.ok(match, 'proof did not report its evidence directory');
       const proof = join(repo, match[1]);
       const raw = JSON.parse(readFileSync(join(proof, 'result.json'), 'utf8'));

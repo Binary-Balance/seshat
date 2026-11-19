@@ -241,7 +241,7 @@ async function assertCleanedUp(name) {
 }
 
 async function check(name, config, flags = []) {
-  temporaryEnv.SESHAT_COST_CASE = name;
+  if (values.cost) temporaryEnv.SESHAT_COST_CASE = name;
   writeFileSync(join(project, 'seshat.json'), JSON.stringify(config));
   const run = await runProcess(cli, ['check', '--config', join(project, 'seshat.json'), '--scratch', scratch,
     '--json', '--no-progress', ...flags], project, temporaryEnv, 900000);
