@@ -92,8 +92,8 @@ node benchmarks/proofs/vitest-check.mjs \
 
 ### Vitest browser mode
 
-Browser support on current `main` is planned for 0.18.0; the published 0.17.0
-does not include it. The verified route uses Vitest `>=5.0.0 <6`, matching
+Browser support is available from 0.18.0. The verified route uses Vitest
+`>=5.0.0 <6`, matching
 `@vitest/browser-playwright` and `@vitest/coverage-istanbul`, and Playwright
 with headless Chromium or Firefox. Use Playwright's own browser build and
 default launch with a fresh profile. The proofs pin Playwright 1.63.0;
