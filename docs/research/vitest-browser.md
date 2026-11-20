@@ -11,7 +11,7 @@ Vitest adapter cannot work there. A setup file that wraps the live browser
 runner can install the same evidence hooks. With it, the unchanged native CLI
 and Vitest reporter gave the expected verdict in every case below, on Vitest
 5.0.0 and on a 5.1.0 subset. The later #293 implementation is now on `main`,
-planned for 0.18.0. See the [user configuration](../configuration.md#vitest-browser-mode),
+included in 0.18.0. See the [user configuration](../configuration.md#vitest-browser-mode),
 [support limits](../runner-compatibility.md#vitest-browser-mode) and the
 implementation record at the end. Publication still needs release preparation.
 
