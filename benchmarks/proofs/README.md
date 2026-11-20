@@ -1769,6 +1769,39 @@ dependency set.
 `SESHAT_PROOF_OUTPUT` receives the portable summary. See the
 [findings](../../docs/research/vitest-browser.md).
 
+### Browser job cost
+
+On an otherwise idle host, with the fixture and browsers installed above:
+
+```sh
+SESHAT_COST_REVISION=$(git rev-parse HEAD) node benchmarks/proofs/vitest-browser-cost.mjs \
+  --cli crates/seshat/target/release/seshat
+```
+
+This runs three samples of Chromium and Firefox, rotating browser and variant
+order. Each sample compares the existing fixture with its normal Vite cache,
+with `.vite` removed before every job, and with failure screenshots disabled.
+Normal-cache samples also compare one and two workers and the same one-test
+control in Node and browser mode. Cold-cache runs deliberately prevent reuse;
+they do not describe the default. The runner asserts identical source
+assessments, operator verdicts and extreme verdicts across the fixture runs.
+It does not reduce the source or test scope to improve timing.
+
+`--samples N` changes repetitions; `--deps DIR` selects installed dependencies.
+The proof's `--cost default|cold|no-screenshots` option enables the benchmark-only
+reporter, which records cache metadata, new screenshot files and temporary-file
+counts after each test run. Tracing adds overhead, so these are comparative
+measurements of the traced runs. Job times include process startup, test work,
+reporting and shutdown; complete-command wall times also include capture,
+original checks, coverage and extreme mutation.
+
+The runner writes `work/assurance-proofs/vitest-browser-cost-*/result.json`,
+retains raw proof reports and cache traces beside it, and removes disposable
+input/dependency copies after each successful proof. A failed proof retains its
+inputs for diagnosis. Record the CLI source revision, binary hash, tool/browser
+versions and host load with any published results. These fixture measurements
+do not establish production-project performance.
+
 ## Parallel mutation workers
 
 Set a top-level limit in the experimental `seshat.json`:

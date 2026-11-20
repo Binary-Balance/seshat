@@ -15,7 +15,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '../..');
 const fixture = join(here, 'fixtures/vitest-browser');
 const {values} = parseArgs({options: {cli: {type: 'string'}, deps: {type: 'string'}, cases: {type: 'string'},
-  skip: {type: 'string'}, browser: {type: 'string', default: 'chromium'}}});
+  skip: {type: 'string'}, browser: {type: 'string', default: 'chromium'}, cost: {type: 'string'}}});
+assert.ok(values.cost === undefined || ['default', 'cold', 'no-screenshots'].includes(values.cost));
 // Playwright's install name for each browser.
 const builds = {chromium: 'chromium-headless-shell', firefox: 'firefox'};
 const browserName = values.browser, build = builds[browserName];
@@ -108,10 +109,12 @@ const scratch = join(work, 'scratch');
 // Playwright creates browser profiles under TMPDIR; a private one makes leaks visible.
 // Windows reads TEMP and TMP instead of TMPDIR.
 const tmp = join(work, 'tmp');
-const temporaryEnv = {TMPDIR: tmp, TEMP: tmp, TMP: tmp};
+const temporaryEnv = {TMPDIR: tmp, TEMP: tmp, TMP: tmp,
+  ...(values.cost ? {SESHAT_COST_MODE: values.cost, SESHAT_COST_TRACE: join(work, 'cache.jsonl')} : {})};
 for (const path of [project, scratch, tmp]) mkdirSync(path);
 const fixtureFiles = ['package.json', 'tsconfig.json', 'meter.tsx', 'gain.ts', 'meter.test.tsx', 'gain.test.ts'];
 for (const name of fixtureFiles) cpSync(join(fixture, name), join(project, name));
+if (values.cost) cpSync(join(here, 'vitest-browser-cost-reporter.mjs'), join(project, 'cost-reporter.mjs'));
 cpSync(dependencies, join(project, 'node_modules'), {recursive: true, verbatimSymlinks: true});
 const version = name => JSON.parse(readFileSync(join(project, 'node_modules', name, 'package.json'), 'utf8')).version;
 const environment = {node: process.version, cli: (await runProcess(cli, ['--version'], repo)).stdout.trim(),
@@ -152,21 +155,23 @@ function vitestConfig({include = ['meter.test.tsx', 'gain.test.ts'], sources = [
   writeFileSync(join(project, 'vitest.config.mjs'), `import {writeFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {playwright} from '@vitest/browser-playwright';
+${values.cost ? "import {begin} from './cost-reporter.mjs';begin();" : ''}
 ${crash ? (browserName === 'chromium'
     ? "const crashPage=async({page})=>{const cdp=await page.context().newCDPSession(page);await cdp.send('Page.crash').catch(()=>{});};"
     : "const crashPage=async({page})=>{await page.goto('about:crashcontent').catch(()=>{});};") : ''}
 ${entered ? "const entered=async()=>{writeFileSync(process.env.SESHAT_CONSOLE_READY,'entered');};" : ''}
 export default {cacheDir:'.vite',plugins:[${plugins}],test:{${runner ? 'runner:process.env.SESHAT_VITEST_RUNNER,' : ''}include:${JSON.stringify(include)},
   ${runnerChange ? "setupFiles:['./user-setup.ts']," : ''}${isolate ? '' : 'isolate:false,'}
-  ${browser ? `browser:{enabled:true,headless:true,connectTimeout:${connectTimeout},provider:playwright(${providerOptions}),${commands.length ? `commands:{${commands}},` : ''}instances:${
+  ${browser ? `browser:{enabled:true,headless:true,${values.cost === 'no-screenshots' ? 'screenshotFailures:false,' : ''}connectTimeout:${connectTimeout},provider:playwright(${providerOptions}),${commands.length ? `commands:{${commands}},` : ''}instances:${
     JSON.stringify(Array.from({length: instances}, (_, index) => ({browser: browserName, name: `${browserName}-${index + 1}`})))}},` : ''}
   coverage:{provider:'istanbul',include:${JSON.stringify(sources)},reporter:['json'],reportsDirectory:'coverage'}}};
 `);
 }
 const vitest = [nodeCommand, 'node_modules/vitest/vitest.mjs', 'run', '--config', 'vitest.config.mjs',
-  '--maxWorkers=1', '--no-file-parallelism', '--reporter=default', '--reporter={seshatReporter}'];
+  '--maxWorkers=1', '--no-file-parallelism', '--reporter=default', '--reporter={seshatReporter}',
+  ...(values.cost ? ['--reporter=./cost-reporter.mjs'] : [])];
 const baseConfig = {source: {include: ['meter.tsx', 'gain.ts']},
-  capture: [...fixtureFiles, 'vitest.config.mjs', 'node_modules'],
+  capture: [...fixtureFiles, 'vitest.config.mjs', 'node_modules', ...(values.cost ? ['cost-reporter.mjs'] : [])],
   setups: [{name: 'browser', runner: 'vitest', cwd: '.', timeoutMs: 60000,
     typecheck: [nodeCommand, 'node_modules/typescript/bin/tsc', '--project', 'tsconfig.json'],
     test: vitest, coverage: {command: [...vitest, '--coverage'], report: 'coverage/coverage-final.json'}}]};
@@ -236,6 +241,7 @@ async function assertCleanedUp(name) {
 }
 
 async function check(name, config, flags = []) {
+  if (values.cost) temporaryEnv.SESHAT_COST_CASE = name;
   writeFileSync(join(project, 'seshat.json'), JSON.stringify(config));
   const run = await runProcess(cli, ['check', '--config', join(project, 'seshat.json'), '--scratch', scratch,
     '--json', '--no-progress', ...flags], project, temporaryEnv, 900000);

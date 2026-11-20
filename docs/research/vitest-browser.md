@@ -505,8 +505,9 @@ and [43373505992](https://github.com/Binary-Balance/seshat/actions/runs/43373505
 and 0.4 s on Linux x64. On every host but macOS x64, browser mode took 2.4 to
 3.2 times as long; on macOS x64 it took 3.5 times in one run and 6.1 in the
 other, so its runner is too noisy to compare. Scope and evidence were not
-reduced to improve these numbers. Measuring on a quiet host belongs with the
-implementation work.
+reduced to improve these numbers. The
+[repeated post-#301 measurements](vitest-browser-cost.md) record cache reuse,
+screenshot cost and worker effects on Linux x64.
 
 ## Implementation work
 
