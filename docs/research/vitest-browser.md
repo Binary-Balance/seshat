@@ -10,8 +10,10 @@ Browser mode has no supported way to install a custom runner, so the shipped
 Vitest adapter cannot work there. A setup file that wraps the live browser
 runner can install the same evidence hooks. With it, the unchanged native CLI
 and Vitest reporter gave the expected verdict in every case below, on Vitest
-5.0.0 and on a 5.1.0 subset. Support still needs the implementation work listed
-at the end and its own release proofs.
+5.0.0 and on a 5.1.0 subset. The later #293 implementation is now on `main`,
+planned for 0.18.0. See the [user configuration](../configuration.md#vitest-browser-mode),
+[support limits](../runner-compatibility.md#vitest-browser-mode) and the
+implementation record at the end. Publication still needs release preparation.
 
 ## Tested boundary
 
@@ -509,9 +511,10 @@ reduced to improve these numbers. The
 [repeated post-#301 measurements](vitest-browser-cost.md) record cache reuse,
 screenshot cost and worker effects on Linux x64.
 
-## Implementation work
+## Implementation status
 
-A follow-up issue in the 0.18.0 milestone should:
+Follow-up [#293](https://github.com/Binary-Balance/seshat/issues/293) targets
+0.18.0:
 
 1. Ship the setup file as an embedded adapter, referenced like the runner and
    reporter, and decide how the identity reaches the page. The prototype needs
@@ -526,10 +529,17 @@ A follow-up issue in the 0.18.0 milestone should:
 3. Give each job a private `TMPDIR` inside its scratch copy, so profiles left
    by killed jobs are removed with it. Implemented; see
    [Lifecycle and cleanup](#lifecycle-and-cleanup).
-4. Decide whether to support switching; if so, ship the mutant ID shim.
-5. Consider recommending `screenshotFailures: false` after measuring it.
+4. Keep switching unsupported; source replacement is the supported route.
+   Documented in the user configuration and runner compatibility guide.
+5. Measure cache, screenshots and worker costs. Done in #302; see the
+   [cost study](vitest-browser-cost.md). Keep cache and worker defaults;
+   disabling screenshots is an explicit project choice.
 6. Add the proof to the release checks on each supported host, including the
-   browser install, and document configuration and limits.
+   browser install, and document configuration and limits. The
+   [workflow](../../.github/workflows/vitest-browser.yml) covers both browsers
+   on all five hosts. User docs and the publication runbook now describe the
+   setup, limits and release evidence gate. Exact 0.18.0 package preparation
+   and release-source checks remain outstanding.
 
 ## Reproduce
 

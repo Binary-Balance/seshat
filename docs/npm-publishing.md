@@ -56,6 +56,14 @@ hashes before writing either output. If a workflow job fails, use "Re-run all
 jobs": the audit requires each package job's evidence to come from the run's
 latest attempt.
 
+For releases with Vitest browser support, also retain a passing
+[Vitest browser proof](../.github/workflows/vitest-browser.yml) run for the
+release source: Chromium and Firefox on all five hosts, including lifecycle
+cases. Dispatch it manually from the release branch if path filters did not
+start it. Manual dispatch also runs the latest Vitest 5 verdict checks on
+Linux x64. Browser evidence supplements the native package audit; the audit
+generator does not validate it.
+
 First archive the previous version's audit JSON and Markdown under
 `docs/releases/<previous-version>-audit.json` and `.md`.
 

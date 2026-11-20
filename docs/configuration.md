@@ -243,6 +243,68 @@ The coverage command uses the Istanbul provider, writes JSON to
 `coverage/coverage-final.json`, and passes `{seshatReporter}`. The [report format](report-format.md)
 defines the stable result fields.
 
+### Vitest browser mode
+
+Browser mode on current `main` is planned for 0.18.0. Use the Vitest
+`seshat.json` above, adjusting source and test paths to your browser project,
+and merge this into `vitest.config.mjs`:
+
+```js
+import {playwright} from '@vitest/browser-playwright';
+
+export default {
+  plugins: [process.env.SESHAT_VITEST_BROWSER
+    && import(process.env.SESHAT_VITEST_BROWSER).then(m => m.default)],
+  test: {
+    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
+    browser: {
+      enabled: true,
+      headless: true,
+      provider: playwright(),
+      instances: [{browser: 'chromium'}],
+    },
+    coverage: {
+      provider: 'istanbul',
+      include: ['src/**/*.ts', 'src/**/*.tsx'],
+      reporter: ['json'],
+      reportsDirectory: 'coverage',
+    },
+  },
+};
+```
+
+Install matching Vitest 5 versions of `vitest`, `@vitest/browser-playwright`
+and `@vitest/coverage-istanbul`, plus `playwright`, in the project. Install
+the browser on the assessment host before running Seshat:
+
+```sh
+npx playwright install chromium-headless-shell
+```
+
+For Firefox, set the single instance to `{browser: 'firefox'}` and run
+`npx playwright install firefox`. Linux hosts also need Playwright's system
+dependencies; use `playwright install --with-deps` where appropriate.
+
+Keep `{seshatReporter}` in both test and coverage commands. The plugin adds
+the browser evidence setup file, execution identity and Vite file access;
+it does nothing outside Seshat. Existing setup files still run. Browser mode
+ignores `test.runner`, so setting only `SESHAT_VITEST_RUNNER` is insufficient.
+Capture the config, sources, tests and installed dependencies as above.
+
+Use one browser instance, default isolation and source replacement. Browser
+mutants run the full test command. See the
+[supported combinations and limits](runner-compatibility.md#vitest-browser-mode),
+including warnings for unverified setups and the connection retry.
+
+Keep the default one Seshat worker until you measure your project. Each job
+starts fresh Vitest and browser processes. The
+[cost measurements](research/vitest-browser-cost.md) support retaining the
+existing cache layout and worker default; disabling failure screenshots or
+adding a worker gave only modest gains on the measured fixture. You can set
+`browser.screenshotFailures: false` if you do not need those images. Each job
+attempt gets a private temporary directory, removed after shutdown; tools
+that use temporary caches may therefore start cold.
+
 ## Source and capture
 
 `source.include` and optional `source.exclude` select the files to assess. Both
@@ -764,6 +826,10 @@ settles, so a timeout is a diagnostic rather than the only evidence that
 behaviour changed.
 
 ### Mutation strategies
+
+Vitest browser setups support source replacement only. Do not pass
+`--experimental-switching`; the browser adapter cannot supply its active
+mutant identity, so the run remains incomplete.
 
 `check` and `mutate` use source replacement by default. Pass
 `--experimental-switching` to use the bounded helper-based switching experiment.
