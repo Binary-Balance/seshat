@@ -82,11 +82,6 @@ tested set is distinct from the supported range. The 5.0.3 run was on Linux x64
 with Node 24.21.0; the package workflows keep the fixtures locked to 5.0.0 on
 every platform.
 
-Vitest browser mode is unsupported. It silently ignores the runner, so a
-browser configuration produces no evidence and Seshat stops at the baseline.
-The [feasibility findings](research/vitest-browser.md) record what support
-would need.
-
 To check another Vitest 5 release, install the proof dependencies with that
 version into a separate directory and pass it with `--deps`:
 
@@ -94,6 +89,47 @@ version into a separate directory and pass it with `--deps`:
 node benchmarks/proofs/vitest-check.mjs \
   --cli /absolute/path/to/seshat --deps /absolute/path/to/dependencies
 ```
+
+### Vitest browser mode
+
+Browser support on current `main` is planned for 0.18.0; the published 0.17.0
+does not include it. The verified route uses Vitest `>=5.0.0 <6`, matching
+`@vitest/browser-playwright` and `@vitest/coverage-istanbul`, and Playwright
+with headless Chromium or Firefox. Use Playwright's own browser build and
+default launch with a fresh profile. The proofs pin Playwright 1.63.0;
+browser versions are recorded in diagnostics rather than gated.
+
+See the [browser configuration](configuration.md#vitest-browser-mode).
+Vitest browser mode ignores `test.runner`, so the config must load Seshat's
+plugin through `SESHAT_VITEST_BROWSER`. Without it, the baseline fails for
+missing evidence. The adapter depends on an undocumented Vitest runner global
+and browser-side `vitest` resolution. If these change, the baseline fails
+visibly; a missing runner method names the piece and Vitest version.
+
+- Exactly one browser instance and default isolation (`isolate: true`) are
+  required. Other values fail the baseline.
+- WebKit, WebdriverIO, headed browsers and custom Playwright launches run with
+  an unverified-setup warning. Custom launches include channels, executable
+  paths, persistent contexts and remote connections.
+- Only source replacement is supported. `--experimental-switching` cannot
+  supply the browser's active mutant identity and leaves the run incomplete.
+- Test-file selection is unavailable: every mutant runs the full configured
+  command, with `attribution-unavailable` when selection is enabled.
+- A browser job stalled before a test file starts is retried once after clean
+  shutdown. Its deadline cannot count as a kill, even with
+  `countTimeoutsAsKilled`. A page stall during cleanup between files can also
+  be treated this way, leaving a potentially detected mutant unresolved.
+  [#299](https://github.com/Binary-Balance/seshat/issues/299) tracks the workaround.
+
+The [browser proof workflow](../.github/workflows/vitest-browser.yml) installs
+both browsers and runs verdict, deadline, cancellation and crash cases on
+Linux x64/ARM64, macOS x64/ARM64 and Windows x64. It runs on relevant PRs and
+`main` pushes, with manual dispatch for release checks. Weekly and manual runs
+also check the latest Vitest 5 verdict cases on Linux x64. Release preparation
+must retain passing browser evidence for the release source alongside the
+existing Node, Jest and Vitest package proofs. The
+[implementation evidence](research/vitest-browser.md) records the tested
+versions and host results.
 
 ## Import-failure observer
 
