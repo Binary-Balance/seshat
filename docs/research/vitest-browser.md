@@ -538,8 +538,8 @@ Follow-up [#293](https://github.com/Binary-Balance/seshat/issues/293) targets
    browser install, and document configuration and limits. The
    [workflow](../../.github/workflows/vitest-browser.yml) covers both browsers
    on all five hosts. User docs and the publication runbook now describe the
-   setup, limits and release evidence gate. Exact 0.18.0 package preparation
-   and release-source checks remain outstanding.
+   setup, limits and release evidence gate. The [0.18.0 preparation](../releases/0.18.0.md)
+   records archive and browser proofs; final release gates remain there.
 
 ## Reproduce
 
