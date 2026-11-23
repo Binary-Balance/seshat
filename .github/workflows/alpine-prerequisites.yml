@@ -1,0 +1,68 @@
+name: Alpine prerequisites
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/alpine-prerequisites.yml
+      - benchmarks/proofs/alpine-prerequisites.sh
+      - docs/alpine-prerequisites.md
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: Alpine ${{ matrix.arch }} prerequisites
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-24.04
+            image: rust@sha256:6d9066cf04ed2cc9d1a406016f4c9b2574bafda23f9e88bcad8e5d24fa6aec8e
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            image: rust@sha256:400acfd2e044747555ff87ead291c3c480b7a02ba54bc7ac1a1bbce927b862cc
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      # Host checkout avoids running JavaScript actions in a musl container.
+      # Both images are native slices of rust:1.98.1-alpine3.24 (Alpine 3.24.2).
+      - name: Run native musl proofs
+        env:
+          IMAGE: ${{ matrix.image }}
+          PROOF_ARCH: ${{ matrix.arch }}
+        run: |
+          docker run --rm --init \
+            -v "$GITHUB_WORKSPACE:/workspace" -w /workspace \
+            -e SESHAT_SOURCE_COMMIT="$GITHUB_SHA" \
+            -e SESHAT_WORKFLOW_RUN="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            -e SESHAT_PROOF_IMAGE="$IMAGE" \
+            "$IMAGE" sh -ec '
+              apk add --no-cache bash binutils build-base nodejs npm procps python3
+              bash benchmarks/proofs/alpine-prerequisites.sh "$1"
+            ' sh "$PROOF_ARCH"
+      - name: Return generated files to the runner
+        if: always()
+        run: |
+          # Container-created mkdtemp directories are root-owned and mode 0700.
+          if [ -d work ]; then
+            sudo chown -R "$(id -u):$(id -g)" work
+          fi
+      - name: Retain evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: alpine-prerequisites-${{ matrix.arch }}
+          path: |
+            work/alpine/${{ matrix.arch }}/evidence/**
+            work/assurance-proofs/**/result.json
+          if-no-files-found: error
