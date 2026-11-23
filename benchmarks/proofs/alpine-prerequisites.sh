@@ -21,8 +21,10 @@ unset RUSTFLAGS CARGO_ENCODED_RUSTFLAGS
 node --input-type=module - "$arch" "$target" "$output" <<'JS'
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
 import {readFileSync, writeFileSync} from 'node:fs';
 import {release} from 'node:os';
+import {loadRuntimeNoticeAssets} from './packaging/runtime-notice-check.mjs';
 const [arch, target, output] = process.argv.slice(2);
 const run = (cmd, args) => execFileSync(cmd, args, {encoding:'utf8'}).trim();
 const rust = run('rustc', ['-vV']);
@@ -34,10 +36,14 @@ assert.ok(rust.includes('commit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\n
 assert.equal(process.report.getReport().header.glibcVersionRuntime, undefined);
 assert.match(process.versions.node, /^24\./);
 assert.ok(Number(process.versions.node.split('.')[1]) >= 20);
+const muslNotices = loadRuntimeNoticeAssets('packaging/runtime-notices/rust-1.98.1-musl');
 writeFileSync(output + '/host.json', JSON.stringify({alpine, arch, target, kernel:release(),
   sourceCommit:process.env.SESHAT_SOURCE_COMMIT ?? null,
   workflowRun:process.env.SESHAT_WORKFLOW_RUN ?? null,
   image:process.env.SESHAT_PROOF_IMAGE ?? null,
+  nodeArchiveSha256:process.env.SESHAT_NODE_ARCHIVE_SHA256 ?? null,
+  nodeExecutableSha256:createHash('sha256').update(readFileSync(process.execPath)).digest('hex'),
+  muslRuntimeNoticeAssets:muslNotices.files.map(({path, bytes, sha256}) => ({path, bytes, sha256})),
   rust, node:process.version, npm:run('npm', ['--version']),
   packages:run('apk', ['info', '-v']),
 }, null, 2) + '\n');
