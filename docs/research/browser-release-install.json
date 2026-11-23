@@ -1,0 +1,71 @@
+{
+  "kind": "release-local-install-verification",
+  "version": "0.18.0",
+  "runId": 44678510565,
+  "head": "1cec5eb664ba70f9587f344fbab70593d94247af",
+  "auditSha256": "1311cdde413aa8ef634f8793d017fc553b626a57a9d2132ca389c6a45aba1d08",
+  "targets": [
+    {
+      "target": "darwin-x64",
+      "artifactId": 14605661490,
+      "digest": "sha256:4e010820b9ca186acb7193cb3d552952aec50b5186cf7b2eb59ff1205105ea0c",
+      "bytes": 5634452,
+      "members": {
+        "archive-staging.json": "79801c2c41644d7822f674cd006d192286e92cbb6ece31781502b4a317686c5e",
+        "verifier.json": "b655fb1cbec4bb45fad4e535fe3eb19eb858497c6ea110eef6e159cf12b5262a"
+      },
+      "nativeSha256": "efa700f80a816ffeb73f202861dfac2c72f31da699ead429ba96920812df2569",
+      "fiveExamplesAndWorkerParity": true
+    },
+    {
+      "target": "darwin-arm64",
+      "artifactId": 14605253043,
+      "digest": "sha256:03e066cb7f3236679370aee0816bf6b747fd0af2ea09ba3c9f35e2fbe3e3896b",
+      "bytes": 5634240,
+      "members": {
+        "archive-staging.json": "fb6b222ef7ce832719098df6ed57691872aad29a5f409fad290c3e8cc1ea0ba6",
+        "verifier.json": "f47d347a3a19f3abb1bcd8367b243b9ea6fcea5a0ea3620ce4bdda87e97df610"
+      },
+      "nativeSha256": "f49c6cfc9d728ee4aee2c1135bbf501ba1736a68167ac64de3ba35bf319957a0",
+      "fiveExamplesAndWorkerParity": true
+    },
+    {
+      "target": "linux-arm64",
+      "artifactId": 14604001915,
+      "digest": "sha256:570e52e04825ce71fedfd2a30689cb0e6a453f0483717b5ae30fcb596ab5c95b",
+      "bytes": 5634066,
+      "members": {
+        "archive-staging.json": "0d51ac26d329b03f9b3d5ba67baebdc72fb20cd3eeedb37136e657c5e1032a70",
+        "verifier.json": "7c1e63d75d2dc889bb557eba9446ecc654f4ba8401b733f39ced34455fe5f676"
+      },
+      "nativeSha256": "6a87d313a94fffafa445ab4e6c79eab585934c0b0d9fe594784d4cd4d21fc66f",
+      "fiveExamplesAndWorkerParity": true
+    },
+    {
+      "target": "win32-x64",
+      "artifactId": 14603924605,
+      "digest": "sha256:98dc4cc4e4ef831c383249c5e3d47b3a36512e1ddfcd09c3f174d4084d921c49",
+      "bytes": 5635020,
+      "members": {
+        "archive-staging.json": "81a40f477d031fd54dd79497be9328029a29b51df1573ae026aac3e896f1625b",
+        "verifier.json": "ccbd6b92e969def9cb3163fbf05f084e40eabdb73f74c547f0c5e94cb72ac869"
+      },
+      "nativeSha256": "1916ab90823670ce90c072913d92564115056e4c37cbf57ceaa290fa938c916b",
+      "fiveExamplesAndWorkerParity": true
+    },
+    {
+      "target": "linux-x64",
+      "artifactId": 14602634662,
+      "digest": "sha256:2e1d3c2835cc2b61aa196427e7bda9b36da8c50d4e9881b3719e9cacc7135392",
+      "bytes": 5634076,
+      "members": {
+        "archive-staging.json": "f2db883ca3a78c33cfb18de1a35e1ade259ae941e6f0013c3e5a842d5702d851",
+        "verifier.json": "1e1bf663d68fc7a44373e8b8854343fb3a9428e6677b931e95cdee003b63c182"
+      },
+      "nativeSha256": "48acfa63df731803cb58b045eb530a3dc8216caf52e01b40fe8e38983c427be8",
+      "fiveExamplesAndWorkerParity": true
+    }
+  ],
+  "allPassed": true,
+  "verifierSha256": "f7aeca7994861e1bb81946d1bb108ef96c65ed7ea90b076dde2360327a67b43f"
+}

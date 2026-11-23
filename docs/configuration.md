@@ -245,7 +245,7 @@ defines the stable result fields.
 
 ### Vitest browser mode
 
-Browser mode on current `main` is planned for 0.18.0. Use the Vitest
+Browser mode is available from 0.18.0. Use the Vitest
 `seshat.json` above, adjusting source and test paths to your browser project,
 and merge this into `vitest.config.mjs`:
 

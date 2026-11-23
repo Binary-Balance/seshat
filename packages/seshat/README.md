@@ -47,10 +47,9 @@ including TypeScript, its test runner and a coverage tool.
 Seshat checks the runner version on every run and stops if it is not
 supported. See the [runner compatibility guide](https://github.com/Binary-Balance/seshat/blob/main/docs/runner-compatibility.md).
 
-Vitest browser support with Playwright and headless Chromium or Firefox is
-planned for 0.18.0. See the
+Version 0.18.0 adds Vitest browser mode with Playwright and headless Chromium
+or Firefox. See the
 [browser setup and limits](https://github.com/Binary-Balance/seshat/blob/main/docs/configuration.md#vitest-browser-mode).
-The published 0.17.0 does not include browser support.
 
 ## Configure
 
