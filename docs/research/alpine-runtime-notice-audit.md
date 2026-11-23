@@ -35,8 +35,10 @@ Both maps load `libc.a` and `libunwind.a` from the pinned Rust target's
 `lib/rustlib/<target>/lib/self-contained/`, rather than Alpine's library paths.
 The x64 links load `rcrt1.o`, `crti.o`, `crtbeginS.o`, `crtendS.o`, and `crtn.o`;
 the ARM64 links load `crt1.o`, `crti.o`, `crtbegin.o`, `crtend.o`, and `crtn.o`.
-The ELF reports have no interpreter or dynamic section. The maps show no other
-native `.a` archives; their Rust `.rlib` inputs remain covered by the existing
+Neither target has an interpreter or dynamic-library dependencies. The x64
+static PIE files retain a dynamic section for relocations; ARM64 has no dynamic
+section. The maps show no other native `.a` archives; their Rust `.rlib` inputs
+remain covered by the existing
 Cargo/Rust notice process. The available sanitizer archives in x64's hash report
 are not linked by these maps.
 
