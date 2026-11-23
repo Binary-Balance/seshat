@@ -50,6 +50,13 @@ jobs:
               apk add --no-cache bash binutils build-base nodejs npm procps python3
               bash benchmarks/proofs/alpine-prerequisites.sh "$1"
             ' sh "$PROOF_ARCH"
+      - name: Return generated files to the runner
+        if: always()
+        run: |
+          # Container-created mkdtemp directories are root-owned and mode 0700.
+          if [ -d work ]; then
+            sudo chown -R "$(id -u):$(id -g)" work
+          fi
       - name: Retain evidence even on failure
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

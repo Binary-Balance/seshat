@@ -30,6 +30,9 @@ The [workflow](../.github/workflows/alpine-prerequisites.yml) checks out source
 on the glibc host, then runs the [script](../benchmarks/proofs/alpine-prerequisites.sh)
 inside the pinned native container. It uses read-only repository permission,
 no secrets, and an init process to reap orphaned fixture processes.
+Before artifact upload, the workflow returns ownership of generated `work/`
+files to the host runner, including after a proof failure. This lets the upload
+action traverse the proofs' private temporary directories.
 
 The script runs the locked Rust tests, builds the release CLI and proof binary,
 then reuses these existing proofs:
