@@ -8,6 +8,7 @@ import {fileURLToPath} from 'node:url';
 
 const tar = process.platform === 'win32' ? 'tar.exe' : 'tar';
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
+const noticeCollections = ['rust-1.98.1', 'rust-1.98.1-musl'];
 
 function readProvenance(directory) {
   const provenancePath = join(directory, 'provenance.json');
@@ -103,7 +104,16 @@ function assertAutocrlfCheckout(repo) {
     execFileSync('git', ['clone', '--no-local', '--no-checkout', '--quiet', repo, checkout], {stdio:['ignore', 'ignore', 'inherit']});
     execFileSync('git', ['-C', checkout, 'config', 'core.autocrlf', 'true'], {stdio:['ignore', 'ignore', 'inherit']});
     execFileSync('git', ['-C', checkout, 'checkout', '--force', 'HEAD'], {stdio:['ignore', 'ignore', 'inherit']});
-    loadRuntimeNoticeAssets(join(checkout, 'packaging/runtime-notices/rust-1.98.1'));
+    for (const collection of noticeCollections) {
+      const directory = join(checkout, 'packaging/runtime-notices', collection);
+      const assets = loadRuntimeNoticeAssets(directory);
+      for (const {path, bytes} of [...assets.files, ...assets.provenance.sourceFacts]) {
+        const repoPath = `packaging/runtime-notices/${collection}/${path}`;
+        const committed = execFileSync('git', ['-C', repo, 'show', `HEAD:${repoPath}`], {maxBuffer:bytes + 1024});
+        assert.ok(readFileSync(join(directory, path)).equals(committed),
+          `autocrlf checkout changed committed bytes: ${repoPath}`);
+      }
+    }
     for (const path of [
       '.gitattributes', '.github/workflows/windows-package.yml', 'crates/seshat/Cargo.lock',
       'packaging/pack.mjs', 'packaging/runtime-notice-check.mjs', 'packaging/OXC-LICENSE',
@@ -115,17 +125,20 @@ function assertAutocrlfCheckout(repo) {
         `autocrlf checkout changed committed bytes: ${path}`);
     }
 
-    // Text-like bytes ensure this checks the archive policy, not binary detection.
-    const opaque = Buffer.from('archive byte-preservation control\r\n');
-    for (const path of ['archive-fixture.tgz', 'archive-fixture.tar.gz']) {
+    // Text-like bytes ensure this checks attributes, not binary detection.
+    const opaque = Buffer.from('byte-preservation control\r\n');
+    for (const path of [
+      'archive-fixture.tgz', 'archive-fixture.tar.gz',
+      'packaging/runtime-notices/rust-1.98.1-musl/byte-control.txt',
+    ]) {
       writeFileSync(join(checkout, path), opaque);
       execFileSync('git', ['-C', checkout, 'add', '--', path]);
       assert.ok(execFileSync('git', ['-C', checkout, 'show', `:${path}`]).equals(opaque),
-        `archive bytes changed on add: ${path}`);
+        `asset bytes changed on add: ${path}`);
       writeFileSync(join(checkout, path), 'changed');
       execFileSync('git', ['-C', checkout, 'checkout-index', '--force', '--', path]);
       assert.ok(readFileSync(join(checkout, path)).equals(opaque),
-        `archive bytes changed on checkout: ${path}`);
+        `asset bytes changed on checkout: ${path}`);
     }
   } finally {
     rmSync(root, {recursive:true, force:true});
@@ -141,7 +154,24 @@ function selfCheck() {
     verboseOutput: `release: ${expectedToolchain.rustcVersion}\ncommit-hash: ${expectedToolchain.rustCommit}\n`,
   });
   const notice = renderRuntimeNotice(assets);
-  assert.ok(notice.includes(assets.files[0].data), 'rendered notice dropped sourced bytes');
+  // Existing targets must keep the same notice payload when musl prerequisites change.
+  assert.equal(sha256(notice), '197bb2926160e87d1120dd6140c9219ae5607320098784ef08900451e1476a85', 'existing runtime notice payload changed');
+  for (const collection of noticeCollections) {
+    const checked = loadRuntimeNoticeAssets(join(dirname(directory), collection));
+    validateRustToolchain(checked.provenance, {
+      versionOutput: expectedToolchain.rustcBuild,
+      verboseOutput: `release: ${expectedToolchain.rustcVersion}\ncommit-hash: ${expectedToolchain.rustCommit}\n`,
+    });
+    const rendered = renderRuntimeNotice(checked);
+    for (const {path, data} of checked.files) {
+      assert.ok(rendered.includes(data), `rendered notice dropped sourced bytes: ${collection}/${path}`);
+    }
+    for (const {path, bytes, sha256: hash} of checked.provenance.sourceFacts) {
+      const data = readFileSync(join(checked.directory, path));
+      assert.equal(data.length, bytes, `source fact byte count changed: ${collection}/${path}`);
+      assert.equal(sha256(data), hash, `source fact hash changed: ${collection}/${path}`);
+    }
+  }
   assert.throws(() => validateRustToolchain(assets.provenance, {
     versionOutput: 'rustc 1.98.0 (wrong)',
     verboseOutput: `release: ${expectedToolchain.rustcVersion}\ncommit-hash: ${expectedToolchain.rustCommit}\n`,
@@ -162,6 +192,8 @@ function selfCheck() {
         noticeHeading: 'Synthetic runtime notice'},
     }));
     const valid = loadRuntimeNoticeAssets(synthetic);
+    rmSync(join(synthetic, 'notice.txt'));
+    assert.throws(() => loadRuntimeNoticeAssets(synthetic), /asset is not a file/);
     writeFileSync(join(synthetic, 'notice.txt'), Buffer.from('badbad\n'));
     assert.throws(() => loadRuntimeNoticeAssets(synthetic), /hash changed/);
 

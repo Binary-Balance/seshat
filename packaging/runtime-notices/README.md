@@ -52,3 +52,18 @@ licenses for those targets. The pinned `unwind-lib.rs` has no extra unwinder
 for MSVC and links `gcc_s` for the ordinary non-`crt-static` Linux GNU path.
 Final native link evidence still decides whether any additional target
 runtime notice is needed.
+
+## Musl prerequisite assets
+
+`rust-1.98.1-musl/` contains additional notice assets audited against the
+retained native x64 and ARM64 Alpine linker maps. It is separate from the
+five-target payload above and is not yet integrated into npm packaging. Its
+manifest records full musl and LLVM license files, exact per-file notices,
+source hashes and patch evidence. These additions must accompany the base
+Rust notices when musl packaging is implemented; they do not replace them.
+
+See [the target audit](../../docs/research/alpine-runtime-notice-audit.md) for
+artifact identities, the difference between host and linked musl, evidence
+limits and remaining release gates. Run `node packaging/runtime-notice-check.mjs`
+to verify both collections. The check also freezes the existing rendered
+payload and checks notice/source-evidence bytes in an autocrlf checkout.

@@ -5,3 +5,8 @@
 *.tgz binary
 *.tar.gz binary
 /packaging/OXC-LICENSE -text
+
+# Musl prerequisite notices and source evidence preserve upstream bytes.
+/packaging/runtime-notices/rust-1.98.1-musl/** -text
+# Upstream source evidence also retains its original whitespace.
+/packaging/runtime-notices/rust-1.98.1-musl/source-facts/** -whitespace

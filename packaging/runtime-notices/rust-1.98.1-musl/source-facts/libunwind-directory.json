@@ -1,0 +1,47 @@
+[
+  {
+    "name": ".clang-format",
+    "type": "file",
+    "sha": "5bead5f39dd3c5841f615beb6472c4c504d407af"
+  },
+  {
+    "name": "CMakeLists.txt",
+    "type": "file",
+    "sha": "3d6add86f7d5adffc6b9091a02e1527a21220376"
+  },
+  {
+    "name": "LICENSE.TXT",
+    "type": "file",
+    "sha": "1e3120621caeb62648745a42f7a9a25d1e2731ab"
+  },
+  {
+    "name": "README_RUST_SGX.md",
+    "type": "file",
+    "sha": "c5d6eb4772bc3246f206f65547898c6fe3d80af1"
+  },
+  {
+    "name": "cmake",
+    "type": "dir",
+    "sha": "1d510f6c122309dd2e43ccb34203bea26822af10"
+  },
+  {
+    "name": "docs",
+    "type": "dir",
+    "sha": "03214591f5858d10a0ec4464fd1d08dd44a2ab18"
+  },
+  {
+    "name": "include",
+    "type": "dir",
+    "sha": "c6c4abf917bb8b8b308258180a5bbe308bd041fd"
+  },
+  {
+    "name": "src",
+    "type": "dir",
+    "sha": "54119f3b976fa2a113b22142862a2a6208b928a8"
+  },
+  {
+    "name": "test",
+    "type": "dir",
+    "sha": "f0c685af0bd013c411c05350eef8cf2d71c96538"
+  }
+]

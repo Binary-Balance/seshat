@@ -1,0 +1,510 @@
+{
+  "format": "seshat-runtime-notices",
+  "formatVersion": 1,
+  "toolchain": {
+    "rustcVersion": "1.98.1",
+    "rustcBuild": "rustc 1.98.1 (48a229cea 2026-09-01)",
+    "rustCommit": "48a229ceaefd4985c50990b14116b6d856af0985",
+    "rustCommitUrl": "https://github.com/rust-lang/rust/tree/48a229ceaefd4985c50990b14116b6d856af0985"
+  },
+  "auditedTargets": [
+    "x86_64-unknown-linux-musl",
+    "aarch64-unknown-linux-musl"
+  ],
+  "status": "Notice prerequisites only; no npm target support or packaging integration",
+  "baseRuntimeNoticeDirectory": "../rust-1.98.1",
+  "musl": {
+    "version": "1.2.5",
+    "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+    "bytes": 1080786,
+    "sha256": "a9a118bbe84d8764da0ea0d28b3ab3fae8477fc7e4085d90102b8596fc7c75e4",
+    "sha1": "36210d3423172a40ddcf83c762207c5f760b60a6",
+    "rustPatches": [
+      "CVE-2025-26519",
+      "CVE-2026-6042",
+      "CVE-2026-40200"
+    ],
+    "muslCrossMakeCommit": "3635262e4524c991552789af6f36211a335a77b3",
+    "hostMuslIsNotThisRuntime": "Alpine evidence records musl 1.2.6-r2; maps select Rust self-contained runtime objects."
+  },
+  "llvm": {
+    "commit": "52ed14fcd56afc30f9cccd8ca8ce237c2eef7e04",
+    "sourceUrl": "https://github.com/llvm/llvm-project/tree/52ed14fcd56afc30f9cccd8ca8ce237c2eef7e04",
+    "libunwindCredits": "libunwind/LICENSE.TXT references CREDITS.TXT, absent from pinned libunwind root. No substitute credits are asserted."
+  },
+  "noticeFiles": [
+    {
+      "path": "musl-COPYRIGHT",
+      "bytes": 6204,
+      "sha256": "f9bc4423732350eb0b3f7ed7e91d530298476f8fec0c6c427a1c04ade22655af",
+      "role": "Complete musl 1.2.5 COPYRIGHT, MIT terms, credits and exceptions",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/COPYRIGHT"
+    },
+    {
+      "path": "musl-notices/src/math/cbrt.c.txt",
+      "bytes": 467,
+      "sha256": "55710724ca76db36b4f757772736b326e7a958a6d33ce61086fa06427464d334",
+      "role": "Exact upstream per-file notice comment(s)",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/src/math/cbrt.c",
+      "sourceFile": {
+        "bytes": 3761,
+        "sha256": "af442893d4048c0eb485b93b5628792fb796d45ffc0f88c682041366c7da611d"
+      },
+      "sourceByteRange": [
+        0,
+        467
+      ],
+      "auditedTargets": [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-musl"
+      ]
+    },
+    {
+      "path": "musl-notices/src/math/exp.c.txt",
+      "bytes": 111,
+      "sha256": "7e52a70e5de1143e4fdb710116f76b27eced3e41be7ab70310138928a3b34e5e",
+      "role": "Exact upstream per-file notice comment(s)",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/src/math/exp.c",
+      "sourceFile": {
+        "bytes": 4485,
+        "sha256": "7db56f21ca9b8915d36dd5099b707aafeb6a736eae798e19b76b074764e75f34"
+      },
+      "sourceByteRange": [
+        0,
+        111
+      ],
+      "auditedTargets": [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-musl"
+      ]
+    },
+    {
+      "path": "musl-notices/src/math/exp_data.c.txt",
+      "bytes": 119,
+      "sha256": "f6b5b71ae6dc49255b8982a8de10bb97d66035b0b6ad91843da71fcde64cf45f",
+      "role": "Exact upstream per-file notice comment(s)",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/src/math/exp_data.c",
+      "sourceFile": {
+        "bytes": 6347,
+        "sha256": "c55dff64e369fe816cd8ce367064989bb119f85783599680d1a329031c660689"
+      },
+      "sourceByteRange": [
+        0,
+        119
+      ],
+      "auditedTargets": [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-musl"
+      ]
+    },
+    {
+      "path": "musl-notices/src/math/exp_data.h.txt",
+      "bytes": 74,
+      "sha256": "6ac2dcacfaa533da778dce54dac87709a1285f08d070d9d95790b50199f71486",
+      "role": "Exact upstream per-file notice comment(s)",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/src/math/exp_data.h",
+      "sourceFile": {
+        "bytes": 540,
+        "sha256": "df77fca837edd02b260dd09a2914202775909ae67a059218ae38cfab104e6d16"
+      },
+      "sourceByteRange": [
+        0,
+        74
+      ],
+      "auditedTargets": [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-musl"
+      ]
+    },
+    {
+      "path": "musl-notices/src/math/log.c.txt",
+      "bytes": 114,
+      "sha256": "7d44f8a20ce2b9ab074ce883201b78815c98e669108b1dbdf3a699098444c326",
+      "role": "Exact upstream per-file notice comment(s)",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/src/math/log.c",
+      "sourceFile": {
+        "bytes": 3030,
+        "sha256": "a0694d8587a0d145d0f8ae87cbffba014d7988bc2ebcbfad94cea73b394c9ecc"
+      },
+      "sourceByteRange": [
+        0,
+        114
+      ],
+      "auditedTargets": [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-musl"
+      ]
+    },
+    {
+      "path": "musl-notices/src/math/log_data.c.txt",
+      "bytes": 94,
+      "sha256": "d22e34751c18a13e5cb7e974c1b94c2cc89caad9d2b4f2ef1c85994d32292805",
+      "role": "Exact upstream per-file notice comment(s)",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/src/math/log_data.c",
+      "sourceFile": {
+        "bytes": 13927,
+        "sha256": "e96bcd99d88fc57e0f3686299014f4b949a6212603ce237f39e16cedc155617a"
+      },
+      "sourceByteRange": [
+        0,
+        94
+      ],
+      "auditedTargets": [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-musl"
+      ]
+    },
+    {
+      "path": "musl-notices/src/math/log_data.h.txt",
+      "bytes": 74,
+      "sha256": "6ac2dcacfaa533da778dce54dac87709a1285f08d070d9d95790b50199f71486",
+      "role": "Exact upstream per-file notice comment(s)",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/src/math/log_data.h",
+      "sourceFile": {
+        "bytes": 552,
+        "sha256": "a8dced6f0821f30cad040ba326b03e419fbe0a750ed8f3b0d7145992bee4bccc"
+      },
+      "sourceByteRange": [
+        0,
+        74
+      ],
+      "auditedTargets": [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-musl"
+      ]
+    },
+    {
+      "path": "musl-notices/src/math/log2.c.txt",
+      "bytes": 115,
+      "sha256": "c359dfaf15768892478461e9cb40da11d380123e47c50f29b3ede8207c04486d",
+      "role": "Exact upstream per-file notice comment(s)",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/src/math/log2.c",
+      "sourceFile": {
+        "bytes": 3446,
+        "sha256": "281e4fc0f737419e245019d8bc8a8ca53032c2d88c31d08561e9e59dcb4b4640"
+      },
+      "sourceByteRange": [
+        0,
+        115
+      ],
+      "auditedTargets": [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-musl"
+      ]
+    },
+    {
+      "path": "musl-notices/src/math/log2_data.c.txt",
+      "bytes": 95,
+      "sha256": "74ae9464d17802e1e8394431844a842eb25efad729748a359a518d26685beedf",
+      "role": "Exact upstream per-file notice comment(s)",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/src/math/log2_data.c",
+      "sourceFile": {
+        "bytes": 7964,
+        "sha256": "5a62bb213f19dc1364cddb612e3d13831e382f5ae6f7fafd7064362f53478dfb"
+      },
+      "sourceByteRange": [
+        0,
+        95
+      ],
+      "auditedTargets": [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-musl"
+      ]
+    },
+    {
+      "path": "musl-notices/src/math/log2_data.h.txt",
+      "bytes": 74,
+      "sha256": "6ac2dcacfaa533da778dce54dac87709a1285f08d070d9d95790b50199f71486",
+      "role": "Exact upstream per-file notice comment(s)",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/src/math/log2_data.h",
+      "sourceFile": {
+        "bytes": 538,
+        "sha256": "b56e1a56f73a8700caa9787cd399fecf7f96038af56c2a590aeb6f0f8662ea8e"
+      },
+      "sourceByteRange": [
+        0,
+        74
+      ],
+      "auditedTargets": [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-musl"
+      ]
+    },
+    {
+      "path": "musl-notices/src/stdlib/qsort.c.txt",
+      "bytes": 1190,
+      "sha256": "f68450975471015bd117322b899bbf0b731dc3b98a93e7dda96627c09d9a36f3",
+      "role": "Exact upstream per-file notice comment(s)",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/src/stdlib/qsort.c",
+      "sourceFile": {
+        "bytes": 5131,
+        "sha256": "3a838cc7f83f4746df6063f567be1ebb2f7d204243342122acd43f44d2434ec6"
+      },
+      "sourceByteRange": [
+        0,
+        1190
+      ],
+      "auditedTargets": [
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-musl"
+      ]
+    },
+    {
+      "path": "musl-notices/src/string/aarch64/memcpy.S.txt",
+      "bytes": 111,
+      "sha256": "6eca170c32acaced38b3e559fda9908b2f16717fc7b4cde36ced5fb407f4f114",
+      "role": "Exact upstream per-file notice comment(s)",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/src/string/aarch64/memcpy.S",
+      "sourceFile": {
+        "bytes": 4437,
+        "sha256": "1ead3716276e8a58e2e015e89fd565d9f33c10b2bc482c303b68b90c9d0f7cef"
+      },
+      "sourceByteRange": [
+        0,
+        111
+      ],
+      "auditedTargets": [
+        "aarch64-unknown-linux-musl"
+      ]
+    },
+    {
+      "path": "musl-notices/src/string/aarch64/memset.S.txt",
+      "bytes": 127,
+      "sha256": "b538ed96d0c4574442e0e3d9be99ca108335ab88db8ef8ca96a08bc9e8d74fa8",
+      "role": "Exact upstream per-file notice comment(s)",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/src/string/aarch64/memset.S",
+      "sourceFile": {
+        "bytes": 2386,
+        "sha256": "4eacce5e57f178a284fd5a48925f4398d593df6cb2b6f727bb495a78fd3cbabf"
+      },
+      "sourceByteRange": [
+        0,
+        127
+      ],
+      "auditedTargets": [
+        "aarch64-unknown-linux-musl"
+      ]
+    },
+    {
+      "path": "musl-notices/src/thread/x86_64/__set_thread_area.s.txt",
+      "bytes": 79,
+      "sha256": "cad216cb970cbc03411b7d25513a189a2721f067e1259347baeb94f87ba822b7",
+      "role": "Exact upstream per-file notice comment(s)",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/src/thread/x86_64/__set_thread_area.s",
+      "sourceFile": {
+        "bytes": 395,
+        "sha256": "9a6299228be5f8f467652263e8f98c1f9ab2e0937243589b8c5642f0ebe3236d"
+      },
+      "sourceByteRange": [
+        0,
+        79
+      ],
+      "auditedTargets": [
+        "x86_64-unknown-linux-musl"
+      ]
+    },
+    {
+      "path": "musl-notices/src/thread/x86_64/__unmapself.s.txt",
+      "bytes": 79,
+      "sha256": "cad216cb970cbc03411b7d25513a189a2721f067e1259347baeb94f87ba822b7",
+      "role": "Exact upstream per-file notice comment(s)",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/src/thread/x86_64/__unmapself.s",
+      "sourceFile": {
+        "bytes": 345,
+        "sha256": "dab063e96f4c9874892b39545e3ea02cd6f6e71532d84705422bd0a8ad62eb00"
+      },
+      "sourceByteRange": [
+        0,
+        79
+      ],
+      "auditedTargets": [
+        "x86_64-unknown-linux-musl"
+      ]
+    },
+    {
+      "path": "libunwind-LICENSE.TXT",
+      "bytes": 16706,
+      "sha256": "b5efebcaca80879234098e52d1725e6d9eb8fb96a19fce625d39184b705f7b6d",
+      "role": "Complete pinned upstream license including legacy license text",
+      "sourceUrl": "https://raw.githubusercontent.com/llvm/llvm-project/52ed14fcd56afc30f9cccd8ca8ce237c2eef7e04/libunwind/LICENSE.TXT",
+      "gitBlobSha": "1e3120621caeb62648745a42f7a9a25d1e2731ab"
+    },
+    {
+      "path": "compiler-rt-LICENSE.TXT",
+      "bytes": 16708,
+      "sha256": "1a8f1058753f1ba890de984e48f0242a3a5c29a6a8f2ed9fd813f36985387e8d",
+      "role": "Complete pinned upstream license including legacy license text",
+      "sourceUrl": "https://raw.githubusercontent.com/llvm/llvm-project/52ed14fcd56afc30f9cccd8ca8ce237c2eef7e04/compiler-rt/LICENSE.TXT",
+      "gitBlobSha": "5a79a1b9d5cb0af9a779751f07033e44ca3b14d8"
+    },
+    {
+      "path": "compiler-rt-CREDITS.TXT",
+      "bytes": 1049,
+      "sha256": "a9901f47a089da41e4690682d00ce4cedaa2baf41fedbe79beee366d43ac2461",
+      "role": "Compiler-rt credits referenced by compiler-rt LICENSE.TXT; not a substitute for absent libunwind credits",
+      "sourceUrl": "https://raw.githubusercontent.com/llvm/llvm-project/52ed14fcd56afc30f9cccd8ca8ce237c2eef7e04/compiler-rt/CREDITS.TXT"
+    },
+    {
+      "path": "libunwind-dwarf2-notice.txt",
+      "bytes": 554,
+      "sha256": "8b928e7573033c97fb66cf2496bdfe1e55fea2e1febb863abcd6410b7480dc16",
+      "role": "Exact DWARF constant attribution in a libunwind header",
+      "sourceUrl": "https://raw.githubusercontent.com/llvm/llvm-project/52ed14fcd56afc30f9cccd8ca8ce237c2eef7e04/libunwind/src/dwarf2.h",
+      "sourceFile": {
+        "bytes": 10635,
+        "sha256": "e10d240e2f19de7121a8afaf3d4841a65936723e69d636f7e3241e14802d0bfc"
+      },
+      "sourceByteRange": [
+        0,
+        554
+      ]
+    }
+  ],
+  "sourceFacts": [
+    {
+      "path": "source-facts/musl-toolchain.sh",
+      "bytes": 2668,
+      "sha256": "faae0de27e4ca1661a030ce3623e4959f34f5d1b6f795ea9b5b84c10c2086b2e",
+      "sourceUrl": "https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/src/ci/docker/scripts/musl-toolchain.sh"
+    },
+    {
+      "path": "source-facts/musl.sh",
+      "bytes": 3179,
+      "sha256": "2f218a2dc7b7e73509212bfd4319ebddc2ddac7c651fca142c2b29bd7ea0aa38",
+      "sourceUrl": "https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/src/ci/docker/scripts/musl.sh"
+    },
+    {
+      "path": "source-facts/musl-cve-2026-6042.diff",
+      "bytes": 7502,
+      "sha256": "444fa70e52ca158fb7d4bad560637790bbf8f72e80b82fff840dd66fa83091e3",
+      "sourceUrl": "https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/src/ci/docker/scripts/musl-cve-2026-6042.diff"
+    },
+    {
+      "path": "source-facts/musl-cve-2026-40200.diff",
+      "bytes": 5594,
+      "sha256": "1ee29f64f9ca8e8ad7c349779d661ff6b52126a27575d3586981357a52c406fb",
+      "sourceUrl": "https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/src/ci/docker/scripts/musl-cve-2026-40200.diff"
+    },
+    {
+      "path": "source-facts/x86_64-musl-Dockerfile",
+      "bytes": 1791,
+      "sha256": "b671f149b73e3bc1a7c0e6b2b9c8bbca1c6983d0879c65659441309ad433ed50",
+      "sourceUrl": "https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/src/ci/docker/host-x86_64/dist-x86_64-musl/Dockerfile"
+    },
+    {
+      "path": "source-facts/0001-cve-2025-26519-p1.diff",
+      "bytes": 1394,
+      "sha256": "89ec5af152afb9c0ba8e37ecdca63a7a7fd13b60247f1a2d8024a59baa18e7dc",
+      "sourceUrl": "https://raw.githubusercontent.com/richfelker/musl-cross-make/3635262e4524c991552789af6f36211a335a77b3/patches/musl-1.2.5/0001-cve-2025-26519-p1.diff"
+    },
+    {
+      "path": "source-facts/0002-cve-2025-26519-p2.diff",
+      "bytes": 1368,
+      "sha256": "d5b88fe87f9554238bdd69235694b0d50bb909f38149a7be417a0240a490e813",
+      "sourceUrl": "https://raw.githubusercontent.com/richfelker/musl-cross-make/3635262e4524c991552789af6f36211a335a77b3/patches/musl-1.2.5/0002-cve-2025-26519-p2.diff"
+    },
+    {
+      "path": "source-facts/musl-1.2.5.tar.gz.sha1",
+      "bytes": 60,
+      "sha256": "5c5d074634ed2dedef96c21d52040bfdf056e17d8ec0ccae96e7bf0eb86c3026",
+      "sourceUrl": "https://raw.githubusercontent.com/richfelker/musl-cross-make/3635262e4524c991552789af6f36211a335a77b3/hashes/musl-1.2.5.tar.gz.sha1"
+    },
+    {
+      "path": "source-facts/compile.rs.txt",
+      "bytes": 4243,
+      "sha256": "f0f003c7c2155647df0dd0e62eb06dff06a29f46978bd28c0f588ed6d00bf52f",
+      "sourceUrl": "https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/src/bootstrap/src/core/build_steps/compile.rs",
+      "sourceFile": {
+        "bytes": 125565,
+        "sha256": "ca5c2b96fb81b508f74bd5127c68645a60536e78d144a1ded903d671cef7fd92"
+      },
+      "sourceByteRange": [
+        12503,
+        16746
+      ]
+    },
+    {
+      "path": "source-facts/llvm.rs.txt",
+      "bytes": 8491,
+      "sha256": "261b55874e281281b478b1051b5e5e23b64774a2bbebe071cabf04fc80562854",
+      "sourceUrl": "https://raw.githubusercontent.com/rust-lang/rust/48a229ceaefd4985c50990b14116b6d856af0985/src/bootstrap/src/core/build_steps/llvm.rs",
+      "sourceFile": {
+        "bytes": 72719,
+        "sha256": "d4ea28d878225ff95593b2ae3e4d51eab929722d77cebd88bf6c85234c32bba6"
+      },
+      "sourceByteRange": [
+        64228,
+        72719
+      ]
+    },
+    {
+      "path": "source-facts/musl-Makefile",
+      "bytes": 7515,
+      "sha256": "58c8b95c68d5326c747e26e7b4ff51560d72fc881fa5492d85f8dcf9af17ab9e",
+      "sourceArchiveUrl": "https://musl.libc.org/releases/musl-1.2.5.tar.gz",
+      "sourceArchivePath": "musl-1.2.5/Makefile"
+    },
+    {
+      "path": "source-facts/crtbegin.c",
+      "bytes": 6750,
+      "sha256": "ad21b03ddb3f66530ef34394cc1819f5156d536c30efba7486a7834120fba93f",
+      "sourceUrl": "https://raw.githubusercontent.com/llvm/llvm-project/52ed14fcd56afc30f9cccd8ca8ce237c2eef7e04/compiler-rt/lib/builtins/crtbegin.c"
+    },
+    {
+      "path": "source-facts/crtend.c",
+      "bytes": 890,
+      "sha256": "6d5a61b8f2f6fa541a12ec52aea40b5085e40fcf8626984d318523cb30335d06",
+      "sourceUrl": "https://raw.githubusercontent.com/llvm/llvm-project/52ed14fcd56afc30f9cccd8ca8ce237c2eef7e04/compiler-rt/lib/builtins/crtend.c"
+    },
+    {
+      "path": "source-facts/libunwind-directory.json",
+      "bytes": 968,
+      "sha256": "62adec2976e3bc9d4c3b28d9202a8f9d46c18e4d9ea8ab3b77bdaf1ea42e4d7e",
+      "sourceUrl": "https://api.github.com/repos/llvm/llvm-project/contents/libunwind?ref=52ed14fcd56afc30f9cccd8ca8ce237c2eef7e04",
+      "role": "Pinned root directory inventory; CREDITS.TXT is absent"
+    }
+  ],
+  "integration": {
+    "noticeHeading": "Additional musl and LLVM runtime attribution audited for Rust 1.98.1 x86_64/aarch64 Linux musl; prerequisite assets only.",
+    "appendOrder": [
+      "musl-COPYRIGHT",
+      "musl-notices/src/math/cbrt.c.txt",
+      "musl-notices/src/math/exp.c.txt",
+      "musl-notices/src/math/exp_data.c.txt",
+      "musl-notices/src/math/exp_data.h.txt",
+      "musl-notices/src/math/log.c.txt",
+      "musl-notices/src/math/log_data.c.txt",
+      "musl-notices/src/math/log_data.h.txt",
+      "musl-notices/src/math/log2.c.txt",
+      "musl-notices/src/math/log2_data.c.txt",
+      "musl-notices/src/math/log2_data.h.txt",
+      "musl-notices/src/stdlib/qsort.c.txt",
+      "musl-notices/src/string/aarch64/memcpy.S.txt",
+      "musl-notices/src/string/aarch64/memset.S.txt",
+      "musl-notices/src/thread/x86_64/__set_thread_area.s.txt",
+      "musl-notices/src/thread/x86_64/__unmapself.s.txt",
+      "libunwind-LICENSE.TXT",
+      "compiler-rt-LICENSE.TXT",
+      "compiler-rt-CREDITS.TXT",
+      "libunwind-dwarf2-notice.txt"
+    ],
+    "sourceFactsAreNoticePayload": false,
+    "failClosedOnAssetHashChange": true
+  }
+}
