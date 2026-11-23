@@ -1,0 +1,59 @@
+{
+  "kind": "github-release-verification",
+  "version": "0.18.0",
+  "revision": "005df34ab726d2a9a19df920df15fa76c2e3905f",
+  "url": "https://github.com/Binary-Balance/seshat/releases/tag/v0.18.0",
+  "tag": "v0.18.0",
+  "releaseId": 455052728,
+  "assets": [
+    {
+      "name": "darwin-arm64.tgz",
+      "id": 781784518,
+      "bytes": 1086616,
+      "sha256": "2267bcfee4d4bb056641d1ead5d4ec900cf9448f740b9e8919710170b671b081",
+      "githubDigest": "sha256:2267bcfee4d4bb056641d1ead5d4ec900cf9448f740b9e8919710170b671b081",
+      "url": "https://github.com/Binary-Balance/seshat/releases/download/v0.18.0/darwin-arm64.tgz"
+    },
+    {
+      "name": "darwin-x64.tgz",
+      "id": 781784517,
+      "bytes": 1123522,
+      "sha256": "266eeb57787a5e9f69378c56a98aa79be95290f120a994e2a089fb2490b4d001",
+      "githubDigest": "sha256:266eeb57787a5e9f69378c56a98aa79be95290f120a994e2a089fb2490b4d001",
+      "url": "https://github.com/Binary-Balance/seshat/releases/download/v0.18.0/darwin-x64.tgz"
+    },
+    {
+      "name": "entry.tgz",
+      "id": 781784516,
+      "bytes": 6539,
+      "sha256": "c7208cc601617ff405e4cb190c2a40745f1fbda92ea488c27d29504807c3c95f",
+      "githubDigest": "sha256:c7208cc601617ff405e4cb190c2a40745f1fbda92ea488c27d29504807c3c95f",
+      "url": "https://github.com/Binary-Balance/seshat/releases/download/v0.18.0/entry.tgz"
+    },
+    {
+      "name": "linux-arm64.tgz",
+      "id": 781784544,
+      "bytes": 1118082,
+      "sha256": "128cfaae817c0e6def6a08a4565440983c6659959b51cc3b7a89dfcdb0e08ee1",
+      "githubDigest": "sha256:128cfaae817c0e6def6a08a4565440983c6659959b51cc3b7a89dfcdb0e08ee1",
+      "url": "https://github.com/Binary-Balance/seshat/releases/download/v0.18.0/linux-arm64.tgz"
+    },
+    {
+      "name": "linux-x64.tgz",
+      "id": 781784514,
+      "bytes": 1186207,
+      "sha256": "3ac25be8262ef19b8f184a011182fc7fb3d37d687881e85955ea14f1007b29c0",
+      "githubDigest": "sha256:3ac25be8262ef19b8f184a011182fc7fb3d37d687881e85955ea14f1007b29c0",
+      "url": "https://github.com/Binary-Balance/seshat/releases/download/v0.18.0/linux-x64.tgz"
+    },
+    {
+      "name": "win32-x64.tgz",
+      "id": 781784557,
+      "bytes": 1148556,
+      "sha256": "6532beac6797560c0f15e043a525d4c1f058b38f2f9d284836b0fb9237aeac09",
+      "githubDigest": "sha256:6532beac6797560c0f15e043a525d4c1f058b38f2f9d284836b0fb9237aeac09",
+      "url": "https://github.com/Binary-Balance/seshat/releases/download/v0.18.0/win32-x64.tgz"
+    }
+  ],
+  "validationPassed": true
+}
