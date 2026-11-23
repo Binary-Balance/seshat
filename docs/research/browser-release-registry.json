@@ -1,0 +1,132 @@
+{
+  "capturedAt": "2026-11-23T06:12:57.777Z",
+  "registry": "https://registry.npmjs.org/",
+  "revision": "005df34ab726d2a9a19df920df15fa76c2e3905f",
+  "manifestSha256": "1311cdde413aa8ef634f8793d017fc553b626a57a9d2132ca389c6a45aba1d08",
+  "records": [
+    {
+      "package": "@binary-balance/seshat-linux-x64",
+      "version": "0.18.0",
+      "target": "linux-x64",
+      "tag": "latest",
+      "tarball": "https://registry.npmjs.org/@binary-balance/seshat-linux-x64/-/seshat-linux-x64-0.18.0.tgz",
+      "bytes": 1186207,
+      "sha256": "3ac25be8262ef19b8f184a011182fc7fb3d37d687881e85955ea14f1007b29c0",
+      "integrity": "sha512-awmF5ONm3Wbw5seAAfoJS7fc7XSfP8V+JOlKC1yTdUB9GxsnfFFuLSXr55humtjXcRPZNLq+NntyDEp7wQPW1w==",
+      "attestationsUrl": "https://registry.npmjs.org/-/npm/v1/attestations/@binary-balance%2fseshat-linux-x64@0.18.0",
+      "provenanceSubject": {
+        "name": "pkg:npm/%40binary-balance/seshat-linux-x64@0.18.0",
+        "digest": {
+          "sha512": "6b0985e4e366dd66f0e6c78001fa094bb7dced749f3fc57e24e94a0b5c9375407d1b1b277c516e2d25ebe7986e9ad8d77113d934babe367b720c4a7bc103d6d7"
+        }
+      },
+      "invocation": "https://github.com/Binary-Balance/seshat/actions/runs/45121938205/attempts/1",
+      "revision": "005df34ab726d2a9a19df920df15fa76c2e3905f",
+      "validationPassed": true
+    },
+    {
+      "package": "@binary-balance/seshat-linux-arm64",
+      "version": "0.18.0",
+      "target": "linux-arm64",
+      "tag": "latest",
+      "tarball": "https://registry.npmjs.org/@binary-balance/seshat-linux-arm64/-/seshat-linux-arm64-0.18.0.tgz",
+      "bytes": 1118082,
+      "sha256": "128cfaae817c0e6def6a08a4565440983c6659959b51cc3b7a89dfcdb0e08ee1",
+      "integrity": "sha512-Ca/DaZwr/8gGYL+74DlxeCZnvj5f76Clg2E1emsik36NRXu7tGzVOpCuwB5iSleXBgy93JEI/Itfsu2LSyI7jQ==",
+      "attestationsUrl": "https://registry.npmjs.org/-/npm/v1/attestations/@binary-balance%2fseshat-linux-arm64@0.18.0",
+      "provenanceSubject": {
+        "name": "pkg:npm/%40binary-balance/seshat-linux-arm64@0.18.0",
+        "digest": {
+          "sha512": "09afc3699c2bffc80660bfbbe03971782667be3e5fefa0a58361357a6b22937e8d457bbbb46cd53a90aec01e624a5797060cbddc9108fc8b5fb2ed8b4b223b8d"
+        }
+      },
+      "invocation": "https://github.com/Binary-Balance/seshat/actions/runs/45121938205/attempts/1",
+      "revision": "005df34ab726d2a9a19df920df15fa76c2e3905f",
+      "validationPassed": true
+    },
+    {
+      "package": "@binary-balance/seshat-darwin-x64",
+      "version": "0.18.0",
+      "target": "darwin-x64",
+      "tag": "latest",
+      "tarball": "https://registry.npmjs.org/@binary-balance/seshat-darwin-x64/-/seshat-darwin-x64-0.18.0.tgz",
+      "bytes": 1123522,
+      "sha256": "266eeb57787a5e9f69378c56a98aa79be95290f120a994e2a089fb2490b4d001",
+      "integrity": "sha512-X1YhOF1q9og13l7YWW3IfcqgJqX136jmv3wZ5iOObIgyBWLpXZXTZIgXVXvGeSPwZZK/p/Au8e8wA0DgOwuF+g==",
+      "attestationsUrl": "https://registry.npmjs.org/-/npm/v1/attestations/@binary-balance%2fseshat-darwin-x64@0.18.0",
+      "provenanceSubject": {
+        "name": "pkg:npm/%40binary-balance/seshat-darwin-x64@0.18.0",
+        "digest": {
+          "sha512": "5f5621385d6af68835de5ed8596dc87dcaa026a5f5dfa8e6bf7c19e6238e6c88320562e95d95d3648817557bc67923f06592bfa7f02ef1ef300340e03b0b85fa"
+        }
+      },
+      "invocation": "https://github.com/Binary-Balance/seshat/actions/runs/45121938205/attempts/1",
+      "revision": "005df34ab726d2a9a19df920df15fa76c2e3905f",
+      "validationPassed": true
+    },
+    {
+      "package": "@binary-balance/seshat-darwin-arm64",
+      "version": "0.18.0",
+      "target": "darwin-arm64",
+      "tag": "latest",
+      "tarball": "https://registry.npmjs.org/@binary-balance/seshat-darwin-arm64/-/seshat-darwin-arm64-0.18.0.tgz",
+      "bytes": 1086616,
+      "sha256": "2267bcfee4d4bb056641d1ead5d4ec900cf9448f740b9e8919710170b671b081",
+      "integrity": "sha512-V35CqXnFsNBLRx2jp4hB0DiptuPxdpR6s6H5uEKOnnJvX592aF0hAMQUM03pqX4m0eN3r9wC5Guk8HFJgahDdA==",
+      "attestationsUrl": "https://registry.npmjs.org/-/npm/v1/attestations/@binary-balance%2fseshat-darwin-arm64@0.18.0",
+      "provenanceSubject": {
+        "name": "pkg:npm/%40binary-balance/seshat-darwin-arm64@0.18.0",
+        "digest": {
+          "sha512": "577e42a979c5b0d04b471da3a78841d038a9b6e3f176947ab3a1f9b8428e9e726f5f9f76685d2100c414334de9a97e26d1e377afdc02e46ba4f0714981a84374"
+        }
+      },
+      "invocation": "https://github.com/Binary-Balance/seshat/actions/runs/45121938205/attempts/1",
+      "revision": "005df34ab726d2a9a19df920df15fa76c2e3905f",
+      "validationPassed": true
+    },
+    {
+      "package": "@binary-balance/seshat-win32-x64",
+      "version": "0.18.0",
+      "target": "win32-x64",
+      "tag": "latest",
+      "tarball": "https://registry.npmjs.org/@binary-balance/seshat-win32-x64/-/seshat-win32-x64-0.18.0.tgz",
+      "bytes": 1148556,
+      "sha256": "6532beac6797560c0f15e043a525d4c1f058b38f2f9d284836b0fb9237aeac09",
+      "integrity": "sha512-7P8dwKrmrhKFZUu1D6diE/nqF4qYAH5r4TUcphIEZzP+YZgKEux/8uYjhw5LfM02F8fIUByC9hWH3XRqUIlp+Q==",
+      "attestationsUrl": "https://registry.npmjs.org/-/npm/v1/attestations/@binary-balance%2fseshat-win32-x64@0.18.0",
+      "provenanceSubject": {
+        "name": "pkg:npm/%40binary-balance/seshat-win32-x64@0.18.0",
+        "digest": {
+          "sha512": "ecff1dc0aae6ae1285654bb50fa76213f9ea178a98007e6be1351ca612046733fe61980a12ec7ff2e623870e4b7ccd3617c7c8501c82f61587dd746a508969f9"
+        }
+      },
+      "invocation": "https://github.com/Binary-Balance/seshat/actions/runs/45121938205/attempts/1",
+      "revision": "005df34ab726d2a9a19df920df15fa76c2e3905f",
+      "validationPassed": true
+    },
+    {
+      "package": "@binary-balance/seshat",
+      "version": "0.18.0",
+      "target": "universal",
+      "tag": "latest",
+      "tarball": "https://registry.npmjs.org/@binary-balance/seshat/-/seshat-0.18.0.tgz",
+      "bytes": 6539,
+      "sha256": "c7208cc601617ff405e4cb190c2a40745f1fbda92ea488c27d29504807c3c95f",
+      "integrity": "sha512-DRnqCEpuLZnH2lMN3iuXlVhqpGMvh2O2uTumB6XDhKFbKTeZPAZOO38LNu9GthG7un3ULYCwjvtl9GX96NB8HQ==",
+      "attestationsUrl": "https://registry.npmjs.org/-/npm/v1/attestations/@binary-balance%2fseshat@0.18.0",
+      "provenanceSubject": {
+        "name": "pkg:npm/%40binary-balance/seshat@0.18.0",
+        "digest": {
+          "sha512": "0d19ea084a6e2d99c7da530dde2b9795586aa4632f8763b6b93ba607a5c384a15b2937993c064e3b7f0b36ef46b611bbba7dd42d80b08efb65f465fde8d07c1d"
+        }
+      },
+      "invocation": "https://github.com/Binary-Balance/seshat/actions/runs/45121938205/attempts/1",
+      "revision": "005df34ab726d2a9a19df920df15fa76c2e3905f",
+      "validationPassed": true
+    }
+  ],
+  "validation": {
+    "passed": true,
+    "limitation": "Availability and provenance content; cryptographic verification is performed by npm audit signatures in the five-host registry workflow."
+  }
+}

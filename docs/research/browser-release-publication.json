@@ -1,0 +1,117 @@
+{
+  "kind": "approved-publication-verification",
+  "revision": "005df34ab726d2a9a19df920df15fa76c2e3905f",
+  "version": "0.18.0",
+  "registry": "https://registry.npmjs.org/",
+  "tag": "latest",
+  "runId": 45121938205,
+  "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/45121938205",
+  "artifactId": 14794475656,
+  "artifactDigest": "sha256:8bba8fdcd21eef00040991a94c6347f1be237f60da7c3c5306741944e55f1c2d",
+  "artifactBytes": 5614690,
+  "memberSha256": {
+    "archives/darwin-arm64.tgz": "2267bcfee4d4bb056641d1ead5d4ec900cf9448f740b9e8919710170b671b081",
+    "archives/darwin-x64.tgz": "266eeb57787a5e9f69378c56a98aa79be95290f120a994e2a089fb2490b4d001",
+    "archives/entry.tgz": "c7208cc601617ff405e4cb190c2a40745f1fbda92ea488c27d29504807c3c95f",
+    "archives/linux-arm64.tgz": "128cfaae817c0e6def6a08a4565440983c6659959b51cc3b7a89dfcdb0e08ee1",
+    "archives/linux-x64.tgz": "3ac25be8262ef19b8f184a011182fc7fb3d37d687881e85955ea14f1007b29c0",
+    "archives/win32-x64.tgz": "6532beac6797560c0f15e043a525d4c1f058b38f2f9d284836b0fb9237aeac09",
+    "archive-staging.json": "55549af66a71108119ad08d5f31a094c5c38dff65e0b0a316a803010f8db3191",
+    "dry-run.json": "8449334c21ae1a578284f8b328f3ac157ea51bbf2569103b11c0a86b7f1cc3aa",
+    "dry-run.log": "8449334c21ae1a578284f8b328f3ac157ea51bbf2569103b11c0a86b7f1cc3aa"
+  },
+  "archives": [
+    {
+      "target": "linux-x64",
+      "package": "@binary-balance/seshat-linux-x64",
+      "file": "linux-x64.tgz",
+      "bytes": 1186207,
+      "sha256": "3ac25be8262ef19b8f184a011182fc7fb3d37d687881e85955ea14f1007b29c0"
+    },
+    {
+      "target": "linux-arm64",
+      "package": "@binary-balance/seshat-linux-arm64",
+      "file": "linux-arm64.tgz",
+      "bytes": 1118082,
+      "sha256": "128cfaae817c0e6def6a08a4565440983c6659959b51cc3b7a89dfcdb0e08ee1"
+    },
+    {
+      "target": "darwin-x64",
+      "package": "@binary-balance/seshat-darwin-x64",
+      "file": "darwin-x64.tgz",
+      "bytes": 1123522,
+      "sha256": "266eeb57787a5e9f69378c56a98aa79be95290f120a994e2a089fb2490b4d001"
+    },
+    {
+      "target": "darwin-arm64",
+      "package": "@binary-balance/seshat-darwin-arm64",
+      "file": "darwin-arm64.tgz",
+      "bytes": 1086616,
+      "sha256": "2267bcfee4d4bb056641d1ead5d4ec900cf9448f740b9e8919710170b671b081"
+    },
+    {
+      "target": "win32-x64",
+      "package": "@binary-balance/seshat-win32-x64",
+      "file": "win32-x64.tgz",
+      "bytes": 1148556,
+      "sha256": "6532beac6797560c0f15e043a525d4c1f058b38f2f9d284836b0fb9237aeac09"
+    },
+    {
+      "target": "universal",
+      "package": "@binary-balance/seshat",
+      "file": "entry.tgz",
+      "bytes": 6539,
+      "sha256": "c7208cc601617ff405e4cb190c2a40745f1fbda92ea488c27d29504807c3c95f"
+    }
+  ],
+  "publishJob": "success",
+  "allPassed": true,
+  "verifierSha256": "2c1031e972f3edea80973bc7379e4a81718545a41b63a7af6f933926c9c83330",
+  "packages": [
+    {
+      "target": "linux-x64",
+      "package": "@binary-balance/seshat-linux-x64",
+      "archive": "linux-x64.tgz",
+      "action": "published"
+    },
+    {
+      "target": "linux-arm64",
+      "package": "@binary-balance/seshat-linux-arm64",
+      "archive": "linux-arm64.tgz",
+      "action": "published"
+    },
+    {
+      "target": "darwin-x64",
+      "package": "@binary-balance/seshat-darwin-x64",
+      "archive": "darwin-x64.tgz",
+      "action": "published"
+    },
+    {
+      "target": "darwin-arm64",
+      "package": "@binary-balance/seshat-darwin-arm64",
+      "archive": "darwin-arm64.tgz",
+      "action": "published"
+    },
+    {
+      "target": "win32-x64",
+      "package": "@binary-balance/seshat-win32-x64",
+      "archive": "win32-x64.tgz",
+      "action": "published"
+    },
+    {
+      "target": "universal",
+      "package": "@binary-balance/seshat",
+      "archive": "entry.tgz",
+      "action": "published"
+    }
+  ],
+  "publicationResultArtifact": {
+    "id": 14793669225,
+    "digest": "sha256:74a4ef204c6b912105ea3dab2cea8c60780ec4f7ff34c5df73ea29cd9c21c598",
+    "size_in_bytes": 2816
+  },
+  "publicationResultMemberSha256": {
+    "publish.json": "d868016d8951f4ea502036c21a7a32d42b940daf3715d032ef8e7061c6e030a0",
+    "publish.log": "204d7c5211e075582cbfa9a73e003b763e9f5742e147a42947cc1ae6ee92585a"
+  }
+}

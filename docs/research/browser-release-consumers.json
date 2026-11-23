@@ -1,0 +1,399 @@
+{
+  "runId": 45122641088,
+  "runUrl": "https://github.com/Binary-Balance/seshat/actions/runs/45122641088",
+  "revision": "005df34ab726d2a9a19df920df15fa76c2e3905f",
+  "auditSha256": "1311cdde413aa8ef634f8793d017fc553b626a57a9d2132ca389c6a45aba1d08",
+  "targets": [
+    {
+      "target": "darwin-arm64",
+      "artifactId": 14794860304,
+      "artifactDigest": "sha256:cbba919dbf574c3fb49d0de39fde4bc65cb4f053588a60a372ad23c53fbc5c22",
+      "artifactBytes": 35358,
+      "reportSha256": "e4c33aaa9e1bf2b91db47ff4b62a7483cd09b1e09efc19f5bc5bea39b1065762",
+      "host": {
+        "target": "darwin-arm64",
+        "platform": "darwin",
+        "arch": "arm64",
+        "node": "v24.20.0",
+        "npm": "11.19.0"
+      },
+      "installed": {
+        "host": {
+          "platform": "darwin",
+          "arch": "arm64"
+        },
+        "entry": {
+          "package": "@binary-balance/seshat",
+          "version": "0.18.0"
+        },
+        "native": {
+          "package": "@binary-balance/seshat-darwin-arm64",
+          "version": "0.18.0",
+          "path": "node_modules/@binary-balance/seshat-darwin-arm64/bin/seshat",
+          "binary": {
+            "bytes": 2306976,
+            "sha256": "f49c6cfc9d728ee4aee2c1135bbf501ba1736a68167ac64de3ba35bf319957a0"
+          }
+        },
+        "absentNativePackages": [
+          "@binary-balance/seshat-linux-x64",
+          "@binary-balance/seshat-linux-arm64",
+          "@binary-balance/seshat-darwin-x64",
+          "@binary-balance/seshat-win32-x64"
+        ]
+      },
+      "installedAfterCi": {
+        "host": {
+          "platform": "darwin",
+          "arch": "arm64"
+        },
+        "entry": {
+          "package": "@binary-balance/seshat",
+          "version": "0.18.0"
+        },
+        "native": {
+          "package": "@binary-balance/seshat-darwin-arm64",
+          "version": "0.18.0",
+          "path": "node_modules/@binary-balance/seshat-darwin-arm64/bin/seshat",
+          "binary": {
+            "bytes": 2306976,
+            "sha256": "f49c6cfc9d728ee4aee2c1135bbf501ba1736a68167ac64de3ba35bf319957a0"
+          }
+        },
+        "absentNativePackages": [
+          "@binary-balance/seshat-linux-x64",
+          "@binary-balance/seshat-linux-arm64",
+          "@binary-balance/seshat-darwin-x64",
+          "@binary-balance/seshat-win32-x64"
+        ]
+      },
+      "fixture": {
+        "sourceFiles": [
+          "src/rules.ts"
+        ],
+        "mutation": {
+          "planned": 4,
+          "killed": 3,
+          "survived": 1,
+          "unresolved": 0,
+          "score": 75
+        }
+      },
+      "provenanceCheckStatus": 0,
+      "validationPassed": true
+    },
+    {
+      "target": "darwin-x64",
+      "artifactId": 14794621252,
+      "artifactDigest": "sha256:08bf810a705b708f4ae3ea1760a8eb31fc90e42582ce686b7a52d74dde9f6ebd",
+      "artifactBytes": 35507,
+      "reportSha256": "d7063863dba4cf90505520eea013abd9deda254091c8eb2468476c4e1ebc15c3",
+      "host": {
+        "target": "darwin-x64",
+        "platform": "darwin",
+        "arch": "x64",
+        "node": "v24.20.0",
+        "npm": "11.19.0"
+      },
+      "installed": {
+        "host": {
+          "platform": "darwin",
+          "arch": "x64"
+        },
+        "entry": {
+          "package": "@binary-balance/seshat",
+          "version": "0.18.0"
+        },
+        "native": {
+          "package": "@binary-balance/seshat-darwin-x64",
+          "version": "0.18.0",
+          "path": "node_modules/@binary-balance/seshat-darwin-x64/bin/seshat",
+          "binary": {
+            "bytes": 2408536,
+            "sha256": "efa700f80a816ffeb73f202861dfac2c72f31da699ead429ba96920812df2569"
+          }
+        },
+        "absentNativePackages": [
+          "@binary-balance/seshat-linux-x64",
+          "@binary-balance/seshat-linux-arm64",
+          "@binary-balance/seshat-darwin-arm64",
+          "@binary-balance/seshat-win32-x64"
+        ]
+      },
+      "installedAfterCi": {
+        "host": {
+          "platform": "darwin",
+          "arch": "x64"
+        },
+        "entry": {
+          "package": "@binary-balance/seshat",
+          "version": "0.18.0"
+        },
+        "native": {
+          "package": "@binary-balance/seshat-darwin-x64",
+          "version": "0.18.0",
+          "path": "node_modules/@binary-balance/seshat-darwin-x64/bin/seshat",
+          "binary": {
+            "bytes": 2408536,
+            "sha256": "efa700f80a816ffeb73f202861dfac2c72f31da699ead429ba96920812df2569"
+          }
+        },
+        "absentNativePackages": [
+          "@binary-balance/seshat-linux-x64",
+          "@binary-balance/seshat-linux-arm64",
+          "@binary-balance/seshat-darwin-arm64",
+          "@binary-balance/seshat-win32-x64"
+        ]
+      },
+      "fixture": {
+        "sourceFiles": [
+          "src/rules.ts"
+        ],
+        "mutation": {
+          "planned": 4,
+          "killed": 3,
+          "survived": 1,
+          "unresolved": 0,
+          "score": 75
+        }
+      },
+      "provenanceCheckStatus": 0,
+      "validationPassed": true
+    },
+    {
+      "target": "linux-arm64",
+      "artifactId": 14794162918,
+      "artifactDigest": "sha256:e3e43f6d981dd00bc5dfcb34306dbb4639f2c8e9b678e44b140ae5f40e18e28d",
+      "artifactBytes": 35218,
+      "reportSha256": "fed101ef91cb547daf058bbcfb8dc7166a2ef66999708ee1a5ac3b5af9de6b58",
+      "host": {
+        "target": "linux-arm64",
+        "platform": "linux",
+        "arch": "arm64",
+        "node": "v24.20.0",
+        "npm": "11.19.0"
+      },
+      "installed": {
+        "host": {
+          "platform": "linux",
+          "arch": "arm64"
+        },
+        "entry": {
+          "package": "@binary-balance/seshat",
+          "version": "0.18.0"
+        },
+        "native": {
+          "package": "@binary-balance/seshat-linux-arm64",
+          "version": "0.18.0",
+          "path": "node_modules/@binary-balance/seshat-linux-arm64/bin/seshat",
+          "binary": {
+            "bytes": 2310864,
+            "sha256": "6a87d313a94fffafa445ab4e6c79eab585934c0b0d9fe594784d4cd4d21fc66f"
+          }
+        },
+        "absentNativePackages": [
+          "@binary-balance/seshat-linux-x64",
+          "@binary-balance/seshat-darwin-x64",
+          "@binary-balance/seshat-darwin-arm64",
+          "@binary-balance/seshat-win32-x64"
+        ]
+      },
+      "installedAfterCi": {
+        "host": {
+          "platform": "linux",
+          "arch": "arm64"
+        },
+        "entry": {
+          "package": "@binary-balance/seshat",
+          "version": "0.18.0"
+        },
+        "native": {
+          "package": "@binary-balance/seshat-linux-arm64",
+          "version": "0.18.0",
+          "path": "node_modules/@binary-balance/seshat-linux-arm64/bin/seshat",
+          "binary": {
+            "bytes": 2310864,
+            "sha256": "6a87d313a94fffafa445ab4e6c79eab585934c0b0d9fe594784d4cd4d21fc66f"
+          }
+        },
+        "absentNativePackages": [
+          "@binary-balance/seshat-linux-x64",
+          "@binary-balance/seshat-darwin-x64",
+          "@binary-balance/seshat-darwin-arm64",
+          "@binary-balance/seshat-win32-x64"
+        ]
+      },
+      "fixture": {
+        "sourceFiles": [
+          "src/rules.ts"
+        ],
+        "mutation": {
+          "planned": 4,
+          "killed": 3,
+          "survived": 1,
+          "unresolved": 0,
+          "score": 75
+        }
+      },
+      "provenanceCheckStatus": 0,
+      "validationPassed": true
+    },
+    {
+      "target": "linux-x64",
+      "artifactId": 14793893919,
+      "artifactDigest": "sha256:0710e5a0fb6efb0d2b02287be8eb62f1208eb5ca601adbcebb49be7c6a32b272",
+      "artifactBytes": 35367,
+      "reportSha256": "ef52383cbb30497d3cfa59716f6ffcdfffeb7218f1ec2b67ae43cddf5fc20c74",
+      "host": {
+        "target": "linux-x64",
+        "platform": "linux",
+        "arch": "x64",
+        "node": "v24.20.0",
+        "npm": "11.19.0"
+      },
+      "installed": {
+        "host": {
+          "platform": "linux",
+          "arch": "x64"
+        },
+        "entry": {
+          "package": "@binary-balance/seshat",
+          "version": "0.18.0"
+        },
+        "native": {
+          "package": "@binary-balance/seshat-linux-x64",
+          "version": "0.18.0",
+          "path": "node_modules/@binary-balance/seshat-linux-x64/bin/seshat",
+          "binary": {
+            "bytes": 2604128,
+            "sha256": "48acfa63df731803cb58b045eb530a3dc8216caf52e01b40fe8e38983c427be8"
+          }
+        },
+        "absentNativePackages": [
+          "@binary-balance/seshat-linux-arm64",
+          "@binary-balance/seshat-darwin-x64",
+          "@binary-balance/seshat-darwin-arm64",
+          "@binary-balance/seshat-win32-x64"
+        ]
+      },
+      "installedAfterCi": {
+        "host": {
+          "platform": "linux",
+          "arch": "x64"
+        },
+        "entry": {
+          "package": "@binary-balance/seshat",
+          "version": "0.18.0"
+        },
+        "native": {
+          "package": "@binary-balance/seshat-linux-x64",
+          "version": "0.18.0",
+          "path": "node_modules/@binary-balance/seshat-linux-x64/bin/seshat",
+          "binary": {
+            "bytes": 2604128,
+            "sha256": "48acfa63df731803cb58b045eb530a3dc8216caf52e01b40fe8e38983c427be8"
+          }
+        },
+        "absentNativePackages": [
+          "@binary-balance/seshat-linux-arm64",
+          "@binary-balance/seshat-darwin-x64",
+          "@binary-balance/seshat-darwin-arm64",
+          "@binary-balance/seshat-win32-x64"
+        ]
+      },
+      "fixture": {
+        "sourceFiles": [
+          "src/rules.ts"
+        ],
+        "mutation": {
+          "planned": 4,
+          "killed": 3,
+          "survived": 1,
+          "unresolved": 0,
+          "score": 75
+        }
+      },
+      "provenanceCheckStatus": 0,
+      "validationPassed": true
+    },
+    {
+      "target": "win32-x64",
+      "artifactId": 14794780754,
+      "artifactDigest": "sha256:d1bbd76d499eaf336e9321216981678d758ecdcc8f7b484f82ac03e1e5829e52",
+      "artifactBytes": 35724,
+      "reportSha256": "480079fee81e2c442594b64b51cd20a89cddb411005698f834323f6634d74254",
+      "host": {
+        "target": "win32-x64",
+        "platform": "win32",
+        "arch": "x64",
+        "node": "v24.20.0",
+        "npm": "11.19.0"
+      },
+      "installed": {
+        "host": {
+          "platform": "win32",
+          "arch": "x64"
+        },
+        "entry": {
+          "package": "@binary-balance/seshat",
+          "version": "0.18.0"
+        },
+        "native": {
+          "package": "@binary-balance/seshat-win32-x64",
+          "version": "0.18.0",
+          "path": "node_modules/@binary-balance/seshat-win32-x64/bin/seshat.exe",
+          "binary": {
+            "bytes": 2738688,
+            "sha256": "1916ab90823670ce90c072913d92564115056e4c37cbf57ceaa290fa938c916b"
+          }
+        },
+        "absentNativePackages": [
+          "@binary-balance/seshat-linux-x64",
+          "@binary-balance/seshat-linux-arm64",
+          "@binary-balance/seshat-darwin-x64",
+          "@binary-balance/seshat-darwin-arm64"
+        ]
+      },
+      "installedAfterCi": {
+        "host": {
+          "platform": "win32",
+          "arch": "x64"
+        },
+        "entry": {
+          "package": "@binary-balance/seshat",
+          "version": "0.18.0"
+        },
+        "native": {
+          "package": "@binary-balance/seshat-win32-x64",
+          "version": "0.18.0",
+          "path": "node_modules/@binary-balance/seshat-win32-x64/bin/seshat.exe",
+          "binary": {
+            "bytes": 2738688,
+            "sha256": "1916ab90823670ce90c072913d92564115056e4c37cbf57ceaa290fa938c916b"
+          }
+        },
+        "absentNativePackages": [
+          "@binary-balance/seshat-linux-x64",
+          "@binary-balance/seshat-linux-arm64",
+          "@binary-balance/seshat-darwin-x64",
+          "@binary-balance/seshat-darwin-arm64"
+        ]
+      },
+      "fixture": {
+        "sourceFiles": [
+          "src/rules.ts"
+        ],
+        "mutation": {
+          "planned": 4,
+          "killed": 3,
+          "survived": 1,
+          "unresolved": 0,
+          "score": 75
+        }
+      },
+      "provenanceCheckStatus": 0,
+      "validationPassed": true
+    }
+  ],
+  "validationPassed": true
+}
