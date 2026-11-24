@@ -17,6 +17,7 @@ export function muslNotices(directory) {
 // Static PIE can contain PT_DYNAMIC; only an interpreter or DT_NEEDED adds a runtime dependency.
 export function staticMuslElf(bytes, machine) {
   assert.equal(bytes.subarray(0, 6).toString('hex'), '7f454c460201', 'expected little-endian ELF64');
+  assert.ok([2, 3].includes(bytes.readUInt16LE(16)), 'expected ELF executable or static PIE');
   assert.equal(bytes.readUInt16LE(18), machine, 'unexpected musl ELF machine');
   const offset = Number(bytes.readBigUInt64LE(32));
   const size = bytes.readUInt16LE(54);

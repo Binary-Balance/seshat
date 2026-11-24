@@ -63,6 +63,7 @@ writeFileSync(output + '/host.json', JSON.stringify({alpine, arch, target, kerne
 JS
 
 node --test benchmarks/proofs/liveness.test.mjs 2>&1 | tee "$output/liveness-tests.log"
+node --test packaging/launcher.test.mjs packaging/musl.test.mjs 2>&1 | tee "$output/packaging-tests.log"
 npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund 2>&1 | tee "$output/npm-benchmarks.log"
 npm ci --prefix benchmarks/proofs --ignore-scripts --no-audit --no-fund 2>&1 | tee "$output/npm-proofs.log"
 cargo test --release --locked --manifest-path crates/seshat/Cargo.toml 2>&1 | tee "$output/rust-tests.log"

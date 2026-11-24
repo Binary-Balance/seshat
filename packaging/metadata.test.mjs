@@ -113,6 +113,7 @@ const archiveFiles = archive => execFileSync(tarCommand, ['-tf', archive], {enco
 function staticElf(machine) {
   const bytes = Buffer.alloc(64 + 56 + 16);
   bytes.write('7f454c460201', 0, 'hex');
+  bytes.writeUInt16LE(3, 16);
   bytes.writeUInt16LE(machine, 18);
   bytes.writeBigUInt64LE(64n, 32);
   bytes.writeUInt16LE(56, 54);
