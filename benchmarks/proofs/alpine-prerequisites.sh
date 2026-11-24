@@ -66,7 +66,9 @@ node --test benchmarks/proofs/liveness.test.mjs 2>&1 | tee "$output/liveness-tes
 node --test packaging/launcher.test.mjs packaging/musl.test.mjs 2>&1 | tee "$output/packaging-tests.log"
 npm ci --prefix benchmarks --ignore-scripts --no-audit --no-fund 2>&1 | tee "$output/npm-benchmarks.log"
 npm ci --prefix benchmarks/proofs --ignore-scripts --no-audit --no-fund 2>&1 | tee "$output/npm-proofs.log"
-cargo test --release --locked --manifest-path crates/seshat/Cargo.toml 2>&1 | tee "$output/rust-tests.log"
+# The offline notice inventory includes dependencies from every locked target.
+cargo fetch --locked --manifest-path crates/seshat/Cargo.toml 2>&1 | tee "$output/cargo-fetch.log"
+cargo test --release --locked --offline --manifest-path crates/seshat/Cargo.toml 2>&1 | tee "$output/rust-tests.log"
 # Repeat packing requires committed, clean source and builds in two fresh owned directories.
 SESHAT_REPEAT_OUTPUT="$output/repeat-pack.json" RUSTFLAGS=invalid CARGO_ENCODED_RUSTFLAGS=invalid \
   node packaging/repeat-pack.mjs --native-musl 2>&1 | tee "$output/repeat-pack.log"
