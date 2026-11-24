@@ -50,6 +50,9 @@ jobs:
         run: |
           docker run --rm --init \
             -v "$GITHUB_WORKSPACE:/workspace" -w /workspace \
+            -e GITHUB_REPOSITORY -e GITHUB_REF -e GITHUB_WORKFLOW \
+            -e GITHUB_WORKFLOW_REF -e GITHUB_WORKFLOW_SHA -e GITHUB_JOB \
+            -e GITHUB_RUN_ID -e GITHUB_RUN_ATTEMPT \
             -e SESHAT_SOURCE_COMMIT="$GITHUB_SHA" \
             -e SESHAT_WORKFLOW_RUN="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
             -e SESHAT_PROOF_IMAGE="$IMAGE" \

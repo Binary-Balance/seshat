@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {validateReleaseEntry} from './release-archive.mjs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {
@@ -16,43 +17,26 @@ import {parseArgs} from 'node:util';
 export const REGISTRY = 'https://registry.npmjs.org/';
 const SCOPE_REGISTRY = `--@binary-balance:registry=${REGISTRY}`;
 
-export const PACKAGE_ORDER = Object.freeze([
-  {target: 'linux-x64', file: 'linux-x64.tgz', package: '@binary-balance/seshat-linux-x64', role: 'native-release'},
-  {target: 'linux-arm64', file: 'linux-arm64.tgz', package: '@binary-balance/seshat-linux-arm64', role: 'native-release'},
-  {target: 'darwin-x64', file: 'darwin-x64.tgz', package: '@binary-balance/seshat-darwin-x64', role: 'native-release'},
-  {target: 'darwin-arm64', file: 'darwin-arm64.tgz', package: '@binary-balance/seshat-darwin-arm64', role: 'native-release'},
-  {target: 'win32-x64', file: 'win32-x64.tgz', package: '@binary-balance/seshat-win32-x64', role: 'native-release'},
-  {target: 'universal', file: 'entry.tgz', package: '@binary-balance/seshat', role: 'entry'},
-]);
-
-const targetByName = new Map(PACKAGE_ORDER.map(target => [target.target, target]));
-const semverPattern = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
+export {PACKAGE_ORDER} from './release-targets.mjs';
+import {releasePackages, releaseVersion as assertVersion} from './release-targets.mjs';
 
 function sha256(bytes) {
   return createHash('sha256').update(bytes).digest('hex');
-}
-
-function assertVersion(version) {
-  const match = semverPattern.exec(version ?? '');
-  assert.ok(match, `version is not valid semver: ${version}`);
-  for (const identifier of match[4]?.split('.') ?? []) {
-    if (/^\d+$/.test(identifier)) assert.ok(identifier === '0' || !identifier.startsWith('0'),
-      `version has a leading-zero prerelease identifier: ${version}`);
-  }
-  return {version, prerelease: Boolean(match[4])};
 }
 
 export function expectedTag(version) {
   return assertVersion(version).prerelease ? 'next' : 'latest';
 }
 
-function validateManifest(manifest, version) {
+export function validateManifest(manifest, version) {
   assert.equal(manifest.schemaVersion, 1, 'release audit schema must be version 1');
   assert.equal(manifest.kind, 'seshat-release-notice-audit', 'release audit kind is invalid');
   assert.equal(manifest.candidate?.packageVersion, version, 'candidate version differs from requested version');
   assert.match(manifest.candidate?.sourceCommit ?? '', /^[\da-f]{40}$/i, 'candidate source commit is invalid');
   assert.ok(Array.isArray(manifest.coordinates), 'release audit coordinates are missing');
-  assert.equal(manifest.coordinates.length, PACKAGE_ORDER.length, 'release audit must contain six coordinates');
+  const packageOrder = releasePackages(version);
+  const targetByName = new Map(packageOrder.map(target => [target.target, target]));
+  assert.equal(manifest.coordinates.length, packageOrder.length, `release audit must contain ${packageOrder.length} coordinates`);
 
   const coordinates = new Map();
   for (const coordinate of manifest.coordinates) {
@@ -96,7 +80,9 @@ function validateStagingEvidence(evidence, candidate, coordinates, revision) {
   assert.deepEqual(evidence.sourceEquivalence?.paths, ['crates', 'packages', 'packaging'],
     'staging source equivalence paths changed');
   assert.ok(Array.isArray(evidence.archives), 'staged archive records are missing');
-  assert.equal(evidence.archives.length, PACKAGE_ORDER.length, 'staging evidence is not a full archive set');
+  const packageOrder = releasePackages(candidate.packageVersion);
+  const targetByName = new Map(packageOrder.map(target => [target.target, target]));
+  assert.equal(evidence.archives.length, packageOrder.length, 'staging evidence is not a full archive set');
 
   const seen = new Set();
   for (const archive of evidence.archives) {
@@ -113,12 +99,13 @@ function validateStagingEvidence(evidence, candidate, coordinates, revision) {
     'staging evidence is missing a release target');
 }
 
-function readArchives(archiveDir, coordinates) {
-  const expectedFiles = PACKAGE_ORDER.map(target => target.file).sort();
+function readArchives(archiveDir, coordinates, version) {
+  const packageOrder = releasePackages(version);
+  const expectedFiles = packageOrder.map(target => target.file).sort();
   assert.deepEqual(readdirSync(archiveDir).sort(), expectedFiles,
-    'archive directory must contain exactly the six canonical archives');
+    'archive directory must contain exactly the canonical release archives');
 
-  return PACKAGE_ORDER.map(target => {
+  return packageOrder.map(target => {
     const coordinate = coordinates.get(target.target);
     const path = join(archiveDir, target.file);
     assert.equal(lstatSync(path).isFile(), true, `${target.target}: archive is not a regular file`);
@@ -126,6 +113,7 @@ function readArchives(archiveDir, coordinates) {
     assert.equal(data.length, coordinate.archiveBytes, `${target.target}: archive size differs from audit`);
     const hash = sha256(data);
     assert.equal(hash, coordinate.archiveSha256, `${target.target}: archive hash differs from audit`);
+    if (target.role === 'entry') validateReleaseEntry(data, version);
     return {
       ...target,
       version: coordinate.version,
@@ -148,7 +136,7 @@ export function buildPublicationPlan(manifest, {
   const {candidate, coordinates} = validateManifest(manifest, version);
   assertVersion(version);
   if (stagingEvidence) validateStagingEvidence(stagingEvidence, candidate, coordinates, revision);
-  const archives = readArchives(resolve(archiveDir), coordinates);
+  const archives = readArchives(resolve(archiveDir), coordinates, version);
   return {
     revision,
     sourceCommit: candidate.sourceCommit,

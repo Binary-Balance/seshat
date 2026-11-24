@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {validateReleaseEntry} from './release-archive.mjs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {
@@ -37,22 +38,8 @@ const output = resolve(values.output ?? join(repo, 'work/release-local-archives'
 const evidencePath = resolve(values.evidence ?? join(dirname(output), 'archive-staging.json'));
 let downloadRoot = null;
 
-const targets = new Map([
-  ['universal', {file: 'entry.tgz', package: '@binary-balance/seshat', role: 'entry'}],
-  ['linux-x64', {file: 'linux-x64.tgz', package: '@binary-balance/seshat-linux-x64', role: 'native-release'}],
-  ['linux-arm64', {file: 'linux-arm64.tgz', package: '@binary-balance/seshat-linux-arm64', role: 'native-release'}],
-  ['darwin-x64', {file: 'darwin-x64.tgz', package: '@binary-balance/seshat-darwin-x64', role: 'native-release'}],
-  ['darwin-arm64', {file: 'darwin-arm64.tgz', package: '@binary-balance/seshat-darwin-arm64', role: 'native-release'}],
-  ['win32-x64', {file: 'win32-x64.tgz', package: '@binary-balance/seshat-win32-x64', role: 'native-release'}],
-]);
-
-const hostTargets = new Map([
-  ['linux-x64', ['linux', 'x64']],
-  ['linux-arm64', ['linux', 'arm64']],
-  ['darwin-x64', ['darwin', 'x64']],
-  ['darwin-arm64', ['darwin', 'arm64']],
-  ['win32-x64', ['win32', 'x64']],
-]);
+import {PACKAGE_ORDER, releasePackages, hostLibc} from './release-targets.mjs';
+const targets = new Map(PACKAGE_ORDER.map(target => [target.target, target]));
 
 const sourcePaths = Object.freeze(['crates', 'packages', 'packaging']);
 const fullShaPattern = /^[\da-f]{40}$/i;
@@ -112,10 +99,11 @@ function git(command, args) {
 
 function validateHost() {
   if (!values.target) return;
-  const expected = hostTargets.get(values.target);
+  const expected = targets.get(values.target);
   assert.ok(expected, `unknown host target: ${values.target}`);
-  assert.deepEqual([process.platform, process.arch], expected,
+  assert.deepEqual([process.platform, process.arch], [expected.platform, expected.arch],
     `runner host does not match ${values.target}: ${process.platform}/${process.arch}`);
+  if (expected.libc) assert.equal(hostLibc(), expected.libc, `runner libc does not match ${values.target}`);
 }
 
 export function validateSourceTrees(sourceTrees, label = 'candidate source trees') {
@@ -138,7 +126,7 @@ export function assertSourceTreeEquivalence(sourceTrees, checkoutTrees) {
   return changed;
 }
 
-function validateManifest(manifest) {
+export function validateManifest(manifest) {
   assert.equal(manifest.schemaVersion, 1, 'release audit schema must be version 1');
   assert.equal(manifest.kind, 'seshat-release-notice-audit', 'release audit kind is invalid');
   const candidate = manifest.candidate;
@@ -146,12 +134,13 @@ function validateManifest(manifest) {
   if (candidate?.sourceTrees !== undefined) validateSourceTrees(candidate.sourceTrees);
   assert.match(candidate?.packageVersion ?? '', /^\S+$/, 'candidate package version is missing');
   assert.ok(Array.isArray(manifest.coordinates), 'release audit coordinates are missing');
-  assert.equal(manifest.coordinates.length, targets.size, 'release audit must contain six coordinates');
+  const expectedTargets = new Map(releasePackages(candidate.packageVersion).map(target => [target.target, target]));
+  assert.equal(manifest.coordinates.length, expectedTargets.size, `release audit must contain ${expectedTargets.size} coordinates`);
 
   const seenTargets = new Set();
   const seenArchivePaths = new Set();
   const coordinates = manifest.coordinates.map(coordinate => {
-    const expected = targets.get(coordinate.target);
+    const expected = expectedTargets.get(coordinate.target);
     assert.ok(expected, `unexpected release target: ${coordinate.target}`);
     assert.equal(seenTargets.has(coordinate.target), false, `duplicate release target: ${coordinate.target}`);
     seenTargets.add(coordinate.target);
@@ -161,6 +150,8 @@ function validateManifest(manifest) {
     assert.equal(coordinate.version, candidate.packageVersion, `${coordinate.target}: package version differs`);
     assert.equal(coordinate.archivePath, coordinate.archiveFile,
       `${coordinate.target}: archive path and file differ`);
+    assert.equal(coordinate.archiveFile, coordinate.target === 'universal' ? 'seshat-entry.tgz'
+      : `seshat-${coordinate.target}-release.tgz`, `${coordinate.target}: archive file is not canonical`);
     assert.match(coordinate.archivePath ?? '', /^[A-Za-z0-9][A-Za-z0-9._-]*\.tgz$/,
       `${coordinate.target}: archive path must be a direct member basename`);
     assert.equal(seenArchivePaths.has(coordinate.archivePath), false,
@@ -178,7 +169,7 @@ function validateManifest(manifest) {
       `${coordinate.target}: artifact source commit differs from candidate`);
     return coordinate;
   });
-  assert.deepEqual([...seenTargets].sort(), [...targets.keys()].sort(), 'release target set is incomplete');
+  assert.deepEqual([...seenTargets].sort(), [...expectedTargets.keys()].sort(), 'release target set is incomplete');
   return {candidate, coordinates};
 }
 
@@ -241,9 +232,10 @@ function downloadGroups(coordinates) {
   return {root, groups};
 }
 
-function stageArchives(coordinates, groups) {
-  mkdirSync(output, {recursive: true});
-  assert.deepEqual(readdirSync(output), [], `archive output must be empty: ${output}`);
+export function stageArchives(coordinates, groups, outputDirectory) {
+  const archives = [];
+  mkdirSync(outputDirectory, {recursive: true});
+  assert.deepEqual(readdirSync(outputDirectory), [], `archive output must be empty: ${outputDirectory}`);
   for (const coordinate of coordinates) {
     const expected = targets.get(coordinate.target);
     const sourceDirectory = groups.get(`${coordinate.runId}/${coordinate.artifactName}`);
@@ -259,11 +251,13 @@ function stageArchives(coordinates, groups) {
     assert.equal(bytes, coordinate.archiveBytes, `${coordinate.target}: archive size differs from manifest`);
     assert.equal(hash, coordinate.archiveSha256, `${coordinate.target}: archive hash differs from manifest`);
 
-    const destination = join(output, expected.file);
+    const destination = join(outputDirectory, expected.file);
     copyFileSync(sourcePath, destination);
-    assert.equal(statSync(destination).size, bytes, `${coordinate.target}: staged archive size changed`);
-    assert.equal(sha256(destination), hash, `${coordinate.target}: staged archive hash changed`);
-    report.archives.push({
+    const stagedData = readFileSync(destination);
+    assert.equal(stagedData.length, bytes, `${coordinate.target}: staged archive size changed`);
+    assert.equal(createHash('sha256').update(stagedData).digest('hex'), hash, `${coordinate.target}: staged archive hash changed`);
+    if (expected.role === 'entry') validateReleaseEntry(stagedData, coordinate.version);
+    archives.push({
       target: coordinate.target,
       role: coordinate.role,
       file: expected.file,
@@ -276,8 +270,9 @@ function stageArchives(coordinates, groups) {
       },
     });
   }
-  assert.deepEqual(readdirSync(output).sort(), [...targets.values()].map(target => target.file).sort(),
+  assert.deepEqual(readdirSync(outputDirectory).sort(), coordinates.map(coordinate => targets.get(coordinate.target).file).sort(),
     'archive output contains an unexpected file set');
+  return archives;
 }
 
 function main() {
@@ -306,7 +301,7 @@ function main() {
   report.sourceEquivalence = checkSourceEquivalence(candidate.sourceCommit, candidate.sourceTrees);
   const downloads = downloadGroups(coordinates);
   try {
-    stageArchives(coordinates, downloads.groups);
+    report.archives = stageArchives(coordinates, downloads.groups, output);
   } finally {
     rmSync(downloads.root, {recursive: true, force: true});
   }

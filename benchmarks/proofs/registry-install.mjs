@@ -15,19 +15,15 @@ import {dirname, join, relative, resolve} from 'node:path';
 import {fileURLToPath, pathToFileURL} from 'node:url';
 import {parseArgs} from 'node:util';
 import {tmpdir} from 'node:os';
-import {expectedTag} from './npm-publishing.mjs';
+import {expectedTag, inspectRegistry, validateManifest} from './npm-publishing.mjs';
+import {PACKAGE_ORDER, releasePackages, releaseVersion, hostLibc} from './release-targets.mjs';
 
 export const REGISTRY = 'https://registry.npmjs.org/';
 export const ENTRY_PACKAGE = '@binary-balance/seshat';
 const SLSA_PROVENANCE_PREDICATE = 'https://slsa.dev/provenance/v1';
 
-export const TARGETS = new Map([
-  ['linux-x64', {platform: 'linux', arch: 'x64', package: '@binary-balance/seshat-linux-x64', executable: 'seshat'}],
-  ['linux-arm64', {platform: 'linux', arch: 'arm64', package: '@binary-balance/seshat-linux-arm64', executable: 'seshat'}],
-  ['darwin-x64', {platform: 'darwin', arch: 'x64', package: '@binary-balance/seshat-darwin-x64', executable: 'seshat'}],
-  ['darwin-arm64', {platform: 'darwin', arch: 'arm64', package: '@binary-balance/seshat-darwin-arm64', executable: 'seshat'}],
-  ['win32-x64', {platform: 'win32', arch: 'x64', package: '@binary-balance/seshat-win32-x64', executable: 'seshat.exe'}],
-]);
+export const TARGETS = new Map(PACKAGE_ORDER.filter(value => value.role === 'native-release')
+  .map(target => [target.target, target]));
 
 export const NATIVE_PACKAGES = [...TARGETS.values()].map(target => target.package);
 
@@ -38,7 +34,7 @@ export function auditVersion(audit) {
   return version;
 }
 
-export function validateHost(targetName, actual = {platform: process.platform, arch: process.arch}) {
+export function validateHost(targetName, actual = {platform: process.platform, arch: process.arch, libc: hostLibc()}) {
   const target = TARGETS.get(targetName);
   assert.ok(target, `unknown registry-install target: ${targetName}`);
   assert.deepEqual(
@@ -46,6 +42,7 @@ export function validateHost(targetName, actual = {platform: process.platform, a
     [target.platform, target.arch],
     `host does not match ${targetName}: ${actual.platform}/${actual.arch}`,
   );
+  if (target.libc) assert.equal(actual.libc, target.libc, `host libc does not match ${targetName}`);
   return target;
 }
 
@@ -54,6 +51,12 @@ export function validateNativePackages(installedPackages, expectedPackage) {
   assert.deepEqual(installed, [expectedPackage],
     `installed native packages do not select only ${expectedPackage}`);
   return installed;
+}
+
+export function validateRegistryArchive(archive, coordinate) {
+  assert.equal(archive.status, 'present', `${coordinate.target}: registry archive unavailable`);
+  assert.equal(archive.bytes, coordinate.archiveBytes, `${coordinate.target}: registry archive size differs from audit`);
+  assert.equal(archive.sha256, coordinate.archiveSha256, `${coordinate.target}: registry archive hash differs from audit`);
 }
 
 export function validateBinaryIdentity(identity, coordinate) {
@@ -117,6 +120,8 @@ if (invoked) {
   const work = mkdtempSync(join(tmpdir(), 'seshat-registry-install-'));
   const consumer = join(work, 'consumer');
   let target;
+  let releaseNativePackages;
+  const archiveIntegrities = new Map();
 
   const portable = value => String(value)
     .replaceAll(work, '<work>')
@@ -200,20 +205,23 @@ if (invoked) {
     const entryRoot = join(consumer, 'node_modules', ENTRY_PACKAGE);
     const entryLock = lock.packages?.[`node_modules/${ENTRY_PACKAGE}`];
     assert.equal(entryLock?.version, version, 'lockfile entry package version changed');
+    assert.equal(entryLock.integrity, archiveIntegrities.get(ENTRY_PACKAGE), 'lockfile entry archive differs from audit');
     assert.equal(entryLock?.resolved?.startsWith(REGISTRY), true,
       'lockfile entry package is not resolved from the public registry');
     const entryManifest = readJson(join(entryRoot, 'package.json'));
     assert.equal(entryManifest.name, ENTRY_PACKAGE);
     assert.equal(entryManifest.version, version);
     assert.deepEqual(entryManifest.optionalDependencies, Object.fromEntries(
-      NATIVE_PACKAGES.map(name => [name, version]),
+      releaseNativePackages.map(name => [name, version]),
     ));
 
     const installedPackages = NATIVE_PACKAGES.filter(name =>
       existsSync(join(consumer, 'node_modules', name)));
     validateNativePackages(installedPackages, target.package);
-    for (const packageName of NATIVE_PACKAGES) {
+    for (const packageName of releaseNativePackages) {
       const nativeLock = lock.packages?.[`node_modules/${packageName}`];
+      assert.equal(nativeLock?.integrity, archiveIntegrities.get(packageName),
+        `lockfile native archive differs from audit: ${packageName}`);
       assert.equal(nativeLock?.version, version,
         `lockfile native package version changed: ${packageName}`);
       assert.equal(nativeLock?.resolved?.startsWith(REGISTRY), true,
@@ -225,10 +233,19 @@ if (invoked) {
     assert.equal(nativeManifest.version, version);
     assert.deepEqual(nativeManifest.os, [target.platform]);
     assert.deepEqual(nativeManifest.cpu, [target.arch]);
+    if (target.libc && (nativeManifest.libc !== undefined || releaseVersion(version).musl || target.libc === 'musl')) {
+      assert.deepEqual(nativeManifest.libc, [target.libc]);
+    }
 
     const binaryPath = join(nativeRoot, 'bin', target.executable);
     assert.equal(statSync(binaryPath).isFile(), true, 'matching native executable is missing');
     const binary = validateBinaryIdentity(identity(binaryPath), coordinate);
+    for (const [file, expected] of [['BUILD.json', coordinate.buildProvenance.buildRecord],
+      ['package.json', coordinate.buildProvenance.packageManifest], ['THIRD_PARTY_NOTICES.txt', coordinate.buildProvenance.notice]]) {
+      const actual = identity(join(nativeRoot, file));
+      assert.equal(actual.bytes, expected.bytes, `${file}: installed size differs from audit`);
+      assert.equal(actual.sha256, expected.sha256, `${file}: installed hash differs from audit`);
+    }
     const build = readJson(join(nativeRoot, 'BUILD.json'));
     assert.equal(build.package, target.package);
     assert.equal(build.packageVersion, version);
@@ -253,6 +270,17 @@ if (invoked) {
     const audit = readJson(join(repo, 'docs/research/release-notice-audit.json'));
     version = auditVersion(audit);
     report.version = version;
+    validateManifest(audit, version);
+    releaseNativePackages = releasePackages(version).filter(value => value.role === 'native-release').map(value => value.package);
+    report.registryArchives = [];
+    for (const coordinate of audit.coordinates) {
+      const archive = await inspectRegistry({package:coordinate.package, version,
+        bytes:coordinate.archiveBytes, sha256:coordinate.archiveSha256}, globalThis.fetch);
+      // Availability and exact bytes are checked before installing; npm verifies provenance below.
+      validateRegistryArchive(archive, coordinate);
+      archiveIntegrities.set(coordinate.package, `sha512-${createHash('sha512').update(archive.data).digest('base64')}`);
+      report.registryArchives.push({target:coordinate.target, bytes:archive.bytes, sha256:archive.sha256});
+    }
     const coordinate = audit.coordinates?.find(value => value.target === targetName);
     assert.ok(coordinate, `audit coordinate is missing: ${targetName}`);
     assert.equal(coordinate.package, target.package);

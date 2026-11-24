@@ -4,6 +4,16 @@ on:
   pull_request:
     paths:
       - .github/workflows/npm-publish.yml
+      - .github/workflows/release-local-install.yml
+      - .github/workflows/release-registry-install.yml
+      - benchmarks/proofs/release-archive.mjs
+      - benchmarks/proofs/release-audit.mjs
+      - benchmarks/proofs/release-audit.test.mjs
+      - benchmarks/proofs/registry-install.mjs
+      - benchmarks/proofs/registry-install.test.mjs
+      - benchmarks/proofs/alpine-release-consumer.sh
+      - benchmarks/proofs/release-targets.mjs
+      - benchmarks/proofs/release-targets.test.mjs
       - benchmarks/proofs/npm-publishing.mjs
       - benchmarks/proofs/npm-publishing.test.mjs
       - benchmarks/proofs/release-local-archive-stager.mjs
@@ -72,6 +82,9 @@ jobs:
       - name: Check focused publication controls
         run: |
           node --test --test-isolation=none \
+            benchmarks/proofs/release-audit.test.mjs \
+            benchmarks/proofs/registry-install.test.mjs \
+            benchmarks/proofs/release-targets.test.mjs \
             benchmarks/proofs/npm-publishing.test.mjs \
             benchmarks/proofs/release-local-archive-stager.test.mjs
 
