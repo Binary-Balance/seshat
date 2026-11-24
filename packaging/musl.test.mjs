@@ -3,7 +3,24 @@ import {mkdirSync, mkdtempSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import test from 'node:test';
-import {muslRuntimeInputs, sha256} from './musl.mjs';
+import {muslRuntimeInputs, portableMuslLinkMap, sha256} from './musl.mjs';
+
+test('portable maps ignore Cargo CLI output IDs while preserving link evidence', () => {
+  const map = (work, id) => [
+    'LOAD /rust/lib/self-contained/libc.a',
+    ` .text 0x1234 0x20 ${work}/target/release/deps/seshat-${id}.seshat.ed58a359-cgu.0.rcgu.o`,
+    `OUTPUT(${work}/target/release/deps/seshat-${id} elf64-x86-64)`,
+  ].join('\n');
+  const options = {libraryDirectory:'/rust/lib', repo:'/source'};
+  const first = portableMuslLinkMap(map('/pack/one', '011874c86f0e29a7'), {...options, work:'/pack/one'});
+  const second = portableMuslLinkMap(map('/pack/two', '9cbe9a2298eb026b'), {...options, work:'/pack/two'});
+  assert.equal(sha256(first), sha256(second));
+  for (const [before, after] of [['libc.a','libgcc.a'], ['0x20','0x28'], ['ed58a359','01234567']]) {
+    const changed = portableMuslLinkMap(map('/pack/one', '011874c86f0e29a7').replace(before, after),
+      {...options, work:'/pack/one'});
+    assert.notEqual(sha256(first), sha256(changed));
+  }
+});
 
 test('link maps require audited self-contained inputs and reject additional native runtimes', () => {
   const root = mkdtempSync(join(tmpdir(), 'seshat-musl-map-'));

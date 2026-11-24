@@ -6,6 +6,13 @@ import {loadRuntimeNoticeAssets, renderRuntimeNotice} from './runtime-notice-che
 
 export const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 
+export function portableMuslLinkMap(map, {libraryDirectory, work, repo}) {
+  // The per-pack -Map path changes Cargo's CLI output ID without changing its bytes.
+  return map.replaceAll(libraryDirectory, '{rust-target-libdir}').replaceAll(work, '{pack-work}')
+    .replaceAll(repo, '{source}').replace(/rustc[A-Za-z0-9]+(?=\/symbols\.o)/g, '{rustc-temp}')
+    .replace(/(\/deps\/seshat-)[0-9a-f]{16}(?=[.\s])/g, '$1{cargo-output-id}');
+}
+
 export function muslNotices(directory) {
   const assets = loadRuntimeNoticeAssets(join(directory, 'rust-1.98.1-musl'));
   return {...assets, text:renderRuntimeNotice(assets), metadata:{

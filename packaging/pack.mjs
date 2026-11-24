@@ -7,7 +7,7 @@ import {arch, release, version as osVersion} from 'node:os';
 import {dirname, isAbsolute, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {packNpm} from './npm.mjs';
-import {muslNotices, muslRuntimeInputs, staticMuslElf} from './musl.mjs';
+import {muslNotices, muslRuntimeInputs, portableMuslLinkMap, staticMuslElf} from './musl.mjs';
 import {packageVersion, windowsSdkInfo} from './metadata.mjs';
 import {createPackWork, finishPack, ownedPackWork} from './repeat-pack-evidence.mjs';
 import {assertArchiveNotice, loadRuntimeNoticeAssets, renderRuntimeNotice, validateRustToolchain} from './runtime-notice-check.mjs';
@@ -278,8 +278,7 @@ if (nativeMusl) {
   const map = readFileSync(mapPath, 'utf8');
   const runtimeInputs = muslRuntimeInputs(map, libraryDirectory, additionalNotices.provenance.auditedRuntimeInputs[triple]);
   // Keep disposable build paths out of retained metadata and repeat comparisons.
-  const portableMap = map.replaceAll(libraryDirectory, '{rust-target-libdir}').replaceAll(work, '{pack-work}')
-    .replaceAll(repo, '{source}').replace(/rustc[A-Za-z0-9]+(?=\/symbols\.o)/g, '{rustc-temp}');
+  const portableMap = portableMuslLinkMap(map, {libraryDirectory, work, repo});
   writeFileSync(mapPath, portableMap);
   linkage = {kind:'static-musl', elf:staticMuslElf(bytes, targetConfig.elfMachine),
     muslVersion:additionalNotices.provenance.musl.version, notices:additionalNotices.metadata,
