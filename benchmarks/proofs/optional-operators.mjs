@@ -191,7 +191,10 @@ const config = {source:{include:['*.ts']},capture:Object.keys(originals),setups:
 // Exercise the npm launcher against the same binary in an installed package layout.
 // No pack/install step or registry download is needed for this fixed fixture.
 const launcherRoot = join(work,'installed/node_modules/@binary-balance/seshat');
-const targetKey = process.platform + '-' + process.arch;
+const hostReport = process.platform === 'linux' ? process.report.getReport() : null;
+const isMusl = hostReport && !hostReport.header.glibcVersionRuntime &&
+  hostReport.sharedObjects.some(path => /\/ld-musl-[^/]+\.so\.1$/.test(path));
+const targetKey = process.platform + '-' + process.arch + (isMusl ? '-musl' : '');
 const payloadRoot = join(work,'installed/node_modules/@binary-balance/seshat-' + targetKey);
 mkdirSync(join(launcherRoot,'bin'),{recursive:true});
 mkdirSync(join(payloadRoot,'bin'),{recursive:true});

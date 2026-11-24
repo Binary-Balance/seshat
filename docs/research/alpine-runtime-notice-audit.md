@@ -4,7 +4,9 @@ Checked 2026-11-23 for [#125](https://github.com/Binary-Balance/seshat/issues/12
 The retained native x64 and ARM64 maps require additional musl and LLVM runtime
 attribution before npm musl packages can be prepared. The assets in
 [`rust-1.98.1-musl`](../../packaging/runtime-notices/rust-1.98.1-musl/provenance.json)
-record that prerequisite; they are not wired into packaging. The existing five
+record that prerequisite. The later packaging slice integrates them only into
+the unpublished musl payloads and pins actual selected runtime input hashes to
+this audit in the notice provenance. The existing five
 targets and their Rust notice payload remain unchanged.
 
 ## Artifact identity
@@ -114,8 +116,9 @@ not an independently reproduced, byte-for-byte rebuild of Rust's runtime
 archives or a claim of legal completeness beyond the checked sources. Repeat
 the audit if the toolchain, target link inputs or dependency set changes.
 
-Remaining work includes musl package target/loader selection, target-specific
-notice assembly and build metadata, native package and entry-package tarball
-verification, and release-support/compatibility gates for both architectures.
-No musl npm target, platform-support claim, version bump or publication is
-introduced here. npm publication still requires approval of a prepared release.
+The later [packaging protocol](../alpine-prerequisites.md) builds musl payloads,
+selects the launcher target from positive libc evidence, checks notices through
+staged archives and runs installed-route proofs. Eight-package release helpers,
+registry provenance/availability, trusted publishers and platform acceptance
+remain release gates. The two packages are unpublished and version 0.18.0 is
+unchanged. npm publication still requires approval of a prepared release.

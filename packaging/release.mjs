@@ -6,6 +6,7 @@ import {chmodSync, copyFileSync, lstatSync, mkdirSync, readFileSync, readdirSync
 import {basename, dirname, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {packNpm} from './npm.mjs';
+import {muslNotices, validateMuslBuild} from './musl.mjs';
 import {packageVersion} from './metadata.mjs';
 import {loadRuntimeNoticeAssets, renderRuntimeNotice} from './runtime-notice-check.mjs';
 
@@ -15,6 +16,8 @@ const cargoManifest = join(repo, 'crates/seshat/Cargo.toml');
 const version = packageVersion(readFileSync(cargoManifest, 'utf8'));
 
 const targets = [
+  {key:'linux-x64-musl', triple:'x86_64-unknown-linux-musl', name:'@binary-balance/seshat-linux-x64-musl', os:['linux'], cpu:['x64'], libc:['musl'], executable:'seshat', elfMachine:62},
+  {key:'linux-arm64-musl', triple:'aarch64-unknown-linux-musl', name:'@binary-balance/seshat-linux-arm64-musl', os:['linux'], cpu:['arm64'], libc:['musl'], executable:'seshat', elfMachine:183},
   {key: 'linux-x64', triple: 'x86_64-unknown-linux-gnu', name: '@binary-balance/seshat-linux-x64', os: ['linux'], cpu: ['x64'], libc: ['glibc'], executable: 'seshat'},
   {key: 'linux-arm64', triple: 'aarch64-unknown-linux-gnu', name: '@binary-balance/seshat-linux-arm64', os: ['linux'], cpu: ['arm64'], libc: ['glibc'], executable: 'seshat'},
   {key: 'darwin-x64', triple: 'x86_64-apple-darwin', name: '@binary-balance/seshat-darwin-x64', os: ['darwin'], cpu: ['x64'], executable: 'seshat'},
@@ -144,7 +147,7 @@ for (const target of targets) {
     assert.ok(Array.isArray(build.dependencies) && build.dependencies.length > 0 &&
       build.dependencies.every(row => row && ['name', 'version', 'license'].every(field => typeof row[field] === 'string' && row[field])),
     `${target.key}: dependency inventory is missing or invalid`);
-    assert.ok(Array.isArray(build.nativeLibraries) && build.nativeLibraries.length > 0 &&
+    assert.ok(Array.isArray(build.nativeLibraries) && (target.libc?.[0] === 'musl' ? build.nativeLibraries.length === 0 : build.nativeLibraries.length > 0) &&
       build.nativeLibraries.every(name => typeof name === 'string' && name), `${target.key}: native libraries are missing`);
     const expectedNotices = {
       format:runtime.provenance.format, formatVersion:runtime.provenance.formatVersion,
@@ -156,6 +159,11 @@ for (const target of targets) {
     };
     for (const [field, value] of Object.entries(expectedNotices)) {
       assert.deepEqual(build.runtimeNotices?.[field], value, `${target.key}: runtimeNotices ${field} mismatch`);
+    }
+    if (target.libc?.[0] === 'musl') {
+      const additional = muslNotices(join(here, 'runtime-notices'));
+      validateMuslBuild(build, payload.binary, target.elfMachine, additional);
+      assert.ok(payload.notices.includes(additional.text), target.key + ': additional musl notices are missing');
     }
     assert.ok(payload.notices.includes(renderRuntimeNotice(runtime)), `${target.key}: pinned runtime notices are missing`);
   }

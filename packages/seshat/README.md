@@ -29,7 +29,8 @@ npm install --save-dev @binary-balance/seshat
 
 Seshat needs Node `>=24.20.0 <25`. npm installs a prebuilt binary for Linux
 x64/ARM64 (glibc), macOS x64/ARM64 or Windows x64, so Rust is not required.
-Alpine Linux, which uses musl instead of glibc, is not supported. See the
+Alpine x64/ARM64 (musl) packages are being verified for a future release and
+remain unpublished; the current public release does not include them. See the
 [platform support matrix](https://github.com/Binary-Balance/seshat/blob/main/docs/platform-support.md) for details.
 
 The project being assessed must already have its own dependencies installed,

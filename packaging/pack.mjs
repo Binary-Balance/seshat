@@ -7,6 +7,7 @@ import {arch, release, version as osVersion} from 'node:os';
 import {dirname, isAbsolute, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {packNpm} from './npm.mjs';
+import {muslNotices, muslRuntimeInputs, portableMuslLinkMap, staticMuslElf} from './musl.mjs';
 import {packageVersion, windowsSdkInfo} from './metadata.mjs';
 import {createPackWork, finishPack, ownedPackWork} from './repeat-pack-evidence.mjs';
 import {assertArchiveNotice, loadRuntimeNoticeAssets, renderRuntimeNotice, validateRustToolchain} from './runtime-notice-check.mjs';
@@ -16,14 +17,21 @@ const repo = resolve(here, '..');
 const cargoManifest = join(repo, 'crates/seshat/Cargo.toml');
 const runtimeNoticeDirectory = join(here, 'runtime-notices', 'rust-1.98.1');
 const version = packageVersion(readFileSync(cargoManifest, 'utf8'));
+const nativeMusl = process.argv.length === 3 && process.argv[2] === '--native-musl';
 const nativeArm64 = process.argv.length === 3 && process.argv[2] === '--native-arm64';
 const nativeMacos = process.argv.length === 3 && process.argv[2] === '--native-macos';
 const nativeWindows = process.argv.length === 3 && process.argv[2] === '--native-windows';
-assert.ok(nativeArm64 || nativeMacos || nativeWindows || process.argv.length === 3,
-  'usage: node packaging/pack.mjs <Debian archive directory> | --native-arm64 | --native-macos | --native-windows');
-assert.ok(nativeArm64 || nativeMacos || nativeWindows || !process.argv[2].startsWith('-'),
+assert.ok(nativeMusl || nativeArm64 || nativeMacos || nativeWindows || process.argv.length === 3,
+  'usage: node packaging/pack.mjs <Debian archive directory> | --native-musl | --native-arm64 | --native-macos | --native-windows');
+assert.ok(nativeMusl || nativeArm64 || nativeMacos || nativeWindows || !process.argv[2].startsWith('-'),
   `unknown pack mode: ${process.argv[2]}`);
-if (nativeArm64) {
+if (nativeMusl) {
+  assert.equal(process.platform, 'linux', 'native musl mode requires Linux');
+  assert.ok(['x64', 'arm64'].includes(process.arch), 'native musl mode requires x64 or ARM64');
+  assert.equal(readFileSync('/etc/alpine-release', 'utf8').trim(), '3.24.2', 'native musl mode requires Alpine 3.24.2');
+  assert.equal(process.report.getReport().header.glibcVersionRuntime, undefined);
+  assert.ok(process.report.getReport().sharedObjects.some(path => /\/ld-musl-[^/]+\.so\.1$/.test(path)), 'positive musl runtime evidence is required');
+} else if (nativeArm64) {
   assert.equal(process.platform, 'linux', 'native ARM64 mode requires Linux');
   assert.equal(process.arch, 'arm64', 'native ARM64 mode must run on an ARM64 host');
   assert.equal(execFileSync('uname', ['-m'], {encoding:'utf8'}).trim(), 'aarch64', 'native ARM64 mode requires aarch64');
@@ -56,9 +64,11 @@ if (nativeArm64) {
   assert.equal(process.platform, 'linux', 'the Debian archive mode requires Linux');
   assert.equal(process.arch, 'x64', 'the Debian archive mode is x64 only');
 }
-if (!nativeMacos && !nativeWindows) assert.ok(process.report.getReport().header.glibcVersionRuntime, 'glibc is required');
-const archives = nativeArm64 || nativeMacos || nativeWindows ? null : resolve(process.argv[2]);
-const targetConfig = nativeArm64
+if (!nativeMusl && !nativeMacos && !nativeWindows) assert.ok(process.report.getReport().header.glibcVersionRuntime, 'glibc is required');
+const archives = nativeMusl || nativeArm64 || nativeMacos || nativeWindows ? null : resolve(process.argv[2]);
+const targetConfig = nativeMusl
+  ? {key:'linux-' + process.arch + '-musl', packageName:'@binary-balance/seshat-linux-' + process.arch + '-musl', target:(process.arch === 'arm64' ? 'aarch64' : 'x86_64') + '-unknown-linux-musl', cpu:process.arch, os:'linux', elfMachine:process.arch === 'arm64' ? 183 : 62}
+  : nativeArm64
   ? {key:'linux-arm64', packageName:'@binary-balance/seshat-linux-arm64', target:'aarch64-unknown-linux-gnu', cpu:'arm64', os:'linux', elfMachine:183, glibcCeiling:'2.35'}
   : nativeMacos
     ? {key:`darwin-${process.arch}`, packageName:`@binary-balance/seshat-darwin-${process.arch}`, target:process.arch === 'arm64' ? 'aarch64-apple-darwin' : 'x86_64-apple-darwin', cpu:process.arch, os:'darwin', machoArch:process.arch === 'arm64' ? 'arm64' : 'x86_64', minimumMacos:'15.0'}
@@ -90,7 +100,8 @@ const runtimeNotices = loadRuntimeNoticeAssets(runtimeNoticeDirectory);
 const rustcVersion = run('rustc', ['--version']).trim();
 const rustcVerbose = run('rustc', ['-vV']);
 validateRustToolchain(runtimeNotices.provenance, {versionOutput:rustcVersion, verboseOutput:rustcVerbose});
-const runtimeNotice = renderRuntimeNotice(runtimeNotices);
+const additionalNotices = nativeMusl ? muslNotices(join(here, 'runtime-notices')) : null;
+const runtimeNotice = Buffer.concat([renderRuntimeNotice(runtimeNotices), ...(additionalNotices ? [additionalNotices.text] : [])]);
 const runtimeLicenseText = path => {
   const asset = runtimeNotices.files.find(file => file.path === path);
   assert.ok(asset, `runtime notice asset is missing: ${path}`);
@@ -150,12 +161,12 @@ function peInfo(bytes) {
   return {machine, magic, imports:[...new Set(imports)].sort()};
 }
 const sourceCommit = () => run('git', ['rev-parse', 'HEAD']).trim();
-const glibcPackages = nativeArm64 || nativeMacos || nativeWindows ? [] : [
+const glibcPackages = nativeMusl || nativeArm64 || nativeMacos || nativeWindows ? [] : [
   {file:'libc6.deb', sha256:'05f7264da867b37f4c5ce49266b558ea1e81e05a9464f623152fca70f3550282'},
   {file:'libc6-dev.deb', sha256:'e7f7b45d9c5cfcf37609f0b6efd3c645272c812144703af89dfd32218fcb0fd3'},
   {file:'libgcc-s1.deb', sha256:'e478f2709d8474165bb664de42e16950c391f30eaa55bc9b3573281d83a29daf'},
 ];
-if (!nativeArm64 && !nativeMacos && !nativeWindows) {
+if (!nativeMusl && !nativeArm64 && !nativeMacos && !nativeWindows) {
   const sysroot = join(work,'sysroot'); mkdirSync(sysroot);
   for (const pkg of glibcPackages) {
     const path = resolve(archives,pkg.file);
@@ -173,7 +184,7 @@ if (!nativeArm64 && !nativeMacos && !nativeWindows) {
     '-C',`link-arg=-B${sysroot}/usr/lib/x86_64-linux-gnu/`,
     '-C',`link-arg=-L${sysroot}/lib/x86_64-linux-gnu`,
     ...buildIdRustflags].join('\x1f');
-} else if (nativeArm64) {
+} else if (nativeArm64 || nativeMusl) {
   env.CARGO_ENCODED_RUSTFLAGS = buildIdRustflags.join('\x1f');
 }
 // The explicit target keeps older-library flags away from host build scripts.
@@ -182,6 +193,12 @@ const cargoBuildArgs = ['build','--release','--locked','--offline','--target',tr
 if (nativeWindows) cargoBuildArgs.splice(1, 0, '--config',
   'target.x86_64-pc-windows-msvc.rustflags=["-C","target-feature=+crt-static","-C","link-arg=/Brepro"]');
 run('cargo', cargoBuildArgs);
+const mapPath = join(work, 'seshat.map');
+if (nativeMusl) {
+  assert.equal(rustcVerbose.match(/^host: (.+)$/m)?.[1], triple, 'native musl toolchain target mismatch');
+  run('cargo', ['rustc', '--release', '--locked', '--offline', '--target', triple,
+    '--manifest-path', cargoManifest, '--bin', 'seshat', '--', '-C', 'link-arg=-Wl,-Map,' + mapPath]);
+}
 const metadata = JSON.parse(run('cargo',['metadata','--locked','--offline','--format-version','1','--manifest-path',cargoManifest]));
 assert.equal(metadata.packages.find(p => p.id === metadata.resolve.root).version, version);
 const binary = join(target,triple,`release/${nativeWindows ? targetConfig.binaryName : 'seshat'}`);
@@ -255,6 +272,18 @@ if (nativeMacos) {
     ?? loadCommands.match(/cmd LC_VERSION_MIN_MACOSX[\s\S]*?\n\s*version\s+([0-9.]+)/)?.[1];
   assert.equal(minimum, targetConfig.minimumMacos, `expected macOS minimum ${targetConfig.minimumMacos}`);
 }
+let linkage;
+if (nativeMusl) {
+  const libraryDirectory = run('rustc', ['--print', 'target-libdir', '--target', triple]).trim();
+  const map = readFileSync(mapPath, 'utf8');
+  const runtimeInputs = muslRuntimeInputs(map, libraryDirectory, additionalNotices.provenance.auditedRuntimeInputs[triple]);
+  // Keep disposable build paths out of retained metadata and repeat comparisons.
+  const portableMap = portableMuslLinkMap(map, {libraryDirectory, work, repo});
+  writeFileSync(mapPath, portableMap);
+  linkage = {kind:'static-musl', elf:staticMuslElf(bytes, targetConfig.elfMachine),
+    muslVersion:additionalNotices.provenance.musl.version, notices:additionalNotices.metadata,
+    runtimeInputs, mapSha256:sha256(portableMap)};
+}
 const build = {
   schemaVersion:1,
   package:targetConfig.packageName,
@@ -278,6 +307,7 @@ const build = {
     os:{platform:process.platform, architecture:arch(), release:release(), version:osVersion(), runner:process.env.RUNNER_OS ?? null,
       image:process.env.ImageOS ?? null, imageVersion:process.env.ImageVersion ?? null},
   } : {}),
+  ...(nativeMusl ? {cpu:process.arch, linkage} : {}),
   rust:rustcVersion,
   runtimeNotices:{
     format:runtimeNotices.provenance.format,
@@ -297,7 +327,7 @@ const build = {
   dependencies:dependencies.map(({name,version,license}) => ({name,version,license})),
   glibcPackages,
 };
-if (!nativeMacos && !nativeWindows) {
+if (!nativeMusl && !nativeMacos && !nativeWindows) {
   assert.ok(build.glibcSymbols.length,'expected versioned glibc requirements');
   for (const version of build.glibcSymbols) {
     const [major,minor] = version.slice(6).split('.').map(Number);
@@ -318,7 +348,7 @@ const packageManifest = {
   repository:{type:'git',url:'git+https://github.com/Binary-Balance/seshat.git'},
   engines:{node:'>=24.20.0 <25'},
   os:[targetConfig.os], cpu:[targetConfig.cpu],
-  ...(targetConfig.os === 'linux' ? {libc:['glibc']} : {}),
+  ...(targetConfig.os === 'linux' ? {libc:[nativeMusl ? 'musl' : 'glibc']} : {}),
   files:[packagedBinary,'BUILD.json','LICENSE','README.md','THIRD_PARTY_NOTICES.txt'],
 };
 writeFileSync(join(stage,'package.json'),JSON.stringify(packageManifest,null,2)+'\n');

@@ -85,7 +85,9 @@ assert.deepEqual(Object.keys(entryArchiveManifest.optionalDependencies).sort(), 
   '@binary-balance/seshat-darwin-arm64',
   '@binary-balance/seshat-darwin-x64',
   '@binary-balance/seshat-linux-arm64',
+  '@binary-balance/seshat-linux-arm64-musl',
   '@binary-balance/seshat-linux-x64',
+  '@binary-balance/seshat-linux-x64-musl',
   '@binary-balance/seshat-win32-x64',
 ]);
 
@@ -96,7 +98,12 @@ if (process.env.SESHAT_NATIVE_TARBALL_SHA256) {
   assert.equal(sha256(nativeArchiveBytes), process.env.SESHAT_NATIVE_TARBALL_SHA256);
 }
 
-const targetForHost = {
+const hostLibc = process.platform === 'linux'
+  ? process.report.getReport().header.glibcVersionRuntime ? 'glibc'
+    : process.report.getReport().sharedObjects.some(path => /\/ld-musl-[^/]+\.so\.1$/.test(path)) ? 'musl' : null
+  : null;
+if (process.platform === 'linux') assert.ok(hostLibc, 'proof host libc must be known');
+const targetForHost = hostLibc === 'musl' ? '@binary-balance/seshat-linux-' + process.arch + '-musl' : {
   'linux-x64': '@binary-balance/seshat-linux-x64',
   'linux-arm64': '@binary-balance/seshat-linux-arm64',
   'darwin-x64': '@binary-balance/seshat-darwin-x64',
@@ -116,7 +123,7 @@ const packageManifests = new Map(packageArchives);
 for (const name of nativePackageNames) {
   if (packageManifests.has(name)) continue;
   const linux = name.includes('-linux-');
-  const arm64 = name.endsWith('-arm64');
+  const arm64 = name.includes('-arm64');
   packageManifests.set(name, {
     manifest: {
       name,
@@ -125,7 +132,7 @@ for (const name of nativePackageNames) {
       engines: entryArchiveManifest.engines,
       os: [name.includes('-darwin-') ? 'darwin' : name.includes('-win32-') ? 'win32' : 'linux'],
       cpu: [arm64 ? 'arm64' : 'x64'],
-      ...(linux ? {libc: ['glibc']} : {}),
+      ...(linux ? {libc: [name.endsWith('-musl') ? 'musl' : 'glibc']} : {}),
     },
     bytes: null,
   });
