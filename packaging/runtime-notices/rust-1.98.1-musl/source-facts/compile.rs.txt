@@ -1,0 +1,99 @@
+fn copy_llvm_libunwind(builder: &Builder<'_>, target: TargetSelection, libdir: &Path) -> PathBuf {
+    let libunwind_path = builder.ensure(llvm::Libunwind { target });
+    let libunwind_source = libunwind_path.join("libunwind.a");
+    let libunwind_target = libdir.join("libunwind.a");
+    builder.copy_link(&libunwind_source, &libunwind_target, FileType::NativeLibrary);
+    libunwind_target
+}
+
+/// Copies third party objects needed by various targets.
+fn copy_third_party_objects(
+    builder: &Builder<'_>,
+    compiler: &Compiler,
+    target: TargetSelection,
+) -> Vec<(PathBuf, DependencyType)> {
+    let mut target_deps = vec![];
+
+    if builder.config.needs_sanitizer_runtime_built(target) && compiler.stage != 0 {
+        // The sanitizers are only copied in stage1 or above,
+        // to avoid creating dependency on LLVM.
+        target_deps.extend(
+            copy_sanitizers(builder, compiler, target)
+                .into_iter()
+                .map(|d| (d, DependencyType::Target)),
+        );
+    }
+
+    if target == "x86_64-fortanix-unknown-sgx"
+        || builder.config.llvm_libunwind(target) == LlvmLibunwind::InTree
+            && (target.contains("linux")
+                || target.contains("fuchsia")
+                || target.contains("aix")
+                || target.contains("hexagon"))
+    {
+        let libunwind_path =
+            copy_llvm_libunwind(builder, target, &builder.sysroot_target_libdir(*compiler, target));
+        target_deps.push((libunwind_path, DependencyType::Target));
+    }
+
+    target_deps
+}
+
+/// Copies third party objects needed by various targets for self-contained linkage.
+fn copy_self_contained_objects(
+    builder: &Builder<'_>,
+    compiler: &Compiler,
+    target: TargetSelection,
+) -> Vec<(PathBuf, DependencyType)> {
+    let libdir_self_contained =
+        builder.sysroot_target_libdir(*compiler, target).join("self-contained");
+    t!(fs::create_dir_all(&libdir_self_contained));
+    let mut target_deps = vec![];
+
+    // Copies the libc and CRT objects.
+    //
+    // rustc historically provides a more self-contained installation for musl targets
+    // not requiring the presence of a native musl toolchain. For example, it can fall back
+    // to using gcc from a glibc-targeting toolchain for linking.
+    // To do that we have to distribute musl startup objects as a part of Rust toolchain
+    // and link with them manually in the self-contained mode.
+    if target.needs_crt_begin_end() {
+        let srcdir = builder.musl_libdir(target).unwrap_or_else(|| {
+            panic!("Target {:?} does not have a \"musl-libdir\" key", target.triple)
+        });
+        if !target.starts_with("wasm32") {
+            for &obj in &["libc.a", "crt1.o", "Scrt1.o", "rcrt1.o", "crti.o", "crtn.o"] {
+                copy_and_stamp(
+                    builder,
+                    &libdir_self_contained,
+                    &srcdir,
+                    obj,
+                    &mut target_deps,
+                    DependencyType::TargetSelfContained,
+                );
+            }
+            let crt_path = builder.ensure(llvm::CrtBeginEnd { target });
+            for &obj in &["crtbegin.o", "crtbeginS.o", "crtend.o", "crtendS.o"] {
+                let src = crt_path.join(obj);
+                let target = libdir_self_contained.join(obj);
+                builder.copy_link(&src, &target, FileType::NativeLibrary);
+                target_deps.push((target, DependencyType::TargetSelfContained));
+            }
+        } else {
+            // For wasm32 targets, we need to copy the libc.a and crt1-command.o files from the
+            // musl-libdir, but we don't need the other files.
+            for &obj in &["libc.a", "crt1-command.o"] {
+                copy_and_stamp(
+                    builder,
+                    &libdir_self_contained,
+                    &srcdir,
+                    obj,
+                    &mut target_deps,
+                    DependencyType::TargetSelfContained,
+                );
+            }
+        }
+        if !target.starts_with("s390x") {
+            let libunwind_path = copy_llvm_libunwind(builder, target, &libdir_self_contained);
+            target_deps.push((libunwind_path, DependencyType::TargetSelfContained));
+        }

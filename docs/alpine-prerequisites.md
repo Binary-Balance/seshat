@@ -13,16 +13,21 @@ Rust musl target and Node architecture, and records the kernel and installed
 APK versions. There is no emulation step.
 
 Alpine's [release table](https://www.alpinelinux.org/releases/) lists 3.24 as
-maintained. Its [Node package index](https://pkgs.alpinelinux.org/packages?branch=v3.24&name=nodejs)
-provides Node 24. The proof installs Node and npm from that branch, rejects Node
-outside Seshat's `>=24.20.0 <25` range, and records the actual versions.
-APK updates are intentionally not pinned; the image is pinned, while each
-run's package inventory identifies its dependency versions.
+maintained. CI uses hash-pinned Node 24.20.0 musl archives from the
+[Node unofficial-builds project](https://github.com/nodejs/unofficial-builds),
+with bundled npm 11.19.0, to check Seshat's advertised minimum. These are
+upstream experimental builds, not official Node binary distributions. The
+workflow pins both archive hashes from the release's
+[SHA-256 list](https://unofficial-builds.nodejs.org/download/release/v24.20.0/SHASUMS256.txt)
+and rejects a hash or Node-version mismatch before running proofs. The host
+record retains the archive and executable hashes. APK build/proof tools follow
+the 3.24 repositories; each run records their actual versions.
 
 This is a candidate userspace, not an established minimum kernel or a claim
-about older Alpine branches. The Node 24.20.0 minimum has not been tested on
-musl by this protocol when APK supplies a later Node version. The eventual
-package acceptance must settle and verify that floor separately.
+about older Alpine branches. The earlier
+[native run](https://github.com/Binary-Balance/seshat/actions/runs/45143532749)
+passed with APK Node 24.22.3; the updated workflow checks the 24.20.0 floor
+separately. Package acceptance still needs installed-route verification.
 
 ## Execution and evidence
 
@@ -52,8 +57,11 @@ retains logs, reports, binary hashes, ELF headers/dependencies, linker maps,
 compiler/linker versions and Rust runtime archive hashes even on failure.
 The artifact also retains the existing proofs' `result.json` files; some
 proofs write their report there rather than to `SESHAT_PROOF_OUTPUT`.
+The host check validates the additional musl notice assets and records their
+identities alongside the Node input hashes.
 
-For a local native x64 run, use a disposable source copy so that `npm ci` does
+For a local native x64 trial with Alpine's packaged Node, use a disposable
+source copy so that `npm ci` does
 not replace another platform's native dependency packages:
 
 ```sh
@@ -69,7 +77,8 @@ podman run --rm --init \
 
 Use the workflow's ARM64 image and `arm64` argument on a native ARM64 host.
 The script rejects the wrong architecture. Do not treat an emulated run as
-the required native platform evidence.
+the required native platform evidence. To reproduce the CI minimum instead
+of the packaged Node version, use the workflow's pinned download commands.
 
 ## Runtime notice gate
 
@@ -89,13 +98,16 @@ applicable per-file notices, plus the matching full
 Audit any Alpine/GCC runtime selected by the actual link separately. The
 existing Rust/libm notices do not establish full musl coverage, and an ELF
 with no dynamic dependencies does not establish notice completeness.
+The [runtime audit](research/alpine-runtime-notice-audit.md) now records those
+linked components and the prepared additional notice assets. Target-specific
+notice assembly still needs to be verified through the eventual archives.
 
 ## Remaining acceptance
 
 This prerequisite proof does not install the CLI through npm or a standalone
 archive. Before declaring support, #125 still requires the two musl packages,
 launcher libc selection, installed-route proofs without Rust, audited runtime
-notices, eight-package release checks and provenance, both npm trusted
+notice assembly, eight-package release checks and provenance, both npm trusted
 publishers, and regression proofs on the five existing hosts. Vitest browser
 mode on Alpine is also unverified; the Node Vitest proof makes no browser
 support claim. Publication requires the existing prepared-release approval.
