@@ -11,7 +11,7 @@
     "x86_64-unknown-linux-musl",
     "aarch64-unknown-linux-musl"
   ],
-  "status": "Notice prerequisites only; no npm target support or packaging integration",
+  "status": "Integrated into unpublished musl packages; release acceptance and publication remain gated",
   "baseRuntimeNoticeDirectory": "../rust-1.98.1",
   "musl": {
     "version": "1.2.5",
@@ -481,7 +481,7 @@
     }
   ],
   "integration": {
-    "noticeHeading": "Additional musl and LLVM runtime attribution audited for Rust 1.98.1 x86_64/aarch64 Linux musl; prerequisite assets only.",
+    "noticeHeading": "Additional musl and LLVM runtime attribution audited for Rust 1.98.1 x86_64/aarch64 Linux musl.",
     "appendOrder": [
       "musl-COPYRIGHT",
       "musl-notices/src/math/cbrt.c.txt",
@@ -506,5 +506,25 @@
     ],
     "sourceFactsAreNoticePayload": false,
     "failClosedOnAssetHashChange": true
+  },
+  "auditedRuntimeInputs": {
+    "x86_64-unknown-linux-musl": {
+      "self-contained/crtbeginS.o": "297960e338581a38bbfcbee45169a847bcdc5527ccaf68abe95b72b3b0856bed",
+      "self-contained/crtendS.o": "0d11009c048ae289cdf184d726b767debc2972321e143838d28d7b6802b69c7c",
+      "self-contained/crti.o": "5343749d306ea3578a4ae5c796be362100273f3314cec283be621bbe4a8ec720",
+      "self-contained/crtn.o": "794abd4b28db5de5f993b1445460d90fa3191cc9556a8b8881d5d34a5e8dfa87",
+      "self-contained/libc.a": "e699c64b0c6b427d89ad5bf767bf78beb30c19930c5dedff635951636e8f9f70",
+      "self-contained/libunwind.a": "eb16569e611a5d6cdda2e7604fd6402a3ad810817dd8d63ed50baa2ce8070aaa",
+      "self-contained/rcrt1.o": "7998a49f23b463b1bf59aecd8fde59df5d0f0bf819d1272d92c6f00ae81fc429"
+    },
+    "aarch64-unknown-linux-musl": {
+      "self-contained/crt1.o": "2c8595cff75b182ad59c0278d5f81bed2cf1e51b5bf9324db52142c89dd6479f",
+      "self-contained/crtbegin.o": "522c4ac7628b80df407f1873be18b6b9b398db5be7f9f5586835cdfd189f6a9e",
+      "self-contained/crtend.o": "9fd9518f8a0ba537a77c5d5c638ec30efa388a9458c21ad84f5607c535547adb",
+      "self-contained/crti.o": "b49a67e2e36eed4836023fc26ff9da617e2020a2317aadfeb7971e4cbe612bf7",
+      "self-contained/crtn.o": "b2f52a98df83f38814f34f7477aeb629d5e1fb1c1379ef2739cad91ab9ab8734",
+      "self-contained/libc.a": "b03473b6f1efb72f700f561b4407a88885b37e0edb5cdb2a64de0df5499e813f",
+      "self-contained/libunwind.a": "06977ce3e033cf2c06fcbac9b25b7c9213c7b4aa09f2a4d4b4427fb809b9f203"
+    }
   }
 }

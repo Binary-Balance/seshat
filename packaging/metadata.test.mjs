@@ -7,13 +7,14 @@ import test from 'node:test';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {loadRuntimeNoticeAssets, renderRuntimeNotice} from './runtime-notice-check.mjs';
+import {muslNotices, staticMuslElf} from './musl.mjs';
 import {packageVersion, windowsSdkInfo} from './metadata.mjs';
 import {assertArchiveExecutable} from './npm.mjs';
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const repository = {type: 'git', url: 'git+https://github.com/Binary-Balance/seshat.git'};
 const entryDescription = 'A native CLI for TypeScript and TSX complexity analysis and mutation testing.';
-const packageDirectories = ['seshat', 'linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'win32-x64'];
+const packageDirectories = ['seshat', 'linux-x64', 'linux-arm64', 'darwin-x64', 'darwin-arm64', 'win32-x64', 'linux-x64-musl', 'linux-arm64-musl'];
 const tarCommand = process.platform === 'win32' ? 'tar.exe' : 'tar';
 
 test('package version belongs to [package], regardless of dependency ordering', () => {
@@ -100,6 +101,7 @@ const triples = {
   'linux-x64':'x86_64-unknown-linux-gnu', 'linux-arm64':'aarch64-unknown-linux-gnu',
   'darwin-x64':'x86_64-apple-darwin', 'darwin-arm64':'aarch64-apple-darwin',
   'win32-x64':'x86_64-pc-windows-msvc',
+  'linux-x64-musl':'x86_64-unknown-linux-musl', 'linux-arm64-musl':'aarch64-unknown-linux-musl',
 };
 const runtime = loadRuntimeNoticeAssets(join(repo, 'packaging/runtime-notices/rust-1.98.1'));
 const noticeBytes = Buffer.concat([Buffer.from('Synthetic dependency notice fixture\n\n'), renderRuntimeNotice(runtime)]);
@@ -107,25 +109,56 @@ const archiveFile = (archive, path) => execFileSync(tarCommand, ['-xOf', archive
 const archiveFiles = archive => execFileSync(tarCommand, ['-tf', archive], {encoding:'utf8'}).trim().split(/\r?\n/)
   .filter(path => !path.endsWith('/')).map(path => path.replace(/^package\//, '')).sort();
 
+// A minimal ELF64 static PIE fixture exercises staging without pretending it is native build evidence.
+function staticElf(machine) {
+  const bytes = Buffer.alloc(64 + 56 + 16);
+  bytes.write('7f454c460201', 0, 'hex');
+  bytes.writeUInt16LE(machine, 18);
+  bytes.writeBigUInt64LE(64n, 32);
+  bytes.writeUInt16LE(56, 54);
+  bytes.writeUInt16LE(1, 56);
+  bytes.writeUInt32LE(2, 64);
+  bytes.writeBigUInt64LE(120n, 72);
+  bytes.writeBigUInt64LE(16n, 96);
+  return bytes;
+}
+
+test('static musl ELF validation permits static PIE and rejects runtime dependencies', () => {
+  const bytes = staticElf(62);
+  assert.deepEqual(staticMuslElf(bytes, 62), {interpreter:null, needed:[]});
+  assert.throws(() => staticMuslElf(bytes, 183), /machine/);
+  bytes.writeBigInt64LE(1n, 120);
+  assert.throws(() => staticMuslElf(bytes, 62), /DT_NEEDED/);
+  bytes.writeUInt32LE(3, 64);
+  assert.throws(() => staticMuslElf(bytes, 62), /PT_INTERP/);
+});
+
 const supportedKeys = Object.keys(triples).filter(key => process.platform !== 'win32' || key === 'win32-x64');
 
 function nativeFixture(root, key = supportedKeys[0]) {
   const binary = join(root, `${key} binary &= %SESHAT_RELEASE_PATH%`);
   const notices = join(root, `${key} notices &= %SESHAT_RELEASE_PATH%.txt`);
   const info = join(root, `${key} BUILD &= %SESHAT_RELEASE_PATH%.json`);
-  const bytes = Buffer.from(`synthetic ${key} binary`);
+  const musl = key.endsWith('-musl');
+  const additional = musl ? muslNotices(join(repo, 'packaging/runtime-notices')) : null;
+  const noticesBytes = Buffer.concat([noticeBytes, ...(additional ? [additional.text] : [])]);
+  const bytes = musl ? staticElf(key.includes('arm64') ? 183 : 62) : Buffer.from(`synthetic ${key} binary`);
   const build = {
     schemaVersion:1, package:`@binary-balance/seshat-${key}`, packageVersion:version, target:triples[key], sourceCommit,
     cargoLockSha256:sha256(readFileSync(join(repo, 'crates/seshat/Cargo.lock'))), rust:runtime.provenance.toolchain.rustcBuild,
     binarySha256:sha256(bytes), binaryBytes:bytes.length,
     dependencyInventoryScope:'synthetic fixture inventory', dependencies:[{name:'fixture', version:'1.0.0', license:'MIT'}],
-    nativeLibraries:['synthetic library'],
+    nativeLibraries:musl ? [] : ['synthetic library'],
+    ...(musl ? {glibcSymbols:[], linkage:{kind:'static-musl', elf:staticMuslElf(bytes, key.includes('arm64') ? 183 : 62),
+      muslVersion:additional.provenance.musl.version, notices:additional.metadata, mapSha256:'a'.repeat(64),
+      runtimeInputs:[...(key.includes('arm64') ? ['crt1.o','crtbegin.o','crtend.o'] : ['rcrt1.o','crtbeginS.o','crtendS.o']), 'crti.o','libc.a','libunwind.a','crtn.o']
+        .map(name => ({path:'self-contained/' + name, bytes:1, sha256:additional.provenance.auditedRuntimeInputs[triples[key]]['self-contained/' + name]}))}} : {}),
     runtimeNotices:{format:runtime.provenance.format, formatVersion:runtime.provenance.formatVersion,
       rustcVersion:runtime.provenance.toolchain.rustcVersion, rustcBuild:runtime.provenance.toolchain.rustcBuild,
-      rustCommit:runtime.provenance.toolchain.rustCommit, noticeSha256:sha256(noticeBytes), noticeBytes:noticeBytes.length,
+      rustCommit:runtime.provenance.toolchain.rustCommit, noticeSha256:sha256(noticesBytes), noticeBytes:noticesBytes.length,
       assets:runtime.files.map(({path, bytes, sha256}) => ({path, bytes, sha256}))},
   };
-  writeFileSync(binary, bytes); writeFileSync(notices, noticeBytes); writeFileSync(info, JSON.stringify(build, null, 2) + '\n');
+  writeFileSync(binary, bytes); writeFileSync(notices, noticesBytes); writeFileSync(info, JSON.stringify(build, null, 2) + '\n');
   return {binary, notices, info, build,
     args:['--binary', `${key}=${binary}`, '--notices', `${key}=${notices}`, '--build-info', `${key}=${info}`]};
 }
@@ -182,7 +215,7 @@ test('packed entry and native archives contain all required files and preserve i
       assert.deepEqual({...manifest, files:[...manifest.files].sort()}, {
         name:`@binary-balance/seshat-${target.key}`, version, description:`Native Seshat payload for ${target.key}`,
         license:'MIT', repository, engines:{node:'>=24.20.0 <25'}, os:[os], cpu:[cpu],
-        ...(os === 'linux' ? {libc:['glibc']} : {}), files:files.filter(path => path !== 'package.json'),
+        ...(os === 'linux' ? {libc:[target.key.endsWith('-musl') ? 'musl' : 'glibc']} : {}), files:files.filter(path => path !== 'package.json'),
       });
       assert.deepEqual(archiveFile(archive, binary), readFileSync(fixture.binary));
       assert.deepEqual(archiveFile(archive, 'BUILD.json'), readFileSync(fixture.info));
@@ -257,6 +290,29 @@ test('reruns and partial target sets cannot reuse stale output or overwrite exte
     assert.deepEqual(readdirSync(empty), []);
     assert.match(release(empty, ['--manifest', join(empty, 'seshat/package.json')]).stderr, /must not overwrite/);
     succeeds(release(empty, ['--layout-only']));
+  } finally { rmSync(root, {recursive:true, force:true}); }
+});
+
+test('musl staging rejects missing notices, changed runtime inputs and invented linkage', {skip:process.platform === 'win32'}, () => {
+  const root = mkdtempSync(join(tmpdir(), 'seshat-musl-evidence-'));
+  try {
+    const fixture = nativeFixture(root, 'linux-x64-musl');
+    const output = join(root, 'release');
+    for (const linkage of [undefined, {...fixture.build.linkage, notices:null},
+      {...fixture.build.linkage, runtimeInputs:[]},
+      {...fixture.build.linkage, runtimeInputs:fixture.build.linkage.runtimeInputs.map(row => ({...row, sha256:'a'.repeat(64)}))},
+    ]) {
+      writeFileSync(fixture.info, JSON.stringify({...fixture.build, linkage}));
+      assert.notEqual(release(output, fixture.args).status, 0);
+      assert.equal(existsSync(output), false);
+    }
+    writeFileSync(fixture.notices, noticeBytes);
+    writeFileSync(fixture.info, JSON.stringify({...fixture.build, runtimeNotices:{...fixture.build.runtimeNotices,
+      noticeSha256:sha256(noticeBytes), noticeBytes:noticeBytes.length}}));
+    const child = release(output, fixture.args);
+    assert.notEqual(child.status, 0);
+    assert.match(child.stderr, /additional musl notices are missing/);
+    assert.equal(existsSync(output), false);
   } finally { rmSync(root, {recursive:true, force:true}); }
 });
 

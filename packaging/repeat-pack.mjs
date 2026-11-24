@@ -13,9 +13,9 @@ import {createPackWork, retainRepeatFailure} from './repeat-pack-evidence.mjs';
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, '..');
 assert.equal(process.argv.length, 3,
-  'usage: SESHAT_REPEAT_OUTPUT=path node packaging/repeat-pack.mjs <Debian archive directory> | --native-arm64 | --native-macos | --native-windows');
+  'usage: SESHAT_REPEAT_OUTPUT=path node packaging/repeat-pack.mjs <Debian archive directory> | --native-musl | --native-arm64 | --native-macos | --native-windows');
 assert.ok(!process.argv[2].startsWith('-') ||
-  ['--native-arm64', '--native-macos', '--native-windows'].includes(process.argv[2]),
+  ['--native-musl', '--native-arm64', '--native-macos', '--native-windows'].includes(process.argv[2]),
   `unknown pack mode: ${process.argv[2]}`);
 const output = process.env.SESHAT_REPEAT_OUTPUT;
 assert.ok(output, 'SESHAT_REPEAT_OUTPUT is required');

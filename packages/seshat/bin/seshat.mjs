@@ -19,6 +19,8 @@ const commands = new Set(['check', 'crap', 'mutate']);
 const started = performance.now();
 
 const targets = {
+  'linux-x64-musl': {name: '@binary-balance/seshat-linux-x64-musl', executable: 'seshat'},
+  'linux-arm64-musl': {name: '@binary-balance/seshat-linux-arm64-musl', executable: 'seshat'},
   'linux-x64': {name: '@binary-balance/seshat-linux-x64', executable: 'seshat'},
   'linux-arm64': {name: '@binary-balance/seshat-linux-arm64', executable: 'seshat'},
   'darwin-x64': {name: '@binary-balance/seshat-darwin-x64', executable: 'seshat'},
@@ -51,18 +53,27 @@ function fail(error) {
 }
 
 function targetForHost() {
-  const key = `${process.platform}-${process.arch}`;
-  const target = targets[key];
-  if (!target) return {error: `unsupported platform ${process.platform}/${process.arch}`};
+  let key = `${process.platform}-${process.arch}`;
+  if (!targets[key]) return {error: `unsupported platform ${process.platform}/${process.arch}`};
   if (process.platform === 'linux') {
-    let glibc;
+    let report;
     try {
-      glibc = process.report?.getReport?.().header?.glibcVersionRuntime;
-    } catch {
-      glibc = undefined;
+      report = process.report?.getReport?.();
+    } catch (error) {
+      return {error: `cannot determine Linux libc: process.report failed: ${error.message}`};
     }
-    if (!glibc) return {error: `unsupported platform ${key}: glibc is required`};
+    const glibc = report?.header?.glibcVersionRuntime;
+    const musl = Array.isArray(report?.sharedObjects) &&
+      report.sharedObjects.some(path => typeof path === 'string' && /\/ld-musl-[^/]+\.so\.1$/.test(path));
+    if (typeof glibc === 'string' && glibc.length > 0) {
+      if (musl) return {error: 'cannot determine Linux libc: conflicting glibc and musl evidence'};
+    } else if (musl) {
+      key += '-musl';
+    } else {
+      return {error: 'cannot determine Linux libc: process.report must identify glibc or a musl loader'};
+    }
   }
+  const target = targets[key];
   return {target, key};
 }
 

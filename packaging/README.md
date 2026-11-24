@@ -4,11 +4,13 @@ The release crate in `crates/seshat/Cargo.toml` owns version `0.18.0`.
 Packaging reads its literal `[package].version`; workspace inheritance is not
 supported. Dependency versions cannot supply a missing package version.
 `pack.mjs` builds one native payload for the current platform. `release.mjs`
-stages the user-facing `@binary-balance/seshat` package and the five exact
+stages the user-facing `@binary-balance/seshat` package and the seven exact
 optional native package names:
 
 - `@binary-balance/seshat-linux-x64`
 - `@binary-balance/seshat-linux-arm64`
+- `@binary-balance/seshat-linux-x64-musl`
+- `@binary-balance/seshat-linux-arm64-musl`
 - `@binary-balance/seshat-darwin-x64`
 - `@binary-balance/seshat-darwin-arm64`
 - `@binary-balance/seshat-win32-x64`
@@ -64,6 +66,19 @@ The deterministic native archive is also the standalone route. Extract it
 under a disposable directory and run `bin/seshat` directly; no npm install or
 compiler is needed at runtime.
 
+For unpublished Alpine x64 and ARM64 payloads, run
+`node packaging/pack.mjs --native-musl` in the pinned native Alpine 3.24.2 /
+Rust 1.98.1 environment in the [Alpine protocol](../docs/alpine-prerequisites.md).
+The targets are `x86_64-unknown-linux-musl` and `aarch64-unknown-linux-musl`.
+Only musl packages append the additional pinned musl and LLVM notices to the
+common runtime notices. The packer checks the actual map selects Rust's
+self-contained musl, libunwind and startup objects, rejects other native
+runtime inputs, and retains their hashes and a portable map. `BUILD.linkage`
+binds those inputs to the additional notice assets and records zero dynamic
+libraries. ELF checks reject an interpreter and DT_NEEDED, while permitting
+the x64 static PIE dynamic section. Existing glibc checks still require their
+versioned symbols and dynamic libraries.
+
 ## Stage the package set
 
 Pass one built binary per target to produce packed entry and native archives:
@@ -85,7 +100,7 @@ those validated inputs unchanged; it never fills in missing build evidence.
 Use a clean checkout of the build's source revision for final release evidence.
 Platform build and installation proofs remain required before publication.
 
-Linux and macOS can stage all five native targets from their validated build
+Linux and macOS can stage all seven native targets from their validated build
 inputs. Windows can pack the entry package and Windows native payload only;
 packed Unix native inputs are rejected before output is created. `--layout-only`
 can inspect every target on any of these hosts. Both packers check actual
@@ -103,7 +118,7 @@ The output must be new or empty, and a separate manifest path must not already
 exist. Staging refuses reuse without deleting anything, including when the next
 run supplies fewer targets. Choose a new output directory for a rerun.
 
-Use `--layout-only` to inspect all six manifests without creating archives.
+Use `--layout-only` to inspect all eight manifests without creating archives.
 It can copy optional binary, build-info and notice inputs for inspection, but
 it does not validate their build provenance or invent missing fields. Its
 report says `mode: "layout-only"`, and all archive records are null. Packed
@@ -171,3 +186,11 @@ uncommitted notice edits. Git and archive failures retain stderr diagnostics. Ru
 Seshat is MIT-licensed. Native package notices preserve licence text available
 from all locked Cargo packages, including the recorded Oxc revisions. Review
 toolchain, runtime and platform notices before any public distribution.
+
+The eight-package layout prepares #125. Version 0.18.0 is unchanged and the
+musl packages are unpublished. Publication, registry availability/provenance
+checks, release-audit aggregation and the local release archive stager still
+need a separate eight-package update and currently reject this expanded set.
+Both musl npm package records and trusted publishers also remain release
+gates. This change does not authorise npm writes or claim released Alpine
+support.

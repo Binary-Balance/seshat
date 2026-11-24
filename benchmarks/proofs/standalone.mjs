@@ -46,12 +46,19 @@ assert.ok(statSync(installed).mode & 0o111);
 assert.ok(process.platform === 'linux' || process.platform === 'darwin');
 assert.equal(manifest.os?.[0], process.platform);
 assert.deepEqual(manifest.cpu, [process.arch]);
-if (process.platform === 'linux') assert.deepEqual(manifest.libc, ['glibc']);
+const hostLibc = process.platform === 'linux'
+  ? process.report.getReport().header.glibcVersionRuntime ? 'glibc'
+    : process.report.getReport().sharedObjects.some(path => /\/ld-musl-[^/]+\.so\.1$/.test(path)) ? 'musl' : null
+  : null;
+if (process.platform === 'linux') {
+  assert.ok(hostLibc, 'proof host libc must be known');
+  assert.deepEqual(manifest.libc, [hostLibc]);
+}
 else assert.equal(manifest.libc, undefined);
 if (process.arch === 'arm64') assert.equal(build.cpu, process.arch);
 const expectedTarget = process.platform === 'darwin'
   ? `${process.arch === 'arm64' ? 'aarch64' : 'x86_64'}-apple-darwin`
-  : `${process.arch === 'arm64' ? 'aarch64' : 'x86_64'}-unknown-linux-gnu`;
+  : `${process.arch === 'arm64' ? 'aarch64' : 'x86_64'}-unknown-linux-${hostLibc === 'musl' ? 'musl' : 'gnu'}`;
 assert.equal(build.target, expectedTarget);
 if (process.platform === 'darwin') {
   assert.equal(build.minimumMacos, '15.0');

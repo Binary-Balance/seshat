@@ -1,8 +1,8 @@
 # Alpine prerequisites
 
-This is the first slice of [#125](https://github.com/Binary-Balance/seshat/issues/125).
+This tracks native build and packaging slices of [#125](https://github.com/Binary-Balance/seshat/issues/125).
 It tests native musl builds and the existing assessment and process supervision
-proofs before changing the npm package set. Alpine support remains unpublished.
+proofs, then stages and installs the musl packages locally. Alpine support remains unpublished.
 
 ## Candidate environment
 
@@ -39,8 +39,10 @@ Before artifact upload, the workflow returns ownership of generated `work/`
 files to the host runner, including after a proof failure. This lets the upload
 action traverse the proofs' private temporary directories.
 
-The script runs the locked Rust tests, builds the release CLI and proof binary,
-then reuses these existing proofs:
+The script runs the locked Rust tests and two clean native packs, requiring
+identical binaries, build metadata and archives. It stages all eight manifests,
+checks original/staged archive parity, and runs npm and standalone installation
+proofs without Cargo or Rustc in their consumer PATH. It then reuses these proofs:
 
 - CLI reports, failure exits, source preservation and scratch cleanup.
 - Parallel workers, cancellation and error handling.
@@ -55,8 +57,8 @@ An error stops the script. Only the end of a successful run writes
 `work/alpine/<arch>/evidence/result.json` with `completed: true`. The workflow
 retains logs, reports, binary hashes, ELF headers/dependencies, linker maps,
 compiler/linker versions and Rust runtime archive hashes even on failure.
-The artifact also retains the existing proofs' `result.json` files; some
-proofs write their report there rather than to `SESHAT_PROOF_OUTPUT`.
+The artifact copies existing proofs' `result.json` files under `raw-results/`,
+including on failure; some proofs choose their own report path.
 The host check validates the additional musl notice assets and records their
 identities alongside the Node input hashes.
 
@@ -65,8 +67,8 @@ source copy so that `npm ci` does
 not replace another platform's native dependency packages:
 
 ```sh
-mkdir -p work/alpine-source
-git archive HEAD | tar -x -C work/alpine-source
+git clone --no-hardlinks . work/alpine-source
+# Repeat packing requires a clean, committed checkout.
 podman run --rm --init \
   -v "$PWD/work/alpine-source:/workspace" -w /workspace \
   -e SESHAT_SOURCE_COMMIT="$(git rev-parse HEAD)" \
@@ -100,14 +102,25 @@ existing Rust/libm notices do not establish full musl coverage, and an ELF
 with no dynamic dependencies does not establish notice completeness.
 The [runtime audit](research/alpine-runtime-notice-audit.md) now records those
 linked components and the prepared additional notice assets. Target-specific
-notice assembly still needs to be verified through the eventual archives.
+notice assembly is checked in the original and staged archives. The packer
+validates selected self-contained objects against that audit, records their
+actual hashes and binds the retained portable map to `BUILD.linkage`. Source
+facts alone are not linkage evidence.
 
 ## Remaining acceptance
 
-This prerequisite proof does not install the CLI through npm or a standalone
-archive. Before declaring support, #125 still requires the two musl packages,
-launcher libc selection, installed-route proofs without Rust, audited runtime
-notice assembly, eight-package release checks and provenance, both npm trusted
-publishers, and regression proofs on the five existing hosts. Vitest browser
-mode on Alpine is also unverified; the Node Vitest proof makes no browser
-support claim. Publication requires the existing prepared-release approval.
+The artifact has a flat root containing `summary.json`, `BUILD.json`,
+`THIRD_PARTY_NOTICES.txt`, `seshat-entry.tgz` and
+`seshat-linux-<arch>-musl-release.tgz`, with archive and binary hashes in the
+summary. Raw logs, JSON, portable linker map, runtime input hashes and both
+repeat-pack attempts remain alongside these files. Use a fresh evidence
+directory for every run.
+
+Before declaring support, #125 still requires eight-package publication,
+registry availability/provenance verification, release-audit aggregation and
+local release archive staging; those helpers remain fail-closed on their
+existing six-package set. Both musl npm package records/trusted publishers and
+regression proofs on the five existing hosts also remain release gates.
+Version 0.18.0 is unchanged and the two added packages remain unpublished.
+Vitest browser mode on Alpine is unverified; the Node Vitest proof makes no
+browser support claim. Publication requires prepared-release approval.

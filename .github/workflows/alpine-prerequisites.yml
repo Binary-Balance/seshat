@@ -6,6 +6,10 @@ on:
       - .github/workflows/alpine-prerequisites.yml
       - benchmarks/proofs/alpine-prerequisites.sh
       - docs/alpine-prerequisites.md
+      - packaging/**
+      - packages/seshat/**
+      - crates/seshat/**
+      - benchmarks/proofs/**
   workflow_dispatch:
 
 concurrency:
@@ -76,5 +80,4 @@ jobs:
           name: alpine-prerequisites-${{ matrix.arch }}
           path: |
             work/alpine/${{ matrix.arch }}/evidence/**
-            work/assurance-proofs/**/result.json
           if-no-files-found: error
