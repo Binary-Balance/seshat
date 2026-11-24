@@ -143,7 +143,19 @@ const npm = read('npm-package');
 const standalone = read('standalone');
 assert.equal(npm.build.binarySha256, build.binarySha256);
 assert.equal(standalone.build.binarySha256, build.binarySha256);
-const summary = {schemaVersion:1, sourceCommit:build.sourceCommit, host:read('host'),
+const provenance = {
+  repository:process.env.GITHUB_REPOSITORY ?? null, ref:process.env.GITHUB_REF ?? null,
+  workflow:process.env.GITHUB_WORKFLOW ?? null, workflowRef:process.env.GITHUB_WORKFLOW_REF ?? null,
+  workflowSha:process.env.GITHUB_WORKFLOW_SHA ?? null, job:process.env.GITHUB_JOB ?? null,
+  runId:process.env.GITHUB_RUN_ID ?? null, runAttempt:process.env.GITHUB_RUN_ATTEMPT ?? null,
+  sourceCommit:build.sourceCommit,
+};
+const summary = {schemaVersion:1, kind:'seshat-linux-' + arch + '-musl-package-proof',
+  sourceCommit:build.sourceCommit, host:read('host'), node:process.version,
+  preflight:{provenance, validation:{passed:true}},
+  artifacts:{entryArchive:artifact('seshat-entry.tgz'),
+    releaseNativeArchive:artifact('seshat-linux-' + arch + '-musl-release.tgz'),
+    binary:{bytes:build.binaryBytes, sha256:build.binarySha256}},
   package:{name:build.package, version:build.packageVersion, target:build.target, binarySha256:build.binarySha256},
   build, archives:{entry:artifact('seshat-entry.tgz'), native:artifact('seshat-linux-' + arch + '-musl-release.tgz')},
   validation:{passed:true, installedNpm:true, installedStandalone:true, repeatPack:true,

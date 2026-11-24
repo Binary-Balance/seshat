@@ -13,6 +13,29 @@ defaults:
     shell: bash --noprofile --norc -euo pipefail {0}
 
 jobs:
+  release-set:
+    runs-on: ubuntu-22.04
+    outputs:
+      musl: ${{ steps.targets.outputs.musl }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.20.0
+      - name: Select the audited target set
+        id: targets
+        run: |
+          node --input-type=module <<'NODE' >> "$GITHUB_OUTPUT"
+          import {readFileSync} from 'node:fs';
+          import {releaseVersion} from './benchmarks/proofs/release-targets.mjs';
+          const audit = JSON.parse(readFileSync('docs/research/release-notice-audit.json'));
+          console.log(`musl=${releaseVersion(audit.candidate.packageVersion).musl}`);
+          NODE
+
   local-install:
     strategy:
       fail-fast: false
@@ -78,7 +101,7 @@ jobs:
             --target "${SESHAT_TARGET}" \
             --output "work/release-local-install/${SESHAT_TARGET}/archives" \
             --evidence "work/release-local-install/${SESHAT_TARGET}/archive-staging.json"
-      - name: Run documented six archive installation
+      - name: Run documented archive installation
         run: |
           node examples/verify.mjs \
             --archives "work/release-local-install/${SESHAT_TARGET}/archives" \
@@ -122,3 +145,69 @@ jobs:
             work/release-local-install/${{ matrix.target }}/verifier.json
             work/release-local-install/${{ matrix.target }}/verifier.log
           if-no-files-found: error
+
+  alpine-install:
+    needs: release-set
+    if: needs.release-set.outputs.musl == 'true'
+    name: Alpine ${{ matrix.arch }} consumption
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-24.04
+            image: alpine@sha256:d56c381f961d307a21b3ca004cf1e3910f106644aefb1f43e654c8a56c4fd395
+            nodeSha256: 4d2838775b7cf4f9641c3a22e3ef6e591a62ed7192381c933204db6aaa270c3b
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            image: alpine@sha256:260479a1cfaf304c4c20da7f8405d3ce313513dcd534bb743257bdd2fe0f3e2d
+            nodeSha256: a69814558043c55e7a86d7ab24ba0a2da6c8f9106ba75d54f7ee9982a4635c85
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      SESHAT_TARGET: linux-${{ matrix.arch }}-musl
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Set up host Node.js for read-only staging
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.20.0
+      - name: Download and stage candidate archives
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node benchmarks/proofs/release-local-archive-stager.mjs \
+            --manifest docs/research/release-notice-audit.json \
+            --output "work/release-local-install/${SESHAT_TARGET}/archives" \
+            --evidence "work/release-local-install/${SESHAT_TARGET}/archive-staging.json"
+      # Native slices of Alpine 3.24.2 contain no Rust toolchain.
+      - name: Consume on native Alpine without Rust
+        env:
+          IMAGE: ${{ matrix.image }}
+          PROOF_ARCH: ${{ matrix.arch }}
+          NODE_SHA256: ${{ matrix.nodeSha256 }}
+        run: |
+          docker run --rm --init \
+            -v "$GITHUB_WORKSPACE:/workspace" -w /workspace \
+            "$IMAGE" sh -ec '
+              apk add --no-cache bash curl git libgcc libstdc++ xz
+              bash benchmarks/proofs/alpine-release-consumer.sh "$1" "$2" "$3"
+            ' sh local "$PROOF_ARCH" "$NODE_SHA256"
+      - name: Return evidence ownership to the runner
+        if: always()
+        run: |
+          if [ -d work ]; then
+            sudo chown -R "$(id -u):$(id -g)" work
+          fi
+      - name: Upload Alpine install evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-local-install-linux-${{ matrix.arch }}-musl
+          path: work/release-local-install/${{ env.SESHAT_TARGET }}/
+          if-no-files-found: error
+          retention-days: 30

@@ -4,9 +4,15 @@ import {createHash} from 'node:crypto';
 import {chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import test from 'node:test';
 import {gunzipSync, gzipSync} from 'node:zlib';
-import {auditMarkdown, createAudit, readArchive, selectRun, targets} from './release-audit.mjs';
+import {auditMarkdown, createAudit, readArchive, selectRun, targets as allTargets} from './release-audit.mjs';
+
+import {releasePackages} from './release-targets.mjs';
+import {muslNotices} from '../../packaging/musl.mjs';
+const targets = releasePackages('0.9.0').filter(value => value.role === 'native-release');
+const additionalNotices = muslNotices(fileURLToPath(new URL('../../packaging/runtime-notices', import.meta.url)));
 
 const head = 'a'.repeat(40);
 const source = 'b'.repeat(40);
@@ -28,16 +34,23 @@ function filesAt(directory, values) {
   for (const [path, data] of Object.entries(values)) {
     const file = join(directory, 'package', path);
     mkdirSync(join(file, '..'), {recursive: true});
-    writeFileSync(file, typeof data === 'string' ? data : JSON.stringify(data));
+    writeFileSync(file, typeof data === 'string' || Buffer.isBuffer(data) ? data : JSON.stringify(data));
     chmodSync(file, path.startsWith('bin/') ? 0o755 : 0o644);
   }
 }
-function buildFor(target, {previous = false} = {}) {
-  const binary = `fixture binary ${target.target}`;
-  const notice = previous ? 'previous notice\n' : 'current notice\n';
+function buildFor(target, {previous = false, version = '0.9.0'} = {}) {
+  let binary = `fixture binary ${target.target}`;
+  let notice = previous ? 'previous notice\n' : 'current notice\n';
+  if (target.target.endsWith('-musl')) {
+    binary = Buffer.alloc(120);
+    binary.write('7f454c460201', 0, 'hex');
+    binary.writeUInt16LE(2, 16); binary.writeUInt16LE(target.arch === 'x64' ? 62 : 183, 18);
+    binary.writeBigUInt64LE(64n, 32); binary.writeUInt16LE(56, 54); binary.writeUInt16LE(1, 56);
+    notice = Buffer.concat([Buffer.from(notice), additionalNotices.text]);
+  }
   const build = {
     schemaVersion: 1, package: `@binary-balance/seshat-${target.target}`,
-    packageVersion: previous ? '0.8.0' : '0.9.0', target: target.triple,
+    packageVersion: previous ? '0.8.0' : version, target: target.triple,
     sourceCommit: source, rust: previous ? 'rustc 1.1.0' : 'rustc 1.2.0',
     cargoLockSha256: 'c'.repeat(64), binarySha256: hash(binary), binaryBytes: Buffer.byteLength(binary),
     dependencies: previous ? previousDependencies : currentDependencies,
@@ -47,15 +60,26 @@ function buildFor(target, {previous = false} = {}) {
       assets: [{path: 'LICENSE.txt', bytes: 5, sha256: (previous ? 'e' : 'f').repeat(64)}],
     },
   };
+  if (target.target.endsWith('-musl')) {
+    const audited = additionalNotices.provenance.auditedRuntimeInputs[target.triple];
+    const names = target.arch === 'x64' ? ['rcrt1.o', 'crtbeginS.o', 'crtendS.o'] : ['crt1.o', 'crtbegin.o', 'crtend.o'];
+    build.nativeLibraries = []; build.glibcSymbols = [];
+    build.linkage = {kind:'static-musl', elf:{interpreter:null, needed:[]},
+      muslVersion:additionalNotices.provenance.musl.version, notices:additionalNotices.metadata,
+      runtimeInputs:[...names, 'crti.o', 'crtn.o', 'libc.a', 'libunwind.a'].map(name => ({
+        path:'self-contained/' + name, bytes:1, sha256:audited['self-contained/' + name],
+      })), mapSha256:hash('fixture map')};
+  }
   return {binary, notice, build};
 }
 
-function fixture(root) {
+function fixture(root, version = '0.9.0') {
+  const targets = releasePackages(version).filter(value => value.role === 'native-release');
   const evidence = join(root, 'native-evidence');
   const runs = new Map();
   const manifest = {
-    name: '@binary-balance/seshat', version: '0.9.0', bin: {seshat: 'bin/seshat.mjs'},
-    optionalDependencies: Object.fromEntries(targets.map(value => [`@binary-balance/seshat-${value.target}`, '0.9.0'])),
+    name: '@binary-balance/seshat', version, bin: {seshat: 'bin/seshat.mjs'},
+    optionalDependencies: Object.fromEntries(targets.map(value => [`@binary-balance/seshat-${value.target}`, version])),
   };
   for (const [index, target] of targets.entries()) {
     const directory = join(evidence, target.target);
@@ -64,15 +88,16 @@ function fixture(root) {
     const run = {id: runId, status: 'completed', conclusion: 'success', head_sha: head, run_attempt: 1,
       name: target.workflow, path: `.github/workflows/${target.workflow}`, html_url: `https://github.com/${repository}/actions/runs/${runId}`};
     const provenance = {repository, ref, sourceCommit: source, workflowSha: source,
-      workflow: run.name, workflowRef: `${repository}/${run.path}@${ref}`, job: 'package', runId: String(runId), runAttempt: '1'};
+      workflow: run.name, workflowRef: `${repository}/${run.path}@${ref}`, job: target.target.endsWith('-musl') ? 'native' : 'package', runId: String(runId), runAttempt: '1'};
     const nativeStage = join(directory, 'native-stage');
-    const {binary, notice, build} = buildFor(target);
+    const {binary, notice, build} = buildFor(target, {version});
     filesAt(nativeStage, {
       'BUILD.json': build, 'LICENSE': 'fixture license', 'README.md': 'native fixture',
       'THIRD_PARTY_NOTICES.txt': notice, [target.binary.slice(8)]: binary,
-      'package.json': {name: build.package, version: build.packageVersion, os: [target.target.split('-')[0]], cpu: [target.target.split('-')[1]]},
+      'package.json': {name: build.package, version: build.packageVersion, os: [target.target.split('-')[0]], cpu: [target.target.split('-')[1]], ...(target.libc ? {libc:[target.libc]} : {})},
     });
     if (target.target === 'win32-x64') chmodSync(join(nativeStage, target.binary), 0o644);
+    if (target.target.endsWith('-musl')) writeFileSync(join(directory, 'seshat.map'), 'fixture map');
     const files = ['BUILD.json', 'LICENSE', 'README.md', 'THIRD_PARTY_NOTICES.txt', target.binary.slice(8), 'package.json'];
     const nativeArchive = join(directory, `seshat-${target.target}-release.tgz`);
     pack(nativeStage, nativeArchive, files);
@@ -82,27 +107,28 @@ function fixture(root) {
     pack(entryStage, entryArchive, ['LICENSE', 'README.md', 'bin/seshat.mjs', 'package.json']);
     writeJson(join(directory, 'summary.json'), {
       kind: `seshat-${target.target}-package-proof`, sourceCommit: source, node: '24.20.0',
+      ...(target.target.endsWith('-musl') ? {build} : {}),
       validation: {passed: true}, preflight: {provenance, validation: {passed: true}},
       artifacts: {releaseNativeArchive: record(nativeArchive), entryArchive: record(entryArchive), binary: {sha256: hash(binary), bytes: Buffer.byteLength(binary)}},
     });
-    runs.set(runId, {run, jobs: [{name: 'package', id: runId * 10, html_url: `${run.html_url}/job/1`, conclusion: 'success'}],
+    runs.set(runId, {run, jobs: [{name: target.target.endsWith('-musl') ? `Alpine ${target.arch} prerequisites` : 'package', id: runId * 10, html_url: `${run.html_url}/job/1`, conclusion: 'success'}],
       artifacts: [{name: target.artifact, id: runId * 100, url: `https://api.github.com/repos/${repository}/actions/artifacts/${runId * 100}`, size_in_bytes: 1000,
         digest: `sha256:${'c'.repeat(64)}`, created_at: '2026-10-01T00:00:00Z', expires_at: '2027-01-01T00:00:00Z', expired: false}]});
   }
   const runtime = join(evidence, 'windows-runtime');
   mkdirSync(join(runtime, 'windows-runtime-preflight'), {recursive: true});
   mkdirSync(join(runtime, 'windows-runtime-cli-evidence'));
-  const run = {id: 6, run_attempt: 1, status: 'completed', conclusion: 'success', head_sha: head,
+  const run = {id: 99, run_attempt: 1, status: 'completed', conclusion: 'success', head_sha: head,
     path: '.github/workflows/windows-runtime.yml', name: 'Windows runtime', html_url: `https://github.com/${repository}/actions/runs/6`};
   writeJson(join(runtime, 'windows-runtime-preflight/windows-runtime-preflight.json'), {
     validation: {passed: true}, provenance: {repository, ref, sourceCommit: source, workflowSha: source, workflow: run.name,
-      workflowRef: `${repository}/${run.path}@${ref}`, job: 'runtime', runId: '6', runAttempt: '1'},
+      workflowRef: `${repository}/${run.path}@${ref}`, job: 'runtime', runId: '99', runAttempt: '1'},
   });
   writeJson(join(runtime, 'windows-runtime-cli-evidence/windows-runtime-cli-evidence.json'), {
     kind: 'seshat-windows-runtime-cli', validation: {passed: true}, binary: {bytes: 100, sha256: 'b'.repeat(64)},
     scenarios: Object.fromEntries(['baseline', 'timeout', 'overflow', 'leaderExit', 'leaderExitRepeat', 'consoleCancellation'].map(name => [name, {}])),
   });
-  runs.set(6, {run, jobs: [{name: 'runtime', conclusion: 'success'}], artifacts: ['windows-runtime-cli-evidence', 'windows-runtime-preflight'].map(name => ({name, id: 600, size_in_bytes: 100}))});
+  runs.set(99, {run, jobs: [{name: 'runtime', conclusion: 'success'}], artifacts: ['windows-runtime-cli-evidence', 'windows-runtime-preflight'].map(name => ({name, id: 600, size_in_bytes: 100}))});
   const previousStage = join(root, 'previous-stage');
   const {binary, notice, build} = buildFor(targets[0], {previous: true});
   filesAt(previousStage, {'BUILD.json': build, 'THIRD_PARTY_NOTICES.txt': notice, 'bin/seshat': binary});
@@ -267,4 +293,76 @@ test('selects the latest successful matching workflow and refuses missing eviden
   const good = {id: 1, path: '.github/workflows/linux-x64-package.yml', status: 'completed', conclusion: 'success', head_sha: head};
   assert.equal(selectRun([good, {...good, id: 2, head_sha: source}, {...good, id: 3, conclusion: 'failure'}, {...good, id: 4}], 'linux-x64-package.yml', head).id, 4);
   assert.throws(() => selectRun([good], 'windows-runtime.yml', head), /no successful windows-runtime.yml run/);
+});
+
+test('audits eight archives and validates musl bytes, notices and retained link maps', () => {
+  const root = mkdtempSync(join(tmpdir(), 'seshat-musl-audit-'));
+  try {
+    const options = fixture(root, '0.19.0-rc.1');
+    const audit = createAudit(options);
+    assert.equal(audit.coordinates.length, 8);
+    assert.equal(audit.targets.length, 7);
+    assert.equal(audit.dependencyReview.notice.identicalOnAllTargets, false);
+    assert.deepEqual(audit.coordinates.find(row => row.target === 'linux-x64-musl').buildProvenance.linkage,
+      json(join(options.evidence, 'linux-x64-musl/native-stage/package/BUILD.json')).linkage);
+  } finally { rmSync(root, {recursive:true, force:true}); }
+});
+
+test('musl audit rejects tampering even with updated archive and summary hashes', () => {
+  const root = mkdtempSync(join(tmpdir(), 'seshat-musl-audit-negative-'));
+  const target = allTargets.find(row => row.target === 'linux-x64-musl');
+  const cases = [
+    ['ELF machine', (_build, stage) => {
+      const path = join(stage, 'bin/seshat'); const bytes = readFileSync(path);
+      bytes.writeUInt16LE(183, 18); writeFileSync(path, bytes);
+    }, /unexpected musl ELF machine/],
+    ['runtime input', build => { build.linkage.runtimeInputs[0].sha256 = 'a'.repeat(64); }, /differs from audited Rust distribution/],
+    ['notice provenance', build => { build.linkage.notices.provenanceSha256 = 'a'.repeat(64); }, /musl notice provenance mismatch/],
+    ['notice asset', build => { build.linkage.notices.assets[0].bytes++; }, /musl notice provenance mismatch/],
+    ['map hash', build => { build.linkage.mapSha256 = 'a'.repeat(64); }, /retained link map hash differs/],
+    ['dynamic libraries', build => { build.nativeLibraries = ['libc.so']; }, /zero dynamic libraries/],
+    ['notice bytes', (_build, stage) => {
+      const path = join(stage, 'THIRD_PARTY_NOTICES.txt'); const bytes = readFileSync(path);
+      bytes[bytes.length - 2] ^= 1; writeFileSync(path, bytes);
+    }, /musl notice bytes differ/],
+    ['common assets', build => { build.runtimeNotices.assets[0].sha256 = 'a'.repeat(64); }, /runtime notice assets differ/],
+  ];
+  try {
+    const original = fixture(join(root, 'original'), '0.19.0');
+    for (const [index, [name, mutate, expected]] of cases.entries()) {
+      const directory = join(root, String(index)); cpSync(join(root, 'original'), directory, {recursive:true});
+      const options = {...original, repo:directory, evidence:join(directory, 'native-evidence'),
+        previousArchivePath:join(directory, 'previous.tgz'), previousAuditPath:join(directory, 'previous-audit.json')};
+      const stage = join(options.evidence, target.target, 'native-stage/package');
+      const build = json(join(stage, 'BUILD.json'));
+      mutate(build, stage);
+      const binary = readFileSync(join(stage, 'bin/seshat'));
+      const notice = readFileSync(join(stage, 'THIRD_PARTY_NOTICES.txt'));
+      build.binarySha256 = hash(binary); build.binaryBytes = binary.length;
+      build.runtimeNotices.noticeSha256 = hash(notice); build.runtimeNotices.noticeBytes = notice.length;
+      writeJson(join(stage, 'BUILD.json'), build); repackNative(options, target);
+      const summaryPath = join(options.evidence, target.target, 'summary.json');
+      const summary = json(summaryPath); summary.build = build;
+      summary.artifacts.binary = {sha256:hash(binary), bytes:binary.length}; writeJson(summaryPath, summary);
+      assert.throws(() => createAudit(options), expected, name);
+    }
+  } finally { rmSync(root, {recursive:true, force:true}); }
+});
+
+test('an experimental eight-dependency entry cannot become a six-coordinate audit', () => {
+  const root = mkdtempSync(join(tmpdir(), 'seshat-experimental-audit-'));
+  try {
+    const options = fixture(root, '0.18.0');
+    const manifest = {name:'@binary-balance/seshat', version:'0.18.0', bin:{seshat:'bin/seshat.mjs'},
+      optionalDependencies:Object.fromEntries(allTargets.map(row => [row.package, '0.18.0']))};
+    for (const target of targets) {
+      const directory = join(options.evidence, target.target);
+      writeJson(join(directory, 'entry-stage/package/package.json'), manifest);
+      const archive = join(directory, 'seshat-entry.tgz');
+      pack(join(directory, 'entry-stage'), archive, ['LICENSE', 'README.md', 'bin/seshat.mjs', 'package.json']);
+      const path = join(directory, 'summary.json'); const summary = json(path);
+      summary.artifacts.entryArchive = record(archive); writeJson(path, summary);
+    }
+    assert.throws(() => createAudit(options), /entry optional dependency set differs/);
+  } finally { rmSync(root, {recursive:true, force:true}); }
 });

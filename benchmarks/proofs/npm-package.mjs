@@ -6,6 +6,7 @@ import {spawn, spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {constants} from 'node:os';
 import {alive} from './liveness.mjs';
+import {entryPackages} from './release-targets.mjs';
 import {
   existsSync,
   copyFileSync,
@@ -81,15 +82,7 @@ assert.equal(nativeArchiveManifest.description,
 assert.ok(nativeReadme.includes('Target: '));
 assert.ok(nativeReadme.includes('Consumers normally install `@binary-balance/seshat`'));
 assert.deepEqual(nativeArchiveManifest.repository, repository);
-assert.deepEqual(Object.keys(entryArchiveManifest.optionalDependencies).sort(), [
-  '@binary-balance/seshat-darwin-arm64',
-  '@binary-balance/seshat-darwin-x64',
-  '@binary-balance/seshat-linux-arm64',
-  '@binary-balance/seshat-linux-arm64-musl',
-  '@binary-balance/seshat-linux-x64',
-  '@binary-balance/seshat-linux-x64-musl',
-  '@binary-balance/seshat-win32-x64',
-]);
+entryPackages(entryArchiveManifest);
 
 if (process.env.SESHAT_ENTRY_TARBALL_SHA256) {
   assert.equal(sha256(entryArchiveBytes), process.env.SESHAT_ENTRY_TARBALL_SHA256);

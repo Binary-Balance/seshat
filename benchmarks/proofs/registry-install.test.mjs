@@ -4,6 +4,7 @@ import {
   TARGETS,
   auditVersion,
   validateBinaryIdentity,
+  validateRegistryArchive,
   validateAttestations,
   validateHost,
   validateNativePackages,
@@ -73,4 +74,23 @@ test('rejects missing or mismatched package attestations', () => {
     }))}, expected),
     /verified SLSA provenance bundle is missing for @binary-balance\/seshat@0\.2\.0/,
   );
+});
+
+test('checks Linux libc separately from OS and CPU', () => {
+  assert.equal(validateHost('linux-x64-musl', {platform:'linux', arch:'x64', libc:'musl'}).libc, 'musl');
+  assert.equal(validateHost('linux-arm64-musl', {platform:'linux', arch:'arm64', libc:'musl'}).arch, 'arm64');
+  assert.throws(() => validateHost('linux-x64-musl', {platform:'linux', arch:'x64', libc:'glibc'}), /host libc does not match/);
+  assert.throws(() => validateHost('linux-arm64', {platform:'linux', arch:'arm64', libc:'musl'}), /host libc does not match/);
+  assert.throws(() => validateNativePackages([
+    TARGETS.get('linux-x64').package, TARGETS.get('linux-x64-musl').package,
+  ], TARGETS.get('linux-x64-musl').package), /select only/);
+});
+
+test('registry archives must match the audit before installation', () => {
+  const coordinate = {target:'linux-x64-musl', archiveBytes:10, archiveSha256:'a'.repeat(64)};
+  const exact = {status:'present', bytes:10, sha256:'a'.repeat(64)};
+  assert.doesNotThrow(() => validateRegistryArchive(exact, coordinate));
+  assert.throws(() => validateRegistryArchive({...exact, status:'absent'}, coordinate), /registry archive unavailable/);
+  assert.throws(() => validateRegistryArchive({...exact, bytes:11}, coordinate), /size differs from audit/);
+  assert.throws(() => validateRegistryArchive({...exact, sha256:'b'.repeat(64)}, coordinate), /hash differs from audit/);
 });

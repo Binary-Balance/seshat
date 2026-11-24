@@ -20,6 +20,7 @@ import {tmpdir} from 'node:os';
 import {basename, dirname, extname, join, relative, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {parseArgs} from 'node:util';
+import {entryPackages, releaseVersion, hostLibc} from '../benchmarks/proofs/release-targets.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const {values} = parseArgs({
@@ -34,18 +35,23 @@ const {values} = parseArgs({
 const usage = 'usage: node examples/verify.mjs (--cli PATH | --archives DIR) [--output PATH]';
 assert.equal(Number(Boolean(values.cli)) + Number(Boolean(values.archives)), 1, usage);
 
-const archiveTargets = [
-  {key: 'entry', file: 'entry.tgz', packageName: '@binary-balance/seshat'},
-  {key: 'linux-x64', file: 'linux-x64.tgz', packageName: '@binary-balance/seshat-linux-x64', executable: 'seshat'},
-  {key: 'linux-arm64', file: 'linux-arm64.tgz', packageName: '@binary-balance/seshat-linux-arm64', executable: 'seshat'},
-  {key: 'darwin-x64', file: 'darwin-x64.tgz', packageName: '@binary-balance/seshat-darwin-x64', executable: 'seshat'},
-  {key: 'darwin-arm64', file: 'darwin-arm64.tgz', packageName: '@binary-balance/seshat-darwin-arm64', executable: 'seshat'},
-  {key: 'win32-x64', file: 'win32-x64.tgz', packageName: '@binary-balance/seshat-win32-x64', executable: 'seshat.exe'},
-];
-const optionalArchiveTargets = archiveTargets.slice(1);
 const archiveDirectory = values.archives ? resolve(values.archives) : null;
-const nativeTarget = optionalArchiveTargets.find(target =>
-  target.key === `${process.platform}-${process.arch}`);
+// Select the version's complete set from the entry archive, never from missing files.
+const archiveManifest = archiveDirectory ? (() => {
+  const entry = spawnSync(process.platform === 'win32' ? 'tar.exe' : 'tar',
+    ['-xOf', join(archiveDirectory, 'entry.tgz'), 'package/package.json'], {encoding:'utf8'});
+  assert.ifError(entry.error);
+  assert.equal(entry.status, 0, entry.stderr);
+  return JSON.parse(entry.stdout);
+})() : null;
+const archiveVersion = archiveManifest?.version;
+const archiveTargets = archiveDirectory ? [...entryPackages(archiveManifest)].sort((left, right) =>
+  Number(right.role === 'entry') - Number(left.role === 'entry')).map(target => ({
+    ...target, key:target.role === 'entry' ? 'entry' : target.target, packageName:target.package,
+  })) : [];
+const optionalArchiveTargets = archiveTargets.slice(1);
+const nativeKey = archiveDirectory ? `${process.platform}-${process.arch}${hostLibc() === 'musl' ? '-musl' : ''}` : null;
+const nativeTarget = optionalArchiveTargets.find(target => target.key === nativeKey);
 
 function fileIdentity(path) {
   const bytes = readFileSync(path);
@@ -215,12 +221,19 @@ function verifyLocalInstallation(project) {
   const nativeManifestPath = join(nativePackage.packageRoot, 'package.json');
   const nativeManifest = JSON.parse(readFileSync(nativeManifestPath, 'utf8'));
   assert.equal(nativeManifest.name, nativeTarget.packageName, 'local install: native package name changed');
+  if (nativeTarget.libc && (nativeManifest.libc !== undefined || releaseVersion(archiveVersion).musl || nativeTarget.libc === 'musl')) {
+    assert.deepEqual(nativeManifest.libc, [nativeTarget.libc], 'local install: native libc changed');
+  }
   const nativeExecutable = join(nativePackage.packageRoot, 'bin', nativeTarget.executable);
   assert.ok(statSync(nativeExecutable).isFile(), 'local install: native executable is missing');
 
   const entryManifestPath = join(project, 'node_modules', archiveTargets[0].packageName, 'package.json');
   const entryManifest = JSON.parse(readFileSync(entryManifestPath, 'utf8'));
   assert.equal(entryManifest.name, archiveTargets[0].packageName, 'local install: entry package name changed');
+  assert.equal(entryManifest.version, archiveVersion, 'local install: entry version changed');
+  assert.equal(nativeManifest.version, archiveVersion, 'local install: native version changed');
+  assert.deepEqual(entryManifest.optionalDependencies, Object.fromEntries(
+    optionalArchiveTargets.map(target => [target.packageName, archiveVersion])));
   const entryLauncher = join(project, 'node_modules', archiveTargets[0].packageName, 'bin', 'seshat.mjs');
   assert.ok(statSync(entryLauncher).isFile(), 'local install: entry launcher is missing');
 

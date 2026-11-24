@@ -5,18 +5,16 @@ import {createHash} from 'node:crypto';
 import {isDeepStrictEqual, parseArgs} from 'node:util';
 import {existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync} from 'node:fs';
 import {basename, dirname, join, relative, resolve} from 'node:path';
-import {pathToFileURL} from 'node:url';
+import {fileURLToPath, pathToFileURL} from 'node:url';
 import {gunzipSync} from 'node:zlib';
 import {packageFiles, windowsPackageFiles} from './repeat-proof.mjs';
 import {expectedTag} from './npm-publishing.mjs';
 
-export const targets = [
-  {target: 'linux-x64', triple: 'x86_64-unknown-linux-gnu', artifact: 'linux-x64-package-proof', workflow: 'linux-x64-package.yml', binary: 'package/bin/seshat'},
-  {target: 'linux-arm64', triple: 'aarch64-unknown-linux-gnu', artifact: 'linux-arm64-package-proof', workflow: 'linux-arm64-package.yml', binary: 'package/bin/seshat'},
-  {target: 'darwin-x64', triple: 'x86_64-apple-darwin', artifact: 'macos-x64-package-proof', workflow: 'macos-package.yml', binary: 'package/bin/seshat'},
-  {target: 'darwin-arm64', triple: 'aarch64-apple-darwin', artifact: 'macos-arm64-package-proof', workflow: 'macos-package.yml', binary: 'package/bin/seshat'},
-  {target: 'win32-x64', triple: 'x86_64-pc-windows-msvc', artifact: 'windows-x64-package-proof', workflow: 'windows-package.yml', binary: 'package/bin/seshat.exe'},
-];
+import {PACKAGE_ORDER, releasePackages, releaseVersion} from './release-targets.mjs';
+import {muslNotices, validateMuslBuild} from '../../packaging/musl.mjs';
+
+export const targets = PACKAGE_ORDER.filter(value => value.role === 'native-release');
+const runtimeNoticeDirectory = fileURLToPath(new URL('../../packaging/runtime-notices', import.meta.url));
 const sourcePaths = ['crates', 'packages', 'packaging'];
 const sha256 = data => createHash('sha256').update(data).digest('hex');
 const readJson = path => JSON.parse(readFileSync(path, 'utf8'));
@@ -103,6 +101,10 @@ function validateNative({target, triple, binary, summary, build, manifest, archi
   assert.equal(build.package, manifest.name, `${target}: build package differs`);
   assert.deepEqual(manifest.os, [target.split('-')[0]], `${target}: manifest OS differs`);
   assert.deepEqual(manifest.cpu, [target.split('-')[1]], `${target}: manifest CPU differs`);
+  if (target.startsWith('linux-') && (manifest.libc !== undefined || releaseVersion(manifest.version).musl)) {
+    assert.deepEqual(manifest.libc, [target.endsWith('-musl') ? 'musl' : 'glibc'], `${target}: manifest libc differs`);
+  }
+  if (target.endsWith('-musl')) assert.deepEqual(manifest.libc, ['musl'], `${target}: manifest libc differs`);
   assert.equal(build.target, triple, `${target}: build target differs`);
   // Windows npm archives record PE files as 0644; Unix binaries need execute bits.
   assert.equal(member(binary).mode, target === 'win32-x64' ? '0644' : '0755', `${target}: binary mode differs`);
@@ -203,10 +205,13 @@ export function createAudit({evidence, repo, repository: repoSlug = 'Binary-Bala
   const builds = [];
   const targetRecords = [];
   const entryVariants = [];
+  const entryVersion = archiveJson(join(evidence, 'linux-x64', 'seshat-entry.tgz'), 'package/package.json').version;
+  const releaseTargets = releasePackages(entryVersion).filter(value => value.role === 'native-release');
+  const additionalNotices = releaseTargets.some(value => value.target.endsWith('-musl')) ? muslNotices(runtimeNoticeDirectory) : null;
   let sourceCommit;
   let sourceRef;
 
-  for (const {target, triple, artifact, binary, workflow: workflowFile} of targets) {
+  for (const {target, triple, artifact, binary, workflow: workflowFile} of releaseTargets) {
     const directory = join(evidence, target);
     const summary = readJson(join(directory, 'summary.json'));
     const provenance = summary.preflight.provenance;
@@ -218,9 +223,11 @@ export function createAudit({evidence, repo, repository: repoSlug = 'Binary-Bala
     const matchingArtifacts = artifacts.filter(value => value.name === artifact);
     assert.equal(matchingArtifacts.length, 1, `${target}: artifact is missing or ambiguous`);
     const artifactRecord = matchingArtifacts[0];
-    // The macOS workflow has one job per CPU; the others have a single package job.
-    const candidates = jobs.filter(value => value.name === provenance.job || value.name.startsWith(`${provenance.job} (`));
-    const matchingJobs = candidates.length === 1 ? candidates : candidates.filter(value => value.name.includes(triple));
+    // macOS and Alpine workflows name their per-CPU jobs differently.
+    const muslJob = target.endsWith('-musl') ? `Alpine ${target.split('-')[1]} prerequisites` : null;
+    if (muslJob) assert.equal(provenance.job, 'native', `${target}: workflow job differs`);
+    const candidates = jobs.filter(value => value.name === (muslJob ?? provenance.job) || value.name.startsWith(`${provenance.job} (`));
+    const matchingJobs = candidates.length === 1 ? candidates : candidates.filter(value => value.name.includes(target.endsWith('-musl') ? target.split('-')[1] : triple));
     assert.equal(matchingJobs.length, 1, `${target}: job is missing or ambiguous`);
     const job = matchingJobs[0];
     assert.equal(job.conclusion, 'success', `${target}: job did not succeed`);
@@ -241,6 +248,11 @@ export function createAudit({evidence, repo, repository: repoSlug = 'Binary-Bala
     const build = archiveJson(archivePath, 'package/BUILD.json');
     const manifest = archiveJson(archivePath, 'package/package.json');
     validateNative({target, triple, binary, summary, build, manifest, archive, archiveMembers});
+    if (target.endsWith('-musl')) {
+      validateMuslBuild(build, archiveData(archivePath, binary), target === 'linux-x64-musl' ? 62 : 183, additionalNotices);
+      assert.equal(sha256(readFileSync(join(directory, 'seshat.map'))), build.linkage.mapSha256, `${target}: retained link map hash differs`);
+      assert.deepEqual(summary.build, build, `${target}: summary build differs from archive`);
+    }
     assert.equal(build.sourceCommit, sourceCommit, `${target}: BUILD.json source commit differs`);
     assert.equal(build.packageVersion, manifest.version, `${target}: build and manifest versions differ`);
     assert.equal(build.binarySha256, member(binary).sha256, `${target}: BUILD.json binary hash differs from the archive`);
@@ -293,6 +305,7 @@ export function createAudit({evidence, repo, repository: repoSlug = 'Binary-Bala
         notice: member('package/THIRD_PARTY_NOTICES.txt'),
         dependencyInventory: {count: build.dependencies.length, sha256: sha256(JSON.stringify(build.dependencies))},
         cargoLockSha256: build.cargoLockSha256,
+        ...(build.linkage ? {linkage: build.linkage} : {}),
       },
     });
     targetRecords.push({
@@ -309,6 +322,7 @@ export function createAudit({evidence, repo, repository: repoSlug = 'Binary-Bala
         cargoLockSha256: build.cargoLockSha256,
         dependencyCount: build.dependencies.length,
         nativeLibraries: build.nativeLibraries ?? null,
+        ...(build.linkage ? {linkage: build.linkage} : {}),
       },
       proof: {
         kind: summary.kind,
@@ -420,14 +434,23 @@ export function createAudit({evidence, repo, repository: repoSlug = 'Binary-Bala
   const native = coordinates.filter(value => value.role === 'native-release');
   const notice = {bytes: native[0].buildProvenance.notice.bytes, sha256: native[0].buildProvenance.notice.sha256};
   for (let index = 1; index < builds.length; index++) {
-    assert.deepEqual(builds[index].dependencies, builds[0].dependencies, `${targets[index].target}: dependency inventories differ`);
-    assert.deepEqual(builds[index].runtimeNotices.assets, builds[0].runtimeNotices.assets, `${targets[index].target}: runtime notice assets differ`);
-    assert.equal(builds[index].rust, builds[0].rust, `${targets[index].target}: Rust toolchains differ`);
-    assert.equal(builds[index].runtimeNotices.rustCommit, builds[0].runtimeNotices.rustCommit, `${targets[index].target}: Rust commits differ`);
-    assertArtifact(notice, native[index].buildProvenance.notice, `${targets[index].target}: notices`);
+    assert.deepEqual(builds[index].dependencies, builds[0].dependencies, `${releaseTargets[index].target}: dependency inventories differ`);
+    assert.deepEqual(builds[index].runtimeNotices.assets, builds[0].runtimeNotices.assets, `${releaseTargets[index].target}: runtime notice assets differ`);
+    assert.equal(builds[index].rust, builds[0].rust, `${releaseTargets[index].target}: Rust toolchains differ`);
+    assert.equal(builds[index].runtimeNotices.rustCommit, builds[0].runtimeNotices.rustCommit, `${releaseTargets[index].target}: Rust commits differ`);
+    const target = releaseTargets[index].target;
+    if (target.endsWith('-musl')) {
+      const expected = Buffer.concat([archiveData(join(evidence, 'linux-x64', 'seshat-linux-x64-release.tgz'),
+        'package/THIRD_PARTY_NOTICES.txt'), additionalNotices.text]);
+      assert.deepEqual(archiveData(join(evidence, target, `seshat-${target}-release.tgz`),
+        'package/THIRD_PARTY_NOTICES.txt'), expected, `${target}: musl notice bytes differ from common and audited notices`);
+    } else {
+      assertArtifact(notice, native[index].buildProvenance.notice, `${target}: notices`);
+    }
   }
 
   const dependencyReview = comparePrevious({previousAuditPath, previousArchivePath, repo}, builds[0], notice);
+  if (additionalNotices) dependencyReview.notice.identicalOnAllTargets = false;
   const previousAudit = previousAuditPath ? readJson(previousAuditPath) : null;
   return {
     schemaVersion: 1,
@@ -471,10 +494,10 @@ export function createAudit({evidence, repo, repository: repoSlug = 'Binary-Bala
       evidenceSha256: sha256(readFileSync(runtimePath)),
     },
     remainingChecks: [
-      'Run the release local install workflow on all five targets.',
-      'Run the read-only publisher dry run against the six staged archives and the reviewed revision.',
-      'After publication, verify the six registry versions, tarball bytes and provenance against this audit.',
-      'Create the GitHub release with the six audited archives.',
+      `Run the release local install workflow on all ${releaseTargets.length} targets.`,
+      `Run the read-only publisher dry run against the ${coordinates.length} staged archives and the reviewed revision.`,
+      `After publication, verify the ${coordinates.length} registry versions, tarball bytes and provenance against this audit.`,
+      `Create the GitHub release with the ${coordinates.length} audited archives.`,
     ],
     historicalEvidence: previousAudit ? [
       {record: portablePath(previousAuditPath, repo), use: `Previous ${previousAudit.candidate.packageVersion} release audit.`},
@@ -573,7 +596,12 @@ function main() {
       mkdirSync(directory, {recursive: true});
       sh('gh', ['run', 'download', String(run.id), '--repo', repository, '--name', artifact, '--dir', directory]);
     };
-    for (const {target, artifact, workflow} of targets) download(selectRun(runs, workflow, head), artifact, join(evidence, target));
+    const packageSource = api(`contents/packages/seshat/package.json?ref=${head}`);
+    assert.equal(packageSource.encoding, 'base64', 'package manifest response encoding differs');
+    const version = JSON.parse(Buffer.from(packageSource.content, 'base64')).version;
+    for (const {target, artifact, workflow} of releasePackages(version).filter(value => value.role === 'native-release')) {
+      download(selectRun(runs, workflow, head), artifact, join(evidence, target));
+    }
     const runtime = selectRun(runs, 'windows-runtime.yml', head);
     for (const artifact of runFor(runtime.id).artifacts) download(runtime, artifact.name, join(evidence, 'windows-runtime', artifact.name));
   }
