@@ -147,6 +147,6 @@ const summary = {schemaVersion:1, sourceCommit:build.sourceCommit, host:read('ho
   validation:{passed:true, installedNpm:true, installedStandalone:true, repeatPack:true,
     lifecycle:true, supervision:true, cancellation:true, deadlines:true, vitest:true, jest:true},
 };
-writeFileSync(output + '/summary.json', JSON.stringify(summary, null, 2) + '\\n');
-writeFileSync(output + '/result.json', '{"completed":true}\\n');
+writeFileSync(output + '/summary.json', JSON.stringify(summary, null, 2) + '\n');
+writeFileSync(output + '/result.json', '{"completed":true}\n');
 JS

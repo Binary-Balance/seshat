@@ -56,6 +56,8 @@ jobs:
             -e SESHAT_NODE_ARCHIVE_SHA256="$NODE_SHA256" \
             "$IMAGE" sh -ec '
               apk add --no-cache bash binutils build-base curl git procps python3 xz
+              # The mounted checkout belongs to the host runner, not container root.
+              git config --global --add safe.directory /workspace
               curl --fail --location --max-time 120 --retry 3 \
                 "https://unofficial-builds.nodejs.org/download/release/v24.20.0/node-v24.20.0-linux-$1-musl.tar.xz" \
                 -o /tmp/node.tar.xz

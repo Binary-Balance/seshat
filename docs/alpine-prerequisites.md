@@ -73,7 +73,8 @@ podman run --rm --init \
   -v "$PWD/work/alpine-source:/workspace" -w /workspace \
   -e SESHAT_SOURCE_COMMIT="$(git rev-parse HEAD)" \
   rust@sha256:6d9066cf04ed2cc9d1a406016f4c9b2574bafda23f9e88bcad8e5d24fa6aec8e \
-  sh -ec 'apk add --no-cache bash binutils build-base nodejs npm procps python3;
+  sh -ec 'apk add --no-cache bash binutils build-base git nodejs npm procps python3;
+    git config --global --add safe.directory /workspace;
     bash benchmarks/proofs/alpine-prerequisites.sh x64'
 ```
 
