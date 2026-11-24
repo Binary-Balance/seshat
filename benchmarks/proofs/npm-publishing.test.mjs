@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
-import {mkdtempSync, rmSync, writeFileSync, unlinkSync} from 'node:fs';
+import {mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, unlinkSync} from 'node:fs';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import test from 'node:test';
@@ -18,6 +18,7 @@ import {
 } from './npm-publishing.mjs';
 
 import {releasePackages} from './release-targets.mjs';
+import {stageArchives} from './release-local-archive-stager.mjs';
 
 const revision = 'a'.repeat(40);
 const sourceCommit = 'b'.repeat(40);
@@ -28,11 +29,27 @@ function hash(data) {
   return createHash('sha256').update(data).digest('hex');
 }
 
-function fixture(packageVersion = version) {
+function entryArchive(packageVersion, mutate = () => {}) {
+  const root = mkdtempSync(join(tmpdir(), 'seshat-entry-fixture-'));
+  temporaryDirectories.push(root);
+  mkdirSync(join(root, 'package'));
+  const manifest = {name:'@binary-balance/seshat', version:packageVersion,
+    optionalDependencies:Object.fromEntries(releasePackages(packageVersion)
+      .filter(target => target.role === 'native-release').map(target => [target.package, packageVersion]))};
+  mutate(manifest);
+  writeFileSync(join(root, 'package/package.json'), JSON.stringify(manifest));
+  const archive = join(root, 'entry.tgz');
+  execFileSync(process.platform === 'win32' ? 'tar.exe' : 'tar',
+    ['--format=ustar', '-czf', archive, '-C', root, 'package/package.json']);
+  return readFileSync(archive);
+}
+
+function fixture(packageVersion = version, mutateEntry) {
   const archiveDir = mkdtempSync(join(tmpdir(), 'seshat-npm-publishing-'));
   temporaryDirectories.push(archiveDir);
   const coordinates = releasePackages(packageVersion).map(target => {
-    const data = Buffer.from(`verified:${target.target}`);
+    const data = target.role === 'entry' ? entryArchive(packageVersion, mutateEntry)
+      : Buffer.from(`verified:${target.target}`);
     writeFileSync(join(archiveDir, target.file), data);
     return {
       target: target.target,
@@ -387,4 +404,48 @@ test('CLI defaults to a read-only dry run for the full eight-package plan', () =
   assert.equal(result.validation.passed, true);
   assert.equal(result.packages.length, 8);
   assert.ok(result.packages.every(row => row.action === 'planned' && row.argv.at(-1) === '--dry-run'));
+});
+
+
+function stageWith(value) {
+  const source = mkdtempSync(join(tmpdir(), 'seshat-staging-fixture-'));
+  temporaryDirectories.push(source);
+  for (const coordinate of value.manifest.coordinates) {
+    coordinate.runId = 1;
+    coordinate.artifactName = 'fixture';
+    writeFileSync(join(source, coordinate.archivePath),
+      readFileSync(join(value.archiveDir, releasePackages(value.manifest.candidate.packageVersion)
+        .find(row => row.target === coordinate.target).file)));
+  }
+  return stageArchives(value.manifest.coordinates, new Map([['1/fixture', source]]), join(source, 'staged'));
+}
+
+test('staging and publication reject an experimental entry in a six-package audit', async t => {
+  for (const [name, run] of [['publication', planWith], ['staging', stageWith]]) {
+    await t.test(name, () => {
+      const value = fixture('0.18.0', manifest => {
+        manifest.optionalDependencies['@binary-balance/seshat-linux-x64-musl'] = '0.18.0';
+        manifest.optionalDependencies['@binary-balance/seshat-linux-arm64-musl'] = '0.18.0';
+      });
+      assert.throws(() => run(value), /entry optional dependency set or versions differ/);
+    });
+  }
+});
+
+test('staging and publication bind entry identity, version and exact dependency versions', () => {
+  for (const packageVersion of ['0.18.0', '0.19.0-rc.1', '0.19.0']) {
+    const valid = fixture(packageVersion);
+    assert.equal(planWith(valid).archives.length, releasePackages(packageVersion).length);
+    assert.equal(stageWith(valid).length, releasePackages(packageVersion).length);
+    for (const [mutate, message] of [
+      [manifest => { manifest.name = '@binary-balance/other'; }, /entry package identity differs/],
+      [manifest => { manifest.version = '0.1.0'; }, /entry package version differs/],
+      [manifest => { delete manifest.optionalDependencies['@binary-balance/seshat-linux-x64']; }, /entry optional dependency set or versions differ/],
+      [manifest => { manifest.optionalDependencies['@binary-balance/seshat-linux-x64'] = '^' + packageVersion; }, /entry optional dependency set or versions differ/],
+    ]) {
+      const value = fixture(packageVersion, mutate);
+      assert.throws(() => planWith(value), message);
+      assert.throws(() => stageWith(value), message);
+    }
+  }
 });

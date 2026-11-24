@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {validateReleaseEntry} from './release-archive.mjs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {
@@ -231,9 +232,10 @@ function downloadGroups(coordinates) {
   return {root, groups};
 }
 
-function stageArchives(coordinates, groups) {
-  mkdirSync(output, {recursive: true});
-  assert.deepEqual(readdirSync(output), [], `archive output must be empty: ${output}`);
+export function stageArchives(coordinates, groups, outputDirectory) {
+  const archives = [];
+  mkdirSync(outputDirectory, {recursive: true});
+  assert.deepEqual(readdirSync(outputDirectory), [], `archive output must be empty: ${outputDirectory}`);
   for (const coordinate of coordinates) {
     const expected = targets.get(coordinate.target);
     const sourceDirectory = groups.get(`${coordinate.runId}/${coordinate.artifactName}`);
@@ -249,11 +251,13 @@ function stageArchives(coordinates, groups) {
     assert.equal(bytes, coordinate.archiveBytes, `${coordinate.target}: archive size differs from manifest`);
     assert.equal(hash, coordinate.archiveSha256, `${coordinate.target}: archive hash differs from manifest`);
 
-    const destination = join(output, expected.file);
+    const destination = join(outputDirectory, expected.file);
     copyFileSync(sourcePath, destination);
-    assert.equal(statSync(destination).size, bytes, `${coordinate.target}: staged archive size changed`);
-    assert.equal(sha256(destination), hash, `${coordinate.target}: staged archive hash changed`);
-    report.archives.push({
+    const stagedData = readFileSync(destination);
+    assert.equal(stagedData.length, bytes, `${coordinate.target}: staged archive size changed`);
+    assert.equal(createHash('sha256').update(stagedData).digest('hex'), hash, `${coordinate.target}: staged archive hash changed`);
+    if (expected.role === 'entry') validateReleaseEntry(stagedData, coordinate.version);
+    archives.push({
       target: coordinate.target,
       role: coordinate.role,
       file: expected.file,
@@ -266,8 +270,9 @@ function stageArchives(coordinates, groups) {
       },
     });
   }
-  assert.deepEqual(readdirSync(output).sort(), coordinates.map(coordinate => targets.get(coordinate.target).file).sort(),
+  assert.deepEqual(readdirSync(outputDirectory).sort(), coordinates.map(coordinate => targets.get(coordinate.target).file).sort(),
     'archive output contains an unexpected file set');
+  return archives;
 }
 
 function main() {
@@ -296,7 +301,7 @@ function main() {
   report.sourceEquivalence = checkSourceEquivalence(candidate.sourceCommit, candidate.sourceTrees);
   const downloads = downloadGroups(coordinates);
   try {
-    stageArchives(coordinates, downloads.groups);
+    report.archives = stageArchives(coordinates, downloads.groups, output);
   } finally {
     rmSync(downloads.root, {recursive: true, force: true});
   }

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {validateReleaseEntry} from './release-archive.mjs';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {
@@ -112,6 +113,7 @@ function readArchives(archiveDir, coordinates, version) {
     assert.equal(data.length, coordinate.archiveBytes, `${target.target}: archive size differs from audit`);
     const hash = sha256(data);
     assert.equal(hash, coordinate.archiveSha256, `${target.target}: archive hash differs from audit`);
+    if (target.role === 'entry') validateReleaseEntry(data, version);
     return {
       ...target,
       version: coordinate.version,

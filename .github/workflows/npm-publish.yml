@@ -6,6 +6,7 @@ on:
       - .github/workflows/npm-publish.yml
       - .github/workflows/release-local-install.yml
       - .github/workflows/release-registry-install.yml
+      - benchmarks/proofs/release-archive.mjs
       - benchmarks/proofs/release-audit.mjs
       - benchmarks/proofs/release-audit.test.mjs
       - benchmarks/proofs/registry-install.mjs
