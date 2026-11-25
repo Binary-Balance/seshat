@@ -122,10 +122,10 @@ directory for every run.
 
 The publisher, registry checks, audit generator and archive stager now require
 all eight packages for 0.19.0 and newer; historical releases keep six. Source
-version 0.19.0 is being prepared and remains unpublished. Its release acceptance
-still needs exact-version artifacts from all seven native targets, their
-archive/notice audit, seven-host local installation, and fresh regression
-proofs on the five existing hosts. Both musl npm package records and trusted
+version 0.19.0 is being prepared and remains unpublished. The
+[release audit](research/release-notice-audit.md) records exact 0.19.0 archives
+from all seven native targets. Release acceptance still needs seven-host local
+installation and the remaining existing-host browser regression evidence. Both musl npm package records and trusted
 publishers must be ready before the reviewed-main publisher dry run and
 prepared-release approval. Registry availability, signature/provenance and
 seven-host consumption checks follow publication. See the
