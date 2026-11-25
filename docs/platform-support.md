@@ -21,9 +21,10 @@ Rust 1.98.1 embeds patched musl 1.2.5, LLVM libunwind and startup objects; the
 [runtime audit](research/alpine-runtime-notice-audit.md) identifies their
 linked inputs and notices. The host's APK musl version is not the embedded
 runtime version. These experimental 0.18.0 archives establish prerequisites;
-they are not approved release inputs. The 0.19.0 exact-archive audit,
-seven-host installation matrix, publisher setup and prepared-release approval
-remain pending. Alpine support remains unpublished.
+they are not approved release inputs. The
+[release audit](research/release-notice-audit.md) records the exact 0.19.0
+archives. Seven-host installation, publisher setup and prepared-release
+approval remain release gates. Alpine support remains unpublished.
 
 Vitest browser support is verified only on the five existing hosts. The Alpine
 Node-mode proofs do not establish browser support. Windows ARM64 remains

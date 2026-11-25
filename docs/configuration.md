@@ -22,7 +22,8 @@ recipe](../examples/README.md#install-and-run-a-local-archive) from the project 
 npm workspace, that is the workspace root containing its root `package.json`
 and `package-lock.json`. For 0.19.0, keep the entry and all seven native
 archives under the project-relative `vendor/seshat` directory; older releases
-use five native archives. The 0.19.0 release audit is still pending.
+use five native archives. Use the exact versions and hashes in the
+[release audit](research/release-notice-audit.md).
 The two npm install commands write
 the entry as a root dev dependency and the native payloads as root optional
 dependencies, then `npm ci --ignore-scripts --offline` replays the complete

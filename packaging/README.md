@@ -187,14 +187,15 @@ Seshat is MIT-licensed. Native package notices preserve licence text available
 from all locked Cargo packages, including the recorded Oxc revisions. Review
 toolchain, runtime and platform notices before any public distribution.
 
-Version 0.19.0 is a draft, unpublished eight-package release for
+Releases from 0.19.0 use eight packages for
 [#125](https://github.com/Binary-Balance/seshat/issues/125). The publisher,
 registry checks, audit generator and archive stager require all eight packages
 from this version onward; older releases retain their six-package sets.
-The checked-in release audit still describes historical 0.18.0 archives.
-Replace it only after all seven native 0.19.0 package artifacts pass the exact
-archive and notice audit. The seven-host local install matrix, musl npm package
-records and trusted publishers, reviewed-main publisher dry run and explicit
-prepared-release approval remain gates. See the
-[draft release notes](../docs/releases/0.19.0.md) and
+The [release audit](../docs/research/release-notice-audit.md) records the exact
+candidate archives. Keep it aligned with the release source before staging or
+publishing; never substitute archives from another version or source revision.
+The seven-host local install matrix, musl npm package records and trusted
+publishers, reviewed-main publisher dry run and explicit prepared-release
+approval are required release gates. See the
+[release notes](../docs/releases/0.19.0.md) and
 [publication runbook](../docs/npm-publishing.md).

@@ -22,10 +22,10 @@ example project's root. For `workspaces`, that is `examples/workspaces`, not
 the Seshat dependencies. Keep the archives under the example root's
 `vendor/seshat` directory.
 
-The recipe below uses the eight-package set planned for
-[draft 0.19.0](../docs/releases/0.19.0.md); its release audit is still pending.
-The [current audit](../docs/research/release-notice-audit.md) remains the
-historical 0.18.0 six-package audit, also
+The recipe below uses the eight-package set for
+[draft 0.19.0](../docs/releases/0.19.0.md). The
+[current audit](../docs/research/release-notice-audit.md) records its exact
+prepared archives. The historical 0.18.0 six-package audit is
 [archived here](../docs/releases/0.18.0-audit.md). To replay that release,
 omit both musl copy commands and musl install arguments below. Never mix
 versions or replace missing release archives with experimental inputs.
