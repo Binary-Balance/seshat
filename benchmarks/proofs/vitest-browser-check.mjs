@@ -506,6 +506,8 @@ if (cases.includes('later-file-stall')) {
 }
 if (cases.includes('counted-load-hang')) {
   const config = countedConfig('counted-load-hang', "while(!ready){}\ntest('loaded',()=>{});");
+  // Slow Firefox baselines can scale the mutant limit past the usual 60 s cap.
+  config.setups[0].timeoutMs = 180000;
   vitestConfig({include: ['control.test.ts'], sources: ['control.ts']});
   const result = await check('counted-load-hang', config);
   const row = result.mutation.outcomes[0], job = row.setups[0];
