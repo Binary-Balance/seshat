@@ -34,7 +34,7 @@ test('libc detection rejects missing and conflicting evidence', () => {
 test('example archive inspection keeps drive-letter paths out of tar arguments', () => {
   const root = mkdtempSync(join(tmpdir(), 'seshat-archive-path-'));
   try {
-    const archives = join(root, 'D: archive fixture');
+    const archives = join(root, process.platform === 'win32' ? 'archive fixture' : 'D: archive fixture');
     mkdirSync(archives);
     writeFileSync(join(archives, 'entry.tgz'), 'manifest extraction is mocked');
     const manifest = {name:'@binary-balance/seshat', version:'0.19.0',
