@@ -1,5 +1,36 @@
 # Native platform support
 
+The published [0.18.0 release](releases/0.18.0.md) supports Linux glibc
+x64/ARM64, macOS x64/ARM64 and Windows x64. Source version
+[0.19.0](releases/0.19.0.md) is in preparation and adds these native targets:
+
+| Target | Verified prerequisite environment | Evidence and limits |
+| --- | --- | --- |
+| Alpine x64 | Alpine 3.24.2, `x86_64-unknown-linux-musl`, Node 24.20.0 | Native [installed-package run](https://github.com/Binary-Balance/seshat/actions/runs/45404075369), [artifact 14926628971](https://github.com/Binary-Balance/seshat/actions/runs/45404075369/artifacts/14926628971); unpublished prerequisite archives |
+| Alpine ARM64 | Alpine 3.24.2, `aarch64-unknown-linux-musl`, Node 24.20.0 | Same [native run](https://github.com/Binary-Balance/seshat/actions/runs/45404075369), [artifact 14925239673](https://github.com/Binary-Balance/seshat/actions/runs/45404075369/artifacts/14925239673); unpublished prerequisite archives |
+
+Both jobs passed repeat packing, npm and standalone installation without Rust,
+CLI and parallel controls, Node assessment fixtures, Vitest in Node mode,
+Jest/Expo, deadlines, SIGINT/SIGTERM cancellation, owned-descendant cleanup and
+source preservation. They use experimental upstream Node musl builds. The
+[Alpine protocol](alpine-prerequisites.md) records the pinned inputs and tested
+limits. Linux `7.0.0-1017-azure` is an observed hosted kernel, not a minimum
+kernel claim. Older Alpine branches and kernels are unverified.
+
+Rust 1.98.1 embeds patched musl 1.2.5, LLVM libunwind and startup objects; the
+[runtime audit](research/alpine-runtime-notice-audit.md) identifies their
+linked inputs and notices. The host's APK musl version is not the embedded
+runtime version. These experimental 0.18.0 archives establish prerequisites;
+they are not approved release inputs. The 0.19.0 exact-archive audit,
+seven-host installation matrix, publisher setup and prepared-release approval
+remain pending. Alpine support remains unpublished.
+
+Vitest browser support is verified only on the five existing hosts. The Alpine
+Node-mode proofs do not establish browser support. Windows ARM64 remains
+outside the support claim.
+
+## Historical first-release acceptance
+
 This is the historical platform acceptance matrix for issue 2. All five native
 package proofs passed on 2026-09-11 from tested merge source
 [`0edd0a3a546d2a94f8ddac59aa52123a22c821c8`](https://github.com/Binary-Balance/seshat/commit/0edd0a3a546d2a94f8ddac59aa52123a22c821c8).
