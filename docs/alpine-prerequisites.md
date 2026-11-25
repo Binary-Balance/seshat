@@ -124,10 +124,13 @@ The publisher, registry checks, audit generator and archive stager now require
 all eight packages for 0.19.0 and newer; historical releases keep six. Source
 version 0.19.0 is being prepared and remains unpublished. The
 [release audit](research/release-notice-audit.md) records exact 0.19.0 archives
-from all seven native targets. Release acceptance still needs seven-host local
-installation and the remaining existing-host browser regression evidence. Both musl npm package records and trusted
-publishers must be ready before the reviewed-main publisher dry run and
-prepared-release approval. Registry availability, signature/provenance and
+from all seven native targets. The
+[browser regression record](research/alpine-release-browser.json) covers the
+five existing hosts. Release acceptance still needs seven-host local
+installation. Complete the reviewed-main read-only publisher dry run before
+requesting prepared-release approval. Both musl npm package records and trusted publishers
+must be ready before publishing; first-package registry writes also require
+explicit approval. Registry availability, signature/provenance and
 seven-host consumption checks follow publication. See the
 [draft release notes](releases/0.19.0.md).
 
