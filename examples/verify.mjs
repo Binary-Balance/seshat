@@ -38,8 +38,9 @@ assert.equal(Number(Boolean(values.cli)) + Number(Boolean(values.archives)), 1, 
 const archiveDirectory = values.archives ? resolve(values.archives) : null;
 // Select the version's complete set from the entry archive, never from missing files.
 const archiveManifest = archiveDirectory ? (() => {
+  // GNU tar treats a Windows drive letter as a remote host; use a relative archive name.
   const entry = spawnSync(process.platform === 'win32' ? 'tar.exe' : 'tar',
-    ['-xOf', join(archiveDirectory, 'entry.tgz'), 'package/package.json'], {encoding:'utf8'});
+    ['-xOf', 'entry.tgz', 'package/package.json'], {cwd:archiveDirectory, encoding:'utf8'});
   assert.ifError(entry.error);
   assert.equal(entry.status, 0, entry.stderr);
   return JSON.parse(entry.stdout);

@@ -17,11 +17,14 @@ inputs and installed dependencies into an execution copy; it does not install or
 configure Node, TypeScript, a test runner or a coverage provider. Commands in a
 setup are argument arrays; Seshat does not interpret shell expressions.
 
-For a local archive, use the [six-archive local installation
+For a local archive, use the [local archive installation
 recipe](../examples/README.md#install-and-run-a-local-archive) from the project root. For an
 npm workspace, that is the workspace root containing its root `package.json`
-and `package-lock.json`. Keep the entry and all five native archives under the
-project-relative `vendor/seshat` directory. The two npm install commands write
+and `package-lock.json`. For 0.19.0, keep the entry and all seven native
+archives under the project-relative `vendor/seshat` directory; older releases
+use five native archives. Use the exact versions and hashes in the
+[release audit](research/release-notice-audit.md).
+The two npm install commands write
 the entry as a root dev dependency and the native payloads as root optional
 dependencies, then `npm ci --ignore-scripts --offline` replays the complete
 lockfile. The offline step needs the consuming project's registry metadata and

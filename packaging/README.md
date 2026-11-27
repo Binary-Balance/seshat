@@ -1,6 +1,6 @@
 # Seshat release packaging
 
-The release crate in `crates/seshat/Cargo.toml` owns version `0.18.0`.
+The release crate in `crates/seshat/Cargo.toml` owns version `0.19.0`.
 Packaging reads its literal `[package].version`; workspace inheritance is not
 supported. Dependency versions cannot supply a missing package version.
 `pack.mjs` builds one native payload for the current platform. `release.mjs`
@@ -85,11 +85,11 @@ Pass one built binary per target to produce packed entry and native archives:
 
 ```sh
 node packaging/release.mjs \
-  --output work/release-0.18.0 \
+  --output work/release-0.19.0 \
   --binary linux-x64=/absolute/path/to/seshat \
   --build-info linux-x64=/absolute/path/to/BUILD.json \
   --notices linux-x64=/absolute/path/to/THIRD_PARTY_NOTICES.txt \
-  --manifest work/release-0.18.0/release.json
+  --manifest work/release-0.19.0/release.json
 ```
 
 Each supplied binary requires its packer's `BUILD.json` and
@@ -147,8 +147,8 @@ and that cache are prerequisites for the offline step.
 
 ```sh
 node benchmarks/proofs/npm-package.mjs \
-  work/release-0.18.0/binary-balance-seshat-0.18.0.tgz \
-  work/release-0.18.0/binary-balance-seshat-linux-x64-0.18.0.tgz
+  work/release-0.19.0/binary-balance-seshat-0.19.0.tgz \
+  work/release-0.19.0/binary-balance-seshat-linux-x64-0.19.0.tgz
 ```
 
 The standalone, lifecycle and runner proofs remain separate native evidence.
@@ -187,10 +187,15 @@ Seshat is MIT-licensed. Native package notices preserve licence text available
 from all locked Cargo packages, including the recorded Oxc revisions. Review
 toolchain, runtime and platform notices before any public distribution.
 
-The eight-package layout prepares #125. Version 0.18.0 is unchanged and the
-musl packages are unpublished. Publication, registry availability/provenance
-checks, release-audit aggregation and the local release archive stager still
-need a separate eight-package update and currently reject this expanded set.
-Both musl npm package records and trusted publishers also remain release
-gates. This change does not authorise npm writes or claim released Alpine
-support.
+Releases from 0.19.0 use eight packages for
+[#125](https://github.com/Binary-Balance/seshat/issues/125). The publisher,
+registry checks, audit generator and archive stager require all eight packages
+from this version onward; older releases retain their six-package sets.
+The [release audit](../docs/research/release-notice-audit.md) records the exact
+candidate archives. Keep it aligned with the release source before staging or
+publishing; never substitute archives from another version or source revision.
+The seven-host local install matrix, musl npm package records and trusted
+publishers, reviewed-main publisher dry run and explicit prepared-release
+approval are required release gates. See the
+[release notes](../docs/releases/0.19.0.md) and
+[publication runbook](../docs/npm-publishing.md).

@@ -95,8 +95,9 @@ node benchmarks/proofs/vitest-check.mjs \
 Browser support is available from 0.18.0. The verified route uses Vitest
 `>=5.0.0 <6`, matching
 `@vitest/browser-playwright` and `@vitest/coverage-istanbul`, and Playwright
-with headless Chromium or Firefox. Use Playwright's own browser build and
-default launch with a fresh profile. The proofs pin Playwright 1.63.0;
+with headless Chromium or Firefox on Linux glibc x64/ARM64, macOS x64/ARM64
+and Windows x64. Browser mode on Alpine is unverified. Use Playwright's own
+browser build and default launch with a fresh profile. The proofs pin Playwright 1.63.0;
 browser versions are recorded in diagnostics rather than gated.
 
 See the [browser configuration](configuration.md#vitest-browser-mode).

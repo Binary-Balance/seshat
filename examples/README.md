@@ -16,12 +16,19 @@ are in the [report format](../docs/report-format.md).
 
 ## Install and run a local archive
 
-Use the six audited archives listed in the [current release
-audit](../docs/research/release-notice-audit.md) with the recipe below, from the
-example project's root. For `workspaces`, that is `examples/workspaces`, not `packages/rules`.
-The root `package.json` and `package-lock.json` must receive the Seshat
-dependencies. Keep all six archives under the example root's `vendor/seshat`
-directory.
+Use the complete audited package set for the version being tested, from the
+example project's root. For `workspaces`, that is `examples/workspaces`, not
+`packages/rules`. The root `package.json` and `package-lock.json` must receive
+the Seshat dependencies. Keep the archives under the example root's
+`vendor/seshat` directory.
+
+The recipe below uses the eight-package set for
+[draft 0.19.0](../docs/releases/0.19.0.md). The
+[current audit](../docs/research/release-notice-audit.md) records its exact
+prepared archives. The historical 0.18.0 six-package audit is
+[archived here](../docs/releases/0.18.0-audit.md). To replay that release,
+omit both musl copy commands and musl install arguments below. Never mix
+versions or replace missing release archives with experimental inputs.
 
 On POSIX, from an example project root:
 
@@ -31,6 +38,8 @@ mkdir -p vendor/seshat
 cp /path/to/seshat-entry.tgz vendor/seshat/entry.tgz
 cp /path/to/seshat-linux-x64-release.tgz vendor/seshat/linux-x64.tgz
 cp /path/to/seshat-linux-arm64-release.tgz vendor/seshat/linux-arm64.tgz
+cp /path/to/seshat-linux-x64-musl-release.tgz vendor/seshat/linux-x64-musl.tgz
+cp /path/to/seshat-linux-arm64-musl-release.tgz vendor/seshat/linux-arm64-musl.tgz
 cp /path/to/seshat-darwin-x64-release.tgz vendor/seshat/darwin-x64.tgz
 cp /path/to/seshat-darwin-arm64-release.tgz vendor/seshat/darwin-arm64.tgz
 cp /path/to/seshat-win32-x64-release.tgz vendor/seshat/win32-x64.tgz
@@ -40,6 +49,8 @@ npm install --save-dev --save-exact --ignore-scripts \
 npm install --save-optional --save-exact --ignore-scripts \
   vendor/seshat/linux-x64.tgz \
   vendor/seshat/linux-arm64.tgz \
+  vendor/seshat/linux-x64-musl.tgz \
+  vendor/seshat/linux-arm64-musl.tgz \
   vendor/seshat/darwin-x64.tgz \
   vendor/seshat/darwin-arm64.tgz \
   vendor/seshat/win32-x64.tgz
@@ -49,9 +60,9 @@ npm ci --ignore-scripts --offline
   --json --no-progress > seshat-report.json
 ```
 
-The first archive is a root `devDependency`. The five native archives are root
+The first archive is a root `devDependency`. The seven native archives are root
 `optionalDependencies`; npm installs only the one matching the current host
-and keeps all five `file:vendor/seshat/...` entries in the lockfile. npm does
+and keeps all seven `file:vendor/seshat/...` entries in the lockfile. npm does
 not accept `--save-dev` and `--save-optional` in one command, so keep the two
 install commands separate. The final offline `npm ci` needs the consuming
 project's registry dependencies and metadata in the npm cache.
@@ -65,6 +76,8 @@ New-Item -ItemType Directory -Force vendor\seshat | Out-Null
 Copy-Item "$artifactDir\seshat-entry.tgz" vendor\seshat\entry.tgz
 Copy-Item "$artifactDir\seshat-linux-x64-release.tgz" vendor\seshat\linux-x64.tgz
 Copy-Item "$artifactDir\seshat-linux-arm64-release.tgz" vendor\seshat\linux-arm64.tgz
+Copy-Item "$artifactDir\seshat-linux-x64-musl-release.tgz" vendor\seshat\linux-x64-musl.tgz
+Copy-Item "$artifactDir\seshat-linux-arm64-musl-release.tgz" vendor\seshat\linux-arm64-musl.tgz
 Copy-Item "$artifactDir\seshat-darwin-x64-release.tgz" vendor\seshat\darwin-x64.tgz
 Copy-Item "$artifactDir\seshat-darwin-arm64-release.tgz" vendor\seshat\darwin-arm64.tgz
 Copy-Item "$artifactDir\seshat-win32-x64-release.tgz" vendor\seshat\win32-x64.tgz
@@ -73,6 +86,8 @@ npm install --save-dev --save-exact --ignore-scripts .\vendor\seshat\entry.tgz
 npm install --save-optional --save-exact --ignore-scripts `
   .\vendor\seshat\linux-x64.tgz `
   .\vendor\seshat\linux-arm64.tgz `
+  .\vendor\seshat\linux-x64-musl.tgz `
+  .\vendor\seshat\linux-arm64-musl.tgz `
   .\vendor\seshat\darwin-x64.tgz `
   .\vendor\seshat\darwin-arm64.tgz `
   .\vendor\seshat\win32-x64.tgz
@@ -96,20 +111,21 @@ SESHAT=./seshat-standalone/bin/seshat
 
 For a standalone Windows run, extract `vendor\seshat\win32-x64.tgz` with
 `tar.exe` and invoke `package\bin\seshat.exe` directly. The native package
-proofs passed on every supported target; run and archive evidence is in the
-[current release audit](../docs/research/release-notice-audit.md). The
-release process records the local six-archive installation matrix separately.
+proofs for the published 0.18.0 release are recorded in its
+[archive audit](../docs/releases/0.18.0-audit.md). The 0.19.0 seven-host local
+installation matrix remains pending and is recorded separately from native
+package proofs.
 Both routes still need the example project's Node, test runner, TypeScript and
 coverage dependencies.
 
 Run the focused verifier from the repository root with either an installed
-launcher, a native executable, or the six-archive directory:
+launcher, a native executable, or the complete archive directory:
 
 ```sh
 LAUNCHER=/absolute/path/to/node_modules/@binary-balance/seshat/bin/seshat.mjs
 node examples/verify.mjs --cli "$LAUNCHER" \
   --output /absolute/path/to/public-consumer-examples.json
-# or: node examples/verify.mjs --archives /absolute/path/to/six-archives \
+# or: node examples/verify.mjs --archives /absolute/path/to/release-archives \
 #   --output /absolute/path/to/public-consumer-examples.json
 ```
 

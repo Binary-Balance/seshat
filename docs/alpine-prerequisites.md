@@ -26,8 +26,11 @@ the 3.24 repositories; each run records their actual versions.
 This is a candidate userspace, not an established minimum kernel or a claim
 about older Alpine branches. The earlier
 [native run](https://github.com/Binary-Balance/seshat/actions/runs/45143532749)
-passed with APK Node 24.22.3; the updated workflow checks the 24.20.0 floor
-separately. Package acceptance still needs installed-route verification.
+passed with APK Node 24.22.3. The later
+[installed-package run](https://github.com/Binary-Balance/seshat/actions/runs/45404075369)
+passed on both native architectures with Node 24.20.0, including npm and
+standalone routes without Rust in the consuming environment. These experimental
+0.18.0 archives establish prerequisites, not 0.19.0 release acceptance.
 
 ## Execution and evidence
 
@@ -117,11 +120,25 @@ summary. Raw logs, JSON, portable linker map, runtime input hashes and both
 repeat-pack attempts remain alongside these files. Use a fresh evidence
 directory for every run.
 
-Before declaring support, #125 still requires eight-package publication,
-registry availability/provenance verification, release-audit aggregation and
-local release archive staging; those helpers remain fail-closed on their
-existing six-package set. Both musl npm package records/trusted publishers and
-regression proofs on the five existing hosts also remain release gates.
-Version 0.18.0 is unchanged and the two added packages remain unpublished.
-Vitest browser mode on Alpine is unverified; the Node Vitest proof makes no
-browser support claim. Publication requires prepared-release approval.
+The publisher, registry checks, audit generator and archive stager now require
+all eight packages for 0.19.0 and newer; historical releases keep six. Source
+version 0.19.0 is being prepared and remains unpublished. The
+[release audit](research/release-notice-audit.md) records exact 0.19.0 archives
+from all seven native targets. The
+[browser regression record](research/alpine-release-browser.json) covers the
+five existing hosts. Release acceptance still needs seven-host local
+installation. Complete the reviewed-main read-only publisher dry run before
+requesting prepared-release approval. Both musl npm package records and trusted publishers
+must be ready before publishing; first-package registry writes also require
+explicit approval. Registry availability, signature/provenance and
+seven-host consumption checks follow publication. See the
+[draft release notes](releases/0.19.0.md).
+
+The Node floor proof uses experimental upstream musl builds. Alpine 3.24.2 is
+the verified candidate userspace, with Linux 7.0.0-1017-azure observed in the
+installed-package run; older Alpine branches and kernels are unverified.
+The embedded runtime is Rust's patched musl 1.2.5, as recorded in the
+[runtime audit](research/alpine-runtime-notice-audit.md), rather than the host's
+APK musl version. Vitest browser mode on Alpine is unverified; the Node Vitest
+proof makes no browser support claim. Publication requires prepared-release
+approval.

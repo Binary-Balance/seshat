@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
-import {execFileSync} from 'node:child_process';
+import {execFileSync, spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath, pathToFileURL} from 'node:url';
 import test from 'node:test';
 import {gunzipSync, gzipSync} from 'node:zlib';
 import {auditMarkdown, createAudit, readArchive, selectRun, targets as allTargets} from './release-audit.mjs';
@@ -346,6 +346,37 @@ test('musl audit rejects tampering even with updated archive and summary hashes'
       summary.artifacts.binary = {sha256:hash(binary), bytes:binary.length}; writeJson(summaryPath, summary);
       assert.throws(() => createAudit(options), expected, name);
     }
+  } finally { rmSync(root, {recursive:true, force:true}); }
+});
+
+test('CLI discovers release version from committed Cargo manifest without a generated npm manifest', () => {
+  const root = mkdtempSync(join(tmpdir(), 'seshat-audit-version-'));
+  try {
+    const preload = join(root, 'mock-gh.mjs');
+    writeFileSync(preload, `
+      import childProcess from 'node:child_process';
+      import {syncBuiltinESMExports} from 'node:module';
+      const original = childProcess.execFileSync;
+      childProcess.execFileSync = (command, args, options) => {
+        if (command !== 'gh') return original(command, args, options);
+        const endpoint = args.at(-1);
+        if (endpoint === 'repos/${repository}/contents/crates/seshat/Cargo.toml?ref=${head}') {
+          return JSON.stringify({encoding:'base64', content:Buffer.from('[package]\\nversion = "0.19.0"\\n').toString('base64')});
+        }
+        if (endpoint === 'repos/${repository}/actions/runs?head_sha=${head}&status=success&per_page=100') {
+          return JSON.stringify([{workflow_runs:[]}]);
+        }
+        throw new Error('Unexpected GitHub request (generated npm manifest is unavailable): ' + endpoint);
+      };
+      syncBuiltinESMExports();
+    `);
+    const result = spawnSync(process.execPath, ['--import', pathToFileURL(preload).href,
+      fileURLToPath(new URL('./release-audit.mjs', import.meta.url)),
+      '--head', head, '--previous-audit', join(root, 'previous.json'), '--output', join(root, 'output')],
+    {encoding:'utf8'});
+    assert.equal(result.status, 1);
+    // Version discovery succeeds; the next gate still rejects missing native proofs.
+    assert.match(result.stderr, new RegExp(`no successful linux-x64-package.yml run for ${head}`));
   } finally { rmSync(root, {recursive:true, force:true}); }
 });
 

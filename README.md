@@ -25,10 +25,14 @@ insufficiently tested code.
 npm install --save-dev @binary-balance/seshat
 ```
 
-Seshat needs Node `>=24.20.0 <25`. npm installs a prebuilt binary for Linux
-x64/ARM64 (glibc), macOS x64/ARM64 or Windows x64, so Rust is not required.
-Alpine Linux, which uses musl instead of glibc, is not supported. See the
-[platform support matrix](docs/platform-support.md) for details.
+Seshat needs Node `>=24.20.0 <25`. The published 0.18.0 release installs a
+prebuilt binary for Linux x64/ARM64 (glibc), macOS x64/ARM64 or Windows x64,
+so Rust is not required.
+
+Version 0.19.0 is being prepared with Alpine 3.24.2 x64/ARM64 (musl) support.
+It is unpublished. See the [draft release notes](docs/releases/0.19.0.md)
+and [platform support matrix](docs/platform-support.md) for the verified
+prerequisites and remaining release gates.
 
 The project being assessed must already have its own dependencies installed,
 including TypeScript, its test runner and a coverage tool.
@@ -46,7 +50,8 @@ Seshat checks the runner version on every run and stops if it is not
 supported. See the [runner compatibility guide](docs/runner-compatibility.md).
 
 Version 0.18.0 adds Vitest browser mode with Playwright and headless Chromium
-or Firefox. See the
+or Firefox on the five existing hosts. Browser mode on Alpine is unverified.
+See the
 [browser setup and limits](docs/configuration.md#vitest-browser-mode).
 
 ## Configure

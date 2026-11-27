@@ -4,6 +4,10 @@ This records the agreed first-release design. Concrete configuration fields,
 supported version ranges and execution details must be verified during
 implementation; changes to these design choices require renewed discussion.
 
+The [draft 0.19.0 release](releases/0.19.0.md) prepares Alpine x64/ARM64
+support after the original five-host release. It remains unpublished and
+requires its own exact-archive and platform acceptance evidence.
+
 ## First release
 
 - Deliver both CRAP analysis with real coverage attribution and comparison-operator

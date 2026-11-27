@@ -27,11 +27,14 @@ insufficiently tested code.
 npm install --save-dev @binary-balance/seshat
 ```
 
-Seshat needs Node `>=24.20.0 <25`. npm installs a prebuilt binary for Linux
-x64/ARM64 (glibc), macOS x64/ARM64 or Windows x64, so Rust is not required.
-Alpine x64/ARM64 (musl) packages are being verified for a future release and
-remain unpublished; the current public release does not include them. See the
-[platform support matrix](https://github.com/Binary-Balance/seshat/blob/main/docs/platform-support.md) for details.
+Seshat needs Node `>=24.20.0 <25`. From version 0.19.0, the package targets
+Linux x64/ARM64 with glibc or musl, macOS x64/ARM64 and Windows x64.
+npm selects a prebuilt native binary, so consuming projects do not need Rust.
+
+The verified musl environment is Alpine 3.24.2 x64/ARM64 using Node 24.20.0
+from Node's experimental unofficial-builds project. Older Alpine branches
+are unverified. See the [platform support matrix](https://github.com/Binary-Balance/seshat/blob/main/docs/platform-support.md)
+for evidence and limits.
 
 The project being assessed must already have its own dependencies installed,
 including TypeScript, its test runner and a coverage tool.
@@ -49,7 +52,8 @@ Seshat checks the runner version on every run and stops if it is not
 supported. See the [runner compatibility guide](https://github.com/Binary-Balance/seshat/blob/main/docs/runner-compatibility.md).
 
 Version 0.18.0 adds Vitest browser mode with Playwright and headless Chromium
-or Firefox. See the
+or Firefox on the five existing hosts. Browser mode on Alpine is unverified.
+See the
 [browser setup and limits](https://github.com/Binary-Balance/seshat/blob/main/docs/configuration.md#vitest-browser-mode).
 
 ## Configure

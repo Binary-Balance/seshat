@@ -12,6 +12,7 @@ import {expectedTag} from './npm-publishing.mjs';
 
 import {PACKAGE_ORDER, releasePackages, releaseVersion} from './release-targets.mjs';
 import {muslNotices, validateMuslBuild} from '../../packaging/musl.mjs';
+import {packageVersion} from '../../packaging/metadata.mjs';
 
 export const targets = PACKAGE_ORDER.filter(value => value.role === 'native-release');
 const runtimeNoticeDirectory = fileURLToPath(new URL('../../packaging/runtime-notices', import.meta.url));
@@ -563,9 +564,9 @@ function main() {
       mkdirSync(directory, {recursive: true});
       sh('gh', ['run', 'download', String(run.id), '--repo', repository, '--name', artifact, '--dir', directory]);
     };
-    const packageSource = api(`contents/packages/seshat/package.json?ref=${head}`);
+    const packageSource = api(`contents/crates/seshat/Cargo.toml?ref=${head}`);
     assert.equal(packageSource.encoding, 'base64', 'package manifest response encoding differs');
-    const version = JSON.parse(Buffer.from(packageSource.content, 'base64')).version;
+    const version = packageVersion(Buffer.from(packageSource.content, 'base64').toString('utf8'));
     for (const {target, artifact, workflow} of releasePackages(version).filter(value => value.role === 'native-release')) {
       download(selectRun(runs, workflow, head), artifact, join(evidence, target));
     }

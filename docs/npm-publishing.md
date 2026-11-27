@@ -17,9 +17,14 @@ Releases from `0.19.0`, including prereleases, require two more native packages:
 
 Both new names returned HTTP 404 on 2026-11-24. Their first publication and
 trusted-publisher setup remain preparation work; this tooling change does not
-publish them or establish Alpine support in a shipped release. The checked-in
-`0.18.0` audit remains the historical six-package release input. Older releases
-keep their complete six-package sets; `0.19.0` and newer require all eight.
+publish them or establish Alpine support in a shipped release. The historical
+`0.18.0` six-package audit is preserved
+unchanged as [JSON](releases/0.18.0-audit.json) and
+[Markdown](releases/0.18.0-audit.md). Source version
+[0.19.0](releases/0.19.0.md) is in preparation and remains unpublished; its
+[exact-archive audit](research/release-notice-audit.md) now records all eight
+prepared archives. Older releases keep their complete six-package
+sets; `0.19.0` and newer require all eight.
 Experimental `0.18.0` CI archives with eight manifests are source proof inputs,
 not approved `0.18.0` publication inputs. The stager and publisher reject them
 as release audits.

@@ -1,0 +1,2734 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "reviewed_head": "0996b5401b7ae9cbdb73f8062a317692e8a65711",
+  "build_head": "0996b5401b7ae9cbdb73f8062a317692e8a65711",
+  "checkout_provenance": {
+    "sampled_job_id": 139144824624,
+    "sampled_checkout_commit": "6c2e27796c094e2ac50fe5e2665cd39c55cb7bc1",
+    "reviewed_and_checkout_tree": "e6cbf334960112d7595a3a708c9b23dc954ae098",
+    "source_trees_identical": true
+  },
+  "build_head_meaning": "GitHub workflow head_sha (reviewed PR head); checkout uses PR merge ref",
+  "repository": "Binary-Balance/seshat",
+  "run_id": 45596782635,
+  "run_attempt": 1,
+  "run_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635",
+  "workflow": ".github/workflows/vitest-browser.yml",
+  "run_conclusion": "success",
+  "verification": {
+    "artifact_count": 10,
+    "sha256_and_byte_counts_match": true,
+    "zip_integrity_verified": true,
+    "cases_per_artifact": 52,
+    "total_case_executions": 520,
+    "all_case_receipts_passed": true,
+    "summary_raw_identity_verified": true,
+    "lifecycle_cases": [
+      "deadline",
+      "blocked-page",
+      "cancellation",
+      "page-crash",
+      "continue-after-crash"
+    ],
+    "cleanup_cases_checked": 520,
+    "leftover_owned_processes": 0,
+    "leftover_playwright_prefixed_temporary_entries": 0,
+    "remaining_temporary_names_case_records": 440
+  },
+  "source_files": [
+    {
+      "path": "vitest-browser-check.mjs",
+      "sha256": "b855c8a1202ce0f980e19f76ba9c5759e4690b6d5529a4ffb17bf662e764a24d"
+    },
+    {
+      "path": "vitest-browser.yml",
+      "sha256": "ba6fd927ae40c7611b5ec1c352cdcf6ed9c6da02f3a5f800049d3f02e7501354"
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "vitest-browser-linux-arm64-chromium",
+      "id": 15013622407,
+      "digest": "sha256:d40d1b21efb84fbb98500d084c5df25a379516b798cc2bb4b09cbe730a725b29",
+      "bytes": 75447,
+      "artifact_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/artifacts/15013622407",
+      "job_id": 139144825106,
+      "job_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/job/139144825106",
+      "host": "linux-arm64",
+      "browser": "chromium",
+      "environment": {
+        "node": "v24.20.0",
+        "cli": "seshat 0.19.0",
+        "tools": {
+          "vitest": "5.0.0",
+          "@vitest/browser": "5.0.0",
+          "@vitest/browser-playwright": "5.0.0",
+          "@vitest/coverage-istanbul": "5.0.0",
+          "playwright": "1.63.0",
+          "react": "19.2.8",
+          "react-dom": "19.2.8",
+          "typescript": "6.0.3"
+        },
+        "browser": [
+          {
+            "name": "chromium-headless-shell",
+            "revision": "1243",
+            "browserVersion": "153.0.8010.12"
+          }
+        ]
+      },
+      "case_count": 52,
+      "groups": {
+        "deadline": 1,
+        "blocked-page": 1,
+        "cancellation": 1,
+        "crash": 2,
+        "verdicts": 47
+      },
+      "raw_results": {
+        "verdicts": "assurance-proofs/vitest-browser-check-VZVnqd/result.json",
+        "crash": "assurance-proofs/vitest-browser-check-gSzqxa/result.json",
+        "deadline": "assurance-proofs/vitest-browser-check-hVSpI4/result.json",
+        "blocked-page": "assurance-proofs/vitest-browser-check-offBpK/result.json",
+        "cancellation": "assurance-proofs/vitest-browser-check-sLYSrm/result.json"
+      },
+      "case_names": [
+        "after-each",
+        "application-error",
+        "around-each",
+        "assertion",
+        "assertion-count",
+        "before-all",
+        "before-each",
+        "blocked-page",
+        "cancellation",
+        "clean-hooks",
+        "cleanup",
+        "concurrent",
+        "connect-retry",
+        "continue-after-crash",
+        "continue-after-timeout",
+        "counted-load-hang",
+        "coverage-maps",
+        "custom-launch",
+        "deadline",
+        "existing-run-task",
+        "expected-failure",
+        "hook-timeout",
+        "import-error",
+        "later-file-stall",
+        "missing-before-run-task",
+        "missing-evidence",
+        "missing-get-test-fn",
+        "missing-runner-global",
+        "missing-snapshot",
+        "missing-task-finished",
+        "mistyped-evidence",
+        "mixed",
+        "nested-after-each",
+        "nested-before-each",
+        "nested-hooks",
+        "never-connects",
+        "no-isolation",
+        "node-reference",
+        "page-crash",
+        "partial-evidence",
+        "repeat",
+        "replayed-identity",
+        "retry",
+        "setup-twice",
+        "soft-after-each",
+        "stack",
+        "survived",
+        "switching-closed",
+        "timeout",
+        "two-instances",
+        "unhandled",
+        "workers"
+      ],
+      "all_case_receipts_passed": true,
+      "summary_raw_identity_verified": true,
+      "counted_load_hang": {
+        "timeout_ms": 180000,
+        "verdict": "timed-out",
+        "counted_as_killed": true,
+        "score": 100,
+        "browser_retry": false
+      },
+      "never_connects": {
+        "verdict": "timed-out",
+        "counted_as_killed": false,
+        "attempts": 2,
+        "both_attempts_browser_connected": false,
+        "score": null
+      },
+      "cleanup": {
+        "checked_cases": 52,
+        "leftover_owned_processes": 0,
+        "leftover_playwright_prefixed_temporary_entries": 0,
+        "cleanup_errors": 0,
+        "remaining_temporary_names": {
+          "coverage-maps": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "assertion": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "survived": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "clean-hooks": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "assertion-count": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "before-all": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "before-each": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "after-each": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "cleanup": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "mixed": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "timeout": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "hook-timeout": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "import-error": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "around-each": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "unhandled": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "application-error": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "soft-after-each": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "nested-hooks": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "nested-before-each": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "nested-after-each": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "setup-twice": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "custom-launch": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "node-reference": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "missing-evidence": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "replayed-identity": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "retry": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "repeat": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "expected-failure": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "concurrent": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "mistyped-evidence": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "partial-evidence": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "missing-snapshot": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "missing-runner-global": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "missing-before-run-task": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "missing-task-finished": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "existing-run-task": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "missing-get-test-fn": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "two-instances": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "no-isolation": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "continue-after-timeout": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "connect-retry": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "never-connects": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "later-file-stall": [
+            "E1J09xC03yazeULiBa8Q5"
+          ],
+          "counted-load-hang": [
+            "E1J09xC03yazeULiBa8Q5"
+          ]
+        }
+      },
+      "cli_identity": {
+        "version": "seshat 0.19.0",
+        "workflow_head": "0996b5401b7ae9cbdb73f8062a317692e8a65711",
+        "checkout_build_proof_steps_succeeded": true,
+        "binary_digest_retained": false
+      }
+    },
+    {
+      "name": "vitest-browser-linux-arm64-firefox",
+      "id": 15014417489,
+      "digest": "sha256:dd478981f83e03a9640478003422f90be0d3e86f25f507ea3aa26f6fd84275dc",
+      "bytes": 75072,
+      "artifact_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/artifacts/15014417489",
+      "job_id": 139144825337,
+      "job_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/job/139144825337",
+      "host": "linux-arm64",
+      "browser": "firefox",
+      "environment": {
+        "node": "v24.20.0",
+        "cli": "seshat 0.19.0",
+        "tools": {
+          "vitest": "5.0.0",
+          "@vitest/browser": "5.0.0",
+          "@vitest/browser-playwright": "5.0.0",
+          "@vitest/coverage-istanbul": "5.0.0",
+          "playwright": "1.63.0",
+          "react": "19.2.8",
+          "react-dom": "19.2.8",
+          "typescript": "6.0.3"
+        },
+        "browser": [
+          {
+            "name": "firefox",
+            "revision": "1543",
+            "browserVersion": "155.0"
+          }
+        ]
+      },
+      "case_count": 52,
+      "groups": {
+        "deadline": 1,
+        "blocked-page": 1,
+        "cancellation": 1,
+        "crash": 2,
+        "verdicts": 47
+      },
+      "raw_results": {
+        "verdicts": "assurance-proofs/vitest-browser-check-4qiWBu/result.json",
+        "deadline": "assurance-proofs/vitest-browser-check-614CL6/result.json",
+        "blocked-page": "assurance-proofs/vitest-browser-check-OC7pmi/result.json",
+        "crash": "assurance-proofs/vitest-browser-check-Rp6sbW/result.json",
+        "cancellation": "assurance-proofs/vitest-browser-check-WbacZb/result.json"
+      },
+      "case_names": [
+        "after-each",
+        "application-error",
+        "around-each",
+        "assertion",
+        "assertion-count",
+        "before-all",
+        "before-each",
+        "blocked-page",
+        "cancellation",
+        "clean-hooks",
+        "cleanup",
+        "concurrent",
+        "connect-retry",
+        "continue-after-crash",
+        "continue-after-timeout",
+        "counted-load-hang",
+        "coverage-maps",
+        "custom-launch",
+        "deadline",
+        "existing-run-task",
+        "expected-failure",
+        "hook-timeout",
+        "import-error",
+        "later-file-stall",
+        "missing-before-run-task",
+        "missing-evidence",
+        "missing-get-test-fn",
+        "missing-runner-global",
+        "missing-snapshot",
+        "missing-task-finished",
+        "mistyped-evidence",
+        "mixed",
+        "nested-after-each",
+        "nested-before-each",
+        "nested-hooks",
+        "never-connects",
+        "no-isolation",
+        "node-reference",
+        "page-crash",
+        "partial-evidence",
+        "repeat",
+        "replayed-identity",
+        "retry",
+        "setup-twice",
+        "soft-after-each",
+        "stack",
+        "survived",
+        "switching-closed",
+        "timeout",
+        "two-instances",
+        "unhandled",
+        "workers"
+      ],
+      "all_case_receipts_passed": true,
+      "summary_raw_identity_verified": true,
+      "counted_load_hang": {
+        "timeout_ms": 180000,
+        "verdict": "timed-out",
+        "counted_as_killed": true,
+        "score": 100,
+        "browser_retry": false
+      },
+      "never_connects": {
+        "verdict": "timed-out",
+        "counted_as_killed": false,
+        "attempts": 2,
+        "both_attempts_browser_connected": false,
+        "score": null
+      },
+      "cleanup": {
+        "checked_cases": 52,
+        "leftover_owned_processes": 0,
+        "leftover_playwright_prefixed_temporary_entries": 0,
+        "cleanup_errors": 0,
+        "remaining_temporary_names": {
+          "coverage-maps": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "assertion": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "survived": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "clean-hooks": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "assertion-count": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "before-all": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "before-each": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "after-each": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "cleanup": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "mixed": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "timeout": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "hook-timeout": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "import-error": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "around-each": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "unhandled": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "application-error": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "soft-after-each": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "nested-hooks": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "nested-before-each": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "nested-after-each": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "setup-twice": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "custom-launch": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "node-reference": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "missing-evidence": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "replayed-identity": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "retry": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "repeat": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "expected-failure": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "concurrent": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "mistyped-evidence": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "partial-evidence": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "missing-snapshot": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "missing-runner-global": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "missing-before-run-task": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "missing-task-finished": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "existing-run-task": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "missing-get-test-fn": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "two-instances": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "no-isolation": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "continue-after-timeout": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "connect-retry": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "never-connects": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "later-file-stall": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ],
+          "counted-load-hang": [
+            "6prxCfd6KxUhJEBdSZvth"
+          ]
+        }
+      },
+      "cli_identity": {
+        "version": "seshat 0.19.0",
+        "workflow_head": "0996b5401b7ae9cbdb73f8062a317692e8a65711",
+        "checkout_build_proof_steps_succeeded": true,
+        "binary_digest_retained": false
+      }
+    },
+    {
+      "name": "vitest-browser-linux-x64-chromium",
+      "id": 15013089943,
+      "digest": "sha256:5378bbc9b6bcbc2dc44b27b27b05909c91e2cee4954d35c0356c098d4d5c5f9a",
+      "bytes": 75330,
+      "artifact_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/artifacts/15013089943",
+      "job_id": 139144825033,
+      "job_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/job/139144825033",
+      "host": "linux-x64",
+      "browser": "chromium",
+      "environment": {
+        "node": "v24.20.0",
+        "cli": "seshat 0.19.0",
+        "tools": {
+          "vitest": "5.0.0",
+          "@vitest/browser": "5.0.0",
+          "@vitest/browser-playwright": "5.0.0",
+          "@vitest/coverage-istanbul": "5.0.0",
+          "playwright": "1.63.0",
+          "react": "19.2.8",
+          "react-dom": "19.2.8",
+          "typescript": "6.0.3"
+        },
+        "browser": [
+          {
+            "name": "chromium-headless-shell",
+            "revision": "1243",
+            "browserVersion": "153.0.8010.12"
+          }
+        ]
+      },
+      "case_count": 52,
+      "groups": {
+        "deadline": 1,
+        "blocked-page": 1,
+        "cancellation": 1,
+        "crash": 2,
+        "verdicts": 47
+      },
+      "raw_results": {
+        "cancellation": "assurance-proofs/vitest-browser-check-FDJ8NR/result.json",
+        "crash": "assurance-proofs/vitest-browser-check-Ly2Jav/result.json",
+        "verdicts": "assurance-proofs/vitest-browser-check-kJBR7W/result.json",
+        "deadline": "assurance-proofs/vitest-browser-check-wHFn1h/result.json",
+        "blocked-page": "assurance-proofs/vitest-browser-check-y4B0du/result.json"
+      },
+      "case_names": [
+        "after-each",
+        "application-error",
+        "around-each",
+        "assertion",
+        "assertion-count",
+        "before-all",
+        "before-each",
+        "blocked-page",
+        "cancellation",
+        "clean-hooks",
+        "cleanup",
+        "concurrent",
+        "connect-retry",
+        "continue-after-crash",
+        "continue-after-timeout",
+        "counted-load-hang",
+        "coverage-maps",
+        "custom-launch",
+        "deadline",
+        "existing-run-task",
+        "expected-failure",
+        "hook-timeout",
+        "import-error",
+        "later-file-stall",
+        "missing-before-run-task",
+        "missing-evidence",
+        "missing-get-test-fn",
+        "missing-runner-global",
+        "missing-snapshot",
+        "missing-task-finished",
+        "mistyped-evidence",
+        "mixed",
+        "nested-after-each",
+        "nested-before-each",
+        "nested-hooks",
+        "never-connects",
+        "no-isolation",
+        "node-reference",
+        "page-crash",
+        "partial-evidence",
+        "repeat",
+        "replayed-identity",
+        "retry",
+        "setup-twice",
+        "soft-after-each",
+        "stack",
+        "survived",
+        "switching-closed",
+        "timeout",
+        "two-instances",
+        "unhandled",
+        "workers"
+      ],
+      "all_case_receipts_passed": true,
+      "summary_raw_identity_verified": true,
+      "counted_load_hang": {
+        "timeout_ms": 180000,
+        "verdict": "timed-out",
+        "counted_as_killed": true,
+        "score": 100,
+        "browser_retry": false
+      },
+      "never_connects": {
+        "verdict": "timed-out",
+        "counted_as_killed": false,
+        "attempts": 2,
+        "both_attempts_browser_connected": false,
+        "score": null
+      },
+      "cleanup": {
+        "checked_cases": 52,
+        "leftover_owned_processes": 0,
+        "leftover_playwright_prefixed_temporary_entries": 0,
+        "cleanup_errors": 0,
+        "remaining_temporary_names": {
+          "coverage-maps": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "assertion": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "survived": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "clean-hooks": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "assertion-count": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "before-all": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "before-each": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "after-each": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "cleanup": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "mixed": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "timeout": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "hook-timeout": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "import-error": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "around-each": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "unhandled": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "application-error": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "soft-after-each": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "nested-hooks": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "nested-before-each": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "nested-after-each": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "setup-twice": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "custom-launch": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "node-reference": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "missing-evidence": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "replayed-identity": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "retry": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "repeat": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "expected-failure": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "concurrent": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "mistyped-evidence": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "partial-evidence": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "missing-snapshot": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "missing-runner-global": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "missing-before-run-task": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "missing-task-finished": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "existing-run-task": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "missing-get-test-fn": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "two-instances": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "no-isolation": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "continue-after-timeout": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "connect-retry": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "never-connects": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "later-file-stall": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ],
+          "counted-load-hang": [
+            "lXtlrvid_j2oRd1FuxVld"
+          ]
+        }
+      },
+      "cli_identity": {
+        "version": "seshat 0.19.0",
+        "workflow_head": "0996b5401b7ae9cbdb73f8062a317692e8a65711",
+        "checkout_build_proof_steps_succeeded": true,
+        "binary_digest_retained": false
+      }
+    },
+    {
+      "name": "vitest-browser-linux-x64-firefox",
+      "id": 15012809844,
+      "digest": "sha256:ff165d287651aaaa83372a4e2bf4f1394da0c76a5a6a270190ffe94999812545",
+      "bytes": 75128,
+      "artifact_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/artifacts/15012809844",
+      "job_id": 139144825090,
+      "job_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/job/139144825090",
+      "host": "linux-x64",
+      "browser": "firefox",
+      "environment": {
+        "node": "v24.20.0",
+        "cli": "seshat 0.19.0",
+        "tools": {
+          "vitest": "5.0.0",
+          "@vitest/browser": "5.0.0",
+          "@vitest/browser-playwright": "5.0.0",
+          "@vitest/coverage-istanbul": "5.0.0",
+          "playwright": "1.63.0",
+          "react": "19.2.8",
+          "react-dom": "19.2.8",
+          "typescript": "6.0.3"
+        },
+        "browser": [
+          {
+            "name": "firefox",
+            "revision": "1543",
+            "browserVersion": "155.0"
+          }
+        ]
+      },
+      "case_count": 52,
+      "groups": {
+        "deadline": 1,
+        "blocked-page": 1,
+        "cancellation": 1,
+        "crash": 2,
+        "verdicts": 47
+      },
+      "raw_results": {
+        "blocked-page": "assurance-proofs/vitest-browser-check-L5LAY3/result.json",
+        "crash": "assurance-proofs/vitest-browser-check-NlWavm/result.json",
+        "verdicts": "assurance-proofs/vitest-browser-check-S5torl/result.json",
+        "deadline": "assurance-proofs/vitest-browser-check-v8HYzq/result.json",
+        "cancellation": "assurance-proofs/vitest-browser-check-vEs7Nh/result.json"
+      },
+      "case_names": [
+        "after-each",
+        "application-error",
+        "around-each",
+        "assertion",
+        "assertion-count",
+        "before-all",
+        "before-each",
+        "blocked-page",
+        "cancellation",
+        "clean-hooks",
+        "cleanup",
+        "concurrent",
+        "connect-retry",
+        "continue-after-crash",
+        "continue-after-timeout",
+        "counted-load-hang",
+        "coverage-maps",
+        "custom-launch",
+        "deadline",
+        "existing-run-task",
+        "expected-failure",
+        "hook-timeout",
+        "import-error",
+        "later-file-stall",
+        "missing-before-run-task",
+        "missing-evidence",
+        "missing-get-test-fn",
+        "missing-runner-global",
+        "missing-snapshot",
+        "missing-task-finished",
+        "mistyped-evidence",
+        "mixed",
+        "nested-after-each",
+        "nested-before-each",
+        "nested-hooks",
+        "never-connects",
+        "no-isolation",
+        "node-reference",
+        "page-crash",
+        "partial-evidence",
+        "repeat",
+        "replayed-identity",
+        "retry",
+        "setup-twice",
+        "soft-after-each",
+        "stack",
+        "survived",
+        "switching-closed",
+        "timeout",
+        "two-instances",
+        "unhandled",
+        "workers"
+      ],
+      "all_case_receipts_passed": true,
+      "summary_raw_identity_verified": true,
+      "counted_load_hang": {
+        "timeout_ms": 180000,
+        "verdict": "timed-out",
+        "counted_as_killed": true,
+        "score": 100,
+        "browser_retry": false
+      },
+      "never_connects": {
+        "verdict": "timed-out",
+        "counted_as_killed": false,
+        "attempts": 2,
+        "both_attempts_browser_connected": false,
+        "score": null
+      },
+      "cleanup": {
+        "checked_cases": 52,
+        "leftover_owned_processes": 0,
+        "leftover_playwright_prefixed_temporary_entries": 0,
+        "cleanup_errors": 0,
+        "remaining_temporary_names": {
+          "coverage-maps": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "assertion": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "survived": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "clean-hooks": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "assertion-count": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "before-all": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "before-each": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "after-each": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "cleanup": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "mixed": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "timeout": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "hook-timeout": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "import-error": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "around-each": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "unhandled": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "application-error": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "soft-after-each": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "nested-hooks": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "nested-before-each": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "nested-after-each": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "setup-twice": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "custom-launch": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "node-reference": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "missing-evidence": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "replayed-identity": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "retry": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "repeat": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "expected-failure": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "concurrent": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "mistyped-evidence": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "partial-evidence": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "missing-snapshot": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "missing-runner-global": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "missing-before-run-task": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "missing-task-finished": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "existing-run-task": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "missing-get-test-fn": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "two-instances": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "no-isolation": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "continue-after-timeout": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "connect-retry": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "never-connects": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "later-file-stall": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ],
+          "counted-load-hang": [
+            "cQ5JSPq_wO88mkZY1qBLO"
+          ]
+        }
+      },
+      "cli_identity": {
+        "version": "seshat 0.19.0",
+        "workflow_head": "0996b5401b7ae9cbdb73f8062a317692e8a65711",
+        "checkout_build_proof_steps_succeeded": true,
+        "binary_digest_retained": false
+      }
+    },
+    {
+      "name": "vitest-browser-macos-arm64-chromium",
+      "id": 15013588181,
+      "digest": "sha256:9c6358e2a69e863367ed6135e09afe446553052e76e71f1d4c9a313cc4da1d04",
+      "bytes": 76012,
+      "artifact_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/artifacts/15013588181",
+      "job_id": 139144825290,
+      "job_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/job/139144825290",
+      "host": "macos-arm64",
+      "browser": "chromium",
+      "environment": {
+        "node": "v24.20.0",
+        "cli": "seshat 0.19.0",
+        "tools": {
+          "vitest": "5.0.0",
+          "@vitest/browser": "5.0.0",
+          "@vitest/browser-playwright": "5.0.0",
+          "@vitest/coverage-istanbul": "5.0.0",
+          "playwright": "1.63.0",
+          "react": "19.2.8",
+          "react-dom": "19.2.8",
+          "typescript": "6.0.3"
+        },
+        "browser": [
+          {
+            "name": "chromium-headless-shell",
+            "revision": "1243",
+            "browserVersion": "153.0.8010.12"
+          }
+        ]
+      },
+      "case_count": 52,
+      "groups": {
+        "deadline": 1,
+        "blocked-page": 1,
+        "cancellation": 1,
+        "crash": 2,
+        "verdicts": 47
+      },
+      "raw_results": {
+        "deadline": "assurance-proofs/vitest-browser-check-5KVMF6/result.json",
+        "cancellation": "assurance-proofs/vitest-browser-check-6Zt4bV/result.json",
+        "blocked-page": "assurance-proofs/vitest-browser-check-9s3NIM/result.json",
+        "crash": "assurance-proofs/vitest-browser-check-ESuWMe/result.json",
+        "verdicts": "assurance-proofs/vitest-browser-check-KcJzBK/result.json"
+      },
+      "case_names": [
+        "after-each",
+        "application-error",
+        "around-each",
+        "assertion",
+        "assertion-count",
+        "before-all",
+        "before-each",
+        "blocked-page",
+        "cancellation",
+        "clean-hooks",
+        "cleanup",
+        "concurrent",
+        "connect-retry",
+        "continue-after-crash",
+        "continue-after-timeout",
+        "counted-load-hang",
+        "coverage-maps",
+        "custom-launch",
+        "deadline",
+        "existing-run-task",
+        "expected-failure",
+        "hook-timeout",
+        "import-error",
+        "later-file-stall",
+        "missing-before-run-task",
+        "missing-evidence",
+        "missing-get-test-fn",
+        "missing-runner-global",
+        "missing-snapshot",
+        "missing-task-finished",
+        "mistyped-evidence",
+        "mixed",
+        "nested-after-each",
+        "nested-before-each",
+        "nested-hooks",
+        "never-connects",
+        "no-isolation",
+        "node-reference",
+        "page-crash",
+        "partial-evidence",
+        "repeat",
+        "replayed-identity",
+        "retry",
+        "setup-twice",
+        "soft-after-each",
+        "stack",
+        "survived",
+        "switching-closed",
+        "timeout",
+        "two-instances",
+        "unhandled",
+        "workers"
+      ],
+      "all_case_receipts_passed": true,
+      "summary_raw_identity_verified": true,
+      "counted_load_hang": {
+        "timeout_ms": 180000,
+        "verdict": "timed-out",
+        "counted_as_killed": true,
+        "score": 100,
+        "browser_retry": false
+      },
+      "never_connects": {
+        "verdict": "timed-out",
+        "counted_as_killed": false,
+        "attempts": 2,
+        "both_attempts_browser_connected": false,
+        "score": null
+      },
+      "cleanup": {
+        "checked_cases": 52,
+        "leftover_owned_processes": 0,
+        "leftover_playwright_prefixed_temporary_entries": 0,
+        "cleanup_errors": 0,
+        "remaining_temporary_names": {
+          "coverage-maps": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "assertion": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "survived": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "clean-hooks": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "assertion-count": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "before-all": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "before-each": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "after-each": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "cleanup": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "mixed": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "timeout": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "hook-timeout": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "import-error": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "around-each": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "unhandled": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "application-error": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "soft-after-each": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "nested-hooks": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "nested-before-each": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "nested-after-each": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "setup-twice": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "custom-launch": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "node-reference": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "missing-evidence": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "replayed-identity": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "retry": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "repeat": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "expected-failure": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "concurrent": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "mistyped-evidence": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "partial-evidence": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "missing-snapshot": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "missing-runner-global": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "missing-before-run-task": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "missing-task-finished": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "existing-run-task": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "missing-get-test-fn": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "two-instances": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "no-isolation": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "continue-after-timeout": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "connect-retry": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "never-connects": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "later-file-stall": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ],
+          "counted-load-hang": [
+            "JMBIn_S3It4idVu5Lq8G-"
+          ]
+        }
+      },
+      "cli_identity": {
+        "version": "seshat 0.19.0",
+        "workflow_head": "0996b5401b7ae9cbdb73f8062a317692e8a65711",
+        "checkout_build_proof_steps_succeeded": true,
+        "binary_digest_retained": false
+      }
+    },
+    {
+      "name": "vitest-browser-macos-arm64-firefox",
+      "id": 15013959799,
+      "digest": "sha256:1a485d209d52be4f3bcc83c42d58ed7a08eee8865b634379fa5c0614ca2274d0",
+      "bytes": 75486,
+      "artifact_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/artifacts/15013959799",
+      "job_id": 139144824624,
+      "job_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/job/139144824624",
+      "host": "macos-arm64",
+      "browser": "firefox",
+      "environment": {
+        "node": "v24.20.0",
+        "cli": "seshat 0.19.0",
+        "tools": {
+          "vitest": "5.0.0",
+          "@vitest/browser": "5.0.0",
+          "@vitest/browser-playwright": "5.0.0",
+          "@vitest/coverage-istanbul": "5.0.0",
+          "playwright": "1.63.0",
+          "react": "19.2.8",
+          "react-dom": "19.2.8",
+          "typescript": "6.0.3"
+        },
+        "browser": [
+          {
+            "name": "firefox",
+            "revision": "1543",
+            "browserVersion": "155.0"
+          }
+        ]
+      },
+      "case_count": 52,
+      "groups": {
+        "deadline": 1,
+        "blocked-page": 1,
+        "cancellation": 1,
+        "crash": 2,
+        "verdicts": 47
+      },
+      "raw_results": {
+        "deadline": "assurance-proofs/vitest-browser-check-9kYpZP/result.json",
+        "blocked-page": "assurance-proofs/vitest-browser-check-RyfFWY/result.json",
+        "cancellation": "assurance-proofs/vitest-browser-check-lK1SD2/result.json",
+        "verdicts": "assurance-proofs/vitest-browser-check-rsmvkC/result.json",
+        "crash": "assurance-proofs/vitest-browser-check-w7Hecl/result.json"
+      },
+      "case_names": [
+        "after-each",
+        "application-error",
+        "around-each",
+        "assertion",
+        "assertion-count",
+        "before-all",
+        "before-each",
+        "blocked-page",
+        "cancellation",
+        "clean-hooks",
+        "cleanup",
+        "concurrent",
+        "connect-retry",
+        "continue-after-crash",
+        "continue-after-timeout",
+        "counted-load-hang",
+        "coverage-maps",
+        "custom-launch",
+        "deadline",
+        "existing-run-task",
+        "expected-failure",
+        "hook-timeout",
+        "import-error",
+        "later-file-stall",
+        "missing-before-run-task",
+        "missing-evidence",
+        "missing-get-test-fn",
+        "missing-runner-global",
+        "missing-snapshot",
+        "missing-task-finished",
+        "mistyped-evidence",
+        "mixed",
+        "nested-after-each",
+        "nested-before-each",
+        "nested-hooks",
+        "never-connects",
+        "no-isolation",
+        "node-reference",
+        "page-crash",
+        "partial-evidence",
+        "repeat",
+        "replayed-identity",
+        "retry",
+        "setup-twice",
+        "soft-after-each",
+        "stack",
+        "survived",
+        "switching-closed",
+        "timeout",
+        "two-instances",
+        "unhandled",
+        "workers"
+      ],
+      "all_case_receipts_passed": true,
+      "summary_raw_identity_verified": true,
+      "counted_load_hang": {
+        "timeout_ms": 180000,
+        "verdict": "timed-out",
+        "counted_as_killed": true,
+        "score": 100,
+        "browser_retry": false
+      },
+      "never_connects": {
+        "verdict": "timed-out",
+        "counted_as_killed": false,
+        "attempts": 2,
+        "both_attempts_browser_connected": false,
+        "score": null
+      },
+      "cleanup": {
+        "checked_cases": 52,
+        "leftover_owned_processes": 0,
+        "leftover_playwright_prefixed_temporary_entries": 0,
+        "cleanup_errors": 0,
+        "remaining_temporary_names": {
+          "coverage-maps": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "assertion": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "survived": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "clean-hooks": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "assertion-count": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "before-all": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "before-each": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "after-each": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "cleanup": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "mixed": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "timeout": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "hook-timeout": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "import-error": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "around-each": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "unhandled": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "application-error": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "soft-after-each": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "nested-hooks": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "nested-before-each": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "nested-after-each": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "setup-twice": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "custom-launch": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "node-reference": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "missing-evidence": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "replayed-identity": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "retry": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "repeat": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "expected-failure": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "concurrent": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "mistyped-evidence": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "partial-evidence": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "missing-snapshot": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "missing-runner-global": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "missing-before-run-task": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "missing-task-finished": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "existing-run-task": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "missing-get-test-fn": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "two-instances": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "no-isolation": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "continue-after-timeout": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "connect-retry": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "never-connects": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "later-file-stall": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ],
+          "counted-load-hang": [
+            "h8l-TDJAHZOPwuGPvtiZo"
+          ]
+        }
+      },
+      "cli_identity": {
+        "version": "seshat 0.19.0",
+        "workflow_head": "0996b5401b7ae9cbdb73f8062a317692e8a65711",
+        "checkout_build_proof_steps_succeeded": true,
+        "binary_digest_retained": false
+      }
+    },
+    {
+      "name": "vitest-browser-macos-x64-chromium",
+      "id": 15014427764,
+      "digest": "sha256:88ba7d8f88c5e53483e15b2ffe30d4c517aedbf8bc502dd228a7d053f34f6df5",
+      "bytes": 76593,
+      "artifact_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/artifacts/15014427764",
+      "job_id": 139144825009,
+      "job_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/job/139144825009",
+      "host": "macos-x64",
+      "browser": "chromium",
+      "environment": {
+        "node": "v24.20.0",
+        "cli": "seshat 0.19.0",
+        "tools": {
+          "vitest": "5.0.0",
+          "@vitest/browser": "5.0.0",
+          "@vitest/browser-playwright": "5.0.0",
+          "@vitest/coverage-istanbul": "5.0.0",
+          "playwright": "1.63.0",
+          "react": "19.2.8",
+          "react-dom": "19.2.8",
+          "typescript": "6.0.3"
+        },
+        "browser": [
+          {
+            "name": "chromium-headless-shell",
+            "revision": "1243",
+            "browserVersion": "153.0.8010.12"
+          }
+        ]
+      },
+      "case_count": 52,
+      "groups": {
+        "deadline": 1,
+        "blocked-page": 1,
+        "cancellation": 1,
+        "crash": 2,
+        "verdicts": 47
+      },
+      "raw_results": {
+        "blocked-page": "assurance-proofs/vitest-browser-check-FEzPl7/result.json",
+        "deadline": "assurance-proofs/vitest-browser-check-GqIswL/result.json",
+        "cancellation": "assurance-proofs/vitest-browser-check-J0PJgP/result.json",
+        "verdicts": "assurance-proofs/vitest-browser-check-NpKZlr/result.json",
+        "crash": "assurance-proofs/vitest-browser-check-adVe72/result.json"
+      },
+      "case_names": [
+        "after-each",
+        "application-error",
+        "around-each",
+        "assertion",
+        "assertion-count",
+        "before-all",
+        "before-each",
+        "blocked-page",
+        "cancellation",
+        "clean-hooks",
+        "cleanup",
+        "concurrent",
+        "connect-retry",
+        "continue-after-crash",
+        "continue-after-timeout",
+        "counted-load-hang",
+        "coverage-maps",
+        "custom-launch",
+        "deadline",
+        "existing-run-task",
+        "expected-failure",
+        "hook-timeout",
+        "import-error",
+        "later-file-stall",
+        "missing-before-run-task",
+        "missing-evidence",
+        "missing-get-test-fn",
+        "missing-runner-global",
+        "missing-snapshot",
+        "missing-task-finished",
+        "mistyped-evidence",
+        "mixed",
+        "nested-after-each",
+        "nested-before-each",
+        "nested-hooks",
+        "never-connects",
+        "no-isolation",
+        "node-reference",
+        "page-crash",
+        "partial-evidence",
+        "repeat",
+        "replayed-identity",
+        "retry",
+        "setup-twice",
+        "soft-after-each",
+        "stack",
+        "survived",
+        "switching-closed",
+        "timeout",
+        "two-instances",
+        "unhandled",
+        "workers"
+      ],
+      "all_case_receipts_passed": true,
+      "summary_raw_identity_verified": true,
+      "counted_load_hang": {
+        "timeout_ms": 180000,
+        "verdict": "timed-out",
+        "counted_as_killed": true,
+        "score": 100,
+        "browser_retry": false
+      },
+      "never_connects": {
+        "verdict": "timed-out",
+        "counted_as_killed": false,
+        "attempts": 2,
+        "both_attempts_browser_connected": false,
+        "score": null
+      },
+      "cleanup": {
+        "checked_cases": 52,
+        "leftover_owned_processes": 0,
+        "leftover_playwright_prefixed_temporary_entries": 0,
+        "cleanup_errors": 0,
+        "remaining_temporary_names": {
+          "coverage-maps": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "assertion": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "survived": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "clean-hooks": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "assertion-count": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "before-all": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "before-each": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "after-each": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "cleanup": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "mixed": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "timeout": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "hook-timeout": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "import-error": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "around-each": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "unhandled": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "application-error": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "soft-after-each": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "nested-hooks": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "nested-before-each": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "nested-after-each": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "setup-twice": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "custom-launch": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "node-reference": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "missing-evidence": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "replayed-identity": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "retry": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "repeat": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "expected-failure": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "concurrent": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "mistyped-evidence": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "partial-evidence": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "missing-snapshot": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "missing-runner-global": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "missing-before-run-task": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "missing-task-finished": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "existing-run-task": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "missing-get-test-fn": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "two-instances": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "no-isolation": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "continue-after-timeout": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "connect-retry": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "never-connects": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "later-file-stall": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ],
+          "counted-load-hang": [
+            "g2N6Em9gQhd5j6vi8jg6N"
+          ]
+        }
+      },
+      "cli_identity": {
+        "version": "seshat 0.19.0",
+        "workflow_head": "0996b5401b7ae9cbdb73f8062a317692e8a65711",
+        "checkout_build_proof_steps_succeeded": true,
+        "binary_digest_retained": false
+      }
+    },
+    {
+      "name": "vitest-browser-macos-x64-firefox",
+      "id": 15016965969,
+      "digest": "sha256:8cb6cc3f48cbf7ba526614f29dcfbed33349b11a65f06ed5d8ecf6719c70d360",
+      "bytes": 76722,
+      "artifact_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/artifacts/15016965969",
+      "job_id": 139144825118,
+      "job_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/job/139144825118",
+      "host": "macos-x64",
+      "browser": "firefox",
+      "environment": {
+        "node": "v24.20.0",
+        "cli": "seshat 0.19.0",
+        "tools": {
+          "vitest": "5.0.0",
+          "@vitest/browser": "5.0.0",
+          "@vitest/browser-playwright": "5.0.0",
+          "@vitest/coverage-istanbul": "5.0.0",
+          "playwright": "1.63.0",
+          "react": "19.2.8",
+          "react-dom": "19.2.8",
+          "typescript": "6.0.3"
+        },
+        "browser": [
+          {
+            "name": "firefox",
+            "revision": "1543",
+            "browserVersion": "155.0"
+          }
+        ]
+      },
+      "case_count": 52,
+      "groups": {
+        "deadline": 1,
+        "blocked-page": 1,
+        "cancellation": 1,
+        "crash": 2,
+        "verdicts": 47
+      },
+      "raw_results": {
+        "deadline": "assurance-proofs/vitest-browser-check-4kBYDk/result.json",
+        "verdicts": "assurance-proofs/vitest-browser-check-UlEnOL/result.json",
+        "crash": "assurance-proofs/vitest-browser-check-oONzkd/result.json",
+        "cancellation": "assurance-proofs/vitest-browser-check-p9h9BC/result.json",
+        "blocked-page": "assurance-proofs/vitest-browser-check-wYzgOM/result.json"
+      },
+      "case_names": [
+        "after-each",
+        "application-error",
+        "around-each",
+        "assertion",
+        "assertion-count",
+        "before-all",
+        "before-each",
+        "blocked-page",
+        "cancellation",
+        "clean-hooks",
+        "cleanup",
+        "concurrent",
+        "connect-retry",
+        "continue-after-crash",
+        "continue-after-timeout",
+        "counted-load-hang",
+        "coverage-maps",
+        "custom-launch",
+        "deadline",
+        "existing-run-task",
+        "expected-failure",
+        "hook-timeout",
+        "import-error",
+        "later-file-stall",
+        "missing-before-run-task",
+        "missing-evidence",
+        "missing-get-test-fn",
+        "missing-runner-global",
+        "missing-snapshot",
+        "missing-task-finished",
+        "mistyped-evidence",
+        "mixed",
+        "nested-after-each",
+        "nested-before-each",
+        "nested-hooks",
+        "never-connects",
+        "no-isolation",
+        "node-reference",
+        "page-crash",
+        "partial-evidence",
+        "repeat",
+        "replayed-identity",
+        "retry",
+        "setup-twice",
+        "soft-after-each",
+        "stack",
+        "survived",
+        "switching-closed",
+        "timeout",
+        "two-instances",
+        "unhandled",
+        "workers"
+      ],
+      "all_case_receipts_passed": true,
+      "summary_raw_identity_verified": true,
+      "counted_load_hang": {
+        "timeout_ms": 180000,
+        "verdict": "timed-out",
+        "counted_as_killed": true,
+        "score": 100,
+        "browser_retry": false
+      },
+      "never_connects": {
+        "verdict": "timed-out",
+        "counted_as_killed": false,
+        "attempts": 2,
+        "both_attempts_browser_connected": false,
+        "score": null
+      },
+      "cleanup": {
+        "checked_cases": 52,
+        "leftover_owned_processes": 0,
+        "leftover_playwright_prefixed_temporary_entries": 0,
+        "cleanup_errors": 0,
+        "remaining_temporary_names": {
+          "coverage-maps": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "assertion": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "survived": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "clean-hooks": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "assertion-count": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "before-all": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "before-each": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "after-each": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "cleanup": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "mixed": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "timeout": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "hook-timeout": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "import-error": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "around-each": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "unhandled": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "application-error": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "soft-after-each": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "nested-hooks": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "nested-before-each": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "nested-after-each": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "setup-twice": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "custom-launch": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "node-reference": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "missing-evidence": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "replayed-identity": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "retry": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "repeat": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "expected-failure": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "concurrent": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "mistyped-evidence": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "partial-evidence": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "missing-snapshot": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "missing-runner-global": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "missing-before-run-task": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "missing-task-finished": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "existing-run-task": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "missing-get-test-fn": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "two-instances": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "no-isolation": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "continue-after-timeout": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "connect-retry": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "never-connects": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "later-file-stall": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ],
+          "counted-load-hang": [
+            "p6-_sSv5F80lQL9BhFVPJ"
+          ]
+        }
+      },
+      "cli_identity": {
+        "version": "seshat 0.19.0",
+        "workflow_head": "0996b5401b7ae9cbdb73f8062a317692e8a65711",
+        "checkout_build_proof_steps_succeeded": true,
+        "binary_digest_retained": false
+      }
+    },
+    {
+      "name": "vitest-browser-windows-x64-chromium",
+      "id": 15015105309,
+      "digest": "sha256:01895b544489540f93af263a73948dc2cbff9bc297d77bdf1bc34de44bd21a10",
+      "bytes": 73710,
+      "artifact_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/artifacts/15015105309",
+      "job_id": 139144825192,
+      "job_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/job/139144825192",
+      "host": "windows-x64",
+      "browser": "chromium",
+      "environment": {
+        "node": "v24.20.0",
+        "cli": "seshat 0.19.0",
+        "tools": {
+          "vitest": "5.0.0",
+          "@vitest/browser": "5.0.0",
+          "@vitest/browser-playwright": "5.0.0",
+          "@vitest/coverage-istanbul": "5.0.0",
+          "playwright": "1.63.0",
+          "react": "19.2.8",
+          "react-dom": "19.2.8",
+          "typescript": "6.0.3"
+        },
+        "browser": [
+          {
+            "name": "chromium-headless-shell",
+            "revision": "1243",
+            "browserVersion": "153.0.8010.12"
+          }
+        ]
+      },
+      "case_count": 52,
+      "groups": {
+        "deadline": 1,
+        "blocked-page": 1,
+        "cancellation": 1,
+        "crash": 2,
+        "verdicts": 47
+      },
+      "raw_results": {
+        "blocked-page": "assurance-proofs/vitest-browser-check-2elYQe/result.json",
+        "crash": "assurance-proofs/vitest-browser-check-DNGJRp/result.json",
+        "deadline": "assurance-proofs/vitest-browser-check-aj3edA/result.json",
+        "cancellation": "assurance-proofs/vitest-browser-check-fHpGf4/result.json",
+        "verdicts": "assurance-proofs/vitest-browser-check-xPF3Ih/result.json"
+      },
+      "case_names": [
+        "after-each",
+        "application-error",
+        "around-each",
+        "assertion",
+        "assertion-count",
+        "before-all",
+        "before-each",
+        "blocked-page",
+        "cancellation",
+        "clean-hooks",
+        "cleanup",
+        "concurrent",
+        "connect-retry",
+        "continue-after-crash",
+        "continue-after-timeout",
+        "counted-load-hang",
+        "coverage-maps",
+        "custom-launch",
+        "deadline",
+        "existing-run-task",
+        "expected-failure",
+        "hook-timeout",
+        "import-error",
+        "later-file-stall",
+        "missing-before-run-task",
+        "missing-evidence",
+        "missing-get-test-fn",
+        "missing-runner-global",
+        "missing-snapshot",
+        "missing-task-finished",
+        "mistyped-evidence",
+        "mixed",
+        "nested-after-each",
+        "nested-before-each",
+        "nested-hooks",
+        "never-connects",
+        "no-isolation",
+        "node-reference",
+        "page-crash",
+        "partial-evidence",
+        "repeat",
+        "replayed-identity",
+        "retry",
+        "setup-twice",
+        "soft-after-each",
+        "stack",
+        "survived",
+        "switching-closed",
+        "timeout",
+        "two-instances",
+        "unhandled",
+        "workers"
+      ],
+      "all_case_receipts_passed": true,
+      "summary_raw_identity_verified": true,
+      "counted_load_hang": {
+        "timeout_ms": 180000,
+        "verdict": "timed-out",
+        "counted_as_killed": true,
+        "score": 100,
+        "browser_retry": false
+      },
+      "never_connects": {
+        "verdict": "timed-out",
+        "counted_as_killed": false,
+        "attempts": 2,
+        "both_attempts_browser_connected": false,
+        "score": null
+      },
+      "cleanup": {
+        "checked_cases": 52,
+        "leftover_owned_processes": 0,
+        "leftover_playwright_prefixed_temporary_entries": 0,
+        "cleanup_errors": 0,
+        "remaining_temporary_names": {
+          "coverage-maps": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "assertion": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "survived": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "clean-hooks": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "assertion-count": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "before-all": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "before-each": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "after-each": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "cleanup": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "mixed": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "timeout": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "hook-timeout": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "import-error": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "around-each": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "unhandled": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "application-error": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "soft-after-each": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "nested-hooks": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "nested-before-each": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "nested-after-each": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "setup-twice": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "custom-launch": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "node-reference": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "missing-evidence": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "replayed-identity": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "retry": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "repeat": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "expected-failure": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "concurrent": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "mistyped-evidence": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "partial-evidence": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "missing-snapshot": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "missing-runner-global": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "missing-before-run-task": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "missing-task-finished": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "existing-run-task": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "missing-get-test-fn": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "two-instances": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "no-isolation": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "continue-after-timeout": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "connect-retry": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "never-connects": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "later-file-stall": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ],
+          "counted-load-hang": [
+            "sXmUJezmJm6bmI4FhT2NV"
+          ]
+        }
+      },
+      "cli_identity": {
+        "version": "seshat 0.19.0",
+        "workflow_head": "0996b5401b7ae9cbdb73f8062a317692e8a65711",
+        "checkout_build_proof_steps_succeeded": true,
+        "binary_digest_retained": false
+      }
+    },
+    {
+      "name": "vitest-browser-windows-x64-firefox",
+      "id": 15014599057,
+      "digest": "sha256:87dfd33b5b555d055ca4f370601832b2f57c34c1b66a87cdd943a6fe8fbbb042",
+      "bytes": 74526,
+      "artifact_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/artifacts/15014599057",
+      "job_id": 139144825145,
+      "job_url": "https://github.com/Binary-Balance/seshat/actions/runs/45596782635/job/139144825145",
+      "host": "windows-x64",
+      "browser": "firefox",
+      "environment": {
+        "node": "v24.20.0",
+        "cli": "seshat 0.19.0",
+        "tools": {
+          "vitest": "5.0.0",
+          "@vitest/browser": "5.0.0",
+          "@vitest/browser-playwright": "5.0.0",
+          "@vitest/coverage-istanbul": "5.0.0",
+          "playwright": "1.63.0",
+          "react": "19.2.8",
+          "react-dom": "19.2.8",
+          "typescript": "6.0.3"
+        },
+        "browser": [
+          {
+            "name": "firefox",
+            "revision": "1543",
+            "browserVersion": "155.0"
+          }
+        ]
+      },
+      "case_count": 52,
+      "groups": {
+        "deadline": 1,
+        "blocked-page": 1,
+        "cancellation": 1,
+        "crash": 2,
+        "verdicts": 47
+      },
+      "raw_results": {
+        "deadline": "assurance-proofs/vitest-browser-check-ANn2sE/result.json",
+        "blocked-page": "assurance-proofs/vitest-browser-check-IAHotG/result.json",
+        "verdicts": "assurance-proofs/vitest-browser-check-ZZpcYh/result.json",
+        "crash": "assurance-proofs/vitest-browser-check-lQhteG/result.json",
+        "cancellation": "assurance-proofs/vitest-browser-check-xUmaNL/result.json"
+      },
+      "case_names": [
+        "after-each",
+        "application-error",
+        "around-each",
+        "assertion",
+        "assertion-count",
+        "before-all",
+        "before-each",
+        "blocked-page",
+        "cancellation",
+        "clean-hooks",
+        "cleanup",
+        "concurrent",
+        "connect-retry",
+        "continue-after-crash",
+        "continue-after-timeout",
+        "counted-load-hang",
+        "coverage-maps",
+        "custom-launch",
+        "deadline",
+        "existing-run-task",
+        "expected-failure",
+        "hook-timeout",
+        "import-error",
+        "later-file-stall",
+        "missing-before-run-task",
+        "missing-evidence",
+        "missing-get-test-fn",
+        "missing-runner-global",
+        "missing-snapshot",
+        "missing-task-finished",
+        "mistyped-evidence",
+        "mixed",
+        "nested-after-each",
+        "nested-before-each",
+        "nested-hooks",
+        "never-connects",
+        "no-isolation",
+        "node-reference",
+        "page-crash",
+        "partial-evidence",
+        "repeat",
+        "replayed-identity",
+        "retry",
+        "setup-twice",
+        "soft-after-each",
+        "stack",
+        "survived",
+        "switching-closed",
+        "timeout",
+        "two-instances",
+        "unhandled",
+        "workers"
+      ],
+      "all_case_receipts_passed": true,
+      "summary_raw_identity_verified": true,
+      "counted_load_hang": {
+        "timeout_ms": 180000,
+        "verdict": "timed-out",
+        "counted_as_killed": true,
+        "score": 100,
+        "browser_retry": false
+      },
+      "never_connects": {
+        "verdict": "timed-out",
+        "counted_as_killed": false,
+        "attempts": 2,
+        "both_attempts_browser_connected": false,
+        "score": null
+      },
+      "cleanup": {
+        "checked_cases": 52,
+        "leftover_owned_processes": 0,
+        "leftover_playwright_prefixed_temporary_entries": 0,
+        "cleanup_errors": 0,
+        "remaining_temporary_names": {
+          "coverage-maps": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "assertion": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "survived": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "clean-hooks": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "assertion-count": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "before-all": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "before-each": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "after-each": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "cleanup": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "mixed": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "timeout": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "hook-timeout": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "import-error": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "around-each": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "unhandled": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "application-error": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "soft-after-each": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "nested-hooks": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "nested-before-each": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "nested-after-each": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "setup-twice": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "custom-launch": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "node-reference": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "missing-evidence": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "replayed-identity": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "retry": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "repeat": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "expected-failure": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "concurrent": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "mistyped-evidence": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "partial-evidence": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "missing-snapshot": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "missing-runner-global": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "missing-before-run-task": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "missing-task-finished": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "existing-run-task": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "missing-get-test-fn": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "two-instances": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "no-isolation": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "continue-after-timeout": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "connect-retry": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "never-connects": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "later-file-stall": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ],
+          "counted-load-hang": [
+            "mozilla-temp-files",
+            "n0vx14Q0VbGk8YcOw-ZHB"
+          ]
+        }
+      },
+      "cli_identity": {
+        "version": "seshat 0.19.0",
+        "workflow_head": "0996b5401b7ae9cbdb73f8062a317692e8a65711",
+        "checkout_build_proof_steps_succeeded": true,
+        "binary_digest_retained": false
+      }
+    }
+  ],
+  "limits": [
+    "Browser regressions cover Chromium and Firefox on the five existing hosts only; they make no Alpine browser support claim.",
+    "Pinned Vitest 5.0.0 and Playwright 1.63.0 were tested; the separate latest-vitest job was skipped.",
+    "GitHub run, artifact, and job head identities equal the reviewed PR head; the checkout action builds the GitHub PR merge ref. A sampled job checkout log records merge commit 6c2e27796c094e2ac50fe5e2665cd39c55cb7bc1; GitHub commit API confirms its source tree exactly matches the reviewed head. Browser result artifacts retain CLI version but no CLI binary hash or commit identity.",
+    "Cleanup verification reads retained process observations, temporary entry names, and cleanup-error fields; this verifier cannot inspect file types or contents on the completed hosted runner.",
+    "Successful proof receipts corroborate the source scratch-empty assertion; no independent scratch-directory listing was retained.",
+    "The proof browser-file predicate checks names starting with playwright only. Zero matching entries does not prove absence of every browser-related file. All remaining temporary names are preserved per artifact, including mozilla-temp-files on Windows Firefox; their types, contents, and cause were not independently established.",
+    "Firefox page-crash proves handling a page lost mid-test rather than a Chromium DevTools renderer crash."
+  ]
+}
