@@ -1,0 +1,30 @@
+{
+  "head": "0aca064d4f92b529c49fe0f81d8d08f761b4668c",
+  "run": 45616405986,
+  "attempt": 2,
+  "artifact": 15161282817,
+  "bytes": 73356,
+  "sha256": "854140e814c2a07ee755e03b7c6e2f5a4b5058a090c0cbe20d16d57990be8b1c",
+  "cases": 52,
+  "cleanupErrors": 0,
+  "leftoverOwnedProcesses": 0,
+  "leftoverPlaywrightPrefixedEntries": 0,
+  "cancelledMutantUncounted": true,
+  "countedLoadHangCounted": true,
+  "neverConnectedUncounted": true,
+  "limits": [
+    "Other temporary entry names may remain; no universal browser-file absence claim.",
+    "Unchanged rerun does not establish the cause of the previous sharing violation."
+  ],
+  "preparationMerge": "085187b39878785ca96236b56d8081e2e540ab1b",
+  "reviewUrl": "https://github.com/Binary-Balance/seshat/pull/313#issuecomment-7162812149",
+  "checks": {
+    "success": 24,
+    "intentionalSkips": 2
+  },
+  "installationReport": {
+    "path": "docs/research/alpine-release-install.json",
+    "bytes": 72231,
+    "sha256": "66af5a76778f60b4fa790515393204217efda9a526c607a88438b8dfed959e19"
+  }
+}
